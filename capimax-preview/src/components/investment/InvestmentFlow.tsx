@@ -20,7 +20,7 @@ import { TransactionProcessor } from './TransactionProcessor';
 import { TransactionConfirmation } from './TransactionConfirmation';
 import { cn } from '../../utils/cn';
 
-export interface Property {
+export interface InvestmentProperty {
   id: number;
   title: string;
   tokenPrice: number;
@@ -58,7 +58,7 @@ export interface InvestmentData {
 }
 
 export interface InvestmentFlowProps {
-  property: Property;
+  property: InvestmentProperty;
   isOpen: boolean;
   onClose: () => void;
   onComplete?: (investment: InvestmentData) => void;

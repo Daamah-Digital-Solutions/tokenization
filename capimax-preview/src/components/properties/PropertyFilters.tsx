@@ -13,6 +13,7 @@ export interface FilterState {
   minInvestors: number;
   maxInvestors: number;
   fundingStatus: 'all' | 'low' | 'medium' | 'high';
+  propertyStatus: 'all' | 'funding' | 'funded' | 'upcoming' | 'construction';
 }
 
 interface PropertyFiltersProps {
@@ -31,7 +32,8 @@ const defaultFilters: FilterState = {
   location: '',
   minInvestors: 0,
   maxInvestors: 10000,
-  fundingStatus: 'all'
+  fundingStatus: 'all',
+  propertyStatus: 'all'
 };
 
 export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
@@ -297,6 +299,36 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                     className={cn(
                       "p-2 rounded-lg text-center text-sm font-medium transition-all duration-200",
                       tempFilters.fundingStatus === status.value
+                        ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 border-2 border-emerald-300 dark:border-emerald-700"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
+                    )}
+                  >
+                    {status.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Property Status */}
+            <div className="space-y-3">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Building className="w-4 h-4 text-emerald-600" />
+                Property Status
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { value: 'all', label: 'All' },
+                  { value: 'funding', label: 'Funding' },
+                  { value: 'funded', label: 'Funded' },
+                  { value: 'construction', label: 'Under Construction' },
+                  { value: 'upcoming', label: 'Upcoming' }
+                ].map(status => (
+                  <button
+                    key={status.value}
+                    onClick={() => updateFilter('propertyStatus', status.value as FilterState['propertyStatus'])}
+                    className={cn(
+                      "p-2 rounded-lg text-center text-xs font-medium transition-all duration-200",
+                      tempFilters.propertyStatus === status.value
                         ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 border-2 border-emerald-300 dark:border-emerald-700"
                         : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
                     )}

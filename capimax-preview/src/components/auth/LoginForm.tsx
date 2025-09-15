@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Lock, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, AlertCircle } from 'lucide-react';
 import { Input } from '../design-system/forms/Input';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface LoginFormProps {
-  onSubmit?: (data: LoginData) => void;
   onForgotPassword?: () => void;
   onSignUp?: () => void;
-  loading?: boolean;
-  error?: string;
+  onSuccess?: () => void;
   className?: string;
 }
 
@@ -18,26 +17,35 @@ interface LoginData {
   email: string;
   password: string;
   rememberMe: boolean;
+  twoFactorCode?: string;
+}
+
+interface ValidationErrors {
+  email?: string;
+  password?: string;
+  twoFactorCode?: string;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({
-  onSubmit,
   onForgotPassword,
   onSignUp,
-  loading = false,
-  error,
+  onSuccess,
   className
 }) => {
+  const { state, login, clearError } = useAuth();
+  
   const [formData, setFormData] = useState<LoginData>({
     email: '',
     password: '',
-    rememberMe: false
+    rememberMe: false,
+    twoFactorCode: ''
   });
 
-  const [validationErrors, setValidationErrors] = useState<Partial<LoginData>>({});
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
 
   const validateForm = (): boolean => {
-    const errors: Partial<LoginData> = {};
+    const errors: ValidationErrors = {};
 
     if (!formData.email) {
       errors.email = 'Email is required';
@@ -51,18 +59,34 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       errors.password = 'Password must be at least 6 characters';
     }
 
+    if (showTwoFactor && !formData.twoFactorCode) {
+      errors.twoFactorCode = '2FA code is required';
+    }
+
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
 
-    onSubmit?.(formData);
+    try {
+      clearError();
+      await login(formData.email, formData.password, formData.twoFactorCode);
+      
+      // Call success callback if provided
+      onSuccess?.();
+    } catch (error: any) {
+      // Check if 2FA is required
+      if (error.code === 'TWO_FACTOR_REQUIRED') {
+        setShowTwoFactor(true);
+      }
+      // Error is handled by the auth context
+    }
   };
 
   const handleInputChange = (field: keyof LoginData) => (
@@ -72,7 +96,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear validation error when user starts typing
-    if (validationErrors[field]) {
+    if (field in validationErrors) {
       setValidationErrors(prev => ({ ...prev, [field]: undefined }));
     }
   };
@@ -98,7 +122,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       </div>
 
       {/* Error Message */}
-      {error && (
+      {state.error && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -106,7 +130,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         >
           <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400" />
           <span className="text-sm text-red-600 dark:text-red-400">
-            {error}
+            {state.error}
           </span>
         </motion.div>
       )}
@@ -140,6 +164,28 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           required
         />
 
+        {/* Two Factor Code Field */}
+        {showTwoFactor && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="overflow-hidden"
+          >
+            <Input
+              type="text"
+              label="Two-Factor Authentication Code"
+              placeholder="Enter your 6-digit code"
+              value={formData.twoFactorCode || ''}
+              onChange={handleInputChange('twoFactorCode')}
+              leftIcon={<Lock className="w-5 h-5" />}
+              errorMessage={validationErrors.twoFactorCode}
+              size="lg"
+              maxLength={6}
+              required
+            />
+          </motion.div>
+        )}
+
         {/* Remember Me & Forgot Password */}
         <div className="flex items-center justify-between">
           <label className="flex items-center gap-2 cursor-pointer">
@@ -171,10 +217,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           variant="primary"
           size="lg"
           className="w-full"
-          isLoading={loading}
-          disabled={loading}
+          isLoading={state.isLoading}
+          disabled={state.isLoading}
         >
-          {loading ? 'Signing In...' : 'Sign In'}
+          {state.isLoading ? 'Signing In...' : 'Sign In'}
         </Button>
       </form>
 

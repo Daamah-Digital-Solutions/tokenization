@@ -18,6 +18,7 @@ interface ActivityFeedProps {
   showViewAll?: boolean;
   onViewAll?: () => void;
   className?: string;
+  loading?: boolean;
 }
 
 export const ActivityFeed: React.FC<ActivityFeedProps> = ({
@@ -26,7 +27,8 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
   maxItems = 10,
   showViewAll = false,
   onViewAll,
-  className = ''
+  className = '',
+  loading = false
 }) => {
   const getActivityIcon = (type: ActivityItem['type'], customIcon?: string) => {
     if (customIcon) return customIcon;
@@ -97,7 +99,32 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
       </div>
 
       <div className="p-6">
-        {displayedActivities.length === 0 ? (
+        {loading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="flex items-start space-x-4 p-4 rounded-lg animate-pulse"
+              >
+                <div className="flex-shrink-0">
+                  <div className="w-10 h-10 bg-neutral-200 dark:bg-slate-600 rounded-full"></div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="h-4 bg-neutral-200 dark:bg-slate-600 rounded mb-1 w-32"></div>
+                      <div className="h-3 bg-neutral-200 dark:bg-slate-600 rounded mb-2 w-48"></div>
+                      <div className="h-3 bg-neutral-200 dark:bg-slate-600 rounded w-20"></div>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <div className="h-4 bg-neutral-200 dark:bg-slate-600 rounded w-16"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : displayedActivities.length === 0 ? (
           <div className="text-center py-8">
             <span className="text-4xl mb-4 block opacity-50">📋</span>
             <p className="text-neutral-500 dark:text-slate-400">

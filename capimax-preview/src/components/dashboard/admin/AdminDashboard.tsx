@@ -1,230 +1,143 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardStats, ActivityFeed, PerformanceChart, QuickActions } from '../';
 import type { StatItem, ActivityItem, ChartDataPoint, QuickAction } from '../';
+import { useAdminDashboard, useAdminActions } from '../../../hooks/useAdminDashboard';
+import type { AdminUser, AdminProperty, SystemAlert } from '../../../services';
+import { UserDetailModal, PropertyDetailModal } from './modals';
+import AdminWebSocketManager from './AdminWebSocketManager';
 
-// Mock data for admin dashboard
-const mockAdminStats: StatItem[] = [
-  {
-    id: 'total-users',
-    label: 'Total Users',
-    value: '2,847',
-    change: '+156',
-    changeType: 'positive',
-    icon: '👥',
-    description: 'Registered users'
-  },
-  {
-    id: 'platform-volume',
-    label: 'Platform Volume',
-    value: '$12.4M',
-    change: '+23.7%',
-    changeType: 'positive',
-    icon: '💰',
-    description: 'Total transaction volume'
-  },
-  {
-    id: 'active-properties',
-    label: 'Active Properties',
-    value: '89',
-    change: '+8',
-    changeType: 'positive',
-    icon: '🏢',
-    description: 'Properties on platform'
-  },
-  {
-    id: 'platform-revenue',
-    label: 'Platform Revenue',
-    value: '$89,450',
-    change: '+18.2%',
-    changeType: 'positive',
-    icon: '📈',
-    description: 'Monthly platform fees'
+// Helper function to convert dashboard stats to StatItem format
+const formatDashboardStats = (stats: any): StatItem[] => {
+  if (!stats) return [];
+  
+  return [
+    {
+      id: 'total-users',
+      label: 'Total Users',
+      value: stats.totalUsers?.toLocaleString() || '0',
+      change: `+${stats.totalUsers - stats.verifiedUsers || 0}`,
+      changeType: 'positive' as const,
+      icon: '👥',
+      description: 'Registered users'
+    },
+    {
+      id: 'platform-volume',
+      label: 'Platform Volume',
+      value: `$${(stats.platformVolume / 1000000).toFixed(1)}M` || '$0',
+      change: `${stats.platformVolumeChange > 0 ? '+' : ''}${stats.platformVolumeChange?.toFixed(1)}%` || '0%',
+      changeType: (stats.platformVolumeChange >= 0 ? 'positive' : 'negative') as const,
+      icon: '💰',
+      description: 'Total transaction volume'
+    },
+    {
+      id: 'active-properties',
+      label: 'Active Properties',
+      value: stats.activeProperties?.toLocaleString() || '0',
+      change: `+${stats.activeProperties - stats.completedProperties || 0}`,
+      changeType: 'positive' as const,
+      icon: '🏢',
+      description: 'Properties on platform'
+    },
+    {
+      id: 'platform-revenue',
+      label: 'Platform Revenue',
+      value: `$${stats.platformRevenue?.toLocaleString() || '0'}`,
+      change: `${stats.revenueChange > 0 ? '+' : ''}${stats.revenueChange?.toFixed(1)}%` || '0%',
+      changeType: (stats.revenueChange >= 0 ? 'positive' : 'negative') as const,
+      icon: '📈',
+      description: 'Monthly platform fees'
+    }
+  ];
+};
+
+// Helper function to convert system alerts to activity items
+const formatSystemAlerts = (alerts: SystemAlert[]): ActivityItem[] => {
+  return alerts.slice(0, 5).map(alert => ({
+    id: alert.id,
+    type: alert.severity === 'CRITICAL' ? 'error' : 'system',
+    title: alert.title,
+    description: alert.message,
+    timestamp: alert.createdAt,
+    status: alert.status === 'ACTIVE' ? 'pending' : 'completed'
+  }));
+};
+
+// Loading component for data sections
+const LoadingSpinner: React.FC<{ size?: 'sm' | 'md' | 'lg' }> = ({ size = 'md' }) => {
+  const sizeClasses = {
+    sm: 'w-4 h-4',
+    md: 'w-8 h-8',
+    lg: 'w-12 h-12'
+  };
+  
+  return (
+    <div className="flex items-center justify-center p-4">
+      <div className={`animate-spin rounded-full border-2 border-primary-200 border-t-primary-600 ${sizeClasses[size]}`}></div>
+    </div>
+  );
+};
+
+// Error display component
+const ErrorDisplay: React.FC<{ error: string; onRetry?: () => void }> = ({ error, onRetry }) => (
+  <div className="flex items-center justify-center p-6">
+    <div className="text-center">
+      <span className="text-2xl mb-2 block">⚠️</span>
+      <p className="text-red-600 dark:text-red-400 mb-3">{error}</p>
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+        >
+          Retry
+        </button>
+      )}
+    </div>
+  </div>
+);
+
+
+const PlatformMetrics: React.FC<{ metrics: any; isLoading: boolean; error?: string | null; onRetry?: () => void }> = ({ 
+  metrics, 
+  isLoading, 
+  error, 
+  onRetry 
+}) => {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700 h-80">
+          <LoadingSpinner size="lg" />
+        </div>
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700 h-80">
+          <LoadingSpinner size="lg" />
+        </div>
+      </div>
+    );
   }
-];
 
-const mockPlatformData: ChartDataPoint[] = [
-  { date: '2024-01-01', value: 8200000, label: 'Jan' },
-  { date: '2024-02-01', value: 8800000, label: 'Feb' },
-  { date: '2024-03-01', value: 9200000, label: 'Mar' },
-  { date: '2024-04-01', value: 9800000, label: 'Apr' },
-  { date: '2024-05-01', value: 10400000, label: 'May' },
-  { date: '2024-06-01', value: 11200000, label: 'Jun' },
-  { date: '2024-07-01', value: 11800000, label: 'Jul' },
-  { date: '2024-08-01', value: 12400000, label: 'Aug' }
-];
-
-const mockUserGrowthData: ChartDataPoint[] = [
-  { date: '2024-01-01', value: 1200 },
-  { date: '2024-02-01', value: 1350 },
-  { date: '2024-03-01', value: 1520 },
-  { date: '2024-04-01', value: 1780 },
-  { date: '2024-05-01', value: 2000 },
-  { date: '2024-06-01', value: 2240 },
-  { date: '2024-07-01', value: 2550 },
-  { date: '2024-08-01', value: 2847 }
-];
-
-const mockAdminActivities: ActivityItem[] = [
-  {
-    id: '1',
-    type: 'system',
-    title: 'New Property Approved',
-    description: 'Marina Bay Luxury Residences approved for tokenization',
-    timestamp: '2024-08-26T11:30:00Z',
-    status: 'completed'
-  },
-  {
-    id: '2',
-    type: 'system',
-    title: 'KYC Verification Completed',
-    description: '15 users completed KYC verification process',
-    timestamp: '2024-08-26T09:15:00Z',
-    status: 'completed'
-  },
-  {
-    id: '3',
-    type: 'transaction',
-    title: 'Large Transaction Alert',
-    description: 'Single investment of $250,000 detected',
-    amount: '$250,000',
-    timestamp: '2024-08-25T16:45:00Z',
-    status: 'completed'
-  },
-  {
-    id: '4',
-    type: 'system',
-    title: 'Platform Maintenance',
-    description: 'Scheduled maintenance completed successfully',
-    timestamp: '2024-08-25T02:00:00Z',
-    status: 'completed'
-  },
-  {
-    id: '5',
-    type: 'system',
-    title: 'Security Alert Resolved',
-    description: 'Suspicious login attempts blocked',
-    timestamp: '2024-08-24T14:30:00Z',
-    status: 'completed'
+  if (error) {
+    return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700 h-80">
+          <ErrorDisplay error={error} onRetry={onRetry} />
+        </div>
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700 h-80">
+          <ErrorDisplay error={error} onRetry={onRetry} />
+        </div>
+      </div>
+    );
   }
-];
 
-interface PlatformUser {
-  id: string;
-  name: string;
-  email: string;
-  role: 'investor' | 'property_owner';
-  joinDate: string;
-  kycStatus: 'verified' | 'pending' | 'rejected';
-  totalInvestment?: number;
-  propertiesOwned?: number;
-  lastActive: string;
-}
-
-const mockUsers: PlatformUser[] = [
-  {
-    id: '1',
-    name: 'John Smith',
-    email: 'john.smith@example.com',
-    role: 'investor',
-    joinDate: '2024-08-20',
-    kycStatus: 'pending',
-    totalInvestment: 45000,
-    lastActive: '2024-08-26T10:30:00Z'
-  },
-  {
-    id: '2',
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@example.com',
-    role: 'property_owner',
-    joinDate: '2024-08-18',
-    kycStatus: 'verified',
-    propertiesOwned: 2,
-    lastActive: '2024-08-26T09:15:00Z'
-  },
-  {
-    id: '3',
-    name: 'Michael Chen',
-    email: 'michael.chen@example.com',
-    role: 'investor',
-    joinDate: '2024-08-15',
-    kycStatus: 'verified',
-    totalInvestment: 82000,
-    lastActive: '2024-08-25T18:45:00Z'
-  },
-  {
-    id: '4',
-    name: 'Emily Davis',
-    email: 'emily.davis@example.com',
-    role: 'property_owner',
-    joinDate: '2024-08-12',
-    kycStatus: 'rejected',
-    propertiesOwned: 1,
-    lastActive: '2024-08-24T14:20:00Z'
-  }
-];
-
-interface PlatformProperty {
-  id: string;
-  name: string;
-  owner: string;
-  location: string;
-  value: number;
-  status: 'pending' | 'approved' | 'rejected' | 'active' | 'completed';
-  submissionDate: string;
-  approvalDate?: string;
-  tokensIssued?: number;
-  fundingProgress: number;
-}
-
-const mockPlatformProperties: PlatformProperty[] = [
-  {
-    id: '1',
-    name: 'Marina Bay Luxury Residences',
-    owner: 'Sarah Johnson',
-    location: 'San Francisco, CA',
-    value: 2400000,
-    status: 'pending',
-    submissionDate: '2024-08-25',
-    tokensIssued: 24000,
-    fundingProgress: 0
-  },
-  {
-    id: '2',
-    name: 'Downtown Office Complex',
-    owner: 'Michael Properties LLC',
-    location: 'Austin, TX',
-    value: 1800000,
-    status: 'active',
-    submissionDate: '2024-06-15',
-    approvalDate: '2024-06-20',
-    tokensIssued: 18000,
-    fundingProgress: 100
-  },
-  {
-    id: '3',
-    name: 'Tech Campus Mixed-Use',
-    owner: 'Emily Davis',
-    location: 'Seattle, WA',
-    value: 3200000,
-    status: 'approved',
-    submissionDate: '2024-07-10',
-    approvalDate: '2024-07-15',
-    tokensIssued: 32000,
-    fundingProgress: 85
-  }
-];
-
-const PlatformMetrics: React.FC = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <PerformanceChart
-        data={mockPlatformData}
+        data={metrics?.transactionVolume || []}
         title="Platform Transaction Volume"
         type="area"
         color="#3b82f6"
       />
       <PerformanceChart
-        data={mockUserGrowthData}
+        data={metrics?.userGrowth || []}
         title="User Growth"
         type="line"
         color="#10b981"
@@ -233,7 +146,37 @@ const PlatformMetrics: React.FC = () => {
   );
 };
 
-const UserManagement: React.FC = () => {
+const UserManagement: React.FC<{ 
+  users: AdminUser[] | null; 
+  isLoading: boolean; 
+  error?: string | null; 
+  onRetry?: () => void;
+  onUserAction?: (userId: string, action: string) => void;
+}> = ({ users, isLoading, error, onRetry, onUserAction }) => {
+  if (isLoading) {
+    return (
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
+        <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">User Management</h3>
+        </div>
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
+        <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">User Management</h3>
+        </div>
+        <ErrorDisplay error={error} onRetry={onRetry} />
+      </div>
+    );
+  }
+
+  const userList = users || [];
+  const pendingKYC = userList.filter(user => user.kycStatus === 'pending').length;
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
       <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
@@ -243,7 +186,7 @@ const UserManagement: React.FC = () => {
           </h3>
           <div className="flex items-center space-x-2">
             <span className="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 text-xs font-medium rounded-full">
-              4 Pending KYC
+              {pendingKYC} Pending KYC
             </span>
             <button className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors">
               View All
@@ -253,7 +196,7 @@ const UserManagement: React.FC = () => {
       </div>
       <div className="p-6">
         <div className="space-y-4">
-          {mockUsers.map((user) => (
+          {userList.slice(0, 6).map((user) => (
             <div
               key={user.id}
               className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-slate-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-600 transition-colors"
@@ -261,13 +204,13 @@ const UserManagement: React.FC = () => {
               <div className="flex items-center space-x-4">
                 <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center">
                   <span className="text-white font-medium text-sm">
-                    {user.name.charAt(0)}
+                    {user.firstName?.charAt(0) || user.email.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div>
                   <div className="flex items-center space-x-2">
                     <h4 className="font-medium text-neutral-900 dark:text-slate-100">
-                      {user.name}
+                      {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email}
                     </h4>
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                       user.kycStatus === 'verified'
@@ -281,6 +224,7 @@ const UserManagement: React.FC = () => {
                   </div>
                   <p className="text-sm text-neutral-500 dark:text-slate-400">
                     {user.email} • {user.role.replace('_', ' ')}
+                    {user.isSuspended && <span className="text-red-500 ml-2">(Suspended)</span>}
                   </p>
                 </div>
               </div>
@@ -289,7 +233,7 @@ const UserManagement: React.FC = () => {
                 <div className="text-right">
                   <p className="text-neutral-500 dark:text-slate-400">Joined</p>
                   <p className="font-medium text-neutral-900 dark:text-slate-100">
-                    {new Date(user.joinDate).toLocaleDateString()}
+                    {new Date(user.createdAt).toLocaleDateString()}
                   </p>
                 </div>
                 {user.totalInvestment && (
@@ -309,12 +253,35 @@ const UserManagement: React.FC = () => {
                   </div>
                 )}
                 <div className="flex items-center space-x-2">
-                  <button className="px-3 py-1 bg-primary-600 text-white text-xs font-medium rounded hover:bg-primary-700 transition-colors">
+                  <button 
+                    onClick={() => onUserAction?.(user.id, 'review')}
+                    className="px-3 py-1 bg-primary-600 text-white text-xs font-medium rounded hover:bg-primary-700 transition-colors"
+                  >
                     Review
                   </button>
-                  <button className="px-3 py-1 bg-neutral-200 text-neutral-700 dark:bg-slate-600 dark:text-slate-300 text-xs font-medium rounded hover:bg-neutral-300 dark:hover:bg-slate-500 transition-colors">
-                    Message
-                  </button>
+                  {user.kycStatus === 'pending' && (
+                    <button 
+                      onClick={() => onUserAction?.(user.id, 'verify')}
+                      className="px-3 py-1 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700 transition-colors"
+                    >
+                      Verify
+                    </button>
+                  )}
+                  {user.isSuspended ? (
+                    <button 
+                      onClick={() => onUserAction?.(user.id, 'unsuspend')}
+                      className="px-3 py-1 bg-orange-600 text-white text-xs font-medium rounded hover:bg-orange-700 transition-colors"
+                    >
+                      Unsuspend
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => onUserAction?.(user.id, 'suspend')}
+                      className="px-3 py-1 bg-neutral-200 text-neutral-700 dark:bg-slate-600 dark:text-slate-300 text-xs font-medium rounded hover:bg-neutral-300 dark:hover:bg-slate-500 transition-colors"
+                    >
+                      Actions
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -325,7 +292,37 @@ const UserManagement: React.FC = () => {
   );
 };
 
-const PropertyApproval: React.FC = () => {
+const PropertyApproval: React.FC<{ 
+  properties: AdminProperty[] | null; 
+  isLoading: boolean; 
+  error?: string | null; 
+  onRetry?: () => void;
+  onPropertyAction?: (propertyId: string, action: string, reason?: string) => void;
+}> = ({ properties, isLoading, error, onRetry, onPropertyAction }) => {
+  if (isLoading) {
+    return (
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
+        <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">Property Approval Queue</h3>
+        </div>
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
+        <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">Property Approval Queue</h3>
+        </div>
+        <ErrorDisplay error={error} onRetry={onRetry} />
+      </div>
+    );
+  }
+
+  const propertyList = properties || [];
+  const pendingProperties = propertyList.filter(p => p.status === 'pending_approval').length;
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
       <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
@@ -334,13 +331,13 @@ const PropertyApproval: React.FC = () => {
             Property Approval Queue
           </h3>
           <span className="px-2 py-1 bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 text-xs font-medium rounded-full">
-            2 Pending Review
+            {pendingProperties} Pending Review
           </span>
         </div>
       </div>
       <div className="p-6">
         <div className="space-y-4">
-          {mockPlatformProperties.map((property) => (
+          {propertyList.slice(0, 5).map((property) => (
             <div
               key={property.id}
               className="p-4 bg-neutral-50 dark:bg-slate-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-600 transition-colors"
@@ -352,10 +349,10 @@ const PropertyApproval: React.FC = () => {
                   </div>
                   <div>
                     <h4 className="font-semibold text-neutral-900 dark:text-slate-100">
-                      {property.name}
+                      {property.title}
                     </h4>
                     <p className="text-sm text-neutral-500 dark:text-slate-400">
-                      {property.location} • by {property.owner}
+                      {property.location} • by {property.ownerName}
                     </p>
                   </div>
                 </div>
@@ -376,15 +373,15 @@ const PropertyApproval: React.FC = () => {
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                 <div>
-                  <p className="text-neutral-500 dark:text-slate-400">Property Value</p>
+                  <p className="text-neutral-500 dark:text-slate-400">Target Amount</p>
                   <p className="font-semibold text-neutral-900 dark:text-slate-100">
-                    ${property.value.toLocaleString()}
+                    ${property.targetAmount.toLocaleString()}
                   </p>
                 </div>
                 <div>
                   <p className="text-neutral-500 dark:text-slate-400">Submitted</p>
                   <p className="font-medium text-neutral-900 dark:text-slate-100">
-                    {new Date(property.submissionDate).toLocaleDateString()}
+                    {new Date(property.createdAt).toLocaleDateString()}
                   </p>
                 </div>
                 <div>
@@ -401,15 +398,29 @@ const PropertyApproval: React.FC = () => {
                 </div>
               </div>
 
-              {property.status === 'pending' && (
+              {property.status === 'pending_approval' && (
                 <div className="flex items-center space-x-2">
-                  <button className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700 transition-colors">
+                  <button 
+                    onClick={() => onPropertyAction?.(property.id, 'approve')}
+                    className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700 transition-colors"
+                  >
                     Approve
                   </button>
-                  <button className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 transition-colors">
+                  <button 
+                    onClick={() => {
+                      const reason = prompt('Please provide a rejection reason:');
+                      if (reason) {
+                        onPropertyAction?.(property.id, 'reject', reason);
+                      }
+                    }}
+                    className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 transition-colors"
+                  >
                     Reject
                   </button>
-                  <button className="px-4 py-2 bg-neutral-200 text-neutral-700 dark:bg-slate-600 dark:text-slate-300 text-sm font-medium rounded hover:bg-neutral-300 dark:hover:bg-slate-500 transition-colors">
+                  <button 
+                    onClick={() => onPropertyAction?.(property.id, 'details')}
+                    className="px-4 py-2 bg-neutral-200 text-neutral-700 dark:bg-slate-600 dark:text-slate-300 text-sm font-medium rounded hover:bg-neutral-300 dark:hover:bg-slate-500 transition-colors"
+                  >
                     Review Details
                   </button>
                 </div>
@@ -422,13 +433,35 @@ const PropertyApproval: React.FC = () => {
   );
 };
 
-const TransactionMonitoring: React.FC = () => {
-  const recentTransactions = [
-    { id: '1', type: 'Investment', user: 'John Smith', property: 'Marina Bay Condos', amount: 25000, timestamp: '2024-08-26T10:30:00Z', status: 'completed' },
-    { id: '2', type: 'Withdrawal', user: 'Sarah Johnson', property: 'Downtown Office', amount: 5000, timestamp: '2024-08-25T16:45:00Z', status: 'pending' },
-    { id: '3', type: 'Dividend', user: 'Michael Chen', property: 'Tech Campus', amount: 1200, timestamp: '2024-08-25T09:15:00Z', status: 'completed' },
-    { id: '4', type: 'Investment', user: 'Emily Davis', property: 'Retail Center', amount: 45000, timestamp: '2024-08-24T14:20:00Z', status: 'completed' }
-  ];
+const TransactionMonitoring: React.FC<{ 
+  transactions: any[] | null; 
+  isLoading: boolean; 
+  error?: string | null; 
+  onRetry?: () => void;
+}> = ({ transactions, isLoading, error, onRetry }) => {
+  if (isLoading) {
+    return (
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
+        <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">Recent Transactions</h3>
+        </div>
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
+        <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">Recent Transactions</h3>
+        </div>
+        <ErrorDisplay error={error} onRetry={onRetry} />
+      </div>
+    );
+  }
+
+  const recentTransactions = transactions?.slice(0, 5) || [];
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
@@ -452,17 +485,17 @@ const TransactionMonitoring: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="font-medium text-neutral-900 dark:text-slate-100">
-                    {transaction.type} - {transaction.property}
+                    {transaction.type} {transaction.propertyTitle ? `- ${transaction.propertyTitle}` : ''}
                   </h4>
                   <p className="text-sm text-neutral-500 dark:text-slate-400">
-                    {transaction.user} • {new Date(transaction.timestamp).toLocaleString()}
+                    {transaction.userName || transaction.userEmail} • {new Date(transaction.createdAt).toLocaleString()}
                   </p>
                 </div>
               </div>
               
               <div className="flex items-center space-x-3">
                 <span className="font-semibold text-neutral-900 dark:text-slate-100">
-                  ${transaction.amount.toLocaleString()}
+                  ${transaction.amount?.toLocaleString() || '0'}
                 </span>
                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                   transaction.status === 'completed'
@@ -480,15 +513,78 @@ const TransactionMonitoring: React.FC = () => {
   );
 };
 
-const SystemHealth: React.FC = () => {
-  const systemMetrics = [
-    { label: 'API Response Time', value: '245ms', status: 'good', target: '<500ms' },
-    { label: 'System Uptime', value: '99.98%', status: 'excellent', target: '>99.9%' },
-    { label: 'Database Performance', value: '1.2s', status: 'warning', target: '<1s' },
-    { label: 'Active Connections', value: '1,247', status: 'good', target: '<2000' },
-    { label: 'Error Rate', value: '0.02%', status: 'excellent', target: '<0.1%' },
-    { label: 'Storage Usage', value: '67%', status: 'good', target: '<80%' }
-  ];
+const SystemHealthComponent: React.FC<{ 
+  health: any | null; 
+  isLoading: boolean; 
+  error?: string | null; 
+  onRetry?: () => void;
+}> = ({ health, isLoading, error, onRetry }) => {
+  if (isLoading) {
+    return (
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
+        <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">System Health</h3>
+        </div>
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
+        <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">System Health</h3>
+        </div>
+        <ErrorDisplay error={error} onRetry={onRetry} />
+      </div>
+    );
+  }
+
+  const getStatusFromValue = (value: number, thresholds: { warning: number; error: number }) => {
+    if (value <= thresholds.warning) return 'excellent';
+    if (value <= thresholds.error) return 'good';
+    return 'warning';
+  };
+
+  const systemMetrics = health ? [
+    { 
+      label: 'API Response Time', 
+      value: `${health.metrics?.apiResponseTime || 0}ms`, 
+      status: getStatusFromValue(health.metrics?.apiResponseTime || 0, { warning: 200, error: 500 }), 
+      target: '<500ms' 
+    },
+    { 
+      label: 'System Uptime', 
+      value: `${((health.uptime || 0) / 86400).toFixed(2)} days`, 
+      status: 'excellent', 
+      target: '>99.9%' 
+    },
+    { 
+      label: 'Database Response', 
+      value: `${health.metrics?.databaseConnectionTime || 0}ms`, 
+      status: getStatusFromValue(health.metrics?.databaseConnectionTime || 0, { warning: 100, error: 1000 }), 
+      target: '<1s' 
+    },
+    { 
+      label: 'Active Connections', 
+      value: (health.metrics?.activeConnections || 0).toLocaleString(), 
+      status: getStatusFromValue(health.metrics?.activeConnections || 0, { warning: 1000, error: 2000 }), 
+      target: '<2000' 
+    },
+    { 
+      label: 'Error Rate', 
+      value: `${(health.metrics?.errorRate || 0).toFixed(2)}%`, 
+      status: getStatusFromValue(health.metrics?.errorRate || 0, { warning: 0.05, error: 0.1 }), 
+      target: '<0.1%' 
+    },
+    { 
+      label: 'Memory Usage', 
+      value: `${(health.metrics?.memoryUsage || 0).toFixed(1)}%`, 
+      status: getStatusFromValue(health.metrics?.memoryUsage || 0, { warning: 70, error: 90 }), 
+      target: '<90%' 
+    }
+  ] : [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -534,56 +630,320 @@ const SystemHealth: React.FC = () => {
 };
 
 export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView }) => {
+  // Modal state management
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<AdminProperty | null>(null);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false);
+
+  // Initialize admin dashboard data and actions
+  const {
+    dashboardStats,
+    platformMetrics,
+    systemHealth,
+    systemAlerts,
+    financialMetrics,
+    users,
+    properties,
+    isLoading,
+    error,
+    loadingStates,
+    loadOverviewData,
+    loadUsers,
+    loadProperties,
+    loadFinancialMetrics,
+    refreshData,
+    clearError,
+    systemAlerts: currentAlerts,
+    dashboardStats: currentStats
+  } = useAdminDashboard();
+
+  // Local state for real-time updates
+  const [realtimeAlerts, setRealtimeAlerts] = useState<SystemAlert[]>([]);
+  const [realtimeStats, setRealtimeStats] = useState<any>(null);
+
+  const {
+    loading: actionLoading,
+    error: actionError,
+    clearError: clearActionError,
+    suspendUser,
+    unsuspendUser,
+    verifyUser,
+    approveProperty,
+    rejectProperty,
+    acknowledgeAlert,
+    resolveAlert
+  } = useAdminActions();
+
+  // Load initial data on component mount
+  useEffect(() => {
+    if (currentView === 'overview') {
+      loadOverviewData();
+    } else if (currentView === 'users') {
+      loadUsers();
+    } else if (currentView === 'properties-admin') {
+      loadProperties({ status: 'pending_approval' });
+    } else if (currentView === 'financial') {
+      loadFinancialMetrics();
+    }
+  }, [currentView, loadOverviewData, loadUsers, loadProperties, loadFinancialMetrics]);
+
+  // Handle user actions
+  const handleUserAction = async (userId: string, action: string) => {
+    clearActionError();
+    
+    try {
+      switch (action) {
+        case 'review':
+          const user = users?.users?.find(u => u.id === userId);
+          if (user) {
+            setSelectedUser(user);
+            setIsUserModalOpen(true);
+          }
+          break;
+        case 'verify':
+          await verifyUser(userId, 'Admin verification');
+          await refreshData('users');
+          break;
+        case 'suspend':
+          const reason = prompt('Please provide suspension reason:');
+          if (reason) {
+            await suspendUser(userId, reason);
+            await refreshData('users');
+          }
+          break;
+        case 'unsuspend':
+          await unsuspendUser(userId, 'Admin unsuspension');
+          await refreshData('users');
+          break;
+        default:
+          console.log(`Unknown user action: ${action}`);
+      }
+    } catch (error) {
+      console.error('User action failed:', error);
+    }
+  };
+
+  // Handle property actions
+  const handlePropertyAction = async (propertyId: string, action: string, reason?: string) => {
+    clearActionError();
+    
+    try {
+      switch (action) {
+        case 'approve':
+          await approveProperty(propertyId);
+          await refreshData('properties');
+          break;
+        case 'reject':
+          if (reason) {
+            await rejectProperty(propertyId, reason);
+            await refreshData('properties');
+          }
+          break;
+        case 'details':
+          const property = properties?.properties?.find(p => p.id === propertyId);
+          if (property) {
+            setSelectedProperty(property);
+            setIsPropertyModalOpen(true);
+          }
+          break;
+        default:
+          console.log(`Unknown property action: ${action}`);
+      }
+    } catch (error) {
+      console.error('Property action failed:', error);
+    }
+  };
+
+  // WebSocket event handlers
+  const handleStatsUpdate = (data: any) => {
+    console.log('Received real-time stats update:', data);
+    setRealtimeStats(data);
+  };
+
+  const handleSystemAlert = (alert: SystemAlert) => {
+    console.log('Received real-time system alert:', alert);
+    setRealtimeAlerts(prev => [alert, ...prev.filter(a => a.id !== alert.id)]);
+  };
+
+  const handleUserUpdate = (data: any) => {
+    console.log('Received real-time user update:', data);
+    if (currentView === 'users') {
+      refreshData('users');
+    }
+  };
+
+  const handlePropertyUpdate = (data: any) => {
+    console.log('Received real-time property update:', data);
+    if (currentView === 'properties-admin') {
+      refreshData('properties');
+    }
+  };
+
+  const handleTransactionUpdate = (data: any) => {
+    console.log('Received real-time transaction update:', data);
+    if (currentView === 'transactions-admin' || currentView === 'financial') {
+      refreshData('all');
+    }
+  };
+
+  const handleFinancialUpdate = (data: any) => {
+    console.log('Received real-time financial update:', data);
+    if (currentView === 'financial') {
+      refreshData('financial');
+    }
+  };
+
+  // Merge real-time data with dashboard data
+  const mergedStats = realtimeStats ? { ...dashboardStats, ...realtimeStats } : dashboardStats;
+  const mergedAlerts = [...realtimeAlerts, ...systemAlerts].slice(0, 10);
+
+  // Convert dashboard stats to StatItem format
+  const formattedStats = formatDashboardStats(mergedStats);
+  
+  // Convert system alerts to activities
+  const systemActivities = formatSystemAlerts(mergedAlerts);
+  // Dynamic quick actions based on real data
+  const pendingKYC = users?.users?.filter(user => user.kycStatus === 'pending').length || 0;
+  const pendingProperties = properties?.properties?.filter(prop => prop.status === 'pending_approval').length || 0;
+  const criticalAlerts = mergedAlerts.filter(alert => alert.severity === 'CRITICAL' && alert.status === 'ACTIVE').length;
+  
   const quickActions: QuickAction[] = [
     {
       id: 'approve-users',
       label: 'Review KYC',
       icon: '✅',
-      description: '4 pending approvals',
-      variant: 'warning',
+      description: `${pendingKYC} pending approvals`,
+      variant: pendingKYC > 0 ? 'warning' : 'default',
       onClick: () => console.log('Navigate to user approvals')
     },
     {
       id: 'review-properties',
       label: 'Review Properties',
       icon: '🏢',
-      description: '2 pending reviews',
-      variant: 'primary',
+      description: `${pendingProperties} pending reviews`,
+      variant: pendingProperties > 0 ? 'primary' : 'default',
       onClick: () => console.log('Navigate to property reviews')
     },
     {
       id: 'system-alerts',
       label: 'System Alerts',
       icon: '⚠️',
-      description: 'View system status',
+      description: criticalAlerts > 0 ? `${criticalAlerts} critical alerts` : 'All systems normal',
+      variant: criticalAlerts > 0 ? 'danger' : 'default',
       onClick: () => console.log('View system alerts')
     },
     {
-      id: 'generate-report',
-      label: 'Generate Report',
-      icon: '📊',
-      description: 'Platform analytics',
-      onClick: () => console.log('Generate platform report')
+      id: 'refresh-data',
+      label: 'Refresh Data',
+      icon: '🔄',
+      description: 'Update dashboard',
+      onClick: () => refreshData('all')
     }
   ];
 
-  switch (currentView) {
+  // Show loading state for initial load
+  if (isLoading && !dashboardStats && !error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  // Show global error state
+  if (error && !dashboardStats) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <ErrorDisplay error={error} onRetry={() => refreshData('all')} />
+      </div>
+    );
+  }
+
+  // Render the modals
+  const modals = (
+    <>
+      {selectedUser && (
+        <UserDetailModal
+          user={selectedUser}
+          isOpen={isUserModalOpen}
+          onClose={() => {
+            setIsUserModalOpen(false);
+            setSelectedUser(null);
+          }}
+          onUserUpdated={() => {
+            refreshData('users');
+          }}
+        />
+      )}
+      
+      {selectedProperty && (
+        <PropertyDetailModal
+          property={selectedProperty}
+          isOpen={isPropertyModalOpen}
+          onClose={() => {
+            setIsPropertyModalOpen(false);
+            setSelectedProperty(null);
+          }}
+          onPropertyUpdated={() => {
+            refreshData('properties');
+          }}
+        />
+      )}
+    </>
+  );
+
+  // Determine the main content based on current view
+  const mainContent = (() => {
+    switch (currentView) {
     case 'overview':
       return (
         <div className="space-y-6">
-          <DashboardStats stats={mockAdminStats} />
+          {/* Show action error if present */}
+          {actionError && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-red-800 dark:text-red-200">{actionError}</p>
+                <button 
+                  onClick={clearActionError}
+                  className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          )}
+          
+          <DashboardStats 
+            stats={formattedStats} 
+            isLoading={loadingStates.stats}
+            error={error}
+            onRefresh={() => refreshData('stats')}
+          />
+          
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2">
-              <PlatformMetrics />
+              <PlatformMetrics 
+                metrics={platformMetrics}
+                isLoading={loadingStates.metrics}
+                error={error}
+                onRetry={() => refreshData('metrics')}
+              />
             </div>
             <QuickActions actions={quickActions} columns={2} />
           </div>
+          
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2">
-              <TransactionMonitoring />
+              <TransactionMonitoring 
+                transactions={[]}
+                isLoading={false}
+                error={null}
+                onRetry={() => console.log('Load transactions')}
+              />
             </div>
             <ActivityFeed 
-              activities={mockAdminActivities} 
+              activities={systemActivities} 
               maxItems={5}
               showViewAll={true}
               onViewAll={() => console.log('View all activities')}
@@ -595,7 +955,23 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
     case 'users':
       return (
         <div className="space-y-6">
-          <UserManagement />
+          {actionError && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-red-800 dark:text-red-200">{actionError}</p>
+                <button onClick={clearActionError} className="text-red-600 dark:text-red-400">×</button>
+              </div>
+            </div>
+          )}
+          
+          <UserManagement 
+            users={users?.users || null}
+            isLoading={loadingStates.users}
+            error={error}
+            onRetry={() => refreshData('users')}
+            onUserAction={handleUserAction}
+          />
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
               <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">
@@ -603,10 +979,26 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
               </h3>
               <div className="space-y-3">
                 {[
-                  { label: 'Total Users', value: '2,847', change: '+156' },
-                  { label: 'Verified Users', value: '2,234', change: '+98' },
-                  { label: 'Pending KYC', value: '234', change: '+12' },
-                  { label: 'Active This Month', value: '1,892', change: '+245' }
+                  { 
+                    label: 'Total Users', 
+                    value: users?.totalCount?.toLocaleString() || '0', 
+                    change: '+' + (users?.totalCount || 0 - (users?.users?.filter(u => u.kycStatus === 'verified').length || 0))
+                  },
+                  { 
+                    label: 'Verified Users', 
+                    value: users?.users?.filter(u => u.kycStatus === 'verified').length?.toLocaleString() || '0', 
+                    change: '+' + (users?.users?.filter(u => u.kycStatus === 'verified').length || 0)
+                  },
+                  { 
+                    label: 'Pending KYC', 
+                    value: users?.users?.filter(u => u.kycStatus === 'pending').length?.toLocaleString() || '0', 
+                    change: '+' + (users?.users?.filter(u => u.kycStatus === 'pending').length || 0)
+                  },
+                  { 
+                    label: 'Suspended Users', 
+                    value: users?.users?.filter(u => u.isSuspended).length?.toLocaleString() || '0', 
+                    change: '+' + (users?.users?.filter(u => u.isSuspended).length || 0)
+                  }
                 ].map((stat) => (
                   <div key={stat.label} className="flex justify-between">
                     <span className="text-sm font-medium text-neutral-700 dark:text-slate-300">
@@ -630,10 +1022,30 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
                 User Types
               </h3>
               <div className="space-y-3">
-                {[
-                  { label: 'Investors', percentage: 78, count: 2219 },
-                  { label: 'Property Owners', percentage: 22, count: 628 }
-                ].map((segment) => (
+                {(() => {
+                  const totalUsers = users?.totalCount || 1;
+                  const investors = users?.users?.filter(u => u.role === 'investor').length || 0;
+                  const propertyOwners = users?.users?.filter(u => u.role === 'property_owner').length || 0;
+                  const brokers = users?.users?.filter(u => u.role === 'broker').length || 0;
+                  
+                  return [
+                    { 
+                      label: 'Investors', 
+                      percentage: Math.round((investors / totalUsers) * 100), 
+                      count: investors 
+                    },
+                    { 
+                      label: 'Property Owners', 
+                      percentage: Math.round((propertyOwners / totalUsers) * 100), 
+                      count: propertyOwners 
+                    },
+                    { 
+                      label: 'Brokers', 
+                      percentage: Math.round((brokers / totalUsers) * 100), 
+                      count: brokers 
+                    }
+                  ];
+                })().map((segment) => (
                   <div key={segment.label}>
                     <div className="flex justify-between mb-1">
                       <span className="text-sm font-medium text-neutral-700 dark:text-slate-300">
@@ -683,28 +1095,74 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
     case 'properties-admin':
       return (
         <div className="space-y-6">
-          <PropertyApproval />
+          {actionError && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-red-800 dark:text-red-200">{actionError}</p>
+                <button onClick={clearActionError} className="text-red-600 dark:text-red-400">×</button>
+              </div>
+            </div>
+          )}
+          
+          <PropertyApproval 
+            properties={properties?.properties || null}
+            isLoading={loadingStates.properties}
+            error={error}
+            onRetry={() => refreshData('properties')}
+            onPropertyAction={handlePropertyAction}
+          />
         </div>
       );
 
     case 'transactions-admin':
       return (
         <div className="space-y-6">
-          <TransactionMonitoring />
-          <PlatformMetrics />
+          <TransactionMonitoring 
+            transactions={[]}
+            isLoading={false}
+            error={null}
+            onRetry={() => console.log('Load transactions')}
+          />
+          <PlatformMetrics 
+            metrics={platformMetrics}
+            isLoading={loadingStates.metrics}
+            error={error}
+            onRetry={() => refreshData('metrics')}
+          />
         </div>
       );
 
     case 'platform':
       return (
         <div className="space-y-6">
-          <PlatformMetrics />
+          <PlatformMetrics 
+            metrics={platformMetrics}
+            isLoading={loadingStates.metrics}
+            error={error}
+            onRetry={() => refreshData('metrics')}
+          />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { label: 'Daily Active Users', value: '1,247', change: '+5.2%' },
-              { label: 'Transaction Volume', value: '$458K', change: '+12.8%' },
-              { label: 'Platform Fees', value: '$12.4K', change: '+18.3%' },
-              { label: 'Success Rate', value: '99.2%', change: '+0.1%' }
+              { 
+                label: 'Daily Active Users', 
+                value: dashboardStats?.dailyActiveUsers?.toLocaleString() || '0', 
+                change: '+5.2%' 
+              },
+              { 
+                label: 'Transaction Volume', 
+                value: `$${((dashboardStats?.monthlyTransactionVolume || 0) / 1000).toFixed(0)}K`, 
+                change: `${dashboardStats?.platformVolumeChange > 0 ? '+' : ''}${dashboardStats?.platformVolumeChange?.toFixed(1)}%` 
+              },
+              { 
+                label: 'Platform Revenue', 
+                value: `$${((dashboardStats?.platformRevenue || 0) / 1000).toFixed(1)}K`, 
+                change: `${dashboardStats?.revenueChange > 0 ? '+' : ''}${dashboardStats?.revenueChange?.toFixed(1)}%` 
+              },
+              { 
+                label: 'Success Rate', 
+                value: `${(dashboardStats?.successRate || 0).toFixed(1)}%`, 
+                change: '+0.1%' 
+              }
             ].map((metric) => (
               <div key={metric.label} className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
                 <h3 className="text-sm font-medium text-neutral-500 dark:text-slate-400 mb-2">
@@ -725,7 +1183,119 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
     case 'system':
       return (
         <div className="space-y-6">
-          <SystemHealth />
+          <SystemHealthComponent 
+            health={systemHealth}
+            isLoading={loadingStates.health}
+            error={error}
+            onRetry={() => refreshData('health')}
+          />
+          
+          {mergedAlerts.length > 0 && (
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
+              <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">Active System Alerts</h3>
+              </div>
+              <div className="p-6">
+                <div className="space-y-3">
+                  {mergedAlerts.slice(0, 10).map((alert) => (
+                    <div key={alert.id} className={`p-4 rounded-lg border ${
+                      alert.severity === 'CRITICAL' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
+                      alert.severity === 'HIGH' ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' :
+                      'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium text-neutral-900 dark:text-slate-100">{alert.title}</h4>
+                          <p className="text-sm text-neutral-600 dark:text-slate-400 mt-1">{alert.message}</p>
+                          <p className="text-xs text-neutral-500 dark:text-slate-500 mt-2">
+                            {new Date(alert.createdAt).toLocaleString()} • {alert.severity} • {alert.source}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {alert.status === 'ACTIVE' && (
+                            <>
+                              <button
+                                onClick={() => acknowledgeAlert(alert.id)}
+                                className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                              >
+                                Acknowledge
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const resolution = prompt('Please provide resolution details:');
+                                  if (resolution) {
+                                    resolveAlert(alert.id, resolution);
+                                  }
+                                }}
+                                className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                              >
+                                Resolve
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+
+    case 'financial':
+      return (
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
+            <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
+              <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">Financial Management</h3>
+            </div>
+            <div className="p-6">
+              {loadingStates.financial ? (
+                <LoadingSpinner size="lg" />
+              ) : financialMetrics ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {[
+                    { 
+                      label: 'Total Revenue', 
+                      value: `$${financialMetrics.totalRevenue?.toLocaleString() || '0'}`, 
+                      change: `${financialMetrics.revenueChange > 0 ? '+' : ''}${financialMetrics.revenueChange?.toFixed(1)}%` 
+                    },
+                    { 
+                      label: 'Monthly Revenue', 
+                      value: `$${financialMetrics.monthlyRevenue?.toLocaleString() || '0'}`, 
+                      change: 'This month' 
+                    },
+                    { 
+                      label: 'Pending Withdrawals', 
+                      value: `$${financialMetrics.pendingWithdrawalAmount?.toLocaleString() || '0'}`, 
+                      change: `${financialMetrics.pendingWithdrawals || 0} requests` 
+                    },
+                    { 
+                      label: 'Total Commissions', 
+                      value: `$${financialMetrics.totalCommissions?.toLocaleString() || '0'}`, 
+                      change: `${financialMetrics.pendingCommissions || 0} pending` 
+                    }
+                  ].map((metric) => (
+                    <div key={metric.label} className="bg-neutral-50 dark:bg-slate-700 rounded-lg p-4">
+                      <h4 className="text-sm font-medium text-neutral-500 dark:text-slate-400 mb-2">
+                        {metric.label}
+                      </h4>
+                      <p className="text-2xl font-bold text-neutral-900 dark:text-slate-100">
+                        {metric.value}
+                      </p>
+                      <p className="text-sm text-neutral-600 dark:text-slate-400 mt-1">
+                        {metric.change}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <ErrorDisplay error={error || 'Failed to load financial data'} onRetry={() => refreshData('financial')} />
+              )}
+            </div>
+          </div>
         </div>
       );
 
@@ -743,5 +1313,20 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
           </div>
         </div>
       );
-  }
+    }
+  })();
+
+  return (
+    <AdminWebSocketManager
+      onStatsUpdate={handleStatsUpdate}
+      onUserUpdate={handleUserUpdate}
+      onPropertyUpdate={handlePropertyUpdate}
+      onSystemAlert={handleSystemAlert}
+      onTransactionUpdate={handleTransactionUpdate}
+      onFinancialUpdate={handleFinancialUpdate}
+    >
+      {mainContent}
+      {modals}
+    </AdminWebSocketManager>
+  );
 };

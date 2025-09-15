@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { useRouter } from '../utils/router';
-import { InvestorDashboard } from '../components/dashboard/investor/InvestorDashboard';
+import { useAuth } from '../contexts/AuthContext';
+import { DynamicUserDashboard } from '../components/dashboard/DynamicUserDashboard';
+import { InvestorControlPanel } from '../components/dashboard/investor/InvestorControlPanel';
 import { PropertyOwnerDashboard } from '../components/dashboard/property-owner/PropertyOwnerDashboard';
 import { AdminDashboard } from '../components/dashboard/admin/AdminDashboard';
+import { BrokerDashboard } from '../components/dashboard/broker/BrokerDashboard';
 
 // Dashboard Types
-export type UserRole = 'investor' | 'property_owner' | 'admin';
+export type UserRole = 'investor' | 'property_owner' | 'admin' | 'broker';
 
 export interface DashboardUser {
   id: string;
@@ -16,18 +19,6 @@ export interface DashboardUser {
   isKYCVerified: boolean;
   joinedDate: string;
 }
-
-// Mock user data - In real app, this would come from authentication context
-// You can change the role here to test different dashboard types
-const mockUser: DashboardUser = {
-  id: '1',
-  name: 'John Doe',
-  email: 'john.doe@example.com',
-  role: 'investor', // Change to 'property_owner' or 'admin' to test different dashboards
-  avatar: undefined,
-  isKYCVerified: true,
-  joinedDate: '2024-01-15'
-};
 
 // Dashboard Layout Component
 interface DashboardLayoutProps {
@@ -79,6 +70,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           { id: 'transactions-admin', label: 'Transactions', icon: '💎' },
           { id: 'platform', label: 'Platform Metrics', icon: '📈' },
           { id: 'system', label: 'System Health', icon: '⚙️' },
+        ];
+      case 'broker':
+        return [
+          ...baseItems,
+          { id: 'referrals', label: 'Referrals', icon: '🤝' },
+          { id: 'commissions', label: 'Commissions', icon: '💰' },
+          { id: 'performance', label: 'Performance', icon: '📊' },
+          { id: 'marketing-materials', label: 'Marketing Materials', icon: '📄' },
         ];
       default:
         return baseItems;
@@ -198,19 +197,76 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 // Main Dashboard Page Component
 export const DashboardPage: React.FC = () => {
   const [currentView, setCurrentView] = useState('overview');
-  const [user] = useState<DashboardUser>(mockUser);
+  const { state } = useAuth();
+  const { navigate } = useRouter();
+  const authUser = state.user;
+
+  // Redirect to login if not authenticated
+  React.useEffect(() => {
+    console.log('🔍 Dashboard auth check:', { isLoading: state.isLoading, isAuthenticated: state.isAuthenticated, user: !!state.user });
+    if (!state.isLoading && !state.isAuthenticated) {
+      console.log('⚠️ Redirecting from dashboard to login - not authenticated');
+      navigate('login');
+    }
+  }, [state.isLoading, state.isAuthenticated, navigate]);
+
+  // Show loading while checking authentication
+  if (state.isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-900">
+        <div className="text-center p-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-300 font-medium">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render dashboard if not authenticated
+  if (!state.isAuthenticated || !authUser) {
+    return null;
+  }
+  
+  // Map auth user to dashboard user format
+  const user: DashboardUser = authUser ? {
+    id: authUser.id,
+    name: `${authUser.first_name} ${authUser.last_name}`.trim() || 'User',
+    email: authUser.email,
+    role: authUser.role as UserRole,
+    avatar: undefined,
+    isKYCVerified: authUser.kyc_status === 'approved',
+    joinedDate: authUser.created_at?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0]
+  } : {
+    id: '1',
+    name: 'Guest User',
+    email: 'guest@example.com',
+    role: 'investor' as UserRole,
+    avatar: undefined,
+    isKYCVerified: false,
+    joinedDate: new Date().toISOString().split('T')[0]
+  };
 
   const renderDashboardContent = () => {
-    // Render role-specific dashboard components
+    // For overview, use the new DynamicUserDashboard
+    if (currentView === 'overview') {
+      return <DynamicUserDashboard userRole={user.role} />;
+    }
+
+    // For investor role, use the new InvestorControlPanel for all investor-specific views
+    if (user.role === 'investor') {
+      return <InvestorControlPanel currentView={currentView} />;
+    }
+
+    // Render role-specific dashboard components for other roles
     const role = user.role;
     
     switch (role) {
-      case 'investor':
-        return <InvestorDashboard currentView={currentView} />;
       case 'property_owner':
         return <PropertyOwnerDashboard currentView={currentView} />;
       case 'admin':
         return <AdminDashboard currentView={currentView} />;
+      case 'broker':
+        return <BrokerDashboard currentView={currentView} />;
       default:
         return (
           <div className="flex items-center justify-center h-64">

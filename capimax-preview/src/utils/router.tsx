@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Route = 'home' | 'login' | 'register' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'wallet' | 'demo' | 'about' | 'contact';
+type Route = 'home' | 'login' | 'register' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'wallet' | 'demo' | 'integration-test' | 'about' | 'contact';
 
 interface RouterContextType {
   currentRoute: Route;
@@ -27,8 +27,28 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
   children,
   initialRoute = 'home'
 }) => {
-  const [currentRoute, setCurrentRoute] = useState<Route>(initialRoute);
-  const [history, setHistory] = useState<Route[]>([initialRoute]);
+  // Get initial route from current URL path
+  const getInitialRouteFromPath = (): Route => {
+    const path = window.location.pathname;
+    const routeMap: Record<string, Route> = {
+      '/': 'home',
+      '/login': 'login',
+      '/register': 'register',
+      '/kyc': 'kyc',
+      '/dashboard': 'dashboard',
+      '/properties': 'properties',
+      '/property-detail': 'property-detail',
+      '/wallet': 'wallet',
+      '/demo': 'demo',
+      '/integration-test': 'integration-test',
+      '/about': 'about',
+      '/contact': 'contact'
+    };
+    return routeMap[path] || initialRoute;
+  };
+
+  const [currentRoute, setCurrentRoute] = useState<Route>(getInitialRouteFromPath());
+  const [history, setHistory] = useState<Route[]>([getInitialRouteFromPath()]);
 
   // Handle browser back/forward buttons (simplified)
   useEffect(() => {
@@ -44,6 +64,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
         '/property-detail': 'property-detail',
         '/wallet': 'wallet',
         '/demo': 'demo',
+        '/integration-test': 'integration-test',
         '/about': 'about',
         '/contact': 'contact'
       };
@@ -67,6 +88,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       'property-detail': '/property-detail',
       wallet: '/wallet',
       demo: '/demo',
+      'integration-test': '/integration-test',
       about: '/about',
       contact: '/contact'
     };

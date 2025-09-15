@@ -1,48 +1,103 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Grid3X3, List, Map, Search, MapPin, Star, TrendingUp, Users, Building, Calendar, DollarSign, ArrowRight } from 'lucide-react';
 import { PropertyCard } from '../design-system/cards/PropertyCard';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
+import { PropertyFilterOptions } from '../../services/api/types';
+import type { Property } from '../../services/api/types';
+import { PropertyService } from '../../services/property/PropertyService';
 
 export type ViewMode = 'grid' | 'list' | 'map';
 
-export interface Property {
-  id: number;
-  image: string;
-  title: string;
-  location: string;
-  price: string;
-  tokenPrice: string;
-  totalTokens: number;
-  soldTokens: number;
-  expectedReturn: string;
-  investors: number;
-  type: string;
-  rating: number;
-  yearBuilt: number;
-  status: 'funding' | 'funded' | 'upcoming';
+// Using the Property interface from API types
+export type PropertyGridItem = Property & {
+  funding_percentage?: number;
+  investor_count?: number;
   featured?: boolean;
-}
+  rating?: number;
+};
 
 interface PropertyGridProps {
-  properties: Property[];
+  properties?: PropertyGridItem[];
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   loading?: boolean;
-  onPropertyClick?: (property: Property) => void;
+  onPropertyClick?: (property: PropertyGridItem) => void;
   className?: string;
+  filters?: PropertyFilterOptions;
+  onFiltersChange?: (filters: PropertyFilterOptions) => void;
+  autoLoad?: boolean;
 }
 
 export const PropertyGrid: React.FC<PropertyGridProps> = ({
-  properties,
+  properties: initialProperties,
   viewMode,
   onViewModeChange,
-  loading = false,
+  loading: externalLoading = false,
   onPropertyClick,
-  className
+  className,
+  filters,
+  onFiltersChange,
+  autoLoad = true
 }) => {
-  const [hoveredProperty, setHoveredProperty] = useState<number | null>(null);
+  const [hoveredProperty, setHoveredProperty] = useState<string | null>(null);
+  const [properties, setProperties] = useState<PropertyGridItem[]>(initialProperties || []);
+  const [internalLoading, setInternalLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 12,
+    total: 0,
+    pages: 0
+  });
+
+  const loading = externalLoading || internalLoading;
+
+  // Load properties from API
+  useEffect(() => {
+    if (autoLoad && !initialProperties) {
+      loadProperties();
+    }
+  }, [filters, autoLoad]);
+
+  const loadProperties = async (page: number = 1) => {
+    try {
+      setInternalLoading(true);
+      setError(null);
+
+      const filterOptions = {
+        ...filters,
+        page,
+        limit: pagination.limit
+      };
+
+      const result = await PropertyService.getProperties(filterOptions);
+      
+      // Transform API properties to include additional UI properties
+      const transformedProperties: PropertyGridItem[] = result.properties.map(property => ({
+        ...property,
+        funding_percentage: property.tokens_sold > 0 ? (property.tokens_sold / property.total_tokens) * 100 : 0,
+        investor_count: 0, // This would come from a separate API call or be included in the property data
+        featured: property.status === 'active' && property.tokens_sold < property.total_tokens * 0.5,
+        rating: 4.5 // Mock rating - would come from API
+      }));
+
+      setProperties(page === 1 ? transformedProperties : [...properties, ...transformedProperties]);
+      setPagination(result.pagination);
+    } catch (error: any) {
+      console.error('Failed to load properties:', error);
+      setError(error.message || 'Failed to load properties');
+    } finally {
+      setInternalLoading(false);
+    }
+  };
+
+  const loadMoreProperties = () => {
+    if (pagination.page < pagination.pages && !loading) {
+      loadProperties(pagination.page + 1);
+    }
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -228,6 +283,7 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
                 <PropertyCard
                   {...property}
                   onInvestClick={() => handlePropertyClick(property)}
+                  onQuickView={() => handlePropertyClick(property)}
                   className="h-full"
                 />
               </motion.div>
@@ -258,9 +314,13 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
                 <div className="flex gap-6">
                   <div className="relative flex-shrink-0">
                     <img
-                      src={property.image}
+                      src={property.images && property.images.length > 0 ? property.images[0] : '/images/placeholder-property.jpg'}
                       alt={property.title}
                       className="w-32 h-32 object-cover rounded-lg"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = '/images/placeholder-property.jpg';
+                      }}
                     />
                     {property.featured && (
                       <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-bold px-2 py-1 rounded-full">
@@ -285,12 +345,16 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
                         </h3>
                         <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                           <MapPin className="w-4 h-4" />
-                          <span>{property.location}</span>
+                          <span>{property.city}{property.address ? ', ' + property.address : ''}</span>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm text-gray-500 dark:text-gray-400">{property.type}</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">Built {property.yearBuilt}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {property.property_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {property.year_built ? `Built ${property.year_built}` : 'Year N/A'}
+                        </div>
                       </div>
                     </div>
 
@@ -300,28 +364,44 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
                           <DollarSign className="w-4 h-4 text-gray-500" />
                           <span className="text-xs text-gray-500">Total Value</span>
                         </div>
-                        <div className="font-bold text-gray-900 dark:text-white">{property.price}</div>
+                        <div className="font-bold text-gray-900 dark:text-white">
+                          {new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                          }).format(property.total_value)}
+                        </div>
                       </div>
                       <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3">
                         <div className="flex items-center gap-2 mb-1">
                           <DollarSign className="w-4 h-4 text-emerald-600" />
                           <span className="text-xs text-gray-500">Token Price</span>
                         </div>
-                        <div className="font-bold text-emerald-600 dark:text-emerald-400">{property.tokenPrice}</div>
+                        <div className="font-bold text-emerald-600 dark:text-emerald-400">
+                          {new Intl.NumberFormat('en-US', {
+                            style: 'currency',
+                            currency: 'USD',
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                          }).format(property.token_price)}
+                        </div>
                       </div>
                       <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3">
                         <div className="flex items-center gap-2 mb-1">
                           <TrendingUp className="w-4 h-4 text-emerald-600" />
                           <span className="text-xs text-gray-500">Returns</span>
                         </div>
-                        <div className="font-bold text-emerald-600 dark:text-emerald-400">{property.expectedReturn}</div>
+                        <div className="font-bold text-emerald-600 dark:text-emerald-400">
+                          {property.expected_return ? `${property.expected_return.toFixed(1)}%` : 'TBD'}
+                        </div>
                       </div>
                       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
                         <div className="flex items-center gap-2 mb-1">
                           <Users className="w-4 h-4 text-gray-500" />
                           <span className="text-xs text-gray-500">Investors</span>
                         </div>
-                        <div className="font-bold text-gray-900 dark:text-white">{property.investors}</div>
+                        <div className="font-bold text-gray-900 dark:text-white">{property.investor_count}</div>
                       </div>
                     </div>
 
@@ -329,13 +409,13 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
                       <div className="flex items-center gap-4">
                         <div className="text-sm text-gray-600 dark:text-gray-400">
                           <span className="font-semibold">
-                            {Math.round((property.soldTokens / property.totalTokens) * 100)}% funded
+                            {Math.round((property.tokens_sold / property.total_tokens) * 100)}% funded
                           </span>
                         </div>
                         <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 max-w-32">
                           <div 
                             className="bg-gradient-to-r from-emerald-500 to-green-500 h-2 rounded-full transition-all duration-500"
-                            style={{ width: `${(property.soldTokens / property.totalTokens) * 100}%` }}
+                            style={{ width: `${(property.tokens_sold / property.total_tokens) * 100}%` }}
                           />
                         </div>
                       </div>

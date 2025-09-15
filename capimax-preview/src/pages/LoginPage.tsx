@@ -2,175 +2,42 @@ import React, { useState } from 'react';
 import { AuthLayout } from '../components/auth/AuthLayout';
 import { LoginForm } from '../components/auth/LoginForm';
 import { PasswordRecoveryForm } from '../components/auth/PasswordRecoveryForm';
-import { TwoFactorAuth } from '../components/auth/TwoFactorAuth';
+import { useAuth } from '../contexts/AuthContext';
+import { useRouter } from '../utils/router';
 
-type LoginStep = 'login' | 'forgot-password' | '2fa' | 'success';
-
-interface LoginState {
-  step: LoginStep;
-  email: string;
-  requires2FA: boolean;
-  twoFAMethod: 'sms' | 'authenticator';
-  loading: boolean;
-  error: string | null;
-}
+type LoginStep = 'login' | 'forgot-password' | 'success';
 
 export const LoginPage: React.FC = () => {
-  const [state, setState] = useState<LoginState>({
-    step: 'login',
-    email: '',
-    requires2FA: false,
-    twoFAMethod: 'authenticator',
-    loading: false,
-    error: null
-  });
+  const { state: authState } = useAuth();
+  const { navigate } = useRouter();
+  const [currentStep, setCurrentStep] = useState<LoginStep>('login');
 
-  const handleLogin = async (data: { email: string; password: string; rememberMe: boolean }) => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Simulate different scenarios
-      const scenarios = ['success', '2fa-required', 'error'];
-      const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
-      
-      if (scenario === 'error') {
-        throw new Error('Invalid email or password. Please try again.');
-      }
-      
-      if (scenario === '2fa-required') {
-        setState(prev => ({
-          ...prev,
-          step: '2fa',
-          email: data.email,
-          requires2FA: true,
-          loading: false
-        }));
-        return;
-      }
-      
-      // Success - would typically redirect to dashboard
-      console.log('Login successful:', data);
-      setState(prev => ({ ...prev, step: 'success', loading: false }));
-      
-    } catch (error) {
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        error: error instanceof Error ? error.message : 'Login failed'
-      }));
-    }
-  };
-
-  const handleForgotPassword = async (data: { email: string }) => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log('Password recovery initiated for:', data.email);
-      setState(prev => ({ ...prev, loading: false }));
-      
-    } catch (error) {
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        error: error instanceof Error ? error.message : 'Failed to send recovery email'
-      }));
-    }
-  };
-
-  const handlePasswordReset = async (data: { code: string; password: string }) => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log('Password reset successful');
-      setState(prev => ({ ...prev, loading: false, step: 'login' }));
-      
-    } catch (error) {
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        error: error instanceof Error ? error.message : 'Failed to reset password'
-      }));
-    }
-  };
-
-  const handle2FAVerification = async (code: string) => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (code !== '123456') {
-        throw new Error('Invalid verification code. Please try again.');
-      }
-      
-      console.log('2FA verification successful');
-      setState(prev => ({ ...prev, step: 'success', loading: false }));
-      
-    } catch (error) {
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        error: error instanceof Error ? error.message : '2FA verification failed'
-      }));
-    }
+  const handleSuccess = () => {
+    setCurrentStep('success');
+    console.log('🚀 Login successful - redirecting to dashboard');
+    // Navigate immediately since login was successful
+    navigate('dashboard');
   };
 
   const handleGoToRegister = () => {
-    // In a real app, this would use router navigation
-    console.log('Navigate to register page');
-  };
-
-  const handleBackToLogin = () => {
-    setState(prev => ({
-      ...prev,
-      step: 'login',
-      error: null,
-      requires2FA: false
-    }));
+    navigate('register');
   };
 
   const renderCurrentStep = () => {
-    switch (state.step) {
+    switch (currentStep) {
       case 'login':
         return (
           <LoginForm
-            onSubmit={handleLogin}
-            onForgotPassword={() => setState(prev => ({ ...prev, step: 'forgot-password' }))}
+            onForgotPassword={() => setCurrentStep('forgot-password')}
             onSignUp={handleGoToRegister}
-            loading={state.loading}
-            error={state.error}
+            onSuccess={handleSuccess}
           />
         );
 
       case 'forgot-password':
         return (
           <PasswordRecoveryForm
-            onSubmit={handleForgotPassword}
-            onResetSubmit={handlePasswordReset}
-            onBackToLogin={handleBackToLogin}
-            loading={state.loading}
-            error={state.error}
-          />
-        );
-
-      case '2fa':
-        return (
-          <TwoFactorAuth
-            mode="verify"
-            method={state.twoFAMethod}
-            onVerify={handle2FAVerification}
-            loading={state.loading}
-            error={state.error}
+            onBackToLogin={() => setCurrentStep('login')}
           />
         );
 

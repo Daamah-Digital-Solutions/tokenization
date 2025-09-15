@@ -8,3 +8,4 @@ export { QuickActions, type QuickAction } from './QuickActions';
 export { InvestorDashboard } from './investor/InvestorDashboard';
 export { PropertyOwnerDashboard } from './property-owner/PropertyOwnerDashboard';
 export { AdminDashboard } from './admin/AdminDashboard';
+export { BrokerDashboard } from './broker/BrokerDashboard';

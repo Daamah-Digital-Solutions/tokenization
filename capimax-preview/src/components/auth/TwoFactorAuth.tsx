@@ -7,7 +7,6 @@ import {
   Copy, 
   Check, 
   AlertCircle, 
-  RefreshCw,
   Fingerprint,
   Phone
 } from 'lucide-react';
@@ -70,7 +69,7 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
   method = 'authenticator',
   onSetup,
   onVerify,
-  onDisable,
+  onDisable: _onDisable,
   onMethodChange,
   qrCodeUrl,
   backupCodes = [],
@@ -248,7 +247,10 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
             onChange={(e) => {
               setPhoneInput(e.target.value);
               if (validationErrors.phone) {
-                setValidationErrors(prev => ({ ...prev, phone: undefined }));
+                setValidationErrors(prev => {
+                  const { phone, ...rest } = prev;
+                  return rest;
+                });
               }
             }}
             leftIcon={<Phone className="w-5 h-5" />}

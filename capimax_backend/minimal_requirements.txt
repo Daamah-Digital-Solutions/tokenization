@@ -1,0 +1,29 @@
+# Essential Django requirements
+Django==4.2.7
+
+# API Documentation
+djangorestframework==3.14.0
+
+# CORS handling
+django-cors-headers==4.3.1
+
+# JWT Authentication
+djangorestframework-simplejwt==5.3.0
+
+# Environment variables
+python-decouple==3.8
+
+# Image processing
+Pillow==10.1.0
+
+# Date/time handling
+python-dateutil==2.8.2
+
+# HTTP requests
+requests==2.31.0
+
+# WebSocket support
+channels==4.0.0
+
+# Cryptocurrency support
+web3==6.12.0

@@ -17,12 +17,12 @@ import { Input } from '../design-system/forms/Input';
 import { Select } from '../design-system/forms/Select';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
+import { useAuth } from '../../contexts/AuthContext';
+import { UserRole } from '../../services/api/types';
 
 interface RegisterFormProps {
-  onSubmit?: (data: RegisterData) => void;
   onSignIn?: () => void;
-  loading?: boolean;
-  error?: string;
+  onSuccess?: () => void;
   className?: string;
 }
 
@@ -41,7 +41,7 @@ export interface RegisterData {
   // Account Information
   password: string;
   confirmPassword: string;
-  userType: 'investor' | 'property_owner' | 'broker';
+  userType: UserRole;
   
   // Agreements
   agreeToTerms: boolean;
@@ -50,7 +50,7 @@ export interface RegisterData {
 }
 
 interface ValidationErrors {
-  [key: string]: string;
+  [key: string]: string | undefined;
 }
 
 const STEPS = [
@@ -61,9 +61,9 @@ const STEPS = [
 ];
 
 const USER_TYPES = [
-  { value: 'investor', label: 'Investor - I want to invest in real estate' },
-  { value: 'property_owner', label: 'Property Owner - I want to tokenize my property' },
-  { value: 'broker', label: 'Broker - I want to refer properties and earn commissions' }
+  { value: UserRole.INVESTOR, label: 'Investor - I want to invest in real estate' },
+  { value: UserRole.PROPERTY_OWNER, label: 'Property Owner - I want to tokenize my property' },
+  { value: UserRole.BROKER, label: 'Broker - I want to refer properties and earn commissions' }
 ];
 
 const COUNTRIES = [
@@ -77,12 +77,11 @@ const COUNTRIES = [
 ];
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({
-  onSubmit,
   onSignIn,
-  loading = false,
-  error,
+  onSuccess,
   className
 }) => {
+  const { state, register, clearError } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<RegisterData>({
     firstName: '',
@@ -94,7 +93,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     city: '',
     password: '',
     confirmPassword: '',
-    userType: 'investor',
+    userType: UserRole.INVESTOR,
     agreeToTerms: false,
     agreeToPrivacy: false,
     agreeToMarketing: false
@@ -167,9 +166,28 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     }
   };
 
-  const handleSubmit = () => {
-    if (validateStep(currentStep)) {
-      onSubmit?.(formData);
+  const handleSubmit = async () => {
+    if (!validateStep(currentStep)) {
+      return;
+    }
+
+    try {
+      clearError();
+      await register({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        role: formData.userType,
+        phone: formData.phoneNumber,
+        country: formData.country,
+      });
+
+      // Call success callback if provided
+      onSuccess?.();
+    } catch (error: any) {
+      // Error is handled by the auth context
+      console.error('Registration failed:', error);
     }
   };
 
@@ -268,7 +286,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
               placeholder="Select your country"
               options={COUNTRIES}
               value={formData.country}
-              onChange={(value) => setFormData(prev => ({ ...prev, country: value }))}
+              onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
               errorMessage={validationErrors.country}
               required
             />
@@ -298,7 +316,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
               placeholder="Select your role"
               options={USER_TYPES}
               value={formData.userType}
-              onChange={(value) => setFormData(prev => ({ ...prev, userType: value as any }))}
+              onChange={(e) => setFormData(prev => ({ ...prev, userType: e.target.value as UserRole }))}
               errorMessage={validationErrors.userType}
               required
             />
@@ -466,7 +484,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       </div>
 
       {/* Error Message */}
-      {error && (
+      {state.error && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -474,7 +492,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         >
           <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400" />
           <span className="text-sm text-red-600 dark:text-red-400">
-            {error}
+            {state.error}
           </span>
         </motion.div>
       )}
@@ -510,12 +528,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           variant="primary"
           size="lg"
           onClick={handleNext}
-          isLoading={loading && currentStep === STEPS.length - 1}
-          disabled={loading}
+          isLoading={state.isLoading && currentStep === STEPS.length - 1}
+          disabled={state.isLoading}
           className="flex items-center gap-2"
         >
           {currentStep === STEPS.length - 1 ? (
-            loading ? 'Creating Account...' : 'Create Account'
+            state.isLoading ? 'Creating Account...' : 'Create Account'
           ) : (
             <>
               Next

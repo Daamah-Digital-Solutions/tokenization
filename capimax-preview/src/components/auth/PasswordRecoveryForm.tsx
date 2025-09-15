@@ -139,7 +139,10 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
               onChange={(e) => {
                 setEmail(e.target.value);
                 if (validationErrors.email) {
-                  setValidationErrors(prev => ({ ...prev, email: undefined }));
+                  setValidationErrors(prev => {
+                    const { email, ...rest } = prev;
+                    return rest;
+                  });
                 }
               }}
               leftIcon={<Mail className="w-5 h-5" />}
@@ -191,7 +194,10 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
                   const value = e.target.value.replace(/\D/g, '').slice(0, 6);
                   setCode(value);
                   if (validationErrors.code) {
-                    setValidationErrors(prev => ({ ...prev, code: undefined }));
+                    setValidationErrors(prev => {
+                      const { code, ...rest } = prev;
+                      return rest;
+                    });
                   }
                 }}
                 leftIcon={<Shield className="w-5 h-5" />}
@@ -255,7 +261,10 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
                 onChange={(e) => {
                   setPassword(e.target.value);
                   if (validationErrors.password) {
-                    setValidationErrors(prev => ({ ...prev, password: undefined }));
+                    setValidationErrors(prev => {
+                      const { password, ...rest } = prev;
+                      return rest;
+                    });
                   }
                 }}
                 leftIcon={<Lock className="w-5 h-5" />}
@@ -274,7 +283,10 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
                 onChange={(e) => {
                   setConfirmPassword(e.target.value);
                   if (validationErrors.confirmPassword) {
-                    setValidationErrors(prev => ({ ...prev, confirmPassword: undefined }));
+                    setValidationErrors(prev => {
+                      const { confirmPassword, ...rest } = prev;
+                      return rest;
+                    });
                   }
                 }}
                 leftIcon={<Lock className="w-5 h-5" />}

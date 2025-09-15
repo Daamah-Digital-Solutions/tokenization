@@ -1,0 +1,744 @@
+INFO 2025-08-29 18:31:43,413 autoreload 3664 2100 Watching for file changes with StatReloader
+INFO 2025-08-29 18:33:53,057 autoreload 6760 15404 Watching for file changes with StatReloader
+WARNING 2025-08-29 18:34:27,888 log 6760 5460 Not Found: /
+WARNING 2025-08-29 18:34:27,889 basehttp 6760 5460 "GET / HTTP/1.1" 404 2830
+WARNING 2025-08-29 18:34:28,455 log 6760 5460 Not Found: /favicon.ico
+WARNING 2025-08-29 18:34:28,459 basehttp 6760 5460 "GET /favicon.ico HTTP/1.1" 404 2881
+INFO 2025-08-29 18:34:46,458 basehttp 6760 5460 "GET /admin HTTP/1.1" 301 0
+INFO 2025-08-29 18:34:46,529 basehttp 6760 11840 "GET /admin/ HTTP/1.1" 302 0
+INFO 2025-08-29 18:34:46,668 basehttp 6760 11840 "GET /admin/login/?next=/admin/ HTTP/1.1" 200 4198
+INFO 2025-08-29 18:34:47,553 basehttp 6760 11840 "GET /static/admin/css/base.css HTTP/1.1" 200 21207
+INFO 2025-08-29 18:34:47,673 basehttp 6760 1452 "GET /static/admin/css/dark_mode.css HTTP/1.1" 200 2929
+INFO 2025-08-29 18:34:47,720 basehttp 6760 11840 "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 200 3063
+INFO 2025-08-29 18:34:47,720 basehttp 6760 4644 "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 200 2694
+INFO 2025-08-29 18:34:47,724 basehttp 6760 2308 "GET /static/admin/css/login.css HTTP/1.1" 200 958
+INFO 2025-08-29 18:34:47,753 basehttp 6760 10480 "GET /static/admin/css/responsive.css HTTP/1.1" 200 18533
+INFO 2025-08-29 18:34:47,920 basehttp 6760 11412 "GET /static/admin/js/theme.js HTTP/1.1" 200 1943
+INFO 2025-08-29 18:34:48,267 basehttp 6760 10048 "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 200 3063
+INFO 2025-08-29 18:34:48,271 basehttp 6760 15812 "GET /static/admin/js/theme.js HTTP/1.1" 200 1943
+INFO 2025-08-29 18:35:05,532 basehttp 6760 11412 "POST /admin/login/?next=/admin/ HTTP/1.1" 302 0
+INFO 2025-08-29 18:35:05,561 basehttp 6760 11412 "GET /admin/ HTTP/1.1" 200 7300
+INFO 2025-08-29 18:35:05,628 basehttp 6760 11412 "GET /static/admin/css/dashboard.css HTTP/1.1" 200 441
+INFO 2025-08-29 18:35:05,697 basehttp 6760 11412 "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 200 331
+INFO 2025-08-29 18:35:05,698 basehttp 6760 10480 "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 200 380
+INFO 2025-08-29 18:35:12,430 basehttp 6760 10480 "GET /admin/accounts/user/ HTTP/1.1" 200 14903
+INFO 2025-08-29 18:35:12,461 basehttp 6760 4644 "GET /static/admin/js/core.js HTTP/1.1" 200 5682
+INFO 2025-08-29 18:35:12,470 basehttp 6760 11840 "GET /static/admin/js/jquery.init.js HTTP/1.1" 200 347
+INFO 2025-08-29 18:35:12,472 basehttp 6760 1452 "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 200 8943
+INFO 2025-08-29 18:35:12,479 basehttp 6760 11412 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-29 18:35:12,482 basehttp 6760 2308 "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 200 292458
+INFO 2025-08-29 18:35:12,509 basehttp 6760 11840 "GET /static/admin/js/actions.js HTTP/1.1" 200 7872
+INFO 2025-08-29 18:35:12,520 basehttp 6760 1452 "GET /static/admin/js/urlify.js HTTP/1.1" 200 7887
+INFO 2025-08-29 18:35:12,521 basehttp 6760 11412 "GET /static/admin/js/prepopulate.js HTTP/1.1" 200 1531
+INFO 2025-08-29 18:35:12,525 basehttp 6760 10480 "GET /static/admin/css/changelists.css HTTP/1.1" 200 6566
+INFO 2025-08-29 18:35:12,527 basehttp 6760 4644 "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 200 232381
+INFO 2025-08-29 18:35:12,551 basehttp 6760 10480 "GET /static/admin/img/search.svg HTTP/1.1" 200 458
+INFO 2025-08-29 18:35:12,552 basehttp 6760 11840 "GET /static/admin/img/icon-yes.svg HTTP/1.1" 200 436
+INFO 2025-08-29 18:35:12,571 basehttp 6760 11840 "GET /static/admin/img/icon-no.svg HTTP/1.1" 200 560
+INFO 2025-08-29 18:35:12,624 basehttp 6760 10480 "GET /static/admin/js/filters.js HTTP/1.1" 200 978
+INFO 2025-08-29 18:35:12,692 basehttp 6760 10480 "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 200 331
+INFO 2025-08-29 18:35:12,696 basehttp 6760 11840 "GET /static/admin/img/sorting-icons.svg HTTP/1.1" 200 1097
+INFO 2025-08-29 18:35:12,723 basehttp 6760 15812 "GET /static/admin/js/jquery.init.js HTTP/1.1" 200 347
+INFO 2025-08-29 18:35:12,727 basehttp 6760 10048 "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 200 8943
+INFO 2025-08-29 18:35:12,808 basehttp 6760 10048 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-29 18:35:12,829 basehttp 6760 10048 "GET /static/admin/js/core.js HTTP/1.1" 200 5682
+INFO 2025-08-29 18:35:12,932 basehttp 6760 15812 "GET /static/admin/js/prepopulate.js HTTP/1.1" 200 1531
+INFO 2025-08-29 18:35:12,939 basehttp 6760 10048 "GET /static/admin/js/urlify.js HTTP/1.1" 200 7887
+INFO 2025-08-29 18:35:12,949 basehttp 6760 15964 "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 200 292458
+INFO 2025-08-29 18:35:13,012 basehttp 6760 15964 "GET /static/admin/js/actions.js HTTP/1.1" 200 7872
+INFO 2025-08-29 18:35:14,262 basehttp 6760 10048 "GET /static/admin/js/filters.js HTTP/1.1" 200 978
+INFO 2025-08-29 18:35:14,264 basehttp 6760 15964 "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 200 232381
+INFO 2025-08-29 18:35:16,994 basehttp 6760 11840 "GET /admin/accounts/user/cda76ee5-fb86-46a1-9a12-22fee8cc3d75/change/ HTTP/1.1" 200 41154
+INFO 2025-08-29 18:35:17,098 basehttp 6760 11840 "GET /static/admin/css/forms.css HTTP/1.1" 200 9047
+INFO 2025-08-29 18:35:17,100 basehttp 6760 4644 "GET /static/admin/js/collapse.js HTTP/1.1" 200 1803
+INFO 2025-08-29 18:35:17,100 basehttp 6760 10480 "GET /static/admin/js/calendar.js HTTP/1.1" 200 8466
+INFO 2025-08-29 18:35:17,105 basehttp 6760 1452 "GET /static/admin/js/SelectFilter2.js HTTP/1.1" 200 15292
+INFO 2025-08-29 18:35:17,106 basehttp 6760 2308 "GET /static/admin/js/admin/DateTimeShortcuts.js HTTP/1.1" 200 19319
+INFO 2025-08-29 18:35:17,106 basehttp 6760 11412 "GET /static/admin/js/SelectBox.js HTTP/1.1" 200 4530
+INFO 2025-08-29 18:35:17,124 basehttp 6760 11840 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-29 18:35:17,132 basehttp 6760 2308 "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 200 586
+INFO 2025-08-29 18:35:17,132 basehttp 6760 10480 "GET /static/admin/css/widgets.css HTTP/1.1" 200 11900
+INFO 2025-08-29 18:35:17,142 basehttp 6760 10480 "GET /static/admin/js/change_form.js HTTP/1.1" 200 606
+INFO 2025-08-29 18:35:17,364 basehttp 6760 11412 "GET /static/admin/img/icon-unknown-alt.svg HTTP/1.1" 200 655
+INFO 2025-08-29 18:35:17,364 basehttp 6760 2308 "GET /static/admin/img/icon-unknown.svg HTTP/1.1" 200 655
+INFO 2025-08-29 18:35:17,365 basehttp 6760 10480 "GET /static/admin/img/icon-calendar.svg HTTP/1.1" 200 1086
+INFO 2025-08-29 18:35:17,365 basehttp 6760 11840 "GET /static/admin/img/selector-icons.svg HTTP/1.1" 200 3291
+INFO 2025-08-29 18:35:17,631 basehttp 6760 15964 "GET /static/admin/js/collapse.js HTTP/1.1" 200 1803
+INFO 2025-08-29 18:35:17,691 basehttp 6760 15964 "GET /static/admin/js/calendar.js HTTP/1.1" 200 8466
+INFO 2025-08-29 18:35:17,719 basehttp 6760 15964 "GET /static/admin/js/admin/DateTimeShortcuts.js HTTP/1.1" 200 19319
+INFO 2025-08-29 18:35:17,852 basehttp 6760 15964 "GET /static/admin/js/SelectFilter2.js HTTP/1.1" 200 15292
+INFO 2025-08-29 18:35:17,853 basehttp 6760 10048 "GET /static/admin/js/SelectBox.js HTTP/1.1" 200 4530
+INFO 2025-08-29 18:35:18,541 basehttp 6760 10048 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-29 18:35:18,958 basehttp 6760 15964 "GET /static/admin/js/change_form.js HTTP/1.1" 200 606
+INFO 2025-08-29 18:35:18,959 basehttp 6760 10048 "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 200 586
+INFO 2025-08-29 18:35:51,435 basehttp 6760 10480 "GET /admin/accounts/usersession/ HTTP/1.1" 200 10579
+INFO 2025-08-29 18:35:51,615 basehttp 6760 10480 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-29 18:35:54,473 basehttp 6760 10048 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-29 18:35:54,569 basehttp 6760 10480 "GET /admin/accounts/passwordresettoken/ HTTP/1.1" 200 10583
+INFO 2025-08-29 18:35:54,692 basehttp 6760 10480 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-29 18:35:56,332 basehttp 6760 10480 "GET /admin/accounts/emailverificationtoken/ HTTP/1.1" 200 10627
+INFO 2025-08-29 18:35:56,572 basehttp 6760 10480 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-29 18:35:56,600 basehttp 6760 10048 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-29 18:35:56,836 basehttp 6760 10048 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-29 18:36:23,642 basehttp 6760 10480 "GET /admin/accounts/passwordresettoken/ HTTP/1.1" 200 10583
+INFO 2025-08-29 18:36:26,691 basehttp 6760 10480 "GET /admin/accounts/passwordresettoken/ HTTP/1.1" 200 10583
+INFO 2025-08-29 18:36:26,847 basehttp 6760 10480 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-29 18:36:31,171 basehttp 6760 10048 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-29 18:36:41,212 basehttp 6760 10480 "GET /api/docs/ HTTP/1.1" 200 2240
+INFO 2025-08-29 18:36:41,261 basehttp 6760 10480 "GET /static/drf-yasg/style.css HTTP/1.1" 200 1047
+INFO 2025-08-29 18:36:41,262 basehttp 6760 1452 "GET /static/drf-yasg/insQ.min.js HTTP/1.1" 200 2093
+INFO 2025-08-29 18:36:41,264 basehttp 6760 4644 "GET /static/drf-yasg/immutable.min.js HTTP/1.1" 200 56904
+INFO 2025-08-29 18:36:41,265 basehttp 6760 11840 "GET /static/drf-yasg/swagger-ui-dist/swagger-ui.css HTTP/1.1" 200 145206
+INFO 2025-08-29 18:36:41,267 basehttp 6760 2308 "GET /static/drf-yasg/swagger-ui-dist/swagger-ui-standalone-preset.js HTTP/1.1" 200 322863
+INFO 2025-08-29 18:36:41,270 basehttp 6760 10480 "GET /static/drf-yasg/swagger-ui-init.js HTTP/1.1" 200 15480
+INFO 2025-08-29 18:36:41,278 basehttp 6760 11412 "GET /static/drf-yasg/swagger-ui-dist/swagger-ui-bundle.js HTTP/1.1" 200 1046583
+INFO 2025-08-29 18:36:41,296 basehttp 6760 10048 "GET /static/drf-yasg/insQ.min.js HTTP/1.1" 200 2093
+INFO 2025-08-29 18:36:41,784 basehttp 6760 11412 "GET /static/drf-yasg/swagger-ui-dist/favicon-32x32.png HTTP/1.1" 200 628
+INFO 2025-08-29 18:36:41,944 basehttp 6760 11412 "GET /api/docs/?format=openapi HTTP/1.1" 200 9823
+WARNING 2025-08-29 18:37:42,174 log 6760 11412 Not Found: /api/
+WARNING 2025-08-29 18:37:42,175 basehttp 6760 11412 "GET /api/ HTTP/1.1" 404 2860
+INFO 2025-08-29 18:37:50,326 basehttp 6760 11412 "GET /api/schema HTTP/1.1" 301 0
+INFO 2025-08-29 18:37:50,376 basehttp 6760 10480 "GET /api/schema/ HTTP/1.1" 200 11113
+WARNING 2025-08-29 18:40:26,268 log 6760 10480 Unauthorized: /api/v1/auth/2fa/disable/
+WARNING 2025-08-29 18:40:26,269 basehttp 6760 10480 "POST /api/v1/auth/2fa/disable/ HTTP/1.1" 401 216
+WARNING 2025-08-29 18:40:48,936 log 6760 10480 Bad Request: /api/v1/auth/register/
+WARNING 2025-08-29 18:40:48,936 basehttp 6760 10480 "POST /api/v1/auth/register/ HTTP/1.1" 400 203
+WARNING 2025-08-29 18:42:35,598 log 6760 10480 Not Found: /api/
+WARNING 2025-08-29 18:42:35,599 basehttp 6760 10480 "GET /api/ HTTP/1.1" 404 2860
+INFO 2025-08-29 18:42:46,615 basehttp 6760 10480 "GET /api/schema/ HTTP/1.1" 200 11113
+WARNING 2025-08-29 18:43:04,152 log 6760 10480 Not Found: /api/
+WARNING 2025-08-29 18:43:04,153 basehttp 6760 10480 "GET /api/ HTTP/1.1" 404 2860
+INFO 2025-08-29 18:43:10,018 basehttp 6760 10480 "GET /admin/ HTTP/1.1" 200 7300
+WARNING 2025-08-29 18:47:03,166 basehttp 6760 2068 "GET /static/css/main.css HTTP/1.1" 404 1896
+INFO 2025-08-29 18:47:09,401 basehttp 6760 10480 "GET /admin/accounts/usersession/ HTTP/1.1" 200 10579
+INFO 2025-08-29 18:47:09,502 basehttp 6760 10480 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-29 18:47:11,774 basehttp 6760 10480 "GET /admin/ HTTP/1.1" 200 7300
+INFO 2025-08-29 18:47:13,065 basehttp 6760 10480 "GET /admin/accounts/user/ HTTP/1.1" 200 14903
+INFO 2025-08-29 18:47:13,220 basehttp 6760 10480 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-29 18:47:14,684 basehttp 6760 10480 "GET /admin/accounts/user/cda76ee5-fb86-46a1-9a12-22fee8cc3d75/change/ HTTP/1.1" 200 41154
+INFO 2025-08-29 18:47:14,767 basehttp 6760 10480 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-08-29 18:49:32,511 basehttp 6760 10480 "GET /admin/accounts/user/ HTTP/1.1" 200 14903
+INFO 2025-08-29 18:49:33,146 basehttp 6760 10480 "GET /admin/ HTTP/1.1" 200 7300
+INFO 2025-08-29 18:49:39,045 basehttp 6760 10480 "GET /api/docs HTTP/1.1" 301 0
+INFO 2025-08-29 18:49:39,085 basehttp 6760 13200 "GET /api/docs/ HTTP/1.1" 200 2240
+INFO 2025-08-29 18:49:39,156 basehttp 6760 13200 "GET /static/drf-yasg/style.css HTTP/1.1" 304 0
+INFO 2025-08-29 18:49:39,163 basehttp 6760 13200 "GET /static/drf-yasg/swagger-ui-init.js HTTP/1.1" 304 0
+INFO 2025-08-29 18:49:39,172 basehttp 6760 5300 "GET /static/drf-yasg/swagger-ui-dist/swagger-ui.css HTTP/1.1" 304 0
+INFO 2025-08-29 18:49:39,176 basehttp 6760 4708 "GET /static/drf-yasg/swagger-ui-dist/swagger-ui-bundle.js HTTP/1.1" 304 0
+INFO 2025-08-29 18:49:39,292 basehttp 6760 12152 "GET /static/drf-yasg/swagger-ui-dist/swagger-ui-standalone-preset.js HTTP/1.1" 304 0
+INFO 2025-08-29 18:49:39,365 basehttp 6760 16052 "GET /static/drf-yasg/insQ.min.js HTTP/1.1" 304 0
+INFO 2025-08-29 18:49:39,482 basehttp 6760 8000 "GET /static/drf-yasg/immutable.min.js HTTP/1.1" 304 0
+INFO 2025-08-29 18:49:39,881 basehttp 6760 8000 "GET /static/drf-yasg/swagger-ui-dist/favicon-32x32.png HTTP/1.1" 304 0
+INFO 2025-08-29 18:49:40,103 basehttp 6760 8000 "GET /api/docs/?format=openapi HTTP/1.1" 200 9823
+INFO 2025-08-29 18:50:06,085 basehttp 6760 8000 "GET /api/redoc HTTP/1.1" 301 0
+INFO 2025-08-29 18:50:06,136 basehttp 6760 16052 "GET /api/redoc/ HTTP/1.1" 200 953
+INFO 2025-08-29 18:50:06,220 basehttp 6760 16052 "GET /static/drf-yasg/redoc-init.js HTTP/1.1" 200 2566
+INFO 2025-08-29 18:50:06,231 basehttp 6760 12152 "GET /static/drf-yasg/redoc/redoc.min.js HTTP/1.1" 200 1042511
+INFO 2025-08-29 18:50:06,614 basehttp 6760 12152 "GET /api/redoc/?format=openapi HTTP/1.1" 200 9823
+INFO 2025-08-29 18:50:06,616 basehttp 6760 16052 "GET /static/drf-yasg/redoc/redoc-logo.png HTTP/1.1" 200 4969
+INFO 2025-08-29 18:54:06,879 autoreload 6760 15404 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\payments\admin.py changed, reloading.
+INFO 2025-08-29 18:54:10,911 autoreload 6884 3320 Watching for file changes with StatReloader
+INFO 2025-08-29 18:58:04,683 autoreload 6884 3320 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\capimax_backend\urls.py changed, reloading.
+INFO 2025-08-29 18:58:10,257 autoreload 1516 9948 Watching for file changes with StatReloader
+INFO 2025-08-29 18:58:44,096 autoreload 1516 9948 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\payments\views.py changed, reloading.
+INFO 2025-08-29 18:58:49,386 autoreload 7000 1932 Watching for file changes with StatReloader
+WARNING 2025-08-29 18:59:43,811 basehttp 7000 3484 "GET /static/css/main.css HTTP/1.1" 404 1896
+WARNING 2025-08-29 18:59:43,987 log 7000 920 Not Found: /logo192.png
+WARNING 2025-08-29 18:59:43,989 basehttp 7000 920 "GET /logo192.png HTTP/1.1" 404 2997
+INFO 2025-08-29 19:00:36,634 autoreload 9028 1628 Watching for file changes with StatReloader
+WARNING 2025-08-29 19:03:22,108 basehttp 9028 476 "GET /static/css/main.css HTTP/1.1" 404 1896
+WARNING 2025-08-29 19:03:22,580 log 9028 3336 Not Found: /logo192.png
+WARNING 2025-08-29 19:03:22,581 basehttp 9028 3336 "GET /logo192.png HTTP/1.1" 404 2997
+WARNING 2025-08-29 19:03:22,687 log 9028 11560 Not Found: /logo512.png
+WARNING 2025-08-29 19:03:22,688 basehttp 9028 11560 "GET /logo512.png HTTP/1.1" 404 2997
+WARNING 2025-08-29 19:05:54,345 basehttp 9028 14608 "GET /static/css/main.css HTTP/1.1" 404 1896
+INFO 2025-08-29 19:07:24,005 autoreload 9028 1628 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\investments\admin.py changed, reloading.
+INFO 2025-08-29 19:07:27,276 autoreload 14192 2952 Watching for file changes with StatReloader
+INFO 2025-08-29 19:09:33,410 autoreload 14192 2952 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\capimax_backend\urls.py changed, reloading.
+INFO 2025-08-29 19:09:41,266 autoreload 5180 15492 Watching for file changes with StatReloader
+WARNING 2025-08-29 19:11:45,299 log 5180 1184 Unauthorized: /api/v1/investments/
+WARNING 2025-08-29 19:11:45,300 basehttp 5180 1184 "GET /api/v1/investments/ HTTP/1.1" 401 210
+INFO 2025-08-29 19:11:56,342 basehttp 5180 2864 "GET /api/docs/ HTTP/1.1" 200 2240
+INFO 2025-08-29 19:11:56,342 basehttp 5180 2864 - Broken pipe from ('127.0.0.1', 62445)
+WARNING 2025-08-29 19:12:18,225 basehttp 5180 2780 "GET /static/css/main.css HTTP/1.1" 404 1896
+INFO 2025-08-29 19:14:56,496 autoreload 5180 15492 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\kyc\models.py changed, reloading.
+INFO 2025-08-29 19:15:02,362 autoreload 8720 14032 Watching for file changes with StatReloader
+INFO 2025-08-29 19:19:12,917 autoreload 8720 14032 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\kyc\models.py changed, reloading.
+INFO 2025-08-29 19:19:15,857 autoreload 10032 14368 Watching for file changes with StatReloader
+INFO 2025-08-29 19:21:15,993 autoreload 10032 14368 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\capimax_backend\urls.py changed, reloading.
+INFO 2025-08-29 19:21:19,304 autoreload 8840 14660 Watching for file changes with StatReloader
+INFO 2025-08-29 19:21:31,796 autoreload 8840 14660 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\kyc\urls.py changed, reloading.
+INFO 2025-08-29 19:21:34,713 autoreload 8316 11620 Watching for file changes with StatReloader
+INFO 2025-08-29 19:21:48,147 autoreload 8316 11620 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\kyc\serializers.py changed, reloading.
+INFO 2025-08-29 19:21:51,148 autoreload 920 8696 Watching for file changes with StatReloader
+INFO 2025-08-29 19:21:59,952 autoreload 920 8696 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\kyc\serializers.py changed, reloading.
+INFO 2025-08-29 19:22:02,899 autoreload 11652 6760 Watching for file changes with StatReloader
+INFO 2025-08-29 19:22:14,090 autoreload 11652 6760 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\kyc\views.py changed, reloading.
+INFO 2025-08-29 19:22:16,935 autoreload 9048 3464 Watching for file changes with StatReloader
+WARNING 2025-08-30 09:35:05,657 log 9048 6380 Unauthorized: /api/v1/kyc/status/
+WARNING 2025-08-30 09:35:05,658 basehttp 9048 6380 "GET /api/v1/kyc/status/ HTTP/1.1" 401 209
+ERROR 2025-08-30 09:35:44,566 exception 17776 9992 Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "C:\Users\Da3m\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Da3m\AppData\Roaming\Python\Python313\site-packages\django\utils\deprecation.py", line 133, in __call__
+    response = self.process_request(request)
+  File "C:\Users\Da3m\AppData\Roaming\Python\Python313\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+  File "C:\Users\Da3m\AppData\Roaming\Python\Python313\site-packages\django\http\request.py", line 150, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+WARNING 2025-08-30 09:36:02,738 log 17776 9992 Bad Request: /api/v1/kyc/status/
+ERROR 2025-08-30 09:36:02,740 exception 17776 9992 Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "C:\Users\Da3m\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Da3m\AppData\Roaming\Python\Python313\site-packages\django\utils\deprecation.py", line 133, in __call__
+    response = self.process_request(request)
+  File "C:\Users\Da3m\AppData\Roaming\Python\Python313\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+  File "C:\Users\Da3m\AppData\Roaming\Python\Python313\site-packages\django\http\request.py", line 150, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+WARNING 2025-08-30 09:36:02,956 log 17776 9992 Bad Request: /api/v1/kyc/requirements/
+ERROR 2025-08-30 09:36:02,958 exception 17776 9992 Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "C:\Users\Da3m\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Da3m\AppData\Roaming\Python\Python313\site-packages\django\utils\deprecation.py", line 133, in __call__
+    response = self.process_request(request)
+  File "C:\Users\Da3m\AppData\Roaming\Python\Python313\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+  File "C:\Users\Da3m\AppData\Roaming\Python\Python313\site-packages\django\http\request.py", line 150, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+WARNING 2025-08-30 09:36:03,141 log 17776 9992 Bad Request: /api/v1/kyc/documents/upload/
+INFO 2025-08-30 14:52:53,778 autoreload 9048 3464 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\construction\models.py changed, reloading.
+INFO 2025-08-30 14:52:58,348 autoreload 9472 8388 Watching for file changes with StatReloader
+INFO 2025-08-30 14:54:46,313 autoreload 9472 8388 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\properties\models.py changed, reloading.
+INFO 2025-08-30 14:54:49,556 autoreload 7444 3956 Watching for file changes with StatReloader
+INFO 2025-08-30 15:06:11,945 autoreload 7444 3956 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\construction\models.py changed, reloading.
+INFO 2025-08-30 15:06:14,828 autoreload 7032 8804 Watching for file changes with StatReloader
+INFO 2025-08-30 15:14:23,632 autoreload 7032 8804 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\notifications\models.py changed, reloading.
+INFO 2025-08-30 15:14:27,160 autoreload 16832 5184 Watching for file changes with StatReloader
+INFO 2025-08-30 15:21:41,511 autoreload 16832 5184 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\capimax_backend\urls.py changed, reloading.
+INFO 2025-08-30 15:21:45,960 autoreload 17092 15328 Watching for file changes with StatReloader
+INFO 2025-08-30 15:22:58,216 autoreload 17092 15328 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\notifications\admin.py changed, reloading.
+INFO 2025-08-30 15:23:02,209 autoreload 9256 17784 Watching for file changes with StatReloader
+INFO 2025-08-30 15:26:06,451 autoreload 9256 17784 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\core\permissions.py changed, reloading.
+INFO 2025-08-30 15:26:10,374 autoreload 18216 17108 Watching for file changes with StatReloader
+INFO 2025-08-30 15:26:23,818 autoreload 18216 17108 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\core\permissions.py changed, reloading.
+INFO 2025-08-30 15:26:27,352 autoreload 16376 16884 Watching for file changes with StatReloader
+INFO 2025-08-30 15:26:37,346 autoreload 16376 16884 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\notifications\views.py changed, reloading.
+INFO 2025-08-30 15:26:41,226 autoreload 8592 16060 Watching for file changes with StatReloader
+INFO 2025-08-30 15:27:34,009 autoreload 15648 11732 Watching for file changes with StatReloader
+INFO 2025-08-30 15:32:20,540 autoreload 15648 11732 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\broker\models.py changed, reloading.
+INFO 2025-08-30 15:32:24,552 autoreload 16860 1400 Watching for file changes with StatReloader
+INFO 2025-08-30 15:33:57,184 autoreload 16860 1400 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\analytics\models.py changed, reloading.
+INFO 2025-08-30 15:34:01,336 autoreload 18124 1544 Watching for file changes with StatReloader
+INFO 2025-08-30 15:40:40,447 autoreload 18124 1544 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\capimax_backend\urls.py changed, reloading.
+INFO 2025-08-30 15:40:44,447 autoreload 12112 1876 Watching for file changes with StatReloader
+INFO 2025-08-30 15:40:55,739 autoreload 12112 1876 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\analytics\models.py changed, reloading.
+INFO 2025-08-30 15:40:59,281 autoreload 18152 19436 Watching for file changes with StatReloader
+INFO 2025-08-30 15:41:57,743 autoreload 18152 19436 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\broker\admin.py changed, reloading.
+INFO 2025-08-30 15:42:01,305 autoreload 5232 17676 Watching for file changes with StatReloader
+INFO 2025-08-30 15:42:58,321 autoreload 5232 17676 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\analytics\admin.py changed, reloading.
+INFO 2025-08-30 15:43:01,746 autoreload 4088 11216 Watching for file changes with StatReloader
+INFO 2025-08-30 15:43:28,351 autoreload 4088 11216 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\analytics\models.py changed, reloading.
+INFO 2025-08-30 15:43:32,347 autoreload 19204 7980 Watching for file changes with StatReloader
+INFO 2025-08-30 15:43:39,654 autoreload 19204 7980 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\analytics\models.py changed, reloading.
+INFO 2025-08-30 15:43:43,086 autoreload 16992 6980 Watching for file changes with StatReloader
+INFO 2025-08-30 15:44:05,740 autoreload 16992 6980 C:\Users\Da3m\Downloads\Tokenization - Django\capimax_backend\analytics\admin.py changed, reloading.
+INFO 2025-08-30 15:44:08,772 autoreload 2268 11724 Watching for file changes with StatReloader
+INFO 2025-09-06 08:19:02,857 autoreload 13284 10144 Watching for file changes with StatReloader
+INFO 2025-09-06 08:19:40,273 basehttp 13284 8248 "GET /admin/ HTTP/1.1" 302 0
+INFO 2025-09-06 08:19:40,512 basehttp 13284 8248 "GET /admin/login/?next=/admin/ HTTP/1.1" 200 4182
+INFO 2025-09-06 08:19:40,647 basehttp 13284 8248 "GET /static/admin/css/base.css HTTP/1.1" 200 21207
+INFO 2025-09-06 08:19:40,686 basehttp 13284 12684 "GET /static/admin/css/nav_sidebar.css HTTP/1.1" 200 2694
+INFO 2025-09-06 08:19:40,694 basehttp 13284 14244 "GET /static/admin/css/dark_mode.css HTTP/1.1" 200 2929
+INFO 2025-09-06 08:19:40,756 basehttp 13284 14244 "GET /static/admin/css/login.css HTTP/1.1" 200 958
+INFO 2025-09-06 08:19:40,761 basehttp 13284 12684 "GET /static/admin/css/responsive.css HTTP/1.1" 200 18533
+INFO 2025-09-06 08:19:40,776 basehttp 13284 8248 "GET /static/admin/js/theme.js HTTP/1.1" 200 1943
+INFO 2025-09-06 08:19:40,815 basehttp 13284 8248 "GET /static/admin/js/nav_sidebar.js HTTP/1.1" 200 3063
+WARNING 2025-09-06 08:19:40,936 log 13284 8248 Not Found: /favicon.ico
+WARNING 2025-09-06 08:19:40,937 basehttp 13284 8248 "GET /favicon.ico HTTP/1.1" 404 3803
+INFO 2025-09-06 08:19:41,426 basehttp 13284 8248 "GET /admin/ HTTP/1.1" 302 0
+INFO 2025-09-06 08:19:41,435 basehttp 13284 8248 "GET /admin/login/?next=/admin/ HTTP/1.1" 200 4182
+INFO 2025-09-06 08:25:57,705 basehttp 13284 13304 "POST /admin/login/?next=/admin/ HTTP/1.1" 302 0
+INFO 2025-09-06 08:25:57,791 basehttp 13284 13304 "GET /admin/ HTTP/1.1" 200 24746
+INFO 2025-09-06 08:25:57,835 basehttp 13284 13304 "GET /static/admin/css/dashboard.css HTTP/1.1" 200 441
+INFO 2025-09-06 08:25:57,924 basehttp 13284 13304 "GET /static/admin/img/icon-addlink.svg HTTP/1.1" 200 331
+INFO 2025-09-06 08:25:57,926 basehttp 13284 13100 "GET /static/admin/img/icon-changelink.svg HTTP/1.1" 200 380
+INFO 2025-09-06 08:26:13,730 basehttp 13284 13100 "GET /admin/notifications/emailtemplate/ HTTP/1.1" 200 23640
+INFO 2025-09-06 08:26:13,776 basehttp 13284 13100 "GET /static/admin/css/changelists.css HTTP/1.1" 200 6566
+INFO 2025-09-06 08:26:13,799 basehttp 13284 13304 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-09-06 08:26:13,831 basehttp 13284 14256 "GET /static/admin/js/jquery.init.js HTTP/1.1" 200 347
+INFO 2025-09-06 08:26:13,850 basehttp 13284 13304 "GET /static/admin/js/urlify.js HTTP/1.1" 200 7887
+INFO 2025-09-06 08:26:13,962 basehttp 13284 1716 "GET /static/admin/js/core.js HTTP/1.1" 200 5682
+INFO 2025-09-06 08:26:13,981 basehttp 13284 1716 "GET /static/admin/img/search.svg HTTP/1.1" 200 458
+INFO 2025-09-06 08:26:13,994 basehttp 13284 14256 "GET /static/admin/js/prepopulate.js HTTP/1.1" 200 1531
+INFO 2025-09-06 08:26:14,023 basehttp 13284 13100 "GET /static/admin/js/actions.js HTTP/1.1" 200 7872
+INFO 2025-09-06 08:26:14,117 basehttp 13284 7480 "GET /static/admin/js/admin/RelatedObjectLookups.js HTTP/1.1" 200 8943
+INFO 2025-09-06 08:26:14,179 basehttp 13284 13304 "GET /static/admin/js/vendor/xregexp/xregexp.js HTTP/1.1" 200 232381
+INFO 2025-09-06 08:26:14,211 basehttp 13284 13304 "GET /static/admin/js/filters.js HTTP/1.1" 200 978
+INFO 2025-09-06 08:26:14,249 basehttp 13284 7628 "GET /static/admin/js/vendor/jquery/jquery.js HTTP/1.1" 200 292458
+INFO 2025-09-06 08:26:14,300 basehttp 13284 7628 "GET /static/admin/img/tooltag-add.svg HTTP/1.1" 200 331
+INFO 2025-09-06 08:26:16,426 basehttp 13284 7628 "GET /admin/ HTTP/1.1" 200 24746
+INFO 2025-09-06 08:26:18,945 basehttp 13284 7628 "GET /admin/notifications/emailtemplate/ HTTP/1.1" 200 23640
+INFO 2025-09-06 08:26:19,001 basehttp 13284 7628 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-09-06 08:26:22,505 basehttp 13284 7628 "GET /admin/notifications/emailtemplate/?template_type__exact=welcome HTTP/1.1" 200 24124
+INFO 2025-09-06 08:26:22,551 basehttp 13284 7628 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-09-06 08:26:25,093 basehttp 13284 7628 "GET /admin/notifications/emailtemplate/add/?_changelist_filters=template_type__exact%3Dwelcome HTTP/1.1" 200 28675
+INFO 2025-09-06 08:26:25,151 basehttp 13284 13100 "GET /admin/jsi18n/ HTTP/1.1" 200 3343
+INFO 2025-09-06 08:26:25,152 basehttp 13284 7628 "GET /static/admin/css/forms.css HTTP/1.1" 200 9047
+INFO 2025-09-06 08:26:25,153 basehttp 13284 7480 "GET /static/admin/js/prepopulate_init.js HTTP/1.1" 200 586
+INFO 2025-09-06 08:26:25,153 basehttp 13284 13304 "GET /static/admin/js/collapse.js HTTP/1.1" 200 1803
+INFO 2025-09-06 08:26:25,172 basehttp 13284 13304 "GET /static/admin/css/widgets.css HTTP/1.1" 200 11900
+INFO 2025-09-06 08:26:25,175 basehttp 13284 7628 "GET /static/admin/js/change_form.js HTTP/1.1" 200 606
+INFO 2025-09-06 08:26:31,722 basehttp 13284 13304 "GET /admin/notifications/emailtemplate/?template_type__exact=welcome HTTP/1.1" 200 24124
+WARNING 2025-09-06 08:33:51,415 log 13284 4208 Not Found: /api/health/
+WARNING 2025-09-06 08:33:51,416 basehttp 13284 4208 "GET /api/health/ HTTP/1.1" 404 3803
+WARNING 2025-09-06 08:33:59,142 log 13284 3972 Not Found: /api/v1/auth/health/
+WARNING 2025-09-06 08:33:59,143 basehttp 13284 3972 "GET /api/v1/auth/health/ HTTP/1.1" 404 9640
+WARNING 2025-09-06 08:34:07,213 log 13284 2868 Bad Request: /api/v1/auth/register/
+WARNING 2025-09-06 08:34:07,213 basehttp 13284 2868 "POST /api/v1/auth/register/ HTTP/1.1" 400 199
+WARNING 2025-09-06 08:34:16,100 log 13284 7768 Bad Request: /api/v1/auth/register/
+WARNING 2025-09-06 08:34:16,101 basehttp 13284 7768 "POST /api/v1/auth/register/ HTTP/1.1" 400 190
+WARNING 2025-09-06 08:34:24,946 log 13284 12900 Bad Request: /api/v1/auth/register/
+WARNING 2025-09-06 08:34:24,946 basehttp 13284 12900 "POST /api/v1/auth/register/ HTTP/1.1" 400 190
+INFO 2025-09-06 08:34:48,998 autoreload 13284 10144 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\accounts\models.py changed, reloading.
+INFO 2025-09-06 08:34:50,766 autoreload 14308 14124 Watching for file changes with StatReloader
+INFO 2025-09-06 08:35:01,485 basehttp 14308 14236 "POST /api/v1/auth/register/ HTTP/1.1" 201 608
+INFO 2025-09-06 08:35:10,658 basehttp 14308 408 "POST /api/v1/auth/login/ HTTP/1.1" 200 1260
+INFO 2025-09-06 08:36:45,525 basehttp 14308 1236 "GET /api/v1/properties/ HTTP/1.1" 200 100
+INFO 2025-09-06 08:40:09,465 basehttp 14308 9060 "OPTIONS /api/auth/register HTTP/1.1" 200 0
+WARNING 2025-09-06 08:40:09,494 log 14308 9060 Not Found: /api/auth/register
+WARNING 2025-09-06 08:40:09,494 basehttp 14308 9060 "POST /api/auth/register HTTP/1.1" 404 3822
+WARNING 2025-09-06 08:40:17,014 log 14308 9060 Not Found: /api/auth/register
+WARNING 2025-09-06 08:40:17,014 basehttp 14308 9060 "POST /api/auth/register HTTP/1.1" 404 3822
+WARNING 2025-09-06 08:42:28,315 log 14308 1732 Bad Request: /api/v1/auth/register/
+WARNING 2025-09-06 08:42:28,315 basehttp 14308 1732 "POST /api/v1/auth/register/ HTTP/1.1" 400 382
+INFO 2025-09-06 08:43:15,368 basehttp 14308 12840 "POST /api/v1/auth/register/ HTTP/1.1" 201 609
+INFO 2025-09-06 08:44:34,201 basehttp 14308 9624 "POST /api/v1/auth/login/ HTTP/1.1" 200 1260
+INFO 2025-09-06 08:48:18,332 basehttp 14308 14216 "OPTIONS /api/v1/auth/register/ HTTP/1.1" 200 0
+INFO 2025-09-06 08:48:23,533 basehttp 14308 14216 "POST /api/v1/auth/register/ HTTP/1.1" 201 610
+INFO 2025-09-06 09:16:07,114 autoreload 14308 14124 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\capimax_backend\urls.py changed, reloading.
+INFO 2025-09-06 09:16:08,677 autoreload 5932 860 Watching for file changes with StatReloader
+INFO 2025-09-06 09:16:32,151 autoreload 5932 860 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\properties\urls.py changed, reloading.
+INFO 2025-09-06 09:16:33,569 autoreload 14288 14128 Watching for file changes with StatReloader
+INFO 2025-09-06 09:16:47,813 autoreload 14288 14128 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\accounts\urls.py changed, reloading.
+INFO 2025-09-06 09:16:49,181 autoreload 9284 11704 Watching for file changes with StatReloader
+INFO 2025-09-06 09:20:01,433 autoreload 9284 11704 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\properties\views.py changed, reloading.
+INFO 2025-09-06 09:20:02,850 autoreload 404 9572 Watching for file changes with StatReloader
+INFO 2025-09-06 09:21:07,301 autoreload 4776 6160 Watching for file changes with StatReloader
+INFO 2025-09-06 09:21:15,903 autoreload 4776 6160 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\investments\views.py changed, reloading.
+INFO 2025-09-06 09:21:17,272 autoreload 12464 12860 Watching for file changes with StatReloader
+INFO 2025-09-06 09:21:30,463 autoreload 12464 12860 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\investments\urls.py changed, reloading.
+INFO 2025-09-06 09:21:31,725 autoreload 6632 5808 Watching for file changes with StatReloader
+INFO 2025-09-06 09:21:36,976 autoreload 6632 5808 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\investments\urls.py changed, reloading.
+INFO 2025-09-06 09:21:38,337 autoreload 2500 8480 Watching for file changes with StatReloader
+INFO 2025-09-06 09:22:01,567 basehttp 2500 10840 "GET /api/v1/properties/market/insights/ HTTP/1.1" 200 718
+WARNING 2025-09-06 09:22:08,745 log 2500 3088 Unauthorized: /api/v1/investments/collaborative/
+WARNING 2025-09-06 09:22:08,746 basehttp 2500 3088 "GET /api/v1/investments/collaborative/ HTTP/1.1" 401 224
+WARNING 2025-09-06 09:25:07,617 log 2500 7280 Unauthorized: /api/v1/dashboard/stats/
+WARNING 2025-09-06 09:25:07,617 basehttp 2500 7280 "GET /api/v1/dashboard/stats/ HTTP/1.1" 401 214
+INFO 2025-09-06 09:29:20,468 basehttp 2500 10132 "OPTIONS /api/v1/auth/login/ HTTP/1.1" 200 0
+INFO 2025-09-06 09:29:22,055 basehttp 2500 10132 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+WARNING 2025-09-06 09:30:31,397 log 2500 13652 Unauthorized: /api/v1/dashboard/stats/
+WARNING 2025-09-06 09:30:31,398 basehttp 2500 13652 "GET /api/v1/dashboard/stats/ HTTP/1.1" 401 214
+WARNING 2025-09-06 09:30:31,401 log 2500 7280 Unauthorized: /api/v1/investments/transactions/
+WARNING 2025-09-06 09:30:31,401 basehttp 2500 7280 "GET /api/v1/investments/transactions/?limit=5&ordering=-created_at HTTP/1.1" 401 223
+WARNING 2025-09-06 09:30:31,411 log 2500 10132 Not Found: /api/users/profile
+WARNING 2025-09-06 09:30:31,411 basehttp 2500 10132 "GET /api/users/profile HTTP/1.1" 404 3938
+WARNING 2025-09-06 09:30:31,421 log 2500 7280 Not Found: /api/users/profile
+WARNING 2025-09-06 09:30:31,421 basehttp 2500 7280 "GET /api/users/profile HTTP/1.1" 404 3938
+INFO 2025-09-06 09:30:31,449 basehttp 2500 7404 "GET /api/v1/properties/market/insights/ HTTP/1.1" 200 718
+INFO 2025-09-06 09:31:52,580 basehttp 2500 7404 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+WARNING 2025-09-06 09:31:55,262 log 2500 7404 Not Found: /api/users/profile
+INFO 2025-09-06 09:31:55,265 basehttp 2500 10132 "GET /api/v1/properties/market/insights/ HTTP/1.1" 200 718
+WARNING 2025-09-06 09:31:55,278 basehttp 2500 7404 "GET /api/users/profile HTTP/1.1" 404 3938
+WARNING 2025-09-06 09:31:55,279 log 2500 7280 Unauthorized: /api/v1/dashboard/stats/
+WARNING 2025-09-06 09:31:55,283 log 2500 13652 Unauthorized: /api/v1/investments/transactions/
+WARNING 2025-09-06 09:31:55,283 basehttp 2500 13652 "GET /api/v1/investments/transactions/?limit=5&ordering=-created_at HTTP/1.1" 401 223
+WARNING 2025-09-06 09:31:55,284 basehttp 2500 7280 "GET /api/v1/dashboard/stats/ HTTP/1.1" 401 214
+WARNING 2025-09-06 09:31:55,342 log 2500 10132 Not Found: /api/users/profile
+WARNING 2025-09-06 09:31:55,342 basehttp 2500 10132 "GET /api/users/profile HTTP/1.1" 404 3938
+INFO 2025-09-06 09:32:27,329 basehttp 2500 10132 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+WARNING 2025-09-06 09:32:30,003 log 2500 7404 Unauthorized: /api/v1/dashboard/stats/
+WARNING 2025-09-06 09:32:30,004 basehttp 2500 7404 "GET /api/v1/dashboard/stats/ HTTP/1.1" 401 214
+WARNING 2025-09-06 09:32:30,013 log 2500 10132 Not Found: /api/users/profile
+WARNING 2025-09-06 09:32:30,013 log 2500 7280 Unauthorized: /api/v1/investments/transactions/
+WARNING 2025-09-06 09:32:30,017 basehttp 2500 10132 "GET /api/users/profile HTTP/1.1" 404 3938
+WARNING 2025-09-06 09:32:30,019 basehttp 2500 7280 "GET /api/v1/investments/transactions/?limit=5&ordering=-created_at HTTP/1.1" 401 223
+INFO 2025-09-06 09:32:30,026 basehttp 2500 13652 "GET /api/v1/properties/market/insights/ HTTP/1.1" 200 718
+WARNING 2025-09-06 09:32:30,073 log 2500 7280 Not Found: /api/users/profile
+WARNING 2025-09-06 09:32:30,074 basehttp 2500 7280 "GET /api/users/profile HTTP/1.1" 404 3938
+INFO 2025-09-06 09:37:30,650 basehttp 2500 7280 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-06 09:37:53,097 basehttp 2500 7280 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-06 09:38:39,946 basehttp 2500 7280 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-06 09:38:50,716 basehttp 2500 7280 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-06 09:38:57,869 basehttp 2500 7280 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-06 09:42:13,742 basehttp 2500 12604 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-06 09:42:23,630 basehttp 2500 12604 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-06 09:42:31,703 basehttp 2500 12604 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-06 09:43:07,008 basehttp 2500 12604 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-06 09:43:19,799 basehttp 2500 12604 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-06 09:45:32,301 basehttp 2500 12604 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-06 09:45:44,220 basehttp 2500 12604 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+WARNING 2025-09-06 10:06:47,323 log 2500 8816 Not Found: /
+WARNING 2025-09-06 10:06:47,324 basehttp 2500 8816 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:06:49,960 log 2500 8832 Not Found: /
+WARNING 2025-09-06 10:06:49,960 basehttp 2500 8832 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:06:53,310 log 2500 13716 Not Found: /
+WARNING 2025-09-06 10:06:53,311 basehttp 2500 13716 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:06:56,660 log 2500 8804 Not Found: /
+WARNING 2025-09-06 10:06:56,661 basehttp 2500 8804 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:06:59,998 log 2500 7088 Not Found: /
+WARNING 2025-09-06 10:06:59,998 basehttp 2500 7088 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:07:03,336 log 2500 2668 Not Found: /
+WARNING 2025-09-06 10:07:03,336 basehttp 2500 2668 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:07:06,689 log 2500 13308 Not Found: /
+WARNING 2025-09-06 10:07:06,690 basehttp 2500 13308 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:28:05,928 log 2500 13776 Not Found: /
+WARNING 2025-09-06 10:28:05,929 basehttp 2500 13776 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:28:05,959 log 2500 5604 Not Found: /
+WARNING 2025-09-06 10:28:05,959 basehttp 2500 5604 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:28:09,283 log 2500 12388 Not Found: /
+WARNING 2025-09-06 10:28:09,283 basehttp 2500 12388 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:28:12,612 log 2500 12492 Not Found: /
+WARNING 2025-09-06 10:28:12,613 basehttp 2500 12492 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:28:15,963 log 2500 1620 Not Found: /
+WARNING 2025-09-06 10:28:15,964 basehttp 2500 1620 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:28:19,300 log 2500 4044 Not Found: /
+WARNING 2025-09-06 10:28:19,300 basehttp 2500 4044 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:28:58,802 log 2500 3588 Not Found: /
+WARNING 2025-09-06 10:28:58,807 basehttp 2500 3588 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:28:58,838 log 2500 9464 Not Found: /
+WARNING 2025-09-06 10:28:58,839 basehttp 2500 9464 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:29:01,609 log 2500 13108 Not Found: /
+WARNING 2025-09-06 10:29:01,610 basehttp 2500 13108 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:29:03,112 log 2500 8332 Not Found: /
+WARNING 2025-09-06 10:29:03,115 basehttp 2500 8332 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:29:03,187 log 2500 14324 Not Found: /
+WARNING 2025-09-06 10:29:03,188 basehttp 2500 14324 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:29:05,659 log 2500 13812 Not Found: /
+WARNING 2025-09-06 10:29:05,660 basehttp 2500 13812 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:29:05,697 log 2500 4552 Not Found: /
+WARNING 2025-09-06 10:29:05,698 basehttp 2500 4552 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:29:09,028 log 2500 4948 Not Found: /
+WARNING 2025-09-06 10:29:09,028 basehttp 2500 4948 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:29:12,686 log 2500 9288 Not Found: /
+WARNING 2025-09-06 10:29:12,686 basehttp 2500 9288 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:29:16,665 log 2500 13716 Not Found: /
+WARNING 2025-09-06 10:29:16,665 basehttp 2500 13716 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:29:20,682 log 2500 11736 Not Found: /
+WARNING 2025-09-06 10:29:20,682 basehttp 2500 11736 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:41:26,903 log 2500 1984 Not Found: /
+WARNING 2025-09-06 10:41:26,904 basehttp 2500 1984 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:41:26,938 log 2500 620 Not Found: /
+WARNING 2025-09-06 10:41:26,939 basehttp 2500 620 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:41:30,282 log 2500 8196 Not Found: /
+WARNING 2025-09-06 10:41:30,282 basehttp 2500 8196 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:41:33,637 log 2500 9876 Not Found: /
+WARNING 2025-09-06 10:41:33,638 basehttp 2500 9876 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:41:36,958 log 2500 12240 Not Found: /
+WARNING 2025-09-06 10:41:36,959 basehttp 2500 12240 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:41:40,295 log 2500 12760 Not Found: /
+WARNING 2025-09-06 10:41:40,295 basehttp 2500 12760 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:41:43,233 log 2500 6568 Not Found: /
+WARNING 2025-09-06 10:41:43,269 basehttp 2500 6568 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:41:46,267 log 2500 2636 Not Found: /
+WARNING 2025-09-06 10:41:46,267 basehttp 2500 2636 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:41:46,298 log 2500 9012 Not Found: /
+WARNING 2025-09-06 10:41:46,298 basehttp 2500 9012 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:41:49,631 log 2500 6300 Not Found: /
+WARNING 2025-09-06 10:41:49,631 basehttp 2500 6300 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:41:52,965 log 2500 12720 Not Found: /
+WARNING 2025-09-06 10:41:52,965 basehttp 2500 12720 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:41:56,304 log 2500 7268 Not Found: /
+WARNING 2025-09-06 10:41:56,304 basehttp 2500 7268 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+WARNING 2025-09-06 10:41:59,639 log 2500 11604 Not Found: /
+WARNING 2025-09-06 10:41:59,639 basehttp 2500 11604 "GET /?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OTM2OWZiYi1mNzYxLTQzMzAtYmU1Ni1mNjAxOGExYjRlMzUiLCJlbWFpbCI6InlhaGlhQHlhaGlhLm1lIiwicm9sZSI6ImludmVzdG9yIiwiaWF0IjoxNzU3MTQyNDA2LCJleHAiOjE3NTcyMjg4MDZ9.nqJGnCg1V2WHLh8ZFMnUPVTqlSyhx391k3YB70lcUyk HTTP/1.1" 404 4125
+INFO 2025-09-06 12:38:45,616 basehttp 2500 16420 "OPTIONS /api/v1/auth/login/ HTTP/1.1" 200 0
+WARNING 2025-09-06 12:38:51,460 log 2500 16420 Unauthorized: /api/v1/auth/login/
+WARNING 2025-09-06 12:38:51,461 basehttp 2500 16420 "POST /api/v1/auth/login/ HTTP/1.1" 401 190
+INFO 2025-09-12 11:01:44,362 autoreload 6128 2988 Watching for file changes with StatReloader
+WARNING 2025-09-12 11:02:02,010 log 6128 9188 Not Found: /api/
+WARNING 2025-09-12 11:02:02,010 basehttp 6128 9188 "GET /api/ HTTP/1.1" 404 3899
+INFO 2025-09-12 11:02:08,865 basehttp 6128 5916 "GET /api/docs/ HTTP/1.1" 200 2240
+WARNING 2025-09-12 11:04:38,493 log 6128 796 Not Found: /
+WARNING 2025-09-12 11:04:38,493 basehttp 6128 796 "GET / HTTP/1.1" 404 3869
+WARNING 2025-09-12 11:04:39,384 log 6128 11640 Not Found: /favicon.ico
+WARNING 2025-09-12 11:04:39,385 basehttp 6128 11640 "GET /favicon.ico HTTP/1.1" 404 3920
+INFO 2025-09-12 11:05:26,906 basehttp 6128 1012 "GET /api/docs/ HTTP/1.1" 200 2240
+INFO 2025-09-12 11:05:27,289 basehttp 6128 1012 "GET /static/drf-yasg/style.css HTTP/1.1" 200 1047
+INFO 2025-09-12 11:05:27,662 basehttp 6128 1868 "GET /static/drf-yasg/swagger-ui-dist/swagger-ui.css HTTP/1.1" 200 145206
+INFO 2025-09-12 11:05:28,213 basehttp 6128 11344 "GET /static/drf-yasg/immutable.min.js HTTP/1.1" 200 56904
+INFO 2025-09-12 11:05:28,409 basehttp 6128 7896 "GET /static/drf-yasg/swagger-ui-dist/swagger-ui-standalone-preset.js HTTP/1.1" 200 322863
+INFO 2025-09-12 11:05:28,498 basehttp 6128 4872 "GET /static/drf-yasg/insQ.min.js HTTP/1.1" 200 2093
+INFO 2025-09-12 11:05:28,562 basehttp 6128 5644 "GET /static/drf-yasg/swagger-ui-dist/swagger-ui-bundle.js HTTP/1.1" 200 1046583
+INFO 2025-09-12 11:05:28,643 basehttp 6128 1012 "GET /static/drf-yasg/swagger-ui-init.js HTTP/1.1" 200 15480
+INFO 2025-09-12 11:05:28,825 basehttp 6128 5644 "GET /static/drf-yasg/swagger-ui-dist/favicon-32x32.png HTTP/1.1" 200 628
+ERROR 2025-09-12 11:05:30,460 log 6128 1012 Internal Server Error: /api/docs/
+ERROR 2025-09-12 11:05:30,460 basehttp 6128 1012 "GET /api/docs/?format=openapi HTTP/1.1" 500 159
+WARNING 2025-09-12 11:05:38,618 log 6128 1012 Not Found: /api
+WARNING 2025-09-12 11:05:38,618 basehttp 6128 1012 "GET /api HTTP/1.1" 404 3896
+WARNING 2025-09-12 11:05:47,962 log 6128 6032 Not Found: /api/v1/auth/
+WARNING 2025-09-12 11:05:47,963 basehttp 6128 6032 "GET /api/v1/auth/ HTTP/1.1" 404 9937
+INFO 2025-09-12 11:06:05,365 basehttp 6128 3828 "GET /api/docs/ HTTP/1.1" 200 2240
+ERROR 2025-09-12 11:06:06,130 log 6128 3828 Internal Server Error: /api/docs/
+ERROR 2025-09-12 11:06:06,149 basehttp 6128 3828 "GET /api/docs/?format=openapi HTTP/1.1" 500 159
+INFO 2025-09-12 11:32:18,840 basehttp 6128 15744 "GET /api/v1/properties/ HTTP/1.1" 200 100
+WARNING 2025-09-12 11:32:26,782 log 6128 14176 Not Found: /api/v1/auth/check/
+WARNING 2025-09-12 11:32:26,783 basehttp 6128 14176 "GET /api/v1/auth/check/ HTTP/1.1" 404 9955
+WARNING 2025-09-12 11:32:34,235 log 6128 13248 Bad Request: /api/v1/auth/register/
+WARNING 2025-09-12 11:32:34,236 basehttp 6128 13248 "POST /api/v1/auth/register/ HTTP/1.1" 400 199
+INFO 2025-09-12 11:32:47,768 basehttp 6128 14952 "POST /api/v1/auth/register/ HTTP/1.1" 201 593
+INFO 2025-09-12 11:33:08,212 basehttp 6128 1068 "POST /api/v1/auth/login/ HTTP/1.1" 200 1314
+INFO 2025-09-12 11:34:45,876 basehttp 6128 15896 "GET /api/v1/auth/profile/ HTTP/1.1" 200 501
+INFO 2025-09-12 11:34:56,066 basehttp 6128 14900 "GET /api/v1/investments/ HTTP/1.1" 200 415
+INFO 2025-09-12 11:35:05,342 basehttp 6128 16976 "GET /api/v1/investments/investments/ HTTP/1.1" 200 52
+WARNING 2025-09-12 11:36:41,215 log 6128 15248 Not Found: /api/v1/auth/user/profile/
+WARNING 2025-09-12 11:36:41,216 basehttp 6128 15248 "GET /api/v1/auth/user/profile/ HTTP/1.1" 404 9976
+WARNING 2025-09-12 11:36:47,312 log 6128 12616 Unauthorized: /api/v1/auth/profile/
+WARNING 2025-09-12 11:36:47,312 basehttp 6128 12616 "GET /api/v1/auth/profile/ HTTP/1.1" 401 211
+INFO 2025-09-12 11:36:53,199 basehttp 6128 3976 "GET /api/v1/properties/ HTTP/1.1" 200 100
+WARNING 2025-09-12 11:37:06,401 log 6128 14096 Not Found: /ws/
+WARNING 2025-09-12 11:37:06,402 basehttp 6128 14096 "GET /ws/ HTTP/1.1" 404 3896
+INFO 2025-09-12 12:44:33,111 autoreload 6128 2988 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\properties\models.py changed, reloading.
+INFO 2025-09-12 12:44:44,222 autoreload 14192 16676 Watching for file changes with StatReloader
+INFO 2025-09-12 12:45:05,702 autoreload 14192 16676 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\properties\models.py changed, reloading.
+INFO 2025-09-12 12:45:07,438 autoreload 13012 12540 Watching for file changes with StatReloader
+INFO 2025-09-12 12:45:46,180 autoreload 13012 12540 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\properties\models.py changed, reloading.
+INFO 2025-09-12 12:45:49,021 autoreload 14260 9532 Watching for file changes with StatReloader
+INFO 2025-09-12 12:46:03,393 autoreload 14260 9532 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\properties\serializers.py changed, reloading.
+INFO 2025-09-12 12:46:05,746 autoreload 12684 5340 Watching for file changes with StatReloader
+INFO 2025-09-12 12:46:18,653 autoreload 12684 5340 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\properties\serializers.py changed, reloading.
+INFO 2025-09-12 12:46:20,237 autoreload 16228 13512 Watching for file changes with StatReloader
+INFO 2025-09-12 12:46:35,525 autoreload 16228 13512 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\properties\serializers.py changed, reloading.
+INFO 2025-09-12 12:46:36,995 autoreload 14764 7248 Watching for file changes with StatReloader
+INFO 2025-09-12 12:46:53,268 autoreload 14764 7248 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\properties\serializers.py changed, reloading.
+INFO 2025-09-12 12:46:54,768 autoreload 15840 1440 Watching for file changes with StatReloader
+INFO 2025-09-12 12:47:03,415 autoreload 15840 1440 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\properties\serializers.py changed, reloading.
+INFO 2025-09-12 12:47:07,583 autoreload 16652 7628 Watching for file changes with StatReloader
+INFO 2025-09-12 12:47:21,868 autoreload 16652 7628 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\properties\serializers.py changed, reloading.
+INFO 2025-09-12 12:47:23,676 autoreload 12480 16076 Watching for file changes with StatReloader
+INFO 2025-09-12 12:47:32,018 autoreload 12480 16076 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\properties\serializers.py changed, reloading.
+INFO 2025-09-12 12:47:34,037 autoreload 15108 15900 Watching for file changes with StatReloader
+INFO 2025-09-12 12:48:19,921 basehttp 15108 15116 "GET /api/v1/properties/ HTTP/1.1" 200 100
+INFO 2025-09-12 15:04:04,759 basehttp 15108 13940 "GET /api/v1/properties/ HTTP/1.1" 200 100
+INFO 2025-09-12 15:08:45,084 autoreload 15108 15900 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\properties\models.py changed, reloading.
+INFO 2025-09-12 15:08:47,632 autoreload 3484 11740 Watching for file changes with StatReloader
+INFO 2025-09-12 15:37:05,191 autoreload 13320 16752 Watching for file changes with StatReloader
+ERROR 2025-09-13 03:41:41,868 exception 3156 8656 Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "C:\Users\Shimaa\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Shimaa\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\utils\deprecation.py", line 133, in __call__
+    response = self.process_request(request)
+  File "C:\Users\Shimaa\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+  File "C:\Users\Shimaa\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\http\request.py", line 150, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+WARNING 2025-09-13 03:41:43,404 log 3156 8656 Bad Request: /api/v1/properties/
+ERROR 2025-09-13 03:41:43,404 exception 3156 8656 Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "C:\Users\Shimaa\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\Shimaa\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\utils\deprecation.py", line 133, in __call__
+    response = self.process_request(request)
+  File "C:\Users\Shimaa\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\middleware\common.py", line 48, in process_request
+    host = request.get_host()
+  File "C:\Users\Shimaa\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\http\request.py", line 150, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'testserver'. You may need to add 'testserver' to ALLOWED_HOSTS.
+WARNING 2025-09-13 03:41:43,425 log 3156 8656 Bad Request: /api/v1/auth/me/
+WARNING 2025-09-13 03:42:26,661 log 336 5460 Not Found: /api/v1/auth/me/
+WARNING 2025-09-13 03:42:26,669 log 336 5460 Not Found: /api/v1/
+WARNING 2025-09-13 03:53:33,191 log 4488 9724 Unauthorized: /api/v1/investments/
+WARNING 2025-09-13 03:53:33,196 log 4488 9724 Unauthorized: /api/v1/payments/
+WARNING 2025-09-13 03:53:33,200 log 4488 9724 Unauthorized: /api/v1/kyc/
+WARNING 2025-09-13 03:53:33,201 log 4488 9724 Method Not Allowed: /api/v1/auth/register/
+WARNING 2025-09-13 03:53:33,214 log 4488 9724 Not Found: /api/v1/blockchain/networks/
+WARNING 2025-09-13 03:53:33,216 log 4488 9724 Unauthorized: /api/v1/dashboard/stats/
+WARNING 2025-09-13 03:53:33,223 log 4488 9724 Not Found: /api/v1/analytics/property-performance/
+INFO 2025-09-13 04:17:24,960 autoreload 1952 5672 Watching for file changes with StatReloader
+INFO 2025-09-13 04:18:49,640 basehttp 1952 9108 "HEAD /api/docs/ HTTP/1.1" 200 0
+INFO 2025-09-13 04:18:54,293 basehttp 1952 10408 "GET /api/v1/properties/ HTTP/1.1" 200 100
+INFO 2025-09-13 04:20:33,306 basehttp 1952 10944 "OPTIONS /api/v1/v1/auth/login/ HTTP/1.1" 200 0
+WARNING 2025-09-13 04:20:33,421 log 1952 10944 Not Found: /api/v1/v1/auth/login/
+WARNING 2025-09-13 04:20:33,421 basehttp 1952 10944 "POST /api/v1/v1/auth/login/ HTTP/1.1" 404 7088
+WARNING 2025-09-13 04:21:47,683 log 1952 1776 Not Found: /api/v1/
+WARNING 2025-09-13 04:21:47,684 basehttp 1952 1776 "GET /api/v1/ HTTP/1.1" 404 7045
+WARNING 2025-09-13 04:21:52,772 log 1952 10232 Not Found: /
+WARNING 2025-09-13 04:21:52,773 basehttp 1952 10232 "GET / HTTP/1.1" 404 3988
+INFO 2025-09-13 04:22:10,536 basehttp 1952 2112 "GET /api/docs/ HTTP/1.1" 200 2240
+WARNING 2025-09-13 04:22:14,221 log 1952 5644 Not Found: /api/v1/auth/
+WARNING 2025-09-13 04:22:14,222 basehttp 1952 5644 "GET /api/v1/auth/ HTTP/1.1" 404 10056
+WARNING 2025-09-13 04:22:23,328 log 1952 4596 Method Not Allowed: /api/v1/auth/register/
+WARNING 2025-09-13 04:22:23,328 basehttp 1952 4596 "GET /api/v1/auth/register/ HTTP/1.1" 405 176
+WARNING 2025-09-13 04:23:04,444 log 1952 10972 Bad Request: /api/v1/auth/register/
+WARNING 2025-09-13 04:23:04,444 basehttp 1952 10972 "POST /api/v1/auth/register/ HTTP/1.1" 400 288
+INFO 2025-09-13 04:23:08,807 basehttp 1952 6000 "GET /api/v1/properties/ HTTP/1.1" 200 100
+INFO 2025-09-13 04:41:28,696 basehttp 1952 7252 "GET /api/v1/properties/ HTTP/1.1" 200 100
+INFO 2025-09-13 04:41:28,789 basehttp 1952 8452 "GET /api/v1/properties/ HTTP/1.1" 200 100
+INFO 2025-09-13 04:41:28,932 basehttp 1952 3836 "GET /api/v1/properties/ HTTP/1.1" 200 100
+INFO 2025-09-13 04:41:29,082 basehttp 1952 3984 "GET /api/v1/properties/ HTTP/1.1" 200 100
+INFO 2025-09-13 04:41:29,182 basehttp 1952 9708 "GET /api/v1/properties/ HTTP/1.1" 200 100
+INFO 2025-09-13 04:41:29,246 basehttp 1952 7284 "GET /api/v1/properties/ HTTP/1.1" 200 100
+INFO 2025-09-13 04:41:29,394 basehttp 1952 10912 "GET /api/v1/properties/ HTTP/1.1" 200 100
+INFO 2025-09-13 04:41:29,448 basehttp 1952 4376 "GET /api/v1/properties/ HTTP/1.1" 200 100
+INFO 2025-09-13 04:41:29,510 basehttp 1952 9756 "GET /api/v1/properties/ HTTP/1.1" 200 100
+INFO 2025-09-13 04:41:29,577 basehttp 1952 1968 "GET /api/v1/properties/ HTTP/1.1" 200 100
+INFO 2025-09-13 04:41:35,626 basehttp 1952 10824 "GET /api/docs/ HTTP/1.1" 200 2240
+WARNING 2025-09-13 05:41:01,991 log 1952 11084 Method Not Allowed: /api/v1/auth/check-email/
+WARNING 2025-09-13 05:41:01,992 basehttp 1952 11084 "GET /api/v1/auth/check-email/ HTTP/1.1" 405 179
+INFO 2025-09-13 05:47:06,159 autoreload 1952 5672 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\capimax_backend\urls.py changed, reloading.
+INFO 2025-09-13 05:47:15,880 autoreload 4016 11084 Watching for file changes with StatReloader
+INFO 2025-09-13 05:47:37,452 autoreload 4016 11084 D:\New Projects\Capimax - Tokenization V1\Tokenization - Django\capimax_backend\capimax_backend\settings\development.py changed, reloading.
+INFO 2025-09-13 05:47:46,782 autoreload 5608 1428 Watching for file changes with StatReloader
+INFO 2025-09-13 05:48:08,791 basehttp 5608 7416 "GET /api/v1/ HTTP/1.1" 200 665
+INFO 2025-09-13 05:48:13,330 basehttp 5608 4940 "GET /api/v1/health/ HTTP/1.1" 200 83
+INFO 2025-09-13 07:22:11,404 basehttp 5608 8660 "GET /api/v1/ HTTP/1.1" 200 665
+INFO 2025-09-13 07:22:16,373 basehttp 5608 4484 "GET /api/v1/health/ HTTP/1.1" 200 83
+INFO 2025-09-13 07:22:20,984 basehttp 5608 2020 "GET /api/v1/status/ HTTP/1.1" 200 85
+INFO 2025-09-13 09:23:46,124 basehttp 5608 432 "OPTIONS /api/v1/v1/auth/login/ HTTP/1.1" 200 0
+WARNING 2025-09-13 09:23:46,157 log 5608 432 Not Found: /api/v1/v1/auth/login/
+WARNING 2025-09-13 09:23:46,158 basehttp 5608 432 "POST /api/v1/v1/auth/login/ HTTP/1.1" 404 4617
+INFO 2025-09-13 10:06:18,198 basehttp 5608 6588 "OPTIONS /api/v1/auth/login/ HTTP/1.1" 200 0
+INFO 2025-09-13 10:06:19,620 basehttp 5608 6588 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-13 10:08:51,521 basehttp 5608 6588 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-13 10:14:56,865 basehttp 5608 9728 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-13 10:15:08,927 basehttp 5608 9728 "OPTIONS /api/v1/auth/login/ HTTP/1.1" 200 0
+INFO 2025-09-13 10:15:10,239 basehttp 5608 9728 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-13 10:20:24,405 basehttp 5608 9908 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-13 10:30:43,079 basehttp 5608 6180 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-13 10:32:57,935 basehttp 5608 4664 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-13 10:33:07,830 basehttp 5608 6152 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-13 10:34:00,333 basehttp 5608 7416 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-13 10:34:31,204 basehttp 5608 10308 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-13 10:34:56,864 basehttp 5608 10308 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-13 10:40:26,564 basehttp 5608 12120 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+WARNING 2025-09-13 10:40:26,662 log 5608 12120 Unauthorized: /api/v1/auth/profile/
+WARNING 2025-09-13 10:40:26,663 log 5608 2148 Unauthorized: /api/v1/dashboard/stats/
+WARNING 2025-09-13 10:40:26,663 basehttp 5608 12120 "GET /api/v1/auth/profile/ HTTP/1.1" 401 211
+WARNING 2025-09-13 10:40:26,664 basehttp 5608 2148 "GET /api/v1/dashboard/stats/ HTTP/1.1" 401 214
+WARNING 2025-09-13 10:40:26,684 log 5608 2148 Unauthorized: /api/v1/investments/transactions/
+WARNING 2025-09-13 10:40:26,684 basehttp 5608 2148 "GET /api/v1/investments/transactions/?limit=5&ordering=-created_at HTTP/1.1" 401 223
+WARNING 2025-09-13 10:40:26,746 log 5608 2148 Unauthorized: /api/v1/auth/profile/
+WARNING 2025-09-13 10:40:26,747 basehttp 5608 2148 "GET /api/v1/auth/profile/ HTTP/1.1" 401 211
+INFO 2025-09-13 10:40:26,759 basehttp 5608 12120 "GET /api/v1/properties/market/insights/ HTTP/1.1" 200 718
+INFO 2025-09-13 10:40:34,745 basehttp 5608 12068 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+WARNING 2025-09-13 10:40:35,017 log 5608 12068 Unauthorized: /api/v1/auth/profile/
+WARNING 2025-09-13 10:40:35,018 log 5608 11456 Unauthorized: /api/v1/dashboard/stats/
+WARNING 2025-09-13 10:40:35,019 basehttp 5608 12068 "GET /api/v1/auth/profile/ HTTP/1.1" 401 211
+WARNING 2025-09-13 10:40:35,019 basehttp 5608 11456 "GET /api/v1/dashboard/stats/ HTTP/1.1" 401 214
+WARNING 2025-09-13 10:40:35,028 log 5608 12068 Unauthorized: /api/v1/investments/transactions/
+WARNING 2025-09-13 10:40:35,028 basehttp 5608 12068 "GET /api/v1/investments/transactions/?limit=5&ordering=-created_at HTTP/1.1" 401 223
+INFO 2025-09-13 10:40:35,047 basehttp 5608 11456 "GET /api/v1/properties/market/insights/ HTTP/1.1" 200 718
+WARNING 2025-09-13 10:40:35,082 log 5608 12068 Unauthorized: /api/v1/auth/profile/
+WARNING 2025-09-13 10:40:35,083 basehttp 5608 12068 "GET /api/v1/auth/profile/ HTTP/1.1" 401 211
+INFO 2025-09-13 10:41:41,920 basehttp 5608 11456 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+WARNING 2025-09-13 10:41:42,272 log 5608 11456 Unauthorized: /api/v1/auth/profile/
+WARNING 2025-09-13 10:41:42,273 log 5608 12068 Unauthorized: /api/v1/dashboard/stats/
+WARNING 2025-09-13 10:41:42,274 basehttp 5608 11456 "GET /api/v1/auth/profile/ HTTP/1.1" 401 211
+WARNING 2025-09-13 10:41:42,274 basehttp 5608 12068 "GET /api/v1/dashboard/stats/ HTTP/1.1" 401 214
+WARNING 2025-09-13 10:41:42,281 log 5608 11456 Unauthorized: /api/v1/investments/transactions/
+WARNING 2025-09-13 10:41:42,282 basehttp 5608 11456 "GET /api/v1/investments/transactions/?limit=5&ordering=-created_at HTTP/1.1" 401 223
+WARNING 2025-09-13 10:41:42,285 log 5608 11456 Unauthorized: /api/v1/auth/profile/
+WARNING 2025-09-13 10:41:42,285 basehttp 5608 11456 "GET /api/v1/auth/profile/ HTTP/1.1" 401 211
+INFO 2025-09-13 10:41:42,299 basehttp 5608 12068 "GET /api/v1/properties/market/insights/ HTTP/1.1" 200 718
+INFO 2025-09-13 10:49:01,569 basehttp 5608 7776 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+WARNING 2025-09-13 10:49:01,951 log 5608 7776 Unauthorized: /api/v1/auth/profile/
+WARNING 2025-09-13 10:49:01,951 basehttp 5608 7776 "GET /api/v1/auth/profile/ HTTP/1.1" 401 211
+WARNING 2025-09-13 10:49:01,953 log 5608 7580 Unauthorized: /api/v1/dashboard/stats/
+WARNING 2025-09-13 10:49:01,956 basehttp 5608 7580 "GET /api/v1/dashboard/stats/ HTTP/1.1" 401 214
+WARNING 2025-09-13 10:49:01,962 log 5608 7580 Unauthorized: /api/v1/investments/transactions/
+WARNING 2025-09-13 10:49:01,962 basehttp 5608 7580 "GET /api/v1/investments/transactions/?limit=5&ordering=-created_at HTTP/1.1" 401 223
+INFO 2025-09-13 10:49:01,996 basehttp 5608 7776 "GET /api/v1/properties/market/insights/ HTTP/1.1" 200 718
+WARNING 2025-09-13 10:49:02,034 log 5608 7580 Unauthorized: /api/v1/auth/profile/
+WARNING 2025-09-13 10:49:02,034 basehttp 5608 7580 "GET /api/v1/auth/profile/ HTTP/1.1" 401 211
+INFO 2025-09-13 10:49:18,094 basehttp 5608 7776 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+WARNING 2025-09-13 10:49:18,399 log 5608 7776 Unauthorized: /api/v1/auth/profile/
+WARNING 2025-09-13 10:49:18,400 log 5608 7580 Unauthorized: /api/v1/dashboard/stats/
+WARNING 2025-09-13 10:49:18,401 basehttp 5608 7776 "GET /api/v1/auth/profile/ HTTP/1.1" 401 211
+WARNING 2025-09-13 10:49:18,401 basehttp 5608 7580 "GET /api/v1/dashboard/stats/ HTTP/1.1" 401 214
+WARNING 2025-09-13 10:49:18,405 log 5608 10876 Unauthorized: /api/v1/investments/transactions/
+WARNING 2025-09-13 10:49:18,405 basehttp 5608 10876 "GET /api/v1/investments/transactions/?limit=5&ordering=-created_at HTTP/1.1" 401 223
+INFO 2025-09-13 10:49:18,424 basehttp 5608 7776 "GET /api/v1/properties/market/insights/ HTTP/1.1" 200 718
+WARNING 2025-09-13 10:49:18,488 log 5608 10876 Unauthorized: /api/v1/auth/profile/
+WARNING 2025-09-13 10:49:18,489 basehttp 5608 10876 "GET /api/v1/auth/profile/ HTTP/1.1" 401 211
+INFO 2025-09-13 10:49:28,060 basehttp 5608 12204 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+WARNING 2025-09-13 10:49:28,295 log 5608 12204 Unauthorized: /api/v1/auth/profile/
+WARNING 2025-09-13 10:49:28,297 log 5608 11568 Unauthorized: /api/v1/dashboard/stats/
+WARNING 2025-09-13 10:49:28,298 basehttp 5608 12204 "GET /api/v1/auth/profile/ HTTP/1.1" 401 211
+WARNING 2025-09-13 10:49:28,298 basehttp 5608 11568 "GET /api/v1/dashboard/stats/ HTTP/1.1" 401 214
+WARNING 2025-09-13 10:49:28,302 log 5608 11568 Unauthorized: /api/v1/investments/transactions/
+WARNING 2025-09-13 10:49:28,303 basehttp 5608 11568 "GET /api/v1/investments/transactions/?limit=5&ordering=-created_at HTTP/1.1" 401 223
+INFO 2025-09-13 10:49:28,329 basehttp 5608 11568 "GET /api/v1/properties/market/insights/ HTTP/1.1" 200 718
+WARNING 2025-09-13 10:49:28,387 log 5608 12204 Unauthorized: /api/v1/auth/profile/
+WARNING 2025-09-13 10:49:28,388 basehttp 5608 12204 "GET /api/v1/auth/profile/ HTTP/1.1" 401 211
+INFO 2025-09-13 10:49:43,478 basehttp 5608 11280 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+WARNING 2025-09-13 10:49:43,671 log 5608 11280 Unauthorized: /api/v1/auth/profile/
+WARNING 2025-09-13 10:49:43,671 basehttp 5608 11280 "GET /api/v1/auth/profile/ HTTP/1.1" 401 211
+WARNING 2025-09-13 10:49:43,675 log 5608 3856 Unauthorized: /api/v1/dashboard/stats/
+WARNING 2025-09-13 10:49:43,676 basehttp 5608 3856 "GET /api/v1/dashboard/stats/ HTTP/1.1" 401 214
+WARNING 2025-09-13 10:49:43,681 log 5608 3856 Unauthorized: /api/v1/investments/transactions/
+WARNING 2025-09-13 10:49:43,681 basehttp 5608 3856 "GET /api/v1/investments/transactions/?limit=5&ordering=-created_at HTTP/1.1" 401 223
+WARNING 2025-09-13 10:49:43,686 log 5608 3856 Unauthorized: /api/v1/auth/profile/
+WARNING 2025-09-13 10:49:43,686 basehttp 5608 3856 "GET /api/v1/auth/profile/ HTTP/1.1" 401 211
+INFO 2025-09-13 10:49:43,726 basehttp 5608 3856 "GET /api/v1/properties/market/insights/ HTTP/1.1" 200 718
+INFO 2025-09-13 10:49:56,894 basehttp 5608 4056 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+WARNING 2025-09-13 10:49:57,139 log 5608 4056 Unauthorized: /api/v1/auth/profile/
+WARNING 2025-09-13 10:49:57,141 log 5608 10172 Unauthorized: /api/v1/dashboard/stats/
+WARNING 2025-09-13 10:49:57,141 basehttp 5608 10172 "GET /api/v1/dashboard/stats/ HTTP/1.1" 401 214
+WARNING 2025-09-13 10:49:57,143 basehttp 5608 4056 "GET /api/v1/auth/profile/ HTTP/1.1" 401 211
+WARNING 2025-09-13 10:49:57,148 log 5608 10172 Unauthorized: /api/v1/investments/transactions/
+WARNING 2025-09-13 10:49:57,149 basehttp 5608 10172 "GET /api/v1/investments/transactions/?limit=5&ordering=-created_at HTTP/1.1" 401 223
+INFO 2025-09-13 10:49:57,168 basehttp 5608 4056 "GET /api/v1/properties/market/insights/ HTTP/1.1" 200 718
+WARNING 2025-09-13 10:49:57,220 log 5608 10172 Unauthorized: /api/v1/auth/profile/
+WARNING 2025-09-13 10:49:57,221 basehttp 5608 10172 "GET /api/v1/auth/profile/ HTTP/1.1" 401 211
+INFO 2025-09-14 10:20:27,395 basehttp 5608 14312 "OPTIONS /api/v1/auth/login/ HTTP/1.1" 200 0
+INFO 2025-09-14 10:20:28,903 basehttp 5608 14312 "POST /api/v1/auth/login/ HTTP/1.1" 200 1350
+INFO 2025-09-14 10:20:29,298 basehttp 5608 15076 "OPTIONS /api/v1/dashboard/stats/ HTTP/1.1" 200 0
+INFO 2025-09-14 10:20:29,298 basehttp 5608 14312 "OPTIONS /api/v1/auth/profile/ HTTP/1.1" 200 0
+INFO 2025-09-14 10:20:29,301 basehttp 5608 15076 "OPTIONS /api/v1/properties/market/insights/ HTTP/1.1" 200 0
+INFO 2025-09-14 10:20:29,301 basehttp 5608 14312 "OPTIONS /api/v1/investments/transactions/?limit=5&ordering=-created_at HTTP/1.1" 200 0
+INFO 2025-09-14 10:20:29,324 basehttp 5608 14312 "GET /api/v1/auth/profile/ HTTP/1.1" 200 518
+INFO 2025-09-14 10:20:29,330 basehttp 5608 15076 "GET /api/v1/dashboard/stats/ HTTP/1.1" 200 434
+INFO 2025-09-14 10:20:29,361 basehttp 5608 14312 "GET /api/v1/investments/transactions/?limit=5&ordering=-created_at HTTP/1.1" 200 52
+INFO 2025-09-14 10:20:29,380 basehttp 5608 14312 "GET /api/v1/auth/profile/ HTTP/1.1" 200 518
+INFO 2025-09-14 10:20:29,398 basehttp 5608 15076 "GET /api/v1/properties/market/insights/ HTTP/1.1" 200 718
+INFO 2025-09-14 10:20:38,649 basehttp 5608 15076 "OPTIONS /api/v1/investments/portfolio/ HTTP/1.1" 200 0
+INFO 2025-09-14 10:20:38,651 basehttp 5608 14312 "OPTIONS /api/v1/analytics/?period=month HTTP/1.1" 200 0
+INFO 2025-09-14 10:20:38,673 basehttp 5608 14312 "GET /api/v1/properties/market/insights/ HTTP/1.1" 200 718
+WARNING 2025-09-14 10:20:38,712 log 5608 15076 Not Found: /api/v1/investments/portfolio/
+WARNING 2025-09-14 10:20:38,725 basehttp 5608 15076 "GET /api/v1/investments/portfolio/ HTTP/1.1" 404 16644
+WARNING 2025-09-14 10:20:38,747 log 5608 10972 Not Found: /api/v1/analytics/
+WARNING 2025-09-14 10:20:38,747 basehttp 5608 10972 "GET /api/v1/analytics/?period=month HTTP/1.1" 404 6762
+WARNING 2025-09-14 10:20:39,752 log 5608 10972 Not Found: /api/v1/investments/portfolio/
+WARNING 2025-09-14 10:20:39,753 basehttp 5608 10972 "GET /api/v1/investments/portfolio/ HTTP/1.1" 404 16644
+WARNING 2025-09-14 10:20:39,781 log 5608 10972 Not Found: /api/v1/analytics/
+WARNING 2025-09-14 10:20:39,781 basehttp 5608 10972 "GET /api/v1/analytics/?period=month HTTP/1.1" 404 6762
+WARNING 2025-09-14 10:20:41,775 log 5608 10972 Not Found: /api/v1/investments/portfolio/
+WARNING 2025-09-14 10:20:41,775 basehttp 5608 10972 "GET /api/v1/investments/portfolio/ HTTP/1.1" 404 16644
+WARNING 2025-09-14 10:20:41,800 log 5608 10972 Not Found: /api/v1/analytics/
+WARNING 2025-09-14 10:20:41,801 basehttp 5608 10972 "GET /api/v1/analytics/?period=month HTTP/1.1" 404 6762
+INFO 2025-09-14 10:20:46,259 basehttp 5608 15076 "GET /api/v1/dashboard/stats/ HTTP/1.1" 200 434
+INFO 2025-09-14 10:20:46,265 basehttp 5608 10972 "GET /api/v1/auth/profile/ HTTP/1.1" 200 518
+INFO 2025-09-14 10:20:46,272 basehttp 5608 14532 "GET /api/v1/investments/transactions/?limit=5&ordering=-created_at HTTP/1.1" 200 52
+INFO 2025-09-14 10:20:46,289 basehttp 5608 10972 "GET /api/v1/auth/profile/ HTTP/1.1" 200 518
+INFO 2025-09-14 10:20:46,290 basehttp 5608 14312 "GET /api/v1/properties/market/insights/ HTTP/1.1" 200 718
+INFO 2025-09-14 10:20:56,901 basehttp 5608 14312 "GET /api/v1/auth/profile/ HTTP/1.1" 200 518
+INFO 2025-09-14 10:20:56,924 basehttp 5608 14312 "GET /api/v1/auth/profile/ HTTP/1.1" 200 518
+INFO 2025-09-14 10:20:56,941 basehttp 5608 14312 "GET /api/v1/auth/profile/ HTTP/1.1" 200 518
+INFO 2025-09-14 10:20:56,958 basehttp 5608 14312 "GET /api/v1/auth/profile/ HTTP/1.1" 200 518
+INFO 2025-09-14 10:21:36,166 basehttp 5608 14312 "GET /api/v1/auth/profile/ HTTP/1.1" 200 518
+INFO 2025-09-14 10:21:36,173 basehttp 5608 10972 "GET /api/v1/dashboard/stats/ HTTP/1.1" 200 434
+INFO 2025-09-14 10:21:36,191 basehttp 5608 15076 "GET /api/v1/investments/transactions/?limit=5&ordering=-created_at HTTP/1.1" 200 52
+INFO 2025-09-14 10:21:36,193 basehttp 5608 14312 "GET /api/v1/auth/profile/ HTTP/1.1" 200 518
+INFO 2025-09-14 10:21:36,198 basehttp 5608 14532 "GET /api/v1/properties/market/insights/ HTTP/1.1" 200 718
+INFO 2025-09-14 10:22:01,487 basehttp 5608 14532 "GET /api/v1/dashboard/stats/ HTTP/1.1" 200 434
+INFO 2025-09-14 10:22:01,500 basehttp 5608 14312 "GET /api/v1/properties/market/insights/ HTTP/1.1" 200 718
+INFO 2025-09-14 10:22:01,527 basehttp 5608 15076 "GET /api/v1/investments/transactions/?limit=5&ordering=-created_at HTTP/1.1" 200 52

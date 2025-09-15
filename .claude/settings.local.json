@@ -1,17 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm create:*)",
-      "Bash(npm install)",
-      "Bash(npm install:*)",
-      "Bash(npm run dev:*)",
-      "Bash(npx tailwindcss init:*)",
-      "Bash(node_modules/.bin/tailwindcss init:*)",
-      "Bash(npm run build:*)",
-      "Bash(timeout:*)",
-      "Bash(npx tsc:*)",
-      "Bash(start http://localhost:5173/demo)",
-      "Bash(node:*)"
+      "Bash(\"C:\\Users\\Shimaa\\AppData\\Local\\Programs\\Python\\Python313\\python.exe\" validate_production_readiness.py)"
     ],
     "deny": [],
     "ask": []

@@ -1,5 +1,7 @@
 import React, { Suspense } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { PaymentProvider } from './contexts/PaymentContext';
 import { LoadingProvider } from './contexts/LoadingContext';
 import { NotificationProvider } from './contexts/NotificationContext';
@@ -8,6 +10,18 @@ import { GlobalErrorBoundary } from './components/ui/GlobalErrorBoundary';
 import { NetworkProvider } from './components/ui/OfflineIndicator';
 import { SkipToContent, KeyboardIndicator } from './components/ui/AccessibilityHelper';
 import './App.css'
+
+// Create a client instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes
+    },
+  },
+});
 
 // Lazy load pages for code splitting
 const HomePage = React.lazy(() => import('./components/HomePage').then(m => ({ default: m.HomePage })));
@@ -18,6 +32,7 @@ const PropertiesPage = React.lazy(() => import('./pages/PropertiesPage').then(m 
 const PropertyDetailPage = React.lazy(() => import('./pages/PropertyDetailPage').then(m => ({ default: m.PropertyDetailPage })));
 const DashboardPage = React.lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const DemoPage = React.lazy(() => import('./pages/DemoPage').then(m => ({ default: m.DemoPage })));
+const IntegrationTestPage = React.lazy(() => import('./pages/IntegrationTestPage').then(m => ({ default: m.IntegrationTestPage })));
 const WalletManagementPage = React.lazy(() => import('./components/payments').then(m => ({ default: m.WalletManagementPage })));
 
 // Loading fallback component
@@ -155,6 +170,14 @@ const AppRouter: React.FC = () => {
             </Suspense>
           </main>
         );
+      case 'integration-test':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading integration test..." />}>
+              <IntegrationTestPage />
+            </Suspense>
+          </main>
+        );
       case 'about':
         return (
           <main {...mainProps}>
@@ -216,19 +239,23 @@ const AppRouter: React.FC = () => {
 function App() {
   return (
     <GlobalErrorBoundary>
-      <ThemeProvider>
-        <NetworkProvider>
-          <LoadingProvider>
-            <NotificationProvider>
-              <PaymentProvider>
-                <RouterProvider>
-                  <AppRouter />
-                </RouterProvider>
-              </PaymentProvider>
-            </NotificationProvider>
-          </LoadingProvider>
-        </NetworkProvider>
-      </ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <NetworkProvider>
+              <LoadingProvider>
+                <NotificationProvider>
+                  <PaymentProvider>
+                    <RouterProvider>
+                      <AppRouter />
+                    </RouterProvider>
+                  </PaymentProvider>
+                </NotificationProvider>
+              </LoadingProvider>
+            </NetworkProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
     </GlobalErrorBoundary>
   );
 }

@@ -1,0 +1,1301 @@
+"""
+Payment Models for Capimax Real Estate Tokenization Platform.
+
+This module contains models for payment processing, wallet management,
+and financial transactions including multi-provider payment support.
+"""
+
+from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
+from decimal import Decimal
+import uuid
+
+
+class PaymentMethod(models.TextChoices):
+    """Payment method choices."""
+    CRYPTOCURRENCY = 'cryptocurrency', 'Cryptocurrency'
+    CREDIT_CARD = 'credit_card', 'Credit Card'
+    BANK_TRANSFER = 'bank_transfer', 'Bank Transfer'
+    PAYPAL = 'paypal', 'PayPal'
+
+
+class PaymentStatus(models.TextChoices):
+    """Payment status choices throughout processing lifecycle."""
+    PENDING = 'pending', 'Pending'
+    PROCESSING = 'processing', 'Processing'
+    COMPLETED = 'completed', 'Completed'
+    FAILED = 'failed', 'Failed'
+    CANCELLED = 'cancelled', 'Cancelled'
+    REFUNDED = 'refunded', 'Refunded'
+
+
+class Payment(models.Model):
+    """
+    Core Payment model for processing financial transactions.
+    
+    Handles payments from multiple providers (Stripe, PayPal, Crypto)
+    and tracks transaction status throughout the payment lifecycle.
+    """
+    
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the payment"
+    )
+    
+    user = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.CASCADE,
+        related_name='payments',
+        help_text="User making the payment"
+    )
+    
+    investment = models.ForeignKey(
+        'investments.Investment',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Investment this payment is for (if applicable)"
+    )
+    
+    amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        help_text="Payment amount"
+    )
+    
+    currency = models.CharField(
+        max_length=10,
+        default='USD',
+        help_text="Payment currency"
+    )
+    
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PaymentMethod.choices,
+        help_text="Payment method used"
+    )
+    
+    status = models.CharField(
+        max_length=20,
+        choices=PaymentStatus.choices,
+        default=PaymentStatus.PENDING,
+        help_text="Current payment status"
+    )
+    
+    transaction_hash = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Blockchain transaction hash (for crypto payments)"
+    )
+    
+    payment_intent_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Payment provider's payment intent ID"
+    )
+    
+    external_transaction_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="External payment provider transaction ID"
+    )
+    
+    processing_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text="Processing fee charged"
+    )
+    
+    net_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        help_text="Net amount after fees"
+    )
+    
+    metadata = models.JSONField(
+        default=dict,
+        help_text="Additional payment metadata and provider-specific data"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Timestamp when payment was completed"
+    )
+
+    class Meta:
+        db_table = 'payments_payment'
+        indexes = [
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['status', 'created_at']),
+            models.Index(fields=['payment_method', 'status']),
+            models.Index(fields=['external_transaction_id']),
+            models.Index(fields=['payment_intent_id']),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(amount__gt=0),
+                name='payment_amount_positive'
+            ),
+            models.CheckConstraint(
+                check=models.Q(processing_fee__gte=0),
+                name='payment_fee_non_negative'
+            ),
+        ]
+        verbose_name = 'Payment'
+        verbose_name_plural = 'Payments'
+
+    def __str__(self):
+        return f"Payment {self.id} - {self.user.email} - ${self.amount} ({self.payment_method})"
+    
+    def save(self, *args, **kwargs):
+        """Calculate net amount before saving."""
+        if not self.net_amount:
+            self.net_amount = self.amount - self.processing_fee
+        super().save(*args, **kwargs)
+    
+    @property
+    def fee_percentage(self):
+        """Calculate processing fee as percentage of amount."""
+        if self.amount == 0:
+            return Decimal('0.00')
+        return ((self.processing_fee / self.amount) * 100).quantize(Decimal('0.01'))
+
+
+class UserPaymentMethod(models.Model):
+    """
+    User's saved payment methods for future transactions.
+    
+    Stores encrypted payment method information for quick access
+    without requiring users to re-enter details.
+    """
+    
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the payment method"
+    )
+    
+    user = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.CASCADE,
+        related_name='payment_methods',
+        help_text="User who owns this payment method"
+    )
+    
+    method_type = models.CharField(
+        max_length=20,
+        choices=PaymentMethod.choices,
+        help_text="Type of payment method"
+    )
+    
+    display_name = models.CharField(
+        max_length=255,
+        help_text="User-friendly display name for the payment method"
+    )
+    
+    last_four = models.CharField(
+        max_length=4,
+        blank=True,
+        help_text="Last four digits (for cards/accounts)"
+    )
+    
+    expiry_date = models.CharField(
+        max_length=7,
+        blank=True,
+        help_text="Expiry date in MM/YYYY format (for cards)"
+    )
+    
+    brand = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text="Card brand or payment method brand"
+    )
+    
+    wallet_address = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Cryptocurrency wallet address"
+    )
+    
+    network = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text="Blockchain network (for crypto)"
+    )
+    
+    is_default = models.BooleanField(
+        default=False,
+        help_text="Whether this is the user's default payment method"
+    )
+    
+    is_verified = models.BooleanField(
+        default=False,
+        help_text="Whether the payment method is verified"
+    )
+    
+    external_id = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="External provider ID (Stripe customer ID, etc.)"
+    )
+    
+    metadata = models.JSONField(
+        default=dict,
+        help_text="Additional payment method metadata"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'payments_user_payment_method'
+        indexes = [
+            models.Index(fields=['user', 'method_type']),
+            models.Index(fields=['user', 'is_default']),
+            models.Index(fields=['external_id']),
+        ]
+        verbose_name = 'User Payment Method'
+        verbose_name_plural = 'User Payment Methods'
+
+    def __str__(self):
+        return f"{self.display_name} for {self.user.email}"
+
+
+class CurrencyType(models.TextChoices):
+    """Currency type choices for enhanced wallet system."""
+    FIAT = 'fiat', 'Fiat Currency'
+    CRYPTOCURRENCY = 'cryptocurrency', 'Cryptocurrency'
+
+
+class WalletBalance(models.Model):
+    """
+    Enhanced user wallet balances for different currencies.
+    
+    Tracks available, pending, and locked balances for each currency
+    a user holds in their platform wallet, including both fiat and cryptocurrencies.
+    """
+    
+    user = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.CASCADE,
+        related_name='wallet_balances',
+        help_text="User who owns this wallet balance"
+    )
+    
+    currency = models.CharField(
+        max_length=10,
+        help_text="Currency code (USD, EUR, AED, BTC, ETH, MATIC, USDC, USDT, BNB)"
+    )
+    
+    currency_type = models.CharField(
+        max_length=20,
+        choices=CurrencyType.choices,
+        default=CurrencyType.FIAT,
+        help_text="Type of currency (fiat or cryptocurrency)"
+    )
+    
+    available_balance = models.DecimalField(
+        max_digits=18,
+        decimal_places=8,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        help_text="Available balance for spending"
+    )
+    
+    pending_balance = models.DecimalField(
+        max_digits=18,
+        decimal_places=8,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        help_text="Balance pending confirmation"
+    )
+    
+    locked_balance = models.DecimalField(
+        max_digits=18,
+        decimal_places=8,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        help_text="Balance locked for pending transactions"
+    )
+    
+    # Cryptocurrency specific fields
+    wallet_address = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Associated wallet address for cryptocurrency"
+    )
+    
+    network = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="Blockchain network (for cryptocurrencies)"
+    )
+    
+    contract_address = models.CharField(
+        max_length=42,
+        blank=True,
+        null=True,
+        help_text="Token contract address (for ERC-20 tokens)"
+    )
+    
+    minimum_withdrawal = models.DecimalField(
+        max_digits=18,
+        decimal_places=8,
+        default=Decimal('0.01'),
+        validators=[MinValueValidator(Decimal('0.00000001'))],
+        help_text="Minimum withdrawal amount for this currency"
+    )
+    
+    withdrawal_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=8,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        help_text="Fixed withdrawal fee for this currency"
+    )
+    
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this currency is active for deposits/withdrawals"
+    )
+    
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'payments_wallet_balance'
+        unique_together = ('user', 'currency')
+        indexes = [
+            models.Index(fields=['user', 'currency']),
+            models.Index(fields=['currency', 'currency_type']),
+            models.Index(fields=['user', 'currency_type']),
+            models.Index(fields=['is_active']),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(available_balance__gte=0),
+                name='wallet_available_balance_non_negative'
+            ),
+            models.CheckConstraint(
+                check=models.Q(pending_balance__gte=0),
+                name='wallet_pending_balance_non_negative'
+            ),
+            models.CheckConstraint(
+                check=models.Q(locked_balance__gte=0),
+                name='wallet_locked_balance_non_negative'
+            ),
+        ]
+        verbose_name = 'Wallet Balance'
+        verbose_name_plural = 'Wallet Balances'
+
+    def __str__(self):
+        return f"{self.user.email} - {self.available_balance} {self.currency}"
+    
+    @property
+    def total_balance(self):
+        """Calculate total balance (available + pending + locked)."""
+        return self.available_balance + self.pending_balance + self.locked_balance
+    
+    @property
+    def is_cryptocurrency(self):
+        """Check if this is a cryptocurrency balance."""
+        return self.currency_type == CurrencyType.CRYPTOCURRENCY
+    
+    @property
+    def is_fiat(self):
+        """Check if this is a fiat currency balance."""
+        return self.currency_type == CurrencyType.FIAT
+    
+    def can_withdraw(self, amount):
+        """Check if user can withdraw the specified amount."""
+        return (
+            self.is_active and
+            amount >= self.minimum_withdrawal and
+            self.available_balance >= amount
+        )
+    
+    def get_withdrawal_total(self, amount):
+        """Calculate total amount including withdrawal fees."""
+        return amount + self.withdrawal_fee
+
+
+class WalletTransaction(models.Model):
+    """
+    Wallet transaction history for balance changes.
+    
+    Tracks all balance changes including deposits, withdrawals,
+    investments, fees, and other transactions.
+    """
+    
+    TRANSACTION_TYPES = [
+        ('deposit', 'Deposit'),
+        ('withdrawal', 'Withdrawal'),
+        ('investment', 'Investment'),
+        ('dividend', 'Dividend'),
+        ('fee', 'Fee'),
+        ('refund', 'Refund'),
+    ]
+    
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the wallet transaction"
+    )
+    
+    user = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.CASCADE,
+        help_text="User whose wallet this transaction affects"
+    )
+    
+    transaction_type = models.CharField(
+        max_length=20,
+        choices=TRANSACTION_TYPES,
+        help_text="Type of wallet transaction"
+    )
+    
+    amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=8,
+        help_text="Transaction amount (positive for credits, negative for debits)"
+    )
+    
+    currency = models.CharField(
+        max_length=10,
+        help_text="Currency of the transaction"
+    )
+    
+    balance_before = models.DecimalField(
+        max_digits=15,
+        decimal_places=8,
+        help_text="Balance before this transaction"
+    )
+    
+    balance_after = models.DecimalField(
+        max_digits=15,
+        decimal_places=8,
+        help_text="Balance after this transaction"
+    )
+    
+    reference_id = models.UUIDField(
+        null=True,
+        blank=True,
+        help_text="Reference ID to payment, investment, etc."
+    )
+    
+    description = models.TextField(
+        help_text="Transaction description"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'payments_wallet_transaction'
+        indexes = [
+            models.Index(fields=['user', 'created_at']),
+            models.Index(fields=['transaction_type', 'created_at']),
+            models.Index(fields=['currency', 'created_at']),
+            models.Index(fields=['reference_id']),
+        ]
+        verbose_name = 'Wallet Transaction'
+        verbose_name_plural = 'Wallet Transactions'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.transaction_type.title()}: {self.amount} {self.currency} for {self.user.email}"
+
+
+class CryptoPayment(models.Model):
+    """
+    Cryptocurrency payment details and blockchain tracking.
+    
+    Extended payment information specific to cryptocurrency transactions
+    including gas fees, confirmations, and network details.
+    """
+    
+    payment = models.OneToOneField(
+        Payment,
+        on_delete=models.CASCADE,
+        related_name='crypto_details',
+        help_text="Associated payment record"
+    )
+    
+    wallet_address = models.CharField(
+        max_length=255,
+        help_text="Wallet address used for payment"
+    )
+    
+    network = models.CharField(
+        max_length=50,
+        help_text="Blockchain network (Ethereum, Polygon, etc.)"
+    )
+    
+    gas_limit = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Gas limit for the transaction"
+    )
+    
+    gas_price = models.DecimalField(
+        max_digits=20,
+        decimal_places=8,
+        null=True,
+        blank=True,
+        help_text="Gas price in network's base unit"
+    )
+    
+    confirmation_blocks_required = models.PositiveIntegerField(
+        default=12,
+        help_text="Number of confirmations required"
+    )
+    
+    confirmations = models.PositiveIntegerField(
+        default=0,
+        help_text="Current number of confirmations"
+    )
+    
+    block_height = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Block height when transaction was mined"
+    )
+
+    class Meta:
+        db_table = 'payments_crypto_payment'
+        indexes = [
+            models.Index(fields=['wallet_address']),
+            models.Index(fields=['network']),
+            models.Index(fields=['confirmations']),
+        ]
+        verbose_name = 'Crypto Payment'
+        verbose_name_plural = 'Crypto Payments'
+
+    def __str__(self):
+        return f"Crypto payment {self.payment.id} on {self.network}"
+    
+    @property
+    def is_confirmed(self):
+        """Check if payment has required confirmations."""
+        return self.confirmations >= self.confirmation_blocks_required
+
+
+class Refund(models.Model):
+    """
+    Payment refund tracking and processing.
+    
+    Handles refund requests and processing for various payment methods
+    with proper audit trail and status tracking.
+    """
+    
+    REFUND_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
+    
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the refund"
+    )
+    
+    payment = models.ForeignKey(
+        Payment,
+        on_delete=models.CASCADE,
+        related_name='refunds',
+        help_text="Original payment being refunded"
+    )
+    
+    amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        help_text="Refund amount"
+    )
+    
+    reason = models.TextField(
+        help_text="Reason for the refund"
+    )
+    
+    status = models.CharField(
+        max_length=20,
+        choices=REFUND_STATUS_CHOICES,
+        default='pending',
+        help_text="Status of the refund"
+    )
+    
+    external_refund_id = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="External payment provider refund ID"
+    )
+    
+    processed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the refund was processed"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'payments_refund'
+        indexes = [
+            models.Index(fields=['payment', 'status']),
+            models.Index(fields=['status', 'created_at']),
+            models.Index(fields=['external_refund_id']),
+        ]
+        verbose_name = 'Refund'
+        verbose_name_plural = 'Refunds'
+
+    def __str__(self):
+        return f"Refund {self.id} - ${self.amount} for payment {self.payment.id}"
+
+
+class RecurringPayment(models.Model):
+    """
+    Recurring payment setup for automatic investments and wallet top-ups.
+    
+    Allows users to set up automatic recurring payments for investments
+    or wallet funding with specified frequencies and limits.
+    """
+    
+    FREQUENCY_CHOICES = [
+        ('weekly', 'Weekly'),
+        ('monthly', 'Monthly'),
+        ('quarterly', 'Quarterly'),
+        ('annually', 'Annually'),
+    ]
+    
+    PURPOSE_CHOICES = [
+        ('investment', 'Investment'),
+        ('wallet_topup', 'Wallet Top-up'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('paused', 'Paused'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the recurring payment"
+    )
+    
+    user = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.CASCADE,
+        help_text="User setting up recurring payment"
+    )
+    
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal('0.01'))],
+        help_text="Amount for each payment"
+    )
+    
+    currency = models.CharField(
+        max_length=10,
+        default='USD',
+        help_text="Payment currency"
+    )
+    
+    frequency = models.CharField(
+        max_length=20,
+        choices=FREQUENCY_CHOICES,
+        help_text="Payment frequency"
+    )
+    
+    payment_method = models.ForeignKey(
+        UserPaymentMethod,
+        on_delete=models.CASCADE,
+        help_text="Payment method to use"
+    )
+    
+    start_date = models.DateTimeField(
+        help_text="Start date for recurring payments"
+    )
+    
+    end_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="End date for recurring payments (optional)"
+    )
+    
+    next_payment = models.DateTimeField(
+        help_text="Next scheduled payment date"
+    )
+    
+    purpose = models.CharField(
+        max_length=20,
+        choices=PURPOSE_CHOICES,
+        help_text="Purpose of recurring payments"
+    )
+    
+    investment = models.ForeignKey(
+        'investments.Investment',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Target investment (if purpose is investment)"
+    )
+    
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='active',
+        help_text="Status of recurring payment"
+    )
+    
+    total_payments = models.PositiveIntegerField(
+        default=0,
+        help_text="Total number of payments made"
+    )
+    
+    total_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        help_text="Total amount paid so far"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'payments_recurring_payment'
+        indexes = [
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['next_payment', 'status']),
+            models.Index(fields=['purpose', 'status']),
+        ]
+        verbose_name = 'Recurring Payment'
+        verbose_name_plural = 'Recurring Payments'
+
+    def __str__(self):
+        return f"Recurring Payment: {self.user.email} - ${self.amount} {self.frequency}"
+
+
+class CurrencyExchangeRate(models.Model):
+    """
+    Currency exchange rates for conversion between different currencies.
+    
+    Maintains real-time exchange rates for both fiat and cryptocurrency
+    conversions with automatic rate updates and historical tracking.
+    """
+    
+    base_currency = models.CharField(
+        max_length=10,
+        help_text="Base currency code (e.g., USD)"
+    )
+    
+    target_currency = models.CharField(
+        max_length=10,
+        help_text="Target currency code (e.g., BTC, ETH, EUR)"
+    )
+    
+    rate = models.DecimalField(
+        max_digits=20,
+        decimal_places=8,
+        validators=[MinValueValidator(Decimal('0.00000001'))],
+        help_text="Exchange rate from base to target currency"
+    )
+    
+    inverse_rate = models.DecimalField(
+        max_digits=20,
+        decimal_places=8,
+        validators=[MinValueValidator(Decimal('0.00000001'))],
+        help_text="Inverse exchange rate (target to base)"
+    )
+    
+    source = models.CharField(
+        max_length=100,
+        default='CoinGecko',
+        help_text="Source of exchange rate data"
+    )
+    
+    last_updated = models.DateTimeField(
+        auto_now=True,
+        help_text="Last time this rate was updated"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'payments_currency_exchange_rate'
+        unique_together = ('base_currency', 'target_currency')
+        indexes = [
+            models.Index(fields=['base_currency', 'target_currency']),
+            models.Index(fields=['last_updated']),
+        ]
+        verbose_name = 'Currency Exchange Rate'
+        verbose_name_plural = 'Currency Exchange Rates'
+
+    def __str__(self):
+        return f"{self.base_currency}/{self.target_currency} = {self.rate}"
+    
+    def save(self, *args, **kwargs):
+        """Calculate inverse rate before saving."""
+        if self.rate > 0:
+            self.inverse_rate = Decimal('1') / self.rate
+        super().save(*args, **kwargs)
+    
+    @classmethod
+    def convert_amount(cls, amount, from_currency, to_currency):
+        """Convert amount from one currency to another."""
+        if from_currency == to_currency:
+            return amount
+        
+        try:
+            # Try direct conversion
+            rate_obj = cls.objects.get(
+                base_currency=from_currency,
+                target_currency=to_currency
+            )
+            return amount * rate_obj.rate
+        except cls.DoesNotExist:
+            try:
+                # Try inverse conversion
+                rate_obj = cls.objects.get(
+                    base_currency=to_currency,
+                    target_currency=from_currency
+                )
+                return amount * rate_obj.inverse_rate
+            except cls.DoesNotExist:
+                raise ValueError(f"No exchange rate available for {from_currency} to {to_currency}")
+
+
+class WalletDeposit(models.Model):
+    """
+    Wallet deposit tracking for cryptocurrency deposits.
+    
+    Tracks cryptocurrency deposits to user wallets with transaction
+    monitoring and automatic balance updates upon confirmation.
+    """
+    
+    DEPOSIT_STATUS = [
+        ('pending', 'Pending'),
+        ('confirmed', 'Confirmed'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
+    
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the deposit"
+    )
+    
+    user = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.CASCADE,
+        related_name='wallet_deposits',
+        help_text="User making the deposit"
+    )
+    
+    wallet_balance = models.ForeignKey(
+        WalletBalance,
+        on_delete=models.CASCADE,
+        related_name='deposits',
+        help_text="Wallet balance being credited"
+    )
+    
+    amount = models.DecimalField(
+        max_digits=18,
+        decimal_places=8,
+        validators=[MinValueValidator(Decimal('0.00000001'))],
+        help_text="Deposit amount"
+    )
+    
+    transaction_hash = models.CharField(
+        max_length=66,
+        unique=True,
+        help_text="Blockchain transaction hash"
+    )
+    
+    from_address = models.CharField(
+        max_length=42,
+        help_text="Source wallet address"
+    )
+    
+    to_address = models.CharField(
+        max_length=42,
+        help_text="Destination wallet address"
+    )
+    
+    block_number = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Block number containing the transaction"
+    )
+    
+    confirmations = models.PositiveIntegerField(
+        default=0,
+        help_text="Number of block confirmations"
+    )
+    
+    required_confirmations = models.PositiveIntegerField(
+        default=12,
+        help_text="Required confirmations for completion"
+    )
+    
+    status = models.CharField(
+        max_length=20,
+        choices=DEPOSIT_STATUS,
+        default='pending',
+        help_text="Current deposit status"
+    )
+    
+    network_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=8,
+        default=Decimal('0.00'),
+        help_text="Network transaction fee"
+    )
+    
+    detected_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When deposit was first detected"
+    )
+    
+    confirmed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When deposit was confirmed"
+    )
+    
+    completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When deposit was completed and credited"
+    )
+
+    class Meta:
+        db_table = 'payments_wallet_deposit'
+        indexes = [
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['transaction_hash']),
+            models.Index(fields=['status', 'detected_at']),
+            models.Index(fields=['wallet_balance', 'status']),
+        ]
+        verbose_name = 'Wallet Deposit'
+        verbose_name_plural = 'Wallet Deposits'
+
+    def __str__(self):
+        return f"Deposit {self.amount} {self.wallet_balance.currency} to {self.user.email}"
+    
+    @property
+    def is_confirmed(self):
+        """Check if deposit has required confirmations."""
+        return self.confirmations >= self.required_confirmations
+
+
+class WalletWithdrawal(models.Model):
+    """
+    Wallet withdrawal requests and processing.
+    
+    Handles cryptocurrency withdrawal requests with multi-step approval,
+    security checks, and automatic blockchain transaction processing.
+    """
+    
+    WITHDRAWAL_STATUS = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+        ('rejected', 'Rejected'),
+    ]
+    
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the withdrawal"
+    )
+    
+    user = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.CASCADE,
+        related_name='wallet_withdrawals',
+        help_text="User requesting withdrawal"
+    )
+    
+    wallet_balance = models.ForeignKey(
+        WalletBalance,
+        on_delete=models.CASCADE,
+        related_name='withdrawals',
+        help_text="Wallet balance being debited"
+    )
+    
+    amount = models.DecimalField(
+        max_digits=18,
+        decimal_places=8,
+        validators=[MinValueValidator(Decimal('0.00000001'))],
+        help_text="Withdrawal amount (excluding fees)"
+    )
+    
+    withdrawal_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=8,
+        default=Decimal('0.00'),
+        help_text="Withdrawal fee charged"
+    )
+    
+    total_amount = models.DecimalField(
+        max_digits=18,
+        decimal_places=8,
+        help_text="Total amount (including fees)"
+    )
+    
+    to_address = models.CharField(
+        max_length=42,
+        help_text="Destination wallet address"
+    )
+    
+    transaction_hash = models.CharField(
+        max_length=66,
+        blank=True,
+        null=True,
+        help_text="Blockchain transaction hash (once processed)"
+    )
+    
+    status = models.CharField(
+        max_length=20,
+        choices=WITHDRAWAL_STATUS,
+        default='pending',
+        help_text="Current withdrawal status"
+    )
+    
+    # Security and verification
+    two_factor_verified = models.BooleanField(
+        default=False,
+        help_text="Whether 2FA was verified for this withdrawal"
+    )
+    
+    email_verified = models.BooleanField(
+        default=False,
+        help_text="Whether email verification was completed"
+    )
+    
+    approval_code = models.CharField(
+        max_length=20,
+        blank=True,
+        help_text="Email approval code"
+    )
+    
+    approved_by = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_withdrawals',
+        help_text="Admin user who approved withdrawal (if required)"
+    )
+    
+    # Processing details
+    gas_price = models.DecimalField(
+        max_digits=15,
+        decimal_places=0,
+        null=True,
+        blank=True,
+        help_text="Gas price used for transaction"
+    )
+    
+    gas_used = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Gas used for transaction"
+    )
+    
+    network_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=8,
+        default=Decimal('0.00'),
+        help_text="Network transaction fee paid"
+    )
+    
+    error_message = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Error message if withdrawal failed"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    approved_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When withdrawal was approved"
+    )
+    processed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When withdrawal was processed"
+    )
+    completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When withdrawal was completed"
+    )
+
+    class Meta:
+        db_table = 'payments_wallet_withdrawal'
+        indexes = [
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['status', 'created_at']),
+            models.Index(fields=['transaction_hash']),
+            models.Index(fields=['wallet_balance', 'status']),
+            models.Index(fields=['approved_by']),
+        ]
+        verbose_name = 'Wallet Withdrawal'
+        verbose_name_plural = 'Wallet Withdrawals'
+
+    def __str__(self):
+        return f"Withdrawal {self.amount} {self.wallet_balance.currency} by {self.user.email}"
+    
+    def save(self, *args, **kwargs):
+        """Calculate total amount before saving."""
+        if not self.total_amount:
+            self.total_amount = self.amount + self.withdrawal_fee
+        super().save(*args, **kwargs)
+    
+    def can_be_processed(self):
+        """Check if withdrawal can be processed."""
+        return (
+            self.status == 'approved' and
+            self.two_factor_verified and
+            self.email_verified
+        )
+
+
+class QRCodePayment(models.Model):
+    """
+    QR code payment generation for cryptocurrency deposits.
+    
+    Generates QR codes for cryptocurrency payments with amount,
+    address, and network information for easy mobile wallet scanning.
+    """
+    
+    QR_STATUS = [
+        ('active', 'Active'),
+        ('used', 'Used'),
+        ('expired', 'Expired'),
+    ]
+    
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the QR payment"
+    )
+    
+    user = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.CASCADE,
+        related_name='qr_payments',
+        help_text="User requesting QR payment"
+    )
+    
+    wallet_balance = models.ForeignKey(
+        WalletBalance,
+        on_delete=models.CASCADE,
+        related_name='qr_payments',
+        help_text="Target wallet balance"
+    )
+    
+    amount = models.DecimalField(
+        max_digits=18,
+        decimal_places=8,
+        validators=[MinValueValidator(Decimal('0.00000001'))],
+        help_text="Payment amount requested"
+    )
+    
+    wallet_address = models.CharField(
+        max_length=42,
+        help_text="Deposit address for payment"
+    )
+    
+    qr_code_data = models.TextField(
+        help_text="QR code data string (URI format)"
+    )
+    
+    qr_code_image = models.ImageField(
+        upload_to='qr_codes/',
+        blank=True,
+        null=True,
+        help_text="Generated QR code image"
+    )
+    
+    status = models.CharField(
+        max_length=20,
+        choices=QR_STATUS,
+        default='active',
+        help_text="QR code status"
+    )
+    
+    expires_at = models.DateTimeField(
+        help_text="When QR code expires"
+    )
+    
+    used_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When QR code was used for payment"
+    )
+    
+    deposit = models.OneToOneField(
+        WalletDeposit,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='qr_payment',
+        help_text="Associated deposit (if payment was made)"
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'payments_qr_code_payment'
+        indexes = [
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['wallet_address']),
+            models.Index(fields=['status', 'expires_at']),
+            models.Index(fields=['created_at']),
+        ]
+        verbose_name = 'QR Code Payment'
+        verbose_name_plural = 'QR Code Payments'
+
+    def __str__(self):
+        return f"QR Payment {self.amount} {self.wallet_balance.currency} for {self.user.email}"
+    
+    @property
+    def is_expired(self):
+        """Check if QR code is expired."""
+        from django.utils import timezone
+        return timezone.now() > self.expires_at
+    
+    @property
+    def is_active(self):
+        """Check if QR code is active and usable."""
+        return self.status == 'active' and not self.is_expired
