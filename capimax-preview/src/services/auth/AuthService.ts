@@ -46,12 +46,13 @@ export class AuthService {
   /**
    * Register a new user
    */
-  static async register(userData: UserRegistrationData & { confirm_password?: string }): Promise<RegisterResponse> {
+  static async register(userData: UserRegistrationData & { confirm_password?: string; roles?: string[] }): Promise<RegisterResponse> {
     try {
       // Add confirm_password which Django backend requires
       const registrationData = {
         ...userData,
-        confirm_password: userData.password  // Use same password for confirmation
+        confirm_password: userData.password,  // Use same password for confirmation
+        roles: userData.roles  // Pass roles array for multi-role support
       };
       const response = await apiClient.post<any>('/auth/register/', registrationData);
       
@@ -92,8 +93,13 @@ export class AuthService {
       };
       
       // Store the auth token
+      console.log('🔐 Storing auth token:', authResponse.token ? 'Token present' : 'No token');
       apiClient.setAuthToken(authResponse.token);
-      
+
+      // Verify token was stored
+      const isAuthenticated = apiClient.isAuthenticated();
+      console.log('✅ Token stored, isAuthenticated:', isAuthenticated);
+
       return authResponse;
     } catch (error) {
       console.error('Registration failed:', error);

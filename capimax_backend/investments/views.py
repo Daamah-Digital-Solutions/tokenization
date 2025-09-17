@@ -12,7 +12,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from django.db import transaction
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, Sum
+from django.db import models
 from decimal import Decimal
 from datetime import timedelta
 import logging
@@ -211,9 +212,57 @@ class InvestmentViewSet(viewsets.ModelViewSet):
 
 class PortfolioViewSet(viewsets.ViewSet):
     """ViewSet for portfolio management operations."""
-    
+
     permission_classes = [IsAuthenticated]
-    
+
+    def list(self, request):
+        """Get user's portfolio data."""
+        try:
+            # Get portfolio summary
+            summary = PortfolioService.get_portfolio_summary(request.user)
+
+            # Get user's investments
+            investments = Investment.objects.filter(
+                user=request.user,
+                status__in=['active', 'pending']
+            ).select_related('property')
+
+            # Calculate portfolio metrics
+            total_invested = investments.filter(status='active').aggregate(
+                total=Sum('amount')
+            )['total'] or 0
+
+            properties_count = investments.values('property').distinct().count()
+
+            # Get recent performance
+            performance = PortfolioService.get_portfolio_performance(request.user, 30)
+
+            portfolio_data = {
+                'total_invested': float(total_invested),
+                'current_value': summary.get('total_value', 0),
+                'return_percentage': summary.get('total_roi', 0),
+                'properties_count': properties_count,
+                'monthly_dividends': summary.get('total_dividends', 0),
+                'investments': InvestmentSerializer(investments, many=True).data,
+                'asset_allocation': summary.get('allocation_by_type', []),
+                'performance_data': performance
+            }
+
+            return Response(portfolio_data)
+        except Exception as e:
+            logger.error(f"Portfolio list error for user {request.user.id}: {str(e)}")
+            # Return empty portfolio data for new users
+            return Response({
+                'total_invested': 0,
+                'current_value': 0,
+                'return_percentage': 0,
+                'properties_count': 0,
+                'monthly_dividends': 0,
+                'investments': [],
+                'asset_allocation': [],
+                'performance_data': []
+            })
+
     @action(detail=False, methods=['get'])
     def summary(self, request):
         """Get portfolio summary."""
@@ -544,8 +593,7 @@ class CollaborativeInvestmentView(APIView):
         
         # Get some active properties for mock data
         active_properties = Property.objects.filter(
-            status__in=['active', 'tokenized'],
-            tokens_available__gt=0
+            status__in=['active', 'tokenized']
         )[:3]
         
         for i, prop in enumerate(active_properties):

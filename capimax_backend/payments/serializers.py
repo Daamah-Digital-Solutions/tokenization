@@ -14,7 +14,8 @@ import re
 
 from .models import (
     Payment, UserPaymentMethod, WalletBalance, WalletTransaction,
-    CryptoPayment, Refund, RecurringPayment, PaymentMethod, PaymentStatus
+    CryptoPayment, Refund, RecurringPayment, PaymentMethod, PaymentStatus,
+    BankTransfer
 )
 from core.utils import validate_investment_amount, calculate_tokens_for_amount
 
@@ -477,5 +478,135 @@ class WalletWithdrawalSerializer(serializers.Serializer):
         
         if value < Decimal('10.00'):  # Minimum $10 withdrawal
             raise serializers.ValidationError("Minimum withdrawal amount is $10")
-        
+
         return value
+
+
+class BankTransferSerializer(serializers.ModelSerializer):
+    """Serializer for bank transfer payment details."""
+
+    payment_id = serializers.UUIDField(source='payment.id', read_only=True)
+    payment_amount = serializers.DecimalField(
+        source='payment.amount',
+        max_digits=12,
+        decimal_places=2,
+        read_only=True
+    )
+    payment_currency = serializers.CharField(source='payment.currency', read_only=True)
+    estimated_completion = serializers.DateTimeField(source='estimated_completion_date', read_only=True)
+
+    class Meta:
+        model = BankTransfer
+        fields = [
+            'id', 'payment_id', 'payment_amount', 'payment_currency',
+            'account_holder_name', 'account_number', 'routing_number',
+            'bank_name', 'bank_address', 'swift_code', 'transfer_reference',
+            'transfer_status', 'transfer_instructions', 'estimated_completion',
+            'bank_reference_number', 'processing_fee', 'initiated_at',
+            'completed_at', 'admin_notes'
+        ]
+        read_only_fields = [
+            'id', 'transfer_reference', 'transfer_status', 'processing_fee',
+            'initiated_at', 'completed_at', 'admin_notes', 'bank_reference_number'
+        ]
+
+
+class BankTransferCreateSerializer(serializers.Serializer):
+    """Serializer for creating bank transfer payments."""
+
+    # Payment details
+    amount = serializers.DecimalField(max_digits=12, decimal_places=2)
+    currency = serializers.CharField(default='USD', max_length=10)
+    property_id = serializers.UUIDField()
+
+    # Bank account details
+    account_holder_name = serializers.CharField(max_length=255)
+    account_number = serializers.CharField(max_length=50)
+    routing_number = serializers.CharField(max_length=50)
+    bank_name = serializers.CharField(max_length=255)
+    bank_address = serializers.CharField(
+        max_length=500,
+        required=False,
+        allow_blank=True
+    )
+    swift_code = serializers.CharField(
+        max_length=20,
+        required=False,
+        allow_blank=True
+    )
+    transfer_instructions = serializers.CharField(
+        max_length=1000,
+        required=False,
+        allow_blank=True
+    )
+
+    def validate_amount(self, value):
+        """Validate payment amount."""
+        if value <= Decimal('0.00'):
+            raise serializers.ValidationError("Amount must be greater than zero")
+
+        if value < Decimal('100.00'):  # Minimum $100 for bank transfers
+            raise serializers.ValidationError("Minimum bank transfer amount is $100")
+
+        if value > Decimal('1000000.00'):  # Maximum $1M
+            raise serializers.ValidationError("Maximum bank transfer amount is $1,000,000")
+
+        return value
+
+    def validate_account_number(self, value):
+        """Validate bank account number format."""
+        # Remove spaces and hyphens
+        value = re.sub(r'[\s\-]', '', value)
+
+        # Check if it's numeric and appropriate length
+        if not value.isdigit():
+            raise serializers.ValidationError("Account number must contain only digits")
+
+        if len(value) < 4 or len(value) > 20:
+            raise serializers.ValidationError("Account number must be between 4 and 20 digits")
+
+        return value
+
+    def validate_routing_number(self, value):
+        """Validate routing number format."""
+        # Remove spaces and hyphens
+        value = re.sub(r'[\s\-]', '', value)
+
+        # US routing number is exactly 9 digits
+        if not value.isdigit() or len(value) != 9:
+            raise serializers.ValidationError("Routing number must be exactly 9 digits")
+
+        return value
+
+    def validate_swift_code(self, value):
+        """Validate SWIFT code format if provided."""
+        if value:
+            value = value.upper().replace(' ', '')
+            # SWIFT code is 8 or 11 characters: 4 letters (bank), 2 letters (country), 2 characters (location), optional 3 characters (branch)
+            if not re.match(r'^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$', value):
+                raise serializers.ValidationError("Invalid SWIFT code format")
+
+        return value
+
+
+class BankTransferStatusSerializer(serializers.Serializer):
+    """Serializer for bank transfer status updates (admin only)."""
+
+    transfer_status = serializers.ChoiceField(choices=[
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+    ])
+    bank_reference_number = serializers.CharField(
+        max_length=100,
+        required=False,
+        allow_blank=True
+    )
+    admin_notes = serializers.CharField(
+        max_length=1000,
+        required=False,
+        allow_blank=True
+    )
+    completed_at = serializers.DateTimeField(required=False)

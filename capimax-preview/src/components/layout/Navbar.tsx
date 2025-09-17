@@ -6,11 +6,15 @@ import { ThemeToggle } from '../ui/ThemeToggle';
 import { AccessibilityMenu, ConnectionQualityIndicator } from '../ui/AccessibilityHelper';
 import { useRouter } from '../../utils/router';
 import { useNetwork } from '../ui/OfflineIndicator';
+import { useTheme } from '../../contexts/ThemeContext';
+import CapiMaxLightLogo from '../../assets/tokenization_capi max  tokenization light  uk  copy.svg';
+import CapiMaxDarkLogo from '../../assets/tokenization_capi max tokenization uk dark   copy.svg';
 
 export const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { navigate, currentRoute } = useRouter();
   const { isOnline } = useNetwork();
+  const { theme } = useTheme();
 
   const navItems = [
     { name: 'Properties', route: 'properties' as const, href: '#properties' },
@@ -43,12 +47,11 @@ export const Navbar: React.FC = () => {
             whileHover={{ scale: 1.02 }}
             className="flex items-center space-x-3"
           >
-            <div className="flex items-center justify-center w-8 h-8 bg-emerald-600 rounded-lg">
-              <Building2 className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-lg font-semibold text-navy-900 dark:text-white">
-              Capimax
-            </span>
+            <img
+              src={theme === 'dark' ? CapiMaxLightLogo : CapiMaxDarkLogo}
+              alt="CapiMax"
+              className="h-8 w-auto"
+            />
           </motion.div>
 
           {/* Desktop Navigation */}

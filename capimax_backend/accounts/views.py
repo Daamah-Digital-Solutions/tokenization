@@ -21,7 +21,7 @@ import qrcode.image.svg
 import base64
 import io
 
-from .models import User, PasswordResetToken, EmailVerificationToken
+from .models import User, PasswordResetToken, EmailVerificationToken, UserRoleAssignment, UserRole
 from .serializers import (
     UserRegistrationSerializer,
     CustomTokenObtainPairSerializer,
@@ -50,15 +50,21 @@ class UserRegistrationView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     
     def create(self, request, *args, **kwargs):
-        """Create user and return success response."""
+        """Create user and return success response with auth tokens."""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        
+
+        # Generate JWT tokens for immediate login
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken.for_user(user)
+
         return Response(
             create_success_response(
                 data={
                     'user': UserProfileSerializer(user).data,
+                    'access': str(refresh.access_token),
+                    'refresh': str(refresh),
                     'message': 'Registration successful. Please check your email to verify your account.'
                 },
                 message="User registered successfully",
@@ -515,12 +521,337 @@ def check_email_availability(request):
             ),
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
     is_available = not User.objects.filter(email=email.lower()).exists()
-    
+
     return Response(
         create_success_response(
             data={'available': is_available},
             message="Email availability checked"
+        )
+    )
+
+
+# ========================================
+# ROLE MANAGEMENT API ENDPOINTS
+# ========================================
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def user_roles_view(request):
+    """
+    Get user's current role assignments.
+
+    Returns all active roles with their details including primary role status.
+    """
+    user = request.user
+
+    # Get all role assignments
+    role_assignments = UserRoleAssignment.objects.filter(
+        user=user,
+        is_active=True
+    ).order_by('-is_primary', 'assigned_at')
+
+    roles_data = []
+    for assignment in role_assignments:
+        roles_data.append({
+            'role': assignment.role,
+            'role_display': assignment.get_role_display(),
+            'is_primary': assignment.is_primary,
+            'assigned_at': assignment.assigned_at,
+            'assigned_by': assignment.assigned_by.get_full_name() if assignment.assigned_by else 'Self-assigned'
+        })
+
+    return Response(
+        create_success_response(
+            data={
+                'roles': roles_data,
+                'primary_role': user.get_primary_role(),
+                'available_roles': user.get_available_roles(),
+                'permissions': {
+                    'can_invest': user.can_invest(),
+                    'can_list_properties': user.can_list_properties(),
+                    'is_admin': user.is_admin_user()
+                }
+            },
+            message="User roles retrieved successfully"
+        )
+    )
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def add_user_role_view(request):
+    """
+    Add a new role to user's account.
+
+    Allows users to add additional roles (INVESTOR, PROPERTY_OWNER).
+    Admin users can add any role including ADMIN.
+    """
+    user = request.user
+    role = request.data.get('role')
+
+    if not role:
+        return Response(
+            create_error_response(
+                message="Role is required",
+                details={'role': ['This field is required.']}
+            ),
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Validate role choice
+    valid_roles = [choice[0] for choice in UserRole.choices]
+    if role not in valid_roles:
+        return Response(
+            create_error_response(
+                message="Invalid role",
+                details={'role': [f'Invalid choice. Valid choices are: {", ".join(valid_roles)}']}
+            ),
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Check if role already exists
+    if user.has_role(role):
+        return Response(
+            create_error_response(
+                message="Role already assigned",
+                details={'role': ['User already has this role.']}
+            ),
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Security check: Only admins can assign ADMIN role
+    if role == UserRole.ADMIN and not user.is_admin_user():
+        return Response(
+            create_error_response(
+                message="Permission denied",
+                details={'role': ['Only administrators can assign admin role.']}
+            ),
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Create role assignment
+    UserRoleAssignment.objects.create(
+        user=user,
+        role=role,
+        is_primary=False,  # New roles are never primary by default
+        is_active=True,
+        assigned_by=user  # Self-assigned
+    )
+
+    return Response(
+        create_success_response(
+            data={
+                'role': role,
+                'role_display': dict(UserRole.choices)[role],
+                'available_roles': user.get_available_roles()
+            },
+            message=f"Role '{dict(UserRole.choices)[role]}' added successfully"
+        )
+    )
+
+
+@api_view(['DELETE'])
+@permission_classes([permissions.IsAuthenticated])
+def remove_user_role_view(request, role):
+    """
+    Remove a role from user's account.
+
+    Users can remove roles with restrictions:
+    - Cannot remove primary role if it's the only role
+    - Cannot remove ADMIN role from self (security measure)
+    """
+    user = request.user
+
+    # Validate role choice
+    valid_roles = [choice[0] for choice in UserRole.choices]
+    if role not in valid_roles:
+        return Response(
+            create_error_response(
+                message="Invalid role",
+                details={'role': [f'Invalid role: {role}']}
+            ),
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Check if user has this role
+    if not user.has_role(role):
+        return Response(
+            create_error_response(
+                message="Role not found",
+                details={'role': ['User does not have this role.']}
+            ),
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Get role assignment
+    role_assignment = UserRoleAssignment.objects.filter(
+        user=user,
+        role=role,
+        is_active=True
+    ).first()
+
+    if not role_assignment:
+        return Response(
+            create_error_response(
+                message="Role assignment not found"
+            ),
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Security checks
+    active_roles_count = UserRoleAssignment.objects.filter(
+        user=user,
+        is_active=True
+    ).count()
+
+    # Cannot remove the only role
+    if active_roles_count <= 1:
+        return Response(
+            create_error_response(
+                message="Cannot remove role",
+                details={'role': ['Cannot remove the only active role. Users must have at least one role.']}
+            ),
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Cannot remove primary role if user has multiple roles (must switch primary first)
+    if role_assignment.is_primary and active_roles_count > 1:
+        return Response(
+            create_error_response(
+                message="Cannot remove primary role",
+                details={'role': ['Cannot remove primary role. Please set another role as primary first.']}
+            ),
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Security: Prevent self-removal of admin role (admin must be removed by another admin)
+    if role == UserRole.ADMIN:
+        return Response(
+            create_error_response(
+                message="Cannot remove admin role",
+                details={'role': ['Admin role cannot be self-removed for security reasons.']}
+            ),
+            status=status.HTTP_403_FORBIDDEN
+        )
+
+    # Remove role assignment
+    role_assignment.delete()
+
+    return Response(
+        create_success_response(
+            data={
+                'removed_role': role,
+                'available_roles': user.get_available_roles()
+            },
+            message=f"Role '{dict(UserRole.choices)[role]}' removed successfully"
+        )
+    )
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def set_primary_role_view(request):
+    """
+    Set a user's primary role.
+
+    The primary role determines the default dashboard and permissions context.
+    User must already have the role to set it as primary.
+    """
+    user = request.user
+    role = request.data.get('role')
+
+    if not role:
+        return Response(
+            create_error_response(
+                message="Role is required",
+                details={'role': ['This field is required.']}
+            ),
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Check if user has this role
+    if not user.has_role(role):
+        return Response(
+            create_error_response(
+                message="Role not found",
+                details={'role': ['User does not have this role.']}
+            ),
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Get the role assignment
+    new_primary = UserRoleAssignment.objects.filter(
+        user=user,
+        role=role,
+        is_active=True
+    ).first()
+
+    if not new_primary:
+        return Response(
+            create_error_response(
+                message="Role assignment not found"
+            ),
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Update primary role (this will automatically set others to non-primary via model save method)
+    new_primary.is_primary = True
+    new_primary.save()
+
+    # Also update the legacy role field for backward compatibility
+    user.role = role
+    user.save(update_fields=['role'])
+
+    return Response(
+        create_success_response(
+            data={
+                'primary_role': role,
+                'role_display': dict(UserRole.choices)[role],
+                'available_roles': user.get_available_roles()
+            },
+            message=f"Primary role set to '{dict(UserRole.choices)[role]}'"
+        )
+    )
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAuthenticated])
+def role_permissions_view(request):
+    """
+    Get detailed permissions for user's current roles.
+
+    Returns specific capabilities and access levels for each role.
+    """
+    user = request.user
+
+    permissions = {
+        'roles': user.get_available_roles(),
+        'primary_role': user.get_primary_role(),
+        'capabilities': {
+            'can_invest': user.can_invest(),
+            'can_list_properties': user.can_list_properties(),
+            'is_admin': user.is_admin_user(),
+            'can_access_investor_dashboard': user.has_role(UserRole.INVESTOR),
+            'can_access_property_owner_dashboard': user.has_role(UserRole.PROPERTY_OWNER),
+            'can_access_admin_panel': user.has_role(UserRole.ADMIN),
+        },
+        'requirements': {
+            'email_verification_required': not user.is_verified,
+            'kyc_verification_required': getattr(user, 'kyc_profile', None) is None or
+                                         getattr(user.kyc_profile, 'status', 'not_started') != 'approved',
+        },
+        'role_descriptions': {
+            UserRole.INVESTOR: 'Can invest in tokenized properties and track investments',
+            UserRole.PROPERTY_OWNER: 'Can list properties for tokenization and manage listings',
+            UserRole.ADMIN: 'Full administrative access to the platform'
+        }
+    }
+
+    return Response(
+        create_success_response(
+            data=permissions,
+            message="Role permissions retrieved successfully"
         )
     )

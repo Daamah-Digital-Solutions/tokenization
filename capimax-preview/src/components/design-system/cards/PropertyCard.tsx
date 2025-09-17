@@ -68,7 +68,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   
   // Calculate funding percentage
-  const calculatedFundingPercentage = funding_percentage || Math.round((tokens_sold / total_tokens) * 100);
+  const calculatedFundingPercentage = funding_percentage || Math.round(((tokens_sold || 0) / (total_tokens || 1)) * 100);
   
   // Format property location
   const location = `${city}${address ? ', ' + address : ''}`;
@@ -77,7 +77,8 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
   const primaryImage = images && images.length > 0 ? images[0] : '/images/placeholder-property.jpg';
   
   // Format currency values
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount?: number) => {
+    if (typeof amount !== 'number') return '$0';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -206,7 +207,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
           <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
             <div className="px-3 py-1.5 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-lg border border-white/20">
               <Text variant="caption" weight="semibold" className="text-slate-800 dark:text-white">
-                {property_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                {property_type ? property_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Property'}
               </Text>
             </div>
             {rating > 0 && (
@@ -311,13 +312,13 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
                 {is_under_construction ? 'Construction Progress' : 'Funding Progress'}
               </Text>
               <Text variant="bodySmall" weight="bold" color="primary">
-                {is_under_construction ? `${construction_progress}%` : `${calculatedFundingPercentage}%`}
+                {is_under_construction ? `${construction_progress || 0}%` : `${calculatedFundingPercentage}%`}
               </Text>
             </div>
             <div className="w-full bg-slate-200 dark:bg-gray-800 rounded-full h-3 overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
-                whileInView={{ width: `${is_under_construction ? construction_progress : calculatedFundingPercentage}%` }}
+                whileInView={{ width: `${is_under_construction ? (construction_progress || 0) : calculatedFundingPercentage}%` }}
                 viewport={{ once: true }}
                 transition={{ duration: 1, delay: 0.2 }}
                 className={cn(
@@ -332,10 +333,10 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
             </div>
             <div className="flex justify-between mt-2">
               <Text variant="caption" color="muted">
-                {tokens_sold.toLocaleString()} {is_under_construction ? 'reserved' : 'sold'}
+                {(tokens_sold || 0).toLocaleString()} {is_under_construction ? 'reserved' : 'sold'}
               </Text>
               <Text variant="caption" color="muted">
-                {total_tokens.toLocaleString()} total
+                {(total_tokens || 0).toLocaleString()} total
               </Text>
             </div>
           </div>
@@ -347,7 +348,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
               <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                 <Building2 className="w-4 h-4 mx-auto mb-1 text-orange-600 dark:text-orange-400" />
                 <Text variant="bodySmall" weight="bold" className="text-orange-600 dark:text-orange-400">
-                  {construction_progress}%
+                  {construction_progress || 0}%
                 </Text>
                 <Text variant="caption" color="muted">
                   Complete

@@ -11,6 +11,9 @@ from . import views
 app_name = 'analytics'
 
 urlpatterns = [
+    # General Analytics
+    path('', views.GeneralAnalyticsView.as_view(), name='general_analytics'),
+
     # Dashboard Analytics
     path('dashboard/', views.DashboardAnalyticsView.as_view(), name='dashboard_analytics'),
     

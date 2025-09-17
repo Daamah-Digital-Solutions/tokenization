@@ -17,6 +17,7 @@ from .views import (
     get_wallet_transactions,
     RefundViewSet,
     RecurringPaymentViewSet,
+    BankTransferView,
 )
 
 # Create router and register viewsets
@@ -46,8 +47,8 @@ urlpatterns = [
     # PayPal Integration (placeholder for future implementation)
     # path('paypal/<str:action>/', PayPalPaymentView.as_view(), name='paypal-payment'),
     
-    # Bank Transfer Integration (placeholder for future implementation)
-    # path('bank-transfer/<str:action>/', BankTransferView.as_view(), name='bank-transfer'),
+    # Bank Transfer Integration
+    path('bank-transfer/<str:action>/', BankTransferView.as_view(), name='bank-transfer'),
 ]
 
 """

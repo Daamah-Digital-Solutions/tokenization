@@ -1,7 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "Bash(\"C:\\Users\\Shimaa\\AppData\\Local\\Programs\\Python\\Python313\\python.exe\" validate_production_readiness.py)"
+      "Bash(\"C:\\Users\\Shimaa\\AppData\\Local\\Programs\\Python\\Python313\\python.exe\" validate_production_readiness.py)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(python -m pip install:*)",
+      "Bash(python manage.py:*)",
+      "Read(//d/Daamah/Clients/**)",
+      "Bash(python:*)",
+      "Bash(npx tsc:*)",
+      "Bash(curl:*)",
+      "Bash(set ACCESS_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4MTE3MzU3LCJpYXQiOjE3NTgxMTM3NTcsImp0aSI6ImFkMDZhNGQ5ZDQ2YjQyMDY5NTFmZTYxN2MyMjdjNTFlIiwidXNlcl9pZCI6ImU0OWI3YjJiLTRhNWQtNDU2My04ZDM5LTcwYTg2M2U2YzBjZCJ9.A7ETbmVxF4E0Tbf0us4aDj1XwkGzVZwLhbeX9mr9RV4)",
+      "Bash(findstr:*)",
+      "WebFetch(domain:localhost)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

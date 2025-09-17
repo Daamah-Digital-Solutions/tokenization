@@ -877,3 +877,275 @@ def _process_successful_payment(payment):
             property_obj = investment.property
             property_obj.tokens_sold += investment.token_amount
             property_obj.save()
+
+
+class BankTransferView(APIView):
+    """
+    Bank Transfer payment processing view.
+
+    Handles bank transfer payment creation, status updates, and management.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, action):
+        """Handle bank transfer actions."""
+        if action == 'create':
+            return self._create_bank_transfer(request)
+        elif action == 'status':
+            return self._get_transfer_status(request)
+        elif action == 'update':
+            return self._update_transfer_status(request)
+        elif action == 'cancel':
+            return self._cancel_transfer(request)
+        else:
+            return create_error_response(
+                message="Invalid action",
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+
+    def _create_bank_transfer(self, request):
+        """Create a new bank transfer payment."""
+        from .serializers import BankTransferCreateSerializer
+        from .services import PaymentService
+        from properties.models import Property
+
+        try:
+            serializer = BankTransferCreateSerializer(data=request.data)
+            if not serializer.is_valid():
+                return create_error_response(
+                    message="Invalid data",
+                    errors=serializer.errors,
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
+
+            validated_data = serializer.validated_data
+
+            # Verify property exists
+            try:
+                property_obj = Property.objects.get(id=validated_data['property_id'])
+            except Property.DoesNotExist:
+                return create_error_response(
+                    message="Property not found",
+                    status_code=status.HTTP_404_NOT_FOUND
+                )
+
+            # Create payment record
+            payment_details = {
+                'bank_transfer': {
+                    'account_holder_name': validated_data['account_holder_name'],
+                    'account_number': validated_data['account_number'],
+                    'routing_number': validated_data['routing_number'],
+                    'bank_name': validated_data['bank_name'],
+                    'bank_address': validated_data.get('bank_address', ''),
+                    'swift_code': validated_data.get('swift_code', ''),
+                    'transfer_instructions': validated_data.get('transfer_instructions', ''),
+                }
+            }
+
+            payment = Payment.objects.create(
+                user=request.user,
+                amount=validated_data['amount'],
+                currency=validated_data['currency'],
+                payment_method=PaymentMethod.BANK_TRANSFER,
+                payment_details=payment_details,
+                property_reference=property_obj.id
+            )
+
+            # Process payment
+            payment_service = PaymentService()
+            result = payment_service.process_payment(payment)
+
+            if result.success:
+                # Get the created bank transfer record
+                bank_transfer = payment.bank_transfer
+                from .serializers import BankTransferSerializer
+                transfer_data = BankTransferSerializer(bank_transfer).data
+
+                return create_success_response(
+                    data={
+                        'payment_id': result.payment_id,
+                        'transfer_reference': result.transaction_id,
+                        'status': result.status,
+                        'bank_transfer': transfer_data,
+                        'metadata': result.metadata
+                    },
+                    message="Bank transfer initiated successfully"
+                )
+            else:
+                return create_error_response(
+                    message=result.error_message,
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
+
+        except Exception as e:
+            logger.error(f"Bank transfer creation failed: {str(e)}")
+            return create_error_response(
+                message="Failed to create bank transfer",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def _get_transfer_status(self, request):
+        """Get bank transfer status."""
+        from .models import BankTransfer
+        from .serializers import BankTransferSerializer
+
+        try:
+            transfer_reference = request.query_params.get('transfer_reference')
+            payment_id = request.query_params.get('payment_id')
+
+            if transfer_reference:
+                bank_transfer = get_object_or_404(
+                    BankTransfer,
+                    transfer_reference=transfer_reference,
+                    payment__user=request.user
+                )
+            elif payment_id:
+                bank_transfer = get_object_or_404(
+                    BankTransfer,
+                    payment__id=payment_id,
+                    payment__user=request.user
+                )
+            else:
+                return create_error_response(
+                    message="Transfer reference or payment ID required",
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
+
+            serializer = BankTransferSerializer(bank_transfer)
+            return create_success_response(
+                data=serializer.data,
+                message="Transfer status retrieved successfully"
+            )
+
+        except Exception as e:
+            logger.error(f"Transfer status retrieval failed: {str(e)}")
+            return create_error_response(
+                message="Failed to retrieve transfer status",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def _update_transfer_status(self, request):
+        """Update bank transfer status (admin only)."""
+        from .models import BankTransfer
+        from .serializers import BankTransferStatusSerializer
+        from core.permissions import IsAdminUser
+
+        # Check admin permissions
+        if not IsAdminUser().has_permission(request, self):
+            return create_error_response(
+                message="Admin access required",
+                status_code=status.HTTP_403_FORBIDDEN
+            )
+
+        try:
+            transfer_reference = request.data.get('transfer_reference')
+            if not transfer_reference:
+                return create_error_response(
+                    message="Transfer reference required",
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
+
+            bank_transfer = get_object_or_404(
+                BankTransfer,
+                transfer_reference=transfer_reference
+            )
+
+            serializer = BankTransferStatusSerializer(data=request.data)
+            if not serializer.is_valid():
+                return create_error_response(
+                    message="Invalid data",
+                    errors=serializer.errors,
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
+
+            validated_data = serializer.validated_data
+
+            # Update transfer status
+            bank_transfer.transfer_status = validated_data['transfer_status']
+
+            if validated_data.get('bank_reference_number'):
+                bank_transfer.bank_reference_number = validated_data['bank_reference_number']
+
+            if validated_data.get('admin_notes'):
+                bank_transfer.admin_notes = validated_data['admin_notes']
+
+            if validated_data.get('completed_at'):
+                bank_transfer.completed_at = validated_data['completed_at']
+
+            # Update payment status based on transfer status
+            if bank_transfer.transfer_status == 'completed':
+                bank_transfer.payment.status = PaymentStatus.COMPLETED
+                bank_transfer.payment.completed_at = validated_data.get('completed_at', timezone.now())
+                bank_transfer.payment.save()
+
+                if not bank_transfer.completed_at:
+                    bank_transfer.completed_at = timezone.now()
+
+            elif bank_transfer.transfer_status == 'failed':
+                bank_transfer.payment.status = PaymentStatus.FAILED
+                bank_transfer.payment.save()
+
+            elif bank_transfer.transfer_status == 'cancelled':
+                bank_transfer.payment.status = PaymentStatus.CANCELLED
+                bank_transfer.payment.save()
+
+            bank_transfer.save()
+
+            from .serializers import BankTransferSerializer
+            transfer_data = BankTransferSerializer(bank_transfer).data
+
+            return create_success_response(
+                data=transfer_data,
+                message="Transfer status updated successfully"
+            )
+
+        except Exception as e:
+            logger.error(f"Transfer status update failed: {str(e)}")
+            return create_error_response(
+                message="Failed to update transfer status",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def _cancel_transfer(self, request):
+        """Cancel bank transfer."""
+        from .models import BankTransfer
+
+        try:
+            transfer_reference = request.data.get('transfer_reference')
+            if not transfer_reference:
+                return create_error_response(
+                    message="Transfer reference required",
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
+
+            bank_transfer = get_object_or_404(
+                BankTransfer,
+                transfer_reference=transfer_reference,
+                payment__user=request.user
+            )
+
+            # Only allow cancellation if transfer is still pending
+            if bank_transfer.transfer_status not in ['initiated', 'pending']:
+                return create_error_response(
+                    message="Transfer cannot be cancelled at this stage",
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Update status
+            bank_transfer.transfer_status = 'cancelled'
+            bank_transfer.save()
+
+            bank_transfer.payment.status = PaymentStatus.CANCELLED
+            bank_transfer.payment.save()
+
+            return create_success_response(
+                data={'transfer_reference': transfer_reference, 'status': 'cancelled'},
+                message="Transfer cancelled successfully"
+            )
+
+        except Exception as e:
+            logger.error(f"Transfer cancellation failed: {str(e)}")
+            return create_error_response(
+                message="Failed to cancel transfer",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

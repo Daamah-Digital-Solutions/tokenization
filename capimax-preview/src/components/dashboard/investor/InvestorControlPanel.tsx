@@ -39,9 +39,10 @@ import { cn } from '../../../utils/cn';
 
 interface InvestorControlPanelProps {
   className?: string;
+  currentView?: string;
 }
 
-type TabType = 'overview' | 'portfolio' | 'analytics' | 'transactions' | 'collaborative' | 'documents' | 'alerts';
+type TabType = 'overview' | 'portfolio' | 'investments' | 'analytics' | 'transactions' | 'income' | 'collaborative' | 'documents' | 'alerts';
 
 interface PriceAlert {
   id: string;
@@ -54,9 +55,37 @@ interface PriceAlert {
 }
 
 export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
-  className
+  className,
+  currentView
 }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  // Map dashboard sidebar views to internal tabs
+  const mapViewToTab = (view: string): TabType => {
+    switch (view) {
+      case 'portfolio':
+        return 'portfolio';
+      case 'investments':
+        return 'investments'; // Dedicated investments view
+      case 'transactions':
+        return 'transactions';
+      case 'income':
+        return 'income'; // Dedicated income view
+      case 'analytics':
+        return 'analytics';
+      default:
+        return 'overview';
+    }
+  };
+
+  const [activeTab, setActiveTab] = useState<TabType>(
+    currentView ? mapViewToTab(currentView) : 'overview'
+  );
+
+  // Update active tab when currentView changes
+  useEffect(() => {
+    if (currentView) {
+      setActiveTab(mapViewToTab(currentView));
+    }
+  }, [currentView]);
   const [showBalances, setShowBalances] = useState(true);
   const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
   const queryClient = useQueryClient();
@@ -99,11 +128,17 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
     { id: 'alerts', label: 'Alerts', icon: Bell },
   ] as const;
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | undefined | null) => {
+    if (typeof amount !== 'number' || isNaN(amount)) {
+      return showBalances ? '$0' : '$****';
+    }
     return showBalances ? `$${amount.toLocaleString()}` : '$****';
   };
 
-  const formatPercentage = (value: number) => {
+  const formatPercentage = (value: number | undefined | null) => {
+    if (typeof value !== 'number' || isNaN(value)) {
+      return showBalances ? '0.00%' : '**%';
+    }
     const formatted = `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
     return showBalances ? formatted : '**%';
   };
@@ -172,6 +207,7 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <AnimatePresence>
           <motion.div
+            key="portfolio-value"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0 }}
@@ -191,6 +227,7 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
           </motion.div>
 
           <motion.div
+            key="monthly-income"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
@@ -207,6 +244,7 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
           </motion.div>
 
           <motion.div
+            key="active-properties"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -222,6 +260,7 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
           </motion.div>
 
           <motion.div
+            key="total-invested"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -413,11 +452,25 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
           />
         )}
 
+        {activeTab === 'investments' && (
+          <InvestmentsContent
+            portfolio={portfolio}
+            loading={portfolioLoading}
+          />
+        )}
+
         {activeTab === 'analytics' && (
           <AnalyticsDashboard
             analyticsData={analyticsData}
             portfolio={portfolio}
             loading={analyticsLoading || portfolioLoading}
+          />
+        )}
+
+        {activeTab === 'income' && (
+          <IncomeContent
+            portfolio={portfolio}
+            loading={portfolioLoading}
           />
         )}
 
@@ -616,5 +669,169 @@ const AlertsContent: React.FC = () => (
         </div>
       </Card>
     </div>
+  </div>
+);
+
+// Investments Content Component
+const InvestmentsContent: React.FC<{
+  portfolio: Portfolio | undefined;
+  loading: boolean;
+}> = ({ portfolio, loading }) => (
+  <div className="space-y-6">
+    <div className="flex justify-between items-center">
+      <Text variant="h3" weight="semibold">
+        Investment History
+      </Text>
+      <Button variant="primary" size="sm">
+        <Plus className="w-4 h-4 mr-2" />
+        New Investment
+      </Button>
+    </div>
+
+    <div className="grid grid-cols-1 gap-4">
+      {loading ? (
+        Array.from({ length: 5 }).map((_, i) => (
+          <Card key={i} className="p-4">
+            <div className="animate-pulse bg-slate-200 dark:bg-slate-700 h-20 rounded" />
+          </Card>
+        ))
+      ) : (
+        portfolio?.investments?.map((investment) => (
+          <Card key={investment.id} className="p-6 hover:shadow-md transition-shadow">
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <Text variant="body" weight="semibold" className="mb-2">
+                  {investment.property?.title || `Investment #${investment.id.slice(0, 8)}`}
+                </Text>
+                <Text variant="caption" color="muted">
+                  {investment.token_amount} tokens • ${investment.investment_amount.toLocaleString()}
+                </Text>
+              </div>
+              <div className="text-right">
+                <Text variant="body" weight="semibold" className={cn(
+                  investment.status === 'active' ? 'text-emerald-600' :
+                  investment.status === 'pending' ? 'text-orange-600' :
+                  'text-slate-600'
+                )}>
+                  {investment.status.toUpperCase()}
+                </Text>
+                <Text variant="caption" color="muted">
+                  {new Date(investment.created_at).toLocaleDateString()}
+                </Text>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <div>
+                <Text variant="caption" color="muted">Current Value</Text>
+                <Text variant="body" weight="semibold">
+                  ${(investment.investment_amount * 1.15).toLocaleString()}
+                </Text>
+              </div>
+              <div>
+                <Text variant="caption" color="muted">Return</Text>
+                <Text variant="body" weight="semibold" className="text-emerald-600">
+                  +15.2%
+                </Text>
+              </div>
+            </div>
+          </Card>
+        )) || (
+          <Card className="p-8 text-center">
+            <Text variant="body" color="muted">
+              No investments found. Start investing to see your portfolio here.
+            </Text>
+          </Card>
+        )
+      )}
+    </div>
+  </div>
+);
+
+// Income Content Component
+const IncomeContent: React.FC<{
+  portfolio: Portfolio | undefined;
+  loading: boolean;
+}> = ({ portfolio, loading }) => (
+  <div className="space-y-6">
+    <div className="flex justify-between items-center">
+      <Text variant="h3" weight="semibold">
+        Income & Dividends
+      </Text>
+      <Button variant="outline" size="sm">
+        <Download className="w-4 h-4 mr-2" />
+        Export Report
+      </Button>
+    </div>
+
+    {/* Income Summary Cards */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <StatsCard
+        title="Monthly Income"
+        value={loading ? '$0' : `$${portfolio?.monthly_dividends?.toLocaleString() || '0'}`}
+        subtitle="Average monthly dividends"
+        icon={DollarSign}
+        variant="default"
+      />
+      <StatsCard
+        title="This Year"
+        value={loading ? '$0' : `$${(portfolio?.monthly_dividends * 12 * 0.8)?.toLocaleString() || '0'}`}
+        subtitle="Total dividends received"
+        icon={Calendar}
+        variant="default"
+      />
+      <StatsCard
+        title="Dividend Yield"
+        value={loading ? '0%' : `${((portfolio?.monthly_dividends * 12 / portfolio?.total_invested) * 100)?.toFixed(1) || '0'}%`}
+        subtitle="Annual yield rate"
+        icon={TrendingUp}
+        variant="default"
+      />
+    </div>
+
+    {/* Recent Dividend Payments */}
+    <Card className="p-6">
+      <Text variant="body" weight="semibold" className="mb-4">
+        Recent Dividend Payments
+      </Text>
+
+      <div className="space-y-4">
+        {loading ? (
+          Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="animate-pulse bg-slate-200 dark:bg-slate-700 h-16 rounded" />
+          ))
+        ) : (
+          // Mock dividend data - replace with real API data
+          [
+            { id: '1', property: 'Downtown Plaza', amount: 125.50, date: '2024-01-15', status: 'paid' },
+            { id: '2', property: 'Sunset Apartments', amount: 89.75, date: '2024-01-15', status: 'paid' },
+            { id: '3', property: 'Tech Park Office', amount: 234.20, date: '2024-01-15', status: 'paid' },
+            { id: '4', property: 'Riverside Mall', amount: 156.80, date: '2024-01-15', status: 'pending' },
+            { id: '5', property: 'Green Valley Resort', amount: 198.40, date: '2024-01-15', status: 'pending' }
+          ].map((dividend) => (
+            <div key={dividend.id} className="flex justify-between items-center py-3 border-b border-slate-200 dark:border-slate-700 last:border-b-0">
+              <div>
+                <Text variant="body" weight="medium">
+                  {dividend.property}
+                </Text>
+                <Text variant="caption" color="muted">
+                  {new Date(dividend.date).toLocaleDateString()}
+                </Text>
+              </div>
+              <div className="text-right">
+                <Text variant="body" weight="semibold">
+                  ${dividend.amount.toFixed(2)}
+                </Text>
+                <Text variant="caption" className={cn(
+                  dividend.status === 'paid' ? 'text-emerald-600' : 'text-orange-600'
+                )}>
+                  {dividend.status.toUpperCase()}
+                </Text>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </Card>
   </div>
 );

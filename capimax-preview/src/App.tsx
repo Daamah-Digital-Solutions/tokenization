@@ -34,6 +34,7 @@ const DashboardPage = React.lazy(() => import('./pages/DashboardPage').then(m =>
 const DemoPage = React.lazy(() => import('./pages/DemoPage').then(m => ({ default: m.DemoPage })));
 const IntegrationTestPage = React.lazy(() => import('./pages/IntegrationTestPage').then(m => ({ default: m.IntegrationTestPage })));
 const WalletManagementPage = React.lazy(() => import('./components/payments').then(m => ({ default: m.WalletManagementPage })));
+const RoleManagementPage = React.lazy(() => import('./pages/RoleManagementPage').then(m => ({ default: m.RoleManagementPage })));
 
 // Loading fallback component
 const PageLoader: React.FC<{ message?: string }> = ({ message = 'Loading page...' }) => (
@@ -159,6 +160,15 @@ const AppRouter: React.FC = () => {
           <main {...mainProps}>
             <Suspense fallback={<PageLoader message="Loading wallet..." />}>
               <WalletManagementPage />
+            </Suspense>
+          </main>
+        );
+      case 'role-management':
+      case 'settings/roles':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading role management..." />}>
+              <RoleManagementPage />
             </Suspense>
           </main>
         );

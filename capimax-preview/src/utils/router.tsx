@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Route = 'home' | 'login' | 'register' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'wallet' | 'demo' | 'integration-test' | 'about' | 'contact';
+type Route = 'home' | 'login' | 'register' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'wallet' | 'role-management' | 'demo' | 'integration-test' | 'about' | 'contact';
 
 interface RouterContextType {
   currentRoute: Route;
@@ -39,6 +39,8 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       '/properties': 'properties',
       '/property-detail': 'property-detail',
       '/wallet': 'wallet',
+      '/role-management': 'role-management',
+      '/settings/roles': 'role-management',
       '/demo': 'demo',
       '/integration-test': 'integration-test',
       '/about': 'about',
@@ -63,6 +65,8 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
         '/properties': 'properties',
         '/property-detail': 'property-detail',
         '/wallet': 'wallet',
+        '/role-management': 'role-management',
+        '/settings/roles': 'role-management',
         '/demo': 'demo',
         '/integration-test': 'integration-test',
         '/about': 'about',
@@ -87,6 +91,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       properties: '/properties',
       'property-detail': '/property-detail',
       wallet: '/wallet',
+      'role-management': '/role-management',
       demo: '/demo',
       'integration-test': '/integration-test',
       about: '/about',

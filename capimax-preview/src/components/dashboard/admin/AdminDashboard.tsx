@@ -5,6 +5,7 @@ import { useAdminDashboard, useAdminActions } from '../../../hooks/useAdminDashb
 import type { AdminUser, AdminProperty, SystemAlert } from '../../../services';
 import { UserDetailModal, PropertyDetailModal } from './modals';
 import AdminWebSocketManager from './AdminWebSocketManager';
+import { PropertyApprovalDashboard } from '../../admin/PropertyApprovalDashboard';
 
 // Helper function to convert dashboard stats to StatItem format
 const formatDashboardStats = (stats: any): StatItem[] => {
@@ -1103,14 +1104,8 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
               </div>
             </div>
           )}
-          
-          <PropertyApproval 
-            properties={properties?.properties || null}
-            isLoading={loadingStates.properties}
-            error={error}
-            onRetry={() => refreshData('properties')}
-            onPropertyAction={handlePropertyAction}
-          />
+
+          <PropertyApprovalDashboard />
         </div>
       );
 

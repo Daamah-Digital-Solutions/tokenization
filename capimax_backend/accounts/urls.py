@@ -23,6 +23,12 @@ from .views import (
     TwoFactorDisableView,
     user_stats_view,
     check_email_availability,
+    # Role management views
+    user_roles_view,
+    add_user_role_view,
+    remove_user_role_view,
+    set_primary_role_view,
+    role_permissions_view,
 )
 
 app_name = 'accounts'
@@ -55,4 +61,11 @@ urlpatterns = [
     
     # Utility endpoints
     path('check-email/', check_email_availability, name='check-email-availability'),
+
+    # Role management endpoints
+    path('roles/', user_roles_view, name='user-roles'),
+    path('roles/add/', add_user_role_view, name='add-user-role'),
+    path('roles/remove/<str:role>/', remove_user_role_view, name='remove-user-role'),
+    path('roles/set-primary/', set_primary_role_view, name='set-primary-role'),
+    path('roles/permissions/', role_permissions_view, name='role-permissions'),
 ]

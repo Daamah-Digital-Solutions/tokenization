@@ -19,13 +19,28 @@ export class ApiClient {
   }
 
   private setupInterceptors(): void {
+    // Public endpoints that should not include auth token
+    const publicEndpoints = [
+      '/auth/register/',
+      '/auth/login/',
+      '/auth/password/reset/',
+      '/auth/password/reset/confirm/',
+      '/auth/check-email/'
+    ];
+
     // Request interceptor to add auth token
     this.client.interceptors.request.use(
       (config) => {
-        if (this.authToken) {
+        // Check if this is a public endpoint
+        const isPublicEndpoint = publicEndpoints.some(endpoint =>
+          config.url?.includes(endpoint)
+        );
+
+        // Only add auth token for non-public endpoints
+        if (this.authToken && !isPublicEndpoint) {
           config.headers.Authorization = `Bearer ${this.authToken}`;
         }
-        
+
         // Add request timestamp for monitoring
         (config as any).metadata = { requestStartTime: new Date().getTime() };
         

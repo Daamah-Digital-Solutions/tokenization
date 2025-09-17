@@ -13,11 +13,11 @@ import uuid
 
 
 class UserRole(models.TextChoices):
-    """User role choices for role-based access control."""
+    """User role choices for main platform role-based access control."""
     INVESTOR = 'investor', 'Investor'
     PROPERTY_OWNER = 'property_owner', 'Property Owner'
-    BROKER = 'broker', 'Broker'
     ADMIN = 'admin', 'Admin'
+    # Note: BROKER role moved to separate broker_platform app
 
 
 class UserManager(BaseUserManager):
@@ -207,21 +207,115 @@ class User(AbstractUser):
         """Return the user's full name."""
         return f"{self.first_name} {self.last_name}".strip()
     
+    def has_role(self, role):
+        """Check if user has a specific role (multi-role support)."""
+        if hasattr(self, '_role_cache'):
+            return role in self._role_cache
+        # For backward compatibility with single role
+        return self.role == role or self.user_roles.filter(role=role, is_active=True).exists()
+
+    def get_available_roles(self):
+        """Get all available roles for this user."""
+        if hasattr(self, '_role_cache'):
+            return self._role_cache
+        # Include both legacy single role and new multi-roles
+        roles = set()
+        if self.role:
+            roles.add(self.role)
+        roles.update(self.user_roles.filter(is_active=True).values_list('role', flat=True))
+        return sorted(list(roles))
+
     def can_invest(self):
         """Check if user can make investments."""
-        return self.role in [UserRole.INVESTOR, UserRole.BROKER] and self.is_verified
-    
+        return self.has_role(UserRole.INVESTOR) and self.is_verified
+
     def can_list_properties(self):
         """Check if user can list properties."""
-        return self.role == UserRole.PROPERTY_OWNER and self.is_verified
-    
+        return self.has_role(UserRole.PROPERTY_OWNER) and self.is_verified
+
     def is_admin_user(self):
         """Check if user has admin privileges."""
-        return self.role == UserRole.ADMIN
-    
-    def is_broker_user(self):
-        """Check if user is a broker."""
-        return self.role == UserRole.BROKER
+        return self.has_role(UserRole.ADMIN)
+
+    def get_primary_role(self):
+        """Get user's primary role."""
+        primary_role_assignment = self.user_roles.filter(is_primary=True, is_active=True).first()
+        if primary_role_assignment:
+            return primary_role_assignment.role
+        # Fallback to legacy single role
+        return self.role
+
+
+class UserRoleAssignment(models.Model):
+    """
+    Model for managing multiple roles per user.
+
+    Enables users to have multiple roles (e.g., both Investor and Property Owner)
+    with the ability to switch between them seamlessly.
+    """
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='user_roles',
+        help_text="User assigned to this role"
+    )
+
+    role = models.CharField(
+        max_length=20,
+        choices=UserRole.choices,
+        help_text="Role assigned to the user"
+    )
+
+    is_primary = models.BooleanField(
+        default=False,
+        help_text="Whether this is the user's primary role"
+    )
+
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this role assignment is active"
+    )
+
+    assigned_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="When this role was assigned"
+    )
+
+    assigned_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='assigned_roles',
+        help_text="Admin user who assigned this role"
+    )
+
+    class Meta:
+        db_table = 'accounts_user_role_assignment'
+        unique_together = ('user', 'role')
+        indexes = [
+            models.Index(fields=['user', 'is_active']),
+            models.Index(fields=['role', 'is_active']),
+            models.Index(fields=['user', 'is_primary']),
+        ]
+        verbose_name = 'User Role Assignment'
+        verbose_name_plural = 'User Role Assignments'
+
+    def __str__(self):
+        primary_indicator = " (Primary)" if self.is_primary else ""
+        return f"{self.user.get_full_name()} - {self.get_role_display()}{primary_indicator}"
+
+    def save(self, *args, **kwargs):
+        """Ensure only one primary role per user."""
+        if self.is_primary:
+            # Set all other roles for this user to non-primary
+            UserRoleAssignment.objects.filter(
+                user=self.user,
+                is_active=True
+            ).exclude(pk=self.pk).update(is_primary=False)
+
+        super().save(*args, **kwargs)
 
 
 class PasswordResetToken(models.Model):

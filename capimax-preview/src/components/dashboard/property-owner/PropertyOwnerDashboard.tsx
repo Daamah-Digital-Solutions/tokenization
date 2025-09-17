@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { DashboardStats, ActivityFeed, PerformanceChart, QuickActions } from '../';
 import type { StatItem, ActivityItem, ChartDataPoint, QuickAction } from '../';
+import PropertyApprovalStatus from '../../property-owner/PropertyApprovalStatus';
 
 // Mock data for property owner dashboard
 const mockOwnerStats: StatItem[] = [
@@ -480,6 +481,13 @@ export const PropertyOwnerDashboard: React.FC<{ currentView: string }> = ({ curr
               </button>
             </div>
           </div>
+
+          {/* Property Approval Status - Example with a property ID */}
+          <PropertyApprovalStatus
+            propertyId="example-property-id"
+            className="mb-6"
+          />
+
           <PropertyOverview />
           <TokenizationProgress />
         </div>

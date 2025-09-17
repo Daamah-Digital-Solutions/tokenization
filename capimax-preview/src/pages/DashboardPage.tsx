@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { DynamicUserDashboard } from '../components/dashboard/DynamicUserDashboard';
 import { InvestorControlPanel } from '../components/dashboard/investor/InvestorControlPanel';
 import { PropertyOwnerDashboard } from '../components/dashboard/property-owner/PropertyOwnerDashboard';
 import { AdminDashboard } from '../components/dashboard/admin/AdminDashboard';
 import { BrokerDashboard } from '../components/dashboard/broker/BrokerDashboard';
+import { RoleSwitcher } from '../components/dashboard/RoleSwitcher';
+import { ThemeToggle } from '../components/ui/ThemeToggle';
+import CapiMaxLightLogo from '../assets/tokenization_capi max  tokenization light  uk  copy.svg';
+import CapiMaxDarkLogo from '../assets/tokenization_capi max tokenization uk dark   copy.svg';
 
 // Dashboard Types
 export type UserRole = 'investor' | 'property_owner' | 'admin' | 'broker';
@@ -26,15 +31,18 @@ interface DashboardLayoutProps {
   user: DashboardUser;
   currentView: string;
   onViewChange: (view: string) => void;
+  onRoleSwitch?: (newRole: UserRole) => void;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
   user,
   currentView,
-  onViewChange
+  onViewChange,
+  onRoleSwitch
 }) => {
   const { navigate } = useRouter();
+  const { theme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Navigation items based on user role
@@ -86,21 +94,37 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   const navigationItems = getNavigationItems(user.role);
 
+  // Handle navigation item click with auto-close for mobile
+  const handleNavigationClick = (itemId: string) => {
+    onViewChange(itemId);
+    // Auto-close sidebar on mobile after navigation
+    if (window.innerWidth < 768) { // md breakpoint
+      setSidebarOpen(false);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-neutral-50 dark:bg-slate-900">
+      {/* Mobile sidebar backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-white dark:bg-slate-800 border-r border-neutral-200 dark:border-slate-700 transition-all duration-300 flex flex-col`}>
+      <div className={`${sidebarOpen ? 'w-[80%] md:w-64' : 'w-16'} bg-white dark:bg-slate-800 border-r border-neutral-200 dark:border-slate-700 transition-all duration-300 flex flex-col ${sidebarOpen ? 'fixed inset-y-0 left-0 md:relative z-50 md:z-auto' : 'hidden md:flex'}`}>
         {/* Sidebar Header */}
         <div className="p-4 border-b border-neutral-200 dark:border-slate-700">
           <div className="flex items-center justify-between">
             {sidebarOpen && (
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">C</span>
-                </div>
-                <span className="font-semibold text-neutral-900 dark:text-slate-100">
-                  CapiMax
-                </span>
+                <img
+                  src={theme === 'dark' ? CapiMaxLightLogo : CapiMaxDarkLogo}
+                  alt="CapiMax"
+                  className="h-8 w-auto"
+                />
               </div>
             )}
             <button
@@ -117,8 +141,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           {navigationItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => onViewChange(item.id)}
-              className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors ${
+              onClick={() => handleNavigationClick(item.id)}
+              className={`w-full flex items-center ${sidebarOpen ? 'space-x-3 px-3' : 'justify-center px-2'} py-2 rounded-lg transition-colors ${
                 currentView === item.id
                   ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400'
                   : 'text-neutral-600 hover:bg-neutral-50 dark:text-slate-400 dark:hover:bg-slate-700'
@@ -134,7 +158,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
         {/* User Profile */}
         <div className="p-4 border-t border-neutral-200 dark:border-slate-700">
-          <div className="flex items-center space-x-3">
+          <div className={`flex items-center ${sidebarOpen ? 'space-x-3' : 'justify-center'}`}>
             <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
               <span className="text-white font-medium text-sm">
                 {user.name.charAt(0)}
@@ -157,29 +181,58 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-white dark:bg-slate-800 border-b border-neutral-200 dark:border-slate-700 px-6 py-4">
+        <header className="bg-white dark:bg-slate-800 border-b border-neutral-200 dark:border-slate-700 px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-neutral-900 dark:text-slate-100 capitalize">
-                {currentView.replace('-', ' ')} Dashboard
-              </h1>
-              <p className="text-sm text-neutral-500 dark:text-slate-400 mt-1">
-                Welcome back, {user.name}
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              {/* Notifications */}
-              <button className="relative p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-slate-300 transition-colors">
-                <span className="text-xl">🔔</span>
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+            <div className="flex items-center min-w-0 flex-1">
+              {/* Mobile menu button */}
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-2 mr-3 text-neutral-600 hover:text-neutral-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors md:hidden"
+                title="Open menu"
+              >
+                <span className="text-lg">☰</span>
               </button>
-              
-              {/* Settings */}
-              <button 
+
+              {/* Mobile: CapiMax logo */}
+              <div className="flex items-center md:hidden">
+                <img
+                  src={theme === 'dark' ? CapiMaxLightLogo : CapiMaxDarkLogo}
+                  alt="CapiMax"
+                  className="h-8 w-auto"
+                />
+              </div>
+
+              {/* Desktop: Page title and welcome message */}
+              <div className="min-w-0 flex-1 hidden md:block">
+                <h1 className="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-slate-100 capitalize truncate">
+                  {currentView.replace('-', ' ')} Dashboard
+                </h1>
+                <p className="text-sm text-neutral-500 dark:text-slate-400 mt-1">
+                  Welcome back, {user.name}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+              {/* Theme Toggle - Moved to main header */}
+              <ThemeToggle />
+
+              {/* Role Switcher */}
+              <RoleSwitcher onRoleSwitch={onRoleSwitch} />
+
+              {/* Exit Dashboard */}
+              <button
                 onClick={() => navigate('home')}
-                className="px-4 py-2 text-sm font-medium text-neutral-600 hover:text-neutral-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors"
+                className="px-3 py-2 text-sm font-medium text-neutral-600 hover:text-neutral-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors hidden sm:inline-flex"
               >
                 Exit Dashboard
+              </button>
+              {/* Mobile Exit Button */}
+              <button
+                onClick={() => navigate('home')}
+                className="p-2 text-neutral-600 hover:text-neutral-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors sm:hidden"
+                title="Exit Dashboard"
+              >
+                <span className="text-lg">←</span>
               </button>
             </div>
           </div>
@@ -197,9 +250,34 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 // Main Dashboard Page Component
 export const DashboardPage: React.FC = () => {
   const [currentView, setCurrentView] = useState('overview');
-  const { state } = useAuth();
+  const [activeRole, setActiveRole] = useState<UserRole | null>(null);
+  const { state, refreshUser } = useAuth();
   const { navigate } = useRouter();
   const authUser = state.user;
+
+  // Initialize active role with user's default role and sync with auth updates
+  React.useEffect(() => {
+    if (authUser) {
+      // Always sync activeRole with authUser.role to handle role switches properly
+      setActiveRole(authUser.role as UserRole);
+    }
+  }, [authUser?.role]); // Depend on authUser.role specifically
+
+  // Handle role switch from RoleSwitcher component
+  const handleRoleSwitch = async (newRole: UserRole) => {
+    setActiveRole(newRole);
+    setCurrentView('overview'); // Reset to overview when switching roles
+
+    // Refresh the user data from AuthContext to sync the backend state
+    // This ensures the dashboard stays in sync without page reload
+    try {
+      if (refreshUser) {
+        await refreshUser();
+      }
+    } catch (error) {
+      console.warn('Could not refresh user data after role switch:', error);
+    }
+  };
 
   // Redirect to login if not authenticated
   React.useEffect(() => {
@@ -227,12 +305,12 @@ export const DashboardPage: React.FC = () => {
     return null;
   }
   
-  // Map auth user to dashboard user format
+  // Map auth user to dashboard user format, using active role for multi-role support
   const user: DashboardUser = authUser ? {
     id: authUser.id,
     name: `${authUser.first_name} ${authUser.last_name}`.trim() || 'User',
     email: authUser.email,
-    role: authUser.role as UserRole,
+    role: activeRole || (authUser.role as UserRole), // Use active role if available, fallback to user's default role
     avatar: undefined,
     isKYCVerified: authUser.kyc_status === 'approved',
     joinedDate: authUser.created_at?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0]
@@ -285,10 +363,11 @@ export const DashboardPage: React.FC = () => {
   };
 
   return (
-    <DashboardLayout 
-      user={user} 
-      currentView={currentView} 
+    <DashboardLayout
+      user={user}
+      currentView={currentView}
       onViewChange={setCurrentView}
+      onRoleSwitch={handleRoleSwitch}
     >
       {renderDashboardContent()}
     </DashboardLayout>

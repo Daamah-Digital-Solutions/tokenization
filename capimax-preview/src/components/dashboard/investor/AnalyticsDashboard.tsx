@@ -180,8 +180,19 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     };
   }, []);
 
-  const formatCurrency = (value: number) => `$${value.toLocaleString()}`;
-  const formatPercentage = (value: number) => `${value.toFixed(1)}%`;
+  const formatCurrency = (value: number | undefined | null) => {
+    if (typeof value !== 'number' || isNaN(value)) {
+      return '$0';
+    }
+    return `$${value.toLocaleString()}`;
+  };
+
+  const formatPercentage = (value: number | undefined | null) => {
+    if (typeof value !== 'number' || isNaN(value)) {
+      return '0.0%';
+    }
+    return `${value.toFixed(1)}%`;
+  };
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {

@@ -135,7 +135,7 @@ urlpatterns = [
     path('api/v1/analytics/', include('analytics.urls')),
     path('api/v1/dashboard/', include('dashboard.urls')),
     path('api/v1/marketplace/', include('marketplace.urls')),
-    # path('api/v1/admin/', include('admin_panel.urls')),
+    path('api/v1/admin/', include('admin_panel.urls')),
     # path('api/v1/blockchain/', include('blockchain.urls')),  # Temporarily disabled due to web3 compatibility
 ]
 

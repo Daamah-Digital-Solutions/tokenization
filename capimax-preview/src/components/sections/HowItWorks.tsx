@@ -7,7 +7,7 @@ export const HowItWorks: React.FC = () => {
     {
       icon: Search,
       title: "Browse Properties",
-      description: "Explore vetted, institutional-grade real estate opportunities with complete transparency.",
+      description: "Explore Ready Properties generating immediate income or Under Construction projects with higher returns.",
       step: "01"
     },
     {
@@ -25,7 +25,7 @@ export const HowItWorks: React.FC = () => {
     {
       icon: TrendingUp,
       title: "Earn Returns",
-      description: "Receive rental income and appreciation automatically through smart contracts.",
+      description: "Get quarterly dividends from Ready Properties or construction milestone returns from new developments.",
       step: "04"
     }
   ];

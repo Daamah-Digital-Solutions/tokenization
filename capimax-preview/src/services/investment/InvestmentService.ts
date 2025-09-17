@@ -185,7 +185,7 @@ export class InvestmentService {
     return_percentage: number;
   }>> {
     try {
-      return await apiClient.get('/investments/portfolio/performance', { period });
+      return await apiClient.get('/investments/portfolio/performance/', { period });
     } catch (error) {
       console.error('Failed to get portfolio performance:', error);
       throw error;

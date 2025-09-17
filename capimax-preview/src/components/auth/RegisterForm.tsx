@@ -33,16 +33,17 @@ export interface RegisterData {
   email: string;
   phoneNumber: string;
   dateOfBirth: string;
-  
+
   // Location Information
   country: string;
   city: string;
-  
+
   // Account Information
   password: string;
   confirmPassword: string;
-  userType: UserRole;
-  
+  userType: UserRole;  // Primary role for backward compatibility
+  userRoles: UserRole[];  // Multi-role support
+
   // Agreements
   agreeToTerms: boolean;
   agreeToPrivacy: boolean;
@@ -62,8 +63,8 @@ const STEPS = [
 
 const USER_TYPES = [
   { value: UserRole.INVESTOR, label: 'Investor - I want to invest in real estate' },
-  { value: UserRole.PROPERTY_OWNER, label: 'Property Owner - I want to tokenize my property' },
-  { value: UserRole.BROKER, label: 'Broker - I want to refer properties and earn commissions' }
+  { value: UserRole.PROPERTY_OWNER, label: 'Property Owner - I want to tokenize my property' }
+  // Note: BROKER role has been moved to a separate partner program
 ];
 
 const COUNTRIES = [
@@ -94,6 +95,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     password: '',
     confirmPassword: '',
     userType: UserRole.INVESTOR,
+    userRoles: [UserRole.INVESTOR],  // Initialize with default role
     agreeToTerms: false,
     agreeToPrivacy: false,
     agreeToMarketing: false
@@ -130,14 +132,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
           errors.password = 'Password must contain uppercase, lowercase, and number';
         }
-        
+
         if (!formData.confirmPassword) {
           errors.confirmPassword = 'Please confirm your password';
         } else if (formData.password !== formData.confirmPassword) {
           errors.confirmPassword = 'Passwords do not match';
         }
-        
-        if (!formData.userType) errors.userType = 'Please select your user type';
+
+        if (formData.userRoles.length === 0) errors.userRoles = 'Please select at least one role';
         break;
 
       case 3: // Agreements
@@ -178,7 +180,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         password: formData.password,
         firstName: formData.firstName,
         lastName: formData.lastName,
-        role: formData.userType,
+        role: formData.userRoles[0],  // Primary role (first selected)
+        roles: formData.userRoles,     // Multi-role support
         phone: formData.phoneNumber,
         country: formData.country,
       });
@@ -311,15 +314,62 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             exit={{ opacity: 0, x: -20 }}
             className="space-y-5"
           >
-            <Select
-              label="I am a..."
-              placeholder="Select your role"
-              options={USER_TYPES}
-              value={formData.userType}
-              onChange={(e) => setFormData(prev => ({ ...prev, userType: e.target.value as UserRole }))}
-              errorMessage={validationErrors.userType}
-              required
-            />
+            {/* Multi-role selection */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Select your role(s) <span className="text-red-500">*</span>
+              </label>
+              <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg space-y-3">
+                {USER_TYPES.map(roleType => (
+                  <label
+                    key={roleType.value}
+                    className="flex items-start gap-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 p-2 rounded-lg transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 mt-0.5 text-emerald-500 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded focus:ring-emerald-500 focus:ring-2"
+                      checked={formData.userRoles.includes(roleType.value)}
+                      onChange={(e) => {
+                        const newRoles = e.target.checked
+                          ? [...formData.userRoles, roleType.value]
+                          : formData.userRoles.filter(r => r !== roleType.value);
+                        setFormData(prev => ({
+                          ...prev,
+                          userRoles: newRoles,
+                          userType: newRoles[0] || UserRole.INVESTOR // Set primary role
+                        }));
+                        // Clear validation error
+                        if (validationErrors.userRoles) {
+                          setValidationErrors(prev => ({ ...prev, userRoles: undefined }));
+                        }
+                      }}
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium text-slate-700 dark:text-slate-200">
+                        {roleType.label.split(' - ')[0]}
+                      </div>
+                      <div className="text-sm text-slate-500 dark:text-slate-400">
+                        {roleType.label.split(' - ')[1]}
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              {formData.userRoles.length > 1 && (
+                <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                  <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-sm text-emerald-700 dark:text-emerald-300">
+                    You can switch between roles anytime from your dashboard
+                  </span>
+                </div>
+              )}
+              {validationErrors.userRoles && (
+                <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400">
+                  <AlertCircle className="w-4 h-4" />
+                  {validationErrors.userRoles}
+                </div>
+              )}
+            </div>
 
             <Input
               type="password"

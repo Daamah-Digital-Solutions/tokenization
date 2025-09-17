@@ -26,7 +26,7 @@ Located in `capimax_backend/`, organized into 15 modular Django apps:
 - **admin_panel**: Administrative interface and controls
 - **core**: Shared utilities and base models
 
-Multi-environment settings structure with base/development/production/testing configurations.
+Settings structure: `capimax_backend/settings/` with base.py, development.py, production.py, staging.py, testing.py
 
 ### Frontend (React)
 Located in `capimax-preview/`, built with:
@@ -56,18 +56,22 @@ python manage.py runserver
 
 # Run tests
 python manage.py test
+python manage.py test <app_name>  # Specific app tests
 
-# Run specific app tests
-python manage.py test <app_name>
+# Run tests with coverage (pytest)
+pytest --cov=. --cov-report=html --cov-report=term-missing --cov-fail-under=85
 
-# Make migrations for an app
+# Make migrations
 python manage.py makemigrations <app_name>
 
-# Check for issues without making migrations
+# Check for issues
 python manage.py check
 
 # Validate production readiness
 python validate_production_readiness.py
+
+# Collect static files for production
+python manage.py collectstatic
 ```
 
 ### Frontend
@@ -77,14 +81,17 @@ cd capimax-preview
 # Install dependencies
 npm install
 
-# Start development server (runs on port 5174 if 5173 is busy)
+# Start development server (port 5173, falls back to 5174)
 npm run dev
 
 # Build for production
 npm run build
 
-# Run linting
+# Run linting (ESLint)
 npm run lint
+
+# Type checking
+tsc --noEmit
 
 # Preview production build
 npm run preview
@@ -109,21 +116,67 @@ Key endpoints:
 
 API documentation available at: `http://localhost:8000/api/docs/`
 
-## Key Models and Data Flow
+## Testing Configuration
 
-### User Roles
-- **Investor**: Can browse properties, make investments, track portfolio
-- **Property Owner**: Can list properties, manage tokenization, track sales
-- **Broker**: Can manage multiple properties, earn commissions
-- **Admin**: Full system access, user management, compliance oversight
+### Backend Testing
+- **Framework**: pytest with Django integration (`pytest.ini` configured)
+- **Coverage requirement**: 85% minimum
+- **Test discovery**: `tests.py`, `test_*.py`, `*_tests.py`
+- **Settings**: Uses `capimax_backend.settings_test`
+- **Markers available**: unit, integration, websocket, performance, slow
+- **Test location**: Each app's `tests/` directory
 
-### Investment Flow
-1. User completes KYC verification
-2. Browses available tokenized properties
-3. Selects investment amount/tokens
-4. Processes payment (fiat or crypto)
-5. Receives tokens to wallet
-6. Tracks investment performance
+### Frontend Testing
+- No testing framework currently configured
+- Missing jest/vitest and react-testing-library
+
+## Production Deployment
+
+### Docker Compose Setup
+Production deployment uses comprehensive Docker Compose configuration with:
+- **Gunicorn**: 4 workers with gevent, 1000 connections
+- **PostgreSQL 15**: Performance-optimized configuration
+- **Redis**: For caching and WebSocket support
+- **Celery**: Background tasks with beat scheduler
+- **Nginx**: Reverse proxy with SSL support
+- **Monitoring**: Prometheus and Grafana integration
+
+### Production Commands
+```bash
+# Deploy with Docker
+docker-compose up -d
+
+# Production readiness check
+python validate_production_readiness.py
+```
+
+## Code Organization Patterns
+
+### Backend API Patterns
+- **Views**: DRF ViewSets in each app's `views.py`
+- **Serializers**: Validation and data transformation in `serializers.py`
+- **Permissions**: Custom role-based permissions
+- **Response Format**: Standardized via `core.utils`
+- **Authentication**: JWT with SimpleJWT, supports 2FA
+
+### Frontend Structure
+```
+src/
+├── components/      # Feature-based organization
+├── services/       # API service layer with centralized client
+├── types/          # TypeScript definitions
+├── hooks/          # Custom React hooks
+├── contexts/       # React contexts for global state
+├── pages/          # Route components
+└── utils/          # Shared utilities
+```
+
+### Database Models
+Key relationships:
+- Custom User model extending Django's User
+- Property → TokenizedProperty (one-to-one)
+- User → Investment → Property (many-to-many through Investment)
+- Payment supports multiple providers (Stripe, PayPal, Crypto)
 
 ## Environment Configuration
 
@@ -145,81 +198,18 @@ VITE_STRIPE_PUBLISHABLE_KEY=<stripe-public-key>
 VITE_WALLET_CONNECT_PROJECT_ID=<wallet-connect-id>
 ```
 
-## Testing Approach
-
-### Backend Testing
-- Test files in each app's `tests/` directory
-- Run specific app tests: `python manage.py test <app_name>`
-- Test configuration in `pytest.ini`
-- Uses Django's TestCase for database tests
-- API tests use DRF's APITestCase
-
-### Frontend Testing
-- Component tests using React Testing Library
-- Integration tests for API interactions
-- E2E tests for critical user flows
-
 ## WebSocket Integration
 
 WebSocket connections for real-time features:
 - Connection URL: `ws://localhost:8000/ws/`
 - Channels: notifications, dashboard updates, investment tracking
 - Authentication via JWT token in connection params
+- Django Channels with Redis backend
 
-## Database Schema
+## Blockchain Integration
 
-Primary models:
-- **User**: Extended Django user with role, KYC status, wallet address
-- **Property**: Tokenization details, ownership, financial metrics
-- **Investment**: Links users to property tokens, tracks performance
-- **Payment**: Multi-provider payment records
-- **Transaction**: Blockchain transaction tracking
-- **KYCDocument**: Document verification and compliance
-
-## Deployment Considerations
-
-- Backend uses Gunicorn + Nginx in production
-- Frontend builds to static files served by CDN
-- PostgreSQL for production database
-- Redis for caching and WebSocket support
-- Celery for background task processing
-- Docker compose configuration available
-
-## Code Patterns
-
-### Backend Patterns
-- ViewSets for CRUD operations
-- Custom permissions for role-based access
-- Serializer validation for data integrity
-- Signal handlers for cross-app communication
-- Celery tasks for async operations
-
-### Frontend Patterns
-- Custom hooks for data fetching
-- Context providers for global state
-- Protected routes with role checking
-- Lazy loading for code splitting
-- Error boundaries for fault tolerance
-
-## Common Development Tasks
-
-### Adding a New API Endpoint
-1. Create view in appropriate app's `views.py`
-2. Add serializer in `serializers.py`
-3. Register URL in app's `urls.py`
-4. Add permissions if needed
-5. Create tests in `tests/`
-
-### Adding a New Frontend Feature
-1. Create components in feature folder
-2. Add types in `types/` directory
-3. Create API service in `services/`
-4. Add route if needed
-5. Update relevant dashboard/page
-
-### Debugging Tips
-- Django Debug Toolbar enabled in development
-- Frontend uses React DevTools
-- Check browser console for API errors
-- Django logs in `capimax_backend/logs/`
-- Use `npm run type-check` to catch TypeScript errors
+- Separate requirements: `requirements_blockchain.txt`
+- Web3.py for smart contract interaction
+- Brownie framework for contract development
+- IPFS support for metadata storage
+- Ganache for local blockchain testing

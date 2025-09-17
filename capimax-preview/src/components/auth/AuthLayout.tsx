@@ -1,7 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Building2, TrendingUp, Shield, Users } from 'lucide-react';
+import { useTheme } from '../../contexts/ThemeContext';
 import { cn } from '../../utils/cn';
+import CapiMaxLightLogo from '../../assets/tokenization_capi max  tokenization light  uk  copy.svg';
+import CapiMaxDarkLogo from '../../assets/tokenization_capi max tokenization uk dark   copy.svg';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -43,6 +46,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   backgroundVariant = 'gradient',
   className
 }) => {
+  const { theme } = useTheme();
   const backgroundClasses = {
     default: 'bg-slate-50 dark:bg-slate-950',
     gradient: 'bg-gradient-to-br from-emerald-50 via-white to-emerald-50 dark:from-slate-950 dark:via-slate-900 dark:to-emerald-950',
@@ -72,13 +76,11 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
           >
             {/* Logo */}
             <div className="flex items-center gap-3 mb-8">
-              <div className="w-12 h-12 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                <Building2 className="w-7 h-7" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">CapiMax</h1>
-                <p className="text-emerald-200 text-sm">Real Estate Tokenization</p>
-              </div>
+              <img
+                src={CapiMaxLightLogo}
+                alt="CapiMax"
+                className="h-12 w-auto"
+              />
             </div>
 
             {/* Main Content */}
@@ -148,14 +150,12 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
       <div className="flex-1 flex items-center justify-center p-8 lg:p-12">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900 dark:text-white">CapiMax</h1>
-              <p className="text-emerald-600 dark:text-emerald-400 text-sm">Real Estate Tokenization</p>
-            </div>
+          <div className="lg:hidden flex items-center mb-8 justify-center">
+            <img
+              src={theme === 'dark' ? CapiMaxLightLogo : CapiMaxDarkLogo}
+              alt="CapiMax"
+              className="h-10 w-auto"
+            />
           </div>
 
           {children}

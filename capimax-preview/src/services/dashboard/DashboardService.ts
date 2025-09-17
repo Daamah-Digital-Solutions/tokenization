@@ -106,34 +106,39 @@ export class DashboardService {
   static async getDashboardStats(): Promise<DashboardStats> {
     try {
       const response = await apiClient.get<DashboardStats>('/dashboard/stats/');
-      return response;
+      return response || {
+        totalInvestments: 0,
+        totalValue: 0,
+        totalReturns: 0,
+        activeProperties: 0,
+        pendingTransactions: 0,
+        roi: 0,
+        monthlyIncome: 0,
+        portfolioGrowth: 0
+      };
     } catch (error: any) {
       console.error('Failed to fetch dashboard stats:', error);
-      
+
       // Handle specific error cases
       if (error?.code === 'AUTH_REQUIRED' || error?.code === 'AUTH_FAILED') {
         throw new Error('Please login to view your dashboard');
       }
-      
+
       if (error?.code === 'NETWORK_ERROR') {
         throw new Error('Network connection failed. Please check your internet connection.');
       }
-      
-      // Return empty stats for new users instead of mock data
-      if (error?.response?.status === 404 || error?.message?.includes('not found')) {
-        return {
-          totalInvestments: 0,
-          totalValue: 0,
-          totalReturns: 0,
-          activeProperties: 0,
-          pendingTransactions: 0,
-          roi: 0,
-          monthlyIncome: 0,
-          portfolioGrowth: 0
-        };
-      }
-      
-      throw error;
+
+      // Return empty stats for new users or any errors
+      return {
+        totalInvestments: 0,
+        totalValue: 0,
+        totalReturns: 0,
+        activeProperties: 0,
+        pendingTransactions: 0,
+        roi: 0,
+        monthlyIncome: 0,
+        portfolioGrowth: 0
+      };
     }
   }
 
@@ -142,10 +147,25 @@ export class DashboardService {
    */
   static async getPortfolio(): Promise<Portfolio> {
     try {
-      const response = await apiClient.get<Portfolio>('/investments/portfolio/');
+      const response = await apiClient.get<Portfolio>('/investments/portfolio/summary/');
       return response;
     } catch (error) {
       console.error('Failed to fetch portfolio:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get portfolio performance data
+   */
+  static async getPortfolioPerformance(periodDays: number = 30): Promise<any> {
+    try {
+      const response = await apiClient.get('/investments/portfolio/performance/', {
+        period_days: periodDays
+      });
+      return response;
+    } catch (error) {
+      console.error('Failed to fetch portfolio performance:', error);
       throw error;
     }
   }
@@ -159,7 +179,7 @@ export class DashboardService {
         limit,
         ordering: '-created_at'
       });
-      return response;
+      return response || [];
     } catch (error) {
       console.error('Failed to fetch transactions:', error);
       return [];
@@ -244,19 +264,25 @@ export class DashboardService {
   static async getMarketInsights(): Promise<MarketInsights> {
     try {
       const response = await apiClient.get<MarketInsights>('/properties/market/insights/');
-      return response;
+      return response || {
+        trending: [],
+        highYield: [],
+        newListings: [],
+        priceAlerts: [],
+        marketNews: []
+      };
     } catch (error: any) {
       console.error('Failed to fetch market insights:', error);
-      
+
       // Handle specific error cases
       if (error?.code === 'AUTH_REQUIRED' || error?.code === 'AUTH_FAILED') {
         throw new Error('Please login to view market insights');
       }
-      
+
       if (error?.code === 'NETWORK_ERROR') {
         throw new Error('Failed to load market data. Please check your connection.');
       }
-      
+
       // Return empty data for any other errors (server down, etc.)
       return {
         trending: [],
@@ -301,7 +327,7 @@ export class DashboardService {
    */
   static async getAnalyticsData(period: 'day' | 'week' | 'month' | 'year'): Promise<AnalyticsData> {
     try {
-      const response = await apiClient.get<AnalyticsData>('/analytics/', {
+      const response = await apiClient.get<AnalyticsData>('/investments/portfolio/analytics/', {
         period
       });
       return response;

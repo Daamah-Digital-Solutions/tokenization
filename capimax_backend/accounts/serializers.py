@@ -13,18 +13,18 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from datetime import timedelta
 import pyotp
-from .models import User, PasswordResetToken, EmailVerificationToken
+from .models import User, PasswordResetToken, EmailVerificationToken, UserRoleAssignment, UserRole
 from core.utils import generate_secure_token, send_notification_email
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     """
-    Serializer for user registration with comprehensive validation.
-    
-    Handles user creation with role assignment, password validation,
+    Serializer for user registration with multi-role support.
+
+    Handles user creation with multiple role assignments, password validation,
     and automatic email verification token generation.
     """
-    
+
     password = serializers.CharField(
         write_only=True,
         min_length=8,
@@ -36,12 +36,18 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         style={'input_type': 'password'},
         help_text="Confirm your password"
     )
+    roles = serializers.ListField(
+        child=serializers.ChoiceField(choices=UserRole.choices),
+        write_only=True,
+        required=False,
+        help_text="List of roles to assign to the user. If not provided, defaults to primary role."
+    )
     
     class Meta:
         model = User
         fields = (
-            'email', 'password', 'confirm_password', 'first_name', 
-            'last_name', 'role', 'phone', 'country', 'city', 
+            'email', 'password', 'confirm_password', 'first_name',
+            'last_name', 'role', 'roles', 'phone', 'country', 'city',
             'state', 'address', 'date_of_birth'
         )
         extra_kwargs = {
@@ -64,34 +70,74 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return value
     
     def validate(self, attrs):
-        """Validate password confirmation and overall data integrity."""
+        """Validate password confirmation, roles, and overall data integrity."""
         if attrs.get('password') != attrs.get('confirm_password'):
             raise serializers.ValidationError({"confirm_password": "Passwords don't match."})
-        
+
         # Validate password strength
         password = attrs.get('password')
         try:
             validate_password(password)
         except DjangoValidationError as e:
             raise serializers.ValidationError({"password": e.messages})
-        
+
+        # Handle role validation - support both single role and multi-role
+        role = attrs.get('role')
+        roles = attrs.get('roles', [])
+
+        # If roles list is provided, validate it
+        if roles:
+            # Validate each role choice
+            valid_roles = [choice[0] for choice in UserRole.choices]
+            for role_value in roles:
+                if role_value not in valid_roles:
+                    raise serializers.ValidationError({"roles": f"Invalid role: {role_value}"})
+
+            # Remove duplicates while preserving order
+            attrs['roles'] = list(dict.fromkeys(roles))
+
+            # Set primary role to first role in list if not already set
+            if not role and roles:
+                attrs['role'] = roles[0]
+        elif role:
+            # If only single role provided, create roles list for consistency
+            attrs['roles'] = [role]
+        else:
+            # Default to investor role if no roles specified
+            attrs['role'] = UserRole.INVESTOR
+            attrs['roles'] = [UserRole.INVESTOR]
+
         # Remove confirm_password from validated data
         attrs.pop('confirm_password', None)
         return attrs
     
     def create(self, validated_data):
-        """Create user with proper password hashing and email verification token."""
+        """Create user with multi-role assignments and email verification token."""
+        # Extract roles before creating user
+        roles = validated_data.pop('roles', [])
+
+        # Create user with primary role
         user = User.objects.create_user(**validated_data)
-        
+
+        # Create role assignments for all specified roles
+        if roles:
+            for i, role in enumerate(roles):
+                UserRoleAssignment.objects.create(
+                    user=user,
+                    role=role,
+                    is_primary=(i == 0),  # First role is primary
+                    is_active=True
+                )
+
         # Create email verification token
         EmailVerificationToken.objects.create(
             user=user,
             expires_at=timezone.now() + timedelta(hours=24)
         )
-        
+
         # Send verification email (in a real app, this should be in a task)
         self.send_verification_email(user)
-        
+
         return user
     
     def send_verification_email(self, user):
@@ -187,41 +233,53 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     
     @classmethod
     def get_token(cls, user):
-        """Customize JWT token claims."""
+        """Customize JWT token claims with multi-role support."""
         token = super().get_token(user)
-        
+
         # Add custom claims
         token['user_id'] = str(user.id)
         token['email'] = user.email
-        token['role'] = user.role
+        token['role'] = user.role  # Legacy primary role
+        token['primary_role'] = user.get_primary_role()
+        token['available_roles'] = user.get_available_roles()
         token['is_verified'] = user.is_verified
         token['full_name'] = user.get_full_name()
-        
+
         return token
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
     """
-    Serializer for user profile information.
-    
+    Serializer for user profile information with multi-role support.
+
     Provides read and update capabilities for user profile data
-    with appropriate field restrictions.
+    with appropriate field restrictions and role information.
     """
-    
+
     full_name = serializers.CharField(source='get_full_name', read_only=True)
-    
+    available_roles = serializers.SerializerMethodField()
+    primary_role = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = (
             'id', 'email', 'first_name', 'last_name', 'full_name', 'role',
-            'phone', 'country', 'date_of_birth', 'address', 'city', 'state',
-            'postal_code', 'is_verified', 'wallet_address', 'two_factor_enabled',
-            'created_at', 'updated_at'
+            'available_roles', 'primary_role', 'phone', 'country', 'date_of_birth',
+            'address', 'city', 'state', 'postal_code', 'is_verified',
+            'wallet_address', 'two_factor_enabled', 'created_at', 'updated_at'
         )
         read_only_fields = (
-            'id', 'email', 'role', 'is_verified', 'two_factor_enabled',
-            'created_at', 'updated_at'
+            'id', 'email', 'role', 'available_roles', 'primary_role',
+            'is_verified', 'two_factor_enabled', 'created_at', 'updated_at'
         )
+
+    def get_available_roles(self, obj):
+        """Get all available roles for this user."""
+        return obj.get_available_roles()
+
+    def get_primary_role(self, obj):
+        """Get user's primary role."""
+        return obj.get_primary_role()
     
     def validate_phone(self, value):
         """Validate phone number format."""

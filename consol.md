@@ -1,22 +1,18 @@
-# Console Errors - RESOLVED
-
-## Previously Fixed Issues:
-
-### ✅ FIXED: Property Import Error
-- **Issue**: `Uncaught SyntaxError: The requested module does not provide an export named 'Property'`
-- **Root Cause**: Mixed imports of runtime values (enums) and compile-time types (interfaces)
-- **Solution**: Separated type imports from value imports using TypeScript's `type` keyword
-- **Files Changed**: 
-  - Updated `PropertyCard.tsx`: Split imports into `import { PropertyCategory }` and `import type { Property }`
-  - Updated `PropertyGrid.tsx`: Split imports into `import { PropertyFilterOptions }` and `import type { Property }`
-  - Marked `types/property.types.ts` as deprecated in favor of canonical API types
-
-### ✅ FIXED: Auth Token Message
-- **Issue**: `❌ No auth token found` appearing as error
-- **Solution**: Changed to informational message: `ℹ️ No auth token found - user not logged in`
-- **Note**: This is normal behavior when user is not authenticated
-
-## Current Status: ✅ ALL RESOLVED
-All major console errors have been fixed. Application should now load without TypeScript/import errors.
-
-The React application is now running smoothly with proper type imports and no syntax errors.
+[plugin:vite:import-analysis] Failed to resolve import "../components/design-system/Card" from "src/pages/RoleManagementPage.tsx". Does the file exist?
+D:/Daamah/Clients/Final Capimax Projects/Capimax - Tokenization V3/Tokenization - Django/capimax-preview/src/pages/RoleManagementPage.tsx:25:21
+40 |  import { apiClient } from "../services/api/ApiClient";
+41 |  import { Button } from "../components/ui/Button";
+42 |  import { Card } from "../components/design-system/Card";
+   |                        ^
+43 |  import { cn } from "../utils/cn";
+44 |  const ROLE_INFO = {
+    at TransformPluginContext._formatLog (file:///D:/Daamah/Clients/Final%20Capimax%20Projects/Capimax%20-%20Tokenization%20V3/Tokenization%20-%20Django/capimax-preview/node_modules/vite/dist/node/chunks/dep-Bj7gA1-0.js:31422:43)
+    at TransformPluginContext.error (file:///D:/Daamah/Clients/Final%20Capimax%20Projects/Capimax%20-%20Tokenization%20V3/Tokenization%20-%20Django/capimax-preview/node_modules/vite/dist/node/chunks/dep-Bj7gA1-0.js:31419:14)
+    at normalizeUrl (file:///D:/Daamah/Clients/Final%20Capimax%20Projects/Capimax%20-%20Tokenization%20V3/Tokenization%20-%20Django/capimax-preview/node_modules/vite/dist/node/chunks/dep-Bj7gA1-0.js:29891:18)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async file:///D:/Daamah/Clients/Final%20Capimax%20Projects/Capimax%20-%20Tokenization%20V3/Tokenization%20-%20Django/capimax-preview/node_modules/vite/dist/node/chunks/dep-Bj7gA1-0.js:29949:32
+    at async Promise.all (index 11)
+    at async TransformPluginContext.transform (file:///D:/Daamah/Clients/Final%20Capimax%20Projects/Capimax%20-%20Tokenization%20V3/Tokenization%20-%20Django/capimax-preview/node_modules/vite/dist/node/chunks/dep-Bj7gA1-0.js:29917:4)
+    at async EnvironmentPluginContainer.transform (file:///D:/Daamah/Clients/Final%20Capimax%20Projects/Capimax%20-%20Tokenization%20V3/Tokenization%20-%20Django/capimax-preview/node_modules/vite/dist/node/chunks/dep-Bj7gA1-0.js:31220:14)
+    at async loadAndTransform (file:///D:/Daamah/Clients/Final%20Capimax%20Projects/Capimax%20-%20Tokenization%20V3/Tokenization%20-%20Django/capimax-preview/node_modules/vite/dist/node/chunks/dep-Bj7gA1-0.js:26307:26)
+    at async viteTransformMiddleware (file:///D:/Daamah/Clients/Final%20Capimax%20Projects/Capimax%2

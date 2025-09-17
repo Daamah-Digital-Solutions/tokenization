@@ -1299,3 +1299,170 @@ class QRCodePayment(models.Model):
     def is_active(self):
         """Check if QR code is active and usable."""
         return self.status == 'active' and not self.is_expired
+
+
+class BankTransfer(models.Model):
+    """
+    Bank Transfer model for handling direct bank transfer payments.
+
+    Stores bank account details and tracks transfer status for payments
+    made through traditional banking systems.
+    """
+
+    TRANSFER_STATUS_CHOICES = [
+        ('initiated', 'Initiated'),
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the bank transfer"
+    )
+
+    payment = models.OneToOneField(
+        Payment,
+        on_delete=models.CASCADE,
+        related_name='bank_transfer',
+        help_text="Associated payment record"
+    )
+
+    # Bank account details
+    account_holder_name = models.CharField(
+        max_length=255,
+        help_text="Name of the account holder"
+    )
+
+    account_number = models.CharField(
+        max_length=50,
+        help_text="Bank account number"
+    )
+
+    routing_number = models.CharField(
+        max_length=50,
+        help_text="Bank routing number"
+    )
+
+    bank_name = models.CharField(
+        max_length=255,
+        help_text="Name of the bank"
+    )
+
+    bank_address = models.TextField(
+        blank=True,
+        help_text="Bank address"
+    )
+
+    swift_code = models.CharField(
+        max_length=20,
+        blank=True,
+        help_text="SWIFT code for international transfers"
+    )
+
+    # Transfer details
+    transfer_reference = models.CharField(
+        max_length=100,
+        unique=True,
+        help_text="Unique reference for the transfer"
+    )
+
+    transfer_status = models.CharField(
+        max_length=20,
+        choices=TRANSFER_STATUS_CHOICES,
+        default='initiated',
+        help_text="Current status of the bank transfer"
+    )
+
+    transfer_instructions = models.TextField(
+        blank=True,
+        help_text="Special instructions for the transfer"
+    )
+
+    estimated_completion_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Estimated completion date for the transfer"
+    )
+
+    # Verification and tracking
+    bank_reference_number = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Reference number provided by the bank"
+    )
+
+    verification_documents = models.JSONField(
+        default=dict,
+        help_text="Document IDs for verification"
+    )
+
+    processing_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        help_text="Processing fee for the bank transfer"
+    )
+
+    # Timestamps
+    initiated_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the transfer was completed"
+    )
+
+    # Admin notes
+    admin_notes = models.TextField(
+        blank=True,
+        help_text="Internal notes from admin"
+    )
+
+    class Meta:
+        db_table = 'payments_bank_transfer'
+        indexes = [
+            models.Index(fields=['payment', 'transfer_status']),
+            models.Index(fields=['transfer_reference']),
+            models.Index(fields=['account_number']),
+            models.Index(fields=['initiated_at']),
+            models.Index(fields=['transfer_status', 'estimated_completion_date']),
+        ]
+        verbose_name = 'Bank Transfer'
+        verbose_name_plural = 'Bank Transfers'
+
+    def __str__(self):
+        return f"Bank Transfer {self.transfer_reference} - {self.transfer_status}"
+
+    @property
+    def is_completed(self):
+        """Check if transfer is completed."""
+        return self.transfer_status == 'completed'
+
+    @property
+    def is_pending(self):
+        """Check if transfer is pending processing."""
+        return self.transfer_status in ['initiated', 'pending', 'processing']
+
+    def generate_reference(self):
+        """Generate unique transfer reference."""
+        if not self.transfer_reference:
+            import random
+            import string
+            ref = 'BT' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
+            self.transfer_reference = ref
+            return ref
+        return self.transfer_reference
+
+    def estimate_completion(self):
+        """Estimate completion date based on current date."""
+        from django.utils import timezone
+        from datetime import timedelta
+
+        # Standard bank transfer takes 1-3 business days
+        self.estimated_completion_date = timezone.now() + timedelta(days=2)
+        return self.estimated_completion_date

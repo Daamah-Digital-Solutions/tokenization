@@ -1909,3 +1909,96 @@ class RentalIncomeManagementView(APIView):
                 {'detail': 'Invalid action. Available actions: trigger_distribution, collect_income, update_property_income'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class PropertyApprovalStatusView(APIView):
+    """
+    Get property approval status for property owners.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, property_id):
+        """Get approval status for a specific property."""
+        try:
+            property_obj = Property.objects.get(id=property_id)
+
+            # Check if user owns this property
+            if property_obj.owner != request.user:
+                return Response(
+                    {'detail': 'You do not have permission to view this property.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            try:
+                approval = PropertyApproval.objects.select_related('reviewer').get(property=property_obj)
+                serializer = PropertyApprovalSerializer(approval)
+                return Response(serializer.data)
+            except PropertyApproval.DoesNotExist:
+                return Response(
+                    {'detail': 'Property has not been submitted for approval.'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        except Property.DoesNotExist:
+            return Response(
+                {'detail': 'Property not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class SubmitPropertyForApprovalView(APIView):
+    """
+    Submit a property for approval process.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, property_id):
+        """Submit property for approval."""
+        try:
+            property_obj = Property.objects.get(id=property_id)
+
+            # Check if user owns this property
+            if property_obj.owner != request.user:
+                return Response(
+                    {'detail': 'You do not have permission to submit this property.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            # Check if property is in draft status
+            if property_obj.status != PropertyStatus.DRAFT:
+                return Response(
+                    {'detail': 'Only draft properties can be submitted for approval.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Create or update approval record
+            approval, created = PropertyApproval.objects.get_or_create(
+                property=property_obj,
+                defaults={
+                    'status': 'pending',
+                    'submitted_at': timezone.now()
+                }
+            )
+
+            if not created:
+                approval.status = 'pending'
+                approval.submitted_at = timezone.now()
+                approval.save()
+
+            # Update property status
+            property_obj.status = PropertyStatus.PENDING_APPROVAL
+            property_obj.save(update_fields=['status'])
+
+            return Response({
+                'message': 'Property submitted for approval successfully.',
+                'approval_id': approval.id,
+                'status': approval.status
+            })
+
+        except Property.DoesNotExist:
+            return Response(
+                {'detail': 'Property not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )

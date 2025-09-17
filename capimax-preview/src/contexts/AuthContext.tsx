@@ -168,35 +168,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       console.log('✅ Auth token found, validating session...');
-      
-      // TEMPORARY: Skip session validation if we're on dashboard (cache issue workaround)
-      if (window.location.pathname === '/dashboard') {
-        console.log('🔧 WORKAROUND: Skipping session validation on dashboard due to cache issues');
-        // Create a minimal user object to prevent errors
-        const mockUser = {
-          id: '1',
-          email: 'user@example.com',
-          first_name: 'User',
-          last_name: 'Account',
-          role: 'investor' as any,
-          phone: '',
-          country: '',
-          date_of_birth: '',
-          address: '',
-          city: '',
-          state: '',
-          postal_code: '',
-          kyc_status: 'not_started' as any,
-          is_verified: false,
-          wallet_address: '',
-          created_at: new Date(),
-          updated_at: new Date()
-        };
-        dispatch({ type: 'AUTH_SUCCESS', payload: mockUser });
-        return;
-      }
 
-      // Validate the session normally for other pages
+      // Validate the session for all pages including dashboard
       const isValid = await AuthService.validateSession();
       if (!isValid) {
         console.log('❌ Session validation failed');
@@ -238,6 +211,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     firstName: string;
     lastName: string;
     role: UserRole;
+    roles?: UserRole[];  // Multi-role support
     phone?: string;
     country: string;
   }): Promise<void> => {
@@ -250,11 +224,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         first_name: userData.firstName,
         last_name: userData.lastName,
         role: userData.role,
+        roles: userData.roles,  // Pass roles array if provided
         phone: userData.phone,
         country: userData.country,
       });
 
       dispatch({ type: 'AUTH_SUCCESS', payload: response.user });
+
+      // Trigger checkAuth to ensure auth state is properly set
+      setTimeout(() => checkAuth(), 100);
     } catch (error: any) {
       console.error('Registration failed:', error);
       const errorMessage = error.message || 'Registration failed. Please try again.';

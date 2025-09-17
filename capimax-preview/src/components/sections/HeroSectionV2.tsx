@@ -195,10 +195,27 @@ export const HeroSectionV2: React.FC = () => {
                 transition={{ duration: 0.8, delay: 0.4 }}
                 className="text-xl lg:text-2xl leading-relaxed text-slate-600 dark:text-gray-300 max-w-3xl mx-auto font-light"
               >
-                Experience the next generation of real estate investment. 
-                Own fractional shares of premium properties worldwide through 
+                Experience the next generation of real estate investment.
+                Own fractional shares of premium properties worldwide through
                 secure blockchain technology.
               </motion.p>
+
+              {/* Property Types Highlight */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+                className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8"
+              >
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-500/30">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Ready Properties</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-500/30">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">Under Construction</span>
+                </div>
+              </motion.div>
             </div>
 
             {/* Enhanced CTA Buttons with dark mode glow effects */}

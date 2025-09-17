@@ -7,6 +7,9 @@ import { Card } from '../components/design-system/cards/Card';
 import { Badge } from '../components/design-system/icons/Badge';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { ComponentShowcase } from '../components/demo/ComponentShowcase';
+import { useTheme } from '../contexts/ThemeContext';
+import CapiMaxLightLogo from '../assets/tokenization_capi max  tokenization light  uk  copy.svg';
+import CapiMaxDarkLogo from '../assets/tokenization_capi max tokenization uk dark   copy.svg';
 
 // Demo Data
 const demoStats = {
@@ -245,6 +248,7 @@ const MetricsCard: React.FC<MetricsCardProps> = ({ title, value, description, ic
 
 export const DemoPage: React.FC = () => {
   const { navigate } = useRouter();
+  const { theme } = useTheme();
   const [activeSection, setActiveSection] = useState<string>('overview');
 
   const handleNavigateToPage = (route: string) => {
@@ -268,13 +272,13 @@ export const DemoPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <div className="flex justify-center items-center gap-4 mb-6">
-              <div className="w-16 h-16 bg-emerald-500 rounded-2xl flex items-center justify-center">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 8h5a2 2 0 002-2V9a2 2 0 00-2-2H9a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
+              <img
+                src={theme === 'dark' ? CapiMaxLightLogo : CapiMaxDarkLogo}
+                alt="CapiMax"
+                className="h-16 w-auto"
+              />
               <h1 className="text-4xl lg:text-6xl font-bold text-slate-900 dark:text-white">
-                Capimax Demo
+                Demo
               </h1>
             </div>
             

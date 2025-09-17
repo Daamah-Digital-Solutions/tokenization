@@ -37,6 +37,92 @@ from .serializers import (
 logger = logging.getLogger(__name__)
 
 
+class GeneralAnalyticsView(generics.GenericAPIView):
+    """
+    API view for general analytics data.
+
+    Provides general analytics data based on the period parameter.
+    Used for dashboard charts and general statistics.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """Get analytics data based on period."""
+        period = request.query_params.get('period', 'month')
+        user = request.user
+
+        # Calculate date range based on period
+        end_date = timezone.now()
+        if period == 'week':
+            start_date = end_date - timedelta(days=7)
+        elif period == 'month':
+            start_date = end_date - timedelta(days=30)
+        elif period == 'quarter':
+            start_date = end_date - timedelta(days=90)
+        elif period == 'year':
+            start_date = end_date - timedelta(days=365)
+        else:
+            start_date = end_date - timedelta(days=30)
+
+        try:
+            # Get investment analytics for the user
+            user_investments = Investment.objects.filter(
+                user=user,
+                created_at__gte=start_date,
+                created_at__lte=end_date
+            )
+
+            # Calculate analytics metrics
+            total_invested = user_investments.filter(status='active').aggregate(
+                total=Sum('amount')
+            )['total'] or 0
+
+            investment_count = user_investments.count()
+
+            # Get daily investment data for the period
+            daily_investments = user_investments.annotate(
+                day=TruncDay('created_at')
+            ).values('day').annotate(
+                amount=Sum('amount'),
+                count=Count('id')
+            ).order_by('day')
+
+            # Get property performance
+            property_stats = Property.objects.filter(
+                investment__user=user,
+                investment__created_at__gte=start_date
+            ).distinct().aggregate(
+                total_properties=Count('id'),
+                avg_roi=Avg('expected_roi')
+            )
+
+            analytics_data = {
+                'period': period,
+                'start_date': start_date.isoformat(),
+                'end_date': end_date.isoformat(),
+                'total_invested': float(total_invested),
+                'investment_count': investment_count,
+                'daily_data': list(daily_investments),
+                'property_stats': property_stats,
+                'roi_percentage': property_stats.get('avg_roi', 0) or 0
+            }
+
+            return Response(analytics_data)
+
+        except Exception as e:
+            logger.error(f"General analytics error for user {user.id}: {str(e)}")
+            # Return empty analytics data on error
+            return Response({
+                'period': period,
+                'total_invested': 0,
+                'investment_count': 0,
+                'daily_data': [],
+                'property_stats': {'total_properties': 0, 'avg_roi': 0},
+                'roi_percentage': 0
+            })
+
+
 class DashboardAnalyticsView(generics.GenericAPIView):
     """
     API view for main dashboard analytics.

@@ -46,9 +46,19 @@ urlpatterns = [
          name='property-valuation-create'),
     
     # Property approval (admin only)
-    path('<uuid:property_id>/approve/', 
-         views.PropertyApprovalView.as_view(), 
+    path('<uuid:property_id>/approve/',
+         views.PropertyApprovalView.as_view(),
          name='property-approve'),
+
+    # Property approval status (property owner)
+    path('<uuid:property_id>/approval-status/',
+         views.PropertyApprovalStatusView.as_view(),
+         name='property-approval-status'),
+
+    # Submit property for approval
+    path('<uuid:property_id>/submit-for-approval/',
+         views.SubmitPropertyForApprovalView.as_view(),
+         name='submit-for-approval'),
     
     # Advanced property search
     path('search/', 
