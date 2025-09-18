@@ -13,7 +13,9 @@
       "Bash(set ACCESS_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4MTE3MzU3LCJpYXQiOjE3NTgxMTM3NTcsImp0aSI6ImFkMDZhNGQ5ZDQ2YjQyMDY5NTFmZTYxN2MyMjdjNTFlIiwidXNlcl9pZCI6ImU0OWI3YjJiLTRhNWQtNDU2My04ZDM5LTcwYTg2M2U2YzBjZCJ9.A7ETbmVxF4E0Tbf0us4aDj1XwkGzVZwLhbeX9mr9RV4)",
       "Bash(findstr:*)",
       "WebFetch(domain:localhost)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(netstat:*)",
+      "Bash(set ACCESS_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzU4MTQ4NTk1LCJpYXQiOjE3NTgxNDQ5OTUsImp0aSI6IjExNTZiNmQxZTUwZjQ4YjI4NWVlOTUwNWViZjFjYjQ4IiwidXNlcl9pZCI6IjkxY2FmNTE1LTc1ODUtNGFlZi05OWQyLTRiOGJmNzM0MGNiMyIsImVtYWlsIjoib3duZXJAdGVzdC5jb20iLCJyb2xlIjoicHJvcGVydHlfb3duZXIiLCJwcmltYXJ5X3JvbGUiOiJwcm9wZXJ0eV9vd25lciIsImF2YWlsYWJsZV9yb2xlcyI6WyJwcm9wZXJ0eV9vd25lciJdLCJpc192ZXJpZmllZCI6dHJ1ZSwiZnVsbF9uYW1lIjoiU2FyYWggUHJvcGVydHlPd25lciJ9.oZad2qnkI4pF7aN3tgYSKPhMlEK6hfJtRiPiItdlM-A)"
     ],
     "deny": [],
     "ask": []

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Bell, Sun, Moon } from 'lucide-react';
 import { useRouter } from '../utils/router';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -8,7 +9,6 @@ import { PropertyOwnerDashboard } from '../components/dashboard/property-owner/P
 import { AdminDashboard } from '../components/dashboard/admin/AdminDashboard';
 import { BrokerDashboard } from '../components/dashboard/broker/BrokerDashboard';
 import { RoleSwitcher } from '../components/dashboard/RoleSwitcher';
-import { ThemeToggle } from '../components/ui/ThemeToggle';
 import CapiMaxLightLogo from '../assets/tokenization_capi max  tokenization light  uk  copy.svg';
 import CapiMaxDarkLogo from '../assets/tokenization_capi max tokenization uk dark   copy.svg';
 
@@ -42,7 +42,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   onRoleSwitch
 }) => {
   const { navigate } = useRouter();
-  const { theme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Navigation items based on user role
@@ -55,11 +55,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       case 'investor':
         return [
           ...baseItems,
-          { id: 'portfolio', label: 'Portfolio', icon: '💼' },
-          { id: 'investments', label: 'Investments', icon: '📈' },
+          { id: 'marketplace', label: 'Marketplace', icon: '🏪' },
           { id: 'transactions', label: 'Transactions', icon: '💳' },
-          { id: 'income', label: 'Income', icon: '💰' },
-          { id: 'analytics', label: 'Analytics', icon: '📊' },
+          { id: 'wallet', label: 'Wallet', icon: '💰' },
+          { id: 'settings', label: 'Settings', icon: '⚙️' },
         ];
       case 'property_owner':
         return [
@@ -96,6 +95,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   // Handle navigation item click with auto-close for mobile
   const handleNavigationClick = (itemId: string) => {
+    // All navigation items now go through the dashboard view change
     onViewChange(itemId);
     // Auto-close sidebar on mobile after navigation
     if (window.innerWidth < 768) { // md breakpoint
@@ -213,11 +213,25 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               </div>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-              {/* Theme Toggle - Moved to main header */}
-              <ThemeToggle />
-
               {/* Role Switcher */}
               <RoleSwitcher onRoleSwitch={onRoleSwitch} />
+
+              {/* Notifications Icon */}
+              <button
+                className="p-2 text-neutral-600 hover:text-neutral-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-700"
+                title="Notifications"
+              >
+                <Bell className="w-5 h-5" />
+              </button>
+
+              {/* Theme Toggle Icon */}
+              <button
+                onClick={toggleTheme}
+                className="p-2 text-neutral-600 hover:text-neutral-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-700"
+                title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
 
               {/* Exit Dashboard */}
               <button

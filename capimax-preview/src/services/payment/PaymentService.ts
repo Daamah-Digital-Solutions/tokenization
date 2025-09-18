@@ -335,7 +335,7 @@ export class PaymentService {
     total_usd_value: number;
   }> {
     try {
-      return await apiClient.get('/payments/wallet/balance');
+      return await apiClient.get('/payments/wallet');
     } catch (error) {
       console.error('Failed to get wallet balance:', error);
       throw error;
