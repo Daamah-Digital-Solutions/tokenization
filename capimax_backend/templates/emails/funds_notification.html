@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CapiMax {{ transaction.type|title }} Confirmation - ${{ transaction.amount }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            {% if transaction.type == "Deposit" %}
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            {% else %}
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            {% endif %}
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .greeting {
+            font-size: 24px;
+            font-weight: 600;
+            {% if transaction.type == "Deposit" %}
+            color: #16a34a;
+            {% else %}
+            color: #2563eb;
+            {% endif %}
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .transaction-icon {
+            width: 32px;
+            height: 32px;
+            {% if transaction.type == "Deposit" %}
+            background-color: #16a34a;
+            {% else %}
+            background-color: #2563eb;
+            {% endif %}
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+
+        .transaction-icon::after {
+            {% if transaction.type == "Deposit" %}
+            content: "⬇️";
+            {% else %}
+            content: "⬆️";
+            {% endif %}
+            font-size: 18px;
+        }
+
+        .message {
+            font-size: 16px;
+            line-height: 1.7;
+            margin-bottom: 30px;
+            color: #555;
+        }
+
+        .confirmation-box {
+            {% if transaction.type == "Deposit" %}
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 2px solid #bbf7d0;
+            {% else %}
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid #bfdbfe;
+            {% endif %}
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .confirmation-title {
+            font-size: 18px;
+            font-weight: 600;
+            {% if transaction.type == "Deposit" %}
+            color: #16a34a;
+            {% else %}
+            color: #2563eb;
+            {% endif %}
+            margin-bottom: 15px;
+        }
+
+        .amount-display {
+            font-size: 36px;
+            font-weight: bold;
+            {% if transaction.type == "Deposit" %}
+            color: #16a34a;
+            {% else %}
+            color: #2563eb;
+            {% endif %}
+            margin: 20px 0;
+        }
+
+        .transaction-summary {
+            background-color: #f8fafc;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+
+        .summary-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .transaction-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-size: 16px;
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .status-confirmed {
+            color: #16a34a;
+        }
+
+        .status-processing {
+            color: #f59e0b;
+        }
+
+        .balance-info {
+            background-color: #f0f9ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        .balance-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .wallet-icon {
+            width: 20px;
+            height: 20px;
+            background-color: #2563eb;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+
+        .wallet-icon::after {
+            content: "💰";
+            font-size: 12px;
+        }
+
+        .balance-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .balance-label {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .balance-value {
+            color: #6b7280;
+            font-weight: 600;
+        }
+
+        .new-balance {
+            color: #1e40af;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .next-steps {
+            {% if transaction.type == "Deposit" %}
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            {% else %}
+            background-color: #fffbeb;
+            border: 1px solid #fde68a;
+            {% endif %}
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        .next-steps-title {
+            font-size: 16px;
+            font-weight: 600;
+            {% if transaction.type == "Deposit" %}
+            color: #16a34a;
+            {% else %}
+            color: #d97706;
+            {% endif %}
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .steps-icon {
+            width: 20px;
+            height: 20px;
+            {% if transaction.type == "Deposit" %}
+            background-color: #16a34a;
+            {% else %}
+            background-color: #f59e0b;
+            {% endif %}
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+
+        .steps-icon::after {
+            {% if transaction.type == "Deposit" %}
+            content: "🎯";
+            {% else %}
+            content: "📋";
+            {% endif %}
+            font-size: 12px;
+        }
+
+        .steps-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .steps-list li {
+            font-size: 14px;
+            {% if transaction.type == "Deposit" %}
+            color: #15803d;
+            {% else %}
+            color: #92400e;
+            {% endif %}
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .steps-list li::before {
+            content: "→";
+            {% if transaction.type == "Deposit" %}
+            color: #16a34a;
+            {% else %}
+            color: #f59e0b;
+            {% endif %}
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .action-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .action-button {
+            display: inline-block;
+            {% if transaction.type == "Deposit" %}
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            {% else %}
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            {% endif %}
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            margin: 0 10px 10px 0;
+            transition: transform 0.2s ease;
+        }
+
+        .action-button:hover {
+            transform: translateY(-1px);
+        }
+
+        .action-button.secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        }
+
+        .footer {
+            background-color: #f8fafc;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .footer-text {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .contact-info {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .important-note {
+            background-color: #fef3cd;
+            border: 1px solid #fbbf24;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .important-text {
+            font-size: 14px;
+            color: #92400e;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 0;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .logo {
+                font-size: 28px;
+            }
+
+            .greeting {
+                font-size: 20px;
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .transaction-icon {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+
+            .amount-display {
+                font-size: 28px;
+            }
+
+            .transaction-details {
+                grid-template-columns: 1fr;
+            }
+
+            .balance-row {
+                flex-direction: column;
+            }
+
+            .balance-value {
+                margin-top: 2px;
+            }
+
+            .action-button {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">CapiMax</div>
+            <div class="subtitle">{{ transaction.type }} Confirmation</div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <div class="greeting">
+                <div class="transaction-icon"></div>
+                {{ transaction.type }} Confirmed
+            </div>
+
+            <div class="message">
+                Hello {{ user.first_name }},<br><br>
+                {% if transaction.type == "Deposit" %}
+                Your deposit of ${{ transaction.amount }} has been successfully processed and added to your CapiMax Investment account.
+                These funds are now available for property investments.
+                {% else %}
+                Your withdrawal request for ${{ transaction.amount }} has been successfully processed and the funds have been sent
+                to your designated {{ transaction.destination|default:"bank account" }}.
+                {% endif %}
+            </div>
+
+            <div class="confirmation-box">
+                <div class="confirmation-title">
+                    ✓ {{ transaction.type }} Successfully Processed
+                </div>
+                <div class="amount-display">
+                    {% if transaction.type == "Deposit" %}+{% else %}-{% endif %}${{ transaction.amount }}
+                </div>
+                <p style="margin-bottom: 0; color: #555; font-size: 14px;">
+                    Transaction completed on {{ transaction_time }}
+                </p>
+            </div>
+
+            <div class="transaction-summary">
+                <div class="summary-title">Transaction Details</div>
+
+                <div class="transaction-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Transaction ID</div>
+                        <div class="detail-value">{{ transaction.transaction_id|default:"TXN" }}{{ transaction.id }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Amount</div>
+                        <div class="detail-value">${{ transaction.amount }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Method</div>
+                        <div class="detail-value">{{ transaction.payment_method|default:"Bank Transfer" }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Status</div>
+                        <div class="detail-value status-confirmed">{{ transaction.status|default:"Confirmed" }}</div>
+                    </div>
+                    {% if transaction.type == "Withdrawal" %}
+                    <div class="detail-item">
+                        <div class="detail-label">Destination</div>
+                        <div class="detail-value">{{ transaction.destination|default:"Bank Account" }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Processing Time</div>
+                        <div class="detail-value">{{ transaction.processing_time|default:"1-3 Business Days" }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="balance-info">
+                <div class="balance-title">
+                    <div class="wallet-icon"></div>
+                    Account Balance Update
+                </div>
+                {% if transaction.previous_balance %}
+                <div class="balance-row">
+                    <span class="balance-label">Previous Balance:</span>
+                    <span class="balance-value">${{ transaction.previous_balance }}</span>
+                </div>
+                {% endif %}
+                <div class="balance-row">
+                    <span class="balance-label">Transaction Amount:</span>
+                    <span class="balance-value">
+                        {% if transaction.type == "Deposit" %}+{% else %}-{% endif %}${{ transaction.amount }}
+                    </span>
+                </div>
+                <div class="balance-row">
+                    <span class="balance-label">Current Available Balance:</span>
+                    <span class="balance-value new-balance">${{ transaction.new_balance|default:"Updated" }}</span>
+                </div>
+            </div>
+
+            <div class="next-steps">
+                <div class="next-steps-title">
+                    <div class="steps-icon"></div>
+                    {% if transaction.type == "Deposit" %}What's Next?{% else %}Important Information{% endif %}
+                </div>
+                <ul class="steps-list">
+                    {% if transaction.type == "Deposit" %}
+                    <li>Your funds are now available for real estate investments</li>
+                    <li>Browse available properties in your investor dashboard</li>
+                    <li>Diversify your portfolio across multiple properties</li>
+                    <li>Monitor your investments and track returns</li>
+                    {% else %}
+                    <li>Funds will arrive in {{ transaction.processing_time|default:"1-3 business days" }}</li>
+                    <li>You'll receive a separate confirmation from your financial institution</li>
+                    <li>Contact support if funds don't arrive within expected timeframe</li>
+                    <li>Keep this email as a record of your withdrawal</li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div class="action-buttons">
+                <a href="#" class="action-button">View Dashboard</a>
+                <a href="#" class="action-button secondary">Transaction History</a>
+            </div>
+
+            {% if transaction.type == "Withdrawal" %}
+            <div class="important-note">
+                <div class="important-text">
+                    <strong>Important:</strong> If you didn't request this withdrawal, please contact our support team
+                    immediately at support@capimaxinvestment.com or call our security hotline.
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-text">
+                <strong>CapiMax Investment</strong><br>
+                Your Trusted Real Estate Investment Partner
+            </div>
+            <div class="contact-info">
+                Support: support@capimaxinvestment.com | Billing: billing@capimaxinvestment.com<br>
+                This transaction confirmation was sent to {{ user.email }}.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -22,7 +22,7 @@ import { UserRole } from '../../services/api/types';
 
 interface RegisterFormProps {
   onSignIn?: () => void;
-  onSuccess?: () => void;
+  onSuccess?: (email: string) => void;
   className?: string;
 }
 
@@ -186,8 +186,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         country: formData.country,
       });
 
-      // Call success callback if provided
-      onSuccess?.();
+      // Call success callback if provided, pass email for redirect
+      onSuccess?.(formData.email);
     } catch (error: any) {
       // Error is handled by the auth context
       console.error('Registration failed:', error);

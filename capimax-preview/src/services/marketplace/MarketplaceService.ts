@@ -3,24 +3,36 @@ import type { APIResponse, PaginatedResponse } from '../api/types';
 
 export interface SecondaryMarketListing {
   id: string;
-  seller_id: string;
-  property_id: string;
-  property: {
+  property_listing: {
     id: string;
-    name: string;
+    title: string;
     location: string;
-    image_url: string;
+    city: string;
+    image_url?: string;
+    images?: Array<{ image: string }>;
     total_value: number;
-    token_symbol: string;
+    token_symbol?: string;
+    property_type: string;
   };
-  tokens_for_sale: number;
-  price_per_token: number;
-  total_value: number;
-  listing_type: 'IMMEDIATE' | 'AUCTION';
-  auction_end_date?: string;
-  status: 'ACTIVE' | 'SOLD' | 'CANCELLED' | 'EXPIRED';
+  seller: {
+    id: string;
+    full_name: string;
+    email: string;
+  };
+  listing_type: 'sell' | 'buy';
+  tokens_offered: number;
+  tokens_remaining: number;
+  price_per_token: string;
+  total_price: string;
+  minimum_order_size: number;
+  status: 'active' | 'partially_filled' | 'completed' | 'cancelled' | 'expired';
+  expires_at: string;
+  auto_extend: boolean;
+  accepts_partial_fills: boolean;
+  notes?: string;
   created_at: string;
   updated_at: string;
+  completed_at?: string;
 }
 
 export interface MarketplaceFilters {
@@ -36,17 +48,22 @@ export interface MarketplaceFilters {
 }
 
 export interface CreateListingRequest {
-  property_id: string;
-  tokens_for_sale: number;
-  price_per_token: number;
-  listing_type: 'IMMEDIATE' | 'AUCTION';
-  auction_end_date?: string;
+  property_listing: string;
+  listing_type: 'sell' | 'buy';
+  tokens_offered: number;
+  price_per_token: string;
+  minimum_order_size?: number;
+  expires_at?: string;
+  auto_extend?: boolean;
+  accepts_partial_fills?: boolean;
+  notes?: string;
 }
 
-export interface PurchaseRequest {
-  listing_id: string;
-  tokens_to_buy: number;
-  offered_price_per_token?: number; // For auction listings
+export interface TradeOrderRequest {
+  listing: string;
+  order_type?: 'market' | 'limit';
+  tokens_requested: number;
+  price_per_token: string;
 }
 
 export interface BidRequest {
@@ -94,7 +111,7 @@ export interface MarketplaceActivity {
 }
 
 export class MarketplaceService {
-  private readonly baseEndpoint = '/marketplace';
+  private readonly baseEndpoint = '/api/v1/marketplace';
 
   /**
    * Get all marketplace listings with optional filters
@@ -145,14 +162,14 @@ export class MarketplaceService {
   }
 
   /**
-   * Purchase tokens from a marketplace listing
+   * Create a trade order to buy tokens from a marketplace listing
    */
-  async purchaseTokens(data: PurchaseRequest): Promise<{
+  async createTradeOrder(data: TradeOrderRequest): Promise<{
     success: boolean;
-    transaction_id: string;
+    order_id: string;
     message: string;
   }> {
-    return await apiClient.post(`${this.baseEndpoint}/purchase/`, data);
+    return await apiClient.post(`${this.baseEndpoint}/orders/`, data);
   }
 
   /**

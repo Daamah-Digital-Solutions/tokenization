@@ -1,11 +1,13 @@
-# Dockerfile for Capimax Backend Production Deployment
+# =============================================================================
+# CAPIMAX BACKEND PRODUCTION DOCKERFILE
+# =============================================================================
 FROM python:3.11-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
-    DJANGO_SETTINGS_MODULE=capimax_backend.settings_production
+    DJANGO_SETTINGS_MODULE=capimax_backend.settings.production
 
 # Set work directory
 WORKDIR /app
@@ -38,8 +40,8 @@ COPY --chown=capimax:capimax . .
 # Create necessary directories
 RUN mkdir -p staticfiles media logs
 
-# Collect static files
-RUN python manage.py collectstatic --noinput --settings=capimax_backend.settings_production || true
+# Collect static files (will run again at container start with env vars)
+RUN python manage.py collectstatic --noinput --settings=capimax_backend.settings.development 2>/dev/null || true
 
 # Expose port
 EXPOSE 8000

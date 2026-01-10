@@ -1,26 +1,26 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, ArrowLeft, Check, AlertCircle, Shield } from 'lucide-react';
+import { Mail, ArrowLeft, AlertCircle } from 'lucide-react';
 import { Input } from '../design-system/forms/Input';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
 
 interface PasswordRecoveryFormProps {
   onSubmit?: (data: { email: string }) => void;
-  onResetSubmit?: (data: { code: string; password: string }) => void;
   onBackToLogin?: () => void;
+  onUseDifferentEmail?: () => void;
   loading?: boolean;
   error?: string;
   emailSent?: boolean;
   className?: string;
 }
 
-type Step = 'request' | 'verify' | 'reset' | 'success';
+type Step = 'request' | 'sent';
 
 export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
   onSubmit,
-  onResetSubmit,
   onBackToLogin,
+  onUseDifferentEmail,
   loading = false,
   error,
   emailSent = false,
@@ -28,15 +28,12 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
 }) => {
   const [currentStep, setCurrentStep] = useState<Step>('request');
   const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  // Move to verify step when email is sent
+  // Move to sent step when email is sent
   React.useEffect(() => {
     if (emailSent && currentStep === 'request') {
-      setCurrentStep('verify');
+      setCurrentStep('sent');
     }
   }, [emailSent, currentStep]);
 
@@ -53,32 +50,6 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
     return Object.keys(errors).length === 0;
   };
 
-  const validateReset = (): boolean => {
-    const errors: Record<string, string> = {};
-
-    if (!code.trim()) {
-      errors.code = 'Verification code is required';
-    } else if (code.length !== 6) {
-      errors.code = 'Code must be 6 digits';
-    }
-
-    if (!password) {
-      errors.password = 'New password is required';
-    } else if (password.length < 8) {
-      errors.password = 'Password must be at least 8 characters';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      errors.password = 'Password must contain uppercase, lowercase, and number';
-    }
-
-    if (!confirmPassword) {
-      errors.confirmPassword = 'Please confirm your password';
-    } else if (password !== confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
-    }
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,23 +61,6 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
     onSubmit?.({ email });
   };
 
-  const handleResetSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateReset()) {
-      return;
-    }
-
-    onResetSubmit?.({ code, password });
-  };
-
-  const handleCodeVerify = () => {
-    if (code.length === 6) {
-      setCurrentStep('reset');
-    } else {
-      setValidationErrors({ code: 'Code must be 6 digits' });
-    }
-  };
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -159,12 +113,12 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
               isLoading={loading}
               disabled={loading}
             >
-              {loading ? 'Sending Reset Code...' : 'Send Reset Code'}
+              {loading ? 'Sending Reset Link...' : 'Send Reset Link'}
             </Button>
           </motion.form>
         );
 
-      case 'verify':
+      case 'sent':
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -172,187 +126,79 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
             exit={{ opacity: 0, y: -20 }}
             className="space-y-6"
           >
-            <div className="text-center space-y-2">
+            <div className="text-center space-y-4">
               <div className="w-16 h-16 mx-auto bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center">
-                <Shield className="w-8 h-8 text-emerald-500 dark:text-emerald-400" />
+                <Mail className="w-8 h-8 text-emerald-500 dark:text-emerald-400" />
               </div>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
                 Check Your Email
               </h2>
-              <p className="text-slate-600 dark:text-slate-400">
-                We've sent a 6-digit verification code to <strong>{email}</strong>
-              </p>
+              <div className="space-y-3">
+                <p className="text-slate-600 dark:text-slate-400">
+                  We've sent a password reset link to <strong>{email}</strong>
+                </p>
+                <p className="text-slate-600 dark:text-slate-400 text-sm">
+                  Click the secure link in your email to create a new password. The link will expire in 24 hours.
+                </p>
+              </div>
             </div>
 
-            <div className="space-y-4">
-              <Input
-                type="text"
-                label="Verification Code"
-                placeholder="Enter 6-digit code"
-                value={code}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                  setCode(value);
-                  if (validationErrors.code) {
-                    setValidationErrors(prev => {
-                      const { code, ...rest } = prev;
-                      return rest;
-                    });
-                  }
-                }}
-                leftIcon={<Shield className="w-5 h-5" />}
-                errorMessage={validationErrors.code}
-                maxLength={6}
-                size="lg"
-                className="text-center text-2xl tracking-widest"
-                required
-              />
+            <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-2 h-2 bg-emerald-500 dark:bg-emerald-400 rounded-full"></div>
+                </div>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Check your spam folder if you don't see the email in your inbox
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-2 h-2 bg-emerald-500 dark:bg-emerald-400 rounded-full"></div>
+                </div>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  The link can only be used once for security purposes
+                </p>
+              </div>
+            </div>
 
+            <div className="space-y-3">
               <div className="text-center">
                 <button
                   type="button"
                   onClick={() => onSubmit?.({ email })}
                   className="text-sm text-emerald-500 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium transition-colors"
+                  disabled={loading}
                 >
-                  Didn't receive the code? Resend
+                  {loading ? 'Sending...' : 'Didn\'t receive the email? Send again'}
+                </button>
+              </div>
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCurrentStep('request');
+                    setEmail('');
+                    setValidationErrors({});
+                    // Notify parent to reset emailSent state
+                    onUseDifferentEmail?.();
+                  }}
+                  className="text-sm text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300 font-medium transition-colors"
+                >
+                  Use a different email address
                 </button>
               </div>
             </div>
-
-            <Button
-              variant="primary"
-              size="lg"
-              className="w-full"
-              onClick={handleCodeVerify}
-              disabled={code.length !== 6}
-            >
-              Verify Code
-            </Button>
           </motion.div>
         );
 
-      case 'reset':
-        return (
-          <motion.form
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            onSubmit={handleResetSubmit}
-            className="space-y-6"
-          >
-            <div className="text-center space-y-2">
-              <div className="w-16 h-16 mx-auto bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center">
-                <Lock className="w-8 h-8 text-emerald-500 dark:text-emerald-400" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                Reset Your Password
-              </h2>
-              <p className="text-slate-600 dark:text-slate-400">
-                Enter your new password below
-              </p>
-            </div>
-
-            <div className="space-y-5">
-              <Input
-                type="password"
-                label="New Password"
-                placeholder="Enter new password"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (validationErrors.password) {
-                    setValidationErrors(prev => {
-                      const { password, ...rest } = prev;
-                      return rest;
-                    });
-                  }
-                }}
-                leftIcon={<Lock className="w-5 h-5" />}
-                showPasswordToggle
-                errorMessage={validationErrors.password}
-                helperText="Must be 8+ characters with uppercase, lowercase, and number"
-                size="lg"
-                required
-              />
-
-              <Input
-                type="password"
-                label="Confirm New Password"
-                placeholder="Confirm new password"
-                value={confirmPassword}
-                onChange={(e) => {
-                  setConfirmPassword(e.target.value);
-                  if (validationErrors.confirmPassword) {
-                    setValidationErrors(prev => {
-                      const { confirmPassword, ...rest } = prev;
-                      return rest;
-                    });
-                  }
-                }}
-                leftIcon={<Lock className="w-5 h-5" />}
-                showPasswordToggle
-                errorMessage={validationErrors.confirmPassword}
-                size="lg"
-                required
-              />
-            </div>
-
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              className="w-full"
-              isLoading={loading}
-              disabled={loading}
-            >
-              {loading ? 'Resetting Password...' : 'Reset Password'}
-            </Button>
-          </motion.form>
-        );
-
-      case 'success':
-        return (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="space-y-6 text-center"
-          >
-            <div className="space-y-4">
-              <div className="w-20 h-20 mx-auto bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center">
-                <Check className="w-10 h-10 text-emerald-500 dark:text-emerald-400" />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                Password Reset Successfully!
-              </h2>
-              <p className="text-slate-600 dark:text-slate-400">
-                Your password has been updated. You can now sign in with your new password.
-              </p>
-            </div>
-
-            <Button
-              variant="primary"
-              size="lg"
-              className="w-full"
-              onClick={onBackToLogin}
-            >
-              Continue to Sign In
-            </Button>
-          </motion.div>
-        );
 
       default:
         return null;
     }
   };
 
-  // Auto-advance to success step when reset is successful (you would trigger this from parent)
-  React.useEffect(() => {
-    if (currentStep === 'reset' && !loading && !error) {
-      // This would be triggered by parent component when reset is successful
-      // setCurrentStep('success');
-    }
-  }, [currentStep, loading, error]);
 
   return (
     <motion.div
@@ -384,7 +230,7 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
       </AnimatePresence>
 
       {/* Back to Login Link */}
-      {onBackToLogin && currentStep !== 'success' && (
+      {onBackToLogin && (
         <div className="text-center pt-4 border-t border-slate-200 dark:border-slate-700">
           <button
             onClick={onBackToLogin}
@@ -399,12 +245,3 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
   );
 };
 
-// Helper function to trigger success step from parent component
-export const usePasswordRecoverySuccess = () => {
-  return {
-    triggerSuccess: () => {
-      // This would be called from parent when API confirms password reset
-      // Implementation depends on how you manage the state
-    }
-  };
-};

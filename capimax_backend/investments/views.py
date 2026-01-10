@@ -33,9 +33,10 @@ from .serializers import (
 from .services import (
     InvestmentCalculationService, PortfolioService,
     InvestmentProcessingService, AutoInvestmentService,
-    DividendDistributionService, InvestmentRecommendationService
+    DividendDistributionService, InvestmentRecommendationService,
+    WalletInvestmentService
 )
-from core.permissions import IsOwnerOrReadOnly
+from core.permissions import IsOwnerOrReadOnly, CanInvestWithKYC, IsNotSuspended
 from core.exceptions import InvestmentError
 
 logger = logging.getLogger(__name__)
@@ -43,12 +44,27 @@ logger = logging.getLogger(__name__)
 
 class InvestmentViewSet(viewsets.ModelViewSet):
     """ViewSet for managing investments."""
-    
+
     serializer_class = InvestmentSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
-    
+
+    def get_permissions(self):
+        """
+        Return different permissions based on action.
+        Create and wallet_invest require KYC approval.
+        """
+        if self.action in ['create', 'wallet_invest', 'validate_wallet_investment']:
+            # Financial actions require KYC approval + not suspended
+            return [CanInvestWithKYC()]
+        elif self.action in ['calculate']:
+            # Read-only calculation just needs authentication
+            return [IsAuthenticated(), IsNotSuspended()]
+        return super().get_permissions()
+
     def get_queryset(self):
         """Get investments for current user."""
+        if getattr(self, 'swagger_fake_view', False):
+            return Investment.objects.none()
         return Investment.objects.filter(
             user=self.request.user
         ).select_related('property_investment').order_by('-created_at')
@@ -209,6 +225,85 @@ class InvestmentViewSet(viewsets.ModelViewSet):
                 'error': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=['post'])
+    def wallet_invest(self, request):
+        """Process wallet-based investment transaction."""
+        property_id = request.data.get('property_id')
+        investment_amount = request.data.get('investment_amount')
+        token_amount = request.data.get('token_amount')
+
+        if not all([property_id, investment_amount, token_amount]):
+            return Response({
+                'success': False,
+                'error': 'property_id, investment_amount, and token_amount are required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            investment_amount = Decimal(str(investment_amount))
+            token_amount = int(token_amount)
+
+            # Process wallet investment
+            result = WalletInvestmentService.process_wallet_investment(
+                user=request.user,
+                property_id=property_id,
+                investment_amount=investment_amount,
+                token_amount=token_amount
+            )
+
+            return Response({
+                'success': True,
+                'data': result
+            }, status=status.HTTP_201_CREATED)
+
+        except InvestmentError as e:
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Wallet investment failed for user {request.user.id}: {str(e)}")
+            return Response({
+                'success': False,
+                'error': 'Investment processing failed'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=['post'])
+    def validate_wallet_investment(self, request):
+        """Validate wallet investment before processing."""
+        property_id = request.data.get('property_id')
+        investment_amount = request.data.get('investment_amount')
+        token_amount = request.data.get('token_amount')
+
+        if not all([property_id, investment_amount, token_amount]):
+            return Response({
+                'success': False,
+                'error': 'property_id, investment_amount, and token_amount are required'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            investment_amount = Decimal(str(investment_amount))
+            token_amount = int(token_amount)
+
+            # Validate wallet investment
+            validation_result = WalletInvestmentService.validate_wallet_investment(
+                user=request.user,
+                property_id=property_id,
+                investment_amount=investment_amount,
+                token_amount=token_amount
+            )
+
+            return Response({
+                'success': True,
+                'data': validation_result
+            })
+
+        except Exception as e:
+            logger.error(f"Wallet investment validation failed for user {request.user.id}: {str(e)}")
+            return Response({
+                'success': False,
+                'error': 'Validation failed'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class PortfolioViewSet(viewsets.ViewSet):
     """ViewSet for portfolio management operations."""
@@ -326,6 +421,8 @@ class DividendViewSet(viewsets.ReadOnlyModelViewSet):
     
     def get_queryset(self):
         """Get dividends for current user's investments."""
+        if getattr(self, 'swagger_fake_view', False):
+            return DividendPayment.objects.none()
         return DividendPayment.objects.filter(
             investment__user=self.request.user
         ).select_related(
@@ -391,6 +488,8 @@ class AutoInvestmentViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """Get auto investments for current user."""
+        if getattr(self, 'swagger_fake_view', False):
+            return AutoInvestment.objects.none()
         return AutoInvestment.objects.filter(
             user=self.request.user
         ).select_related('property_investment').order_by('-created_at')
@@ -451,6 +550,8 @@ class InvestmentWithdrawalViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """Get withdrawals for current user's investments."""
+        if getattr(self, 'swagger_fake_view', False):
+            return InvestmentWithdrawal.objects.none()
         return InvestmentWithdrawal.objects.filter(
             investment__user=self.request.user
         ).select_related(

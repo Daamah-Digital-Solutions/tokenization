@@ -1,26 +1,68 @@
+As discussed, below are all the required details to proceed with full production deployment.
 
-Subject: Re: Comprehensive Testing Protocol Results - Action Plan
+1. VPS / Server
 
-Hi Claude,
+VPS IP Address: <VPS_IP_ADDRESS>
 
-Thank you for conducting the comprehensive testing and for the honest and detailed report. Discovering these critical issues now is crucial, and I appreciate your thoroughness.
+Server access: Full MCP access provided "Hostinger MCP"
+(You have full control to manage Docker, Nginx, SSL, DNS, and server configuration)
 
-I understand that the core wallet and portfolio APIs are currently the main blockers and that the platform is not ready for my UAT yet.
+2. DNS
 
-I approve the "Immediate Action Required" plan. Please prioritize fixing the critical issues in the order you recommended:
+DNS A records will be handled by you via MCP:
 
+capimaxrt.com → <VPS_IP_ADDRESS>
 
+www.capimaxrt.com → <VPS_IP_ADDRESS>
 
-Fix the Wallet Balance API.
+3. Email (Hostinger SMTP)
 
-Implement the missing Dashboard Portfolio API.
-
-Replace all remaining mock data with real API calls.
-
-Implement global error handling.
-
+EMAIL_HOST: smtp.hostinger.com
 
 
-Thanks for your hard work in identifying these problems. Let's get them fixed.
+EMAIL_HOST_USER: <no-reply@capimaxrt.com>
 
-Regards,
+EMAIL_HOST_PASSWORD: <No@1122Capirt>
+
+
+
+4. Stripe (LIVE Mode)
+
+STRIPE_SECRET_KEY: <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>
+
+STRIPE_WEBHOOK_SECRET: <whsec_hUCEgyGnNKolFGUiUgh4H73wSZWRc9oR>
+
+Webhook URL (already configured):
+https://capimaxrt.com/api/v1/payments/webhooks/stripe/
+
+5. NOWPayments (LIVE Mode)
+
+NOWPAYMENTS_API_KEY: <EX6JWPP-3X74DFW-KBHXDAB-GDSNG6S>
+
+NOWPAYMENTS_IPN_SECRET: <EaPCxEh+MXpNyHiHMNENXYR9j13BS+C+>
+
+IPN Callback URL:
+https://capimaxrt.com/api/v1/payments/nowpayments/ipn/
+
+Final Confirmation
+
+Blockchain minting: ENABLED
+
+SSL: Let’s Encrypt
+
+Admin panel: Django Admin
+
+Please proceed with:
+
+Updating .env.production
+
+
+Nginx + SSL configuration
+
+Database migrations
+
+Admin superuser setup
+
+End-to-end verification (payments, emails, blockchain)
+
+Once completed, please confirm when the platform is live on the production domain.

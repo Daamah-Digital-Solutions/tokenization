@@ -27,12 +27,14 @@ import {
   ChevronUp
 } from 'lucide-react';
 
-import { DashboardService } from '../../../services/dashboard/DashboardService';
-import { 
-  type Transaction, 
-  TransactionType, 
-  PaymentMethod,
-  type Investment 
+import { TransactionService, type EnhancedTransaction, type TransactionFilters } from '../../../services/transaction/TransactionService';
+import {
+  TransactionType,
+  PaymentMethod
+} from '../../../services/api/types';
+import type {
+  Transaction,
+  Investment
 } from '../../../services/api/types';
 import { Card } from '../../design-system';
 import { Text } from '../../design-system/typography/Text';
@@ -43,13 +45,6 @@ interface TransactionManagerProps {
   className?: string;
 }
 
-interface ExtendedTransaction extends Transaction {
-  property?: {
-    title: string;
-    address: string;
-  };
-  investment?: Investment;
-}
 
 type StatusFilter = 'all' | 'completed' | 'pending' | 'failed';
 type TypeFilter = 'all' | TransactionType;
@@ -65,110 +60,158 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
   const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
+  const [isExporting, setIsExporting] = useState(false);
   const limit = 20;
 
-  // Fetch transactions
-  const { data: transactions, isLoading, refetch } = useQuery({
-    queryKey: ['transactions', page, statusFilter, typeFilter, dateRange],
-    queryFn: () => DashboardService.getRecentTransactions(limit * page),
+  // Fetch transactions with filters
+  const { data: transactionData, isLoading, refetch, error } = useQuery({
+    queryKey: ['transactions', page, statusFilter, typeFilter, dateRange, searchTerm],
+    queryFn: () => {
+      const filters: TransactionFilters = {
+        page,
+        limit,
+        ordering: '-created_at'
+      };
+
+      if (statusFilter !== 'all') {
+        filters.status = statusFilter;
+      }
+
+      if (typeFilter !== 'all') {
+        filters.type = typeFilter;
+      }
+
+      if (searchTerm) {
+        filters.search = searchTerm;
+      }
+
+      // Apply date range filter
+      if (dateRange !== 'all') {
+        const now = new Date();
+        let dateFrom = new Date();
+
+        switch (dateRange) {
+          case '7d':
+            dateFrom.setDate(now.getDate() - 7);
+            break;
+          case '30d':
+            dateFrom.setDate(now.getDate() - 30);
+            break;
+          case '90d':
+            dateFrom.setDate(now.getDate() - 90);
+            break;
+          case '1y':
+            dateFrom.setFullYear(now.getFullYear() - 1);
+            break;
+        }
+
+        filters.date_from = dateFrom.toISOString().split('T')[0];
+      }
+
+      return TransactionService.getTransactions(filters);
+    },
+    staleTime: 30000, // Cache for 30 seconds
+    refetchOnWindowFocus: false
   });
 
-  // Generate mock extended transaction data
-  const extendedTransactions: ExtendedTransaction[] = useMemo(() => {
-    if (!transactions) return [];
-    
-    return transactions.map((transaction, index) => ({
-      ...transaction,
-      property: transaction.property_id ? {
-        title: `Property ${index + 1}`,
-        address: `${123 + index} Main St, New York`,
-      } : undefined,
-      // Add some mock metadata for better UX
-      metadata: {
-        ...transaction.metadata,
-        payment_method: ['credit_card', 'bank_transfer', 'cryptocurrency'][Math.floor(Math.random() * 3)],
-        transaction_fee: transaction.amount * 0.02,
-        gas_fee: transaction.type === TransactionType.INVESTMENT ? Math.random() * 50 : undefined,
-        confirmation_blocks: transaction.type === TransactionType.INVESTMENT ? Math.floor(Math.random() * 12) + 1 : undefined,
-      }
-    }));
-  }, [transactions]);
+  // Extract transactions from response
+  const transactions = transactionData?.transactions || [];
+  const pagination = transactionData?.pagination;
+  const summary = transactionData?.summary;
 
-  // Filter and sort transactions
-  const filteredTransactions = useMemo(() => {
-    let filtered = extendedTransactions;
+  // Filtered transactions are handled by the API
+  const filteredTransactions = transactions;
 
-    // Apply search filter
-    if (searchTerm) {
-      filtered = filtered.filter(transaction =>
-        transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        transaction.property?.title.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      // Try to export via API first (more comprehensive data)
+      const filters: TransactionFilters = {
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        type: typeFilter !== 'all' ? typeFilter : undefined,
+        search: searchTerm || undefined,
+        date_from: dateRange !== 'all' ? getDateFromRange(dateRange) : undefined
+      };
+
+      const blob = await TransactionService.exportTransactions(filters);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `transactions-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.warn('API export failed, falling back to client-side export:', error);
+
+      // Fallback to client-side CSV generation
+      const csvContent = [
+        ['Date', 'Type', 'Description', 'Amount', 'Status', 'Currency', 'Property', 'Payment Method'].join(','),
+        ...filteredTransactions.map(t => [
+          new Date(t.created_at).toLocaleDateString(),
+          t.type,
+          t.description,
+          t.amount,
+          t.status,
+          t.currency,
+          t.property?.title || 'N/A',
+          t.payment_details?.method_display || 'N/A'
+        ].join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `transactions-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const getDateFromRange = (range: DateRange): string => {
+    const now = new Date();
+    let dateFrom = new Date();
+
+    switch (range) {
+      case '7d':
+        dateFrom.setDate(now.getDate() - 7);
+        break;
+      case '30d':
+        dateFrom.setDate(now.getDate() - 30);
+        break;
+      case '90d':
+        dateFrom.setDate(now.getDate() - 90);
+        break;
+      case '1y':
+        dateFrom.setFullYear(now.getFullYear() - 1);
+        break;
     }
 
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(transaction => 
-        transaction.status.toLowerCase() === statusFilter.toLowerCase()
-      );
+    return dateFrom.toISOString().split('T')[0];
+  };
+
+  const handleViewTransaction = (transactionId: string) => {
+    setSelectedTransaction(transactionId);
+  };
+
+  const handleRetryTransaction = async (transactionId: string) => {
+    try {
+      await TransactionService.retryTransaction(transactionId);
+      refetch(); // Refresh the list
+    } catch (error) {
+      console.error('Failed to retry transaction:', error);
     }
+  };
 
-    // Apply type filter
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter(transaction => transaction.type === typeFilter);
+  const handleCancelTransaction = async (transactionId: string) => {
+    try {
+      await TransactionService.cancelTransaction(transactionId);
+      refetch(); // Refresh the list
+    } catch (error) {
+      console.error('Failed to cancel transaction:', error);
     }
-
-    // Apply date range filter
-    if (dateRange !== 'all') {
-      const now = new Date();
-      let cutoffDate = new Date();
-      
-      switch (dateRange) {
-        case '7d':
-          cutoffDate.setDate(now.getDate() - 7);
-          break;
-        case '30d':
-          cutoffDate.setDate(now.getDate() - 30);
-          break;
-        case '90d':
-          cutoffDate.setDate(now.getDate() - 90);
-          break;
-        case '1y':
-          cutoffDate.setFullYear(now.getFullYear() - 1);
-          break;
-      }
-      
-      filtered = filtered.filter(transaction => 
-        new Date(transaction.created_at) >= cutoffDate
-      );
-    }
-
-    return filtered.sort((a, b) => 
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
-  }, [extendedTransactions, searchTerm, statusFilter, typeFilter, dateRange]);
-
-  const handleExport = () => {
-    const csvContent = [
-      ['Date', 'Type', 'Description', 'Amount', 'Status', 'Currency'].join(','),
-      ...filteredTransactions.map(t => [
-        new Date(t.created_at).toLocaleDateString(),
-        t.type,
-        t.description,
-        t.amount,
-        t.status,
-        t.currency
-      ].join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `transactions-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
   };
 
   const toggleRowExpansion = (transactionId: string) => {
@@ -249,6 +292,28 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
     }
   };
 
+  // Error state
+  if (error) {
+    return (
+      <div className={cn('space-y-6', className)}>
+        <Card className="p-12 text-center">
+          <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <Text variant="h3" weight="semibold" className="mb-2">
+            Failed to Load Transactions
+          </Text>
+          <Text variant="body" color="muted" className="mb-4">
+            {error instanceof Error ? error.message : 'Unable to fetch your transaction history. Please try again.'}
+          </Text>
+          <Button variant="outline" onClick={() => refetch()}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Try Again
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  // Loading state
   if (isLoading) {
     return (
       <div className={cn('space-y-6', className)}>
@@ -257,6 +322,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
           <div className="animate-pulse bg-slate-200 dark:bg-slate-700 h-10 w-32 rounded" />
         </div>
         <Card className="p-6">
+          <div className="animate-pulse bg-slate-200 dark:bg-slate-700 h-10 w-full rounded mb-4" />
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="animate-pulse bg-slate-200 dark:bg-slate-700 h-16 rounded mb-4" />
           ))}
@@ -275,17 +341,23 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
           </Text>
           <Text variant="body" color="muted">
             {filteredTransactions.length} transactions found
+            {summary && (
+              <span className="ml-4">
+                • Total: ${summary.total_amount.toLocaleString()}
+                • Fees: ${summary.fees_paid.toFixed(2)}
+              </span>
+            )}
           </Text>
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="w-4 h-4 mr-2" />
-            Export CSV
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting}>
+            <Download className={cn("w-4 h-4 mr-2", isExporting && "animate-pulse")} />
+            {isExporting ? 'Exporting...' : 'Export CSV'}
           </Button>
-          <Button variant="outline" size="sm" onClick={() => refetch()}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
+            <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
+            {isLoading ? 'Refreshing...' : 'Refresh'}
           </Button>
         </div>
       </div>
@@ -356,8 +428,8 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
               No transactions found
             </Text>
             <Text variant="body" color="muted">
-              {searchTerm || statusFilter !== 'all' || typeFilter !== 'all'
-                ? 'Try adjusting your filters'
+              {searchTerm || statusFilter !== 'all' || typeFilter !== 'all' || dateRange !== '30d'
+                ? 'Try adjusting your filters or search terms'
                 : 'Your transaction history will appear here'}
             </Text>
           </div>
@@ -463,6 +535,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                 variant="outline"
                                 size="sm"
                                 onClick={() => toggleRowExpansion(transaction.id)}
+                                title={isExpanded ? 'Collapse details' : 'Expand details'}
                               >
                                 {isExpanded ? (
                                   <ChevronUp className="w-4 h-4" />
@@ -470,12 +543,34 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                   <ChevronDown className="w-4 h-4" />
                                 )}
                               </Button>
-                              <Button variant="outline" size="sm">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewTransaction(transaction.id)}
+                                title="View transaction details"
+                              >
                                 <Eye className="w-4 h-4" />
                               </Button>
-                              <Button variant="outline" size="sm">
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
+                              {transaction.status.toLowerCase() === 'failed' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleRetryTransaction(transaction.id)}
+                                  title="Retry failed transaction"
+                                >
+                                  <RefreshCw className="w-4 h-4" />
+                                </Button>
+                              )}
+                              {transaction.status.toLowerCase() === 'pending' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleCancelTransaction(transaction.id)}
+                                  title="Cancel pending transaction"
+                                >
+                                  <XCircle className="w-4 h-4" />
+                                </Button>
+                              )}
                             </div>
                           </td>
                         </motion.tr>
@@ -531,22 +626,22 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                       <div className="flex justify-between">
                                         <Text variant="caption" color="muted">Method:</Text>
                                         <Text variant="caption">
-                                          {transaction.metadata?.payment_method?.replace('_', ' ').toUpperCase() || 'N/A'}
+                                          {transaction.payment_details?.method_display || 'N/A'}
                                         </Text>
                                       </div>
-                                      {transaction.metadata?.transaction_fee && (
+                                      {transaction.payment_details?.transaction_fee && (
                                         <div className="flex justify-between">
-                                          <Text variant="caption" color="muted">Fee:</Text>
+                                          <Text variant="caption" color="muted">Transaction Fee:</Text>
                                           <Text variant="caption">
-                                            ${transaction.metadata.transaction_fee.toFixed(2)}
+                                            ${transaction.payment_details.transaction_fee.toFixed(2)}
                                           </Text>
                                         </div>
                                       )}
-                                      {transaction.metadata?.gas_fee && (
+                                      {transaction.payment_details?.gas_fee && (
                                         <div className="flex justify-between">
                                           <Text variant="caption" color="muted">Gas Fee:</Text>
                                           <Text variant="caption">
-                                            ${transaction.metadata.gas_fee.toFixed(2)}
+                                            ${transaction.payment_details.gas_fee.toFixed(2)}
                                           </Text>
                                         </div>
                                       )}
@@ -554,7 +649,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                   </div>
                                   
                                   {/* Blockchain Details */}
-                                  {transaction.type === TransactionType.INVESTMENT && (
+                                  {transaction.blockchain_details && (
                                     <div>
                                       <Text variant="body" weight="semibold" className="mb-2">
                                         Blockchain Details
@@ -562,20 +657,49 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                       <div className="space-y-2 text-sm">
                                         <div className="flex justify-between">
                                           <Text variant="caption" color="muted">Network:</Text>
-                                          <Text variant="caption">Ethereum</Text>
+                                          <Text variant="caption">{transaction.blockchain_details.network}</Text>
                                         </div>
                                         <div className="flex justify-between">
                                           <Text variant="caption" color="muted">Confirmations:</Text>
                                           <Text variant="caption">
-                                            {transaction.metadata?.confirmation_blocks || 0}/12
+                                            {transaction.blockchain_details.confirmations}/{transaction.blockchain_details.required_confirmations}
                                           </Text>
                                         </div>
-                                        {transaction.metadata?.transaction_hash && (
-                                          <div className="flex items-center gap-2">
+                                        {transaction.blockchain_details.transaction_hash && (
+                                          <div className="flex items-center justify-between">
                                             <Text variant="caption" color="muted">Hash:</Text>
-                                            <Button variant="outline" size="sm" className="p-1">
-                                              <ExternalLink className="w-3 h-3" />
-                                            </Button>
+                                            <div className="flex items-center gap-2">
+                                              <Text variant="caption" className="font-mono text-xs">
+                                                {transaction.blockchain_details.transaction_hash.slice(0, 10)}...
+                                              </Text>
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="p-1"
+                                                onClick={() => {
+                                                  // Use correct explorer based on network
+                                                  const network = transaction.blockchain_details?.network?.toLowerCase() || 'polygon';
+                                                  const explorers: Record<string, string> = {
+                                                    polygon: 'https://polygonscan.com/tx/',
+                                                    ethereum: 'https://etherscan.io/tx/',
+                                                    bsc: 'https://bscscan.com/tx/',
+                                                  };
+                                                  const baseUrl = explorers[network] || explorers.polygon;
+                                                  window.open(`${baseUrl}${transaction.blockchain_details?.transaction_hash}`, '_blank', 'noopener,noreferrer');
+                                                }}
+                                                title="View on PolygonScan"
+                                              >
+                                                <ExternalLink className="w-3 h-3" />
+                                              </Button>
+                                            </div>
+                                          </div>
+                                        )}
+                                        {transaction.blockchain_details.gas_used && (
+                                          <div className="flex justify-between">
+                                            <Text variant="caption" color="muted">Gas Used:</Text>
+                                            <Text variant="caption">
+                                              {transaction.blockchain_details.gas_used.toLocaleString()}
+                                            </Text>
                                           </div>
                                         )}
                                       </div>
@@ -600,22 +724,25 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
       {filteredTransactions.length > 0 && (
         <div className="flex items-center justify-between">
           <Text variant="body" color="muted">
-            Showing {filteredTransactions.length} of {extendedTransactions.length} transactions
+            Showing {filteredTransactions.length} of {pagination?.total || filteredTransactions.length} transactions
           </Text>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
+              disabled={page === 1 || isLoading}
             >
               Previous
             </Button>
-            <Button 
-              variant="outline" 
+            <span className="px-3 py-1 text-sm text-slate-600 dark:text-slate-400">
+              Page {page} of {pagination?.pages || 1}
+            </span>
+            <Button
+              variant="outline"
               size="sm"
               onClick={() => setPage(p => p + 1)}
-              disabled={filteredTransactions.length < limit}
+              disabled={!pagination || page >= pagination.pages || isLoading}
             >
               Next
             </Button>

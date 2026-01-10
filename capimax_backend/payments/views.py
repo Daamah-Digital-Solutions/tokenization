@@ -35,6 +35,8 @@ from .serializers import (
     WalletDepositSerializer, WalletWithdrawalSerializer
 )
 from core.utils import create_success_response, create_error_response
+from core.services.crypto_price_service import CryptoPriceService
+from core.services.email_service import EmailService
 from rest_framework.permissions import IsAuthenticated
 
 logger = logging.getLogger(__name__)
@@ -51,6 +53,9 @@ class PaymentMethodViewSet(ModelViewSet):
     
     def get_queryset(self):
         """Get payment methods for current user."""
+        # Handle schema generation for drf-yasg
+        if getattr(self, 'swagger_fake_view', False):
+            return UserPaymentMethod.objects.none()
         return UserPaymentMethod.objects.filter(user=self.request.user).order_by('-created_at')
     
     def perform_create(self, serializer):
@@ -91,6 +96,9 @@ class PaymentViewSet(ModelViewSet):
     
     def get_queryset(self):
         """Get payments for current user."""
+        # Handle schema generation for drf-yasg
+        if getattr(self, 'swagger_fake_view', False):
+            return Payment.objects.none()
         return Payment.objects.filter(user=self.request.user).order_by('-created_at')
     
     def perform_create(self, serializer):
@@ -319,7 +327,7 @@ class StripePaymentView(APIView):
             wallet_balance.save()
             
             # Create wallet transaction record
-            WalletTransaction.objects.create(
+            transaction_record = WalletTransaction.objects.create(
                 user=payment.user,
                 transaction_type='deposit',
                 amount=payment.net_amount,
@@ -329,24 +337,50 @@ class StripePaymentView(APIView):
                 reference_id=payment.id,
                 description=f"Payment deposit - {payment.payment_method}"
             )
+
+            # Send funds notification email for deposit
+            try:
+                transaction_details = {
+                    'type': 'Deposit',
+                    'amount': str(payment.net_amount),
+                    'transaction_id': str(transaction_record.id),
+                    'payment_method': payment.payment_method.title(),
+                    'status': 'Confirmed',
+                    'previous_balance': str(wallet_balance.available_balance - payment.net_amount),
+                    'new_balance': str(wallet_balance.available_balance),
+                    'id': transaction_record.id
+                }
+
+                EmailService.send_funds_notification_email(
+                    user=payment.user,
+                    transaction_details=transaction_details
+                )
+                logger.info(f"Funds notification email sent for deposit {transaction_record.id}")
+            except Exception as e:
+                logger.error(f"Failed to send funds notification email for deposit {transaction_record.id}: {str(e)}")
             
             # Process investment if applicable
             if payment.investment:
                 self._process_investment_payment(payment)
     
     def _process_investment_payment(self, payment):
-        """Process payment for investment."""
+        """Process payment for investment - triggers deferred token minting."""
         investment = payment.investment
-        
-        # Update investment status
-        investment.status = 'completed'
-        investment.completed_at = timezone.now()
-        investment.save()
-        
-        # Update property token count
-        property_obj = investment.property
+
+        # Mark payment confirmed - tokens will be minted by Celery task
+        # This sets status to PENDING_MINT and schedules minting
+        investment.mark_payment_confirmed()
+
+        # Reserve tokens (mark as sold) but don't mint yet
+        # Actual on-chain minting happens via process_pending_mints Celery task
+        property_obj = investment.property_investment
         property_obj.tokens_sold += investment.token_amount
-        property_obj.save()
+        property_obj.save(update_fields=['tokens_sold'])
+
+        logger.info(
+            f"Investment {investment.id} payment confirmed. "
+            f"Status: {investment.status}. Tokens will be minted by background task."
+        )
 
 
 class CryptoPaymentView(APIView):
@@ -480,26 +514,10 @@ class CryptoPaymentView(APIView):
     
     def _fetch_crypto_quote(self, from_currency, to_currency, amount):
         """Fetch cryptocurrency quote from external API."""
-        # Mock implementation - integrate with real crypto price API
-        mock_rates = {
-            'BTC': Decimal('45000.00'),
-            'ETH': Decimal('3000.00'),
-            'USDC': Decimal('1.00'),
-            'USDT': Decimal('1.00')
-        }
-        
-        rate = mock_rates.get(from_currency, Decimal('1.00'))
-        converted_amount = amount * rate
-        
-        return {
-            'from_currency': from_currency,
-            'to_currency': to_currency,
-            'amount': amount,
-            'converted_amount': converted_amount,
-            'rate': rate,
-            'valid_until': timezone.now() + timedelta(minutes=15),
-            'network_fee': Decimal('0.005'),  # Mock network fee
-        }
+        # Use real crypto price service
+        quote = CryptoPriceService.get_crypto_quote(from_currency, to_currency, amount)
+        quote['valid_until'] = timezone.now() + timedelta(minutes=15)
+        return quote
     
     def _verify_blockchain_transaction(self, tx_hash, wallet_address, amount):
         """Verify blockchain transaction (mock implementation)."""
@@ -622,6 +640,27 @@ class WalletManagementView(APIView):
                     balance_after=wallet_balance.available_balance,
                     description="Withdrawal request initiated"
                 )
+
+                # Send funds notification email for withdrawal
+                try:
+                    transaction_details = {
+                        'type': 'Withdrawal',
+                        'amount': str(amount),
+                        'transaction_id': str(transaction_record.id),
+                        'payment_method': 'Wallet Withdrawal',
+                        'status': 'Processing',
+                        'previous_balance': str(wallet_balance.available_balance + amount),
+                        'new_balance': str(wallet_balance.available_balance),
+                        'id': transaction_record.id
+                    }
+
+                    EmailService.send_funds_notification_email(
+                        user=request.user,
+                        transaction_details=transaction_details
+                    )
+                    logger.info(f"Funds notification email sent for withdrawal {transaction_record.id}")
+                except Exception as e:
+                    logger.error(f"Failed to send funds notification email for withdrawal {transaction_record.id}: {str(e)}")
                 
                 return Response(create_success_response(data={
                     'transaction_id': transaction_record.id,
@@ -650,23 +689,25 @@ class WalletManagementView(APIView):
     
     def _calculate_total_wallet_value(self, balances):
         """Calculate total wallet value in USD."""
-        # Mock implementation - would integrate with real exchange rates
         total = Decimal('0.00')
-        
+
+        # Collect all unique currencies
+        currencies = [b.currency for b in balances if b.currency != 'USD']
+
+        # Get real exchange rates if we have non-USD currencies
+        if currencies:
+            rates = CryptoPriceService.get_exchange_rates(currencies, 'usd')
+        else:
+            rates = {}
+
         for balance in balances:
             if balance.currency == 'USD':
                 total += balance.total_balance
             else:
-                # Apply mock conversion rates
-                mock_rates = {
-                    'BTC': Decimal('45000.00'),
-                    'ETH': Decimal('3000.00'),
-                    'USDC': Decimal('1.00'),
-                    'USDT': Decimal('1.00')
-                }
-                rate = mock_rates.get(balance.currency, Decimal('1.00'))
+                # Use real exchange rate, fallback to 1:1 if not available
+                rate = rates.get(balance.currency, Decimal('1.00'))
                 total += balance.total_balance * rate
-        
+
         return total
 
 
@@ -711,6 +752,9 @@ class RefundViewSet(ModelViewSet):
     
     def get_queryset(self):
         """Get refunds for current user's payments."""
+        # Handle schema generation for drf-yasg
+        if getattr(self, 'swagger_fake_view', False):
+            return Refund.objects.none()
         return Refund.objects.filter(payment__user=self.request.user).order_by('-created_at')
     
     def create(self, request, *args, **kwargs):
@@ -786,6 +830,9 @@ class RecurringPaymentViewSet(ModelViewSet):
     
     def get_queryset(self):
         """Get recurring payments for current user."""
+        # Handle schema generation for drf-yasg
+        if getattr(self, 'swagger_fake_view', False):
+            return RecurringPayment.objects.none()
         return RecurringPayment.objects.filter(user=self.request.user).order_by('-created_at')
     
     def perform_create(self, serializer):
@@ -855,7 +902,7 @@ def _process_successful_payment(payment):
         wallet_balance.save()
         
         # Create wallet transaction record
-        WalletTransaction.objects.create(
+        transaction_record = WalletTransaction.objects.create(
             user=payment.user,
             transaction_type='deposit',
             amount=payment.net_amount,
@@ -865,18 +912,248 @@ def _process_successful_payment(payment):
             reference_id=payment.id,
             description=f"Payment deposit - {payment.payment_method}"
         )
+
+        # Send funds notification email for deposit
+        try:
+            transaction_details = {
+                'type': 'Deposit',
+                'amount': str(payment.net_amount),
+                'transaction_id': str(transaction_record.id),
+                'payment_method': payment.payment_method.title(),
+                'status': 'Confirmed',
+                'previous_balance': str(previous_balance),
+                'new_balance': str(wallet_balance.available_balance),
+                'id': transaction_record.id
+            }
+
+            EmailService.send_funds_notification_email(
+                user=payment.user,
+                transaction_details=transaction_details
+            )
+            logger.info(f"Funds notification email sent for deposit {transaction_record.id}")
+        except Exception as e:
+            logger.error(f"Failed to send funds notification email for deposit {transaction_record.id}: {str(e)}")
         
-        # Process investment if applicable
+        # Process investment if applicable - triggers deferred minting
         if payment.investment:
             investment = payment.investment
-            investment.status = 'completed'
-            investment.completed_at = timezone.now()
-            investment.save()
-            
-            # Update property token count
-            property_obj = investment.property
+
+            # Mark payment confirmed - tokens will be minted by Celery task
+            investment.mark_payment_confirmed()
+
+            # Reserve tokens (mark as sold) but don't mint on-chain yet
+            property_obj = investment.property_investment
             property_obj.tokens_sold += investment.token_amount
-            property_obj.save()
+            property_obj.save(update_fields=['tokens_sold'])
+
+            logger.info(
+                f"Investment {investment.id} payment confirmed via helper. "
+                f"Status: {investment.status}. Minting scheduled."
+            )
+
+
+class StripeWebhookView(APIView):
+    """
+    Handle Stripe webhook events.
+
+    This endpoint receives asynchronous notifications from Stripe about
+    payment events. No authentication required - uses Stripe signature verification.
+    """
+    permission_classes = []  # No auth - Stripe sends webhooks
+
+    def post(self, request):
+        """Process incoming Stripe webhook events."""
+        payload = request.body
+        sig_header = request.META.get('HTTP_STRIPE_SIGNATURE', '')
+        webhook_secret = getattr(settings, 'STRIPE_WEBHOOK_SECRET', None)
+
+        if not webhook_secret:
+            logger.error("STRIPE_WEBHOOK_SECRET not configured")
+            return Response(
+                {'error': 'Webhook not configured'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        try:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, webhook_secret
+            )
+        except ValueError as e:
+            logger.error(f"Invalid Stripe webhook payload: {str(e)}")
+            return Response(
+                {'error': 'Invalid payload'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except stripe.error.SignatureVerificationError as e:
+            logger.error(f"Invalid Stripe signature: {str(e)}")
+            return Response(
+                {'error': 'Invalid signature'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Handle the event
+        event_type = event['type']
+        logger.info(f"Received Stripe webhook event: {event_type}")
+
+        try:
+            if event_type == 'payment_intent.succeeded':
+                self._handle_payment_intent_succeeded(event['data']['object'])
+            elif event_type == 'payment_intent.payment_failed':
+                self._handle_payment_intent_failed(event['data']['object'])
+            elif event_type == 'charge.refunded':
+                self._handle_charge_refunded(event['data']['object'])
+            else:
+                logger.info(f"Unhandled Stripe event type: {event_type}")
+
+            return Response({'status': 'success'}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.error(f"Error processing Stripe webhook {event_type}: {str(e)}")
+            # Return 200 to prevent Stripe retries for application errors
+            # The error is logged for manual investigation
+            return Response({'status': 'error logged'}, status=status.HTTP_200_OK)
+
+    def _handle_payment_intent_succeeded(self, payment_intent):
+        """Handle successful payment intent from Stripe webhook."""
+        payment_intent_id = payment_intent['id']
+        logger.info(f"Processing payment_intent.succeeded for {payment_intent_id}")
+
+        try:
+            # Find the payment record
+            payment = Payment.objects.get(payment_intent_id=payment_intent_id)
+
+            # Skip if already processed
+            if payment.status == PaymentStatus.COMPLETED:
+                logger.info(f"Payment {payment.id} already completed, skipping")
+                return
+
+            with transaction.atomic():
+                # Update payment status
+                payment.status = PaymentStatus.COMPLETED
+                payment.completed_at = timezone.now()
+                payment.external_transaction_id = payment_intent_id
+                payment.save()
+
+                # Update wallet balance
+                wallet_balance, created = WalletBalance.objects.get_or_create(
+                    user=payment.user,
+                    currency=payment.currency,
+                    defaults={'available_balance': Decimal('0.00')}
+                )
+
+                previous_balance = wallet_balance.available_balance
+                wallet_balance.available_balance += payment.net_amount
+                wallet_balance.save()
+
+                # Create wallet transaction record
+                transaction_record = WalletTransaction.objects.create(
+                    user=payment.user,
+                    transaction_type='deposit',
+                    amount=payment.net_amount,
+                    currency=payment.currency,
+                    balance_before=previous_balance,
+                    balance_after=wallet_balance.available_balance,
+                    reference_id=payment.id,
+                    description=f"Payment deposit via Stripe webhook"
+                )
+
+                # Process investment if linked
+                if payment.investment:
+                    investment = payment.investment
+
+                    # Only process if not already processed
+                    if investment.status not in ['completed', 'pending_mint', 'minting']:
+                        # Mark payment confirmed - triggers deferred minting
+                        investment.mark_payment_confirmed()
+
+                        # Reserve tokens
+                        property_obj = investment.property_investment
+                        property_obj.tokens_sold += investment.token_amount
+                        property_obj.save(update_fields=['tokens_sold'])
+
+                        logger.info(
+                            f"Investment {investment.id} payment confirmed via webhook. "
+                            f"Status: {investment.status}. Minting scheduled."
+                        )
+
+                # Send email notification
+                try:
+                    transaction_details = {
+                        'type': 'Deposit',
+                        'amount': str(payment.net_amount),
+                        'transaction_id': str(transaction_record.id),
+                        'payment_method': 'Credit Card',
+                        'status': 'Confirmed',
+                        'previous_balance': str(previous_balance),
+                        'new_balance': str(wallet_balance.available_balance),
+                        'id': transaction_record.id
+                    }
+                    EmailService.send_funds_notification_email(
+                        user=payment.user,
+                        transaction_details=transaction_details
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to send webhook payment email: {str(e)}")
+
+            logger.info(f"Successfully processed payment {payment.id} via webhook")
+
+        except Payment.DoesNotExist:
+            logger.warning(f"Payment not found for intent {payment_intent_id}")
+        except Exception as e:
+            logger.error(f"Error processing payment_intent.succeeded: {str(e)}")
+            raise
+
+    def _handle_payment_intent_failed(self, payment_intent):
+        """Handle failed payment intent from Stripe webhook."""
+        payment_intent_id = payment_intent['id']
+        logger.info(f"Processing payment_intent.payment_failed for {payment_intent_id}")
+
+        try:
+            payment = Payment.objects.get(payment_intent_id=payment_intent_id)
+
+            # Update payment status
+            payment.status = PaymentStatus.FAILED
+            payment.metadata = payment.metadata or {}
+            payment.metadata['failure_reason'] = payment_intent.get('last_payment_error', {}).get('message', 'Unknown')
+            payment.save()
+
+            # Update investment if linked
+            if payment.investment:
+                investment = payment.investment
+                if investment.status == 'processing':
+                    investment.status = 'failed'
+                    investment.save(update_fields=['status'])
+
+            logger.info(f"Marked payment {payment.id} as failed via webhook")
+
+        except Payment.DoesNotExist:
+            logger.warning(f"Payment not found for failed intent {payment_intent_id}")
+
+    def _handle_charge_refunded(self, charge):
+        """Handle refunded charge from Stripe webhook."""
+        payment_intent_id = charge.get('payment_intent')
+        if not payment_intent_id:
+            logger.warning("Refund webhook missing payment_intent")
+            return
+
+        try:
+            payment = Payment.objects.get(payment_intent_id=payment_intent_id)
+
+            # Check if fully refunded
+            if charge.get('refunded', False):
+                payment.status = PaymentStatus.REFUNDED
+                payment.save()
+
+                # Update investment if linked
+                if payment.investment:
+                    investment = payment.investment
+                    investment.status = 'refunded'
+                    investment.save(update_fields=['status'])
+
+                logger.info(f"Marked payment {payment.id} as refunded via webhook")
+
+        except Payment.DoesNotExist:
+            logger.warning(f"Payment not found for refund intent {payment_intent_id}")
 
 
 class BankTransferView(APIView):

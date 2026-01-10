@@ -93,18 +93,102 @@ class IsAdminUser(BasePermission):
         )
 
 
+class IsNotSuspended(BasePermission):
+    """
+    Permission to block suspended users from ALL actions.
+    This should be added to permission_classes for financial endpoints.
+    """
+    message = "Your account has been suspended. Please contact support."
+
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return True  # Let other permissions handle auth
+
+        # Check if user is suspended
+        if getattr(request.user, 'is_suspended', False):
+            return False
+
+        return True
+
+
+class IsKYCApproved(BasePermission):
+    """
+    Permission to only allow users with approved KYC status.
+    Required for financial transactions like investments.
+    """
+    message = "KYC verification required. Please complete your identity verification before investing."
+
+    def has_permission(self, request, view):
+        if not request.user or not request.user.is_authenticated:
+            return False
+
+        # Check if user has KYC profile and it's approved
+        kyc_profile = getattr(request.user, 'kyc_profile', None)
+        if not kyc_profile:
+            return False
+
+        # Check if KYC status is approved
+        return kyc_profile.status == 'approved'
+
+
 class CanInvest(BasePermission):
     """
     Permission for users who can make investments.
     Allows investors and brokers who are verified.
+    NOTE: This checks basic eligibility. Use with IsKYCApproved for financial actions.
     """
-    
+
     def has_permission(self, request, view):
         return bool(
             request.user and
             request.user.is_authenticated and
             request.user.can_invest()
         )
+
+
+class CanInvestWithKYC(BasePermission):
+    """
+    Combined permission for investment actions.
+    Checks: authenticated + not suspended + can invest + KYC approved.
+    Use this for investment creation endpoints.
+    """
+    message = "You are not eligible to invest. Please ensure your account is verified and KYC is approved."
+
+    def has_permission(self, request, view):
+        user = request.user
+
+        if not user or not user.is_authenticated:
+            return False
+
+        # Check suspension
+        if getattr(user, 'is_suspended', False):
+            self.message = "Your account has been suspended. Please contact support."
+            return False
+
+        # Check basic investment eligibility
+        if not user.can_invest():
+            self.message = "Your account is not eligible to invest."
+            return False
+
+        # Check KYC approval
+        kyc_profile = getattr(user, 'kyc_profile', None)
+        if not kyc_profile:
+            self.message = "Please complete your KYC verification before investing."
+            return False
+
+        if kyc_profile.status != 'approved':
+            status_messages = {
+                'pending': "Your KYC is pending review. Please wait for approval.",
+                'in_review': "Your KYC is being reviewed. Please wait for approval.",
+                'rejected': "Your KYC was rejected. Please resubmit your documents.",
+            }
+            self.message = status_messages.get(
+                kyc_profile.status,
+                "KYC verification required before investing."
+            )
+            return False
+
+        return True
 
 
 class CanListProperties(BasePermission):

@@ -14,6 +14,7 @@ interface PropertyCardProps extends Omit<Property, 'id'> {
   className?: string;
   onInvestClick?: () => void;
   onQuickView?: () => void;
+  onCardClick?: () => void;
   onFavorite?: (id: string, isFavorite: boolean) => void;
   onShare?: (property: { id: string; title: string; }) => void;
   initialFavorite?: boolean;
@@ -24,7 +25,7 @@ interface PropertyCardProps extends Omit<Property, 'id'> {
   funding_percentage?: number;
 }
 
-export const PropertyCard: React.FC<PropertyCardProps> = ({
+export const PropertyCard = React.forwardRef<HTMLDivElement, PropertyCardProps>(({
   id,
   title,
   address,
@@ -58,12 +59,13 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
   className,
   onInvestClick,
   onQuickView,
+  onCardClick,
   onFavorite,
   onShare,
   initialFavorite = false,
   showQuickActions = true,
   ...rest
-}) => {
+}, ref) => {
   const [isFavorite, setIsFavorite] = useState(initialFavorite);
   const [isHovered, setIsHovered] = useState(false);
   
@@ -147,7 +149,8 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
   };
 
   return (
-    <div 
+    <div
+      ref={ref}
       className={cn('relative group', className)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -184,8 +187,9 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
         interactive
         borderAccent
         hover
+        onClick={onCardClick}
         className={cn(
-          'overflow-hidden transition-all duration-500',
+          'overflow-hidden transition-all duration-500 cursor-pointer',
           isHovered && 'shadow-2xl dark:shadow-emerald-500/10 border-emerald-400 dark:border-emerald-500 scale-105',
           className
         )}
@@ -528,4 +532,6 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
       </Card>
     </div>
   );
-};
+});
+
+PropertyCard.displayName = 'PropertyCard';

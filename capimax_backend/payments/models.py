@@ -1449,11 +1449,12 @@ class BankTransfer(models.Model):
         return self.transfer_status in ['initiated', 'pending', 'processing']
 
     def generate_reference(self):
-        """Generate unique transfer reference."""
+        """Generate unique cryptographically secure transfer reference."""
         if not self.transfer_reference:
-            import random
+            import secrets
             import string
-            ref = 'BT' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
+            chars = string.ascii_uppercase + string.digits
+            ref = 'BT' + ''.join(secrets.choice(chars) for _ in range(10))
             self.transfer_reference = ref
             return ref
         return self.transfer_reference
@@ -1466,3 +1467,192 @@ class BankTransfer(models.Model):
         # Standard bank transfer takes 1-3 business days
         self.estimated_completion_date = timezone.now() + timedelta(days=2)
         return self.estimated_completion_date
+
+
+class NOWPaymentsTransaction(models.Model):
+    """
+    NOWPayments cryptocurrency payment tracking.
+
+    Tracks cryptocurrency payments processed through NOWPayments gateway
+    with support for 150+ cryptocurrencies and automatic status updates.
+    """
+
+    PAYMENT_STATUS_CHOICES = [
+        ('waiting', 'Waiting'),
+        ('confirming', 'Confirming'),
+        ('confirmed', 'Confirmed'),
+        ('sending', 'Sending'),
+        ('partially_paid', 'Partially Paid'),
+        ('finished', 'Finished'),
+        ('failed', 'Failed'),
+        ('refunded', 'Refunded'),
+        ('expired', 'Expired'),
+    ]
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the NOWPayments transaction"
+    )
+
+    payment = models.OneToOneField(
+        Payment,
+        on_delete=models.CASCADE,
+        related_name='nowpayments_transaction',
+        help_text="Associated payment record"
+    )
+
+    nowpayments_payment_id = models.CharField(
+        max_length=255,
+        unique=True,
+        help_text="NOWPayments payment ID"
+    )
+
+    order_id = models.CharField(
+        max_length=255,
+        help_text="Internal order ID"
+    )
+
+    payment_status = models.CharField(
+        max_length=20,
+        choices=PAYMENT_STATUS_CHOICES,
+        default='waiting',
+        help_text="NOWPayments payment status"
+    )
+
+    pay_address = models.CharField(
+        max_length=255,
+        help_text="Cryptocurrency address for payment"
+    )
+
+    pay_amount = models.DecimalField(
+        max_digits=18,
+        decimal_places=8,
+        help_text="Amount to pay in cryptocurrency"
+    )
+
+    pay_currency = models.CharField(
+        max_length=10,
+        help_text="Cryptocurrency to pay (BTC, ETH, USDT, etc.)"
+    )
+
+    price_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        help_text="Amount in base currency"
+    )
+
+    price_currency = models.CharField(
+        max_length=10,
+        help_text="Base currency (USD, EUR, etc.)"
+    )
+
+    order_description = models.TextField(
+        blank=True,
+        help_text="Order description"
+    )
+
+    invoice_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="NOWPayments invoice ID"
+    )
+
+    invoice_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="Invoice payment URL"
+    )
+
+    ipn_callback_url = models.URLField(
+        blank=True,
+        null=True,
+        help_text="IPN callback URL"
+    )
+
+    actually_paid = models.DecimalField(
+        max_digits=18,
+        decimal_places=8,
+        default=Decimal('0'),
+        help_text="Actually paid amount"
+    )
+
+    outcome_amount = models.DecimalField(
+        max_digits=18,
+        decimal_places=8,
+        blank=True,
+        null=True,
+        help_text="Outcome amount"
+    )
+
+    outcome_currency = models.CharField(
+        max_length=10,
+        blank=True,
+        null=True,
+        help_text="Outcome currency"
+    )
+
+    network_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=8,
+        blank=True,
+        null=True,
+        help_text="Network transaction fee"
+    )
+
+    transaction_hash = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Blockchain transaction hash"
+    )
+
+    burning_percent = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        help_text="Burning percentage"
+    )
+
+    expiration_estimate_date = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="Payment expiration date"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'payments_nowpayments_transaction'
+        indexes = [
+            models.Index(fields=['nowpayments_payment_id']),
+            models.Index(fields=['order_id']),
+            models.Index(fields=['payment_status']),
+            models.Index(fields=['pay_currency']),
+            models.Index(fields=['created_at']),
+        ]
+        verbose_name = 'NOWPayments Transaction'
+        verbose_name_plural = 'NOWPayments Transactions'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"NOWPayments {self.nowpayments_payment_id} - {self.payment_status}"
+
+    @property
+    def is_completed(self):
+        """Check if payment is completed."""
+        return self.payment_status == 'finished'
+
+    @property
+    def is_pending(self):
+        """Check if payment is pending."""
+        return self.payment_status in ['waiting', 'confirming', 'confirmed', 'sending']
+
+    @property
+    def is_failed(self):
+        """Check if payment failed."""
+        return self.payment_status in ['failed', 'expired']

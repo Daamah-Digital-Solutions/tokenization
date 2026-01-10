@@ -18,18 +18,13 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { Input } from '../design-system/forms/Input';
 import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
+import { Badge } from '../design-system/icons/Badge';
 import { Container } from '../design-system/layout/Container';
-import { MarketplaceListingCard } from './MarketplaceListingCard';
-import { MarketplaceFilters } from './MarketplaceFilters';
-import { MarketplaceStats } from './MarketplaceStats';
-import { MarketplaceActivity } from './MarketplaceActivity';
+import { PropertyCard } from '../design-system/cards/PropertyCard';
 import { cn } from '../../utils/cn';
-import {
-  marketplaceService,
-  type MarketplaceFilters as FilterType,
-  type SecondaryMarketListing
-} from '../../services/marketplace/MarketplaceService';
+import { PropertyService } from '../../services/property/PropertyService';
+import { useRouter } from '../../utils/router';
+import type { Property, PropertyFilterOptions } from '../../services/api/types';
 
 interface MarketplaceDashboardProps {
   className?: string;
@@ -42,97 +37,85 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
   showStats = true,
   showActivity = true
 }) => {
+  const { navigate } = useRouter();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<'all' | 'immediate' | 'auction'>('all');
+  const [selectedTab, setSelectedTab] = useState<'all' | 'approved' | 'featured'>('approved');
   const [currentPage, setCurrentPage] = useState(1);
-  const [filters, setFilters] = useState<FilterType>({
-    sort_by: 'created_desc'
+  const [filters, setFilters] = useState<PropertyFilterOptions>({
+    status: 'approved' as any, // Show approved properties for investment
+    sort: 'created_at',
+    order: 'desc'
   });
 
   // Combine search and filters
   const combinedFilters = useMemo(() => {
     const combined = { ...filters };
 
-    if (selectedTab !== 'all') {
-      combined.listing_type = selectedTab === 'immediate' ? 'IMMEDIATE' : 'AUCTION';
+    // Apply tab filters
+    if (selectedTab === 'approved') {
+      combined.status = 'approved' as any;
+    } else if (selectedTab === 'featured') {
+      // Add featured filter when available
+      combined.status = 'approved' as any;
     }
 
+    // Add search query
     if (searchQuery) {
-      // Search will be handled by the searchListings endpoint
-      return combined;
+      combined.search = searchQuery;
     }
+
+    // Add pagination
+    combined.page = currentPage;
+    combined.limit = 20;
 
     return combined;
-  }, [filters, selectedTab, searchQuery]);
+  }, [filters, selectedTab, searchQuery, currentPage]);
 
-  // Fetch listings
+  // Fetch properties
   const {
-    data: listingsData,
+    data: propertiesData,
     isLoading,
     error,
     refetch
   } = useQuery({
-    queryKey: ['marketplace-listings', combinedFilters, searchQuery, currentPage],
-    queryFn: () => {
-      if (searchQuery) {
-        return marketplaceService.searchListings(searchQuery, combinedFilters, currentPage, 20);
-      }
-      return marketplaceService.getListings(combinedFilters, currentPage, 20);
-    },
+    queryKey: ['marketplace-properties', combinedFilters],
+    queryFn: () => PropertyService.getProperties(combinedFilters),
     staleTime: 30000, // 30 seconds
   });
 
-  // Fetch marketplace stats
-  const {
-    data: statsData
-  } = useQuery({
-    queryKey: ['marketplace-stats'],
-    queryFn: () => marketplaceService.getMarketplaceStats(),
-    enabled: showStats,
-    staleTime: 60000, // 1 minute
-  });
-
-  // Fetch recent activity
-  const {
-    data: activityData
-  } = useQuery({
-    queryKey: ['marketplace-activity'],
-    queryFn: () => marketplaceService.getMarketplaceActivity(1, 10),
-    enabled: showActivity,
-    staleTime: 30000, // 30 seconds
-  });
-
-  const handlePurchase = (listingId: string) => {
-    // This would open a purchase modal/dialog
-    console.log('Purchase listing:', listingId);
+  const handleInvest = (propertyId: string) => {
+    // This would open an investment modal/dialog
+    console.log('Invest in property:', propertyId);
   };
 
-  const handleBid = (listingId: string) => {
-    // This would open a bid modal/dialog
-    console.log('Bid on listing:', listingId);
+  const handleViewDetails = (propertyId: string) => {
+    // Navigate to property details page with property ID as URL parameter
+    console.log('Navigating to property details:', propertyId);
+
+    // Add property ID to URL as query parameter
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('propertyId', propertyId);
+    window.history.pushState({ propertyId }, '', currentUrl.toString());
+
+    // Navigate to property detail page
+    navigate('property-detail');
   };
 
-  const handleViewDetails = (listingId: string) => {
-    // This would navigate to listing details or open details modal
-    console.log('View listing details:', listingId);
-  };
-
-  const handleFiltersChange = (newFilters: FilterType) => {
+  const handleFiltersChange = (newFilters: PropertyFilterOptions) => {
     setFilters(newFilters);
     setCurrentPage(1); // Reset to first page
   };
 
-  const listings = listingsData?.results || [];
-  const totalCount = listingsData?.count || 0;
-  const hasNextPage = !!listingsData?.next;
-  const hasPreviousPage = !!listingsData?.previous;
+  const properties = propertiesData?.properties || [];
+  const totalCount = propertiesData?.pagination.total || 0;
+  const totalPages = propertiesData?.pagination.pages || 1;
 
   const tabs = [
-    { id: 'all', label: 'All Listings', icon: Grid3X3 },
-    { id: 'immediate', label: 'Buy Now', icon: Zap },
-    { id: 'auction', label: 'Auctions', icon: Clock }
+    { id: 'approved', label: 'Available Properties', icon: Grid3X3 },
+    { id: 'featured', label: 'Featured', icon: Zap },
+    { id: 'all', label: 'All Properties', icon: List }
   ];
 
   return (
@@ -142,10 +125,10 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Secondary Market
+              Property Marketplace
             </h1>
             <p className="text-gray-600">
-              Trade tokenized real estate on the secondary market
+              Invest in tokenized real estate properties
             </p>
           </div>
           <Button
@@ -158,9 +141,17 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
           </Button>
         </div>
 
-        {/* Stats Section */}
-        {showStats && statsData && (
-          <MarketplaceStats stats={statsData} className="mb-8" />
+        {/* Stats Section - Hidden for now until property stats are implemented */}
+        {false && showStats && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white rounded-xl p-6 shadow-sm border">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-gray-500 text-sm">Total Properties</span>
+                <TrendingUp className="w-4 h-4 text-green-500" />
+              </div>
+              <span className="text-2xl font-bold text-gray-900">{totalCount}</span>
+            </div>
+          </div>
         )}
 
         {/* Search and Controls */}
@@ -171,7 +162,7 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
                 type="text"
-                placeholder="Search properties, locations, or token symbols..."
+                placeholder="Search properties by title, location, or description..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -237,23 +228,67 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Sidebar */}
         <div className="lg:col-span-1">
-          {/* Filters */}
+          {/* Filters - TODO: Implement property-specific filters */}
           <AnimatePresence>
             {showFilters && (
-              <MarketplaceFilters
-                filters={filters}
-                onFiltersChange={handleFiltersChange}
-                className="mb-6"
-              />
+              <div className="bg-white rounded-xl p-6 shadow-sm border mb-6">
+                <h3 className="font-semibold text-gray-900 mb-4">Filters</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Property Type
+                    </label>
+                    <select
+                      className="w-full border rounded-lg px-3 py-2 text-sm"
+                      value={filters.property_type || ''}
+                      onChange={(e) => handleFiltersChange({
+                        ...filters,
+                        property_type: e.target.value || undefined
+                      })}
+                    >
+                      <option value="">All Types</option>
+                      <option value="residential">Residential</option>
+                      <option value="commercial">Commercial</option>
+                      <option value="industrial">Industrial</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Status
+                    </label>
+                    <select
+                      className="w-full border rounded-lg px-3 py-2 text-sm"
+                      value={filters.status || 'approved'}
+                      onChange={(e) => handleFiltersChange({
+                        ...filters,
+                        status: e.target.value as any
+                      })}
+                    >
+                      <option value="approved">Available for Investment</option>
+                      <option value="under_review">Under Review</option>
+                      <option value="draft">Draft</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             )}
           </AnimatePresence>
 
-          {/* Recent Activity */}
-          {showActivity && activityData && (
-            <MarketplaceActivity
-              activities={activityData.results}
-              className="sticky top-6"
-            />
+          {/* Property Stats */}
+          {!showActivity && (
+            <div className="bg-white rounded-xl p-6 shadow-sm border sticky top-6">
+              <h3 className="font-semibold text-gray-900 mb-4">Market Overview</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600 text-sm">Total Properties</span>
+                  <span className="font-medium">{totalCount}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 text-sm">Available for Investment</span>
+                  <span className="font-medium">{properties.filter(p => p.status === 'approved').length}</span>
+                </div>
+              </div>
+            </div>
           )}
         </div>
 
@@ -263,7 +298,7 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <h2 className="text-lg font-semibold text-gray-900">
-                {totalCount.toLocaleString()} Listings
+                {totalCount.toLocaleString()} Properties
               </h2>
               {searchQuery && (
                 <Badge variant="secondary">
@@ -273,19 +308,20 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
             </div>
 
             <select
-              value={filters.sort_by || 'created_desc'}
+              value={filters.sort || 'created_at'}
               onChange={(e) => handleFiltersChange({
                 ...filters,
-                sort_by: e.target.value as any
+                sort: e.target.value,
+                order: e.target.value.endsWith('_desc') ? 'desc' : 'asc'
               })}
               className="border rounded-lg px-3 py-2 text-sm"
             >
-              <option value="created_desc">Newest First</option>
-              <option value="created_asc">Oldest First</option>
-              <option value="price_desc">Price: High to Low</option>
-              <option value="price_asc">Price: Low to High</option>
-              <option value="tokens_desc">Most Tokens</option>
-              <option value="tokens_asc">Fewest Tokens</option>
+              <option value="created_at">Newest First</option>
+              <option value="-created_at">Oldest First</option>
+              <option value="-total_value">Price: High to Low</option>
+              <option value="total_value">Price: Low to High</option>
+              <option value="-total_tokens">Most Tokens</option>
+              <option value="total_tokens">Fewest Tokens</option>
             </select>
           </div>
 
@@ -312,17 +348,17 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
           )}
 
           {/* No Results */}
-          {!isLoading && !error && listings.length === 0 && (
+          {!isLoading && !error && properties.length === 0 && (
             <div className="text-center py-12">
               <div className="text-gray-500 mb-4">
-                No listings found matching your criteria
+                No properties found matching your criteria
               </div>
               <Button
                 variant="outline"
                 onClick={() => {
                   setSearchQuery('');
-                  setFilters({ sort_by: 'created_desc' });
-                  setSelectedTab('all');
+                  setFilters({ sort: 'created_at', order: 'desc' });
+                  setSelectedTab('approved');
                 }}
               >
                 Clear Filters
@@ -330,8 +366,8 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
             </div>
           )}
 
-          {/* Listings Grid */}
-          {!isLoading && !error && listings.length > 0 && (
+          {/* Properties Grid */}
+          {!isLoading && !error && properties.length > 0 && (
             <>
               <motion.div
                 layout
@@ -342,13 +378,14 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
                 )}
               >
                 <AnimatePresence mode="popLayout">
-                  {listings.map((listing) => (
-                    <MarketplaceListingCard
-                      key={listing.id}
-                      listing={listing}
-                      onPurchase={handlePurchase}
-                      onBid={handleBid}
-                      onViewDetails={handleViewDetails}
+                  {properties.map((property) => (
+                    <PropertyCard
+                      key={property.id}
+                      {...property}
+                      id={String(property.id)}
+                      onInvestClick={() => handleInvest(String(property.id))}
+                      onQuickView={() => handleViewDetails(String(property.id))}
+                      onCardClick={() => handleViewDetails(String(property.id))}
                       className={viewMode === 'list' ? "flex-row" : undefined}
                     />
                   ))}
@@ -356,21 +393,21 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
               </motion.div>
 
               {/* Pagination */}
-              {(hasNextPage || hasPreviousPage) && (
+              {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-4 mt-8">
                   <Button
                     variant="outline"
-                    disabled={!hasPreviousPage}
+                    disabled={currentPage <= 1}
                     onClick={() => setCurrentPage(prev => prev - 1)}
                   >
                     Previous
                   </Button>
                   <span className="text-sm text-gray-600">
-                    Page {currentPage}
+                    Page {currentPage} of {totalPages}
                   </span>
                   <Button
                     variant="outline"
-                    disabled={!hasNextPage}
+                    disabled={currentPage >= totalPages}
                     onClick={() => setCurrentPage(prev => prev + 1)}
                   >
                     Next

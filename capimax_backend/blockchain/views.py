@@ -235,11 +235,15 @@ class TokenTransactionViewSet(ReadOnlyModelViewSet):
     
     def get_queryset(self):
         """Filter queryset based on user permissions."""
+        # Handle Swagger schema generation
+        if getattr(self, 'swagger_fake_view', False):
+            return self.queryset.none()
+
         queryset = super().get_queryset()
-        
+
         if self.request.user.is_staff:
             return queryset
-        
+
         # Regular users can only see their own transactions
         return queryset.filter(
             Q(user=self.request.user) |
@@ -266,11 +270,15 @@ class TokenBalanceViewSet(ReadOnlyModelViewSet):
     
     def get_queryset(self):
         """Filter queryset based on user permissions."""
+        # Handle Swagger schema generation
+        if getattr(self, 'swagger_fake_view', False):
+            return self.queryset.none()
+
         queryset = super().get_queryset()
-        
+
         if self.request.user.is_staff:
             return queryset
-        
+
         # Regular users can only see their own balances
         return queryset.filter(user=self.request.user)
 

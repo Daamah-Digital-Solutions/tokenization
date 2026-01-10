@@ -10,14 +10,17 @@ from django.db import models
 from django.utils import timezone
 from datetime import timedelta
 import uuid
+import random
+import secrets
+import string
 
 
 class UserRole(models.TextChoices):
     """User role choices for main platform role-based access control."""
     INVESTOR = 'investor', 'Investor'
     PROPERTY_OWNER = 'property_owner', 'Property Owner'
+    BROKER = 'broker', 'Broker'
     ADMIN = 'admin', 'Admin'
-    # Note: BROKER role moved to separate broker_platform app
 
 
 class UserManager(BaseUserManager):
@@ -245,6 +248,32 @@ class User(AbstractUser):
         # Fallback to legacy single role
         return self.role
 
+    @property
+    def kyc_status(self):
+        """Get user's KYC verification status mapped to frontend requirements."""
+        try:
+            kyc_profile = self.kyc_profile
+            # Map KYC model statuses to frontend expected values
+            status_mapping = {
+                'pending': 'not_verified',      # Initial state
+                'in_review': 'pending_review',  # User submitted documents
+                'approved': 'approved',         # Admin approved
+                'rejected': 'rejected',         # Admin rejected
+                'expired': 'not_verified',      # Expired = needs re-verification
+            }
+            return status_mapping.get(kyc_profile.status, 'not_verified')
+        except:
+            # No KYC profile exists yet
+            return 'not_verified'
+
+    def is_kyc_verified(self):
+        """Check if user is fully KYC verified and can perform financial activities."""
+        try:
+            kyc_profile = self.kyc_profile
+            return kyc_profile.is_verified()
+        except:
+            return False
+
 
 class UserRoleAssignment(models.Model):
     """
@@ -372,30 +401,38 @@ class PasswordResetToken(models.Model):
 class EmailVerificationToken(models.Model):
     """
     Token model for email verification functionality.
-    
+
     Provides secure email verification with expiration and single-use tokens.
+    Supports both UUID tokens (legacy) and 6-digit codes.
     """
-    
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         help_text="User to verify email for"
     )
-    
+
     token = models.UUIDField(
         default=uuid.uuid4,
         help_text="Unique token for email verification"
     )
-    
+
+    code = models.CharField(
+        max_length=6,
+        blank=True,
+        null=True,
+        help_text="6-digit verification code"
+    )
+
     expires_at = models.DateTimeField(
         help_text="Token expiration timestamp"
     )
-    
+
     verified = models.BooleanField(
         default=False,
         help_text="Whether email has been verified"
     )
-    
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -409,11 +446,16 @@ class EmailVerificationToken(models.Model):
 
     def __str__(self):
         return f"Email verification token for {self.user.email}"
-    
+
+    @staticmethod
+    def generate_code():
+        """Generate a cryptographically secure 6-digit verification code."""
+        return ''.join(secrets.choice(string.digits) for _ in range(6))
+
     def is_valid(self):
         """Check if token is still valid."""
         return not self.verified and self.expires_at > timezone.now()
-    
+
     def mark_as_verified(self):
         """Mark token as verified."""
         self.verified = True

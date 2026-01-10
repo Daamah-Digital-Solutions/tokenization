@@ -10,9 +10,10 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from decimal import Decimal
 from .models import (
-    BrokerProfile, BrokerCommission, BrokerReferral, 
-    MarketingMaterial, BrokerPerformanceMetrics,
-    BrokerVerificationStatus, CommissionType, CommissionStatus
+    BrokerProfile, BrokerCommission, BrokerReferral,
+    MarketingMaterial, BrokerPerformanceMetrics, BrokerApplication,
+    BrokerVerificationStatus, CommissionType, CommissionStatus,
+    BrokerApplicationStatus, ExperienceLevel
 )
 
 User = get_user_model()
@@ -398,3 +399,119 @@ class ReferralLinkGeneratorSerializer(serializers.Serializer):
         if value and value <= timezone.now():
             raise serializers.ValidationError("Expiration date must be in the future.")
         return value
+
+
+class BrokerApplicationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for broker application submissions.
+
+    Handles the complete broker application form data including
+    personal information, professional credentials, and file uploads.
+    """
+
+    full_name = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source='get_application_status_display', read_only=True)
+    experience_display = serializers.CharField(source='get_experience_level_display', read_only=True)
+
+    class Meta:
+        model = BrokerApplication
+        fields = [
+            'id', 'first_name', 'last_name', 'full_name', 'email',
+            'phone_number', 'country', 'city_address', 'license_number',
+            'experience_level', 'experience_display', 'current_company',
+            'referral_strategy', 'supporting_documents', 'terms_accepted',
+            'application_status', 'status_display', 'rejection_reason',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = [
+            'id', 'application_status', 'rejection_reason', 'created_at', 'updated_at'
+        ]
+
+    def get_full_name(self, obj):
+        """Get applicant's full name."""
+        return obj.get_full_name()
+
+    def validate_email(self, value):
+        """Validate email uniqueness."""
+        if BrokerApplication.objects.filter(email=value).exists():
+            raise serializers.ValidationError("An application with this email already exists.")
+        return value
+
+    def validate_terms_accepted(self, value):
+        """Ensure terms are accepted."""
+        if not value:
+            raise serializers.ValidationError("You must accept the Broker Program Terms & Conditions.")
+        return value
+
+    def validate(self, data):
+        """Validate the complete application."""
+        # Ensure required fields are present
+        required_fields = ['first_name', 'last_name', 'email', 'phone_number',
+                          'country', 'city_address', 'experience_level', 'referral_strategy']
+
+        for field in required_fields:
+            if not data.get(field):
+                raise serializers.ValidationError(f"{field.replace('_', ' ').title()} is required.")
+
+        return data
+
+
+class BrokerApplicationStatusSerializer(serializers.ModelSerializer):
+    """
+    Serializer for checking broker application status.
+
+    Provides read-only status information for applicants
+    to check their application progress.
+    """
+
+    full_name = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source='get_application_status_display', read_only=True)
+
+    class Meta:
+        model = BrokerApplication
+        fields = [
+            'id', 'full_name', 'email', 'application_status', 'status_display',
+            'reviewed_at', 'rejection_reason', 'created_at'
+        ]
+        read_only_fields = '__all__'
+
+    def get_full_name(self, obj):
+        """Get applicant's full name."""
+        return obj.get_full_name()
+
+
+class AdminBrokerApplicationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for admin review of broker applications.
+
+    Includes admin-specific fields for reviewing and managing
+    broker applications in the admin panel.
+    """
+
+    full_name = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source='get_application_status_display', read_only=True)
+    experience_display = serializers.CharField(source='get_experience_level_display', read_only=True)
+    reviewed_by_name = serializers.CharField(source='reviewed_by.get_full_name', read_only=True)
+
+    class Meta:
+        model = BrokerApplication
+        fields = [
+            'id', 'first_name', 'last_name', 'full_name', 'email',
+            'phone_number', 'country', 'city_address', 'license_number',
+            'experience_level', 'experience_display', 'current_company',
+            'referral_strategy', 'supporting_documents', 'terms_accepted',
+            'application_status', 'status_display', 'reviewed_by',
+            'reviewed_by_name', 'reviewed_at', 'rejection_reason',
+            'admin_notes', 'associated_user', 'created_at', 'updated_at'
+        ]
+        read_only_fields = [
+            'id', 'first_name', 'last_name', 'email', 'phone_number',
+            'country', 'city_address', 'license_number', 'experience_level',
+            'current_company', 'referral_strategy', 'supporting_documents',
+            'terms_accepted', 'created_at', 'updated_at'
+        ]
+
+    def get_full_name(self, obj):
+        """Get applicant's full name."""
+        return obj.get_full_name()
+

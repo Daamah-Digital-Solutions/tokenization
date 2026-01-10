@@ -102,6 +102,24 @@ CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_ALWAYS_EAGER = False
 CELERY_TASK_EAGER_PROPAGATES = True
 
+# Email Configuration for Production - Hostinger SMTP
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.hostinger.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '465'))
+EMAIL_USE_SSL = True
+EMAIL_USE_TLS = False
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'tech@capimaxinvestment.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'CapiMax Investment <tech@capimaxinvestment.com>')
+SERVER_EMAIL = os.environ.get('SERVER_EMAIL', 'tech@capimaxinvestment.com')
+
+# Validate required email credentials in production
+if not EMAIL_HOST_PASSWORD:
+    raise ValueError(
+        "EMAIL_HOST_PASSWORD environment variable must be set in production. "
+        "Never commit production credentials to version control."
+    )
+
 # Logging Configuration for production
 LOGGING = {
     'version': 1,

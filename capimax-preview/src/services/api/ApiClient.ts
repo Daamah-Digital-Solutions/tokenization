@@ -5,6 +5,11 @@ export class ApiClient {
   private client: any;
   private authToken: string | null = null;
 
+  // Getter to access the raw axios client when needed
+  public get rawClient() {
+    return this.client;
+  }
+
   constructor(baseURL: string = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1') {
     this.client = axios.create({
       baseURL,

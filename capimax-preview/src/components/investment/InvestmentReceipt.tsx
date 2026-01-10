@@ -1,30 +1,31 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   Download,
   ArrowLeft,
   Building,
   Calendar,
   Receipt,
   Shield,
-  ExternalLink,
   CheckCircle,
   User,
-  CreditCard,
   Hash,
   TrendingUp,
   MapPin
 } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { BlockchainLink } from '../ui/BlockchainLink';
 import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
-import { Property, InvestmentData } from './InvestmentFlow';
+import type { InvestmentProperty, InvestmentData } from './types';
 import { cn } from '../../utils/cn';
 
 interface InvestmentReceiptProps {
-  property: Property;
+  property: InvestmentProperty;
   investmentData: InvestmentData;
   transactionId: string;
+  blockchainHash?: string | null;
+  investmentStatus?: 'completed' | 'pending' | 'minting' | 'pending_mint' | 'failed';
   onClose: () => void;
   onDownload: () => void;
   className?: string;
@@ -34,6 +35,8 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
   property,
   investmentData,
   transactionId,
+  blockchainHash,
+  investmentStatus = 'completed',
   onClose,
   onDownload,
   className
@@ -372,16 +375,40 @@ Status: Confirmed
               For questions or support, contact us at invest@capimax.com
             </Text>
             
+            {/* Blockchain Verification Section */}
+            {investmentStatus === 'completed' && blockchainHash && (
+              <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4 mt-4">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <CheckCircle className="w-5 h-5 text-emerald-600" />
+                  <Text variant="body" weight="semibold" className="text-emerald-700 dark:text-emerald-300">
+                    Tokens Minted on Polygon Blockchain
+                  </Text>
+                </div>
+                <Text variant="bodySmall" color="muted" className="text-center mb-3">
+                  Your property tokens have been securely minted and recorded on the blockchain.
+                </Text>
+                <div className="flex justify-center">
+                  <BlockchainLink
+                    transactionHash={blockchainHash}
+                    network="polygon"
+                    status={investmentStatus}
+                    variant="badge"
+                    size="md"
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center justify-center gap-4 mt-4">
-              <Button
-                variant="ghost"
+              <BlockchainLink
+                transactionHash={blockchainHash}
+                network="polygon"
+                status={investmentStatus}
+                variant="button"
                 size="sm"
-                className="text-gray-600 dark:text-gray-400"
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                View on Blockchain
-              </Button>
-              
+                showStatus={true}
+              />
+
               <Button
                 variant="ghost"
                 size="sm"
@@ -393,7 +420,10 @@ Status: Confirmed
             </div>
 
             <Text variant="bodySmall" color="muted" className="mt-4">
-              Generated on {currentDate.toLocaleString()} • Transaction Hash: {transactionId.slice(-16)}
+              Generated on {currentDate.toLocaleString()}
+              {blockchainHash && (
+                <span> • TX: {blockchainHash.slice(0, 10)}...{blockchainHash.slice(-6)}</span>
+              )}
             </Text>
           </div>
         </motion.div>

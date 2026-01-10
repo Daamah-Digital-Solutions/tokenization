@@ -10,8 +10,14 @@ export const Footer: React.FC = () => {
   const footerLinks = {
     platform: [
       { name: 'Properties', href: '#properties' },
+      { name: 'Secondary Market', href: '#marketplace' },
       { name: 'How It Works', href: '#how-it-works' },
       { name: 'About', href: '#about' }
+    ],
+    partners: [
+      { name: 'Partner Program', href: '#broker-program' },
+      { name: 'For Brokers', href: '#broker-program' },
+      { name: 'Referral Program', href: '#broker-program' }
     ],
     legal: [
       { name: 'Privacy Policy', href: '#privacy' },
@@ -30,7 +36,7 @@ export const Footer: React.FC = () => {
     <footer className="bg-navy-50 dark:bg-navy-900 border-t border-navy-200 dark:border-navy-800">
       <div className="max-w-6xl mx-auto px-6">
         {/* Main Footer Content */}
-        <div className="py-16 grid grid-cols-1 md:grid-cols-3 gap-12">
+        <div className="py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -61,7 +67,7 @@ export const Footer: React.FC = () => {
               transition={{ duration: 0.6, delay: (index + 1) * 0.1 }}
             >
               <h3 className="text-sm font-semibold mb-4 text-navy-900 dark:text-white uppercase tracking-wide">
-                {category === 'platform' ? 'Platform' : 'Legal'}
+                {category === 'platform' ? 'Platform' : category === 'partners' ? 'Partners' : 'Legal'}
               </h3>
               <ul className="space-y-2">
                 {links.map((link) => (

@@ -26,13 +26,14 @@ type AuthAction =
 // Auth Context Interface
 interface AuthContextType {
   state: AuthState;
-  login: (email: string, password: string, twoFactorCode?: string) => Promise<void>;
+  login: (email: string, password: string, twoFactorCode?: string, preAuthResponse?: { user: User; token: string; refreshToken?: string }) => Promise<void>;
   register: (userData: {
     email: string;
     password: string;
     firstName: string;
     lastName: string;
     role: UserRole;
+    roles?: UserRole[];  // Multi-role support
     phone?: string;
     country: string;
   }) => Promise<void>;
@@ -143,12 +144,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Set up WebSocket connection when user is authenticated
   useEffect(() => {
     if (state.isAuthenticated && state.user) {
-      // Temporarily disable WebSocket to fix authentication first
-      // ServiceUtils.connectWebSocket();
-      // webSocketService.subscribeToUserNotifications(state.user.id);
-      console.log('✅ User authenticated successfully:', state.user.email);
+      // Connect to WebSocket with reconnection logic
+      ServiceUtils.connectWebSocket();
+      webSocketService.subscribeToUserNotifications(state.user.id);
+      console.log('✅ User authenticated successfully, WebSocket connected:', state.user.email);
     } else {
-      // webSocketService.disconnect();
+      // Disconnect WebSocket when user logs out
+      webSocketService.disconnect();
     }
   }, [state.isAuthenticated, state.user]);
 
@@ -186,10 +188,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const login = async (email: string, password: string, twoFactorCode?: string): Promise<void> => {
+  const login = async (email: string, password: string, twoFactorCode?: string, preAuthResponse?: { user: User; token: string; refreshToken?: string }): Promise<void> => {
     try {
       dispatch({ type: 'AUTH_LOADING' });
 
+      // If preAuthResponse is provided (from email verification), use it directly
+      if (preAuthResponse) {
+        console.log('🔐 Using pre-authenticated response for auto-login');
+        dispatch({ type: 'AUTH_SUCCESS', payload: preAuthResponse.user });
+        return;
+      }
+
+      // Otherwise, perform normal login
       const response = await AuthService.login({
         email,
         password,
@@ -229,10 +239,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         country: userData.country,
       });
 
-      dispatch({ type: 'AUTH_SUCCESS', payload: response.user });
+      // Registration successful but user is NOT authenticated until email is verified
+      // Do NOT dispatch AUTH_SUCCESS here as the backend doesn't return tokens
+      dispatch({ type: 'AUTH_LOGOUT' }); // Ensure user is not marked as authenticated
 
-      // Trigger checkAuth to ensure auth state is properly set
-      setTimeout(() => checkAuth(), 100);
+      console.log('✅ Registration successful - user must verify email before login');
     } catch (error: any) {
       console.error('Registration failed:', error);
       const errorMessage = error.message || 'Registration failed. Please try again.';

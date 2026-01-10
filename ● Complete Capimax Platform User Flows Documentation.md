@@ -1,4 +1,4 @@
- Complete Capimax Platform User Flows Documentation
+Complete Capimax Platform User Flows Documentation
 
   1. USER AUTHENTICATION & REGISTRATION FLOWS
 

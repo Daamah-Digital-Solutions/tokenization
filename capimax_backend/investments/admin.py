@@ -4,44 +4,49 @@ Investment Admin for Capimax Real Estate Tokenization Platform.
 This module contains admin interfaces for investment management models.
 """
 
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.utils.html import format_html
+from django.utils import timezone
 from django.urls import reverse
 from django.db.models import Sum
 from decimal import Decimal
 
 from .models import (
     Investment, InstallmentPayment, TokenReservation,
-    InvestmentWithdrawal, AutoInvestment, DividendPayment
+    InvestmentWithdrawal, AutoInvestment, DividendPayment,
+    InvestmentStatus
 )
 
 
 @admin.register(Investment)
 class InvestmentAdmin(admin.ModelAdmin):
     """Admin interface for Investment model."""
-    
+
     list_display = [
         'id', 'user_email', 'property_title', 'token_amount',
-        'investment_amount', 'status', 'ownership_percentage_display',
+        'investment_amount', 'status', 'mint_status_display',
+        'tokens_minted', 'ownership_percentage_display',
         'created_at', 'completed_at'
     ]
-    
+
     list_filter = [
         'status', 'blockchain_confirmed', 'created_at',
         'property_investment__property_type',
-        'property_investment__city'
+        'property_investment__city',
+        'mint_retry_count'
     ]
-    
+
     search_fields = [
         'user__email', 'user__first_name', 'user__last_name',
-        'property_investment__title', 'transaction_hash'
+        'property_investment__title', 'transaction_hash', 'idempotency_key'
     ]
-    
+
     readonly_fields = [
         'id', 'created_at', 'updated_at', 'ownership_percentage_display',
-        'current_value_display', 'user_link', 'property_link'
+        'current_value_display', 'user_link', 'property_link',
+        'mint_status_display', 'mint_error_display'
     ]
-    
+
     fieldsets = (
         ('Investment Details', {
             'fields': (
@@ -55,6 +60,15 @@ class InvestmentAdmin(admin.ModelAdmin):
                 'blockchain_confirmed', 'confirmation_blocks'
             )
         }),
+        ('Token Minting Status', {
+            'fields': (
+                'mint_status_display', 'tokens_minted', 'mint_retry_count',
+                'mint_last_attempt', 'mint_scheduled_at', 'mint_error_display',
+                'idempotency_key'
+            ),
+            'classes': ('collapse',),
+            'description': 'Token minting tracking for deferred minting flow'
+        }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at', 'completed_at')
         }),
@@ -62,8 +76,11 @@ class InvestmentAdmin(admin.ModelAdmin):
             'fields': ('current_value_display',)
         })
     )
-    
-    actions = ['mark_as_completed', 'mark_as_failed']
+
+    actions = [
+        'mark_as_completed', 'mark_as_failed',
+        'retry_failed_mints', 'mark_for_refund', 'reset_mint_status'
+    ]
     
     def user_email(self, obj):
         """Display user email."""
@@ -113,6 +130,121 @@ class InvestmentAdmin(admin.ModelAdmin):
         updated = queryset.filter(status='processing').update(status='failed')
         self.message_user(request, f'{updated} investments marked as failed.')
     mark_as_failed.short_description = 'Mark selected investments as failed'
+
+    def mint_status_display(self, obj):
+        """Display mint status with color coding."""
+        status_colors = {
+            InvestmentStatus.PENDING_MINT: 'orange',
+            InvestmentStatus.MINTING: 'blue',
+            InvestmentStatus.COMPLETED: 'green',
+            InvestmentStatus.MINT_FAILED: 'red',
+        }
+        color = status_colors.get(obj.status, 'gray')
+
+        if obj.status == InvestmentStatus.MINT_FAILED:
+            return format_html(
+                '<span style="color: {}; font-weight: bold;">{}</span> '
+                '<br><small>Retries: {}/{}</small>',
+                color, obj.get_status_display(),
+                obj.mint_retry_count, obj.MAX_MINT_RETRIES
+            )
+        elif obj.status == InvestmentStatus.PENDING_MINT:
+            scheduled = obj.mint_scheduled_at.strftime('%H:%M:%S') if obj.mint_scheduled_at else 'Now'
+            return format_html(
+                '<span style="color: {};">{}</span>'
+                '<br><small>Scheduled: {}</small>',
+                color, obj.get_status_display(), scheduled
+            )
+        else:
+            return format_html(
+                '<span style="color: {};">{}</span>',
+                color, obj.get_status_display()
+            )
+    mint_status_display.short_description = 'Mint Status'
+
+    def mint_error_display(self, obj):
+        """Display mint error message."""
+        if obj.mint_error:
+            return format_html(
+                '<pre style="white-space: pre-wrap; max-width: 400px;">{}</pre>',
+                obj.mint_error[:500]
+            )
+        return '-'
+    mint_error_display.short_description = 'Last Mint Error'
+
+    def retry_failed_mints(self, request, queryset):
+        """Retry minting for failed investments."""
+        from .tasks import retry_failed_mint
+
+        eligible = queryset.filter(
+            status__in=[InvestmentStatus.MINT_FAILED, InvestmentStatus.PENDING_MINT]
+        )
+
+        retried = 0
+        for investment in eligible:
+            try:
+                # Reset and queue for retry
+                investment.mint_retry_count = 0
+                investment.mint_error = None
+                investment.status = InvestmentStatus.PENDING_MINT
+                investment.mint_scheduled_at = timezone.now()
+                investment.save()
+
+                # Trigger async task
+                retry_failed_mint.delay(str(investment.id))
+                retried += 1
+            except Exception as e:
+                self.message_user(
+                    request,
+                    f'Failed to retry investment {investment.id}: {str(e)}',
+                    messages.ERROR
+                )
+
+        if retried > 0:
+            self.message_user(
+                request,
+                f'{retried} investment(s) queued for mint retry.',
+                messages.SUCCESS
+            )
+    retry_failed_mints.short_description = 'Retry token minting for selected'
+
+    def mark_for_refund(self, request, queryset):
+        """Mark investments for refund (manual process)."""
+        eligible = queryset.filter(
+            status__in=[InvestmentStatus.MINT_FAILED, InvestmentStatus.FAILED]
+        )
+
+        updated = eligible.update(status=InvestmentStatus.REFUNDED)
+
+        if updated > 0:
+            self.message_user(
+                request,
+                f'{updated} investment(s) marked for refund. '
+                f'Please process refunds manually via Stripe dashboard.',
+                messages.WARNING
+            )
+        else:
+            self.message_user(
+                request,
+                'No eligible investments found. Only FAILED or MINT_FAILED can be refunded.',
+                messages.ERROR
+            )
+    mark_for_refund.short_description = 'Mark for refund (manual)'
+
+    def reset_mint_status(self, request, queryset):
+        """Reset mint status for stuck investments (admin emergency action)."""
+        updated = queryset.update(
+            status=InvestmentStatus.PENDING_MINT,
+            mint_retry_count=0,
+            mint_error=None,
+            mint_scheduled_at=timezone.now()
+        )
+        self.message_user(
+            request,
+            f'{updated} investment(s) reset to PENDING_MINT.',
+            messages.SUCCESS
+        )
+    reset_mint_status.short_description = 'Reset mint status (emergency)'
 
 
 @admin.register(InstallmentPayment)

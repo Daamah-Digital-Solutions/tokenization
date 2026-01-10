@@ -1,0 +1,27 @@
+{
+  "name": "capimax-smart-contracts",
+  "version": "1.0.0",
+  "description": "Real Estate Tokenization Smart Contracts for Capimax Platform",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy:bsc-testnet": "hardhat run scripts/deploy.js --network bscTestnet",
+    "deploy:polygon-testnet": "hardhat run scripts/deploy.js --network mumbai",
+    "verify:bsc": "hardhat verify --network bscTestnet",
+    "test": "hardhat test",
+    "console:bsc": "hardhat console --network bscTestnet"
+  },
+  "keywords": ["real-estate", "tokenization", "erc1155", "blockchain"],
+  "author": "Capimax Platform",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.0.0",
+    "@openzeppelin/hardhat-upgrades": "^3.0.0",
+    "hardhat": "^2.19.0",
+    "dotenv": "^16.3.1"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.1",
+    "@openzeppelin/contracts-upgradeable": "^5.0.1"
+  }
+}

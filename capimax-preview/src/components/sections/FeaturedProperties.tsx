@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Users, TrendingUp, ArrowRight, Clock, Shield, Star, Building, DollarSign, Award, Sparkles } from 'lucide-react';
+import { MapPin, Users, TrendingUp, ArrowRight, Clock, Shield, Star, Building, DollarSign, Award, Sparkles, Loader } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { PropertyService } from '../../services/property/PropertyService';
+import type { Property as BackendProperty } from '../../services/api/types';
 
 interface Property {
   id: number;
@@ -22,60 +24,70 @@ interface Property {
 }
 
 export const FeaturedProperties: React.FC = () => {
-  const [hoveredId, setHoveredId] = useState<number | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const properties: Property[] = [
-    {
-      id: 1,
-      image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      title: "Manhattan Elite Tower",
-      location: "New York, NY",
-      price: "$12.85M",
-      tokenPrice: "$1,000",
-      totalTokens: 12850,
-      soldTokens: 10280,
-      expectedReturn: "14.8%",
-      investors: 847,
-      type: "Residential",
-      rating: 4.8,
-      yearBuilt: 2022,
-      status: 'funding',
-      featured: true
-    },
-    {
-      id: 2,
-      image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      title: "Silicon Valley Tech Hub",
-      location: "Palo Alto, CA",
-      price: "$28.5M",
-      tokenPrice: "$2,500",
-      totalTokens: 11400,
-      soldTokens: 6840,
-      expectedReturn: "18.2%",
-      investors: 1203,
-      type: "Commercial",
-      rating: 4.9,
-      yearBuilt: 2021,
-      status: 'funding'
-    },
-    {
-      id: 3,
-      image: "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      title: "Miami Beach Resort",
-      location: "Miami, FL",
-      price: "$45.75M",
-      tokenPrice: "$5,000",
-      totalTokens: 9150,
-      soldTokens: 6405,
-      expectedReturn: "22.4%",
-      investors: 892,
-      type: "Hospitality",
-      rating: 4.7,
-      yearBuilt: 2023,
-      status: 'funding'
+  // Load featured properties from backend
+  useEffect(() => {
+    loadFeaturedProperties();
+  }, []);
+
+  const loadFeaturedProperties = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Get approved properties (featured ones first if available)
+      const result = await PropertyService.getProperties({
+        status: 'approved',
+        limit: 6,
+        sort: 'created_at',
+        order: 'desc'
+      });
+
+      const backendProperties: BackendProperty[] = result.properties || [];
+
+      // Ensure we have an array before mapping
+      if (!Array.isArray(backendProperties)) {
+        console.error('Backend properties is not an array:', backendProperties);
+        throw new Error('Invalid properties data received from backend');
+      }
+
+      // Convert backend properties to frontend format
+      const frontendProperties: Property[] = backendProperties.map((prop) => {
+        const fundingPercentage = prop.total_tokens > 0 ? (prop.tokens_sold / prop.total_tokens) * 100 : 0;
+
+        return {
+          id: parseInt(prop.id.replace(/-/g, '').substring(0, 8), 16), // Convert UUID to number for compatibility
+          image: prop.images?.[0] || "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+          title: prop.title,
+          location: `${prop.city}${prop.state ? ', ' + prop.state : ''}, ${prop.country}`,
+          price: `$${(prop.total_value / 1000000).toFixed(2)}M`,
+          tokenPrice: `$${prop.token_price.toLocaleString()}`,
+          totalTokens: prop.total_tokens,
+          soldTokens: prop.tokens_sold,
+          expectedReturn: `${prop.expected_return}%`,
+          investors: 0, // This would come from analytics if available
+          type: prop.property_type === 'residential' ? 'Residential' :
+                prop.property_type === 'commercial' ? 'Commercial' : 'Hospitality',
+          rating: prop.average_rating || 4.5,
+          yearBuilt: prop.year_built || new Date().getFullYear(),
+          status: fundingPercentage >= 100 ? 'funded' : 'funding' as const,
+          featured: prop.featured || false
+        };
+      });
+
+      setProperties(frontendProperties);
+    } catch (err: any) {
+      console.error('Failed to load featured properties:', err);
+      setError(err.message || 'Failed to load featured properties');
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
 
   const categories = ['all', 'Residential', 'Commercial', 'Hospitality'];
 
@@ -101,9 +113,62 @@ export const FeaturedProperties: React.FC = () => {
     }
   };
 
-  const filteredProperties = selectedCategory === 'all' 
-    ? properties 
+  const filteredProperties = selectedCategory === 'all'
+    ? properties
     : properties.filter(p => p.type === selectedCategory);
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <section id="properties" className="relative py-24 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-gray-900 dark:to-slate-800 overflow-hidden">
+        <div className="relative z-10 max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border border-emerald-200/50 dark:border-emerald-500/20 mb-6"
+            >
+              <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Premium Investment Opportunities</span>
+            </motion.div>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">
+              Featured Properties
+            </h2>
+          </div>
+
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-emerald-600" />
+              <p className="text-slate-600 dark:text-gray-400">Loading featured properties...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <section id="properties" className="relative py-24 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-gray-900 dark:to-slate-800 overflow-hidden">
+        <div className="relative z-10 max-w-7xl mx-auto px-6">
+          <div className="text-center">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">
+              Featured Properties
+            </h2>
+            <div className="text-center py-16">
+              <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+              <Button onClick={loadFeaturedProperties} variant="primary">
+                Try Again
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="properties" className="relative py-24 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-slate-900 dark:via-gray-900 dark:to-slate-800 overflow-hidden">

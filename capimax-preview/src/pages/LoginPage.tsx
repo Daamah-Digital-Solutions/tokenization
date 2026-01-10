@@ -4,6 +4,7 @@ import { LoginForm } from '../components/auth/LoginForm';
 import { PasswordRecoveryForm } from '../components/auth/PasswordRecoveryForm';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from '../utils/router';
+import { AuthService } from '../services/auth/AuthService';
 
 type LoginStep = 'login' | 'forgot-password' | 'success';
 
@@ -11,6 +12,11 @@ export const LoginPage: React.FC = () => {
   const { state: authState } = useAuth();
   const { navigate } = useRouter();
   const [currentStep, setCurrentStep] = useState<LoginStep>('login');
+
+  // Password reset states
+  const [passwordResetLoading, setPasswordResetLoading] = useState(false);
+  const [passwordResetError, setPasswordResetError] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
 
   const handleSuccess = () => {
     setCurrentStep('success');
@@ -21,6 +27,38 @@ export const LoginPage: React.FC = () => {
 
   const handleGoToRegister = () => {
     navigate('register');
+  };
+
+  const handlePasswordResetRequest = async (data: { email: string }) => {
+    setPasswordResetLoading(true);
+    setPasswordResetError(null);
+
+    try {
+      const response = await AuthService.requestPasswordReset(data);
+      setEmailSent(true);
+      console.log('✅ Password reset email sent successfully');
+    } catch (error: any) {
+      console.error('❌ Password reset request failed:', error);
+      // Set a user-friendly error message
+      const errorMessage = error?.message || 'Failed to send reset email. Please try again.';
+      setPasswordResetError(errorMessage);
+    } finally {
+      setPasswordResetLoading(false);
+    }
+  };
+
+  const handleBackToLogin = () => {
+    setCurrentStep('login');
+    // Reset password reset states when going back to login
+    setPasswordResetError(null);
+    setEmailSent(false);
+    setPasswordResetLoading(false);
+  };
+
+  const handleUseDifferentEmail = () => {
+    // Reset the emailSent state so user can enter different email
+    setEmailSent(false);
+    setPasswordResetError(null);
   };
 
   const renderCurrentStep = () => {
@@ -37,7 +75,12 @@ export const LoginPage: React.FC = () => {
       case 'forgot-password':
         return (
           <PasswordRecoveryForm
-            onBackToLogin={() => setCurrentStep('login')}
+            onSubmit={handlePasswordResetRequest}
+            onBackToLogin={handleBackToLogin}
+            onUseDifferentEmail={handleUseDifferentEmail}
+            loading={passwordResetLoading}
+            error={passwordResetError}
+            emailSent={emailSent}
           />
         );
 

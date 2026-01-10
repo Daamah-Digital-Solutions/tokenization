@@ -24,7 +24,8 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  Wallet
+  Wallet,
+  ExternalLink
 } from 'lucide-react';
 
 import { DashboardService } from '../../../services/dashboard/DashboardService';
@@ -32,6 +33,7 @@ import { type Portfolio, type Investment, PropertyType, InvestmentStatus } from 
 import { StatsCard, Card } from '../../design-system';
 import { Text } from '../../design-system/typography/Text';
 import { Button } from '../../ui/Button';
+import { BlockchainLink } from '../../ui/BlockchainLink';
 import { cn } from '../../../utils/cn';
 
 interface PortfolioManagerProps {
@@ -47,6 +49,8 @@ type FilterType = PropertyType | 'all';
 type StatusFilter = InvestmentStatus | 'all';
 
 interface PropertyInvestment extends Investment {
+  transaction_hash?: string | null;
+  blockchain_confirmed?: boolean;
   property?: {
     id: string;
     title: string;
@@ -491,6 +495,27 @@ const InvestmentCard: React.FC<{ investment: PropertyInvestment }> = ({ investme
             </div>
           </div>
 
+          {/* Blockchain Verification - Shows when completed and minted */}
+          {investment.status === InvestmentStatus.COMPLETED && investment.transaction_hash && (
+            <div className="mb-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  <Text variant="caption" weight="medium" className="text-emerald-700 dark:text-emerald-300">
+                    Verified on Blockchain
+                  </Text>
+                </div>
+                <BlockchainLink
+                  transactionHash={investment.transaction_hash}
+                  network="polygon"
+                  status="completed"
+                  variant="link"
+                  size="sm"
+                />
+              </div>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="flex gap-2">
             <Button variant="primary" size="sm" className="flex-1">
@@ -594,6 +619,19 @@ const InvestmentListItem: React.FC<{ investment: PropertyInvestment }> = ({ inve
                 ${investment.performance?.monthly_income?.toLocaleString()}
               </Text>
             </div>
+
+            {/* Blockchain Verification */}
+            {investment.status === InvestmentStatus.COMPLETED && investment.transaction_hash && (
+              <div className="text-right mr-4">
+                <BlockchainLink
+                  transactionHash={investment.transaction_hash}
+                  network="polygon"
+                  status="completed"
+                  variant="badge"
+                  size="sm"
+                />
+              </div>
+            )}
 
             {/* Actions */}
             <div className="flex gap-2">

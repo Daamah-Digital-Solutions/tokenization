@@ -12,12 +12,21 @@ from .views import (
     PaymentMethodViewSet,
     PaymentViewSet,
     StripePaymentView,
+    StripeWebhookView,
     CryptoPaymentView,
     WalletManagementView,
     get_wallet_transactions,
     RefundViewSet,
     RecurringPaymentViewSet,
     BankTransferView,
+)
+from .nowpayments_views import (
+    nowpayments_currencies,
+    nowpayments_estimate,
+    nowpayments_create_payment,
+    nowpayments_create_invoice,
+    nowpayments_payment_status,
+    nowpayments_ipn_callback,
 )
 
 # Create router and register viewsets
@@ -32,21 +41,29 @@ app_name = 'payments'
 urlpatterns = [
     # Router URLs
     path('', include(router.urls)),
-    
+
     # Stripe Payment Processing
     path('stripe/<str:action>/', StripePaymentView.as_view(), name='stripe-payment'),
-    
+
+    # Stripe Webhooks (no auth - uses signature verification)
+    path('webhooks/stripe/', StripeWebhookView.as_view(), name='stripe-webhook'),
+
     # Cryptocurrency Payment Processing
     path('crypto/<str:action>/', CryptoPaymentView.as_view(), name='crypto-payment'),
-    
+
+    # NOWPayments Cryptocurrency Gateway
+    path('nowpayments/currencies/', nowpayments_currencies, name='nowpayments-currencies'),
+    path('nowpayments/estimate/', nowpayments_estimate, name='nowpayments-estimate'),
+    path('nowpayments/create-payment/', nowpayments_create_payment, name='nowpayments-create-payment'),
+    path('nowpayments/create-invoice/', nowpayments_create_invoice, name='nowpayments-create-invoice'),
+    path('nowpayments/status/<uuid:payment_id>/', nowpayments_payment_status, name='nowpayments-status'),
+    path('nowpayments/ipn/', nowpayments_ipn_callback, name='nowpayments-ipn'),
+
     # Wallet Management
     path('wallet/', WalletManagementView.as_view(), name='wallet-balance'),
     path('wallet/<str:action>/', WalletManagementView.as_view(), name='wallet-action'),
     path('wallet/transactions/', get_wallet_transactions, name='wallet-transactions'),
-    
-    # PayPal Integration (placeholder for future implementation)
-    # path('paypal/<str:action>/', PayPalPaymentView.as_view(), name='paypal-payment'),
-    
+
     # Bank Transfer Integration
     path('bank-transfer/<str:action>/', BankTransferView.as_view(), name='bank-transfer'),
 ]
@@ -78,6 +95,14 @@ Cryptocurrency Payments:
 - POST   /api/payments/crypto/create-payment/ - Create crypto payment
 - POST   /api/payments/crypto/verify-payment/ - Verify crypto payment
 
+NOWPayments Cryptocurrency Gateway:
+- GET    /api/payments/nowpayments/currencies/ - Get available cryptocurrencies
+- POST   /api/payments/nowpayments/estimate/   - Get price estimate for crypto payment
+- POST   /api/payments/nowpayments/create-payment/ - Create NOWPayments payment
+- POST   /api/payments/nowpayments/create-invoice/ - Create NOWPayments invoice
+- GET    /api/payments/nowpayments/status/{payment_id}/ - Get payment status
+- POST   /api/payments/nowpayments/ipn/        - IPN webhook callback (internal)
+
 Wallet Management:
 - GET    /api/payments/wallet/            - Get wallet balances
 - POST   /api/payments/wallet/deposit/    - Deposit funds to wallet
@@ -99,52 +124,106 @@ Recurring Payments:
 - POST   /api/payments/recurring/{id}/pause/ - Pause recurring payment
 - POST   /api/payments/recurring/{id}/resume/ - Resume recurring payment
 
-Request/Response Examples:
+NOWPayments Request/Response Examples:
 
-1. Create Stripe Payment Intent:
-   POST /api/payments/stripe/create-payment-intent/
+1. Get Available Cryptocurrencies:
+   GET /api/payments/nowpayments/currencies/
+
+   Response:
+   {
+     "success": true,
+     "data": {
+       "currencies": ["BTC", "ETH", "USDT", "BNB", ...]
+     },
+     "message": "150 cryptocurrencies available"
+   }
+
+2. Get Payment Estimate:
+   POST /api/payments/nowpayments/estimate/
+   {
+     "amount": "100.00",
+     "currency_from": "USD",
+     "currency_to": "BTC"
+   }
+
+   Response:
+   {
+     "success": true,
+     "data": {
+       "amount": "100.00",
+       "currency_from": "USD",
+       "currency_to": "BTC",
+       "estimated_amount": "0.00234567",
+       "min_amount": "0.0001",
+       "exchange_rate": "42500.00",
+       "valid_until": "2024-01-15T12:45:00Z"
+     }
+   }
+
+3. Create NOWPayments Payment:
+   POST /api/payments/nowpayments/create-payment/
    {
      "amount": "500.00",
      "currency": "USD",
-     "investment_id": "uuid-here",
-     "save_payment_method": true
+     "pay_currency": "BTC",
+     "order_description": "Property investment",
+     "investment_id": "uuid-here"
    }
 
-2. Get Crypto Quote:
-   POST /api/payments/crypto/get-quote/
+   Response:
    {
-     "from_currency": "BTC",
-     "to_currency": "USD",
-     "amount": "0.01"
+     "success": true,
+     "data": {
+       "payment_id": "uuid-here",
+       "nowpayments_payment_id": "12345678",
+       "pay_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+       "pay_amount": "0.01175000",
+       "pay_currency": "BTC",
+       "payment_status": "waiting",
+       "payment_url": "https://nowpayments.io/payment/...",
+       "created_at": "2024-01-15T12:30:00Z"
+     },
+     "message": "NOWPayments transaction created successfully"
    }
 
-3. Add Payment Method:
-   POST /api/payments/methods/
+4. Create NOWPayments Invoice (user selects crypto):
+   POST /api/payments/nowpayments/create-invoice/
    {
-     "method_type": "credit_card",
-     "display_name": "Visa *1234",
-     "last_four": "1234",
-     "expiry_date": "12/2025",
-     "brand": "Visa"
-   }
-
-4. Create Wallet Deposit:
-   POST /api/payments/wallet/deposit/
-   {
-     "amount": "100.00",
+     "amount": "500.00",
      "currency": "USD",
-     "payment_method_id": "uuid-here"
+     "order_description": "Property investment",
+     "investment_id": "uuid-here"
    }
 
-5. Create Recurring Payment:
-   POST /api/payments/recurring/
+   Response:
    {
-     "amount": "100.00",
-     "currency": "USD",
-     "frequency": "monthly",
-     "payment_method": "uuid-here",
-     "start_date": "2024-02-01T00:00:00Z",
-     "purpose": "investment",
-     "investment": "uuid-here"
+     "success": true,
+     "data": {
+       "payment_id": "uuid-here",
+       "invoice_id": "abc123",
+       "invoice_url": "https://nowpayments.io/invoice/abc123",
+       "created_at": "2024-01-15T12:30:00Z"
+     },
+     "message": "NOWPayments invoice created successfully"
+   }
+
+5. Check Payment Status:
+   GET /api/payments/nowpayments/status/{payment_id}/
+
+   Response:
+   {
+     "success": true,
+     "data": {
+       "payment_id": "uuid-here",
+       "nowpayments_payment_id": "12345678",
+       "payment_status": "finished",
+       "pay_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+       "pay_amount": "0.01175000",
+       "pay_currency": "BTC",
+       "actually_paid": "0.01175000",
+       "is_completed": true,
+       "is_pending": false,
+       "is_failed": false
+     }
    }
 """

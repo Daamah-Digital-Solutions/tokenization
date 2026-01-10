@@ -18,11 +18,11 @@ import { Button } from '../ui/Button';
 import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
 import { WalletConnector } from './WalletConnector';
-import { Property, InvestmentData } from './InvestmentFlow';
+import type { InvestmentProperty, InvestmentData } from './types';
 import { cn } from '../../utils/cn';
 
 interface TransactionProcessorProps {
-  property: Property;
+  property: InvestmentProperty;
   investmentData: InvestmentData;
   onComplete: (success: boolean, transactionId?: string) => void;
   isProcessing: boolean;

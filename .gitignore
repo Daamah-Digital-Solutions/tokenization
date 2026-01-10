@@ -1,0 +1,147 @@
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+ENV/
+env/
+venv_blockchain/
+.venv
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+static_root/
+
+# Environment Variables - CRITICAL
+.env
+.env.*
+.env.local
+.env.production
+.env.development
+.env.test
+.env.staging
+*.env
+*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Security Reports
+bandit_report.json
+safety_report.json
+security_audit_*.json
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Backups
+*.backup
+*.bak
+*.sql
+backup/
+backups/
+
+# Compiled files
+*.pyc
+__pycache__/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Node modules (Frontend)
+capimax-preview/node_modules/
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Frontend build artifacts
+capimax-preview/dist/
+capimax-preview/build/
+capimax-preview/.vite/
+
+# Frontend environment
+capimax-preview/.env
+capimax-preview/.env.local
+capimax-preview/.env.production
+capimax-preview/.env.development
+
+# Temporary files
+*.tmp
+*.temp
+nul
+
+# Database dumps
+*.dump
+*.sql
+
+# SSL Certificates (if stored locally - should use secrets manager)
+*.pem
+*.key
+*.crt
+*.cert
+*.ca-bundle
+
+# AWS credentials (should never be committed)
+.aws/
+credentials
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Misc
+.cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json

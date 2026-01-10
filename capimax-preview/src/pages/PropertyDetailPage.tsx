@@ -130,7 +130,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-gray-900 dark:to-slate-800">
         <Navbar />
-        <Container className="py-8">
+        <Container className="py-8 pt-24">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-emerald-600" />
@@ -148,7 +148,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-gray-900 dark:to-slate-800">
         <Navbar />
-        <Container className="py-8">
+        <Container className="py-8 pt-24">
           <div className="text-center py-16">
             <div className="w-16 h-16 mx-auto bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
               <Info className="w-8 h-8 text-red-600 dark:text-red-400" />
@@ -176,49 +176,23 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
   const isUnderConstruction = property.property_category === PropertyCategory.UNDER_CONSTRUCTION;
   const isReadyProperty = property.property_category === PropertyCategory.READY_PROPERTY;
   
-  // Construction progress (mock data for now - would come from API)
+  // Construction progress data from backend (if available)
   const constructionProgressData = isUnderConstruction ? {
     propertyId: property.id,
     propertyName: property.title,
     overallProgress: property.construction_progress || 0,
-    currentPhase: property.construction_status_display || 'Foundation',
-    milestones: [
-      {
-        id: '1',
-        title: 'Foundation Complete',
-        description: 'Foundation work and excavation completed',
-        plannedDate: '2024-03-15',
-        completedDate: '2024-03-20',
-        status: 'completed' as const,
-        progress: 100,
-      },
-      {
-        id: '2', 
-        title: 'Frame Construction',
-        description: 'Building frame and structural elements',
-        plannedDate: '2024-06-15',
-        status: 'in_progress' as const,
-        progress: 65,
-      },
-      {
-        id: '3',
-        title: 'Interior Finishing',
-        description: 'Interior work and finishing touches',
-        plannedDate: '2024-09-15',
-        status: 'pending' as const,
-        progress: 0,
-      },
-    ],
-    lastUpdated: new Date().toISOString(),
-    nextInspectionDate: '2024-07-01',
+    currentPhase: property.construction_status_display || 'In Progress',
+    milestones: [], // Would be loaded from construction API endpoint
+    lastUpdated: property.updated_at.toISOString(),
+    nextInspectionDate: property.expected_completion_date || null,
     developer: {
-      name: 'ABC Construction Ltd',
-      contact: 'contact@abcconstruction.com',
-      projectManager: 'John Smith'
+      name: property.owner_id ? 'Property Developer' : 'Unknown',
+      contact: 'Contact via platform',
+      projectManager: 'Project Manager'
     },
     timeline: {
-      startDate: '2024-01-15',
-      plannedCompletion: property.expected_completion_date || '2024-12-15',
+      startDate: property.created_at.toISOString().split('T')[0],
+      plannedCompletion: property.expected_completion_date || null,
     }
   } : null;
 
@@ -252,8 +226,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-gray-900 dark:to-slate-800">
       <Navbar />
-      
-      <Container className="py-8">
+
+      <Container className="py-8 pt-24">
         {/* Breadcrumb & Actions */}
         <div className="flex items-center justify-between mb-8">
           <Button

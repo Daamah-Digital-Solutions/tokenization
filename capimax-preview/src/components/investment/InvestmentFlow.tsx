@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, 
@@ -19,50 +19,7 @@ import { PaymentMethodSelector } from './PaymentMethodSelector';
 import { TransactionProcessor } from './TransactionProcessor';
 import { TransactionConfirmation } from './TransactionConfirmation';
 import { cn } from '../../utils/cn';
-
-export interface InvestmentProperty {
-  id: number;
-  title: string;
-  tokenPrice: number;
-  minInvestment: number;
-  expectedReturn: number;
-  totalTokens: number;
-  soldTokens: number;
-  investment: {
-    minInvestment: number;
-    avgAnnualReturn: number;
-    dividendFrequency: string;
-    managementFee: number;
-    appreciationForecast: number;
-    rentalYield: number;
-    totalROI: number;
-  };
-}
-
-export interface InvestmentData {
-  amount: number;
-  tokens: number;
-  paymentMethod: 'crypto' | 'fiat' | null;
-  walletAddress?: string;
-  cardDetails?: {
-    cardNumber: string;
-    expiryDate: string;
-    cvv: string;
-    cardholderName: string;
-  };
-  bankDetails?: {
-    accountNumber: string;
-    routingNumber: string;
-    accountHolderName: string;
-  };
-}
-
-export interface InvestmentFlowProps {
-  property: InvestmentProperty;
-  isOpen: boolean;
-  onClose: () => void;
-  onComplete?: (investment: InvestmentData) => void;
-}
+import type { InvestmentProperty, InvestmentData, InvestmentFlowProps } from './types';
 
 const steps = [
   { 
@@ -105,6 +62,12 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Debug logging for currentStep changes
+  useEffect(() => {
+    console.log('📍 CURRENT STEP CHANGED TO:', currentStep);
+    console.log('📍 Step name:', steps[currentStep]?.title);
+  }, [currentStep]);
 
   const currentStepData = steps[currentStep];
   const isLastStep = currentStep === steps.length - 1;
@@ -152,10 +115,17 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
 
   const handleNext = () => {
     if (!validateStep(currentStep)) return;
-    
+
     if (currentStep < steps.length - 1) {
       setCurrentStep(prev => prev + 1);
     }
+  };
+
+  const handleAdvanceToProcessing = () => {
+    console.log('🎯 HANDLE ADVANCE TO PROCESSING CALLED!');
+    console.log('🎯 Current step before:', currentStep);
+    setCurrentStep(2); // Move to processing step
+    console.log('🎯 setCurrentStep(2) called - should advance to processing step');
   };
 
   const handlePrevious = () => {
@@ -165,6 +135,12 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
   };
 
   const handleClose = () => {
+    // If we're on the confirmation step, call onComplete
+    if (currentStep === 3) {
+      console.log('✅ Investment flow completed successfully!');
+      onComplete?.(investmentData);
+    }
+
     setCurrentStep(0);
     setInvestmentData({
       amount: property.investment.minInvestment,
@@ -178,8 +154,9 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
 
   const handleTransactionComplete = (success: boolean, transactionId?: string) => {
     if (success && transactionId) {
+      console.log('🎯 Transaction complete, moving to confirmation step');
       setCurrentStep(3); // Move to confirmation step
-      onComplete?.(investmentData);
+      // DON'T call onComplete here - wait for user to close confirmation!
     }
     setIsProcessing(false);
   };
@@ -304,6 +281,7 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                       investmentData={investmentData}
                       onUpdate={updateInvestmentData}
                       errors={errors}
+                      onAdvanceToProcessing={handleAdvanceToProcessing}
                     />
                   )}
 

@@ -27,6 +27,10 @@ const queryClient = new QueryClient({
 const HomePage = React.lazy(() => import('./components/HomePage').then(m => ({ default: m.HomePage })));
 const LoginPage = React.lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const RegisterPage = React.lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
+const EmailVerificationPage = React.lazy(() => import('./pages/EmailVerificationPage').then(m => ({ default: m.EmailVerificationPage })));
+const CodeVerificationPage = React.lazy(() => import('./pages/CodeVerificationPage').then(m => ({ default: m.CodeVerificationPage })));
+const PasswordResetPage = React.lazy(() => import('./pages/PasswordResetPage').then(m => ({ default: m.PasswordResetPage })));
+const NewPasswordPage = React.lazy(() => import('./pages/NewPasswordPage').then(m => ({ default: m.NewPasswordPage })));
 const KYCPage = React.lazy(() => import('./pages/KYCPage').then(m => ({ default: m.KYCPage })));
 const PropertiesPage = React.lazy(() => import('./pages/PropertiesPage').then(m => ({ default: m.PropertiesPage })));
 const PropertyDetailPage = React.lazy(() => import('./pages/PropertyDetailPage').then(m => ({ default: m.PropertyDetailPage })));
@@ -35,6 +39,9 @@ const DemoPage = React.lazy(() => import('./pages/DemoPage').then(m => ({ defaul
 const IntegrationTestPage = React.lazy(() => import('./pages/IntegrationTestPage').then(m => ({ default: m.IntegrationTestPage })));
 const WalletManagementPage = React.lazy(() => import('./components/payments').then(m => ({ default: m.WalletManagementPage })));
 const RoleManagementPage = React.lazy(() => import('./pages/RoleManagementPage').then(m => ({ default: m.RoleManagementPage })));
+const MarketplacePage = React.lazy(() => import('./pages/MarketplacePage').then(m => ({ default: m.MarketplacePage })));
+const BrokerProgramPage = React.lazy(() => import('./pages/BrokerProgramPage').then(m => ({ default: m.BrokerProgramPage })));
+const BrokerApplicationPage = React.lazy(() => import('./pages/BrokerApplicationPage').then(m => ({ default: m.BrokerApplicationPage })));
 
 // Loading fallback component
 const PageLoader: React.FC<{ message?: string }> = ({ message = 'Loading page...' }) => (
@@ -120,6 +127,38 @@ const AppRouter: React.FC = () => {
           <main {...mainProps}>
             <Suspense fallback={<PageLoader message="Loading registration..." />}>
               <RegisterPage />
+            </Suspense>
+          </main>
+        );
+      case 'email-verification':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading email verification..." />}>
+              <EmailVerificationPage />
+            </Suspense>
+          </main>
+        );
+      case 'code-verification':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading code verification..." />}>
+              <CodeVerificationPage />
+            </Suspense>
+          </main>
+        );
+      case 'password-reset':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading password reset..." />}>
+              <PasswordResetPage />
+            </Suspense>
+          </main>
+        );
+      case 'new-password':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading new password..." />}>
+              <NewPasswordPage />
             </Suspense>
           </main>
         );
@@ -222,6 +261,30 @@ const AppRouter: React.FC = () => {
                 </p>
               </div>
             </div>
+          </main>
+        );
+      case 'marketplace':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading marketplace..." />}>
+              <MarketplacePage />
+            </Suspense>
+          </main>
+        );
+      case 'broker-program':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading broker program..." />}>
+              <BrokerProgramPage />
+            </Suspense>
+          </main>
+        );
+      case 'broker-application':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading broker application..." />}>
+              <BrokerApplicationPage />
+            </Suspense>
           </main>
         );
       default:

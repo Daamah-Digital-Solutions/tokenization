@@ -14,13 +14,10 @@ from datetime import datetime, timedelta
 import threading
 import time
 
-try:
-    from web3 import Web3
-    from web3.exceptions import TransactionNotFound, BlockNotFound
-    from eth_utils import to_checksum_address
-except ImportError:
-    from blockchain.mock_web3 import Web3, TransactionNotFound, to_checksum_address
-    class BlockNotFound(Exception): pass
+# Real Web3 imports - fail fast if not available (Phase 1 Blockchain Activation)
+from web3 import Web3
+from web3.exceptions import TransactionNotFound, BlockNotFound
+from eth_utils import to_checksum_address
 
 from django.conf import settings
 from django.utils import timezone

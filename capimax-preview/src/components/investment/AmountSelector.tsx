@@ -14,11 +14,11 @@ import { Button } from '../ui/Button';
 import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
 import { Input } from '../design-system/forms/Input';
-import { Property, InvestmentData } from './InvestmentFlow';
+import type { InvestmentProperty, InvestmentData } from './types';
 import { cn } from '../../utils/cn';
 
 interface AmountSelectorProps {
-  property: Property;
+  property: InvestmentProperty;
   investmentData: InvestmentData;
   onUpdate: (updates: Partial<InvestmentData>) => void;
   errors: Record<string, string>;

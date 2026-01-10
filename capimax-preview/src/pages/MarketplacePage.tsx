@@ -2,27 +2,25 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Navbar } from '../components/layout/Navbar';
 import { Footer } from '../components/layout/Footer';
-import { MarketplaceDashboard } from '../components/marketplace/MarketplaceDashboard';
+import { SecondaryMarketDashboard } from '../components/marketplace/SecondaryMarketDashboard';
 
 export const MarketplacePage: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>Secondary Market | Capimax - Trade Tokenized Real Estate</title>
+        <title>Secondary Market | Capimax - Trading Platform</title>
         <meta
           name="description"
-          content="Trade tokenized real estate on the Capimax secondary market. Buy and sell property tokens, participate in auctions, and access liquidity for your investments."
+          content="Trade property tokens on the Capimax secondary market. Buy and sell real estate tokens with instant settlement."
         />
-        <meta name="keywords" content="secondary market, real estate tokens, property trading, tokenization, liquidity" />
+        <meta name="keywords" content="secondary market, property trading, real estate tokens, token trading" />
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Navbar />
-
-        <main>
-          <MarketplaceDashboard />
+        <main className="pt-16">
+          <SecondaryMarketDashboard />
         </main>
-
         <Footer />
       </div>
     </>

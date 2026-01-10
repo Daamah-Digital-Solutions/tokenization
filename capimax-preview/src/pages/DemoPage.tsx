@@ -6,7 +6,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/design-system/cards/Card';
 import { Badge } from '../components/design-system/icons/Badge';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
-import { ComponentShowcase } from '../components/demo/ComponentShowcase';
+// import { ComponentShowcase } from '../components/demo/ComponentShowcase'; // Commented out - component not found
 import { useTheme } from '../contexts/ThemeContext';
 import CapiMaxLightLogo from '../assets/tokenization_capi max  tokenization light  uk  copy.svg';
 import CapiMaxDarkLogo from '../assets/tokenization_capi max tokenization uk dark   copy.svg';
@@ -268,7 +268,7 @@ export const DemoPage: React.FC = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-emerald-50 via-white to-emerald-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 py-16">
+      <section className="bg-gradient-to-br from-emerald-50 via-white to-emerald-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 py-16 pt-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <div className="flex justify-center items-center gap-4 mb-6">
@@ -523,7 +523,10 @@ export const DemoPage: React.FC = () => {
         {/* Components Section */}
         {activeSection === 'components' && (
           <section>
-            <ComponentShowcase />
+            {/* <ComponentShowcase /> */}
+            <div className="text-center py-12">
+              <p className="text-gray-600">Component showcase will be available soon</p>
+            </div>
           </section>
         )}
 

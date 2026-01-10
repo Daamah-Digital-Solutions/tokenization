@@ -330,11 +330,8 @@ class ContractDeploymentRequestSerializer(serializers.Serializer):
     
     def validate_multi_sig_owners(self, value):
         """Validate multi-signature owner addresses."""
-        try:
-            from web3 import Web3
-        except ImportError:
-            from blockchain.mock_web3 import Web3
-        
+        from web3 import Web3
+
         for address in value:
             if not Web3.is_address(address):
                 raise serializers.ValidationError(f"Invalid address: {address}")
@@ -375,11 +372,8 @@ class TokenMintRequestSerializer(serializers.Serializer):
     
     def validate_contract_address(self, value):
         """Validate contract address exists."""
-        try:
-            from web3 import Web3
-        except ImportError:
-            from blockchain.mock_web3 import Web3
-        
+        from web3 import Web3
+
         if not Web3.is_address(value):
             raise serializers.ValidationError("Invalid contract address")
         
@@ -394,11 +388,8 @@ class TokenMintRequestSerializer(serializers.Serializer):
     
     def validate_investor_address(self, value):
         """Validate investor address."""
-        try:
-            from web3 import Web3
-        except ImportError:
-            from blockchain.mock_web3 import Web3
-        
+        from web3 import Web3
+
         if not Web3.is_address(value):
             raise serializers.ValidationError("Invalid investor address")
         

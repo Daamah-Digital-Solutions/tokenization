@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Map, Grid3X3, List, SlidersHorizontal, MapPin, TrendingUp, Users, Star } from 'lucide-react';
+import { Search, Filter, Map, Grid3X3, List, SlidersHorizontal, MapPin, TrendingUp, Users, Star, Loader } from 'lucide-react';
 import { Navbar } from '../components/layout/Navbar';
 import { Footer } from '../components/layout/Footer';
 import { Container } from '../components/design-system/layout/Container';
@@ -9,140 +9,10 @@ import { Input } from '../components/design-system/forms/Input';
 import { PropertyCard } from '../components/design-system/cards/PropertyCard';
 import { SearchBar } from '../components/properties/SearchBar';
 import { cn } from '../utils/cn';
+import { PropertyService } from '../services/property/PropertyService';
+import type { Property } from '../services/api/types';
+import { InvestmentFlow, type InvestmentProperty, type InvestmentData } from '../components/investment';
 
-// Mock property data - this will be replaced with API calls
-const mockProperties = [
-  {
-    id: 1,
-    image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    title: "Manhattan Elite Tower",
-    location: "New York, NY",
-    price: "$12.85M",
-    tokenPrice: "$1,000",
-    totalTokens: 12850,
-    soldTokens: 10280,
-    expectedReturn: "14.8%",
-    investors: 847,
-    type: "Residential",
-    rating: 4.8,
-    yearBuilt: 2022,
-    status: 'funding' as const,
-    featured: true
-  },
-  {
-    id: 2,
-    image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    title: "Silicon Valley Tech Hub",
-    location: "Palo Alto, CA",
-    price: "$28.5M",
-    tokenPrice: "$2,500",
-    totalTokens: 11400,
-    soldTokens: 6840,
-    expectedReturn: "18.2%",
-    investors: 1203,
-    type: "Commercial",
-    rating: 4.9,
-    yearBuilt: 2021,
-    status: 'funding' as const
-  },
-  {
-    id: 3,
-    image: "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    title: "Miami Beach Resort",
-    location: "Miami, FL",
-    price: "$45.75M",
-    tokenPrice: "$5,000",
-    totalTokens: 9150,
-    soldTokens: 6405,
-    expectedReturn: "22.4%",
-    investors: 892,
-    type: "Hospitality",
-    rating: 4.7,
-    yearBuilt: 2023,
-    status: 'funding' as const
-  },
-  {
-    id: 4,
-    image: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    title: "Downtown Chicago Office",
-    location: "Chicago, IL",
-    price: "$18.2M",
-    tokenPrice: "$1,500",
-    totalTokens: 12133,
-    soldTokens: 8493,
-    expectedReturn: "16.5%",
-    investors: 654,
-    type: "Commercial",
-    rating: 4.6,
-    yearBuilt: 2020,
-    status: 'funding' as const
-  },
-  {
-    id: 5,
-    image: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    title: "Seattle Modern Loft",
-    location: "Seattle, WA",
-    price: "$8.5M",
-    tokenPrice: "$850",
-    totalTokens: 10000,
-    soldTokens: 7500,
-    expectedReturn: "12.3%",
-    investors: 423,
-    type: "Residential",
-    rating: 4.5,
-    yearBuilt: 2021,
-    status: 'funding' as const
-  },
-  {
-    id: 6,
-    image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    title: "Austin Tech Campus",
-    location: "Austin, TX",
-    price: "$32.1M",
-    tokenPrice: "$3,000",
-    totalTokens: 10700,
-    soldTokens: 5350,
-    expectedReturn: "20.1%",
-    investors: 892,
-    type: "Commercial",
-    rating: 4.8,
-    yearBuilt: 2022,
-    status: 'funding' as const
-  },
-  {
-    id: 7,
-    image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    title: "Las Vegas Resort & Casino",
-    location: "Las Vegas, NV",
-    price: "$65.8M",
-    tokenPrice: "$6,500",
-    totalTokens: 10123,
-    soldTokens: 8098,
-    expectedReturn: "25.2%",
-    investors: 1547,
-    type: "Hospitality",
-    rating: 4.9,
-    yearBuilt: 2023,
-    status: 'funding' as const,
-    featured: true
-  },
-  {
-    id: 8,
-    image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    title: "Boston Historic Brownstone",
-    location: "Boston, MA",
-    price: "$4.2M",
-    tokenPrice: "$420",
-    totalTokens: 10000,
-    soldTokens: 10000,
-    expectedReturn: "11.8%",
-    investors: 234,
-    type: "Residential",
-    rating: 4.4,
-    yearBuilt: 1895,
-    status: 'funded' as const
-  }
-];
 
 type ViewMode = 'grid' | 'list' | 'map';
 type SortOption = 'featured' | 'price-low' | 'price-high' | 'return-high' | 'return-low' | 'newest' | 'oldest';
@@ -155,21 +25,126 @@ export const PropertiesPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<SortOption>('featured');
   const [priceRange, setPriceRange] = useState([0, 100000000]);
   const [showFilters, setShowFilters] = useState(false);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showInvestmentFlow, setShowInvestmentFlow] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
 
   const propertyTypes = ['all', 'Residential', 'Commercial', 'Hospitality'];
-  const statusOptions = ['all', 'funding', 'funded', 'upcoming'];
+  const statusOptions = ['all', 'funding', 'funded', 'upcoming', 'approved'];
+
+  // Load properties from API
+  useEffect(() => {
+    loadProperties();
+  }, [selectedStatus]);
+
+  const loadProperties = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Map frontend status to backend status
+      const statusMap: Record<string, string> = {
+        'funding': 'funding',
+        'funded': 'funded',
+        'upcoming': 'draft',
+        'approved': 'approved'
+      };
+
+      const filters: any = {
+        limit: 100, // Get more properties
+        sort: 'created_at',
+        order: 'desc'
+      };
+
+      // Add status filter if not 'all'
+      if (selectedStatus !== 'all' && statusMap[selectedStatus]) {
+        filters.status = statusMap[selectedStatus];
+      }
+
+      const result = await PropertyService.getProperties(filters);
+
+      if (result && result.properties) {
+        setProperties(result.properties);
+      } else {
+        setProperties([]);
+      }
+    } catch (err: any) {
+      console.error('Failed to load properties:', err);
+      setError(err.message || 'Failed to load properties');
+      setProperties([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Map Property to display format with additional search fields
+  const mapPropertyForSearch = (property: Property): Property & { searchableLocation: string; searchableType: string; displayStatus: string } => {
+    return {
+      ...property,
+      searchableLocation: `${property.city}, ${property.country}`,
+      searchableType: property.property_type || 'Residential',
+      displayStatus: property.status === 'approved' ? 'funding' : property.status
+    };
+  };
+
+  // Investment flow handlers
+  const handleInvestClick = (property: Property) => {
+    setSelectedProperty(property);
+    setShowInvestmentFlow(true);
+  };
+
+  const handleInvestmentComplete = (investment: InvestmentData) => {
+    console.log('Investment completed:', investment);
+    // In a real app, you would update the portfolio, send to backend, etc.
+    setShowInvestmentFlow(false);
+    setSelectedProperty(null);
+    // Optionally refresh the properties to show updated token counts
+    loadProperties();
+  };
+
+  const handleInvestmentClose = () => {
+    setShowInvestmentFlow(false);
+    setSelectedProperty(null);
+  };
+
+  // Convert Property to InvestmentProperty format
+  const convertToInvestmentProperty = (property: Property): InvestmentProperty => {
+    return {
+      id: parseInt(property.id.replace(/-/g, '').substring(0, 8), 16), // Convert UUID to number
+      title: property.title,
+      tokenPrice: property.token_price,
+      minInvestment: property.minimum_investment || property.token_price,
+      expectedReturn: property.expected_return || 10,
+      totalTokens: property.total_tokens,
+      soldTokens: property.tokens_sold,
+      investment: {
+        minInvestment: property.minimum_investment || property.token_price,
+        avgAnnualReturn: property.expected_return || 10,
+        dividendFrequency: "Quarterly",
+        managementFee: 2.5,
+        appreciationForecast: 8,
+        rentalYield: property.rental_yield || 6,
+        totalROI: (property.expected_return || 10) + (property.rental_yield || 6)
+      }
+    };
+  };
 
   // Filter and sort properties
   const filteredAndSortedProperties = useMemo(() => {
-    let filtered = mockProperties.filter(property => {
+    // Map properties with search helper fields
+    const searchableProperties = properties.map(mapPropertyForSearch);
+
+    let filtered = searchableProperties.filter(property => {
       const matchesSearch = property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           property.location.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesType = selectedType === 'all' || property.type === selectedType;
-      const matchesStatus = selectedStatus === 'all' || property.status === selectedStatus;
-      
-      // Convert price string to number for comparison
-      const priceValue = parseFloat(property.price.replace(/[$M,]/g, '')) * 1000000;
-      const matchesPrice = priceValue >= priceRange[0] && priceValue <= priceRange[1];
+                           property.searchableLocation.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesType = selectedType === 'all' || property.searchableType === selectedType;
+      const matchesStatus = selectedStatus === 'all' || property.displayStatus === selectedStatus ||
+                          (selectedStatus === 'approved' && property.displayStatus === 'funding');
+
+      // Price range filtering
+      const matchesPrice = property.total_value >= priceRange[0] && property.total_value <= priceRange[1];
 
       return matchesSearch && matchesType && matchesStatus && matchesPrice;
     });
@@ -182,31 +157,31 @@ export const PropertiesPage: React.FC = () => {
           if (!a.featured && b.featured) return 1;
           return 0;
         case 'price-low':
-          return parseFloat(a.price.replace(/[$M,]/g, '')) - parseFloat(b.price.replace(/[$M,]/g, ''));
+          return a.total_value - b.total_value;
         case 'price-high':
-          return parseFloat(b.price.replace(/[$M,]/g, '')) - parseFloat(a.price.replace(/[$M,]/g, ''));
+          return b.total_value - a.total_value;
         case 'return-high':
-          return parseFloat(b.expectedReturn.replace('%', '')) - parseFloat(a.expectedReturn.replace('%', ''));
+          return b.expected_return - a.expected_return;
         case 'return-low':
-          return parseFloat(a.expectedReturn.replace('%', '')) - parseFloat(b.expectedReturn.replace('%', ''));
+          return a.expected_return - b.expected_return;
         case 'newest':
-          return b.yearBuilt - a.yearBuilt;
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         case 'oldest':
-          return a.yearBuilt - b.yearBuilt;
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
         default:
           return 0;
       }
     });
 
     return filtered;
-  }, [searchQuery, selectedType, selectedStatus, priceRange, sortBy]);
+  }, [properties, searchQuery, selectedType, selectedStatus, priceRange, sortBy]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-gray-900 dark:to-slate-800">
       <Navbar />
-      
+
       {/* Hero Section */}
-      <section className="relative py-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
+      <section className="relative py-16 pt-32 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
         {/* Background Effects */}
         <div className="absolute inset-0">
           <motion.div
@@ -441,18 +416,47 @@ export const PropertiesPage: React.FC = () => {
       {/* Results Section */}
       <section className="py-8">
         <Container>
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {filteredAndSortedProperties.length} Properties Found
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                Showing results for "{searchQuery || 'all properties'}"
-              </p>
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center py-16">
+              <div className="text-center">
+                <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-emerald-600" />
+                <p className="text-gray-600 dark:text-gray-400">Loading properties...</p>
+              </div>
             </div>
-          </div>
+          )}
 
-          {viewMode === 'grid' && (
+          {/* Error State */}
+          {error && !loading && (
+            <div className="text-center py-16">
+              <div className="w-16 h-16 mx-auto bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
+                <Search className="w-8 h-8 text-red-600 dark:text-red-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                Failed to Load Properties
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
+              <Button variant="primary" onClick={loadProperties}>
+                Try Again
+              </Button>
+            </div>
+          )}
+
+          {/* Results */}
+          {!loading && !error && (
+            <>
+              <div className="mb-6 flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {filteredAndSortedProperties.length} Properties Found
+                  </h2>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Showing results for "{searchQuery || 'all properties'}"
+                  </p>
+                </div>
+              </div>
+
+              {viewMode === 'grid' && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -466,13 +470,13 @@ export const PropertiesPage: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
-                  <PropertyCard {...property} />
+                  <PropertyCard {...property} onInvestClick={() => handleInvestClick(property)} />
                 </motion.div>
               ))}
             </motion.div>
           )}
 
-          {viewMode === 'list' && (
+              {viewMode === 'list' && (
             <div className="space-y-4">
               {filteredAndSortedProperties.map((property, index) => (
                 <motion.div
@@ -484,7 +488,9 @@ export const PropertiesPage: React.FC = () => {
                 >
                   <div className="flex gap-6">
                     <img
-                      src={property.image}
+                      src={property.images && property.images.length > 0
+                        ? property.images[0]
+                        : "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"}
                       alt={property.title}
                       className="w-32 h-32 object-cover rounded-lg"
                     />
@@ -496,39 +502,52 @@ export const PropertiesPage: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                           <span className="font-medium text-gray-700 dark:text-gray-300">
-                            {property.rating}
+                            {property.average_rating || 4.5}
                           </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-3">
                         <MapPin className="w-4 h-4" />
-                        <span>{property.location}</span>
+                        <span>{property.city}, {property.country}</span>
                       </div>
                       <div className="grid grid-cols-4 gap-4 mb-4">
                         <div>
                           <div className="text-sm text-gray-500">Total Value</div>
-                          <div className="font-bold text-gray-900 dark:text-white">{property.price}</div>
+                          <div className="font-bold text-gray-900 dark:text-white">
+                            ${(property.total_value / 1000000).toFixed(2)}M
+                          </div>
                         </div>
                         <div>
                           <div className="text-sm text-gray-500">Token Price</div>
-                          <div className="font-bold text-emerald-600">{property.tokenPrice}</div>
+                          <div className="font-bold text-emerald-600">${property.token_price.toFixed(0)}</div>
                         </div>
                         <div>
                           <div className="text-sm text-gray-500">Expected Return</div>
-                          <div className="font-bold text-emerald-600">{property.expectedReturn}</div>
+                          <div className="font-bold text-emerald-600">{property.expected_return}%</div>
                         </div>
                         <div>
                           <div className="text-sm text-gray-500">Investors</div>
-                          <div className="font-bold text-gray-900 dark:text-white">{property.investors}</div>
+                          <div className="font-bold text-gray-900 dark:text-white">
+                            {property.investor_count || Math.floor(property.tokens_sold / 10)}
+                          </div>
                         </div>
                       </div>
                       <div className="flex justify-between items-center">
                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                          {Math.round((property.soldTokens / property.totalTokens) * 100)}% funded
+                          {Math.round((property.tokens_sold / property.total_tokens) * 100)}% funded
                         </div>
-                        <Button variant="primary" size="sm">
-                          View Details
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm">
+                            View Details
+                          </Button>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => handleInvestClick(property)}
+                          >
+                            Invest
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -537,7 +556,7 @@ export const PropertiesPage: React.FC = () => {
             </div>
           )}
 
-          {viewMode === 'map' && (
+              {viewMode === 'map' && (
             <div className="bg-white dark:bg-gray-900 rounded-xl p-8 border border-gray-200 dark:border-gray-800">
               <div className="text-center">
                 <Map className="w-16 h-16 mx-auto text-gray-400 mb-4" />
@@ -551,8 +570,8 @@ export const PropertiesPage: React.FC = () => {
             </div>
           )}
 
-          {/* Empty State */}
-          {filteredAndSortedProperties.length === 0 && (
+              {/* Empty State */}
+              {filteredAndSortedProperties.length === 0 && (
             <div className="text-center py-16">
               <div className="w-16 h-16 mx-auto bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
                 <Search className="w-8 h-8 text-gray-400" />
@@ -575,10 +594,22 @@ export const PropertiesPage: React.FC = () => {
               </Button>
             </div>
           )}
+            </>
+          )}
         </Container>
       </section>
 
       <Footer />
+
+      {/* Investment Flow Modal */}
+      {selectedProperty && (
+        <InvestmentFlow
+          property={convertToInvestmentProperty(selectedProperty)}
+          isOpen={showInvestmentFlow}
+          onClose={handleInvestmentClose}
+          onComplete={handleInvestmentComplete}
+        />
+      )}
     </div>
   );
 };

@@ -1,10 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, TrendingUp, TrendingDown, Plus, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { Eye, EyeOff, TrendingUp, TrendingDown, Plus, ArrowUpRight, ArrowDownLeft, RefreshCw, AlertCircle } from 'lucide-react';
 import { usePayment } from '../../contexts/PaymentContext';
 import { formatCurrency, getCurrencyInfo } from '../../utils/currencyConverter';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
+import { usePortfolioAnalytics } from '../../hooks/usePortfolioAnalytics';
 
 interface WalletBalanceProps {
   className?: string;
@@ -15,9 +16,33 @@ interface WalletBalanceProps {
 export function WalletBalance({ className, showActions = true, compact = false }: WalletBalanceProps) {
   const { state, getTotalUSDBalance, openPaymentModal } = usePayment();
   const [showBalances, setShowBalances] = React.useState(true);
+  const [showPortfolioGrowth, setShowPortfolioGrowth] = React.useState(true);
+
+  // Get portfolio analytics data
+  const {
+    growth,
+    metrics,
+    isLoading: isAnalyticsLoading,
+    error: analyticsError,
+    refetchGrowth,
+    formatGrowthPercentage,
+    getGrowthTrend,
+    getGrowthPeriodLabel
+  } = usePortfolioAnalytics({
+    period: 'month',
+    refetchInterval: 5 * 60 * 1000 // 5 minutes
+  });
 
   const totalBalance = getTotalUSDBalance();
   const hasBalances = state.balances.length > 0;
+
+  // Calculate display values
+  const portfolioValue = metrics?.current_value || totalBalance;
+  const growthPercentage = growth?.return_percentage || 0;
+  const growthAmount = growth?.return_amount || 0;
+  const isPositiveGrowth = growthPercentage >= 0;
+  const growthTrend = getGrowthTrend(growthPercentage);
+  const periodLabel = getGrowthPeriodLabel(growth?.period || 'month');
 
   return (
     <div className={className}>
@@ -40,14 +65,73 @@ export function WalletBalance({ className, showActions = true, compact = false }
           <div className="mb-6">
             <div className="flex items-baseline gap-2">
               <span className="text-3xl font-bold text-gray-900">
-                {showBalances ? formatCurrency(totalBalance, 'USD') : '$••••••'}
+                {showBalances ? formatCurrency(portfolioValue, 'USD') : '$••••••'}
               </span>
               <span className="text-sm text-gray-500">USD</span>
+              {isAnalyticsLoading && (
+                <RefreshCw className="h-4 w-4 text-gray-400 animate-spin" />
+              )}
             </div>
+
+            {/* Portfolio Growth Display */}
             <div className="flex items-center gap-1 mt-2">
-              <TrendingUp className="h-4 w-4 text-emerald-500" />
-              <span className="text-sm text-emerald-600 font-medium">+12.5%</span>
-              <span className="text-sm text-gray-500">this month</span>
+              {analyticsError ? (
+                <>
+                  <AlertCircle className="h-4 w-4 text-orange-500" />
+                  <span className="text-sm text-orange-600 font-medium">Unable to load growth data</span>
+                  <button
+                    onClick={refetchGrowth}
+                    className="text-sm text-orange-600 hover:text-orange-700 underline ml-1"
+                  >
+                    Retry
+                  </button>
+                </>
+              ) : showPortfolioGrowth && growth ? (
+                <>
+                  {isPositiveGrowth ? (
+                    <TrendingUp className={`h-4 w-4 ${
+                      growthTrend === 'positive' ? 'text-emerald-500' :
+                      growthTrend === 'neutral' ? 'text-gray-500' : 'text-red-500'
+                    }`} />
+                  ) : (
+                    <TrendingDown className="h-4 w-4 text-red-500" />
+                  )}
+                  <span className={`text-sm font-medium ${
+                    growthTrend === 'positive' ? 'text-emerald-600' :
+                    growthTrend === 'neutral' ? 'text-gray-600' : 'text-red-600'
+                  }`}>
+                    {showBalances ? formatGrowthPercentage(growthPercentage) : '••••'}
+                  </span>
+                  <span className="text-sm text-gray-500">{periodLabel}</span>
+                  {showBalances && growthAmount !== 0 && (
+                    <span className={`text-xs ml-1 ${
+                      isPositiveGrowth ? 'text-emerald-500' : 'text-red-500'
+                    }`}>
+                      ({isPositiveGrowth ? '+' : ''}{formatCurrency(growthAmount, 'USD')})
+                    </span>
+                  )}
+                </>
+              ) : (
+                <>
+                  <TrendingUp className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm text-gray-400 font-medium">Growth data loading...</span>
+                </>
+              )}
+
+              {/* Toggle growth visibility button */}
+              {!analyticsError && (
+                <button
+                  onClick={() => setShowPortfolioGrowth(!showPortfolioGrowth)}
+                  className="ml-2 p-1 hover:bg-emerald-100 rounded transition-colors"
+                  title={showPortfolioGrowth ? 'Hide growth data' : 'Show growth data'}
+                >
+                  {showPortfolioGrowth ? (
+                    <Eye className="h-3 w-3 text-emerald-600" />
+                  ) : (
+                    <EyeOff className="h-3 w-3 text-emerald-600" />
+                  )}
+                </button>
+              )}
             </div>
           </div>
 
@@ -67,6 +151,18 @@ export function WalletBalance({ className, showActions = true, compact = false }
                 <ArrowUpRight className="h-4 w-4" />
                 Withdraw
               </Button>
+              {analyticsError && (
+                <Button
+                  onClick={refetchGrowth}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1 border-orange-200 text-orange-700 hover:bg-orange-50"
+                  disabled={isAnalyticsLoading}
+                >
+                  <RefreshCw className={`h-3 w-3 ${isAnalyticsLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              )}
             </div>
           )}
         </Card>
@@ -189,12 +285,41 @@ export function WalletBalance({ className, showActions = true, compact = false }
         )}
       </div>
 
+      {/* Analytics Status Alert */}
+      {analyticsError && !compact && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mt-4"
+        >
+          <Card className="p-4 bg-orange-50 border-orange-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-orange-500" />
+                <span className="text-sm font-medium text-orange-800">
+                  Portfolio analytics temporarily unavailable
+                </span>
+              </div>
+              <Button
+                onClick={refetchGrowth}
+                size="sm"
+                variant="outline"
+                className="text-xs border-orange-200 text-orange-700 hover:bg-orange-100"
+                disabled={isAnalyticsLoading}
+              >
+                {isAnalyticsLoading ? 'Retrying...' : 'Retry'}
+              </Button>
+            </div>
+          </Card>
+        </motion.div>
+      )}
+
       {/* Pending Transactions Alert */}
       {state.pendingTransactions.length > 0 && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="mt-4"
+          className={analyticsError && !compact ? "mt-2" : "mt-4"}
         >
           <Card className="p-4 bg-yellow-50 border-yellow-200">
             <div className="flex items-center gap-2">

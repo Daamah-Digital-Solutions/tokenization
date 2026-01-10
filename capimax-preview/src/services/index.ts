@@ -43,6 +43,14 @@ export type {
   InvestmentTransaction
 } from './investment/InvestmentService';
 
+// Transaction Services
+export { TransactionService } from './transaction/TransactionService';
+export type {
+  EnhancedTransaction,
+  TransactionFilters,
+  TransactionListResponse
+} from './transaction/TransactionService';
+
 // Payment Processing
 export { PaymentService } from './payment/PaymentService';
 export type {
@@ -54,13 +62,16 @@ export type {
 } from './payment/PaymentService';
 
 // Broker Services
-export { BrokerService } from './broker/BrokerService';
+export { default as BrokerService } from './broker/BrokerService';
 export type {
   BrokerStats,
   ReferralClient,
   CommissionTier,
   ReferralLink,
-  MarketingMaterial
+  MarketingMaterial,
+  BrokerApplication,
+  BrokerDashboard,
+  CommissionSummary
 } from './broker/BrokerService';
 
 // Construction Management
@@ -109,6 +120,16 @@ export type {
   SystemAlert,
   SystemAnalytics
 } from './admin/AdminService';
+
+// Analytics Services
+export { PortfolioAnalyticsService } from './analytics/PortfolioAnalyticsService';
+export type {
+  PortfolioGrowthData,
+  PortfolioPerformanceData,
+  PortfolioMetrics,
+  PortfolioTrend,
+  PortfolioAnalytics
+} from './analytics/PortfolioAnalyticsService';
 
 // WebSocket & Real-time
 export { webSocketService, WebSocketService, NotificationService } from './websocket/WebSocketService';

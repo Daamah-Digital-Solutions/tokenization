@@ -42,6 +42,7 @@ import { TransactionManager } from './TransactionManager';
 import { CollaborativeInvestments } from './CollaborativeInvestments';
 import { useUser } from '../../../contexts/AuthContext';
 import { apiClient } from '../../../services/api/ApiClient';
+import { PropertyService } from '../../../services/property/PropertyService';
 import { cn } from '../../../utils/cn';
 
 interface InvestorControlPanelProps {
@@ -498,7 +499,38 @@ const OverviewContent: React.FC<{
 
 
 // Marketplace Content Component
-const MarketplaceContent: React.FC = () => (
+const MarketplaceContent: React.FC = () => {
+  // Fetch properties from API
+  const { data: propertiesData, isLoading: isLoadingProperties, error: propertiesError } = useQuery({
+    queryKey: ['properties'],
+    queryFn: () => PropertyService.getProperties({ status: 'approved' }),
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  if (isLoadingProperties) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (propertiesError) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col items-center justify-center h-64 text-center">
+          <AlertTriangle className="w-12 h-12 text-amber-500 mb-4" />
+          <Text variant="h4" weight="semibold" className="mb-2">Unable to load properties</Text>
+          <Text variant="body" color="muted">Please try refreshing the page</Text>
+        </div>
+      </div>
+    );
+  }
+
+  return (
   <div className="space-y-6">
     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
       <div>
@@ -555,51 +587,27 @@ const MarketplaceContent: React.FC = () => (
 
     {/* Property Listings */}
     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-      {/* Mock property data - replace with real API data */}
-      {[
-        {
-          id: '1',
-          title: 'Downtown Office Complex',
-          location: 'New York, NY',
-          price: 850000,
-          tokenPrice: 100,
-          totalTokens: 8500,
-          availableTokens: 3200,
-          roi: 9.5,
-          image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400'
-        },
-        {
-          id: '2',
-          title: 'Luxury Apartment Building',
-          location: 'Los Angeles, CA',
-          price: 1200000,
-          tokenPrice: 150,
-          totalTokens: 8000,
-          availableTokens: 5400,
-          roi: 7.8,
-          image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400'
-        },
-        {
-          id: '3',
-          title: 'Shopping Center',
-          location: 'Miami, FL',
-          price: 2300000,
-          tokenPrice: 200,
-          totalTokens: 11500,
-          availableTokens: 8900,
-          roi: 11.2,
-          image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400'
-        }
-      ].map((property) => (
+      {(propertiesData?.properties || []).map((property) => (
         <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow">
           <div className="aspect-video bg-slate-200 dark:bg-slate-700 relative">
+            {property.images && property.images.length > 0 ? (
+              <img
+                src={property.images[0].image}
+                alt={property.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Building className="w-16 h-16 text-slate-400" />
+              </div>
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
             <div className="absolute bottom-4 left-4 text-white">
               <Text variant="body" weight="semibold">
                 {property.title}
               </Text>
               <Text variant="caption">
-                {property.location}
+                {property.city}, {property.state || property.country}
               </Text>
             </div>
           </div>
@@ -609,13 +617,13 @@ const MarketplaceContent: React.FC = () => (
               <div>
                 <Text variant="caption" color="muted">Property Value</Text>
                 <Text variant="body" weight="semibold">
-                  ${property.price.toLocaleString()}
+                  ${property.total_value.toLocaleString()}
                 </Text>
               </div>
               <div>
                 <Text variant="caption" color="muted">Token Price</Text>
                 <Text variant="body" weight="semibold">
-                  ${property.tokenPrice}
+                  ${property.token_price}
                 </Text>
               </div>
             </div>
@@ -624,13 +632,13 @@ const MarketplaceContent: React.FC = () => (
               <div className="flex justify-between items-center">
                 <Text variant="caption" color="muted">Available Tokens</Text>
                 <Text variant="caption" weight="semibold">
-                  {property.availableTokens.toLocaleString()} / {property.totalTokens.toLocaleString()}
+                  {(property.total_tokens - property.tokens_sold).toLocaleString()} / {property.total_tokens.toLocaleString()}
                 </Text>
               </div>
               <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
                 <div
                   className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${(property.availableTokens / property.totalTokens) * 100}%` }}
+                  style={{ width: `${((property.total_tokens - property.tokens_sold) / property.total_tokens) * 100}%` }}
                 />
               </div>
             </div>
@@ -639,7 +647,7 @@ const MarketplaceContent: React.FC = () => (
               <div className="flex items-center space-x-2">
                 <Text variant="caption" color="muted">Expected ROI</Text>
                 <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
-                  {property.roi}%
+                  {property.expected_return || 0}%
                 </div>
               </div>
             </div>
@@ -652,7 +660,8 @@ const MarketplaceContent: React.FC = () => (
       ))}
     </div>
   </div>
-);
+  );
+};
 
 // Wallet Content Component
 const WalletContent: React.FC<{

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Identity Verification Update - CapiMax</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8fafc;
+        }
+        .email-container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 30px 40px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header .subtitle {
+            margin: 8px 0 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            margin: 20px 0;
+            color: white;
+            background-color: {{ status_color }};
+        }
+        .status-section {
+            background-color: #f8fafc;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 24px 0;
+            text-align: center;
+        }
+        .status-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: block;
+        }
+        .message-box {
+            background-color: #f1f5f9;
+            border-left: 4px solid {{ status_color }};
+            padding: 16px 20px;
+            margin: 24px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .action-button {
+            display: inline-block;
+            background-color: #10b981;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 20px 0;
+            transition: background-color 0.3s ease;
+        }
+        .action-button:hover {
+            background-color: #059669;
+        }
+        .footer {
+            background-color: #f8fafc;
+            padding: 24px 40px;
+            text-align: center;
+            font-size: 14px;
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+        }
+        .footer a {
+            color: #10b981;
+            text-decoration: none;
+        }
+        .security-note {
+            background-color: #fef7ff;
+            border: 1px solid #e879f9;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 24px 0;
+        }
+        .security-note h4 {
+            margin: 0 0 8px 0;
+            color: #86198f;
+            font-size: 14px;
+        }
+        .security-note p {
+            margin: 0;
+            font-size: 13px;
+            color: #a21caf;
+        }
+        .next-steps {
+            background-color: #f0fdf4;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 24px 0;
+        }
+        .next-steps h4 {
+            margin: 0 0 12px 0;
+            color: #166534;
+            font-size: 16px;
+        }
+        .next-steps ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #15803d;
+        }
+        .next-steps li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>🏠 CapiMax</h1>
+            <p class="subtitle">Real Estate Tokenization Platform</p>
+        </div>
+
+        <div class="content">
+            <h2>Hello {{ user.first_name }},</h2>
+
+            <div class="status-section">
+                {% if status == 'approved' %}
+                    <div class="status-icon">🎉</div>
+                    <h3>Identity Verification Complete!</h3>
+                {% elif status == 'rejected' %}
+                    <div class="status-icon">📋</div>
+                    <h3>Additional Information Required</h3>
+                {% elif status == 'pending_review' %}
+                    <div class="status-icon">🔍</div>
+                    <h3>Verification Under Review</h3>
+                {% else %}
+                    <div class="status-icon">📋</div>
+                    <h3>Verification Status Update</h3>
+                {% endif %}
+
+                <div class="status-badge" style="background-color: {{ status_color }};">
+                    {{ status_display }}
+                </div>
+            </div>
+
+            <div class="message-box">
+                <p>{{ message }}</p>
+            </div>
+
+            {% if status == 'approved' %}
+                <div class="next-steps">
+                    <h4>🎯 What You Can Do Now:</h4>
+                    <ul>
+                        <li>Deposit funds to start investing in tokenized real estate</li>
+                        <li>Browse available property investment opportunities</li>
+                        <li>Access your full investor dashboard</li>
+                        <li>Participate in property voting and governance</li>
+                    </ul>
+                </div>
+            {% elif status == 'rejected' %}
+                <div class="security-note">
+                    <h4>📝 Resubmission Guidelines:</h4>
+                    <p>Please ensure all documents are clear, legible, and contain all required information. Our compliance team is available to help if you have questions.</p>
+                </div>
+            {% elif status == 'pending_review' %}
+                <div class="security-note">
+                    <h4>⏱️ Review Timeline:</h4>
+                    <p>Our compliance team typically completes reviews within 24-48 hours. You'll receive another email once the review is complete.</p>
+                </div>
+            {% endif %}
+
+            <div style="text-align: center; margin: 32px 0;">
+                <a href="{{ action_url }}" class="action-button">
+                    {{ action_text }}
+                </a>
+            </div>
+
+            <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                <p style="margin: 0; font-size: 14px; color: #64748b;">
+                    <strong>Need Help?</strong><br>
+                    If you have any questions about your identity verification, please don't hesitate to contact our support team. We're here to help!
+                </p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>
+                <strong>CapiMax Real Estate Tokenization Platform</strong><br>
+                Making real estate investment accessible to everyone
+            </p>
+            <p style="margin-top: 16px;">
+                <a href="{{ dashboard_url }}">Dashboard</a> |
+                <a href="mailto:support@capimax.com">Support</a> |
+                <a href="#">Privacy Policy</a>
+            </p>
+            <p style="margin-top: 12px; font-size: 12px;">
+                This email was sent on {{ update_time }}<br>
+                © {{ current_year }} CapiMax. All rights reserved.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

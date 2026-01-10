@@ -11,9 +11,9 @@ import os
 from django.core.asgi import get_asgi_application
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.security.websocket import AllowedHostsOriginValidator
-import websockets.routing
-from websockets.middleware import (
-    JWTAuthMiddleware, WebSocketSecurityMiddleware, 
+import ws_app.routing
+from ws_app.middleware import (
+    JWTAuthMiddleware, WebSocketSecurityMiddleware,
     WebSocketRateLimitMiddleware, WebSocketLoggingMiddleware
 )
 
@@ -31,7 +31,7 @@ application = ProtocolTypeRouter({
                 WebSocketLoggingMiddleware(
                     JWTAuthMiddleware(
                         URLRouter(
-                            websockets.routing.websocket_urlpatterns
+                            ws_app.routing.websocket_urlpatterns
                         )
                     )
                 )

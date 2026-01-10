@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to CapiMax Investment - Verify Your Email</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .greeting {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            font-size: 16px;
+            line-height: 1.7;
+            margin-bottom: 30px;
+            color: #555;
+        }
+
+        .verification-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .verification-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 15px;
+        }
+
+        .verification-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            color: white;
+            text-decoration: none;
+            padding: 14px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s ease;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .verification-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+        }
+
+        .verification-code {
+            background-color: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .code {
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            color: #1e40af;
+            font-family: 'Courier New', monospace;
+        }
+
+        .features {
+            margin: 30px 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 12px;
+            background-color: #f8fafc;
+            border-radius: 6px;
+        }
+
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            background-color: #2563eb;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .feature-icon::after {
+            content: "✓";
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .feature-text {
+            font-size: 14px;
+            color: #555;
+        }
+
+        .footer {
+            background-color: #f8fafc;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .footer-text {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .contact-info {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .warning {
+            background-color: #fef3cd;
+            border: 1px solid #fbbf24;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .warning-text {
+            font-size: 14px;
+            color: #92400e;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 0;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .logo {
+                font-size: 28px;
+            }
+
+            .greeting {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">CapiMax</div>
+            <div class="subtitle">Real Estate Investment Platform</div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <div class="greeting">Welcome to CapiMax, {{ user.first_name }}!</div>
+
+            <div class="message">
+                Thank you for joining CapiMax Investment, the premier platform for fractional real estate investing.
+                Your journey toward building a diversified real estate portfolio starts here.
+            </div>
+
+            <div class="verification-box">
+                <div class="verification-title">Verify Your Email Address</div>
+                <p style="margin-bottom: 20px; color: #555;">
+                    To complete your registration and secure your account, please enter the 6-digit verification code below in the verification page:
+                </p>
+
+                {% if verification_code %}
+                <div class="verification-code">
+                    <p style="margin-bottom: 15px; font-size: 16px; font-weight: 600; color: #1e40af;">Your Verification Code:</p>
+                    <div class="code">{{ verification_code }}</div>
+                    <p style="margin-top: 15px; font-size: 14px; color: #6b7280;">
+                        Enter this code in the verification page to activate your account.
+                    </p>
+                </div>
+                {% else %}
+                <p style="color: #ef4444; font-weight: 600;">
+                    Error: No verification code was generated. Please contact support.
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="features">
+                <h3 style="color: #1e40af; margin-bottom: 20px;">What you can do with CapiMax:</h3>
+                <div class="feature-item">
+                    <div class="feature-icon"></div>
+                    <div class="feature-text">Invest in premium real estate properties with as little as $1,000</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"></div>
+                    <div class="feature-text">Earn passive income through rental distributions</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"></div>
+                    <div class="feature-text">Access detailed property analytics and performance tracking</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"></div>
+                    <div class="feature-text">Trade property tokens on our secure marketplace</div>
+                </div>
+            </div>
+
+            <div class="warning">
+                <div class="warning-text">
+                    <strong>Security Notice:</strong> This verification code will expire in 15 minutes.
+                    If you did not create this account, please ignore this email or contact our support team.
+                </div>
+            </div>
+
+            <div class="message">
+                If you have any questions or need assistance, our support team is here to help.
+                Welcome to the future of real estate investing!
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-text">
+                <strong>CapiMax Investment</strong><br>
+                Making Real Estate Investment Accessible to Everyone
+            </div>
+            <div class="contact-info">
+                Email: support@capimaxinvestment.com | Website: www.capimaxinvestment.com<br>
+                This email was sent to {{ user.email }}. If you didn't request this, please contact support.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

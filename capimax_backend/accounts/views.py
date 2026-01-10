@@ -20,6 +20,9 @@ import qrcode
 import qrcode.image.svg
 import base64
 import io
+import logging
+
+logger = logging.getLogger(__name__)
 
 from .models import User, PasswordResetToken, EmailVerificationToken, UserRoleAssignment, UserRole
 from .serializers import (
@@ -35,39 +38,73 @@ from .serializers import (
 )
 from core.utils import create_success_response, create_error_response
 from core.permissions import IsOwnerOrReadOnly
+from core.services.email_service import EmailService, get_request_info
 
 
 class UserRegistrationView(generics.CreateAPIView):
     """
     User registration endpoint.
-    
+
     Creates new user account with email verification token
     and sends welcome email.
     """
-    
+
     queryset = User.objects.all()
     serializer_class = UserRegistrationSerializer
     permission_classes = [permissions.AllowAny]
+
     
     def create(self, request, *args, **kwargs):
-        """Create user and return success response with auth tokens."""
+        """Create user and return success response without auth tokens."""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        # Generate JWT tokens for immediate login
-        from rest_framework_simplejwt.tokens import RefreshToken
-        refresh = RefreshToken.for_user(user)
+        # Send welcome and verification email with 6-digit code
+        try:
+            # Generate 6-digit verification code
+            verification_code = EmailVerificationToken.generate_code()
 
+            # Create verification token with code and expiration (15 minutes)
+            verification_token, created = EmailVerificationToken.objects.get_or_create(
+                user=user,
+                defaults={
+                    'code': verification_code,
+                    'expires_at': timezone.now() + timedelta(minutes=15)
+                }
+            )
+            if not created:
+                # Update existing token with new code and expiration
+                verification_token.code = verification_code
+                verification_token.expires_at = timezone.now() + timedelta(minutes=15)
+                verification_token.verified = False
+                verification_token.save()
+
+            # Send welcome email with 6-digit code
+            EmailService.send_welcome_verification_email(
+                user=user,
+                verification_url='',  # No URL needed for code-based verification
+                verification_code=verification_code
+            )
+
+        except Exception as e:
+            # Log error but don't fail registration
+            logger.warning(f"Failed to send welcome email to {user.email}: {str(e)}")
+
+        # Do not provide JWT tokens - require email verification first
         return Response(
             create_success_response(
                 data={
-                    'user': UserProfileSerializer(user).data,
-                    'access': str(refresh.access_token),
-                    'refresh': str(refresh),
-                    'message': 'Registration successful. Please check your email to verify your account.'
+                    'user': {
+                        'email': user.email,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
+                        'is_verified': user.is_verified
+                    },
+                    'message': 'Registration successful. Please check your email to verify your account before logging in.',
+                    'debug_marker': 'CUSTOM_VIEW_EXECUTED_SUCCESSFULLY'
                 },
-                message="User registered successfully",
+                message="User registered successfully. Email verification required.",
                 status_code=status.HTTP_201_CREATED
             ),
             status=status.HTTP_201_CREATED
@@ -221,7 +258,7 @@ class PasswordResetRequestView(APIView):
     
     def post(self, request):
         """Request password reset."""
-        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer = PasswordResetRequestSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(
@@ -250,7 +287,7 @@ class PasswordResetConfirmView(APIView):
     
     def post(self, request):
         """Confirm password reset with token."""
-        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer = PasswordResetConfirmSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(
@@ -278,17 +315,25 @@ class EmailVerificationView(APIView):
     permission_classes = [permissions.AllowAny]
     
     def post(self, request):
-        """Verify email address."""
+        """Verify email address with 6-digit code and log user in."""
         serializer = EmailVerificationSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
+            result = serializer.save()
+            user = result['user']
+
             return Response(
                 create_success_response(
-                    data={'user': UserProfileSerializer(user).data},
-                    message="Email verified successfully"
+                    data={
+                        'user': UserProfileSerializer(user).data,
+                        'tokens': {
+                            'access': result['access'],
+                            'refresh': result['refresh'],
+                        }
+                    },
+                    message="Email verified successfully. You are now logged in."
                 )
             )
-        
+
         return Response(
             create_error_response(
                 message="Email verification failed",
@@ -319,19 +364,30 @@ class ResendEmailVerificationView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Invalidate existing tokens
-        EmailVerificationToken.objects.filter(user=user, verified=False).update(verified=True)
-        
-        # Create new token
-        verification_token = EmailVerificationToken.objects.create(
+        # Generate 6-digit verification code
+        verification_code = EmailVerificationToken.generate_code()
+
+        # Create or update verification token with code and expiration (15 minutes)
+        verification_token, created = EmailVerificationToken.objects.get_or_create(
             user=user,
-            expires_at=timezone.now() + timedelta(hours=24)
+            defaults={
+                'code': verification_code,
+                'expires_at': timezone.now() + timedelta(minutes=15)
+            }
         )
-        
-        # Send verification email
-        from .serializers import UserRegistrationSerializer
-        serializer = UserRegistrationSerializer()
-        serializer.send_verification_email(user)
+        if not created:
+            # Update existing token with new code and expiration
+            verification_token.code = verification_code
+            verification_token.expires_at = timezone.now() + timedelta(minutes=15)
+            verification_token.verified = False
+            verification_token.save()
+
+        # Send welcome and verification email with 6-digit code
+        EmailService.send_welcome_verification_email(
+            user=user,
+            verification_url='',  # No URL needed for code-based verification
+            verification_code=verification_code
+        )
         
         return Response(
             create_success_response(

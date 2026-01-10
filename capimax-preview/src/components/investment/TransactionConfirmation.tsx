@@ -22,11 +22,11 @@ import { Button } from '../ui/Button';
 import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
 import { InvestmentReceipt } from './InvestmentReceipt';
-import { Property, InvestmentData } from './InvestmentFlow';
+import type { InvestmentProperty, InvestmentData } from './types';
 import { cn } from '../../utils/cn';
 
 interface TransactionConfirmationProps {
-  property: Property;
+  property: InvestmentProperty;
   investmentData: InvestmentData;
   onClose: () => void;
   transactionId?: string;

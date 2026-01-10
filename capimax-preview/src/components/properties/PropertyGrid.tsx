@@ -80,7 +80,7 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
         funding_percentage: property.tokens_sold > 0 ? (property.tokens_sold / property.total_tokens) * 100 : 0,
         investor_count: 0, // This would come from a separate API call or be included in the property data
         featured: property.status === 'active' && property.tokens_sold < property.total_tokens * 0.5,
-        rating: 4.5 // Mock rating - would come from API
+        rating: property.average_rating || 4.5
       }));
 
       setProperties(page === 1 ? transformedProperties : [...properties, ...transformedProperties]);

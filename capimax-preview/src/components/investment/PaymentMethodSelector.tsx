@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  CreditCard, 
-  Wallet, 
+import {
+  CreditCard,
+  Wallet,
   Building2,
   Bitcoin,
   Coins,
@@ -11,50 +11,136 @@ import {
   CheckCircle,
   Info,
   AlertCircle,
-  Star
+  Star,
+  DollarSign
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
 import { Input } from '../design-system/forms/Input';
-import { InvestmentData } from './InvestmentFlow';
+import type { InvestmentData } from './types';
 import { cn } from '../../utils/cn';
-import { EnhancedPaymentMethodSelector } from '../payments';
 
 interface PaymentMethodSelectorProps {
   investmentData: InvestmentData;
   onUpdate: (updates: Partial<InvestmentData>) => void;
   errors: Record<string, string>;
   onPaymentComplete?: (paymentId: string, method: string) => void;
+  onAdvanceToProcessing?: () => void;
 }
+
+interface PaymentMethodOption {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ComponentType<any>;
+  fee: string;
+  processingTime: string;
+  recommended?: boolean;
+  popular?: boolean;
+}
+
+const PAYMENT_METHODS: PaymentMethodOption[] = [
+  {
+    id: 'wallet',
+    name: 'CapiMax Wallet Balance',
+    description: 'Use your existing CapiMax wallet balance for instant investment',
+    icon: Wallet,
+    fee: 'Free',
+    processingTime: 'Instant',
+    recommended: true,
+  },
+  // TODO: Re-enable other payment methods later
+  // {
+  //   id: 'crypto',
+  //   name: 'Cryptocurrency',
+  //   description: 'Pay with Bitcoin, Ethereum, or other cryptocurrencies',
+  //   icon: Bitcoin,
+  //   fee: '0.5%',
+  //   processingTime: '10-30 minutes',
+  // },
+  // {
+  //   id: 'fiat',
+  //   name: 'Credit/Debit Card',
+  //   description: 'Pay instantly with Visa, Mastercard, or American Express',
+  //   icon: CreditCard,
+  //   fee: '2.9% + $0.30',
+  //   processingTime: 'Instant',
+  // },
+  // {
+  //   id: 'bank',
+  //   name: 'Bank Transfer',
+  //   description: 'Direct transfer from your bank account (ACH/Wire)',
+  //   icon: Building2,
+  //   fee: 'Free (ACH)',
+  //   processingTime: '1-3 business days',
+  // },
+];
 
 export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   investmentData,
   onUpdate,
   errors,
-  onPaymentComplete
+  onPaymentComplete,
+  onAdvanceToProcessing
 }) => {
-  const handlePaymentSuccess = (paymentId: string, method: string) => {
-    // Update investment data with payment information
-    onUpdate({ 
-      paymentId,
-      paymentMethod: method,
-      paymentStatus: 'completed'
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(
+    investmentData.paymentMethod || null
+  );
+
+  const handleMethodSelect = (methodId: string) => {
+    console.log('Payment method selected:', methodId);
+    setSelectedMethod(methodId);
+
+    // Update the investment data with the selected payment method
+    onUpdate({
+      paymentMethod: methodId as 'crypto' | 'fiat' | 'wallet',
     });
-    
-    // Call the completion callback if provided
-    if (onPaymentComplete) {
-      onPaymentComplete(paymentId, method);
-    }
   };
 
-  const handlePaymentCancel = () => {
-    // Reset payment method selection
-    onUpdate({ 
-      paymentMethod: undefined,
-      paymentId: undefined,
-      paymentStatus: undefined
+  const handleConfirmPayment = () => {
+    console.log('🔥 HANDLE CONFIRM PAYMENT CALLED!');
+    console.log('🔥 selectedMethod:', selectedMethod);
+    console.log('🔥 onAdvanceToProcessing available:', !!onAdvanceToProcessing);
+
+    if (!selectedMethod) {
+      console.log('❌ No selected method, returning');
+      onUpdate({ paymentMethod: null });
+      return;
+    }
+
+    // Simulate payment processing
+    const paymentId = `payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    console.log('✅ Generated paymentId:', paymentId);
+
+    // Update investment data with payment completion
+    onUpdate({
+      paymentMethod: selectedMethod as 'crypto' | 'fiat' | 'wallet',
+      paymentId: paymentId,
+      paymentStatus: 'pending'
     });
+
+    console.log('✅ Updated investment data');
+
+    // Call the completion callback if provided
+    if (onPaymentComplete) {
+      console.log('✅ Calling onPaymentComplete callback');
+      onPaymentComplete(paymentId, selectedMethod);
+    } else {
+      console.log('⚠️ onPaymentComplete callback not provided');
+    }
+
+    // Advance to processing step
+    if (onAdvanceToProcessing) {
+      console.log('🚀 CALLING onAdvanceToProcessing - THIS SHOULD ADVANCE TO STEP 2!');
+      onAdvanceToProcessing();
+      console.log('🚀 onAdvanceToProcessing call completed');
+    } else {
+      console.log('❌ onAdvanceToProcessing callback not provided!');
+    }
+
+    console.log('🔥 HANDLE CONFIRM PAYMENT COMPLETED!');
   };
 
   // If no amount is specified, show placeholder
@@ -72,14 +158,136 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
     );
   }
 
+  const calculateFee = (method: PaymentMethodOption): number => {
+    switch (method.id) {
+      case 'crypto':
+        return investmentData.amount * 0.005; // 0.5%
+      case 'fiat':
+        return investmentData.amount * 0.029 + 0.30; // 2.9% + $0.30
+      case 'bank':
+        return 0; // Free
+      case 'wallet':
+        return 0; // Free
+      default:
+        return 0;
+    }
+  };
+
   return (
     <div className="space-y-6">
-      {/* Enhanced Payment Method Selector */}
-      <EnhancedPaymentMethodSelector
-        amount={investmentData.amount}
-        onPaymentComplete={handlePaymentSuccess}
-        onCancel={handlePaymentCancel}
-      />
+      {/* Header */}
+      <div className="text-center">
+        <Text variant="h3" className="text-gray-900 mb-2">
+          Choose Payment Method
+        </Text>
+        <Text variant="body" className="text-gray-600 mb-4">
+          Pay ${investmentData.amount.toLocaleString()} for your real estate investment
+        </Text>
+      </div>
+
+      {/* Payment Methods Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {PAYMENT_METHODS.map((method) => {
+          const fee = calculateFee(method);
+          const totalAmount = investmentData.amount + fee;
+
+          return (
+            <motion.div
+              key={method.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Card
+                className={cn(
+                  "p-6 cursor-pointer transition-all border-2",
+                  selectedMethod === method.id
+                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/10"
+                    : "border-gray-200 hover:border-emerald-300 hover:shadow-md"
+                )}
+                onClick={() => handleMethodSelect(method.id)}
+              >
+                {/* Badges */}
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex gap-2">
+                    {method.recommended && (
+                      <span className="px-2 py-1 text-xs bg-emerald-100 text-emerald-800 rounded-full font-medium">
+                        Recommended
+                      </span>
+                    )}
+                    {method.popular && (
+                      <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full font-medium">
+                        Popular
+                      </span>
+                    )}
+                  </div>
+
+                  {selectedMethod === method.id && (
+                    <CheckCircle className="w-6 h-6 text-emerald-600" />
+                  )}
+                </div>
+
+                {/* Icon and Title */}
+                <div className="flex items-center gap-4 mb-4">
+                  <div className={cn(
+                    "w-12 h-12 rounded-lg flex items-center justify-center",
+                    method.id === 'crypto' ? 'bg-orange-100' :
+                    method.id === 'fiat' ? 'bg-blue-100' :
+                    method.id === 'bank' ? 'bg-emerald-100' :
+                    'bg-purple-100'
+                  )}>
+                    <method.icon className={cn(
+                      "h-6 w-6",
+                      method.id === 'crypto' ? 'text-orange-600' :
+                      method.id === 'fiat' ? 'text-blue-600' :
+                      method.id === 'bank' ? 'text-emerald-600' :
+                      'text-purple-600'
+                    )} />
+                  </div>
+
+                  <div>
+                    <Text variant="bodyLarge" weight="semibold" className="text-gray-900">
+                      {method.name}
+                    </Text>
+                    <Text variant="bodySmall" className="text-gray-600">
+                      {method.description}
+                    </Text>
+                  </div>
+                </div>
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+                  <div>
+                    <div className="flex items-center gap-1 text-gray-600 mb-1">
+                      <DollarSign className="h-3 w-3" />
+                      <span>Fee</span>
+                    </div>
+                    <div className="font-medium">${fee.toFixed(2)}</div>
+                    <div className="text-xs text-gray-500">{method.fee}</div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-1 text-gray-600 mb-1">
+                      <Clock className="h-3 w-3" />
+                      <span>Processing</span>
+                    </div>
+                    <div className="font-medium text-sm">{method.processingTime}</div>
+                  </div>
+                </div>
+
+                {/* Total Amount */}
+                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Total:</span>
+                  <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                    ${totalAmount.toLocaleString()}
+                  </span>
+                </div>
+              </Card>
+            </motion.div>
+          );
+        })}
+      </div>
 
       {/* Error Display */}
       {errors.paymentMethod && (
@@ -91,33 +299,49 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
         </Card>
       )}
 
-      {/* Success State */}
-      {investmentData.paymentStatus === 'completed' && investmentData.paymentId && (
+      {/* Selected Method Info */}
+      {selectedMethod && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
         >
           <Card className="p-6 bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1">
-                <Text variant="bodyLarge" weight="semibold" className="text-emerald-800 dark:text-emerald-200 mb-1">
-                  Payment Successful!
+            <div className="flex items-center gap-4 mb-4">
+              <CheckCircle className="w-8 h-8 text-emerald-600" />
+              <div>
+                <Text variant="bodyLarge" weight="semibold" className="text-emerald-800 dark:text-emerald-200">
+                  Payment Method Selected
                 </Text>
-                <Text variant="bodySmall" className="text-emerald-700 dark:text-emerald-300 mb-3">
-                  Your payment of ${investmentData.amount?.toLocaleString()} has been processed successfully.
+                <Text variant="bodySmall" className="text-emerald-700 dark:text-emerald-300">
+                  {PAYMENT_METHODS.find(m => m.id === selectedMethod)?.name} is ready for processing
                 </Text>
-                <div className="text-xs text-emerald-600 dark:text-emerald-400">
-                  Payment ID: {investmentData.paymentId}
-                </div>
               </div>
             </div>
+
+            <Button
+              onClick={handleConfirmPayment}
+              className="w-full bg-emerald-600 hover:bg-emerald-700"
+            >
+              Proceed with {PAYMENT_METHODS.find(m => m.id === selectedMethod)?.name}
+            </Button>
           </Card>
         </motion.div>
       )}
+
+      {/* Security Notice */}
+      <Card className="p-4 bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800">
+        <div className="flex items-start gap-3">
+          <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
+          <div className="text-sm text-blue-800 dark:text-blue-200">
+            <div className="font-medium mb-1">Secure Payment Processing</div>
+            <div>
+              All payments are processed through encrypted channels with industry-standard security measures.
+              Your financial information is never stored on our servers.
+            </div>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 };

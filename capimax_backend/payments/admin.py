@@ -13,6 +13,7 @@ from django.utils import timezone
 from datetime import timedelta
 
 from .models import (
+    NOWPaymentsTransaction,
     Payment, UserPaymentMethod, WalletBalance, WalletTransaction,
     CryptoPayment, Refund, RecurringPayment
 )
@@ -383,3 +384,105 @@ class RecurringPaymentAdmin(admin.ModelAdmin):
 
 # Add inline to Payment admin
 PaymentAdmin.inlines = [CryptoPaymentInline]
+
+
+@admin.register(NOWPaymentsTransaction)
+class NOWPaymentsTransactionAdmin(admin.ModelAdmin):
+    """Admin interface for NOWPaymentsTransaction model."""
+    
+    list_display = [
+        'id', 'payment_id', 'nowpayments_payment_id', 'payment_status',
+        'pay_currency', 'pay_amount', 'actually_paid', 'is_completed',
+        'created_at', 'updated_at'
+    ]
+    list_filter = ['payment_status', 'pay_currency', 'price_currency', 'created_at']
+    search_fields = [
+        'id', 'nowpayments_payment_id', 'order_id', 'invoice_id',
+        'pay_address', 'transaction_hash', 'payment__id', 'payment__user__email'
+    ]
+    readonly_fields = [
+        'id', 'created_at', 'updated_at', 'is_completed',
+        'is_pending', 'is_failed'
+    ]
+    raw_id_fields = ['payment']
+    
+    fieldsets = (
+        ('NOWPayments Information', {
+            'fields': (
+                'id', 'payment', 'nowpayments_payment_id', 'order_id', 'payment_status'
+            )
+        }),
+        ('Payment Details', {
+            'fields': (
+                'pay_address', 'pay_amount', 'pay_currency', 'actually_paid',
+                'price_amount', 'price_currency'
+            )
+        }),
+        ('Invoice & URLs', {
+            'fields': (
+                'invoice_id', 'invoice_url', 'ipn_callback_url'
+            ),
+            'classes': ('collapse',)
+        }),
+        ('Transaction Details', {
+            'fields': (
+                'transaction_hash', 'network_fee', 'outcome_amount',
+                'outcome_currency', 'burning_percent'
+            ),
+            'classes': ('collapse',)
+        }),
+        ('Status Checks', {
+            'fields': (
+                'is_completed', 'is_pending', 'is_failed', 'expiration_estimate_date'
+            )
+        }),
+        ('Order Description', {
+            'fields': ('order_description',),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        })
+    )
+    
+    def payment_id(self, obj):
+        """Display payment ID with link."""
+        url = reverse('admin:payments_payment_change', args=[obj.payment.pk])
+        return format_html('<a href="{}">{}</a>', url, str(obj.payment.id)[:8])
+    payment_id.short_description = 'Payment'
+    
+    def get_queryset(self, request):
+        """Optimize queryset."""
+        return super().get_queryset(request).select_related('payment', 'payment__user')
+    
+    actions = ['refresh_payment_status', 'mark_as_failed']
+    
+    def refresh_payment_status(self, request, queryset):
+        """Refresh payment status from NOWPayments API."""
+        from .nowpayments_service import NOWPaymentsService
+        service = NOWPaymentsService()
+        updated = 0
+        
+        for tx in queryset:
+            try:
+                status_data = service.get_payment_status(tx.nowpayments_payment_id)
+                if status_data:
+                    tx.payment_status = status_data.get('payment_status', tx.payment_status)
+                    tx.save()
+                    updated += 1
+            except Exception as e:
+                continue
+        
+        self.message_user(request, f"{updated} NOWPayments transactions refreshed.")
+    refresh_payment_status.short_description = "Refresh payment status from NOWPayments"
+    
+    def mark_as_failed(self, request, queryset):
+        """Mark selected transactions as failed."""
+        updated = queryset.filter(payment_status__in=['waiting', 'confirming', 'confirmed']).update(
+            payment_status='failed'
+        )
+        self.message_user(request, f"{updated} transactions marked as failed.")
+    mark_as_failed.short_description = "Mark selected transactions as failed"
+
+
+# Update imports at the top of the file

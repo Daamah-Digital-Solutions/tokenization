@@ -279,6 +279,7 @@ export const DashboardPage: React.FC = () => {
 
   // Handle role switch from RoleSwitcher component
   const handleRoleSwitch = async (newRole: UserRole) => {
+    console.log('🔄 Role switch initiated:', { from: activeRole, to: newRole });
     setActiveRole(newRole);
     setCurrentView('overview'); // Reset to overview when switching roles
 
@@ -286,10 +287,12 @@ export const DashboardPage: React.FC = () => {
     // This ensures the dashboard stays in sync without page reload
     try {
       if (refreshUser) {
+        console.log('🔄 Refreshing user data after role switch...');
         await refreshUser();
+        console.log('✅ User data refreshed successfully');
       }
     } catch (error) {
-      console.warn('Could not refresh user data after role switch:', error);
+      console.warn('❌ Could not refresh user data after role switch:', error);
     }
   };
 
@@ -338,21 +341,28 @@ export const DashboardPage: React.FC = () => {
     joinedDate: new Date().toISOString().split('T')[0]
   };
 
-  const renderDashboardContent = () => {
+  const renderDashboardContent = React.useCallback(() => {
+    // Use activeRole for immediate updates, fallback to user.role for consistency
+    const effectiveRole = activeRole || user.role;
+    console.log('📊 Rendering dashboard content:', {
+      activeRole,
+      userRole: user.role,
+      effectiveRole,
+      currentView
+    });
+
     // For overview, use the new DynamicUserDashboard
     if (currentView === 'overview') {
-      return <DynamicUserDashboard userRole={user.role} />;
+      return <DynamicUserDashboard userRole={effectiveRole} />;
     }
 
     // For investor role, use the new InvestorControlPanel for all investor-specific views
-    if (user.role === 'investor') {
+    if (effectiveRole === 'investor') {
       return <InvestorControlPanel currentView={currentView} />;
     }
 
     // Render role-specific dashboard components for other roles
-    const role = user.role;
-    
-    switch (role) {
+    switch (effectiveRole) {
       case 'property_owner':
         return <PropertyOwnerDashboard currentView={currentView} />;
       case 'admin':
@@ -374,7 +384,7 @@ export const DashboardPage: React.FC = () => {
           </div>
         );
     }
-  };
+  }, [activeRole, user.role, currentView]);
 
   return (
     <DashboardLayout
@@ -383,7 +393,9 @@ export const DashboardPage: React.FC = () => {
       onViewChange={setCurrentView}
       onRoleSwitch={handleRoleSwitch}
     >
-      {renderDashboardContent()}
+      <div key={`dashboard-${activeRole}-${currentView}`}>
+        {renderDashboardContent()}
+      </div>
     </DashboardLayout>
   );
 };

@@ -7,6 +7,7 @@ and token ownership including installment payments and dividend distributions.
 
 from rest_framework import serializers
 from django.db import transaction
+from django.db.models import Sum
 from django.utils import timezone
 from decimal import Decimal
 from datetime import timedelta
@@ -18,6 +19,14 @@ from .models import (
 )
 from properties.models import Property
 from payments.models import Payment
+
+
+# Investment limits by KYC verification level
+INVESTMENT_LIMITS = {
+    'basic': {'daily': Decimal('1000'), 'monthly': Decimal('5000')},
+    'enhanced': {'daily': Decimal('5000'), 'monthly': Decimal('25000')},
+    'premium': {'daily': Decimal('25000'), 'monthly': Decimal('100000')},
+}
 
 
 class InvestmentCalculationSerializer(serializers.Serializer):
@@ -121,12 +130,12 @@ class InvestmentCreateSerializer(serializers.ModelSerializer):
         """Validate investment amount matches token calculation."""
         property_id = self.initial_data.get('property_id')
         token_amount = self.initial_data.get('token_amount')
-        
+
         if property_id and token_amount:
             try:
                 property_obj = Property.objects.get(id=property_id)
                 expected_amount = property_obj.token_price * token_amount
-                
+
                 # Allow small variance for rounding
                 if abs(value - expected_amount) > Decimal('0.01'):
                     raise serializers.ValidationError(
@@ -134,9 +143,61 @@ class InvestmentCreateSerializer(serializers.ModelSerializer):
                     )
             except Property.DoesNotExist:
                 pass
-        
+
         return value
-    
+
+    def validate(self, attrs):
+        """Validate investment against user's daily and monthly limits."""
+        user = self.context['request'].user
+        investment_amount = attrs.get('investment_amount', Decimal('0'))
+
+        # Get user's KYC level for limits
+        kyc_profile = getattr(user, 'kyc_profile', None)
+        kyc_level = kyc_profile.verification_level if kyc_profile else 'basic'
+
+        # Get limits for this KYC level
+        limits = INVESTMENT_LIMITS.get(kyc_level, INVESTMENT_LIMITS['basic'])
+        daily_limit = limits['daily']
+        monthly_limit = limits['monthly']
+
+        # Calculate current usage
+        today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        month_start = today_start.replace(day=1)
+
+        daily_used = Investment.objects.filter(
+            user=user,
+            created_at__gte=today_start,
+            status__in=['pending', 'processing', 'pending_mint', 'minting', 'completed']
+        ).aggregate(
+            total=Sum('investment_amount')
+        )['total'] or Decimal('0')
+
+        monthly_used = Investment.objects.filter(
+            user=user,
+            created_at__gte=month_start,
+            status__in=['pending', 'processing', 'pending_mint', 'minting', 'completed']
+        ).aggregate(
+            total=Sum('investment_amount')
+        )['total'] or Decimal('0')
+
+        # Check daily limit
+        daily_remaining = daily_limit - daily_used
+        if investment_amount > daily_remaining:
+            raise serializers.ValidationError({
+                'investment_amount': f"Exceeds daily investment limit. "
+                                     f"Remaining today: ${daily_remaining:.2f} (Limit: ${daily_limit:.2f})"
+            })
+
+        # Check monthly limit
+        monthly_remaining = monthly_limit - monthly_used
+        if investment_amount > monthly_remaining:
+            raise serializers.ValidationError({
+                'investment_amount': f"Exceeds monthly investment limit. "
+                                     f"Remaining this month: ${monthly_remaining:.2f} (Limit: ${monthly_limit:.2f})"
+            })
+
+        return attrs
+
     def create(self, validated_data):
         """Create investment with token reservation."""
         property_id = validated_data.pop('property_id')

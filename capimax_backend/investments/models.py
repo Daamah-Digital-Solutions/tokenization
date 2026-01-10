@@ -14,11 +14,16 @@ import uuid
 
 class InvestmentStatus(models.TextChoices):
     """Investment status choices throughout the lifecycle."""
-    PENDING = 'pending', 'Pending'
-    PROCESSING = 'processing', 'Processing'
-    COMPLETED = 'completed', 'Completed'
-    FAILED = 'failed', 'Failed'
-    CANCELLED = 'cancelled', 'Cancelled'
+    PENDING = 'pending', 'Pending'                      # Initial state, awaiting payment
+    PROCESSING = 'processing', 'Processing'              # Payment being processed
+    PAYMENT_CONFIRMED = 'payment_confirmed', 'Payment Confirmed'  # Payment success, pre-mint
+    PENDING_MINT = 'pending_mint', 'Pending Mint'        # Payment done, awaiting blockchain mint
+    MINTING = 'minting', 'Minting'                       # Mint transaction submitted
+    COMPLETED = 'completed', 'Completed'                 # Fully complete with tokens minted
+    MINT_FAILED = 'mint_failed', 'Mint Failed'           # Mint failed after retries
+    FAILED = 'failed', 'Failed'                          # Payment or other failure
+    CANCELLED = 'cancelled', 'Cancelled'                 # User cancelled
+    REFUNDED = 'refunded', 'Refunded'                    # Refund processed
 
 
 class Investment(models.Model):
@@ -90,7 +95,44 @@ class Investment(models.Model):
         default=0,
         help_text="Number of blockchain confirmation blocks"
     )
-    
+
+    # Mint tracking fields for deferred minting with retry
+    mint_retry_count = models.PositiveIntegerField(
+        default=0,
+        help_text="Number of mint retry attempts"
+    )
+
+    mint_last_attempt = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Timestamp of last mint attempt"
+    )
+
+    mint_error = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Last mint error message"
+    )
+
+    mint_scheduled_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When next mint attempt is scheduled"
+    )
+
+    tokens_minted = models.PositiveIntegerField(
+        default=0,
+        help_text="Actual number of tokens minted on-chain"
+    )
+
+    idempotency_key = models.CharField(
+        max_length=64,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text="Unique key to prevent double processing"
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     completed_at = models.DateTimeField(
@@ -106,6 +148,8 @@ class Investment(models.Model):
             models.Index(fields=['property_investment', 'status']),
             models.Index(fields=['created_at']),
             models.Index(fields=['status', 'created_at']),
+            models.Index(fields=['status', 'mint_scheduled_at']),  # For mint processor query
+            models.Index(fields=['idempotency_key']),
         ]
         constraints = [
             models.CheckConstraint(
@@ -122,7 +166,80 @@ class Investment(models.Model):
 
     def __str__(self):
         return f"Investment {self.id} - {self.user.email} - {self.token_amount} tokens in {self.property_investment.title}"
-    
+
+    # -------------------------------------------------------------------------
+    # Mint State Machine Methods
+    # -------------------------------------------------------------------------
+
+    MAX_MINT_RETRIES = 3
+    RETRY_DELAYS = [120, 240, 480]  # Seconds: 2min, 4min, 8min (exponential backoff)
+
+    def mark_payment_confirmed(self):
+        """Mark payment as confirmed, ready for minting."""
+        import hashlib
+        self.status = InvestmentStatus.PENDING_MINT
+        self.mint_scheduled_at = timezone.now()
+        # Generate idempotency key if not set
+        if not self.idempotency_key:
+            key_data = f"{self.id}-{self.user_id}-{self.property_investment_id}-{self.token_amount}"
+            self.idempotency_key = hashlib.sha256(key_data.encode()).hexdigest()[:64]
+        self.save(update_fields=['status', 'mint_scheduled_at', 'idempotency_key'])
+
+    def mark_minting_started(self):
+        """Mark that minting transaction has been submitted."""
+        self.status = InvestmentStatus.MINTING
+        self.mint_last_attempt = timezone.now()
+        self.save(update_fields=['status', 'mint_last_attempt'])
+
+    def mark_mint_success(self, tx_hash: str, tokens_minted: int):
+        """Mark minting as successful."""
+        self.status = InvestmentStatus.COMPLETED
+        self.transaction_hash = tx_hash
+        self.tokens_minted = tokens_minted
+        self.blockchain_confirmed = True
+        self.completed_at = timezone.now()
+        self.mint_error = None
+        self.save(update_fields=[
+            'status', 'transaction_hash', 'tokens_minted',
+            'blockchain_confirmed', 'completed_at', 'mint_error'
+        ])
+
+    def mark_mint_failed(self, error_message: str):
+        """Mark a mint attempt as failed, schedule retry or final failure."""
+        self.mint_retry_count += 1
+        self.mint_last_attempt = timezone.now()
+        self.mint_error = error_message
+
+        if self.mint_retry_count >= self.MAX_MINT_RETRIES:
+            # Max retries exceeded - mark as failed
+            self.status = InvestmentStatus.MINT_FAILED
+            self.mint_scheduled_at = None
+        else:
+            # Schedule next retry with exponential backoff
+            delay_seconds = self.RETRY_DELAYS[min(self.mint_retry_count - 1, len(self.RETRY_DELAYS) - 1)]
+            self.status = InvestmentStatus.PENDING_MINT
+            self.mint_scheduled_at = timezone.now() + timezone.timedelta(seconds=delay_seconds)
+
+        self.save(update_fields=[
+            'status', 'mint_retry_count', 'mint_last_attempt',
+            'mint_error', 'mint_scheduled_at'
+        ])
+
+    def can_retry_mint(self) -> bool:
+        """Check if mint can be retried."""
+        return (
+            self.status in [InvestmentStatus.PENDING_MINT, InvestmentStatus.MINT_FAILED] and
+            self.mint_retry_count < self.MAX_MINT_RETRIES
+        )
+
+    def is_ready_for_mint(self) -> bool:
+        """Check if investment is ready for mint processing."""
+        if self.status != InvestmentStatus.PENDING_MINT:
+            return False
+        if self.mint_scheduled_at and self.mint_scheduled_at > timezone.now():
+            return False
+        return True
+
     @property
     def ownership_percentage(self):
         """Calculate ownership percentage in the property."""
@@ -130,7 +247,7 @@ class Investment(models.Model):
             return Decimal('0.00')
         percentage = (Decimal(self.token_amount) / Decimal(self.property_investment.total_tokens)) * 100
         return percentage.quantize(Decimal('0.0001'))
-    
+
     @property
     def current_value(self):
         """Calculate current value based on latest property valuation."""
@@ -139,12 +256,12 @@ class Investment(models.Model):
             property_value = latest_valuation.current_value
         else:
             property_value = self.property_investment.total_value
-        
+
         ownership_fraction = Decimal(self.token_amount) / Decimal(self.property_investment.total_tokens)
         return (property_value * ownership_fraction).quantize(Decimal('0.01'))
-    
+
     def complete_investment(self):
-        """Mark investment as completed."""
+        """Mark investment as completed (legacy method, use mark_mint_success instead)."""
         self.status = InvestmentStatus.COMPLETED
         self.completed_at = timezone.now()
         self.save(update_fields=['status', 'completed_at'])

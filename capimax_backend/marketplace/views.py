@@ -198,18 +198,22 @@ class TradeOrderViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         """Filter queryset based on user permissions and request parameters."""
+        # Handle Swagger schema generation
+        if getattr(self, 'swagger_fake_view', False):
+            return self.queryset.none()
+
         queryset = super().get_queryset()
-        
+
         # Filter user's own orders if not staff
         if not self.request.user.is_staff:
             if self.request.query_params.get('all_orders', '').lower() != 'true':
                 queryset = queryset.filter(buyer=self.request.user)
-        
+
         # Filter by property if specified
         property_id = self.request.query_params.get('property_id')
         if property_id:
             queryset = queryset.filter(listing__property_id=property_id)
-        
+
         return queryset
     
     def perform_create(self, serializer):
@@ -297,19 +301,23 @@ class TradeTransactionViewSet(viewsets.ReadOnlyModelViewSet):
     
     def get_queryset(self):
         """Filter queryset based on user permissions."""
+        # Handle Swagger schema generation
+        if getattr(self, 'swagger_fake_view', False):
+            return self.queryset.none()
+
         queryset = super().get_queryset()
-        
+
         # Non-staff users can only see their own transactions
         if not self.request.user.is_staff:
             queryset = queryset.filter(
                 Q(buyer=self.request.user) | Q(seller=self.request.user)
             )
-        
+
         # Filter by property if specified
         property_id = self.request.query_params.get('property_id')
         if property_id:
             queryset = queryset.filter(property_id=property_id)
-        
+
         return queryset
 
 
@@ -335,15 +343,19 @@ class EscrowAccountViewSet(viewsets.ReadOnlyModelViewSet):
     
     def get_queryset(self):
         """Filter queryset based on user permissions."""
+        # Handle Swagger schema generation
+        if getattr(self, 'swagger_fake_view', False):
+            return self.queryset.none()
+
         queryset = super().get_queryset()
-        
+
         # Non-staff users can only see their own escrow accounts
         if not self.request.user.is_staff:
             queryset = queryset.filter(
                 Q(transaction__buyer=self.request.user) |
                 Q(transaction__seller=self.request.user)
             )
-        
+
         return queryset
     
     @action(detail=True, methods=['post'])

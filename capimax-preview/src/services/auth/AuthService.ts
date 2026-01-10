@@ -22,8 +22,8 @@ export interface PasswordResetRequest {
 
 export interface PasswordReset {
   token: string;
-  password: string;
-  confirmPassword: string;
+  new_password: string;
+  confirm_password: string;
 }
 
 export interface ChangePasswordRequest {
@@ -91,14 +91,17 @@ export class AuthService {
         token: response.access || response.token || '',
         refreshToken: response.refresh
       };
-      
-      // Store the auth token
-      console.log('🔐 Storing auth token:', authResponse.token ? 'Token present' : 'No token');
-      apiClient.setAuthToken(authResponse.token);
 
-      // Verify token was stored
-      const isAuthenticated = apiClient.isAuthenticated();
-      console.log('✅ Token stored, isAuthenticated:', isAuthenticated);
+      // For registration, the backend should NOT return tokens until email is verified
+      // Only store token if it exists (for backward compatibility)
+      if (authResponse.token) {
+        console.log('🔐 Registration returned token (unexpected) - storing it');
+        apiClient.setAuthToken(authResponse.token);
+      } else {
+        console.log('✅ Registration successful - no token returned (user must verify email)');
+        // Ensure no old tokens are stored
+        apiClient.clearAuthToken();
+      }
 
       return authResponse;
     } catch (error) {
@@ -248,7 +251,7 @@ export class AuthService {
    */
   static async requestPasswordReset(data: PasswordResetRequest): Promise<{ message: string }> {
     try {
-      return await apiClient.post('/auth/password/reset-request', data);
+      return await apiClient.post('/auth/password/reset/', data);
     } catch (error) {
       console.error('Password reset request failed:', error);
       throw error;
@@ -260,7 +263,7 @@ export class AuthService {
    */
   static async resetPassword(data: PasswordReset): Promise<{ message: string }> {
     try {
-      return await apiClient.post('/auth/password/reset', data);
+      return await apiClient.post('/auth/password/reset/confirm/', data);
     } catch (error) {
       console.error('Password reset failed:', error);
       throw error;
@@ -328,7 +331,7 @@ export class AuthService {
   }
 
   /**
-   * Verify email address
+   * Verify email address with link-based token (legacy method)
    */
   static async verifyEmail(token: string): Promise<{ message: string }> {
     try {
@@ -336,6 +339,72 @@ export class AuthService {
     } catch (error) {
       console.error('Email verification failed:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Verify email address with 6-digit code and auto-login
+   */
+  static async verifyEmailCode(email: string, code: string): Promise<AuthResponse> {
+    try {
+      console.log('🔍 Attempting email verification for:', email, 'with code:', code);
+      const response = await apiClient.post<any>('/auth/email/verify/', {
+        email,
+        code
+      });
+      console.log('📧 Email verification response:', response);
+
+      // ApiClient.post() returns response.data.data, so response is already the data object
+      // It contains { user, tokens }
+      const backendUser = response.user;
+
+      // Handle case where backend might not return user data properly
+      if (!backendUser) {
+        console.error('❌ No user data in response:', { response, backendUser });
+        throw new Error('Invalid response from server');
+      }
+
+      const mappedUser: User = {
+        id: backendUser.id,
+        email: backendUser.email,
+        first_name: backendUser.first_name || '',
+        last_name: backendUser.last_name || '',
+        role: backendUser.role,
+        phone: backendUser.phone || '',
+        country: backendUser.country || '',
+        date_of_birth: backendUser.date_of_birth || '',
+        address: backendUser.address || '',
+        city: backendUser.city || '',
+        state: backendUser.state || '',
+        postal_code: backendUser.postal_code || '',
+        kyc_status: backendUser.kyc_status || 'not_started',
+        is_verified: backendUser.is_verified || true, // Should be true after email verification
+        wallet_address: backendUser.wallet_address || '',
+        created_at: new Date(backendUser.created_at || Date.now()),
+        updated_at: new Date(backendUser.updated_at || Date.now())
+      };
+
+      const authResponse: AuthResponse = {
+        user: mappedUser,
+        token: response.tokens?.access || response.access || response.token || '',
+        refreshToken: response.tokens?.refresh || response.refresh
+      };
+
+      // Store the auth token for auto-login
+      console.log('🔐 Email verification successful - storing auth token');
+      apiClient.setAuthToken(authResponse.token);
+
+      return authResponse;
+    } catch (error) {
+      console.error('❌ Email code verification failed:', error);
+      console.error('❌ Error details:', JSON.stringify(error, null, 2));
+
+      // Re-throw ApiError with better structure preservation
+      if (error instanceof Error) {
+        throw error;
+      } else {
+        throw new Error('Email verification failed');
+      }
     }
   }
 

@@ -68,15 +68,95 @@ export interface MarketingMaterial {
   tags: string[];
 }
 
+export interface BrokerApplication {
+  id?: string;
+  full_name: string;
+  email: string;
+  phone_number: string;
+  company_name?: string;
+  license_number?: string;
+  years_of_experience: number;
+  specialization: string;
+  linkedin_url?: string;
+  portfolio_url?: string;
+  motivation: string;
+  target_market?: string;
+  expected_clients?: number;
+  status?: 'pending' | 'approved' | 'rejected';
+  submitted_at?: string;
+  reviewed_at?: string;
+  rejection_reason?: string;
+}
+
+export interface BrokerDashboard {
+  profile: {
+    id: string;
+    user: {
+      id: string;
+      email: string;
+      full_name: string;
+    };
+    license_number?: string;
+    years_of_experience: number;
+    specialization: string;
+    commission_rate: number;
+    status: 'active' | 'inactive' | 'suspended';
+    total_earned: number;
+    total_referrals: number;
+    successful_referrals: number;
+  };
+  total_earned: number;
+  pending_commission: number;
+  total_referrals: number;
+  successful_referrals: number;
+  conversion_rate: number;
+  recent_commissions: BrokerCommission[];
+  recent_referrals: any[];
+  monthly_performance: any[];
+}
+
+export interface CommissionSummary {
+  total_earned: number;
+  pending_amount: number;
+  paid_amount: number;
+  total_commissions: number;
+  this_month_earned: number;
+  last_month_earned: number;
+}
+
 export class BrokerService {
   /**
-   * Get broker dashboard statistics
+   * Submit broker application
    */
-  static async getBrokerStats(): Promise<BrokerStats> {
+  static async submitApplication(data: BrokerApplication): Promise<BrokerApplication> {
     try {
-      return await apiClient.get<BrokerStats>('/brokers/stats');
+      return await apiClient.post<BrokerApplication>('/broker/applications/submit/', data);
     } catch (error) {
-      console.error('Failed to get broker stats:', error);
+      console.error('Failed to submit broker application:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get application status
+   */
+  static async getApplicationStatus(applicationId: string): Promise<BrokerApplication> {
+    try {
+      return await apiClient.get<BrokerApplication>(`/broker/applications/status/${applicationId}/`);
+    } catch (error) {
+      console.error('Failed to get application status:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get broker dashboard data
+   */
+  static async getDashboard(): Promise<BrokerDashboard> {
+    try {
+      return await apiClient.get<BrokerDashboard>('/broker/dashboard/');
+    } catch (error) {
+      console.error('Failed to get broker dashboard:', error);
       throw error;
     }
   }
@@ -85,8 +165,8 @@ export class BrokerService {
    * Get broker commissions
    */
   static async getCommissions(
-    page = 1, 
-    limit = 20, 
+    page = 1,
+    limit = 20,
     status?: CommissionStatus
   ): Promise<{
     commissions: BrokerCommission[];
@@ -98,12 +178,33 @@ export class BrokerService {
     };
   }> {
     try {
-      const params: any = { page, limit };
+      const params: any = { page, page_size: limit };
       if (status) params.status = status;
 
-      return await apiClient.get('/brokers/commissions', params);
+      const response = await apiClient.get('/broker/commissions/', { params });
+      return {
+        commissions: response.results || response,
+        pagination: {
+          page,
+          limit,
+          total: response.count || 0,
+          pages: Math.ceil((response.count || 0) / limit),
+        },
+      };
     } catch (error) {
       console.error('Failed to get commissions:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get commission summary
+   */
+  static async getCommissionSummary(): Promise<CommissionSummary> {
+    try {
+      return await apiClient.get<CommissionSummary>('/broker/commissions/summary/');
+    } catch (error) {
+      console.error('Failed to get commission summary:', error);
       throw error;
     }
   }
@@ -125,10 +226,10 @@ export class BrokerService {
   }
 
   /**
-   * Get referred clients
+   * Get broker referrals
    */
-  static async getReferredClients(page = 1, limit = 20): Promise<{
-    clients: ReferralClient[];
+  static async getReferrals(page = 1, limit = 20, status?: string): Promise<{
+    referrals: any[];
     pagination: {
       page: number;
       limit: number;
@@ -137,41 +238,21 @@ export class BrokerService {
     };
   }> {
     try {
-      return await apiClient.get('/brokers/clients', { page, limit });
-    } catch (error) {
-      console.error('Failed to get referred clients:', error);
-      throw error;
-    }
-  }
+      const params: any = { page, page_size: limit };
+      if (status) params.status = status;
 
-  /**
-   * Get client details
-   */
-  static async getClient(clientId: string): Promise<ReferralClient & {
-    investments: Investment[];
-    total_commissions_earned: number;
-  }> {
-    try {
-      return await apiClient.get(`/brokers/clients/${clientId}`);
+      const response = await apiClient.get('/broker/referrals/', { params });
+      return {
+        referrals: response.results || response,
+        pagination: {
+          page,
+          limit,
+          total: response.count || 0,
+          pages: Math.ceil((response.count || 0) / limit),
+        },
+      };
     } catch (error) {
-      console.error('Failed to get client details:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get commission structure/tiers
-   */
-  static async getCommissionTiers(): Promise<{
-    current_tier: CommissionTier;
-    next_tier?: CommissionTier;
-    progress_to_next: number;
-    all_tiers: CommissionTier[];
-  }> {
-    try {
-      return await apiClient.get('/brokers/commission-structure');
-    } catch (error) {
-      console.error('Failed to get commission structure:', error);
+      console.error('Failed to get referrals:', error);
       throw error;
     }
   }
@@ -179,53 +260,18 @@ export class BrokerService {
   /**
    * Generate new referral link
    */
-  static async generateReferralLink(campaignName?: string): Promise<ReferralLink> {
+  static async generateReferralLink(propertyId?: string): Promise<{
+    referral_code: string;
+    referral_link: string;
+    expires_at: string;
+  }> {
     try {
       const data: any = {};
-      if (campaignName) data.campaign_name = campaignName;
+      if (propertyId) data.property_id = propertyId;
 
-      return await apiClient.post<ReferralLink>('/brokers/referral-links', data);
+      return await apiClient.post('/broker/referrals/generate/', data);
     } catch (error) {
       console.error('Failed to generate referral link:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get all referral links
-   */
-  static async getReferralLinks(): Promise<ReferralLink[]> {
-    try {
-      return await apiClient.get<ReferralLink[]>('/brokers/referral-links');
-    } catch (error) {
-      console.error('Failed to get referral links:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Update referral link
-   */
-  static async updateReferralLink(
-    linkId: string, 
-    updates: { campaign_name?: string; is_active?: boolean }
-  ): Promise<ReferralLink> {
-    try {
-      return await apiClient.put<ReferralLink>(`/brokers/referral-links/${linkId}`, updates);
-    } catch (error) {
-      console.error('Failed to update referral link:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Delete referral link
-   */
-  static async deleteReferralLink(linkId: string): Promise<{ message: string }> {
-    try {
-      return await apiClient.delete(`/brokers/referral-links/${linkId}`);
-    } catch (error) {
-      console.error('Failed to delete referral link:', error);
       throw error;
     }
   }
@@ -247,10 +293,19 @@ export class BrokerService {
     };
   }> {
     try {
-      const params: any = { page, limit };
-      if (type) params.type = type;
+      const params: any = { page, page_size: limit };
+      if (type) params.material_type = type;
 
-      return await apiClient.get('/brokers/marketing-materials', params);
+      const response = await apiClient.get('/broker/materials/', { params });
+      return {
+        materials: response.results || response,
+        pagination: {
+          page,
+          limit,
+          total: response.count || 0,
+          pages: Math.ceil((response.count || 0) / limit),
+        },
+      };
     } catch (error) {
       console.error('Failed to get marketing materials:', error);
       throw error;
@@ -260,12 +315,12 @@ export class BrokerService {
   /**
    * Download marketing material
    */
-  static async downloadMarketingMaterial(materialId: string): Promise<{
-    download_url: string;
-    expires_at: Date;
-  }> {
+  static async downloadMarketingMaterial(materialId: string): Promise<Blob> {
     try {
-      return await apiClient.post(`/brokers/marketing-materials/${materialId}/download`);
+      const response = await apiClient.get(`/broker/materials/${materialId}/download/`, {
+        responseType: 'blob',
+      });
+      return response;
     } catch (error) {
       console.error('Failed to download marketing material:', error);
       throw error;
@@ -273,140 +328,18 @@ export class BrokerService {
   }
 
   /**
-   * Get performance analytics
+   * Get performance metrics
    */
-  static async getPerformanceAnalytics(period = '30days'): Promise<{
-    referrals_over_time: Array<{
-      date: string;
-      new_referrals: number;
-      conversions: number;
-      commissions_earned: number;
-    }>;
-    top_properties: Array<{
-      property_id: string;
-      property_title: string;
-      referrals: number;
-      total_investment: number;
-      commission_earned: number;
-    }>;
-    conversion_funnel: {
-      clicks: number;
-      signups: number;
-      kyc_completed: number;
-      first_investment: number;
-      repeat_investors: number;
-    };
-    geographic_distribution: Array<{
-      country: string;
-      clients_count: number;
-      total_investment: number;
-    }>;
-  }> {
+  static async getPerformanceMetrics(startDate?: string, endDate?: string): Promise<any[]> {
     try {
-      return await apiClient.get('/brokers/analytics', { period });
-    } catch (error) {
-      console.error('Failed to get performance analytics:', error);
-      throw error;
-    }
-  }
+      const params: any = {};
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
 
-  /**
-   * Request commission payout
-   */
-  static async requestPayout(
-    commissionIds: string[],
-    paymentMethodId: string
-  ): Promise<{
-    payout_id: string;
-    total_amount: number;
-    processing_fee: number;
-    net_amount: number;
-    estimated_completion: Date;
-    message: string;
-  }> {
-    try {
-      return await apiClient.post('/brokers/payouts', {
-        commission_ids: commissionIds,
-        payment_method_id: paymentMethodId
-      });
+      const response = await apiClient.get('/broker/performance/', { params });
+      return response.results || response;
     } catch (error) {
-      console.error('Failed to request payout:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get payout history
-   */
-  static async getPayouts(page = 1, limit = 20): Promise<{
-    payouts: Array<{
-      id: string;
-      amount: number;
-      processing_fee: number;
-      net_amount: number;
-      currency: string;
-      status: 'pending' | 'processing' | 'completed' | 'failed';
-      payment_method: string;
-      requested_at: Date;
-      completed_at?: Date;
-      commission_count: number;
-    }>;
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      pages: number;
-    };
-  }> {
-    try {
-      return await apiClient.get('/brokers/payouts', { page, limit });
-    } catch (error) {
-      console.error('Failed to get payouts:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get broker leaderboard
-   */
-  static async getLeaderboard(period = 'monthly', limit = 10): Promise<Array<{
-    rank: number;
-    broker_name: string;
-    total_commissions: number;
-    referral_count: number;
-    conversion_rate: number;
-    tier: string;
-    is_current_user: boolean;
-  }>> {
-    try {
-      return await apiClient.get('/brokers/leaderboard', { period, limit });
-    } catch (error) {
-      console.error('Failed to get leaderboard:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Update broker profile
-   */
-  static async updateProfile(profileData: {
-    business_name?: string;
-    website?: string;
-    bio?: string;
-    specialization?: string[];
-    license_number?: string;
-    years_experience?: number;
-    languages?: string[];
-    social_links?: {
-      linkedin?: string;
-      twitter?: string;
-      facebook?: string;
-    };
-  }): Promise<{ message: string }> {
-    try {
-      return await apiClient.put('/brokers/profile', profileData);
-    } catch (error) {
-      console.error('Failed to update broker profile:', error);
+      console.error('Failed to get performance metrics:', error);
       throw error;
     }
   }
@@ -416,27 +349,48 @@ export class BrokerService {
    */
   static async getProfile(): Promise<{
     id: string;
-    user_id: string;
-    business_name?: string;
-    website?: string;
-    bio?: string;
-    specialization: string[];
-    license_number?: string;
-    years_experience?: number;
-    languages: string[];
-    social_links?: {
-      linkedin?: string;
-      twitter?: string;
-      facebook?: string;
+    user: {
+      id: string;
+      email: string;
+      full_name: string;
     };
-    verified: boolean;
-    created_at: Date;
-    updated_at: Date;
+    license_number?: string;
+    years_of_experience: number;
+    specialization: string;
+    company_name?: string;
+    linkedin_url?: string;
+    portfolio_url?: string;
+    commission_rate: number;
+    status: 'active' | 'inactive' | 'suspended';
+    total_earned: number;
+    total_referrals: number;
+    successful_referrals: number;
+    created_at: string;
+    updated_at: string;
   }> {
     try {
-      return await apiClient.get('/brokers/profile');
+      return await apiClient.get('/broker/profile/');
     } catch (error) {
       console.error('Failed to get broker profile:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update broker profile
+   */
+  static async updateProfile(profileData: Partial<{
+    license_number: string;
+    years_of_experience: number;
+    specialization: string;
+    company_name: string;
+    linkedin_url: string;
+    portfolio_url: string;
+  }>): Promise<{ message: string }> {
+    try {
+      return await apiClient.put('/broker/profile/', profileData);
+    } catch (error) {
+      console.error('Failed to update broker profile:', error);
       throw error;
     }
   }
@@ -452,72 +406,172 @@ export class BrokerService {
     try {
       const formData = new FormData();
       formData.append('license_document', documents.license_document);
-      
+
       if (documents.business_registration) {
         formData.append('business_registration', documents.business_registration);
       }
-      
+
       if (documents.insurance_certificate) {
         formData.append('insurance_certificate', documents.insurance_certificate);
       }
 
-      return await apiClient.uploadFile('/brokers/verification', formData);
+      return await apiClient.uploadFile('/broker/verification/submit/', formData);
     } catch (error) {
       console.error('Failed to submit verification documents:', error);
       throw error;
     }
   }
 
+  // Admin Methods
+
   /**
-   * Get verification status
+   * Admin: Get all broker applications
    */
-  static async getVerificationStatus(): Promise<{
-    status: 'pending' | 'in_review' | 'approved' | 'rejected';
-    submitted_at?: Date;
-    reviewed_at?: Date;
-    documents_required: string[];
-    documents_submitted: string[];
-    rejection_reason?: string;
-    next_steps: string[];
+  static async getAllApplications(page = 1, limit = 20, status?: string): Promise<{
+    applications: BrokerApplication[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      pages: number;
+    };
   }> {
     try {
-      return await apiClient.get('/brokers/verification/status');
+      const params: any = { page, page_size: limit };
+      if (status) params.status = status;
+
+      const response = await apiClient.get('/broker/admin/applications/', { params });
+      return {
+        applications: response.results || response,
+        pagination: {
+          page,
+          limit,
+          total: response.count || 0,
+          pages: Math.ceil((response.count || 0) / limit),
+        },
+      };
     } catch (error) {
-      console.error('Failed to get verification status:', error);
+      console.error('Failed to get broker applications:', error);
       throw error;
     }
   }
 
   /**
-   * Get training materials
+   * Admin: Get broker application details
    */
-  static async getTrainingMaterials(): Promise<Array<{
-    id: string;
-    title: string;
-    description: string;
-    type: 'video' | 'pdf' | 'webinar' | 'course';
-    duration?: string;
-    difficulty: 'beginner' | 'intermediate' | 'advanced';
-    url: string;
-    completed: boolean;
-    completion_date?: Date;
-  }>> {
+  static async getApplicationDetails(applicationId: string): Promise<BrokerApplication> {
     try {
-      return await apiClient.get('/brokers/training');
+      return await apiClient.get(`/broker/admin/applications/${applicationId}/`);
     } catch (error) {
-      console.error('Failed to get training materials:', error);
+      console.error('Failed to get application details:', error);
       throw error;
     }
   }
 
   /**
-   * Mark training material as completed
+   * Admin: Approve broker application
    */
-  static async completeTraining(trainingId: string): Promise<{ message: string }> {
+  static async approveApplication(applicationId: string, commissionRate?: number): Promise<{
+    message: string;
+    user_id: string;
+    broker_profile_id: string;
+  }> {
     try {
-      return await apiClient.post(`/brokers/training/${trainingId}/complete`);
+      const data: any = {};
+      if (commissionRate) data.commission_rate = commissionRate;
+
+      return await apiClient.post(`/broker/admin/applications/${applicationId}/approve/`, data);
     } catch (error) {
-      console.error('Failed to mark training as completed:', error);
+      console.error('Failed to approve application:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Admin: Reject broker application
+   */
+  static async rejectApplication(applicationId: string, reason: string): Promise<{
+    message: string;
+  }> {
+    try {
+      return await apiClient.post(`/broker/admin/applications/${applicationId}/reject/`, { reason });
+    } catch (error) {
+      console.error('Failed to reject application:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Admin: Get all brokers
+   */
+  static async getAllBrokers(page = 1, limit = 20, status?: string): Promise<{
+    brokers: any[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      pages: number;
+    };
+  }> {
+    try {
+      const params: any = { page, page_size: limit };
+      if (status) params.status = status;
+
+      const response = await apiClient.get('/broker/admin/brokers/', { params });
+      return {
+        brokers: response.results || response,
+        pagination: {
+          page,
+          limit,
+          total: response.count || 0,
+          pages: Math.ceil((response.count || 0) / limit),
+        },
+      };
+    } catch (error) {
+      console.error('Failed to get brokers:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Admin: Get all broker commissions
+   */
+  static async getAllCommissions(page = 1, limit = 20): Promise<{
+    commissions: BrokerCommission[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      pages: number;
+    };
+  }> {
+    try {
+      const params = { page, page_size: limit };
+      const response = await apiClient.get('/broker/admin/commissions/', { params });
+
+      return {
+        commissions: response.results || response,
+        pagination: {
+          page,
+          limit,
+          total: response.count || 0,
+          pages: Math.ceil((response.count || 0) / limit),
+        },
+      };
+    } catch (error) {
+      console.error('Failed to get all commissions:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Admin: Approve broker commission
+   */
+  static async approveCommission(commissionId: string): Promise<{ message: string }> {
+    try {
+      return await apiClient.post(`/broker/admin/commissions/${commissionId}/approve/`);
+    } catch (error) {
+      console.error('Failed to approve commission:', error);
       throw error;
     }
   }

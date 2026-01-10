@@ -7,8 +7,10 @@ and property-related operations including images, documents, and reviews.
 
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
 from decimal import Decimal
 import uuid
+import logging
 
 
 class PropertyType(models.TextChoices):
@@ -854,6 +856,72 @@ class PropertyApproval(models.Model):
 
     def __str__(self):
         return f"Approval for {self.property.title} - {self.status}"
+
+    def save(self, *args, **kwargs):
+        """Override save to send property status update emails when status changes."""
+        is_new = self.pk is None
+        old_status = None
+
+        if not is_new:
+            # Get the old status before saving
+            try:
+                old_instance = PropertyApproval.objects.get(pk=self.pk)
+                old_status = old_instance.status
+            except PropertyApproval.DoesNotExist:
+                pass
+
+        # Update timestamps based on status changes
+        if self.status in ['approved', 'rejected'] and not self.reviewed_at:
+            self.reviewed_at = timezone.now()
+
+        if self.status == 'approved' and not self.approved_at:
+            self.approved_at = timezone.now()
+
+        super().save(*args, **kwargs)
+
+        # Send email notifications for status changes (but not for initial creation)
+        if not is_new and old_status and old_status != self.status:
+            self._send_status_update_email(old_status)
+
+    def _send_status_update_email(self, old_status):
+        """Send property status update email to the property owner."""
+        try:
+            from core.services.email_service import EmailService
+
+            property_details = {
+                'title': self.property.title,
+                'location': self.property.location,
+                'submission_date': self.submitted_at.strftime('%B %d, %Y')
+            }
+
+            status_update = {
+                'status': self.status,
+                'new_status': dict(self.APPROVAL_STATUS_CHOICES).get(self.status, self.status.title()),
+                'previous_status': dict(self.APPROVAL_STATUS_CHOICES).get(old_status, old_status.title()),
+                'description': self._get_status_description(),
+                'reviewer': self.reviewer.get_full_name() if self.reviewer else 'Property Review Team',
+                'notes': self.review_notes or 'No additional notes provided.'
+            }
+
+            EmailService.send_property_status_update_email(
+                user=self.property.owner,
+                property_details=property_details,
+                status_update=status_update
+            )
+            logging.getLogger(__name__).info(f"Property status update email sent for property {self.property.id}")
+        except Exception as e:
+            logging.getLogger(__name__).error(f"Failed to send property status update email for property {self.property.id}: {str(e)}")
+
+    def _get_status_description(self):
+        """Get a description based on the current status."""
+        descriptions = {
+            'approved': 'Your property has been approved and is ready for tokenization.',
+            'rejected': 'Your property submission has been rejected. Please review the feedback and consider resubmitting.',
+            'requires_changes': 'Your property requires some changes before approval. Please review the required changes and resubmit.',
+            'under_review': 'Your property is currently under review by our team.',
+            'pending': 'Your property submission is pending review.'
+        }
+        return descriptions.get(self.status, 'Property status has been updated.')
 
 
 class RentalIncomeDistribution(models.Model):

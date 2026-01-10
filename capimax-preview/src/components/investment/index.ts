@@ -16,4 +16,4 @@ export type { TokenReservation } from './ReservedTokenManager';
 export { GraduatedOwnershipTracker } from './GraduatedOwnershipTracker';
 export type { OwnershipTier, OwnershipPosition } from './GraduatedOwnershipTracker';
 
-export type { InvestmentProperty, InvestmentData } from './InvestmentFlow';
+export type { InvestmentProperty, InvestmentData, InvestmentFlowProps } from './types';

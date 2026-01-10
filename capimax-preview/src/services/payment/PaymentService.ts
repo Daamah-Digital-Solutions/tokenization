@@ -330,9 +330,11 @@ export class PaymentService {
       currency: string;
       available_balance: number;
       pending_balance: number;
+      locked_balance: number;
       total_balance: number;
+      updated_at: string;
     }>;
-    total_usd_value: number;
+    total_value_usd: number;
   }> {
     try {
       return await apiClient.get('/payments/wallet');

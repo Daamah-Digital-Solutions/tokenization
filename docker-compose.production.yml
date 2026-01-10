@@ -1,0 +1,238 @@
+# =============================================================================
+# CAPIMAX PRODUCTION DOCKER COMPOSE
+# =============================================================================
+# Domain: capimaxrt.com
+# Server: Hostinger VPS (8 vCPU, 32GB RAM, 400GB NVMe)
+#
+# Usage:
+#   docker-compose -f docker-compose.production.yml up -d
+#   docker-compose -f docker-compose.production.yml logs -f
+#   docker-compose -f docker-compose.production.yml down
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:15-alpine
+    container_name: capimax_db
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME:-capimax}
+      POSTGRES_USER: ${DB_USER:-capimax_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/backups:/backups
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-capimax_user} -d ${DB_NAME:-capimax}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - capimax_network
+    command: >
+      postgres
+      -c max_connections=200
+      -c shared_buffers=256MB
+      -c effective_cache_size=768MB
+      -c maintenance_work_mem=128MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+
+  # ---------------------------------------------------------------------------
+  # Redis Cache & Message Broker
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: capimax_redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - capimax_network
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+
+  # ---------------------------------------------------------------------------
+  # Django Backend (Gunicorn)
+  # ---------------------------------------------------------------------------
+  web:
+    build:
+      context: ./capimax_backend
+      dockerfile: Dockerfile
+    container_name: capimax_web
+    restart: always
+    env_file:
+      - ./capimax_backend/.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=capimax_backend.settings.production
+    volumes:
+      - ./capimax_backend:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - ./capimax_backend/logs:/app/logs
+    expose:
+      - "8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - capimax_network
+    command: >
+      sh -c "
+        python manage.py migrate --noinput &&
+        python manage.py collectstatic --noinput &&
+        gunicorn capimax_backend.wsgi:application
+          --bind 0.0.0.0:8000
+          --workers 4
+          --worker-class gevent
+          --worker-connections 1000
+          --timeout 120
+          --keep-alive 5
+          --access-logfile /app/logs/gunicorn_access.log
+          --error-logfile /app/logs/gunicorn_error.log
+          --capture-output
+      "
+
+  # ---------------------------------------------------------------------------
+  # Celery Worker (Background Tasks)
+  # ---------------------------------------------------------------------------
+  celery:
+    build:
+      context: ./capimax_backend
+      dockerfile: Dockerfile
+    container_name: capimax_celery
+    restart: always
+    env_file:
+      - ./capimax_backend/.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=capimax_backend.settings.production
+    volumes:
+      - ./capimax_backend:/app
+      - media_volume:/app/media
+      - ./capimax_backend/logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - capimax_network
+    command: celery -A capimax_backend worker -l info --concurrency=4
+
+  # ---------------------------------------------------------------------------
+  # Celery Beat (Scheduled Tasks)
+  # ---------------------------------------------------------------------------
+  celery-beat:
+    build:
+      context: ./capimax_backend
+      dockerfile: Dockerfile
+    container_name: capimax_celery_beat
+    restart: always
+    env_file:
+      - ./capimax_backend/.env
+    environment:
+      - DJANGO_SETTINGS_MODULE=capimax_backend.settings.production
+    volumes:
+      - ./capimax_backend:/app
+      - ./capimax_backend/logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - capimax_network
+    command: celery -A capimax_backend beat -l info
+
+  # ---------------------------------------------------------------------------
+  # Nginx Reverse Proxy
+  # ---------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: capimax_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.production.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./capimax-preview/dist:/var/www/frontend:ro
+      - static_volume:/var/www/static:ro
+      - media_volume:/var/www/media:ro
+      - ./nginx/logs:/var/log/nginx
+      - certbot_www:/var/www/certbot:ro
+      - certbot_conf:/etc/letsencrypt:ro
+    depends_on:
+      - web
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - capimax_network
+
+  # ---------------------------------------------------------------------------
+  # Certbot (SSL Certificate Management)
+  # ---------------------------------------------------------------------------
+  certbot:
+    image: certbot/certbot:latest
+    container_name: capimax_certbot
+    volumes:
+      - certbot_www:/var/www/certbot
+      - certbot_conf:/etc/letsencrypt
+    depends_on:
+      - nginx
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  static_volume:
+    driver: local
+  media_volume:
+    driver: local
+  certbot_www:
+    driver: local
+  certbot_conf:
+    driver: local
+
+# =============================================================================
+# NETWORKS
+# =============================================================================
+networks:
+  capimax_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16

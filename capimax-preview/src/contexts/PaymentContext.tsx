@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
+import { PaymentService } from '../services/payment/PaymentService';
+import { useAuth } from './AuthContext';
 
 // Payment Method Types
 export type PaymentMethodType = 'crypto' | 'card' | 'bank' | 'paypal';
@@ -217,7 +219,7 @@ function paymentReducer(state: PaymentState, action: PaymentAction): PaymentStat
 interface PaymentContextType {
   state: PaymentState;
   dispatch: React.Dispatch<PaymentAction>;
-  
+
   // Helper Functions
   addPaymentMethod: (method: PaymentMethod) => void;
   removePaymentMethod: (methodId: string) => void;
@@ -234,6 +236,7 @@ interface PaymentContextType {
   closePaymentModal: () => void;
   setError: (error: string | undefined) => void;
   clearError: () => void;
+  refreshWalletBalances: () => Promise<void>;
 }
 
 const PaymentContext = createContext<PaymentContextType | undefined>(undefined);
@@ -246,6 +249,57 @@ interface PaymentProviderProps {
 // Payment Provider Component
 export function PaymentProvider({ children }: PaymentProviderProps) {
   const [state, dispatch] = useReducer(paymentReducer, initialState);
+  const { user, isAuthenticated } = useAuth();
+
+  // Function to fetch wallet balances
+  const refreshWalletBalances = async () => {
+    // Only fetch if user is authenticated
+    if (!isAuthenticated || !user) {
+      return;
+    }
+
+    try {
+      const response = await PaymentService.getWalletBalance();
+
+      // Transform the response to match our WalletBalance interface
+      const balances: WalletBalance[] = response.balances.map(b => ({
+        currency: b.currency,
+        balance: b.available_balance,
+        locked: b.pending_balance,
+        usdValue: b.currency === 'USD' ? b.available_balance : undefined
+      }));
+
+      dispatch({ type: 'SET_BALANCES', payload: balances });
+
+      // Set exchange rates based on total USD value if available
+      if (response.total_value_usd) {
+        const rates: Record<string, number> = { USD: 1 };
+        balances.forEach(b => {
+          if (b.currency !== 'USD' && b.usdValue) {
+            rates[b.currency] = b.usdValue / b.balance;
+          }
+        });
+        dispatch({ type: 'UPDATE_EXCHANGE_RATES', payload: rates });
+      }
+    } catch (error) {
+      console.error('Failed to fetch wallet balances:', error);
+      // Only set error if it's not an auth error (401)
+      if (error?.status !== 401) {
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to load wallet balances' });
+      }
+    }
+  };
+
+  // Fetch wallet balances when authentication changes
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      refreshWalletBalances();
+    } else {
+      // Clear balances when not authenticated
+      dispatch({ type: 'SET_BALANCES', payload: [] });
+      dispatch({ type: 'SET_ERROR', payload: undefined });
+    }
+  }, [isAuthenticated, user]);
 
   // Helper Functions
   const addPaymentMethod = (method: PaymentMethod) => {
@@ -336,6 +390,7 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
     closePaymentModal,
     setError,
     clearError,
+    refreshWalletBalances,
   };
 
   return (

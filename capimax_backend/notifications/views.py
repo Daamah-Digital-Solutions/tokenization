@@ -110,6 +110,10 @@ class NotificationDetailView(generics.RetrieveUpdateDestroyAPIView):
     
     def get_queryset(self):
         """Get notifications for the authenticated user."""
+        # Handle Swagger schema generation
+        if getattr(self, 'swagger_fake_view', False):
+            return Notification.objects.none()
+
         return Notification.objects.filter(user=self.request.user)
     
     def perform_update(self, serializer):

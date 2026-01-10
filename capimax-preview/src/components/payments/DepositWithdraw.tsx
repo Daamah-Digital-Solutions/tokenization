@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowDownLeft, 
-  ArrowUpRight, 
-  Wallet, 
-  CreditCard, 
-  Building2, 
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  Wallet,
+  CreditCard,
+  Building2,
   Smartphone,
   AlertTriangle,
   Shield,
@@ -15,11 +15,13 @@ import {
   QrCode
 } from 'lucide-react';
 import { usePayment } from '../../contexts/PaymentContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { formatCurrency, getCurrencyInfo, ALL_CURRENCIES } from '../../utils/currencyConverter';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../design-system/forms/Input';
 import { Select } from '../design-system/forms/Select';
+import { KYCGate } from '../kyc/KYCGate';
 
 interface DepositWithdrawProps {
   className?: string;
@@ -29,6 +31,7 @@ interface DepositWithdrawProps {
 
 export function DepositWithdraw({ className, mode: initialMode = 'deposit', onClose }: DepositWithdrawProps) {
   const { state, getBalance, addTransaction, setError } = usePayment();
+  const { state: authState } = useAuth();
   const [mode, setMode] = useState<'deposit' | 'withdraw'>(initialMode);
   const [step, setStep] = useState<'method' | 'amount' | 'confirm' | 'processing' | 'complete'>('method');
   const [selectedMethod, setSelectedMethod] = useState<'crypto' | 'card' | 'bank' | 'paypal'>('crypto');
@@ -37,6 +40,7 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
   const [processingTx, setProcessingTx] = useState<any>(null);
 
   const isDeposit = mode === 'deposit';
+  const user = authState.user;
   const availableBalance = getBalance(selectedCurrency);
   const minAmount = isDeposit ? 0.001 : 0.001;
   const maxAmount = isDeposit ? Infinity : availableBalance;
@@ -410,59 +414,76 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
     </div>
   );
 
+  // Helper function to render the main UI
+  const renderDepositWithdrawUI = () => (
+    <Card className="max-w-md mx-auto">
+      <div className="p-6">
+        {/* Mode Toggle */}
+        <div className="flex mb-6 p-1 bg-gray-100 rounded-lg">
+          <button
+            onClick={() => {
+              setMode('deposit');
+              resetForm();
+            }}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+              mode === 'deposit'
+                ? 'bg-white text-emerald-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <ArrowDownLeft className="h-4 w-4" />
+            Deposit
+          </button>
+          <button
+            onClick={() => {
+              setMode('withdraw');
+              resetForm();
+            }}
+            className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+              mode === 'withdraw'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <ArrowUpRight className="h-4 w-4" />
+            Withdraw
+          </button>
+        </div>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {step === 'method' && renderMethodSelection()}
+            {step === 'amount' && renderAmountInput()}
+            {step === 'confirm' && renderConfirmation()}
+            {step === 'processing' && renderProcessing()}
+            {step === 'complete' && renderComplete()}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </Card>
+  );
+
+  // Check KYC status for deposits only
+  if (isDeposit && user?.kyc_status !== 'approved') {
+    return (
+      <div className={className}>
+        <KYCGate action="deposit funds">
+          {renderDepositWithdrawUI()}
+        </KYCGate>
+      </div>
+    );
+  }
+
+  // For withdrawals or approved users, show the normal UI
   return (
     <div className={className}>
-      <Card className="max-w-md mx-auto">
-        <div className="p-6">
-          {/* Mode Toggle */}
-          <div className="flex mb-6 p-1 bg-gray-100 rounded-lg">
-            <button
-              onClick={() => {
-                setMode('deposit');
-                resetForm();
-              }}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-all ${
-                mode === 'deposit'
-                  ? 'bg-white text-emerald-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <ArrowDownLeft className="h-4 w-4" />
-              Deposit
-            </button>
-            <button
-              onClick={() => {
-                setMode('withdraw');
-                resetForm();
-              }}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-all ${
-                mode === 'withdraw'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <ArrowUpRight className="h-4 w-4" />
-              Withdraw
-            </button>
-          </div>
-
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={step}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {step === 'method' && renderMethodSelection()}
-              {step === 'amount' && renderAmountInput()}
-              {step === 'confirm' && renderConfirmation()}
-              {step === 'processing' && renderProcessing()}
-              {step === 'complete' && renderComplete()}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </Card>
+      {renderDepositWithdrawUI()}
     </div>
   );
 }

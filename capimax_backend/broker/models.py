@@ -23,6 +23,23 @@ class BrokerVerificationStatus(models.TextChoices):
     SUSPENDED = 'suspended', 'Suspended'
 
 
+class BrokerApplicationStatus(models.TextChoices):
+    """Broker application status choices."""
+    PENDING = 'pending', 'Pending Review'
+    UNDER_REVIEW = 'under_review', 'Under Review'
+    APPROVED = 'approved', 'Approved'
+    REJECTED = 'rejected', 'Rejected'
+    INCOMPLETE = 'incomplete', 'Incomplete'
+
+
+class ExperienceLevel(models.TextChoices):
+    """Experience level choices."""
+    ZERO_TO_ONE = '0-1', '0-1 Years'
+    TWO_TO_FIVE = '2-5', '2-5 Years'
+    FIVE_TO_TEN = '5-10', '5-10 Years'
+    TEN_PLUS = '10+', '10+ Years'
+
+
 class CommissionType(models.TextChoices):
     """Commission type choices."""
     INVESTMENT = 'investment', 'Investment Commission'
@@ -50,6 +67,179 @@ class MaterialType(models.TextChoices):
     REPORT = 'report', 'Report'
     LOGO = 'logo', 'Logo'
     BANNER = 'banner', 'Banner'
+
+
+class BrokerApplication(models.Model):
+    """
+    Broker application form data.
+
+    Stores application information from potential brokers before
+    they are reviewed and potentially approved to become BrokerProfile.
+    """
+
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the application"
+    )
+
+    # Step 1: Personal Information
+    first_name = models.CharField(
+        max_length=100,
+        help_text="Applicant's first name"
+    )
+
+    last_name = models.CharField(
+        max_length=100,
+        help_text="Applicant's last name"
+    )
+
+    email = models.EmailField(
+        unique=True,
+        help_text="Applicant's email address"
+    )
+
+    phone_number = models.CharField(
+        max_length=20,
+        help_text="Applicant's phone number"
+    )
+
+    country = models.CharField(
+        max_length=100,
+        help_text="Country of residence"
+    )
+
+    city_address = models.TextField(
+        help_text="City and address"
+    )
+
+    # Step 2: Professional Credentials
+    license_number = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="Real estate license number (optional)"
+    )
+
+    experience_level = models.CharField(
+        max_length=10,
+        choices=ExperienceLevel.choices,
+        help_text="Years of experience"
+    )
+
+    current_company = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        help_text="Current brokerage/company name (optional)"
+    )
+
+    referral_strategy = models.TextField(
+        help_text="How they plan to refer clients"
+    )
+
+    supporting_documents = models.FileField(
+        upload_to='broker_applications/documents/',
+        blank=True,
+        null=True,
+        help_text="Supporting documents (license, company registration, etc.)"
+    )
+
+    # Step 3: Agreements & Status
+    terms_accepted = models.BooleanField(
+        default=False,
+        help_text="Broker Program Terms & Conditions accepted"
+    )
+
+    application_status = models.CharField(
+        max_length=20,
+        choices=BrokerApplicationStatus.choices,
+        default=BrokerApplicationStatus.PENDING,
+        help_text="Application review status"
+    )
+
+    # Admin review fields
+    reviewed_by = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_broker_applications',
+        help_text="Admin who reviewed the application"
+    )
+
+    reviewed_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text="When the application was reviewed"
+    )
+
+    rejection_reason = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Reason for rejection (if applicable)"
+    )
+
+    admin_notes = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Internal notes for admin review"
+    )
+
+    # Associated user (created after approval)
+    associated_user = models.OneToOneField(
+        'accounts.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='broker_application',
+        help_text="User account created after approval"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'broker_application'
+        indexes = [
+            models.Index(fields=['application_status']),
+            models.Index(fields=['email']),
+            models.Index(fields=['created_at']),
+            models.Index(fields=['application_status', 'created_at']),
+        ]
+        verbose_name = 'Broker Application'
+        verbose_name_plural = 'Broker Applications'
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} - {self.email} ({self.application_status})"
+
+    def get_full_name(self):
+        """Get applicant's full name."""
+        return f"{self.first_name} {self.last_name}"
+
+    def approve(self, reviewed_by_user):
+        """Approve the application and create user account."""
+        if self.application_status == BrokerApplicationStatus.PENDING:
+            self.application_status = BrokerApplicationStatus.APPROVED
+            self.reviewed_by = reviewed_by_user
+            self.reviewed_at = timezone.now()
+            self.save()
+
+            # Create user account would be handled in the view/service
+            return True
+        return False
+
+    def reject(self, reviewed_by_user, reason=""):
+        """Reject the application."""
+        if self.application_status == BrokerApplicationStatus.PENDING:
+            self.application_status = BrokerApplicationStatus.REJECTED
+            self.reviewed_by = reviewed_by_user
+            self.reviewed_at = timezone.now()
+            self.rejection_reason = reason
+            self.save()
+            return True
+        return False
 
 
 class BrokerProfile(models.Model):

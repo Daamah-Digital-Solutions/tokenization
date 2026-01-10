@@ -56,43 +56,80 @@ export class PropertyService {
    */
   static async getProperties(filters?: PropertyFilterOptions): Promise<PropertySearchResult> {
     try {
-      const response = await apiClient.get<any>('/properties', filters);
-      
-      // Map backend response to frontend format
-      const mappedProperties: Property[] = response.properties.map((property: any) => ({
+      // Use the correct API endpoint format
+      // Note: We need to use the raw axios client instead of the wrapped apiClient.get
+      // because the backend returns DRF format directly, not wrapped in {data: ...}
+      const response = await apiClient.rawClient.get('/properties/', {
+        params: filters
+      });
+
+      // The response.data contains the DRF response directly
+      const data = response.data;
+
+      // Check if response exists
+      if (!data) {
+        throw new Error('No response received from properties API');
+      }
+
+      // Check if response has results
+      if (!data.results) {
+        console.error('Invalid response format:', data);
+        throw new Error('Invalid response format: missing results array');
+      }
+
+      // Map backend response to frontend format (backend returns DRF paginated format)
+      const mappedProperties: Property[] = data.results.map((property: any) => ({
         id: property.id,
         title: property.title,
         description: property.description,
-        property_type: property.propertyType || property.property_type,
+        property_type: property.property_type,
         status: property.status as PropertyStatus,
-        total_value: property.totalValue || property.total_value,
-        token_price: property.tokenPrice || property.token_price,
-        total_tokens: property.totalTokens || property.total_tokens,
-        tokens_sold: property.tokensSold || property.tokens_sold,
-        expected_return: property.expectedReturn || property.expected_return,
-        rental_yield: property.rentalYield || property.rental_yield,
-        property_size: property.propertySize || property.property_size,
-        year_built: property.yearBuilt || property.year_built,
-        address: property.address,
+        total_value: parseFloat(property.total_value),
+        token_price: parseFloat(property.token_price),
+        total_tokens: property.total_tokens,
+        tokens_sold: property.tokens_sold,
+        expected_return: parseFloat(property.expected_return),
+        rental_yield: parseFloat(property.rental_yield),
+        property_size: parseFloat(property.property_size),
+        year_built: property.year_built,
+        address: property.address || '',
         city: property.city,
-        state: property.state,
+        state: property.state || '',
         country: property.country,
         coordinates: property.coordinates,
-        images: property.images || [],
+        images: property.primary_image ? [property.primary_image] : ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"],
         documents: property.documents || [],
-        smart_contract_address: property.smartContractAddress || property.smart_contract_address,
-        owner_id: property.ownerId || property.owner_id,
-        created_at: new Date(property.createdAt || property.created_at),
-        updated_at: new Date(property.updatedAt || property.updated_at)
+        smart_contract_address: property.smart_contract_address,
+        owner_id: property.owner?.id || property.owner_id,
+        created_at: new Date(property.created_at),
+        updated_at: new Date(property.updated_at),
+        // Additional fields from the backend
+        property_category: property.property_category,
+        tokens_available: property.tokens_available,
+        funding_percentage: property.funding_percentage,
+        is_fully_funded: property.is_fully_funded,
+        can_accept_investments: property.can_accept_investments,
+        monthly_rental_income: parseFloat(property.monthly_rental_income || 0),
+        occupancy_rate: parseFloat(property.occupancy_rate || 0),
+        supports_installments: property.supports_installments,
+        installment_period_months: property.installment_period_months,
+        is_under_construction: property.is_under_construction,
+        is_ready_property: property.is_ready_property,
+        construction_status_display: property.construction_status_display,
+        estimated_monthly_return: property.estimated_monthly_return,
+        featured: property.featured,
+        minimum_investment: parseFloat(property.minimum_investment || 1000),
+        average_rating: property.average_rating,
+        total_reviews: property.total_reviews
       }));
 
       return {
         properties: mappedProperties,
         pagination: {
-          page: response.pagination.currentPage,
-          limit: response.pagination.itemsPerPage,
-          total: response.pagination.totalItems,
-          pages: response.pagination.totalPages
+          page: data.current_page,
+          limit: data.page_size,
+          total: data.count,
+          pages: data.total_pages
         },
         filters_applied: filters || {}
       };
@@ -130,7 +167,7 @@ export class PropertyService {
         state: property.state,
         country: property.country,
         coordinates: property.coordinates,
-        images: property.images || [],
+        images: property.images || (property.primary_image ? [property.primary_image] : ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"]),
         documents: property.documents || [],
         smart_contract_address: property.smartContractAddress || property.smart_contract_address,
         owner_id: property.ownerId || property.owner_id,
@@ -341,6 +378,30 @@ export class PropertyService {
   }
 
   /**
+   * Upload a single property image
+   */
+  static async uploadPropertyImage(propertyId: string, formData: FormData): Promise<any> {
+    try {
+      return await apiClient.uploadFile(`/properties/${propertyId}/images/`, formData);
+    } catch (error) {
+      console.error('Failed to upload property image:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Upload a single property document
+   */
+  static async uploadPropertyDocument(propertyId: string, formData: FormData): Promise<any> {
+    try {
+      return await apiClient.uploadFile(`/properties/${propertyId}/documents/`, formData);
+    } catch (error) {
+      console.error('Failed to upload property document:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Submit property for approval
    */
   static async submitForApproval(propertyId: string): Promise<{ message: string; submission_id: string }> {
@@ -353,11 +414,71 @@ export class PropertyService {
   }
 
   /**
+   * Submit property for approval (alias for consistency with components)
+   */
+  static async submitPropertyForApproval(propertyId: string): Promise<{ message: string; submission_id: string }> {
+    return this.submitForApproval(propertyId);
+  }
+
+  /**
    * Get featured properties
    */
   static async getFeaturedProperties(limit = 6): Promise<Property[]> {
     try {
-      return await apiClient.get<Property[]>('/properties/featured', { limit });
+      const response = await apiClient.rawClient.get('/properties/featured', {
+        params: { limit }
+      });
+
+      const data = response.data;
+
+      if (!data || !data.results) {
+        throw new Error('Invalid response format from featured properties API');
+      }
+
+      // Map backend response to frontend format
+      return data.results.map((property: any) => ({
+        id: property.id,
+        title: property.title,
+        description: property.description,
+        property_type: property.property_type,
+        status: property.status,
+        total_value: parseFloat(property.total_value),
+        token_price: parseFloat(property.token_price),
+        total_tokens: property.total_tokens,
+        tokens_sold: property.tokens_sold,
+        expected_return: parseFloat(property.expected_return),
+        rental_yield: parseFloat(property.rental_yield),
+        property_size: parseFloat(property.property_size),
+        year_built: property.year_built,
+        address: property.address || '',
+        city: property.city,
+        state: property.state || '',
+        country: property.country,
+        coordinates: property.coordinates,
+        images: property.primary_image ? [property.primary_image] : ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"],
+        documents: property.documents || [],
+        smart_contract_address: property.smart_contract_address,
+        owner_id: property.owner?.id || property.owner_id,
+        created_at: new Date(property.created_at),
+        updated_at: new Date(property.updated_at),
+        property_category: property.property_category,
+        tokens_available: property.tokens_available,
+        funding_percentage: property.funding_percentage,
+        is_fully_funded: property.is_fully_funded,
+        can_accept_investments: property.can_accept_investments,
+        monthly_rental_income: parseFloat(property.monthly_rental_income || 0),
+        occupancy_rate: parseFloat(property.occupancy_rate || 0),
+        supports_installments: property.supports_installments,
+        installment_period_months: property.installment_period_months,
+        is_under_construction: property.is_under_construction,
+        is_ready_property: property.is_ready_property,
+        construction_status_display: property.construction_status_display,
+        estimated_monthly_return: property.estimated_monthly_return,
+        featured: property.featured,
+        minimum_investment: parseFloat(property.minimum_investment || 1000),
+        average_rating: property.average_rating,
+        total_reviews: property.total_reviews
+      }));
     } catch (error) {
       console.error('Failed to get featured properties:', error);
       throw error;

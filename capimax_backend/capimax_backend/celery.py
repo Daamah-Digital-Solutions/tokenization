@@ -26,6 +26,13 @@ app.autodiscover_tasks()
 
 # Celery Beat Schedule for Periodic Tasks
 app.conf.beat_schedule = {
+    # Token minting - runs every 2 minutes (CRITICAL for payment→mint flow)
+    'process-pending-mints': {
+        'task': 'investments.tasks.process_pending_mints',
+        'schedule': 120.0,  # Every 2 minutes
+        'kwargs': {},
+    },
+
     # Daily installment processing
     'process-due-installments': {
         'task': 'properties.tasks.process_due_installments',
@@ -85,6 +92,11 @@ app.conf.beat_schedule = {
 
 # Task routing configuration
 app.conf.task_routes = {
+    # Critical: Token minting tasks (high priority)
+    'investments.tasks.process_pending_mints': {'queue': 'high_priority'},
+    'investments.tasks.process_single_mint': {'queue': 'high_priority'},
+    'investments.tasks.retry_failed_mint': {'queue': 'high_priority'},
+
     # High priority payment tasks
     'properties.tasks.process_installment_payment': {'queue': 'high_priority'},
     'properties.tasks.send_payment_reminder': {'queue': 'high_priority'},

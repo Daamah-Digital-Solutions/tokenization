@@ -27,6 +27,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://localhost:5174",
     "http://127.0.0.1:5174",
+    "http://localhost:3030",  # UAT Frontend Port
+    "http://127.0.0.1:3030",  # UAT Frontend Port
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -95,8 +97,20 @@ CELERY_TIMEZONE = TIME_ZONE
 CELERY_TASK_ALWAYS_EAGER = True  # Execute tasks synchronously in development
 CELERY_TASK_EAGER_PROPAGATES = True
 
-# Development Email Backend - Console for development
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Email Configuration - Using Hostinger SMTP for development testing
+# For console output during development, use:
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# For testing actual email sending with Hostinger SMTP:
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.hostinger.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '465'))
+EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'True') == 'True'
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'False') == 'True'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'tech@capimaxinvestment.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'CapiMax Investment <tech@capimaxinvestment.com>')
+SERVER_EMAIL = os.environ.get('SERVER_EMAIL', 'tech@capimaxinvestment.com')
 
 # Development Logging Configuration
 LOGGING = {

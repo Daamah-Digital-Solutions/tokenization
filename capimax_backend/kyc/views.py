@@ -60,9 +60,11 @@ class KYCProfileViewSet(ModelViewSet):
         if self.action in ['update', 'partial_update'] and self.request.user.is_staff:
             return KYCProfileUpdateSerializer
         return KYCProfileSerializer
-    
+
     def get_queryset(self):
         """Filter queryset based on user permissions."""
+        if getattr(self, 'swagger_fake_view', False):
+            return KYCProfile.objects.none()
         if self.request.user.is_staff:
             return self.queryset
         return self.queryset.filter(user=self.request.user)
@@ -247,9 +249,11 @@ class KYCDocumentViewSet(ModelViewSet):
         if self.action == 'create':
             return KYCDocumentUploadSerializer
         return KYCDocumentSerializer
-    
+
     def get_queryset(self):
         """Filter queryset based on user permissions."""
+        if getattr(self, 'swagger_fake_view', False):
+            return KYCDocument.objects.none()
         if self.request.user.is_staff:
             return self.queryset
         return self.queryset.filter(kyc_profile__user=self.request.user)
@@ -348,6 +352,10 @@ class BiometricVerificationViewSet(GenericViewSet, RetrieveModelMixin, UpdateMod
     
     def get_queryset(self):
         """Filter queryset based on user permissions."""
+        # Handle Swagger schema generation
+        if getattr(self, 'swagger_fake_view', False):
+            return self.queryset.none()
+
         if self.request.user.is_staff:
             return self.queryset
         return self.queryset.filter(kyc_profile__user=self.request.user)
@@ -423,6 +431,10 @@ class ComplianceCheckViewSet(GenericViewSet, ListModelMixin, RetrieveModelMixin)
     
     def get_queryset(self):
         """Filter queryset based on user permissions."""
+        # Handle Swagger schema generation
+        if getattr(self, 'swagger_fake_view', False):
+            return self.queryset.none()
+
         if self.request.user.is_staff:
             return self.queryset
         return self.queryset.filter(user=self.request.user)
@@ -475,9 +487,13 @@ class KYCNoteViewSet(ModelViewSet):
     
     def get_queryset(self):
         """Filter queryset based on user permissions."""
+        # Handle Swagger schema generation
+        if getattr(self, 'swagger_fake_view', False):
+            return self.queryset.none()
+
         if self.request.user.is_staff:
             return self.queryset
-        
+
         # Regular users can only see non-internal notes on their own KYC
         return self.queryset.filter(
             kyc_profile__user=self.request.user,

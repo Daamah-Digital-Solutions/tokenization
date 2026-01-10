@@ -10,31 +10,47 @@ Capimax is a full-stack real estate tokenization platform enabling fractional pr
 
 ### Backend (Django)
 Located in `capimax_backend/`, organized into 15 modular Django apps:
-- **accounts**: User authentication, JWT tokens, 2FA support
+- **accounts**: User authentication, JWT tokens, 2FA support, custom User model
 - **properties**: Property management with tokenization features
-- **investments**: Investment tracking and portfolio management
-- **payments**: Multi-provider payment processing (Stripe, PayPal, Crypto)
-- **kyc**: KYC verification and document management
+- **investments**: Investment tracking, portfolio management, dividend distribution
+- **payments**: Multi-provider payment processing (Stripe, PayPal, Coinbase, NowPayments)
+- **kyc**: KYC verification and document management (Jumio integration)
 - **construction**: Construction milestone tracking
-- **broker**: Broker management and commissioning
+- **broker**: Broker management, commissioning, and applications
 - **analytics**: Investment analytics and reporting
 - **dashboard**: Role-specific dashboard APIs
 - **notifications**: Real-time notifications system
-- **websockets**: WebSocket support via Django Channels
-- **blockchain**: Smart contract integration
-- **marketplace**: Property marketplace and trading
+- **ws_app**: WebSocket support via Django Channels with custom middleware
+- **blockchain**: Smart contract integration (web3.py for Ethereum/Polygon)
+- **marketplace**: Secondary market for property tokens
 - **admin_panel**: Administrative interface and controls
-- **core**: Shared utilities and base models
+- **core**: Shared utilities, standardized responses, pagination, custom permissions
 
-Settings structure: `capimax_backend/settings/` with base.py, development.py, production.py, staging.py, testing.py
+Settings structure: `capimax_backend/capimax_backend/settings/` with base.py, development.py, production.py
+
+Key architectural patterns:
+- Custom User model: `accounts.User` (AUTH_USER_MODEL)
+- Standardized API responses via `core.utils.create_success_response()` and `core.utils.create_error_response()`
+- Custom exception handler: `core.exceptions.custom_exception_handler`
+- JWT authentication with 60-minute access tokens, 7-day refresh tokens
+- ASGI application for WebSocket support via Django Channels
 
 ### Frontend (React)
 Located in `capimax-preview/`, built with:
 - React 18 + TypeScript + Vite
 - TanStack Query for server state management
 - Tailwind CSS + Framer Motion for UI
-- Wagmi/Ethers.js for Web3 integration
+- Wagmi/Ethers.js/Viem for Web3 integration
+- RainbowKit for wallet connection UI
+- Stripe integration via @stripe/react-stripe-js
 - Role-based routing (Investor, Property Owner, Broker, Admin)
+
+Frontend architecture:
+- Centralized API client: `src/services/api/ApiClient.ts` (singleton pattern)
+- Custom axios interceptors for auth token injection and error handling
+- Service layer pattern: separate services for auth, property, payment, marketplace
+- Context providers: AuthContext, PaymentContext
+- Public endpoints bypass auth: /auth/register/, /auth/login/, /auth/password/reset/
 
 ## Development Commands
 
@@ -43,173 +59,169 @@ Located in `capimax-preview/`, built with:
 cd capimax_backend
 
 # Install dependencies
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
 
 # Run migrations
 python manage.py migrate
 
-# Create superuser
-python manage.py createsuperuser
-
 # Start development server
 python manage.py runserver
 
-# Run tests
-python manage.py test
-python manage.py test <app_name>  # Specific app tests
+# Run tests with pytest (uses settings_test)
+pytest                                     # All tests with 85% coverage requirement
+pytest -k test_function_name              # Run specific test by name
+pytest -m unit                            # Run only unit tests
+pytest -m integration                     # Run only integration tests
+pytest --cov=. --cov-report=html          # Generate HTML coverage report
 
-# Run tests with coverage (pytest)
-pytest --cov=. --cov-report=html --cov-report=term-missing --cov-fail-under=85
+# Run tests with Django test runner
+python manage.py test <app_name>          # Specific app
+python manage.py test <app_name>.tests.TestClassName  # Specific class
 
 # Make migrations
+python manage.py makemigrations
 python manage.py makemigrations <app_name>
 
-# Check for issues
-python manage.py check
-
-# Validate production readiness
-python validate_production_readiness.py
-
-# Collect static files for production
-python manage.py collectstatic
+# Celery for background tasks
+celery -A capimax_backend worker -l info
+celery -A capimax_backend beat -l info
 ```
 
 ### Frontend
 ```bash
 cd capimax-preview
 
-# Install dependencies
 npm install
-
-# Start development server (port 5173, falls back to 5174)
-npm run dev
-
-# Build for production
-npm run build
-
-# Run linting (ESLint)
-npm run lint
-
-# Type checking
-tsc --noEmit
-
-# Preview production build
-npm run preview
+npm run dev              # Start dev server (port 5173)
+npm run build            # Production build
+npm run lint             # ESLint
+npm run type-check       # TypeScript checking
+npm run test             # Run vitest tests
+npm run test:ui          # Vitest with UI
+npm run test:coverage    # Test coverage report
 ```
 
 ## API Structure
 
 Base URL: `http://localhost:8000/api/v1/`
 
-Key endpoints:
-- `/auth/` - Authentication (login, register, refresh, 2FA)
-- `/properties/` - Property CRUD and tokenization
-- `/investments/` - Investment management
-- `/payments/` - Payment processing
-- `/kyc/` - KYC document submission and verification
-- `/construction/` - Construction progress tracking
-- `/broker/` - Broker operations
-- `/analytics/` - Analytics and reporting
-- `/dashboard/` - Role-specific dashboard data
-- `/marketplace/` - Property marketplace and trading
-- `/blockchain/` - Blockchain transactions and smart contracts
+Main URL router: `capimax_backend/capimax_backend/urls.py`
 
-API documentation available at: `http://localhost:8000/api/docs/`
+Key endpoint groups:
+- `/auth/` → accounts app (login, register, refresh, 2FA, email verification)
+- `/properties/` → properties app (CRUD, tokenization, analytics)
+- `/investments/` → investments app (portfolio, dividends)
+- `/payments/` → payments app (payment processing, wallet, NowPayments crypto)
+- `/kyc/` → kyc app (document submission and verification)
+- `/construction/` → construction app (milestone tracking)
+- `/broker/` → broker app (applications, commissions)
+- `/analytics/` → analytics app
+- `/dashboard/` → dashboard app (role-specific data)
+- `/marketplace/` → marketplace app (secondary market)
+- `/admin/` → admin_panel app
+- `/notifications/` → notifications app
+- `/blockchain/` → blockchain app (network info, transaction monitoring)
+
+API documentation:
+- Swagger UI: `http://localhost:8000/api/docs/`
+- ReDoc: `http://localhost:8000/api/redoc/`
+
+WebSocket endpoints: `ws://localhost:8000/ws/`
 
 ## Testing Configuration
 
-### Backend Testing
-- **Framework**: pytest with Django integration (`pytest.ini` configured)
-- **Coverage requirement**: 85% minimum
-- **Test discovery**: `tests.py`, `test_*.py`, `*_tests.py`
-- **Settings**: Uses `capimax_backend.settings_test`
-- **Markers available**: unit, integration, websocket, performance, slow
-- **Test location**: Each app's `tests/` directory
+### Backend (pytest)
+Configuration: `capimax_backend/pytest.ini`
+- Settings module: `capimax_backend.settings_test`
+- Coverage requirement: 85% minimum
+- Database: Reuses test database (--reuse-db)
+- Markers: `@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.websocket`, `@pytest.mark.performance`, `@pytest.mark.slow`
 
-### Frontend Testing
-- No testing framework currently configured
-- Missing jest/vitest and react-testing-library
+### Frontend (vitest)
+Configuration: `capimax-preview/vitest.config.ts`
+- Uses @testing-library/react and happy-dom/jsdom
 
-## Production Deployment
+## Code Patterns
 
-### Docker Compose Setup
-Production deployment uses comprehensive Docker Compose configuration with:
-- **Gunicorn**: 4 workers with gevent, 1000 connections
-- **PostgreSQL 15**: Performance-optimized configuration
-- **Redis**: For caching and WebSocket support
-- **Celery**: Background tasks with beat scheduler
-- **Nginx**: Reverse proxy with SSL support
-- **Monitoring**: Prometheus and Grafana integration
+### Backend API Response Format
+Always use standardized responses:
+```python
+from core.utils import create_success_response, create_error_response
 
-### Production Commands
-```bash
-# Deploy with Docker
-docker-compose up -d
+# Success
+return Response(create_success_response(data=serializer.data, message="Created"))
 
-# Production readiness check
-python validate_production_readiness.py
+# Error
+return Response(create_error_response(message="Not found", status_code=404), status=404)
 ```
 
-## Code Organization Patterns
-
-### Backend API Patterns
-- **Views**: DRF ViewSets in each app's `views.py`
-- **Serializers**: Validation and data transformation in `serializers.py`
-- **Permissions**: Custom role-based permissions
-- **Response Format**: Standardized via `core.utils`
-- **Authentication**: JWT with SimpleJWT, supports 2FA
-
-### Frontend Structure
+### Backend App Structure
 ```
-src/
-├── components/      # Feature-based organization
-├── services/       # API service layer with centralized client
-├── types/          # TypeScript definitions
-├── hooks/          # Custom React hooks
-├── contexts/       # React contexts for global state
-├── pages/          # Route components
-└── utils/          # Shared utilities
+app_name/
+├── models.py           # Database models
+├── serializers.py      # DRF serializers
+├── views.py            # ViewSets and APIViews
+├── urls.py             # URL routing
+├── admin.py            # Django admin config
+├── services.py         # Business logic (where applicable)
+├── permissions.py      # Custom permissions (where applicable)
+└── tests.py or tests/  # Test files
+```
+
+### Frontend Service Pattern
+All API calls go through centralized `ApiClient` singleton:
+```typescript
+import { apiClient } from '@/services/api/ApiClient';
+const data = await apiClient.get('/endpoint/');
 ```
 
 ### Database Models
 Key relationships:
-- Custom User model extending Django's User
-- Property → TokenizedProperty (one-to-one)
-- User → Investment → Property (many-to-many through Investment)
-- Payment supports multiple providers (Stripe, PayPal, Crypto)
+- **User model**: `accounts.User` (AUTH_USER_MODEL) with role field
+- **Property tokenization**: Property → TokenizedProperty (one-to-one, optional)
+- **Investments**: User ↔ Property (many-to-many through Investment)
+- **Payments**: Multiple providers via provider field
+- **KYC**: User → KYCDocument (one-to-many)
+- **Marketplace**: Investment → Listing (one-to-one) for secondary market
 
 ## Environment Configuration
 
 ### Backend (.env in capimax_backend/)
-```
+Key variables:
+```bash
 SECRET_KEY=<django-secret-key>
 DEBUG=True
-DATABASE_URL=<database-connection-string>
+DJANGO_SETTINGS_MODULE=capimax_backend.settings.development
+DATABASE_URL=postgresql://user:password@localhost:5432/capimax
 REDIS_URL=redis://localhost:6379
-STRIPE_SECRET_KEY=<stripe-key>
-STRIPE_PUBLISHABLE_KEY=<stripe-public-key>
-JWT_SECRET_KEY=<jwt-secret>
+STRIPE_SECRET_KEY=<key>
+ETHEREUM_RPC_URL=https://mainnet.infura.io/v3/<project-id>
+POLYGON_RPC_URL=https://polygon-rpc.com/
 ```
 
 ### Frontend (.env in capimax-preview/)
-```
+```bash
 VITE_API_URL=http://localhost:8000/api/v1
 VITE_STRIPE_PUBLISHABLE_KEY=<stripe-public-key>
-VITE_WALLET_CONNECT_PROJECT_ID=<wallet-connect-id>
+VITE_WALLET_CONNECT_PROJECT_ID=<wallet-connect-project-id>
 ```
 
-## WebSocket Integration
+## Production Deployment
 
-WebSocket connections for real-time features:
-- Connection URL: `ws://localhost:8000/ws/`
-- Channels: notifications, dashboard updates, investment tracking
-- Authentication via JWT token in connection params
-- Django Channels with Redis backend
+Docker Compose config: `capimax_backend/docker-compose.yml`
+
+Services: web (Gunicorn), db (PostgreSQL), redis, celery, celery-beat, nginx, prometheus, grafana
+
+```bash
+cd capimax_backend
+docker-compose up -d
+docker-compose logs -f web
+python validate_production_readiness.py
+```
 
 ## Blockchain Integration
 
-- Separate requirements: `requirements_blockchain.txt`
-- Web3.py for smart contract interaction
-- Brownie framework for contract development
-- IPFS support for metadata storage
-- Ganache for local blockchain testing
+- Smart contracts: `blockchain/contracts/`
+- Web3 library: Web3.py for Ethereum/Polygon
+- RPC endpoints: ETHEREUM_RPC_URL and POLYGON_RPC_URL env vars
+- Contract deployment: `blockchain/services/property_tokenization_service.py`

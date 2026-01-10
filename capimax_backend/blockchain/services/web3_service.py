@@ -12,16 +12,12 @@ import json
 import asyncio
 from datetime import datetime, timedelta
 
-# Try to import real web3, fallback to mock implementation
-try:
-    from web3 import Web3
-    from web3.contract import Contract
-    from web3.exceptions import ContractLogicError, TransactionNotFound
-    from eth_account import Account
-    from eth_utils import to_checksum_address
-except ImportError:
-    # Use mock implementation when web3 is not available
-    from blockchain.mock_web3 import Web3, Contract, ContractLogicError, TransactionNotFound, Account, to_checksum_address
+# Real Web3 imports - fail fast if not available (Phase 1 Blockchain Activation)
+from web3 import Web3
+from web3.contract import Contract
+from web3.exceptions import ContractLogicError, TransactionNotFound
+from eth_account import Account
+from eth_utils import to_checksum_address
 import requests
 
 from django.conf import settings
@@ -51,42 +47,140 @@ class Web3Service:
         self.w3 = None
         self.account = None
         self.contracts_cache = {}
-        
+        self.active_rpc_url = None  # Track which RPC is currently active
+
         if network_id:
             self.initialize_network(network_id)
-    
+
     def initialize_network(self, network_id: str) -> bool:
-        """Initialize Web3 connection for a specific network."""
+        """
+        Initialize Web3 connection for a specific network with RPC failover.
+
+        Tries primary RPC first, then falls back to backup RPCs if available.
+        """
         try:
             self.network = BlockchainNetwork.objects.get(id=network_id, is_active=True)
-            # Add timeout and request kwargs for better reliability
-            provider_kwargs = {
-                'request_kwargs': {
-                    'timeout': 60,
-                    'headers': {'User-Agent': 'Capimax/1.0'}
-                }
-            }
-            self.w3 = Web3(Web3.HTTPProvider(self.network.rpc_url, **provider_kwargs))
-            
-            # Verify connection
-            if not self.w3.is_connected():
-                logger.error(f"Failed to connect to {self.network.name}")
+
+            # Build list of RPC URLs to try (primary + backups)
+            rpc_urls = [self.network.rpc_url]
+            if self.network.backup_rpc_urls:
+                rpc_urls.extend(self.network.backup_rpc_urls)
+
+            # Try each RPC URL until one connects
+            connected = False
+            last_error = None
+
+            for rpc_url in rpc_urls:
+                try:
+                    connected = self._try_connect_rpc(rpc_url)
+                    if connected:
+                        self.active_rpc_url = rpc_url
+                        break
+                except Exception as e:
+                    last_error = e
+                    logger.warning(f"RPC {rpc_url} failed: {str(e)}")
+                    continue
+
+            if not connected:
+                logger.error(
+                    f"Failed to connect to any RPC for {self.network.name}. "
+                    f"Tried {len(rpc_urls)} endpoints. Last error: {last_error}"
+                )
                 return False
-            
+
             # Initialize account if private key is available
             private_key = getattr(settings, 'BLOCKCHAIN_PRIVATE_KEY', None)
             if private_key:
                 self.account = Account.from_key(private_key)
                 logger.info(f"Initialized account: {self.account.address}")
-            
-            logger.info(f"Connected to {self.network.name} (Chain ID: {self.network.chain_id})")
+
+            logger.info(
+                f"Connected to {self.network.name} (Chain ID: {self.network.chain_id}) "
+                f"via {self.active_rpc_url}"
+            )
             return True
-            
+
         except BlockchainNetwork.DoesNotExist:
             logger.error(f"Network {network_id} not found")
             return False
         except Exception as e:
             logger.error(f"Failed to initialize network {network_id}: {str(e)}")
+            return False
+
+    def _try_connect_rpc(self, rpc_url: str) -> bool:
+        """
+        Attempt to connect to a specific RPC endpoint.
+
+        Returns True if connection is successful and healthy.
+        """
+        provider_kwargs = {
+            'request_kwargs': {
+                'timeout': 30,  # Shorter timeout for failover testing
+                'headers': {'User-Agent': 'Capimax/1.0'}
+            }
+        }
+
+        w3 = Web3(Web3.HTTPProvider(rpc_url, **provider_kwargs))
+
+        # Verify connection with a simple call
+        if not w3.is_connected():
+            return False
+
+        # Health check: try to get block number
+        try:
+            block_num = w3.eth.block_number
+            if block_num is None or block_num < 0:
+                return False
+        except Exception:
+            return False
+
+        # Connection is healthy
+        self.w3 = w3
+        return True
+
+    def reconnect_with_failover(self) -> bool:
+        """
+        Attempt to reconnect, trying backup RPCs if primary fails.
+
+        Call this when a connection error is detected during operations.
+        """
+        if not self.network:
+            return False
+
+        logger.warning(f"Attempting reconnection with failover for {self.network.name}")
+
+        # Build list of RPCs, putting current failed one at the end
+        rpc_urls = [self.network.rpc_url]
+        if self.network.backup_rpc_urls:
+            rpc_urls.extend(self.network.backup_rpc_urls)
+
+        # If we have an active URL that failed, move it to the end
+        if self.active_rpc_url and self.active_rpc_url in rpc_urls:
+            rpc_urls.remove(self.active_rpc_url)
+            rpc_urls.append(self.active_rpc_url)
+
+        for rpc_url in rpc_urls:
+            try:
+                if self._try_connect_rpc(rpc_url):
+                    self.active_rpc_url = rpc_url
+                    logger.info(f"Reconnected to {self.network.name} via {rpc_url}")
+                    return True
+            except Exception as e:
+                logger.warning(f"Failover RPC {rpc_url} failed: {str(e)}")
+                continue
+
+        logger.error(f"All RPC failover attempts failed for {self.network.name}")
+        return False
+
+    def is_connection_healthy(self) -> bool:
+        """Check if the current RPC connection is healthy."""
+        if not self.w3:
+            return False
+
+        try:
+            # Quick health check
+            return self.w3.is_connected() and self.w3.eth.block_number > 0
+        except Exception:
             return False
     
     def deploy_contract(
@@ -188,31 +282,57 @@ class Web3Service:
         args: List = None,
         value: int = 0,
         gas_limit: int = None,
-        gas_price: int = None
+        gas_price: int = None,
+        gas_settings: Dict = None
     ) -> Optional[Dict]:
         """
         Call a smart contract function (state-changing transaction).
-        
+
         Returns transaction hash and receipt details.
+        Includes automatic failover on connection errors.
+        """
+        # Handle gas_settings parameter (from tasks.py)
+        if gas_settings:
+            gas_limit = gas_settings.get('gas_limit', gas_limit)
+            gas_price = gas_settings.get('gas_price', gas_price)
+
+        return self._call_contract_function_with_retry(
+            contract_address, abi, function_name, args, value, gas_limit, gas_price
+        )
+
+    def _call_contract_function_with_retry(
+        self,
+        contract_address: str,
+        abi: List[Dict],
+        function_name: str,
+        args: List = None,
+        value: int = 0,
+        gas_limit: int = None,
+        gas_price: int = None,
+        retry_count: int = 0,
+        max_retries: int = 2
+    ) -> Optional[Dict]:
+        """
+        Internal method with retry logic for contract function calls.
         """
         if not self.w3 or not self.account:
             logger.error("Web3 not initialized or account not available")
             return None
-        
+
         try:
             contract = self.create_contract_instance(contract_address, abi)
             if not contract:
                 return None
-            
+
             # Get the function
             function = getattr(contract.functions, function_name)
             if not function:
                 logger.error(f"Function {function_name} not found in contract")
                 return None
-            
+
             # Call with arguments
             function_call = function(*args if args else [])
-            
+
             # Estimate gas if not provided
             if not gas_limit:
                 try:
@@ -224,11 +344,11 @@ class Web3Service:
                 except Exception as e:
                     logger.warning(f"Failed to estimate gas: {str(e)}")
                     gas_limit = 200000  # Default gas limit
-            
+
             # Get gas price if not provided
             if not gas_price:
                 gas_price = self.get_optimal_gas_price()
-            
+
             # Build transaction
             transaction_params = {
                 'from': self.account.address,
@@ -237,18 +357,18 @@ class Web3Service:
                 'value': value,
                 'nonce': self.w3.eth.get_transaction_count(self.account.address),
             }
-            
+
             transaction_data = function_call.build_transaction(transaction_params)
-            
+
             # Sign and send transaction
             signed_txn = self.w3.eth.account.sign_transaction(transaction_data, self.account.key)
             tx_hash = self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
-            
+
             logger.info(f"Transaction sent: {tx_hash.hex()}")
-            
+
             # Wait for transaction receipt
             receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=300)
-            
+
             return {
                 'transaction_hash': tx_hash.hex(),
                 'status': receipt['status'],
@@ -257,13 +377,42 @@ class Web3Service:
                 'block_number': receipt['blockNumber'],
                 'receipt': dict(receipt)
             }
-            
+
         except ContractLogicError as e:
+            # Contract logic errors are not connection issues, don't retry
             logger.error(f"Contract logic error calling {function_name}: {str(e)}")
-            return None
+            return {'status': 0, 'error': f"Contract error: {str(e)}"}
+
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout,
+                ConnectionRefusedError, TimeoutError) as e:
+            # Connection error - try failover
+            logger.warning(f"Connection error calling {function_name}: {str(e)}")
+
+            if retry_count < max_retries:
+                logger.info(f"Attempting RPC failover (retry {retry_count + 1}/{max_retries})")
+                if self.reconnect_with_failover():
+                    return self._call_contract_function_with_retry(
+                        contract_address, abi, function_name, args, value,
+                        gas_limit, gas_price, retry_count + 1, max_retries
+                    )
+
+            logger.error(f"All retry attempts failed for {function_name}")
+            return {'status': 0, 'error': f"Connection error after {max_retries} retries: {str(e)}"}
+
         except Exception as e:
+            error_str = str(e).lower()
+            # Check if this looks like a connection error
+            if any(x in error_str for x in ['connection', 'timeout', 'refused', 'unavailable']):
+                if retry_count < max_retries:
+                    logger.info(f"Attempting RPC failover for connection-like error")
+                    if self.reconnect_with_failover():
+                        return self._call_contract_function_with_retry(
+                            contract_address, abi, function_name, args, value,
+                            gas_limit, gas_price, retry_count + 1, max_retries
+                        )
+
             logger.error(f"Error calling contract function {function_name}: {str(e)}")
-            return None
+            return {'status': 0, 'error': str(e)}
     
     def read_contract_function(
         self,

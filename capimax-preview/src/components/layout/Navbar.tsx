@@ -18,9 +18,8 @@ export const Navbar: React.FC = () => {
 
   const navItems = [
     { name: 'Properties', route: 'properties' as const, href: '#properties' },
-    { name: 'How It Works', route: null, href: '#how-it-works' },
-    { name: 'About', route: 'about' as const, href: '#about' },
-    { name: 'Contact', route: 'contact' as const, href: '#contact' }
+    { name: 'Secondary Market', route: 'marketplace' as const, href: '#marketplace' },
+    { name: 'Partner Program', route: 'broker-program' as const, href: '#broker-program' }
   ];
 
   const handleNavClick = (item: typeof navItems[0], e: React.MouseEvent) => {

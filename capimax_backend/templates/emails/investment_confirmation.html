@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Confirmed - {{ investment.property_name }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .greeting {
+            font-size: 24px;
+            font-weight: 600;
+            color: #16a34a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .success-icon {
+            width: 32px;
+            height: 32px;
+            background-color: #16a34a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+
+        .success-icon::after {
+            content: "✓";
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .message {
+            font-size: 16px;
+            line-height: 1.7;
+            margin-bottom: 30px;
+            color: #555;
+        }
+
+        .confirmation-box {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 2px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .confirmation-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #16a34a;
+            margin-bottom: 15px;
+        }
+
+        .investment-summary {
+            background-color: #f8fafc;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+
+        .summary-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .property-details {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .property-image {
+            width: 120px;
+            height: 90px;
+            background-color: #e5e7eb;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 12px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .property-info {
+            flex: 1;
+        }
+
+        .property-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+
+        .property-location {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .property-type {
+            font-size: 12px;
+            background-color: #dbeafe;
+            color: #1e40af;
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .investment-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-item {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-size: 16px;
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .amount-highlight {
+            color: #16a34a;
+            font-size: 20px;
+        }
+
+        .transaction-info {
+            background-color: #f0f9ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        .transaction-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .transaction-icon {
+            width: 20px;
+            height: 20px;
+            background-color: #2563eb;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+
+        .transaction-icon::after {
+            content: "📄";
+            font-size: 12px;
+        }
+
+        .transaction-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .transaction-label {
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .transaction-value {
+            color: #6b7280;
+        }
+
+        .next-steps {
+            background-color: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        .next-steps-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #d97706;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .lightbulb-icon {
+            width: 20px;
+            height: 20px;
+            background-color: #f59e0b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+
+        .lightbulb-icon::after {
+            content: "💡";
+            font-size: 12px;
+        }
+
+        .steps-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .steps-list li {
+            font-size: 14px;
+            color: #92400e;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .steps-list li::before {
+            content: "→";
+            color: #f59e0b;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .action-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            margin: 0 10px 10px 0;
+            transition: transform 0.2s ease;
+        }
+
+        .action-button:hover {
+            transform: translateY(-1px);
+        }
+
+        .action-button.secondary {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        }
+
+        .footer {
+            background-color: #f8fafc;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .footer-text {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 10px;
+        }
+
+        .contact-info {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .disclaimer {
+            background-color: #f3f4f6;
+            border-left: 4px solid #6b7280;
+            padding: 15px 20px;
+            margin: 20px 0;
+        }
+
+        .disclaimer-text {
+            font-size: 12px;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 0;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .logo {
+                font-size: 28px;
+            }
+
+            .greeting {
+                font-size: 20px;
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .success-icon {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+
+            .property-details {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .property-image {
+                width: 100%;
+                height: 120px;
+            }
+
+            .investment-details {
+                grid-template-columns: 1fr;
+            }
+
+            .transaction-row {
+                flex-direction: column;
+            }
+
+            .transaction-value {
+                margin-top: 2px;
+            }
+
+            .action-button {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">CapiMax</div>
+            <div class="subtitle">Investment Confirmation</div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content">
+            <div class="greeting">
+                <div class="success-icon"></div>
+                Investment Confirmed!
+            </div>
+
+            <div class="message">
+                Hello {{ user.first_name }},<br><br>
+                Congratulations! Your investment in {{ investment.property_name }} has been successfully confirmed.
+                You are now a proud fractional owner of this premium real estate property.
+            </div>
+
+            <div class="confirmation-box">
+                <div class="confirmation-title">✓ Investment Successfully Processed</div>
+                <p style="margin-bottom: 0; color: #555; font-size: 14px;">
+                    Your investment of ${{ investment.amount }} has been confirmed on {{ confirmation_time }}.
+                </p>
+            </div>
+
+            <div class="investment-summary">
+                <div class="summary-title">Investment Summary</div>
+
+                <div class="property-details">
+                    <div class="property-image">
+                        {% if investment.property_image %}
+                        <img src="{{ investment.property_image }}" alt="{{ investment.property_name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                        {% else %}
+                        Property Image
+                        {% endif %}
+                    </div>
+                    <div class="property-info">
+                        <div class="property-name">{{ investment.property_name }}</div>
+                        <div class="property-location">{{ investment.property_location|default:"Location TBA" }}</div>
+                        <div class="property-type">{{ investment.property_type|default:"Real Estate" }}</div>
+                    </div>
+                </div>
+
+                <div class="investment-details">
+                    <div class="detail-item">
+                        <div class="detail-label">Investment Amount</div>
+                        <div class="detail-value amount-highlight">${{ investment.amount }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Shares Purchased</div>
+                        <div class="detail-value">{{ investment.shares|default:"TBA" }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Share Price</div>
+                        <div class="detail-value">${{ investment.share_price|default:"TBA" }}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Expected Annual Return</div>
+                        <div class="detail-value">{{ investment.expected_return|default:"8-12%" }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="transaction-info">
+                <div class="transaction-title">
+                    <div class="transaction-icon"></div>
+                    Transaction Details
+                </div>
+                <div class="transaction-row">
+                    <span class="transaction-label">Transaction ID:</span>
+                    <span class="transaction-value">{{ investment.transaction_id|default:"TXN" }}{{ investment.id }}</span>
+                </div>
+                <div class="transaction-row">
+                    <span class="transaction-label">Payment Method:</span>
+                    <span class="transaction-value">{{ investment.payment_method|default:"Credit Card" }}</span>
+                </div>
+                <div class="transaction-row">
+                    <span class="transaction-label">Transaction Time:</span>
+                    <span class="transaction-value">{{ confirmation_time }}</span>
+                </div>
+                <div class="transaction-row">
+                    <span class="transaction-label">Status:</span>
+                    <span class="transaction-value" style="color: #16a34a; font-weight: 600;">Confirmed</span>
+                </div>
+            </div>
+
+            <div class="next-steps">
+                <div class="next-steps-title">
+                    <div class="lightbulb-icon"></div>
+                    What Happens Next?
+                </div>
+                <ul class="steps-list">
+                    <li>Your ownership shares will be tokenized on the blockchain within 24-48 hours</li>
+                    <li>You'll receive updates on property performance and rental income</li>
+                    <li>Dividend distributions will begin according to the property schedule</li>
+                    <li>You can track your investment performance in your dashboard</li>
+                    <li>Property tokens can be traded on our marketplace when available</li>
+                </ul>
+            </div>
+
+            <div class="action-buttons">
+                <a href="#" class="action-button">View Portfolio</a>
+                <a href="#" class="action-button secondary">Property Details</a>
+            </div>
+
+            <div class="disclaimer">
+                <div class="disclaimer-text">
+                    <strong>Investment Disclaimer:</strong> Real estate investments carry inherent risks including market volatility,
+                    liquidity constraints, and potential loss of principal. Past performance does not guarantee future results.
+                    Please review all investment documents and consult with financial advisors as needed.
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-text">
+                <strong>CapiMax Investment</strong><br>
+                Building Wealth Through Real Estate
+            </div>
+            <div class="contact-info">
+                Investment Support: investments@capimaxinvestment.com | General Support: support@capimaxinvestment.com<br>
+                This confirmation was sent to {{ user.email }}.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

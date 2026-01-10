@@ -23,8 +23,17 @@ from properties.models import Property
 from accounts.models import User
 from payments.models import Payment, WalletBalance
 from core.exceptions import InvestmentError
+from core.services.email_service import EmailService
 
 logger = logging.getLogger(__name__)
+
+
+# Investment limits by KYC verification level
+INVESTMENT_LIMITS = {
+    'basic': {'daily': Decimal('1000'), 'monthly': Decimal('5000')},
+    'enhanced': {'daily': Decimal('5000'), 'monthly': Decimal('25000')},
+    'premium': {'daily': Decimal('25000'), 'monthly': Decimal('100000')},
+}
 
 
 class InvestmentCalculationService:
@@ -314,7 +323,30 @@ class InvestmentProcessingService:
             
             # Complete investment
             investment.complete_investment()
-            
+
+            # Send investment confirmation email
+            try:
+                investment_details = {
+                    'property_name': property_obj.title,
+                    'property_location': property_obj.location,
+                    'property_type': property_obj.property_type,
+                    'amount': str(investment.investment_amount),
+                    'shares': str(investment.token_amount),
+                    'share_price': str(property_obj.token_price),
+                    'expected_return': f"{property_obj.expected_return}%" if property_obj.expected_return else "N/A",
+                    'transaction_id': str(investment.id),
+                    'payment_method': payment.payment_method if hasattr(payment, 'payment_method') else 'N/A',
+                    'id': investment.id
+                }
+
+                EmailService.send_investment_confirmation_email(
+                    user=investment.user,
+                    investment_details=investment_details
+                )
+                logger.info(f"Investment confirmation email sent for investment {investment.id}")
+            except Exception as e:
+                logger.error(f"Failed to send investment confirmation email for investment {investment.id}: {str(e)}")
+
             # Release any token reservations for this investment
             TokenReservation.objects.filter(
                 user=investment.user,
@@ -514,7 +546,38 @@ class DividendDistributionService:
                     
                     # Credit user wallet (simplified - would integrate with payment system)
                     cls._credit_user_dividend(dividend.investment.user, dividend_amount)
-                    
+
+                    # Send dividend notification email
+                    try:
+                        dividend_details = {
+                            'property_name': dividend.investment.property_investment.title,
+                            'property_location': dividend.investment.property_investment.location,
+                            'amount': str(dividend_amount),
+                            'period': f"{dividend.period_start.strftime('%B %Y')}",
+                            'ownership_percentage': f"{dividend.investment.ownership_percentage}%",
+                            'shares_owned': str(dividend.investment.token_amount),
+                            'total_income': str(property_income),
+                            'occupancy_rate': '95%',  # This could be dynamic based on property data
+                            'annual_yield': f"{dividend.investment.property_investment.rental_yield}%" if dividend.investment.property_investment.rental_yield else "N/A",
+                            'property_value': f"${dividend.investment.property_investment.total_value:,.0f}",
+                            'initial_investment': str(dividend.investment.investment_amount),
+                            'total_dividends': str(DividendPayment.objects.filter(
+                                investment=dividend.investment,
+                                status='paid'
+                            ).aggregate(total=Sum('amount'))['total'] or Decimal('0')),
+                            'current_value': str(dividend.investment.current_value),
+                            'total_return': f"{((dividend.investment.current_value - dividend.investment.investment_amount) / dividend.investment.investment_amount * 100):+.1f}%",
+                            'next_distribution': 'Expected next month'
+                        }
+
+                        EmailService.send_dividend_notification_email(
+                            user=dividend.investment.user,
+                            dividend_details=dividend_details
+                        )
+                        logger.info(f"Dividend notification email sent for dividend {dividend.id}")
+                    except Exception as e:
+                        logger.error(f"Failed to send dividend notification email for dividend {dividend.id}: {str(e)}")
+
                     results.append({
                         'dividend_id': str(dividend.id),
                         'user_email': dividend.investment.user.email,
@@ -717,3 +780,330 @@ class InvestmentRecommendationService:
             return 'medium'
         else:
             return 'low'
+
+
+class WalletInvestmentService:
+    """Service for processing wallet-based investments with complete end-to-end logic."""
+
+    @classmethod
+    def check_investment_limits(cls, user: User, investment_amount: Decimal) -> None:
+        """
+        Check if user's investment amount is within their daily and monthly limits.
+        Raises InvestmentError if limits are exceeded.
+        """
+        # Get user's KYC level for limits
+        kyc_profile = getattr(user, 'kyc_profile', None)
+        kyc_level = kyc_profile.verification_level if kyc_profile else 'basic'
+
+        # Get limits for this KYC level
+        limits = INVESTMENT_LIMITS.get(kyc_level, INVESTMENT_LIMITS['basic'])
+        daily_limit = limits['daily']
+        monthly_limit = limits['monthly']
+
+        # Calculate current usage
+        today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        month_start = today_start.replace(day=1)
+
+        daily_used = Investment.objects.filter(
+            user=user,
+            created_at__gte=today_start,
+            status__in=['pending', 'processing', 'pending_mint', 'minting', 'completed']
+        ).aggregate(
+            total=Sum('investment_amount')
+        )['total'] or Decimal('0')
+
+        monthly_used = Investment.objects.filter(
+            user=user,
+            created_at__gte=month_start,
+            status__in=['pending', 'processing', 'pending_mint', 'minting', 'completed']
+        ).aggregate(
+            total=Sum('investment_amount')
+        )['total'] or Decimal('0')
+
+        # Check daily limit
+        daily_remaining = daily_limit - daily_used
+        if investment_amount > daily_remaining:
+            raise InvestmentError(
+                f"Exceeds daily investment limit. "
+                f"Remaining today: ${daily_remaining:.2f} (Limit: ${daily_limit:.2f})"
+            )
+
+        # Check monthly limit
+        monthly_remaining = monthly_limit - monthly_used
+        if investment_amount > monthly_remaining:
+            raise InvestmentError(
+                f"Exceeds monthly investment limit. "
+                f"Remaining this month: ${monthly_remaining:.2f} (Limit: ${monthly_limit:.2f})"
+            )
+
+    @classmethod
+    @transaction.atomic
+    def process_wallet_investment(
+        cls,
+        user: User,
+        property_id: str,
+        investment_amount: Decimal,
+        token_amount: int
+    ) -> Dict:
+        """
+        Process complete wallet-based investment transaction.
+
+        This implements the full end-to-end logic required:
+        1. Verify user has sufficient wallet funds
+        2. Deduct investment amount from wallet balance
+        3. Allocate tokens to user's portfolio
+        4. Update property data (tokens_available, total_funds_raised, investor_count)
+        5. Record transaction in user's transaction history
+        6. Return success status for UI display
+        """
+        try:
+            # Check investment limits FIRST before any other processing
+            cls.check_investment_limits(user, investment_amount)
+
+            # Get property with lock to prevent race conditions
+            property_obj = Property.objects.select_for_update().get(id=property_id)
+
+            # Verify token availability
+            available_tokens = property_obj.total_tokens - property_obj.tokens_sold
+            if token_amount > available_tokens:
+                raise InvestmentError(f"Insufficient tokens available. Requested: {token_amount}, Available: {available_tokens}")
+
+            # Get user's wallet balance
+            wallet_balance = WalletBalance.objects.select_for_update().get(
+                user=user,
+                currency='USD'
+            )
+
+            # Verify sufficient wallet funds
+            if wallet_balance.available_balance < investment_amount:
+                raise InvestmentError(
+                    f"Insufficient wallet balance. Required: ${investment_amount}, Available: ${wallet_balance.available_balance}"
+                )
+
+            # Calculate fees
+            platform_fee = investment_amount * InvestmentCalculationService.PLATFORM_FEE_RATE
+            total_amount = investment_amount + platform_fee
+
+            # Verify total amount including fees
+            if wallet_balance.available_balance < total_amount:
+                raise InvestmentError(
+                    f"Insufficient wallet balance including fees. Required: ${total_amount}, Available: ${wallet_balance.available_balance}"
+                )
+
+            # Step 1: Deduct investment amount from user's wallet balance
+            balance_before = wallet_balance.available_balance
+            wallet_balance.available_balance -= total_amount
+            wallet_balance.save(update_fields=['available_balance'])
+
+            # Step 2: Create wallet transaction record
+            from payments.models import WalletTransaction
+            wallet_transaction = WalletTransaction.objects.create(
+                user=user,
+                transaction_type='investment',
+                amount=-total_amount,
+                currency='USD',
+                balance_before=balance_before,
+                balance_after=wallet_balance.available_balance,
+                description=f'Investment in {property_obj.title} - {token_amount} tokens'
+            )
+
+            # Step 3: Create Payment record for this wallet transaction
+            payment = Payment.objects.create(
+                user=user,
+                amount=total_amount,
+                currency='USD',
+                payment_method='wallet',
+                status='completed',
+                payment_provider='wallet',
+                transaction_id=str(wallet_transaction.id),
+                metadata={
+                    'wallet_transaction_id': str(wallet_transaction.id),
+                    'property_id': str(property_id),
+                    'token_amount': token_amount
+                }
+            )
+
+            # Step 4: Create Investment record
+            investment = Investment.objects.create(
+                user=user,
+                property_investment=property_obj,
+                investment_amount=investment_amount,
+                token_amount=token_amount,
+                investment_type='fractional',
+                payment_method='wallet',
+                status=InvestmentStatus.PROCESSING,
+                fees=platform_fee,
+                metadata={
+                    'payment_id': str(payment.id),
+                    'wallet_transaction_id': str(wallet_transaction.id)
+                }
+            )
+
+            # Step 5: Process investment through existing service (updates property tokens_sold)
+            success = InvestmentProcessingService.process_investment(investment, payment)
+
+            if not success:
+                raise InvestmentError("Investment processing failed")
+
+            # Step 6: Update property total_funds_raised (this is calculated dynamically but we can add it explicitly)
+            # The property model should have a method to calculate this, but let's ensure it's updated
+            property_obj.refresh_from_db()
+
+            # Calculate current investor count for this property
+            investor_count = Investment.objects.filter(
+                property_investment=property_obj,
+                status=InvestmentStatus.COMPLETED
+            ).values('user').distinct().count()
+
+            # Calculate total funds raised for this property
+            total_funds_raised = Investment.objects.filter(
+                property_investment=property_obj,
+                status=InvestmentStatus.COMPLETED
+            ).aggregate(
+                total=Sum('investment_amount')
+            )['total'] or Decimal('0')
+
+            logger.info(
+                f"Wallet investment completed successfully: "
+                f"User {user.id}, Property {property_id}, "
+                f"Amount ${investment_amount}, Tokens {token_amount}, "
+                f"New tokens_sold: {property_obj.tokens_sold}, "
+                f"Investor count: {investor_count}, "
+                f"Total funds raised: ${total_funds_raised}"
+            )
+
+            # Return success response with all relevant data
+            return {
+                'success': True,
+                'investment_id': str(investment.id),
+                'payment_id': str(payment.id),
+                'wallet_transaction_id': str(wallet_transaction.id),
+                'message': 'Investment completed successfully',
+                'investment': {
+                    'amount': str(investment_amount),
+                    'tokens': token_amount,
+                    'fees': str(platform_fee),
+                    'total_paid': str(total_amount)
+                },
+                'property_updates': {
+                    'tokens_sold': property_obj.tokens_sold,
+                    'tokens_available': property_obj.total_tokens - property_obj.tokens_sold,
+                    'investor_count': investor_count,
+                    'total_funds_raised': str(total_funds_raised),
+                    'funding_percentage': float((total_funds_raised / property_obj.total_value) * 100) if property_obj.total_value else 0
+                },
+                'wallet_updates': {
+                    'new_balance': str(wallet_balance.available_balance),
+                    'amount_deducted': str(total_amount)
+                }
+            }
+
+        except Property.DoesNotExist:
+            raise InvestmentError("Property not found")
+        except WalletBalance.DoesNotExist:
+            raise InvestmentError("User wallet not found")
+        except Exception as e:
+            logger.error(f"Wallet investment failed for user {user.id}, property {property_id}: {str(e)}")
+            raise InvestmentError(f"Investment failed: {str(e)}")
+
+    @classmethod
+    def validate_wallet_investment(
+        cls,
+        user: User,
+        property_id: str,
+        investment_amount: Decimal,
+        token_amount: int
+    ) -> Dict:
+        """
+        Validate wallet investment before processing.
+        Returns validation result with detailed information.
+        """
+        try:
+            property_obj = Property.objects.get(id=property_id)
+
+            # Check token availability
+            available_tokens = property_obj.total_tokens - property_obj.tokens_sold
+            token_availability_valid = token_amount <= available_tokens
+
+            # Check wallet balance
+            try:
+                wallet_balance = WalletBalance.objects.get(user=user, currency='USD')
+                balance_sufficient = wallet_balance.available_balance >= investment_amount
+
+                # Calculate fees
+                platform_fee = investment_amount * InvestmentCalculationService.PLATFORM_FEE_RATE
+                total_amount = investment_amount + platform_fee
+                total_balance_sufficient = wallet_balance.available_balance >= total_amount
+
+            except WalletBalance.DoesNotExist:
+                wallet_balance = None
+                balance_sufficient = False
+                total_balance_sufficient = False
+                platform_fee = Decimal('0')
+                total_amount = investment_amount
+
+            # Calculate investment details
+            ownership_percentage = (Decimal(token_amount) / Decimal(property_obj.total_tokens)) * 100
+
+            return {
+                'valid': token_availability_valid and total_balance_sufficient,
+                'property': {
+                    'id': str(property_obj.id),
+                    'title': property_obj.title,
+                    'token_price': str(property_obj.token_price),
+                    'total_tokens': property_obj.total_tokens,
+                    'available_tokens': available_tokens,
+                    'tokens_requested': token_amount
+                },
+                'wallet': {
+                    'available_balance': str(wallet_balance.available_balance) if wallet_balance else '0.00',
+                    'balance_sufficient': total_balance_sufficient,
+                    'amount_required': str(total_amount)
+                },
+                'investment': {
+                    'base_amount': str(investment_amount),
+                    'platform_fee': str(platform_fee),
+                    'total_amount': str(total_amount),
+                    'ownership_percentage': str(ownership_percentage.quantize(Decimal('0.0001')))
+                },
+                'validation_errors': cls._get_validation_errors(
+                    token_availability_valid,
+                    total_balance_sufficient,
+                    available_tokens,
+                    token_amount,
+                    wallet_balance.available_balance if wallet_balance else Decimal('0'),
+                    total_amount
+                )
+            }
+
+        except Property.DoesNotExist:
+            return {
+                'valid': False,
+                'validation_errors': ['Property not found']
+            }
+        except Exception as e:
+            return {
+                'valid': False,
+                'validation_errors': [f'Validation failed: {str(e)}']
+            }
+
+    @classmethod
+    def _get_validation_errors(
+        cls,
+        token_availability_valid: bool,
+        balance_sufficient: bool,
+        available_tokens: int,
+        requested_tokens: int,
+        available_balance: Decimal,
+        required_amount: Decimal
+    ) -> List[str]:
+        """Get list of validation errors."""
+        errors = []
+
+        if not token_availability_valid:
+            errors.append(f'Insufficient tokens available. Requested: {requested_tokens}, Available: {available_tokens}')
+
+        if not balance_sufficient:
+            errors.append(f'Insufficient wallet balance. Required: ${required_amount}, Available: ${available_balance}')
+
+        return errors

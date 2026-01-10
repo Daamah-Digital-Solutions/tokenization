@@ -55,6 +55,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             'first_name': {'required': True},
             'last_name': {'required': True},
             'country': {'required': True},
+            'date_of_birth': {'required': True},
         }
     
     def validate_email(self, value):
@@ -68,7 +69,38 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         if value and len(value.replace('+', '').replace('-', '').replace(' ', '')) < 10:
             raise serializers.ValidationError("Please provide a valid phone number.")
         return value
-    
+
+    def validate_date_of_birth(self, value):
+        """Validate user is at least 18 years old (legal age for investment)."""
+        if not value:
+            raise serializers.ValidationError(
+                "Date of birth is required for investment platform registration."
+            )
+
+        from datetime import date
+        today = date.today()
+
+        # Calculate age
+        age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
+
+        if age < 18:
+            raise serializers.ValidationError(
+                "You must be at least 18 years old to register on this investment platform."
+            )
+
+        if age > 120:
+            raise serializers.ValidationError(
+                "Please enter a valid date of birth."
+            )
+
+        # Ensure date is not in the future
+        if value > today:
+            raise serializers.ValidationError(
+                "Date of birth cannot be in the future."
+            )
+
+        return value
+
     def validate(self, attrs):
         """Validate password confirmation, roles, and overall data integrity."""
         if attrs.get('password') != attrs.get('confirm_password'):
@@ -135,27 +167,10 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             expires_at=timezone.now() + timedelta(hours=24)
         )
 
-        # Send verification email (in a real app, this should be in a task)
-        self.send_verification_email(user)
+        # Note: Email verification is now handled in the views.py with 6-digit codes
 
         return user
     
-    def send_verification_email(self, user):
-        """Send email verification email to user."""
-        verification_token = user.emailverificationtoken_set.filter(verified=False).first()
-        if verification_token:
-            verification_url = f"http://localhost:3000/verify-email?token={verification_token.token}"
-            send_notification_email(
-                to_email=user.email,
-                subject="Welcome to Capimax - Verify Your Email",
-                message=f"Please verify your email by clicking: {verification_url}",
-                html_message=f"""
-                <h2>Welcome to Capimax Real Estate Tokenization Platform</h2>
-                <p>Please verify your email address by clicking the link below:</p>
-                <p><a href="{verification_url}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Verify Email</a></p>
-                <p>This link will expire in 24 hours.</p>
-                """
-            )
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -190,7 +205,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 raise serializers.ValidationError(
                     f"Account is suspended. Reason: {user.suspension_reason or 'Contact support for more information.'}"
                 )
-            
+
+            # Check email verification
+            if not user.is_verified:
+                raise serializers.ValidationError(
+                    "Please verify your email address before logging in. Check your email for a verification link."
+                )
+
             # Check 2FA if enabled
             if user.two_factor_enabled:
                 if not two_factor_code:
@@ -259,18 +280,19 @@ class UserProfileSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='get_full_name', read_only=True)
     available_roles = serializers.SerializerMethodField()
     primary_role = serializers.SerializerMethodField()
+    kyc_status = serializers.CharField(read_only=True)
 
     class Meta:
         model = User
         fields = (
             'id', 'email', 'first_name', 'last_name', 'full_name', 'role',
             'available_roles', 'primary_role', 'phone', 'country', 'date_of_birth',
-            'address', 'city', 'state', 'postal_code', 'is_verified',
+            'address', 'city', 'state', 'postal_code', 'is_verified', 'kyc_status',
             'wallet_address', 'two_factor_enabled', 'created_at', 'updated_at'
         )
         read_only_fields = (
             'id', 'email', 'role', 'available_roles', 'primary_role',
-            'is_verified', 'two_factor_enabled', 'created_at', 'updated_at'
+            'is_verified', 'kyc_status', 'two_factor_enabled', 'created_at', 'updated_at'
         )
 
     def get_available_roles(self, obj):
@@ -329,11 +351,39 @@ class PasswordChangeSerializer(serializers.Serializer):
         return attrs
     
     def save(self):
-        """Update user password."""
+        """Update user password and send confirmation email."""
         user = self.context['request'].user
+        request = self.context['request']
+
+        # Update password
         user.set_password(self.validated_data['new_password'])
         user.save(update_fields=['password'])
+
+        # Send password change confirmation email
+        from core.services.email_service import EmailService
+        change_info = {
+            'ip_address': self.get_client_ip(request),
+            'user_agent': request.META.get('HTTP_USER_AGENT', 'Unknown Browser'),
+            'location': 'Unknown Location',  # Could be enhanced with IP geolocation
+            'dashboard_url': request.build_absolute_uri('/dashboard'),
+            'security_settings_url': request.build_absolute_uri('/dashboard/security'),
+        }
+
+        EmailService.send_password_changed_email(
+            user=user,
+            change_info=change_info
+        )
+
         return user
+
+    def get_client_ip(self, request):
+        """Extract client IP address from request."""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
@@ -362,29 +412,47 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         if self.user:
             # Invalidate existing tokens
             PasswordResetToken.objects.filter(user=self.user, used=False).update(used=True)
-            
+
             # Create new token
             reset_token = PasswordResetToken.objects.create(
                 user=self.user,
                 expires_at=timezone.now() + timedelta(hours=1)
             )
-            
-            # Send reset email
-            reset_url = f"http://localhost:3000/reset-password?token={reset_token.token}"
-            send_notification_email(
-                to_email=self.user.email,
-                subject="Capimax - Password Reset Request",
-                message=f"Reset your password by clicking: {reset_url}",
-                html_message=f"""
-                <h2>Password Reset Request</h2>
-                <p>Click the link below to reset your password:</p>
-                <p><a href="{reset_url}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a></p>
-                <p>This link will expire in 1 hour.</p>
-                <p>If you didn't request this, please ignore this email.</p>
-                """
+
+            # Build reset URL - Always point to frontend
+            request = self.context.get('request')
+            # Always use frontend URL regardless of request presence
+            reset_url = f"http://localhost:5173/new-password?token={reset_token.token}"
+
+            if request:
+                request_info = {
+                    'ip_address': self.get_client_ip(request),
+                    'user_agent': request.META.get('HTTP_USER_AGENT', 'Unknown Browser'),
+                }
+            else:
+                request_info = {
+                    'ip_address': 'Unknown',
+                    'user_agent': 'Unknown Browser',
+                }
+
+            # Send reset email using EmailService
+            from core.services.email_service import EmailService
+            EmailService.send_password_reset_email(
+                user=self.user,
+                reset_url=reset_url,
+                request_info=request_info
             )
-        
+
         return True
+
+    def get_client_ip(self, request):
+        """Extract client IP address from request."""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
@@ -431,45 +499,97 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     def save(self):
         """Reset user password and mark token as used."""
         user = self.reset_token.user
+        request = self.context.get('request')
+
+        # Update password
         user.set_password(self.validated_data['new_password'])
         user.save(update_fields=['password'])
-        
+
         # Mark token as used
         self.reset_token.mark_as_used()
-        
+
+        # Send password change confirmation email
+        from core.services.email_service import EmailService
+        if request:
+            change_info = {
+                'ip_address': self.get_client_ip(request),
+                'user_agent': request.META.get('HTTP_USER_AGENT', 'Unknown Browser'),
+                'location': 'Unknown Location',  # Could be enhanced with IP geolocation
+                'dashboard_url': request.build_absolute_uri('/dashboard'),
+                'security_settings_url': request.build_absolute_uri('/dashboard/security'),
+            }
+        else:
+            change_info = {
+                'ip_address': 'Unknown',
+                'user_agent': 'Unknown Browser',
+                'location': 'Unknown Location',
+                'dashboard_url': '#',
+                'security_settings_url': '#',
+            }
+
+        EmailService.send_password_changed_email(
+            user=user,
+            change_info=change_info
+        )
+
         return user
+
+    def get_client_ip(self, request):
+        """Extract client IP address from request."""
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
 
 
 class EmailVerificationSerializer(serializers.Serializer):
     """
-    Serializer for email verification.
-    
-    Validates verification token and marks email as verified.
+    Serializer for email verification using 6-digit codes.
+
+    Validates verification code and marks email as verified.
     """
-    
-    token = serializers.UUIDField()
-    
-    def validate_token(self, value):
-        """Validate verification token."""
+
+    email = serializers.EmailField()
+    code = serializers.CharField(max_length=6, min_length=6)
+
+    def validate(self, attrs):
+        """Validate verification code for the given email."""
+        email = attrs['email']
+        code = attrs['code']
+
         try:
-            verification_token = EmailVerificationToken.objects.get(token=value)
+            verification_token = EmailVerificationToken.objects.get(
+                user__email=email,
+                code=code
+            )
             if not verification_token.is_valid():
-                raise serializers.ValidationError("Invalid or expired verification token.")
+                raise serializers.ValidationError("Invalid or expired verification code.")
             self.verification_token = verification_token
-            return value
+            return attrs
         except EmailVerificationToken.DoesNotExist:
-            raise serializers.ValidationError("Invalid verification token.")
-    
+            raise serializers.ValidationError("Invalid verification code.")
+
     def save(self):
-        """Mark email as verified."""
+        """Mark email as verified and generate JWT tokens for automatic login."""
+        from rest_framework_simplejwt.tokens import RefreshToken
+
         user = self.verification_token.user
         user.is_verified = True
         user.save(update_fields=['is_verified'])
-        
+
         # Mark token as verified
         self.verification_token.mark_as_verified()
-        
-        return user
+
+        # Generate JWT tokens for automatic login
+        refresh = RefreshToken.for_user(user)
+
+        return {
+            'user': user,
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
 
 
 class TwoFactorSetupSerializer(serializers.Serializer):

@@ -13,4 +13,7 @@ app_name = 'dashboard'
 urlpatterns = [
     # Dashboard statistics endpoint
     path('stats/', views.DashboardStatsView.as_view(), name='dashboard-stats'),
+
+    # Property Owner Activity Feed endpoint
+    path('activities/', views.PropertyOwnerActivityFeedView.as_view(), name='property-owner-activities'),
 ]

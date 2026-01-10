@@ -68,9 +68,15 @@ class BlockchainNetwork(models.Model):
     )
     
     rpc_url = models.URLField(
-        help_text="RPC endpoint URL for blockchain interaction"
+        help_text="Primary RPC endpoint URL for blockchain interaction"
     )
-    
+
+    backup_rpc_urls = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="List of backup RPC endpoint URLs for failover (e.g., ['https://backup1.com', 'https://backup2.com'])"
+    )
+
     explorer_url = models.URLField(
         blank=True,
         null=True,

@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from .models import (
     BrokerProfile, BrokerCommission, BrokerReferral,
-    MarketingMaterial, BrokerPerformanceMetrics
+    MarketingMaterial, BrokerPerformanceMetrics, BrokerApplication
 )
 
 
@@ -316,3 +316,107 @@ class BrokerPerformanceMetricsAdmin(admin.ModelAdmin):
         """Display broker's name."""
         return obj.broker.user.get_full_name()
     broker_name.short_description = 'Broker'
+
+
+
+@admin.register(BrokerApplication)
+class BrokerApplicationAdmin(admin.ModelAdmin):
+    """Admin interface for broker applications."""
+
+    list_display = [
+        'full_name', 'email', 'application_status', 'experience_level',
+        'country', 'terms_accepted', 'created_at', 'reviewed_at'
+    ]
+    list_filter = [
+        'application_status', 'experience_level', 'country',
+        'terms_accepted', 'created_at', 'reviewed_at'
+    ]
+    search_fields = [
+        'first_name', 'last_name', 'email', 'phone_number',
+        'current_company', 'license_number'
+    ]
+    readonly_fields = [
+        'id', 'created_at', 'updated_at', 'reviewed_at'
+    ]
+    fieldsets = [
+        ('Application Information', {
+            'fields': ['id', 'application_status', 'created_at', 'updated_at']
+        }),
+        ('Personal Information', {
+            'fields': [
+                'first_name', 'last_name', 'email', 'phone_number',
+                'country', 'city_address'
+            ]
+        }),
+        ('Professional Credentials', {
+            'fields': [
+                'license_number', 'experience_level', 'current_company',
+                'referral_strategy', 'supporting_documents'
+            ]
+        }),
+        ('Agreements', {
+            'fields': ['terms_accepted']
+        }),
+        ('Review Information', {
+            'fields': [
+                'reviewed_by', 'reviewed_at', 'rejection_reason',
+                'admin_notes', 'associated_user'
+            ]
+        })
+    ]
+
+    def full_name(self, obj):
+        """Display applicant's full name."""
+        return obj.get_full_name()
+    full_name.short_description = 'Name'
+
+    # Custom actions for bulk operations
+    actions = ['approve_applications', 'reject_applications', 'mark_under_review']
+
+    def approve_applications(self, request, queryset):
+        """Bulk approve applications (manual process - creates user accounts)."""
+        from django.utils import timezone
+        pending_apps = queryset.filter(application_status='pending')
+        if pending_apps.exists():
+            # This would normally integrate with the approve_broker_application view
+            # For now, just mark as approved for manual processing
+            updated = pending_apps.update(
+                application_status='approved',
+                reviewed_by=request.user,
+                reviewed_at=timezone.now()
+            )
+            self.message_user(
+                request,
+                f'{updated} applications marked as approved. '
+                'Please use the API endpoints to complete user account creation.'
+            )
+        else:
+            self.message_user(request, 'No pending applications selected.')
+    approve_applications.short_description = 'Approve selected applications'
+
+    def reject_applications(self, request, queryset):
+        """Bulk reject applications."""
+        from django.utils import timezone
+        pending_apps = queryset.filter(application_status='pending')
+        updated = pending_apps.update(
+            application_status='rejected',
+            reviewed_by=request.user,
+            reviewed_at=timezone.now(),
+            rejection_reason='Bulk rejection via admin panel'
+        )
+        self.message_user(request, f'{updated} applications rejected.')
+    reject_applications.short_description = 'Reject selected applications'
+
+    def mark_under_review(self, request, queryset):
+        """Mark applications as under review."""
+        pending_apps = queryset.filter(application_status='pending')
+        updated = pending_apps.update(application_status='under_review')
+        self.message_user(request, f'{updated} applications marked as under review.')
+    mark_under_review.short_description = 'Mark as under review'
+
+    def get_queryset(self, request):
+        """Optimize queryset with related objects."""
+        return super().get_queryset(request).select_related(
+            'reviewed_by', 'associated_user'
+        )
+

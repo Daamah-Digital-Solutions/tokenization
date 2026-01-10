@@ -11,7 +11,20 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key-change-immediately')
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    # Check if this is production environment
+    if os.environ.get('DJANGO_SETTINGS_MODULE', '').endswith('production'):
+        raise ValueError(
+            "SECRET_KEY environment variable must be set in production. "
+            "Generate a secure key using: python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'"
+        )
+    else:
+        # Use development fallback (NOT FOR PRODUCTION)
+        SECRET_KEY = 'django-insecure-dev-key-$k3y-f0r-d3v310pm3nt-0n1y-n0t-pr0duct10n-u53'
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning("Using development SECRET_KEY - NOT FOR PRODUCTION USE")
 
 # Application definition
 INSTALLED_APPS = [
@@ -32,7 +45,7 @@ INSTALLED_APPS = [
     # Custom apps
     'accounts',
     'properties',
-    'investments', 
+    'investments',
     'payments',
     'kyc',
     'notifications',
@@ -40,7 +53,7 @@ INSTALLED_APPS = [
     'construction',
     'broker',
     'admin_panel',
-    'websockets',
+    # 'ws_app',  # Removed - WebSocket app moved to separate deployment
     'analytics',
     'blockchain',
     'marketplace',
@@ -63,7 +76,7 @@ ROOT_URLCONF = 'capimax_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
