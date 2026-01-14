@@ -145,10 +145,15 @@ export class ApiClient {
 
         // Handle 500+ server errors
         if (error.response.status >= 500) {
+          // Extract actual error message from backend response
+          const serverMessage = error.response.data?.error?.message ||
+                               error.response.data?.message ||
+                               error.response.data?.detail ||
+                               'Server error occurred. Please try again later.';
           throw new ApiError(
             'SERVER_ERROR',
-            'Server error occurred. Please try again later.',
-            { status: error.response.status }
+            serverMessage,
+            { status: error.response.status, details: error.response.data?.error?.details }
           );
         }
 
