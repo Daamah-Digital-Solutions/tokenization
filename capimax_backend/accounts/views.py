@@ -1052,8 +1052,15 @@ class GoogleAuthView(APIView):
                 )
 
             except User.DoesNotExist:
+                # Generate unique username from email (before @) + random suffix
+                import uuid
+                base_username = email.split('@')[0][:20]  # Take first 20 chars before @
+                unique_suffix = uuid.uuid4().hex[:8]
+                username = f"{base_username}_{unique_suffix}"
+
                 # Create new user with Google data (partial account)
                 user = User.objects.create(
+                    username=username,
                     email=email.lower(),
                     first_name=first_name,
                     last_name=last_name,
