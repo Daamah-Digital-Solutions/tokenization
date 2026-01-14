@@ -33,8 +33,14 @@ export class WebSocketService {
   private authToken: string | null = null;
 
   constructor(config: Partial<WebSocketConfig> = {}) {
+    // Use environment variable or derive from API URL
+    const defaultWsUrl = import.meta.env.VITE_WEBSOCKET_URL ||
+      (import.meta.env.VITE_API_URL
+        ? import.meta.env.VITE_API_URL.replace(/^http/, 'ws').replace('/api/v1', '/ws')
+        : 'ws://127.0.0.1:8000/ws');
+
     this.config = {
-      url: 'ws://127.0.0.1:8000/ws',
+      url: defaultWsUrl,
       reconnectInterval: 3000,
       maxReconnectAttempts: 5,
       heartbeatInterval: 30000,
