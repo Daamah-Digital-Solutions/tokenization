@@ -21,6 +21,9 @@ import qrcode.image.svg
 import base64
 import io
 import logging
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -911,3 +914,342 @@ def role_permissions_view(request):
             message="Role permissions retrieved successfully"
         )
     )
+
+
+# ========================================
+# GOOGLE OAUTH AUTHENTICATION
+# ========================================
+
+class GoogleAuthView(APIView):
+    """
+    Google OAuth authentication endpoint.
+
+    Handles Google Sign-In by verifying ID tokens and either:
+    - Logging in existing users
+    - Creating partial accounts for new users (requiring profile completion)
+    """
+
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        """
+        Authenticate with Google ID token.
+
+        Expected payload:
+        {
+            "id_token": "google_id_token_string"
+        }
+
+        Returns:
+        - For existing users: JWT tokens and user data
+        - For new users: user data with requires_profile_completion=True
+        """
+        id_token_str = request.data.get('id_token')
+
+        if not id_token_str:
+            return Response(
+                create_error_response(
+                    message="Google ID token is required",
+                    status_code=status.HTTP_400_BAD_REQUEST
+                ),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Verify the Google ID token
+            google_client_id = getattr(settings, 'GOOGLE_OAUTH_CLIENT_ID', None)
+
+            if not google_client_id:
+                logger.error("GOOGLE_OAUTH_CLIENT_ID not configured in settings")
+                return Response(
+                    create_error_response(
+                        message="Google authentication is not configured",
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    ),
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+            # Verify the token with Google
+            idinfo = id_token.verify_oauth2_token(
+                id_token_str,
+                google_requests.Request(),
+                google_client_id
+            )
+
+            # Extract user info from Google token
+            google_user_id = idinfo.get('sub')
+            email = idinfo.get('email')
+            email_verified = idinfo.get('email_verified', False)
+            first_name = idinfo.get('given_name', '')
+            last_name = idinfo.get('family_name', '')
+            picture = idinfo.get('picture', '')
+
+            if not email:
+                return Response(
+                    create_error_response(
+                        message="Email not provided by Google",
+                        status_code=status.HTTP_400_BAD_REQUEST
+                    ),
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Check if user exists
+            try:
+                user = User.objects.get(email=email.lower())
+
+                # Check if account was created with email/password (no google_id)
+                if not user.google_id and user.has_usable_password():
+                    return Response(
+                        create_error_response(
+                            message="An account with this email already exists. Please sign in with your email and password.",
+                            status_code=status.HTTP_409_CONFLICT,
+                            details={'email_exists': True, 'auth_method': 'email_password'}
+                        ),
+                        status=status.HTTP_409_CONFLICT
+                    )
+
+                # Update Google ID if not set (linking accounts)
+                if not user.google_id:
+                    user.google_id = google_user_id
+                    user.save(update_fields=['google_id'])
+
+                # Check if profile is complete
+                if not self._is_profile_complete(user):
+                    return Response(
+                        create_success_response(
+                            data={
+                                'requires_profile_completion': True,
+                                'user': {
+                                    'email': user.email,
+                                    'first_name': user.first_name,
+                                    'last_name': user.last_name,
+                                    'google_id': user.google_id,
+                                }
+                            },
+                            message="Please complete your profile to continue"
+                        )
+                    )
+
+                # Generate JWT tokens for existing complete user
+                refresh = RefreshToken.for_user(user)
+
+                # Update last login
+                user.last_login = timezone.now()
+                user.save(update_fields=['last_login'])
+
+                return Response(
+                    create_success_response(
+                        data={
+                            'requires_profile_completion': False,
+                            'user': UserProfileSerializer(user).data,
+                            'tokens': {
+                                'access': str(refresh.access_token),
+                                'refresh': str(refresh),
+                            }
+                        },
+                        message="Login successful"
+                    )
+                )
+
+            except User.DoesNotExist:
+                # Create new user with Google data (partial account)
+                user = User.objects.create(
+                    email=email.lower(),
+                    first_name=first_name,
+                    last_name=last_name,
+                    google_id=google_user_id,
+                    is_verified=email_verified,  # Google already verified email
+                    role=UserRole.INVESTOR,  # Default role, will be updated in profile completion
+                )
+                # Set unusable password since they're using Google auth
+                user.set_unusable_password()
+                user.save()
+
+                # Return data indicating profile completion is needed
+                return Response(
+                    create_success_response(
+                        data={
+                            'requires_profile_completion': True,
+                            'is_new_user': True,
+                            'user': {
+                                'email': user.email,
+                                'first_name': user.first_name,
+                                'last_name': user.last_name,
+                                'google_id': user.google_id,
+                            }
+                        },
+                        message="Account created. Please complete your profile to continue."
+                    ),
+                    status=status.HTTP_201_CREATED
+                )
+
+        except ValueError as e:
+            # Invalid token
+            logger.warning(f"Invalid Google ID token: {str(e)}")
+            return Response(
+                create_error_response(
+                    message="Invalid Google ID token",
+                    status_code=status.HTTP_401_UNAUTHORIZED
+                ),
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        except Exception as e:
+            logger.error(f"Google authentication error: {str(e)}")
+            return Response(
+                create_error_response(
+                    message="Authentication failed",
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    details={'error': str(e)} if settings.DEBUG else {}
+                ),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def _is_profile_complete(self, user):
+        """Check if user has completed their profile."""
+        # Required fields for complete profile
+        required_fields = [
+            user.first_name,
+            user.last_name,
+            user.phone_number,
+            user.country,
+        ]
+
+        # Check if user has at least one role assignment
+        has_role = UserRoleAssignment.objects.filter(user=user, is_active=True).exists()
+
+        return all(required_fields) and has_role
+
+
+class GoogleProfileCompletionView(APIView):
+    """
+    Complete profile for Google-authenticated users.
+
+    New Google users must complete their profile with:
+    - Phone number
+    - Date of birth
+    - Country
+    - City
+    - Role selection
+    - Terms agreement
+    """
+
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        """
+        Complete user profile after Google authentication.
+
+        Expected payload:
+        {
+            "email": "user@example.com",
+            "google_id": "google_user_id",
+            "phone_number": "+1234567890",
+            "date_of_birth": "1990-01-01",
+            "country": "us",
+            "city": "New York",
+            "roles": ["investor"],  # or ["property_owner"] or both
+            "agree_to_terms": true,
+            "agree_to_privacy": true,
+            "agree_to_marketing": false
+        }
+        """
+        email = request.data.get('email')
+        google_id = request.data.get('google_id')
+
+        if not email or not google_id:
+            return Response(
+                create_error_response(
+                    message="Email and Google ID are required",
+                    status_code=status.HTTP_400_BAD_REQUEST
+                ),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = User.objects.get(email=email.lower(), google_id=google_id)
+        except User.DoesNotExist:
+            return Response(
+                create_error_response(
+                    message="User not found or Google ID mismatch",
+                    status_code=status.HTTP_404_NOT_FOUND
+                ),
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Validate required fields
+        required_fields = ['phone_number', 'country', 'city', 'roles', 'agree_to_terms', 'agree_to_privacy']
+        missing_fields = [f for f in required_fields if not request.data.get(f)]
+
+        if missing_fields:
+            return Response(
+                create_error_response(
+                    message="Missing required fields",
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    details={'missing_fields': missing_fields}
+                ),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate agreements
+        if not request.data.get('agree_to_terms') or not request.data.get('agree_to_privacy'):
+            return Response(
+                create_error_response(
+                    message="You must agree to the Terms and Privacy Policy",
+                    status_code=status.HTTP_400_BAD_REQUEST
+                ),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate roles
+        roles = request.data.get('roles', [])
+        valid_roles = [UserRole.INVESTOR, UserRole.PROPERTY_OWNER]
+
+        if not roles or not all(r in valid_roles for r in roles):
+            return Response(
+                create_error_response(
+                    message="Invalid role selection",
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    details={'valid_roles': valid_roles}
+                ),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Update user profile
+        user.phone_number = request.data.get('phone_number')
+        user.date_of_birth = request.data.get('date_of_birth')
+        user.country = request.data.get('country')
+        user.city = request.data.get('city')
+        user.role = roles[0]  # Primary role
+        user.save()
+
+        # Create role assignments
+        for i, role in enumerate(roles):
+            UserRoleAssignment.objects.get_or_create(
+                user=user,
+                role=role,
+                defaults={
+                    'is_primary': i == 0,
+                    'is_active': True,
+                    'assigned_by': user
+                }
+            )
+
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
+
+        # Update last login
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
+
+        return Response(
+            create_success_response(
+                data={
+                    'user': UserProfileSerializer(user).data,
+                    'tokens': {
+                        'access': str(refresh.access_token),
+                        'refresh': str(refresh),
+                    }
+                },
+                message="Profile completed successfully. Welcome to Capimax!"
+            )
+        )

@@ -43,6 +43,10 @@ django-cors-headers==4.3.1
 # JWT Authentication
 djangorestframework-simplejwt==5.3.0
 
+# Google OAuth
+google-auth==2.27.0
+google-auth-oauthlib==1.2.0
+
 # Two-Factor Authentication
 pyotp==2.9.0
 qrcode==7.4.2

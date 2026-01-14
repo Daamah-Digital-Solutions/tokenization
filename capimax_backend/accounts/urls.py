@@ -29,6 +29,9 @@ from .views import (
     remove_user_role_view,
     set_primary_role_view,
     role_permissions_view,
+    # Google OAuth views
+    GoogleAuthView,
+    GoogleProfileCompletionView,
 )
 
 app_name = 'accounts'
@@ -68,4 +71,8 @@ urlpatterns = [
     path('roles/remove/<str:role>/', remove_user_role_view, name='remove-user-role'),
     path('roles/set-primary/', set_primary_role_view, name='set-primary-role'),
     path('roles/permissions/', role_permissions_view, name='role-permissions'),
+
+    # Google OAuth endpoints
+    path('google/auth/', GoogleAuthView.as_view(), name='google-auth'),
+    path('google/complete-profile/', GoogleProfileCompletionView.as_view(), name='google-complete-profile'),
 ]

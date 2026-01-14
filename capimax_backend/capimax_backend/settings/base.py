@@ -240,6 +240,9 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@capimax.com')
 
+# Google OAuth Configuration
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', '')
+
 # Create logs directory if it doesn't exist
 logs_dir = BASE_DIR / 'logs'
 logs_dir.mkdir(exist_ok=True)

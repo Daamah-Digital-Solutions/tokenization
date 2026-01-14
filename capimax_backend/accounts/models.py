@@ -143,7 +143,22 @@ class User(AbstractUser):
         null=True,
         help_text="User's blockchain wallet address"
     )
-    
+
+    google_id = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        unique=True,
+        help_text="Google OAuth user ID for social login"
+    )
+
+    phone_number = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        help_text="User's phone number (for profile completion)"
+    )
+
     two_factor_enabled = models.BooleanField(
         default=False,
         help_text="Whether two-factor authentication is enabled"
@@ -199,6 +214,7 @@ class User(AbstractUser):
             models.Index(fields=['role']),
             models.Index(fields=['is_verified']),
             models.Index(fields=['created_at']),
+            models.Index(fields=['google_id']),
         ]
         verbose_name = 'User'
         verbose_name_plural = 'Users'

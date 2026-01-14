@@ -42,6 +42,34 @@ export interface TwoFactorVerification {
   code: string;
 }
 
+export interface GoogleAuthResponse {
+  requires_profile_completion: boolean;
+  is_new_user?: boolean;
+  user: {
+    email: string;
+    first_name: string;
+    last_name: string;
+    google_id: string;
+  };
+  tokens?: {
+    access: string;
+    refresh: string;
+  };
+}
+
+export interface GoogleProfileCompletionData {
+  email: string;
+  google_id: string;
+  phone_number: string;
+  date_of_birth?: string;
+  country: string;
+  city: string;
+  roles: string[];
+  agree_to_terms: boolean;
+  agree_to_privacy: boolean;
+  agree_to_marketing?: boolean;
+}
+
 export class AuthService {
   /**
    * Register a new user
@@ -450,6 +478,89 @@ export class AuthService {
       // Token is invalid, clear it
       apiClient.clearAuthToken();
       return false;
+    }
+  }
+
+  /**
+   * Authenticate with Google ID token
+   * @param idToken - Google ID token from Google Sign-In
+   */
+  static async googleAuth(idToken: string): Promise<GoogleAuthResponse> {
+    try {
+      console.log('🔐 Initiating Google authentication...');
+      const response = await apiClient.post<any>('/auth/google/auth/', {
+        id_token: idToken
+      });
+
+      console.log('📧 Google auth response:', response);
+
+      // If user has complete profile and tokens, store the token
+      if (response.tokens?.access) {
+        console.log('🔐 Google auth successful - storing auth token');
+        apiClient.setAuthToken(response.tokens.access);
+      }
+
+      return response as GoogleAuthResponse;
+    } catch (error) {
+      console.error('❌ Google authentication failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Complete profile for Google-authenticated users
+   * @param profileData - Profile completion data
+   */
+  static async completeGoogleProfile(profileData: GoogleProfileCompletionData): Promise<LoginResponse> {
+    try {
+      console.log('🔐 Completing Google profile...');
+      const response = await apiClient.post<any>('/auth/google/complete-profile/', profileData);
+
+      console.log('📧 Profile completion response:', response);
+
+      // Map backend user format to frontend User interface
+      const backendUser = response.user;
+
+      if (!backendUser) {
+        throw new Error('Invalid response from server');
+      }
+
+      const mappedUser: User = {
+        id: backendUser.id,
+        email: backendUser.email,
+        first_name: backendUser.first_name || '',
+        last_name: backendUser.last_name || '',
+        role: backendUser.role,
+        phone: backendUser.phone || backendUser.phone_number || '',
+        country: backendUser.country || '',
+        date_of_birth: backendUser.date_of_birth || '',
+        address: backendUser.address || '',
+        city: backendUser.city || '',
+        state: backendUser.state || '',
+        postal_code: backendUser.postal_code || '',
+        kyc_status: backendUser.kyc_status || 'not_started',
+        is_verified: backendUser.is_verified || true,
+        wallet_address: backendUser.wallet_address || '',
+        created_at: new Date(backendUser.created_at || Date.now()),
+        updated_at: new Date(backendUser.updated_at || Date.now())
+      };
+
+      const authResponse: LoginResponse = {
+        user: mappedUser,
+        token: response.tokens?.access || '',
+        refreshToken: response.tokens?.refresh
+      };
+
+      // Store the auth token
+      if (authResponse.token) {
+        console.log('🔐 Profile completed - storing auth token');
+        apiClient.setAuthToken(authResponse.token);
+      }
+
+      return authResponse;
+    } catch (error) {
+      console.error('❌ Google profile completion failed:', error);
+      throw error;
     }
   }
 }

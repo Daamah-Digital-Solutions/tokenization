@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Route = 'home' | 'login' | 'register' | 'email-verification' | 'code-verification' | 'password-reset' | 'new-password' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'marketplace' | 'broker-program' | 'broker-application' | 'wallet' | 'role-management' | 'demo' | 'integration-test' | 'about' | 'contact';
+type Route = 'home' | 'login' | 'register' | 'email-verification' | 'code-verification' | 'password-reset' | 'new-password' | 'complete-google-profile' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'marketplace' | 'broker-program' | 'broker-application' | 'wallet' | 'role-management' | 'demo' | 'integration-test' | 'about' | 'contact';
 
 interface RouterContextType {
   currentRoute: Route;
@@ -38,6 +38,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       '/code-verification': 'code-verification',
       '/password-reset': 'password-reset',
       '/new-password': 'new-password',
+      '/complete-google-profile': 'complete-google-profile',
       '/kyc': 'kyc',
       '/dashboard': 'dashboard',
       '/properties': 'properties',
@@ -71,6 +72,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
         '/code-verification': 'code-verification',
         '/password-reset': 'password-reset',
         '/new-password': 'new-password',
+        '/complete-google-profile': 'complete-google-profile',
         '/kyc': 'kyc',
         '/dashboard': 'dashboard',
         '/properties': 'properties',
@@ -86,7 +88,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
         '/about': 'about',
         '/contact': 'contact'
       };
-      
+
       const route = routeMap[path] || 'home';
       setCurrentRoute(route);
     };
@@ -104,6 +106,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       'code-verification': '/code-verification',
       'password-reset': '/password-reset',
       'new-password': '/new-password',
+      'complete-google-profile': '/complete-google-profile',
       kyc: '/kyc',
       dashboard: '/dashboard',
       properties: '/properties',

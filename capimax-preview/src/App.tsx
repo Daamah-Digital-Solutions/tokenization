@@ -31,6 +31,7 @@ const EmailVerificationPage = React.lazy(() => import('./pages/EmailVerification
 const CodeVerificationPage = React.lazy(() => import('./pages/CodeVerificationPage').then(m => ({ default: m.CodeVerificationPage })));
 const PasswordResetPage = React.lazy(() => import('./pages/PasswordResetPage').then(m => ({ default: m.PasswordResetPage })));
 const NewPasswordPage = React.lazy(() => import('./pages/NewPasswordPage').then(m => ({ default: m.NewPasswordPage })));
+const CompleteGoogleProfilePage = React.lazy(() => import('./pages/CompleteGoogleProfilePage').then(m => ({ default: m.CompleteGoogleProfilePage })));
 const KYCPage = React.lazy(() => import('./pages/KYCPage').then(m => ({ default: m.KYCPage })));
 const PropertiesPage = React.lazy(() => import('./pages/PropertiesPage').then(m => ({ default: m.PropertiesPage })));
 const PropertyDetailPage = React.lazy(() => import('./pages/PropertyDetailPage').then(m => ({ default: m.PropertyDetailPage })));
@@ -161,6 +162,14 @@ const AppRouter: React.FC = () => {
           <main {...mainProps}>
             <Suspense fallback={<PageLoader message="Loading new password..." />}>
               <NewPasswordPage />
+            </Suspense>
+          </main>
+        );
+      case 'complete-google-profile':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading profile completion..." />}>
+              <CompleteGoogleProfilePage />
             </Suspense>
           </main>
         );
