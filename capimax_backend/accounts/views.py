@@ -1085,21 +1085,40 @@ class GoogleAuthView(APIView):
 
         except ValueError as e:
             # Invalid token
-            logger.warning(f"Invalid Google ID token: {str(e)}")
+            error_msg = str(e)
+            logger.warning(f"Invalid Google ID token: {error_msg}")
+
+            # Provide more specific error messages
+            if 'Token used too early' in error_msg or 'Token used too late' in error_msg:
+                message = "Google token has expired. Please try signing in again."
+            elif 'Wrong issuer' in error_msg:
+                message = "Invalid Google token issuer."
+            elif 'Could not verify audience' in error_msg:
+                message = "Google token audience mismatch. Please contact support."
+            else:
+                message = "Invalid Google ID token. Please try again."
+
             return Response(
                 create_error_response(
-                    message="Invalid Google ID token",
-                    status_code=status.HTTP_401_UNAUTHORIZED
+                    message=message,
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    details={'error_type': 'token_validation'} if settings.DEBUG else {}
                 ),
                 status=status.HTTP_401_UNAUTHORIZED
             )
         except Exception as e:
-            logger.error(f"Google authentication error: {str(e)}")
+            import traceback
+            error_msg = str(e)
+            error_traceback = traceback.format_exc()
+            logger.error(f"Google authentication error: {error_msg}")
+            logger.error(f"Traceback: {error_traceback}")
+
+            # Return more helpful error message in production
             return Response(
                 create_error_response(
-                    message="Authentication failed",
+                    message=f"Google authentication failed: {error_msg}",
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    details={'error': str(e)} if settings.DEBUG else {}
+                    details={'error': error_msg, 'traceback': error_traceback} if settings.DEBUG else {}
                 ),
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
