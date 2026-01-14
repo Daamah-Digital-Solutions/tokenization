@@ -45,6 +45,7 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
   clearError: () => void;
   checkAuth: () => Promise<void>;
+  setUser: (user: User) => void;
 }
 
 // Initial State
@@ -349,6 +350,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     dispatch({ type: 'CLEAR_ERROR' });
   };
 
+  const setUser = (user: User): void => {
+    dispatch({ type: 'AUTH_SUCCESS', payload: user });
+  };
+
   const contextValue: AuthContextType = {
     state,
     login,
@@ -361,6 +366,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     refreshUser,
     clearError,
     checkAuth,
+    setUser,
   };
 
   return (
