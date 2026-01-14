@@ -42,6 +42,8 @@ const RoleManagementPage = React.lazy(() => import('./pages/RoleManagementPage')
 const MarketplacePage = React.lazy(() => import('./pages/MarketplacePage').then(m => ({ default: m.MarketplacePage })));
 const BrokerProgramPage = React.lazy(() => import('./pages/BrokerProgramPage').then(m => ({ default: m.BrokerProgramPage })));
 const BrokerApplicationPage = React.lazy(() => import('./pages/BrokerApplicationPage').then(m => ({ default: m.BrokerApplicationPage })));
+const AboutPage = React.lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
+const ContactPage = React.lazy(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
 
 // Loading fallback component
 const PageLoader: React.FC<{ message?: string }> = ({ message = 'Loading page...' }) => (
@@ -230,37 +232,17 @@ const AppRouter: React.FC = () => {
       case 'about':
         return (
           <main {...mainProps}>
-            <div className="min-h-screen flex items-center justify-center">
-              <div className="text-center p-8">
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-                  About Capimax
-                </h1>
-                <p className="text-slate-600 dark:text-slate-300">
-                  Learn more about our real estate tokenization platform.
-                </p>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-4">
-                  Coming Soon!
-                </p>
-              </div>
-            </div>
+            <Suspense fallback={<PageLoader message="Loading about page..." />}>
+              <AboutPage />
+            </Suspense>
           </main>
         );
       case 'contact':
         return (
           <main {...mainProps}>
-            <div className="min-h-screen flex items-center justify-center">
-              <div className="text-center p-8">
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-                  Contact Us
-                </h1>
-                <p className="text-slate-600 dark:text-slate-300">
-                  Get in touch with our team.
-                </p>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-4">
-                  Coming Soon!
-                </p>
-              </div>
-            </div>
+            <Suspense fallback={<PageLoader message="Loading contact page..." />}>
+              <ContactPage />
+            </Suspense>
           </main>
         );
       case 'marketplace':

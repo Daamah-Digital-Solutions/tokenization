@@ -93,21 +93,24 @@ export const HeroSectionV2: React.FC = () => {
                 transition={{ duration: 0.8, delay: 0.2 }}
                 className="text-5xl lg:text-7xl font-bold leading-[1.05] tracking-tight text-slate-800 dark:text-white"
               >
-                Invest in Properties,{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 dark:from-emerald-400 dark:via-green-400 dark:to-teal-400 relative">
-                  Not Just Dreams
+                  Capimax Tokenization
                   <motion.div
-                    animate={{ 
+                    animate={{
                       scaleX: [0, 1, 0],
                       opacity: [0, 0.8, 0]
                     }}
-                    transition={{ 
-                      duration: 3, 
+                    transition={{
+                      duration: 3,
                       repeat: Infinity,
                       delay: 1
                     }}
                     className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 dark:from-emerald-400 dark:via-green-400 dark:to-teal-400 rounded-full dark:shadow-[0_2px_10px_rgba(16,185,129,0.5)]"
                   />
+                </span>
+                <br />
+                <span className="text-slate-800 dark:text-white">
+                  Invest in Real Estate, Not Just Dreams
                 </span>
               </motion.h1>
 
