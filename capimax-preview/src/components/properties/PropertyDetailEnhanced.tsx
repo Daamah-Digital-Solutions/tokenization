@@ -1,17 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  Share2, 
-  Heart, 
-  MapPin, 
-  Star, 
-  Users, 
-  TrendingUp, 
-  Calendar, 
-  Building, 
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  MapPin,
+  Star,
+  Users,
+  Building,
   Building2,
-  Shield, 
+  Shield,
   Clock,
   DollarSign,
   Calculator,
@@ -22,41 +17,64 @@ import {
   ChevronRight,
   Award,
   CheckCircle,
-  Info,
   BarChart3,
-  Loader,
   Home,
   CreditCard,
+  CalendarDays,
+  Briefcase,
+  Scale,
+  Globe,
+  ExternalLink,
+  Lock,
+  Folder,
+  TrendingUp,
+  Calendar,
   Percent,
-  CalendarDays
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
-import type { Property } from '../../services/api/types';
+import type { Property, PropertyDocuments } from '../../services/api/types';
 
 interface PropertyDetailEnhancedProps {
   property: Property;
+  analytics?: any;
+  investors?: any[];
+  documents?: PropertyDocuments[];
+  isUnderConstruction?: boolean;
+  constructionProgressData?: any;
   onInvestClick?: () => void;
-  investmentAmount: number;
-  setInvestmentAmount: (amount: number) => void;
+  onImageClick?: (index: number) => void;
+  currentImageIndex?: number;
 }
+
+type TabId = 'overview' | 'financials' | 'spv' | 'documents' | 'location';
 
 export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
   property,
+  analytics,
+  investors = [],
+  documents = [],
+  isUnderConstruction = false,
+  constructionProgressData,
   onInvestClick,
-  investmentAmount,
-  setInvestmentAmount
+  onImageClick,
+  currentImageIndex: externalImageIndex
 }) => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [internalImageIndex, setInternalImageIndex] = useState(0);
+  const [investmentAmount, setInvestmentAmount] = useState(property.token_price || 500);
+  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+
+  const currentImageIndex = externalImageIndex ?? internalImageIndex;
+  const setCurrentImageIndex = onImageClick ?? setInternalImageIndex;
 
   // Helper functions
-  const isUnderConstruction = property.property_category === 'under_construction';
   const isReadyProperty = property.property_category === 'ready_property';
-  
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -65,9 +83,9 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
       maximumFractionDigits: 0,
     }).format(amount);
   };
-  
+
   const formatPercentage = (value: number) => `${value.toFixed(1)}%`;
-  
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -76,25 +94,26 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
     });
   };
 
-  const fundingPercentage = property.total_tokens > 0 ? 
+  const fundingPercentage = property.total_tokens > 0 ?
     Math.round((property.tokens_sold / property.total_tokens) * 100) : 0;
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: Eye },
-    { id: 'financials', label: 'Financials', icon: BarChart3 },
-    { id: 'documents', label: 'Documents', icon: FileText },
-    { id: 'location', label: 'Location', icon: MapPin },
+    { id: 'overview' as const, label: 'Overview', icon: Eye },
+    { id: 'financials' as const, label: 'Financials', icon: BarChart3 },
+    { id: 'spv' as const, label: 'SPV Info', icon: Briefcase },
+    { id: 'documents' as const, label: 'Data Room', icon: Folder },
+    { id: 'location' as const, label: 'Location', icon: MapPin },
   ];
 
   const nextImage = () => {
     if (property.images?.length > 1) {
-      setCurrentImageIndex((prev) => (prev + 1) % property.images.length);
+      setCurrentImageIndex((currentImageIndex + 1) % property.images.length);
     }
   };
 
   const previousImage = () => {
     if (property.images?.length > 1) {
-      setCurrentImageIndex((prev) => (prev - 1 + property.images.length) % property.images.length);
+      setCurrentImageIndex((currentImageIndex - 1 + property.images.length) % property.images.length);
     }
   };
 
@@ -103,10 +122,35 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
     const returnRate = property.expected_return || 10;
     const annualReturn = (investmentAmount * returnRate) / 100;
     const quarterlyDividend = annualReturn / 4;
-    return { tokens, annualReturn, quarterlyDividend };
+    const monthlyDividend = annualReturn / 12;
+    return { tokens, annualReturn, quarterlyDividend, monthlyDividend };
   };
 
-  const { tokens, annualReturn, quarterlyDividend } = calculateReturns();
+  const { tokens, annualReturn, quarterlyDividend, monthlyDividend } = calculateReturns();
+
+  // SPV Information (would come from backend in real app)
+  const spvInfo = {
+    name: `${property.title} SPV Ltd`,
+    jurisdiction: 'United Arab Emirates',
+    formationDate: property.created_at ? formatDate(property.created_at.toString()) : 'N/A',
+    registrationNumber: `SPV-${property.id?.slice(0, 8).toUpperCase()}`,
+    legalStructure: 'Special Purpose Vehicle',
+    managingDirector: 'Capimax RT Management',
+    auditor: 'Independent Audit Firm',
+    custodian: 'Licensed Custodian Bank'
+  };
+
+  // Distribution schedule
+  const distributionSchedule = [
+    { quarter: 'Q1', month: 'March', status: 'upcoming' },
+    { quarter: 'Q2', month: 'June', status: 'upcoming' },
+    { quarter: 'Q3', month: 'September', status: 'upcoming' },
+    { quarter: 'Q4', month: 'December', status: 'upcoming' },
+  ];
+
+  const toggleSection = (section: string) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
 
   return (
     <div className="space-y-8">
@@ -121,7 +165,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
               (e.target as HTMLImageElement).src = '/default-property.jpg';
             }}
           />
-          
+
           {/* Image Navigation */}
           {property.images && property.images.length > 1 && (
             <>
@@ -131,7 +175,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
-              
+
               <button
                 onClick={nextImage}
                 className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm shadow-lg hover:scale-110 transition-transform"
@@ -165,7 +209,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                 FEATURED
               </div>
             )}
-            
+
             {/* Property Category Badge */}
             {isUnderConstruction ? (
               <div className="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold rounded-full flex items-center gap-1">
@@ -196,326 +240,589 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
             <div className="px-3 py-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-lg border border-white/20">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                <span className="font-semibold text-gray-900 dark:text-white">{property.investor_count || 0}</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{property.investor_count || investors.length || 0}</span>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Thumbnail Strip */}
+        {property.images && property.images.length > 1 && (
+          <div className="flex gap-2 p-4 overflow-x-auto">
+            {property.images.map((image, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentImageIndex(index)}
+                className={cn(
+                  "flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 transition-all",
+                  currentImageIndex === index
+                    ? "border-emerald-500"
+                    : "border-transparent hover:border-gray-300"
+                )}
+              >
+                <img
+                  src={image}
+                  alt={`${property.title} ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Tab Navigation */}
+      <Card className="p-2">
+        <div className="flex flex-wrap gap-2">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all",
+                  activeTab === tab.id
+                    ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                )}
+              >
+                <Icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
       </Card>
 
-      {/* Property Info */}
-      <Card className="p-8">
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-              {property.title}
-            </h1>
-            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-              <MapPin className="w-4 h-4" />
-              <span className="text-lg">{property.city}, {property.state || property.country}</span>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Property Type</div>
-            <div className="text-lg font-semibold text-gray-900 dark:text-white">
-              {property.property_type?.replace('_', ' ').toUpperCase()}
-            </div>
-          </div>
-        </div>
-
-        <Text variant="body" className="text-gray-700 dark:text-gray-300 mb-8 leading-relaxed">
-          {property.description}
-        </Text>
-
-        {/* Key Metrics Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-800 dark:to-gray-850 p-4 rounded-xl">
-            <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-              {formatCurrency(property.total_value)}
-            </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Total Value</div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-4 rounded-xl">
-            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">
-              {formatCurrency(property.token_price)}
-            </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Per Token</div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-xl">
-            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
-              {formatPercentage(property.expected_return || 0)}
-            </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              {isUnderConstruction ? 'Expected Return' : 'Annual Return'}
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-xl">
-            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-1">
-              {isUnderConstruction && property.expected_completion_date ? (
-                formatDate(property.expected_completion_date)
-              ) : isReadyProperty && property.monthly_rental_income ? (
-                formatCurrency(property.monthly_rental_income)
-              ) : (
-                property.year_built || 'N/A'
-              )}
-            </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              {isUnderConstruction ? 'Completion' : isReadyProperty ? 'Monthly Income' : 'Year Built'}
-            </div>
-          </div>
-        </div>
-
-        {/* Progress Section - Different for Construction vs Ready */}
-        <div className="mb-8">
-          {isUnderConstruction ? (
-            /* Construction Progress */
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <Text variant="bodyLarge" weight="semibold">Construction Progress</Text>
-                <Text variant="bodyLarge" weight="bold" className="text-orange-600 dark:text-orange-400">
-                  {formatPercentage(property.construction_progress || 0)}
-                </Text>
-              </div>
-              
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden mb-3">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${property.construction_progress || 0}%` }}
-                  transition={{ duration: 2, ease: "easeOut" }}
-                  className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full relative"
-                >
-                  <div className="absolute inset-0 bg-white/20 animate-pulse" />
-                </motion.div>
-              </div>
-              
-              <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                <span>{property.construction_status_display || 'In Progress'}</span>
-                <span>Expected: {property.expected_completion_date ? formatDate(property.expected_completion_date) : 'TBD'}</span>
-              </div>
-              
-              {/* Funding Progress below construction */}
-              <div className="mt-6">
-                <div className="flex justify-between items-center mb-3">
-                  <Text variant="bodyLarge" weight="semibold">Funding Progress</Text>
-                  <Text variant="bodyLarge" weight="bold" className="text-emerald-600 dark:text-emerald-400">
-                    {fundingPercentage}% Complete
-                  </Text>
-                </div>
-                
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden mb-2">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${fundingPercentage}%` }}
-                    transition={{ duration: 2, ease: "easeOut", delay: 0.5 }}
-                    className="h-full bg-gradient-to-r from-emerald-500 to-green-500 rounded-full"
-                  />
-                </div>
-                
-                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                  <span>{property.tokens_sold?.toLocaleString()} tokens sold</span>
-                  <span>{property.total_tokens?.toLocaleString()} total tokens</span>
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* Ready Property - Funding Progress */
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <Text variant="bodyLarge" weight="semibold">Funding Progress</Text>
-                <Text variant="bodyLarge" weight="bold" className="text-emerald-600 dark:text-emerald-400">
-                  {fundingPercentage}% Complete
-                </Text>
-              </div>
-              
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden mb-3">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${fundingPercentage}%` }}
-                  transition={{ duration: 2, ease: "easeOut" }}
-                  className="h-full bg-gradient-to-r from-emerald-500 to-green-500 rounded-full relative"
-                >
-                  <div className="absolute inset-0 bg-white/20 animate-pulse" />
-                </motion.div>
-              </div>
-              
-              <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                <span>{property.tokens_sold?.toLocaleString()} tokens sold</span>
-                <span>{property.total_tokens?.toLocaleString()} total tokens</span>
-              </div>
-              
-              {/* Rental Income Info for Ready Properties */}
-              {isReadyProperty && property.rental_income_active && (
-                <div className="mt-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
-                  <div className="flex items-center justify-between mb-2">
-                    <Text variant="bodyLarge" weight="semibold" className="text-emerald-800 dark:text-emerald-200">
-                      Active Rental Income
-                    </Text>
-                    <DollarSign className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+      {/* Tab Content */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+        >
+          {activeTab === 'overview' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Main Content */}
+              <div className="lg:col-span-2 space-y-8">
+                {/* Property Info */}
+                <Card className="p-8">
+                  <div className="flex items-start justify-between mb-6">
                     <div>
-                      <span className="text-gray-600 dark:text-gray-400">Monthly Income:</span>
-                      <div className="font-semibold text-emerald-700 dark:text-emerald-300">
-                        {formatCurrency(property.monthly_rental_income || 0)}
+                      <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                        {property.title}
+                      </h1>
+                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                        <MapPin className="w-4 h-4" />
+                        <span className="text-lg">{property.city}, {property.state || property.country}</span>
                       </div>
                     </div>
-                    <div>
-                      <span className="text-gray-600 dark:text-gray-400">Occupancy Rate:</span>
-                      <div className="font-semibold text-emerald-700 dark:text-emerald-300">
-                        {formatPercentage(property.occupancy_rate || 100)}
+                    <div className="text-right">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Property Type</div>
+                      <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {property.property_type?.replace('_', ' ').toUpperCase()}
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </Card>
 
-      {/* Investment Calculator */}
-      <Card>
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <Calculator className="w-5 h-5 text-emerald-600" />
-            Investment Calculator
-          </h3>
-        </div>
-        
-        <div className="p-6 space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Investment Amount
-            </label>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="number"
-                value={investmentAmount}
-                onChange={(e) => setInvestmentAmount(Number(e.target.value))}
-                min={property.token_price}
-                step={property.token_price}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-              />
-            </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Minimum: {formatCurrency(property.token_price)}
-            </p>
-            
-            {/* Installment Payment Option for Construction Properties */}
-            {isUnderConstruction && property.supports_installments && (
-              <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <CreditCard className="w-4 h-4 text-blue-600" />
-                  <Text variant="bodySmall" weight="semibold" className="text-blue-800 dark:text-blue-200">
-                    Installment Option Available
+                  <Text variant="body" className="text-gray-700 dark:text-gray-300 mb-8 leading-relaxed">
+                    {property.description}
                   </Text>
-                </div>
-                <Text variant="caption" className="text-blue-700 dark:text-blue-300">
-                  Pay over {property.installment_period_months} months with flexible installment plans
-                </Text>
-              </div>
-            )}
-          </div>
 
-          <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-4 rounded-xl">
-            <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Your Investment</h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Tokens:</span>
-                <span className="font-semibold text-gray-900 dark:text-white">{tokens}</span>
+                  {/* Key Metrics Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-800 dark:to-gray-850 p-4 rounded-xl">
+                      <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                        {formatCurrency(property.total_value)}
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">Total Value</div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-4 rounded-xl">
+                      <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">
+                        {formatCurrency(property.token_price)}
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">Per Token</div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-xl">
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+                        {formatPercentage(property.expected_return || 0)}
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        {isUnderConstruction ? 'Expected Return' : 'Annual Return'}
+                      </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-xl">
+                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-1">
+                        {property.rental_yield ? formatPercentage(property.rental_yield) : 'N/A'}
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">Rental Yield</div>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Progress Section */}
+                <Card className="p-8">
+                  {isUnderConstruction ? (
+                    <div>
+                      <div className="flex justify-between items-center mb-3">
+                        <Text variant="bodyLarge" weight="semibold">Construction Progress</Text>
+                        <Text variant="bodyLarge" weight="bold" className="text-orange-600 dark:text-orange-400">
+                          {formatPercentage(property.construction_progress || 0)}
+                        </Text>
+                      </div>
+
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden mb-3">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${property.construction_progress || 0}%` }}
+                          transition={{ duration: 2, ease: "easeOut" }}
+                          className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full relative"
+                        >
+                          <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                        </motion.div>
+                      </div>
+
+                      <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-6">
+                        <span>{property.construction_status_display || 'In Progress'}</span>
+                        <span>Expected: {property.expected_completion_date ? formatDate(property.expected_completion_date) : 'TBD'}</span>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {/* Funding Progress */}
+                  <div>
+                    <div className="flex justify-between items-center mb-3">
+                      <Text variant="bodyLarge" weight="semibold">Funding Progress</Text>
+                      <Text variant="bodyLarge" weight="bold" className="text-emerald-600 dark:text-emerald-400">
+                        {fundingPercentage}% Complete
+                      </Text>
+                    </div>
+
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden mb-3">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${fundingPercentage}%` }}
+                        transition={{ duration: 2, ease: "easeOut" }}
+                        className="h-full bg-gradient-to-r from-emerald-500 to-green-500 rounded-full relative"
+                      >
+                        <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                      </motion.div>
+                    </div>
+
+                    <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                      <span>{property.tokens_sold?.toLocaleString()} tokens sold</span>
+                      <span>{(property.total_tokens - property.tokens_sold)?.toLocaleString()} available</span>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Distribution Schedule */}
+                <Card className="p-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-emerald-600" />
+                      Distribution Schedule
+                    </h3>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      {isReadyProperty ? 'Monthly' : 'Quarterly'} Distributions
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {distributionSchedule.map((dist, index) => (
+                      <div
+                        key={index}
+                        className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl text-center"
+                      >
+                        <div className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
+                          {dist.quarter}
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {dist.month}
+                        </div>
+                        <div className="mt-2">
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
+                            Scheduled
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Annual Return:</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                  {formatCurrency(annualReturn)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">
-                  {isReadyProperty ? 'Monthly Dividend:' : 'Quarterly Dividend:'}
-                </span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                  {formatCurrency(isReadyProperty ? quarterlyDividend / 3 : quarterlyDividend)}
-                </span>
+
+              {/* Sidebar */}
+              <div className="space-y-6">
+                {/* Investment Calculator */}
+                <Card className="sticky top-24">
+                  <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      <Calculator className="w-5 h-5 text-emerald-600" />
+                      Investment Calculator
+                    </h3>
+                  </div>
+
+                  <div className="p-6 space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Investment Amount
+                      </label>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                          type="number"
+                          value={investmentAmount}
+                          onChange={(e) => setInvestmentAmount(Number(e.target.value))}
+                          min={property.token_price}
+                          step={property.token_price}
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Minimum: {formatCurrency(property.token_price)}
+                      </p>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-4 rounded-xl">
+                      <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Your Investment</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">Tokens:</span>
+                          <span className="font-semibold text-gray-900 dark:text-white">{tokens}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">Ownership:</span>
+                          <span className="font-semibold text-gray-900 dark:text-white">
+                            {((tokens / property.total_tokens) * 100).toFixed(4)}%
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">Annual Return:</span>
+                          <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                            {formatCurrency(annualReturn)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">
+                            {isReadyProperty ? 'Monthly Dividend:' : 'Quarterly Dividend:'}
+                          </span>
+                          <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                            {formatCurrency(isReadyProperty ? monthlyDividend : quarterlyDividend)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      className="w-full"
+                      onClick={onInvestClick}
+                    >
+                      <DollarSign className="w-4 h-4 mr-2" />
+                      Invest {formatCurrency(investmentAmount)}
+                    </Button>
+                  </div>
+                </Card>
+
+                {/* Trust Indicators */}
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Trust & Security</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 text-sm">
+                      <Shield className="w-5 h-5 text-emerald-500" />
+                      <span className="text-gray-700 dark:text-gray-300">Regulatory Compliant</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <CheckCircle className="w-5 h-5 text-emerald-500" />
+                      <span className="text-gray-700 dark:text-gray-300">Verified Property</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <Lock className="w-5 h-5 text-emerald-500" />
+                      <span className="text-gray-700 dark:text-gray-300">SPV Protected</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <Scale className="w-5 h-5 text-emerald-500" />
+                      <span className="text-gray-700 dark:text-gray-300">Independent Valuation</span>
+                    </div>
+                  </div>
+                </Card>
               </div>
             </div>
-          </div>
-
-          <Button 
-            variant="primary" 
-            size="lg" 
-            className="w-full"
-            onClick={onInvestClick}
-          >
-            {isUnderConstruction && property.supports_installments ? (
-              <>
-                <CreditCard className="w-4 h-4 mr-2" />
-                Reserve with Installments
-              </>
-            ) : (
-              <>
-                <DollarSign className="w-4 h-4 mr-2" />
-                Invest {formatCurrency(investmentAmount)}
-              </>
-            )}
-          </Button>
-          
-          <div className="text-center">
-            <Button variant="ghost" size="sm" className="text-gray-600 dark:text-gray-400">
-              <Eye className="w-4 h-4 mr-2" />
-              Preview Investment Terms
-            </Button>
-          </div>
-        </div>
-      </Card>
-
-      {/* Trust Indicators */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Trust & Security</h3>
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 text-sm">
-            <Shield className="w-5 h-5 text-emerald-500" />
-            <span className="text-gray-700 dark:text-gray-300">SEC Compliant</span>
-          </div>
-          <div className="flex items-center gap-3 text-sm">
-            <CheckCircle className="w-5 h-5 text-emerald-500" />
-            <span className="text-gray-700 dark:text-gray-300">Verified Property</span>
-          </div>
-          <div className="flex items-center gap-3 text-sm">
-            <Shield className="w-5 h-5 text-emerald-500" />
-            <span className="text-gray-700 dark:text-gray-300">Insured Investment</span>
-          </div>
-          
-          {/* Category-specific trust indicators */}
-          {isUnderConstruction ? (
-            <>
-              <div className="flex items-center gap-3 text-sm">
-                <Building2 className="w-5 h-5 text-orange-500" />
-                <span className="text-gray-700 dark:text-gray-300">Construction Monitored</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <CalendarDays className="w-5 h-5 text-blue-500" />
-                <span className="text-gray-700 dark:text-gray-300">Milestone Reporting</span>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="flex items-center gap-3 text-sm">
-                <DollarSign className="w-5 h-5 text-green-500" />
-                <span className="text-gray-700 dark:text-gray-300">Monthly Distributions</span>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <Clock className="w-5 h-5 text-blue-500" />
-                <span className="text-gray-700 dark:text-gray-300">Quarterly Reporting</span>
-              </div>
-            </>
           )}
-        </div>
-      </Card>
+
+          {activeTab === 'financials' && (
+            <Card className="p-8">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                <BarChart3 className="w-6 h-6 text-emerald-600" />
+                Financial Details
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Investment Metrics */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Investment Metrics</h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
+                      <span className="text-gray-600 dark:text-gray-400">Token Price</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(property.token_price)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
+                      <span className="text-gray-600 dark:text-gray-400">Total Tokens</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{property.total_tokens?.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
+                      <span className="text-gray-600 dark:text-gray-400">Available Tokens</span>
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">{(property.total_tokens - property.tokens_sold)?.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
+                      <span className="text-gray-600 dark:text-gray-400">Minimum Investment</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(property.token_price)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3">
+                      <span className="text-gray-600 dark:text-gray-400">Expected Yield</span>
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">{formatPercentage(property.expected_return || 10)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Property Financials */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Property Financials</h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
+                      <span className="text-gray-600 dark:text-gray-400">Property Value</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(property.total_value)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
+                      <span className="text-gray-600 dark:text-gray-400">Rental Yield</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{formatPercentage(property.rental_yield || 0)}</span>
+                    </div>
+                    {property.monthly_rental_income && (
+                      <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
+                        <span className="text-gray-600 dark:text-gray-400">Monthly Rental Income</span>
+                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(property.monthly_rental_income)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
+                      <span className="text-gray-600 dark:text-gray-400">Management Fee</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">2.5%</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3">
+                      <span className="text-gray-600 dark:text-gray-400">Platform Fee</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">1.0%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {activeTab === 'spv' && (
+            <Card className="p-8">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                <Briefcase className="w-6 h-6 text-emerald-600" />
+                SPV Information
+              </h2>
+
+              <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-6 mb-8">
+                <p className="text-emerald-800 dark:text-emerald-200">
+                  This property is held through a Special Purpose Vehicle (SPV) structure, providing legal separation and investor protection. The SPV owns the underlying asset and investors hold economic rights through their token holdings.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">SPV Details</h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
+                      <span className="text-gray-600 dark:text-gray-400">SPV Name</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{spvInfo.name}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
+                      <span className="text-gray-600 dark:text-gray-400">Jurisdiction</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{spvInfo.jurisdiction}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
+                      <span className="text-gray-600 dark:text-gray-400">Formation Date</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{spvInfo.formationDate}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3">
+                      <span className="text-gray-600 dark:text-gray-400">Registration Number</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{spvInfo.registrationNumber}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Service Providers</h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
+                      <span className="text-gray-600 dark:text-gray-400">Managing Director</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{spvInfo.managingDirector}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
+                      <span className="text-gray-600 dark:text-gray-400">Auditor</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{spvInfo.auditor}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3">
+                      <span className="text-gray-600 dark:text-gray-400">Custodian</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{spvInfo.custodian}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8">
+                <Button variant="outline" className="mr-4">
+                  <FileText className="w-4 h-4 mr-2" />
+                  View SPV Documents
+                </Button>
+                <Button variant="ghost">
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Verify Registration
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {activeTab === 'documents' && (
+            <Card className="p-8">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                <Folder className="w-6 h-6 text-emerald-600" />
+                Data Room
+              </h2>
+
+              <p className="text-gray-600 dark:text-gray-400 mb-8">
+                Access all property documentation, including ownership records, valuation reports, insurance policies, and SPV documents.
+              </p>
+
+              {/* Document Categories */}
+              <div className="space-y-4">
+                {[
+                  { title: 'Ownership Documents', count: 3, icon: FileText, items: ['Title Deed', 'Property Registration', 'Ownership Certificate'] },
+                  { title: 'Valuation Reports', count: 2, icon: BarChart3, items: ['Independent Valuation', 'Market Analysis Report'] },
+                  { title: 'Insurance Documents', count: 2, icon: Shield, items: ['Property Insurance Policy', 'Coverage Summary'] },
+                  { title: 'SPV Documents', count: 4, icon: Briefcase, items: ['Operating Agreement', 'Articles of Association', 'Investment Agreement', 'Subscription Form'] },
+                  { title: 'Financial Reports', count: 3, icon: TrendingUp, items: ['Annual Financial Statement', 'Cash Flow Projections', 'Distribution History'] },
+                ].map((category) => {
+                  const Icon = category.icon;
+                  const isExpanded = expandedSection === category.title;
+
+                  return (
+                    <div key={category.title} className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => toggleSection(category.title)}
+                        className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
+                            <Icon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                          </div>
+                          <div className="text-left">
+                            <div className="font-semibold text-gray-900 dark:text-white">{category.title}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">{category.count} documents</div>
+                          </div>
+                        </div>
+                        {isExpanded ? (
+                          <ChevronUp className="w-5 h-5 text-gray-400" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-gray-400" />
+                        )}
+                      </button>
+
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="p-4 space-y-2">
+                              {category.items.map((item, index) => (
+                                <div
+                                  key={index}
+                                  className="flex items-center justify-between p-3 bg-white dark:bg-gray-900 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <FileText className="w-4 h-4 text-gray-400" />
+                                    <span className="text-gray-700 dark:text-gray-300">{item}</span>
+                                  </div>
+                                  <Button variant="ghost" size="sm">
+                                    <Download className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="mt-8 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <Lock className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <div className="font-semibold text-yellow-800 dark:text-yellow-200">Verified Investor Access</div>
+                    <div className="text-sm text-yellow-700 dark:text-yellow-300">
+                      Some documents require investor verification. Complete your KYC to access all documentation.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {activeTab === 'location' && (
+            <Card className="p-8">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                <MapPin className="w-6 h-6 text-emerald-600" />
+                Location
+              </h2>
+
+              {/* Map Placeholder */}
+              <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-xl mb-8 flex items-center justify-center">
+                <div className="text-center">
+                  <Globe className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400">Interactive Map</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500">{property.address}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Address</h3>
+                  <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                    <p>{property.address}</p>
+                    <p>{property.city}, {property.state}</p>
+                    <p>{property.country} {property.zip_code}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Nearby Amenities</h3>
+                  <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                    <p>• Shopping Centers - 0.5 km</p>
+                    <p>• Public Transport - 0.2 km</p>
+                    <p>• Schools - 1.0 km</p>
+                    <p>• Hospital - 2.0 km</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 };
