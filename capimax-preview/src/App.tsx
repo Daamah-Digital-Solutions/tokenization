@@ -46,6 +46,18 @@ const BrokerApplicationPage = React.lazy(() => import('./pages/BrokerApplication
 const AboutPage = React.lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
 const ContactPage = React.lazy(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
 
+// Legal Pages
+const DisclaimerPage = React.lazy(() => import('./pages/legal/DisclaimerPage').then(m => ({ default: m.DisclaimerPage })));
+const RiskDisclosurePage = React.lazy(() => import('./pages/legal/RiskDisclosurePage').then(m => ({ default: m.RiskDisclosurePage })));
+const CompliancePage = React.lazy(() => import('./pages/legal/CompliancePage').then(m => ({ default: m.CompliancePage })));
+const PrivacyPolicyPage = React.lazy(() => import('./pages/legal/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
+const TermsPage = React.lazy(() => import('./pages/legal/TermsPage').then(m => ({ default: m.TermsPage })));
+const CookiesPolicyPage = React.lazy(() => import('./pages/legal/CookiesPolicyPage').then(m => ({ default: m.CookiesPolicyPage })));
+const AMLKYCPage = React.lazy(() => import('./pages/legal/AMLKYCPage').then(m => ({ default: m.AMLKYCPage })));
+const ConflictsPage = React.lazy(() => import('./pages/legal/ConflictsPage').then(m => ({ default: m.ConflictsPage })));
+const ComplaintsPage = React.lazy(() => import('./pages/legal/ComplaintsPage').then(m => ({ default: m.ComplaintsPage })));
+const SecurityPolicyPage = React.lazy(() => import('./pages/legal/SecurityPolicyPage').then(m => ({ default: m.SecurityPolicyPage })));
+
 // Loading fallback component
 const PageLoader: React.FC<{ message?: string }> = ({ message = 'Loading page...' }) => (
   <main id="main-content" tabIndex={-1} className="focus:outline-none">
@@ -275,6 +287,87 @@ const AppRouter: React.FC = () => {
           <main {...mainProps}>
             <Suspense fallback={<PageLoader message="Loading broker application..." />}>
               <BrokerApplicationPage />
+            </Suspense>
+          </main>
+        );
+      // Legal Pages
+      case 'legal-disclaimer':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading disclaimer..." />}>
+              <DisclaimerPage />
+            </Suspense>
+          </main>
+        );
+      case 'legal-risk-disclosure':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading risk disclosure..." />}>
+              <RiskDisclosurePage />
+            </Suspense>
+          </main>
+        );
+      case 'legal-compliance':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading compliance..." />}>
+              <CompliancePage />
+            </Suspense>
+          </main>
+        );
+      case 'legal-privacy':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading privacy policy..." />}>
+              <PrivacyPolicyPage />
+            </Suspense>
+          </main>
+        );
+      case 'legal-terms':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading terms..." />}>
+              <TermsPage />
+            </Suspense>
+          </main>
+        );
+      case 'legal-cookies':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading cookies policy..." />}>
+              <CookiesPolicyPage />
+            </Suspense>
+          </main>
+        );
+      case 'legal-aml-kyc':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading AML/KYC policy..." />}>
+              <AMLKYCPage />
+            </Suspense>
+          </main>
+        );
+      case 'legal-conflicts':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading conflicts policy..." />}>
+              <ConflictsPage />
+            </Suspense>
+          </main>
+        );
+      case 'legal-complaints':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading complaints procedure..." />}>
+              <ComplaintsPage />
+            </Suspense>
+          </main>
+        );
+      case 'legal-security':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading security policy..." />}>
+              <SecurityPolicyPage />
             </Suspense>
           </main>
         );

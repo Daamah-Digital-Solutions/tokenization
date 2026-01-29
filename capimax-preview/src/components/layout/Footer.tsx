@@ -1,28 +1,43 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Building2, Twitter, Linkedin, Github } from 'lucide-react';
+import { Twitter, Linkedin, Github } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import CapiMaxLightLogo from '../../assets/tokenization_capi max  tokenization light  uk  copy.svg';
 import CapiMaxDarkLogo from '../../assets/tokenization_capi max tokenization uk dark   copy.svg';
 
 export const Footer: React.FC = () => {
   const { theme } = useTheme();
+
+  const handleNavigation = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    // Allow anchor links and external links to work normally
+    if (href.startsWith('#') || href.startsWith('http')) {
+      return;
+    }
+    e.preventDefault();
+    window.history.pushState({}, '', href);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   const footerLinks = {
     platform: [
-      { name: 'Properties', href: '#properties' },
-      { name: 'Secondary Market', href: '#marketplace' },
+      { name: 'Properties', href: '/properties' },
+      { name: 'Secondary Market', href: '/marketplace' },
       { name: 'How It Works', href: '#how-it-works' },
-      { name: 'About', href: '#about' }
+      { name: 'About', href: '/about' }
     ],
     partners: [
-      { name: 'Partner Program', href: '#broker-program' },
-      { name: 'For Brokers', href: '#broker-program' },
-      { name: 'Referral Program', href: '#broker-program' }
+      { name: 'Partner Program', href: '/broker-program' },
+      { name: 'For Brokers', href: '/broker-program' },
+      { name: 'Referral Program', href: '/broker-program' }
     ],
     legal: [
-      { name: 'Privacy Policy', href: '#privacy' },
-      { name: 'Terms of Service', href: '#terms' },
-      { name: 'Compliance', href: '#compliance' }
+      { name: 'Privacy Policy', href: '/legal/privacy' },
+      { name: 'Terms & Conditions', href: '/legal/terms' },
+      { name: 'Risk Disclosure', href: '/legal/risk-disclosure' },
+      { name: 'Compliance', href: '/legal/compliance' },
+      { name: 'Cookies Policy', href: '/legal/cookies' },
+      { name: 'AML/KYC Policy', href: '/legal/aml-kyc' },
+      { name: 'Security Policy', href: '/legal/security' }
     ]
   };
 
@@ -74,6 +89,7 @@ export const Footer: React.FC = () => {
                   <li key={link.name}>
                     <a
                       href={link.href}
+                      onClick={(e) => handleNavigation(e, link.href)}
                       className="text-navy-600 dark:text-navy-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors duration-200 text-sm"
                     >
                       {link.name}

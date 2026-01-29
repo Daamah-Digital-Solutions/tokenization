@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Route = 'home' | 'login' | 'register' | 'email-verification' | 'code-verification' | 'password-reset' | 'new-password' | 'complete-google-profile' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'marketplace' | 'broker-program' | 'broker-application' | 'wallet' | 'role-management' | 'demo' | 'integration-test' | 'about' | 'contact';
+type Route = 'home' | 'login' | 'register' | 'email-verification' | 'code-verification' | 'password-reset' | 'new-password' | 'complete-google-profile' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'marketplace' | 'broker-program' | 'broker-application' | 'wallet' | 'role-management' | 'demo' | 'integration-test' | 'about' | 'contact' | 'legal-disclaimer' | 'legal-risk-disclosure' | 'legal-compliance' | 'legal-privacy' | 'legal-terms' | 'legal-cookies' | 'legal-aml-kyc' | 'legal-conflicts' | 'legal-complaints' | 'legal-security';
 
 interface RouterContextType {
   currentRoute: Route;
@@ -52,7 +52,17 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       '/demo': 'demo',
       '/integration-test': 'integration-test',
       '/about': 'about',
-      '/contact': 'contact'
+      '/contact': 'contact',
+      '/legal/disclaimer': 'legal-disclaimer',
+      '/legal/risk-disclosure': 'legal-risk-disclosure',
+      '/legal/compliance': 'legal-compliance',
+      '/legal/privacy': 'legal-privacy',
+      '/legal/terms': 'legal-terms',
+      '/legal/cookies': 'legal-cookies',
+      '/legal/aml-kyc': 'legal-aml-kyc',
+      '/legal/conflicts': 'legal-conflicts',
+      '/legal/complaints': 'legal-complaints',
+      '/legal/security': 'legal-security'
     };
     return routeMap[path] || initialRoute;
   };
@@ -86,7 +96,17 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
         '/demo': 'demo',
         '/integration-test': 'integration-test',
         '/about': 'about',
-        '/contact': 'contact'
+        '/contact': 'contact',
+        '/legal/disclaimer': 'legal-disclaimer',
+        '/legal/risk-disclosure': 'legal-risk-disclosure',
+        '/legal/compliance': 'legal-compliance',
+        '/legal/privacy': 'legal-privacy',
+        '/legal/terms': 'legal-terms',
+        '/legal/cookies': 'legal-cookies',
+        '/legal/aml-kyc': 'legal-aml-kyc',
+        '/legal/conflicts': 'legal-conflicts',
+        '/legal/complaints': 'legal-complaints',
+        '/legal/security': 'legal-security'
       };
 
       const route = routeMap[path] || 'home';
@@ -119,7 +139,17 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       demo: '/demo',
       'integration-test': '/integration-test',
       about: '/about',
-      contact: '/contact'
+      contact: '/contact',
+      'legal-disclaimer': '/legal/disclaimer',
+      'legal-risk-disclosure': '/legal/risk-disclosure',
+      'legal-compliance': '/legal/compliance',
+      'legal-privacy': '/legal/privacy',
+      'legal-terms': '/legal/terms',
+      'legal-cookies': '/legal/cookies',
+      'legal-aml-kyc': '/legal/aml-kyc',
+      'legal-conflicts': '/legal/conflicts',
+      'legal-complaints': '/legal/complaints',
+      'legal-security': '/legal/security'
     };
 
     setCurrentRoute(route);
