@@ -55,7 +55,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             'first_name': {'required': True},
             'last_name': {'required': True},
             'country': {'required': True},
-            'date_of_birth': {'required': True},
+            # date_of_birth is now collected during KYC process, not registration
+            'date_of_birth': {'required': False},
         }
     
     def validate_email(self, value):
@@ -71,11 +72,16 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return value
 
     def validate_date_of_birth(self, value):
-        """Validate user is at least 18 years old (legal age for investment)."""
+        """
+        Validate date of birth if provided.
+
+        Note: Date of birth is now optional at registration and will be
+        collected during the KYC process. Age verification (18+) will be
+        performed during KYC.
+        """
+        # Allow None/empty since DOB is now optional at registration
         if not value:
-            raise serializers.ValidationError(
-                "Date of birth is required for investment platform registration."
-            )
+            return value
 
         from datetime import date
         today = date.today()

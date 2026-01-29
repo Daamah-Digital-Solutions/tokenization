@@ -11,7 +11,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     KYCProfileViewSet, KYCDocumentViewSet, BiometricVerificationViewSet,
     ComplianceCheckViewSet, KYCNoteViewSet, KYCAnalyticsView,
-    KYCRequirementsView, KYCBulkActionsView
+    KYCRequirementsView, KYCBulkActionsView, KYCPersonalInfoView
 )
 
 # Create main router
@@ -26,9 +26,14 @@ urlpatterns = [
     # Main router URLs
     path('', include(router.urls)),
     
+    # Personal Information Update (DOB collection moved from registration)
+    path('personal-info/',
+         KYCPersonalInfoView.as_view(),
+         name='kyc-personal-info'),
+
     # KYC Status and Management Endpoints
-    path('status/', 
-         KYCProfileViewSet.as_view({'get': 'current'}), 
+    path('status/',
+         KYCProfileViewSet.as_view({'get': 'current'}),
          name='kyc-status'),
     
     path('submit/', 

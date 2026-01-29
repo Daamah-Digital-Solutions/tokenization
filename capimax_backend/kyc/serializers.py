@@ -485,6 +485,71 @@ class DocumentTypeRequirementSerializer(serializers.Serializer):
     investment_limit = serializers.DecimalField(max_digits=12, decimal_places=2)
 
 
+class KYCPersonalInfoSerializer(serializers.Serializer):
+    """
+    Serializer for updating user's personal information during KYC process.
+
+    This handles the date of birth collection that was moved from registration
+    to the KYC process per client requirements.
+    """
+
+    date_of_birth = serializers.DateField(
+        required=True,
+        help_text="User's date of birth (required for KYC)"
+    )
+    nationality = serializers.CharField(
+        max_length=100,
+        required=False,
+        allow_blank=True,
+        help_text="User's nationality"
+    )
+    residency_country = serializers.CharField(
+        max_length=100,
+        required=False,
+        allow_blank=True,
+        help_text="User's country of residence"
+    )
+
+    def validate_date_of_birth(self, value):
+        """Validate user is at least 18 years old."""
+        if not value:
+            raise serializers.ValidationError("Date of birth is required for KYC verification.")
+
+        from datetime import date
+        today = date.today()
+
+        # Calculate age
+        age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
+
+        if age < 18:
+            raise serializers.ValidationError(
+                "You must be at least 18 years old to use this investment platform."
+            )
+
+        if age > 120:
+            raise serializers.ValidationError("Please enter a valid date of birth.")
+
+        if value > today:
+            raise serializers.ValidationError("Date of birth cannot be in the future.")
+
+        return value
+
+    def update(self, instance, validated_data):
+        """Update user's personal information."""
+        user = instance
+
+        # Update date of birth
+        if 'date_of_birth' in validated_data:
+            user.date_of_birth = validated_data['date_of_birth']
+
+        # Update country if provided (residency country)
+        if validated_data.get('residency_country'):
+            user.country = validated_data['residency_country']
+
+        user.save()
+        return user
+
+
 # Utility function for getting document requirements
 def get_document_requirements(verification_level):
     """Get document requirements for specific verification level."""

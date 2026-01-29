@@ -1,21 +1,24 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FileText, 
-  Camera, 
-  MapPin, 
-  Shield, 
-  Check, 
+import {
+  FileText,
+  Camera,
+  MapPin,
+  Shield,
+  Check,
   AlertTriangle,
   Clock,
   Users,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  User,
+  Calendar
 } from 'lucide-react';
 import { DocumentUpload, type UploadedFile } from './DocumentUpload';
 import { LivenessVerification, type LivenessResult } from './LivenessVerification';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface KYCWizardProps {
   onComplete?: (data: KYCData) => void;
@@ -44,7 +47,7 @@ export interface KYCData {
   submittedAt: Date;
 }
 
-type KYCStep = 'intro' | 'identity-docs' | 'address-docs' | 'liveness' | 'review' | 'complete';
+type KYCStep = 'intro' | 'personal-info' | 'identity-docs' | 'address-docs' | 'liveness' | 'review' | 'complete';
 
 interface StepConfig {
   id: KYCStep;
@@ -60,6 +63,13 @@ const STEPS: StepConfig[] = [
     title: 'Introduction',
     description: 'KYC requirements overview',
     icon: Shield,
+    required: true
+  },
+  {
+    id: 'personal-info',
+    title: 'Personal Information',
+    description: 'Date of birth & nationality',
+    icon: User,
     required: true
   },
   {
@@ -117,14 +127,24 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
   userType = 'investor',
   className
 }) => {
+  const { state: authState } = useAuth();
+  const user = authState.user;
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [kycData, setKYCData] = useState<Partial<KYCData>>({
+    personalInfo: {
+      firstName: user?.first_name || '',
+      lastName: user?.last_name || '',
+      dateOfBirth: '',
+      nationality: '',
+      residencyCountry: user?.country || ''
+    },
     documents: {},
     liveness: null,
     verificationStatus: 'pending'
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [personalInfoErrors, setPersonalInfoErrors] = useState<Record<string, string>>({});
 
   const currentStepConfig = STEPS[currentStep];
   const requirements = DOCUMENT_REQUIREMENTS[userType];
@@ -204,28 +224,45 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
 
   const handleSubmit = async () => {
     setLoading(true);
-    
+
     try {
-      // Simulate API submission
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      // Submit personal info (including DOB) to backend
+      const personalInfo = kycData.personalInfo;
+      if (personalInfo?.dateOfBirth) {
+        try {
+          const { apiClient } = await import('../../services/api/ApiClient');
+          await apiClient.patch('/kyc/personal-info/', {
+            date_of_birth: personalInfo.dateOfBirth,
+            nationality: personalInfo.nationality,
+            residency_country: personalInfo.residencyCountry
+          });
+        } catch (apiError) {
+          console.error('Failed to update personal info:', apiError);
+          // Continue with KYC submission even if personal info update fails
+          // The backend will handle validation
+        }
+      }
+
+      // Simulate API submission for documents
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
       const completeData: KYCData = {
         personalInfo: {
-          firstName: 'John',
-          lastName: 'Doe',
-          dateOfBirth: '1990-01-01',
-          nationality: 'US',
-          residencyCountry: 'US'
+          firstName: user?.first_name || personalInfo?.firstName || '',
+          lastName: user?.last_name || personalInfo?.lastName || '',
+          dateOfBirth: personalInfo?.dateOfBirth || '',
+          nationality: personalInfo?.nationality || '',
+          residencyCountry: personalInfo?.residencyCountry || ''
         },
         documents: kycData.documents || {},
         liveness: kycData.liveness || null,
         verificationStatus: 'processing',
         submittedAt: new Date()
       };
-      
+
       onComplete?.(completeData);
       setCurrentStep(STEPS.length);
-      
+
     } catch (error) {
       setErrors({ submit: 'Failed to submit KYC data. Please try again.' });
     } finally {
@@ -233,10 +270,47 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
     }
   };
 
+  const validatePersonalInfo = (): boolean => {
+    const errors: Record<string, string> = {};
+    const info = kycData.personalInfo;
+
+    if (!info?.dateOfBirth) {
+      errors.dateOfBirth = 'Date of birth is required';
+    } else {
+      // Validate age is at least 18
+      const today = new Date();
+      const birthDate = new Date(info.dateOfBirth);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      if (age < 18) {
+        errors.dateOfBirth = 'You must be at least 18 years old to use this platform';
+      }
+      if (birthDate > today) {
+        errors.dateOfBirth = 'Date of birth cannot be in the future';
+      }
+    }
+
+    if (!info?.nationality?.trim()) {
+      errors.nationality = 'Nationality is required';
+    }
+
+    if (!info?.residencyCountry?.trim()) {
+      errors.residencyCountry = 'Country of residence is required';
+    }
+
+    setPersonalInfoErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const canProceedToNext = (): boolean => {
     switch (STEPS[currentStep].id) {
       case 'intro':
         return true;
+      case 'personal-info':
+        return validatePersonalInfo();
       case 'identity-docs':
         return !!(kycData.documents?.passport || kycData.documents?.nationalId);
       case 'address-docs':
@@ -381,6 +455,191 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
     </motion.div>
   );
 
+  const renderPersonalInfoStep = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="space-y-6"
+    >
+      <div className="text-center space-y-4">
+        <div className="w-20 h-20 mx-auto bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center">
+          <User className="w-10 h-10 text-emerald-500 dark:text-emerald-400" />
+        </div>
+
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+            Personal Information
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400 mt-2">
+            Please provide your date of birth and nationality for verification
+          </p>
+        </div>
+      </div>
+
+      <div className="max-w-md mx-auto space-y-6">
+        {/* Date of Birth */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Date of Birth <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <input
+              type="date"
+              value={kycData.personalInfo?.dateOfBirth || ''}
+              onChange={(e) => {
+                setKYCData(prev => ({
+                  ...prev,
+                  personalInfo: {
+                    ...prev.personalInfo!,
+                    dateOfBirth: e.target.value
+                  }
+                }));
+                if (personalInfoErrors.dateOfBirth) {
+                  setPersonalInfoErrors(prev => ({ ...prev, dateOfBirth: '' }));
+                }
+              }}
+              className={cn(
+                'w-full pl-10 pr-4 py-3 rounded-xl border bg-white dark:bg-slate-800 text-slate-900 dark:text-white',
+                'focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent',
+                'transition-all duration-200',
+                personalInfoErrors.dateOfBirth
+                  ? 'border-red-300 dark:border-red-600'
+                  : 'border-slate-300 dark:border-slate-600'
+              )}
+              max={new Date().toISOString().split('T')[0]}
+            />
+          </div>
+          {personalInfoErrors.dateOfBirth && (
+            <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+              <AlertTriangle className="w-4 h-4" />
+              {personalInfoErrors.dateOfBirth}
+            </p>
+          )}
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            You must be at least 18 years old to invest on this platform
+          </p>
+        </div>
+
+        {/* Nationality */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Nationality <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={kycData.personalInfo?.nationality || ''}
+            onChange={(e) => {
+              setKYCData(prev => ({
+                ...prev,
+                personalInfo: {
+                  ...prev.personalInfo!,
+                  nationality: e.target.value
+                }
+              }));
+              if (personalInfoErrors.nationality) {
+                setPersonalInfoErrors(prev => ({ ...prev, nationality: '' }));
+              }
+            }}
+            className={cn(
+              'w-full px-4 py-3 rounded-xl border bg-white dark:bg-slate-800 text-slate-900 dark:text-white',
+              'focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent',
+              'transition-all duration-200',
+              personalInfoErrors.nationality
+                ? 'border-red-300 dark:border-red-600'
+                : 'border-slate-300 dark:border-slate-600'
+            )}
+          >
+            <option value="">Select your nationality</option>
+            <option value="US">United States</option>
+            <option value="GB">United Kingdom</option>
+            <option value="CA">Canada</option>
+            <option value="AU">Australia</option>
+            <option value="DE">Germany</option>
+            <option value="FR">France</option>
+            <option value="AE">United Arab Emirates</option>
+            <option value="SA">Saudi Arabia</option>
+            <option value="EG">Egypt</option>
+            <option value="JO">Jordan</option>
+            <option value="LB">Lebanon</option>
+            <option value="KW">Kuwait</option>
+            <option value="QA">Qatar</option>
+            <option value="BH">Bahrain</option>
+            <option value="OM">Oman</option>
+            <option value="OTHER">Other</option>
+          </select>
+          {personalInfoErrors.nationality && (
+            <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+              <AlertTriangle className="w-4 h-4" />
+              {personalInfoErrors.nationality}
+            </p>
+          )}
+        </div>
+
+        {/* Country of Residence */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+            Country of Residence <span className="text-red-500">*</span>
+          </label>
+          <select
+            value={kycData.personalInfo?.residencyCountry || ''}
+            onChange={(e) => {
+              setKYCData(prev => ({
+                ...prev,
+                personalInfo: {
+                  ...prev.personalInfo!,
+                  residencyCountry: e.target.value
+                }
+              }));
+              if (personalInfoErrors.residencyCountry) {
+                setPersonalInfoErrors(prev => ({ ...prev, residencyCountry: '' }));
+              }
+            }}
+            className={cn(
+              'w-full px-4 py-3 rounded-xl border bg-white dark:bg-slate-800 text-slate-900 dark:text-white',
+              'focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent',
+              'transition-all duration-200',
+              personalInfoErrors.residencyCountry
+                ? 'border-red-300 dark:border-red-600'
+                : 'border-slate-300 dark:border-slate-600'
+            )}
+          >
+            <option value="">Select your country of residence</option>
+            <option value="US">United States</option>
+            <option value="GB">United Kingdom</option>
+            <option value="CA">Canada</option>
+            <option value="AU">Australia</option>
+            <option value="DE">Germany</option>
+            <option value="FR">France</option>
+            <option value="AE">United Arab Emirates</option>
+            <option value="SA">Saudi Arabia</option>
+            <option value="EG">Egypt</option>
+            <option value="JO">Jordan</option>
+            <option value="LB">Lebanon</option>
+            <option value="KW">Kuwait</option>
+            <option value="QA">Qatar</option>
+            <option value="BH">Bahrain</option>
+            <option value="OM">Oman</option>
+            <option value="OTHER">Other</option>
+          </select>
+          {personalInfoErrors.residencyCountry && (
+            <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+              <AlertTriangle className="w-4 h-4" />
+              {personalInfoErrors.residencyCountry}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 max-w-md mx-auto">
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          <Shield className="w-4 h-4 inline mr-1" />
+          Your personal information is encrypted and securely stored in compliance with data protection regulations.
+        </p>
+      </div>
+    </motion.div>
+  );
+
   const renderIdentityDocsStep = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -422,7 +681,7 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
         </div>
 
         <DocumentUpload
-          documentType="nationalId"
+          documentType="id"
           title="National ID / Driver License"
           description="Upload front and back of your national ID or driver license"
           requirements={[
@@ -459,7 +718,7 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
 
       <div className="space-y-6">
         <DocumentUpload
-          documentType="utilityBill"
+          documentType="utility_bill"
           title="Utility Bill"
           description="Recent utility bill (electricity, water, gas, internet)"
           requirements={[
@@ -483,7 +742,7 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
         </div>
 
         <DocumentUpload
-          documentType="bankStatement"
+          documentType="bank_statement"
           title="Bank Statement"
           description="Recent bank statement showing your address"
           requirements={[
@@ -534,6 +793,40 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
       </div>
 
       <div className="space-y-6">
+        {/* Personal Information */}
+        <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-6">
+          <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <User className="w-5 h-5" />
+            Personal Information
+          </h3>
+          <div className="space-y-3">
+            {kycData.personalInfo?.dateOfBirth && (
+              <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+                <Check className="w-5 h-5 text-emerald-500" />
+                <span className="text-sm font-medium">
+                  Date of Birth: {new Date(kycData.personalInfo.dateOfBirth).toLocaleDateString()}
+                </span>
+              </div>
+            )}
+            {kycData.personalInfo?.nationality && (
+              <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+                <Check className="w-5 h-5 text-emerald-500" />
+                <span className="text-sm font-medium">
+                  Nationality: {kycData.personalInfo.nationality}
+                </span>
+              </div>
+            )}
+            {kycData.personalInfo?.residencyCountry && (
+              <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+                <Check className="w-5 h-5 text-emerald-500" />
+                <span className="text-sm font-medium">
+                  Country of Residence: {kycData.personalInfo.residencyCountry}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Identity Documents */}
         <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-6">
           <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
@@ -676,6 +969,8 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
     switch (STEPS[currentStep]?.id) {
       case 'intro':
         return renderIntroStep();
+      case 'personal-info':
+        return renderPersonalInfoStep();
       case 'identity-docs':
         return renderIdentityDocsStep();
       case 'address-docs':

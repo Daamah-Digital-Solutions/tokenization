@@ -33,7 +33,8 @@ from .serializers import (
     BiometricVerificationSerializer, ComplianceCheckSerializer,
     KYCNoteSerializer, KYCAuditLogSerializer,
     KYCStatusUpdateSerializer, KYCSummarySerializer,
-    DocumentTypeRequirementSerializer, get_document_requirements
+    DocumentTypeRequirementSerializer, get_document_requirements,
+    KYCPersonalInfoSerializer
 )
 from .services import (
     KYCService, ComplianceService, BiometricService,
@@ -654,3 +655,60 @@ class KYCBulkActionsView(APIView):
             'message': f'Ran compliance checks for {processed_count} profiles.',
             'processed_count': processed_count
         })
+
+
+class KYCPersonalInfoView(APIView):
+    """
+    View for updating user's personal information during KYC process.
+
+    This endpoint handles the date of birth collection that was moved from
+    registration to the KYC process per client requirements.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """Get current user's personal info relevant to KYC."""
+        user = request.user
+        return Response({
+            'date_of_birth': user.date_of_birth,
+            'country': user.country,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+        })
+
+    def patch(self, request):
+        """Update user's personal information during KYC."""
+        serializer = KYCPersonalInfoSerializer(data=request.data)
+
+        if serializer.is_valid():
+            user = serializer.update(request.user, serializer.validated_data)
+
+            # Ensure KYC profile exists
+            try:
+                kyc_profile = user.kyc_profile
+            except:
+                from .models import KYCProfile
+                kyc_profile = KYCProfile.objects.create(user=user)
+
+            # Log the update
+            KYCAuditLog.objects.create(
+                kyc_profile=kyc_profile,
+                action="Personal Information Updated",
+                actor=user,
+                details={
+                    'date_of_birth': str(serializer.validated_data.get('date_of_birth')),
+                    'nationality': serializer.validated_data.get('nationality', ''),
+                    'residency_country': serializer.validated_data.get('residency_country', '')
+                },
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get('HTTP_USER_AGENT', '')
+            )
+
+            return Response({
+                'message': 'Personal information updated successfully.',
+                'date_of_birth': user.date_of_birth,
+                'country': user.country
+            })
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -32,7 +32,7 @@ export interface RegisterData {
   lastName: string;
   email: string;
   phoneNumber: string;
-  dateOfBirth: string;
+  // Note: dateOfBirth moved to KYC process per client requirements
 
   // Location Information
   country: string;
@@ -89,7 +89,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     lastName: '',
     email: '',
     phoneNumber: '',
-    dateOfBirth: '',
     country: '',
     city: '',
     password: '',
@@ -116,7 +115,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           errors.email = 'Please enter a valid email address';
         }
         if (!formData.phoneNumber.trim()) errors.phoneNumber = 'Phone number is required';
-        if (!formData.dateOfBirth) errors.dateOfBirth = 'Date of birth is required';
+        // Note: dateOfBirth validation moved to KYC process
         break;
 
       case 1: // Location
@@ -260,16 +259,6 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
               onChange={handleInputChange('phoneNumber')}
               leftIcon={<Phone className="w-5 h-5" />}
               errorMessage={validationErrors.phoneNumber}
-              size="lg"
-              required
-            />
-
-            <Input
-              type="date"
-              label="Date of Birth"
-              value={formData.dateOfBirth}
-              onChange={handleInputChange('dateOfBirth')}
-              errorMessage={validationErrors.dateOfBirth}
               size="lg"
               required
             />
