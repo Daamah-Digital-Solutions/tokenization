@@ -23,6 +23,8 @@ export const Footer: React.FC = () => {
       { name: 'Properties', href: '/properties' },
       { name: 'Secondary Market', href: '/marketplace' },
       { name: 'How It Works', href: '/how-it-works' },
+      { name: 'Our Partners', href: '/partners' },
+      { name: 'Broker Program', href: '/broker-program' },
       { name: 'About', href: '/about' }
     ],
     learn: [

@@ -34,7 +34,8 @@ export const Navbar: React.FC = () => {
     { name: 'About Us', route: 'about' as const },
     { name: 'Properties', route: 'properties' as const },
     { name: 'Secondary Market', route: 'marketplace' as const },
-    { name: 'Partner Program', route: 'broker-program' as const },
+    { name: 'Our Partners', route: 'partners' as const },
+    { name: 'Broker Program', route: 'broker-program' as const },
     { name: 'Contact Us', route: 'contact' as const }
   ];
 
