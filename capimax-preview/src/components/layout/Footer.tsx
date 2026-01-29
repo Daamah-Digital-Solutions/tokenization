@@ -22,13 +22,17 @@ export const Footer: React.FC = () => {
     platform: [
       { name: 'Properties', href: '/properties' },
       { name: 'Secondary Market', href: '/marketplace' },
-      { name: 'How It Works', href: '#how-it-works' },
+      { name: 'How It Works', href: '/how-it-works' },
       { name: 'About', href: '/about' }
     ],
-    partners: [
-      { name: 'Partner Program', href: '/broker-program' },
-      { name: 'For Brokers', href: '/broker-program' },
-      { name: 'Referral Program', href: '/broker-program' }
+    learn: [
+      { name: 'What is Tokenization', href: '/tokenization' },
+      { name: 'What is SPV', href: '/spv' },
+      { name: 'Investor Guide', href: '/investor-guide' },
+      { name: 'Data Room', href: '/data-room' },
+      { name: 'Risks & Disclosures', href: '/risks' },
+      { name: 'FAQ', href: '/faq' },
+      { name: 'For Property Owners', href: '/property-owner' }
     ],
     legal: [
       { name: 'Privacy Policy', href: '/legal/privacy' },
@@ -82,7 +86,7 @@ export const Footer: React.FC = () => {
               transition={{ duration: 0.6, delay: (index + 1) * 0.1 }}
             >
               <h3 className="text-sm font-semibold mb-4 text-navy-900 dark:text-white uppercase tracking-wide">
-                {category === 'platform' ? 'Platform' : category === 'partners' ? 'Partners' : 'Legal'}
+                {category === 'platform' ? 'Platform' : category === 'learn' ? 'Learn' : 'Legal'}
               </h3>
               <ul className="space-y-2">
                 {links.map((link) => (

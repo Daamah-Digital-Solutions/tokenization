@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Route = 'home' | 'login' | 'register' | 'email-verification' | 'code-verification' | 'password-reset' | 'new-password' | 'complete-google-profile' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'marketplace' | 'broker-program' | 'broker-application' | 'wallet' | 'role-management' | 'demo' | 'integration-test' | 'about' | 'contact' | 'legal-disclaimer' | 'legal-risk-disclosure' | 'legal-compliance' | 'legal-privacy' | 'legal-terms' | 'legal-cookies' | 'legal-aml-kyc' | 'legal-conflicts' | 'legal-complaints' | 'legal-security';
+type Route = 'home' | 'login' | 'register' | 'email-verification' | 'code-verification' | 'password-reset' | 'new-password' | 'complete-google-profile' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'marketplace' | 'broker-program' | 'broker-application' | 'wallet' | 'role-management' | 'demo' | 'integration-test' | 'about' | 'contact' | 'legal-disclaimer' | 'legal-risk-disclosure' | 'legal-compliance' | 'legal-privacy' | 'legal-terms' | 'legal-cookies' | 'legal-aml-kyc' | 'legal-conflicts' | 'legal-complaints' | 'legal-security' | 'how-it-works' | 'tokenization' | 'spv' | 'data-room' | 'investor-guide' | 'secondary-market' | 'risks' | 'faq' | 'property-owner';
 
 interface RouterContextType {
   currentRoute: Route;
@@ -62,7 +62,16 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       '/legal/aml-kyc': 'legal-aml-kyc',
       '/legal/conflicts': 'legal-conflicts',
       '/legal/complaints': 'legal-complaints',
-      '/legal/security': 'legal-security'
+      '/legal/security': 'legal-security',
+      '/how-it-works': 'how-it-works',
+      '/tokenization': 'tokenization',
+      '/spv': 'spv',
+      '/data-room': 'data-room',
+      '/investor-guide': 'investor-guide',
+      '/secondary-market': 'secondary-market',
+      '/risks': 'risks',
+      '/faq': 'faq',
+      '/property-owner': 'property-owner'
     };
     return routeMap[path] || initialRoute;
   };
@@ -106,7 +115,16 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
         '/legal/aml-kyc': 'legal-aml-kyc',
         '/legal/conflicts': 'legal-conflicts',
         '/legal/complaints': 'legal-complaints',
-        '/legal/security': 'legal-security'
+        '/legal/security': 'legal-security',
+        '/how-it-works': 'how-it-works',
+        '/tokenization': 'tokenization',
+        '/spv': 'spv',
+        '/data-room': 'data-room',
+        '/investor-guide': 'investor-guide',
+        '/secondary-market': 'secondary-market',
+        '/risks': 'risks',
+        '/faq': 'faq',
+        '/property-owner': 'property-owner'
       };
 
       const route = routeMap[path] || 'home';
@@ -149,7 +167,16 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       'legal-aml-kyc': '/legal/aml-kyc',
       'legal-conflicts': '/legal/conflicts',
       'legal-complaints': '/legal/complaints',
-      'legal-security': '/legal/security'
+      'legal-security': '/legal/security',
+      'how-it-works': '/how-it-works',
+      tokenization: '/tokenization',
+      spv: '/spv',
+      'data-room': '/data-room',
+      'investor-guide': '/investor-guide',
+      'secondary-market': '/secondary-market',
+      risks: '/risks',
+      faq: '/faq',
+      'property-owner': '/property-owner'
     };
 
     setCurrentRoute(route);

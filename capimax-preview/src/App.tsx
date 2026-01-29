@@ -58,6 +58,17 @@ const ConflictsPage = React.lazy(() => import('./pages/legal/ConflictsPage').the
 const ComplaintsPage = React.lazy(() => import('./pages/legal/ComplaintsPage').then(m => ({ default: m.ComplaintsPage })));
 const SecurityPolicyPage = React.lazy(() => import('./pages/legal/SecurityPolicyPage').then(m => ({ default: m.SecurityPolicyPage })));
 
+// Info/Public Pages
+const HowItWorksPage = React.lazy(() => import('./pages/HowItWorksPage').then(m => ({ default: m.HowItWorksPage })));
+const TokenizationPage = React.lazy(() => import('./pages/TokenizationPage').then(m => ({ default: m.TokenizationPage })));
+const SPVPage = React.lazy(() => import('./pages/SPVPage').then(m => ({ default: m.SPVPage })));
+const DataRoomPage = React.lazy(() => import('./pages/DataRoomPage').then(m => ({ default: m.DataRoomPage })));
+const InvestorGuidePage = React.lazy(() => import('./pages/InvestorGuidePage').then(m => ({ default: m.InvestorGuidePage })));
+const SecondaryMarketPage = React.lazy(() => import('./pages/SecondaryMarketPage').then(m => ({ default: m.SecondaryMarketPage })));
+const RisksPage = React.lazy(() => import('./pages/RisksPage').then(m => ({ default: m.RisksPage })));
+const FAQPage = React.lazy(() => import('./pages/FAQPage').then(m => ({ default: m.FAQPage })));
+const PropertyOwnerLandingPage = React.lazy(() => import('./pages/PropertyOwnerLandingPage').then(m => ({ default: m.PropertyOwnerLandingPage })));
+
 // Loading fallback component
 const PageLoader: React.FC<{ message?: string }> = ({ message = 'Loading page...' }) => (
   <main id="main-content" tabIndex={-1} className="focus:outline-none">
@@ -368,6 +379,79 @@ const AppRouter: React.FC = () => {
           <main {...mainProps}>
             <Suspense fallback={<PageLoader message="Loading security policy..." />}>
               <SecurityPolicyPage />
+            </Suspense>
+          </main>
+        );
+      // Info/Public Pages
+      case 'how-it-works':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading how it works..." />}>
+              <HowItWorksPage />
+            </Suspense>
+          </main>
+        );
+      case 'tokenization':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading tokenization info..." />}>
+              <TokenizationPage />
+            </Suspense>
+          </main>
+        );
+      case 'spv':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading SPV info..." />}>
+              <SPVPage />
+            </Suspense>
+          </main>
+        );
+      case 'data-room':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading data room..." />}>
+              <DataRoomPage />
+            </Suspense>
+          </main>
+        );
+      case 'investor-guide':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading investor guide..." />}>
+              <InvestorGuidePage />
+            </Suspense>
+          </main>
+        );
+      case 'secondary-market':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading secondary market info..." />}>
+              <SecondaryMarketPage />
+            </Suspense>
+          </main>
+        );
+      case 'risks':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading risk disclosures..." />}>
+              <RisksPage />
+            </Suspense>
+          </main>
+        );
+      case 'faq':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading FAQ..." />}>
+              <FAQPage />
+            </Suspense>
+          </main>
+        );
+      case 'property-owner':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading property owner page..." />}>
+              <PropertyOwnerLandingPage />
             </Suspense>
           </main>
         );
