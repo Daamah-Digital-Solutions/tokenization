@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'analytics',
     'blockchain',
     'marketplace',
+    'liquidity_provider',
     'core',
 ]
 

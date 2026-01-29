@@ -46,6 +46,7 @@ const BrokerApplicationPage = React.lazy(() => import('./pages/BrokerApplication
 const AboutPage = React.lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
 const ContactPage = React.lazy(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
 const PartnersPage = React.lazy(() => import('./pages/PartnersPage').then(m => ({ default: m.PartnersPage })));
+const LiquidityProviderPage = React.lazy(() => import('./pages/LiquidityProviderPage').then(m => ({ default: m.LiquidityProviderPage })));
 
 // Legal Pages
 const DisclaimerPage = React.lazy(() => import('./pages/legal/DisclaimerPage').then(m => ({ default: m.DisclaimerPage })));
@@ -283,6 +284,14 @@ const AppRouter: React.FC = () => {
           <main {...mainProps}>
             <Suspense fallback={<PageLoader message="Loading partners..." />}>
               <PartnersPage />
+            </Suspense>
+          </main>
+        );
+      case 'liquidity-provider':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading liquidity provider..." />}>
+              <LiquidityProviderPage />
             </Suspense>
           </main>
         );
