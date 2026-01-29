@@ -9,8 +9,8 @@ Capimax is a full-stack real estate tokenization platform enabling fractional pr
 ## Architecture
 
 ### Backend (Django)
-Located in `capimax_backend/`, organized into 15 modular Django apps:
-- **accounts**: User authentication, JWT tokens, 2FA support, custom User model
+Located in `capimax_backend/`, organized into modular Django apps:
+- **accounts**: User authentication, JWT tokens, 2FA, Google OAuth with FedCM support
 - **properties**: Property management with tokenization features
 - **investments**: Investment tracking, portfolio management, dividend distribution
 - **payments**: Multi-provider payment processing (Stripe, PayPal, Coinbase, NowPayments)
@@ -20,13 +20,13 @@ Located in `capimax_backend/`, organized into 15 modular Django apps:
 - **analytics**: Investment analytics and reporting
 - **dashboard**: Role-specific dashboard APIs
 - **notifications**: Real-time notifications system
-- **ws_app**: WebSocket support via Django Channels with custom middleware
+- **ws_app**: WebSocket support via Django Channels
 - **blockchain**: Smart contract integration (web3.py for Ethereum/Polygon)
 - **marketplace**: Secondary market for property tokens
 - **admin_panel**: Administrative interface and controls
 - **core**: Shared utilities, standardized responses, pagination, custom permissions
 
-Settings structure: `capimax_backend/capimax_backend/settings/` with base.py, development.py, production.py
+Settings structure: `capimax_backend/capimax_backend/settings/` with base.py, development.py, production.py, staging.py, testing.py
 
 Key architectural patterns:
 - Custom User model: `accounts.User` (AUTH_USER_MODEL)
@@ -46,10 +46,11 @@ Located in `capimax-preview/`, built with:
 - Role-based routing (Investor, Property Owner, Broker, Admin)
 
 Frontend architecture:
-- Centralized API client: `src/services/api/ApiClient.ts` (singleton pattern)
-- Custom axios interceptors for auth token injection and error handling
-- Service layer pattern: separate services for auth, property, payment, marketplace
-- Context providers: AuthContext, PaymentContext
+- Centralized API client: `src/services/api/ApiClient.ts` (singleton pattern with axios)
+- Service layer: `src/services/` with separate services for auth, property, payment, marketplace
+- Context providers: `src/contexts/` for AuthContext, PaymentContext
+- Pages: `src/pages/` organized by feature/role
+- Components: `src/components/` for reusable UI components
 - Public endpoints bypass auth: /auth/register/, /auth/login/, /auth/password/reset/
 
 ## Development Commands
@@ -126,20 +127,21 @@ API documentation:
 - Swagger UI: `http://localhost:8000/api/docs/`
 - ReDoc: `http://localhost:8000/api/redoc/`
 
-WebSocket endpoints: `ws://localhost:8000/ws/`
+WebSocket endpoints: `ws://localhost:8000/ws/` (configured via VITE_WS_URL in frontend)
 
 ## Testing Configuration
 
 ### Backend (pytest)
-Configuration: `capimax_backend/pytest.ini`
+Configuration: `capimax_backend/pytest.ini` and `capimax_backend/conftest.py`
 - Settings module: `capimax_backend.settings_test`
 - Coverage requirement: 85% minimum
 - Database: Reuses test database (--reuse-db)
 - Markers: `@pytest.mark.unit`, `@pytest.mark.integration`, `@pytest.mark.websocket`, `@pytest.mark.performance`, `@pytest.mark.slow`
+- Note: The web3 pytest plugin is disabled in conftest.py due to compatibility issues
 
 ### Frontend (vitest)
 Configuration: `capimax-preview/vitest.config.ts`
-- Uses @testing-library/react and happy-dom/jsdom
+- Uses @testing-library/react with happy-dom/jsdom environments
 
 ## Code Patterns
 
@@ -221,7 +223,20 @@ python validate_production_readiness.py
 
 ## Blockchain Integration
 
-- Smart contracts: `blockchain/contracts/`
-- Web3 library: Web3.py for Ethereum/Polygon
+- Smart contracts: `capimax_backend/blockchain/contracts/`
+- Web3 library: Web3.py for Ethereum/Polygon (BNB chain support)
 - RPC endpoints: ETHEREUM_RPC_URL and POLYGON_RPC_URL env vars
-- Contract deployment: `blockchain/services/property_tokenization_service.py`
+- Contract deployment: `capimax_backend/blockchain/services/property_tokenization_service.py`
+
+## Key Files Reference
+
+Backend:
+- Main URL router: `capimax_backend/capimax_backend/urls.py`
+- Core utilities: `capimax_backend/core/utils.py`
+- Custom User model: `capimax_backend/accounts/models.py`
+- Test configuration: `capimax_backend/pytest.ini`, `capimax_backend/conftest.py`
+
+Frontend:
+- API Client: `capimax-preview/src/services/api/ApiClient.ts`
+- Entry point: `capimax-preview/src/main.tsx`
+- App routes: `capimax-preview/src/App.tsx`
