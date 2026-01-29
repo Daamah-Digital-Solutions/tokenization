@@ -82,7 +82,7 @@ export const HeroSectionV2: React.FC = () => {
                   <Sparkles className="w-5 h-5 text-yellow-400/60 dark:text-yellow-300/80" />
                 </motion.div>
               </div>
-              <span className="text-sm font-semibold text-slate-700 dark:text-gray-200">The Future of Real Estate Investment</span>
+              <span className="text-sm font-semibold text-slate-700 dark:text-gray-200">Tokenized Real Estate Investment | SPV-Backed | Global Access</span>
             </motion.div>
 
             {/* Enhanced Headlines with better dark mode gradients */}
@@ -120,9 +120,9 @@ export const HeroSectionV2: React.FC = () => {
                 transition={{ duration: 0.8, delay: 0.4 }}
                 className="text-xl lg:text-2xl leading-relaxed text-slate-600 dark:text-gray-300 max-w-3xl mx-auto font-light"
               >
-                Experience the next generation of real estate investment.
-                Own fractional shares of premium properties worldwide through
-                secure blockchain technology.
+                A global technology platform for tokenizing assets and offering fractional
+                investment opportunities through the SPV model, with document transparency,
+                operational governance, and liquidity options via secondary market.
               </motion.p>
 
               {/* Property Types Highlight */}
