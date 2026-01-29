@@ -145,3 +145,11 @@ docker-compose.override.yml
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# Claude Code
+.claude/
+
+# Project working documents
+prompt.md
+FULL_IMPLEMENTATION_PLAN.md
+Document Must Analyze/

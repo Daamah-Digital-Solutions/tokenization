@@ -47,6 +47,7 @@ Located in `capimax-preview/`, built with:
 
 Frontend architecture:
 - Centralized API client: `src/services/api/ApiClient.ts` (singleton pattern with axios)
+- Custom router: `src/utils/router.tsx` (uses Context API and History API, not react-router)
 - Service layer: `src/services/` with separate services for auth, property, payment, marketplace
 - Context providers: `src/contexts/` for AuthContext, PaymentContext
 - Pages: `src/pages/` organized by feature/role
@@ -127,7 +128,7 @@ API documentation:
 - Swagger UI: `http://localhost:8000/api/docs/`
 - ReDoc: `http://localhost:8000/api/redoc/`
 
-WebSocket endpoints: `ws://localhost:8000/ws/` (configured via VITE_WS_URL in frontend)
+WebSocket endpoints: `ws://localhost:8000/ws/` (configured via VITE_WEBSOCKET_URL in frontend)
 
 ## Testing Configuration
 
@@ -141,7 +142,9 @@ Configuration: `capimax_backend/pytest.ini` and `capimax_backend/conftest.py`
 
 ### Frontend (vitest)
 Configuration: `capimax-preview/vitest.config.ts`
-- Uses @testing-library/react with happy-dom/jsdom environments
+- Setup file: `src/test/setup.ts`
+- Coverage requirement: 70% minimum (lines, functions, branches, statements)
+- Uses @testing-library/react with jsdom environment
 
 ## Code Patterns
 
@@ -177,6 +180,14 @@ import { apiClient } from '@/services/api/ApiClient';
 const data = await apiClient.get('/endpoint/');
 ```
 
+### Frontend Routing Pattern
+Uses custom router with Context API (not react-router):
+```typescript
+import { useRouter } from '@/utils/router';
+const { navigate, currentRoute, goBack } = useRouter();
+navigate('dashboard'); // Navigate to dashboard route
+```
+
 ### Database Models
 Key relationships:
 - **User model**: `accounts.User` (AUTH_USER_MODEL) with role field
@@ -204,8 +215,10 @@ POLYGON_RPC_URL=https://polygon-rpc.com/
 ### Frontend (.env in capimax-preview/)
 ```bash
 VITE_API_URL=http://localhost:8000/api/v1
+VITE_WEBSOCKET_URL=ws://localhost:8000/ws
 VITE_STRIPE_PUBLISHABLE_KEY=<stripe-public-key>
 VITE_WALLET_CONNECT_PROJECT_ID=<wallet-connect-project-id>
+VITE_GOOGLE_CLIENT_ID=<google-oauth-client-id>
 ```
 
 ## Production Deployment
