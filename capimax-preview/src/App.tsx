@@ -393,6 +393,18 @@ const AppRouter: React.FC = () => {
           </ProtectedRoute>
         );
       // Legal Pages
+      case 'legal-index':
+        // Redirect /legal to /legal/privacy
+        requestAnimationFrame(() => {
+          window.history.replaceState({}, '', '/legal/privacy');
+        });
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading privacy policy..." />}>
+              <PrivacyPolicyPage />
+            </Suspense>
+          </main>
+        );
       case 'legal-disclaimer':
         return (
           <main {...mainProps}>

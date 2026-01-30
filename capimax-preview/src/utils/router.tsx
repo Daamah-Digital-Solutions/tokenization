@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Route = 'home' | 'login' | 'register' | 'email-verification' | 'code-verification' | 'password-reset' | 'new-password' | 'complete-google-profile' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'marketplace' | 'broker-program' | 'broker-application' | 'wallet' | 'role-management' | 'demo' | 'integration-test' | 'about' | 'contact' | 'partners' | 'liquidity-provider' | 'legal-disclaimer' | 'legal-risk-disclosure' | 'legal-compliance' | 'legal-privacy' | 'legal-terms' | 'legal-cookies' | 'legal-aml-kyc' | 'legal-conflicts' | 'legal-complaints' | 'legal-security' | 'how-it-works' | 'tokenization' | 'spv' | 'data-room' | 'investor-guide' | 'secondary-market' | 'risks' | 'faq' | 'property-owner' | 'not-found';
+type Route = 'home' | 'login' | 'register' | 'email-verification' | 'code-verification' | 'password-reset' | 'new-password' | 'complete-google-profile' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'marketplace' | 'broker-program' | 'broker-application' | 'wallet' | 'role-management' | 'demo' | 'integration-test' | 'about' | 'contact' | 'partners' | 'liquidity-provider' | 'legal-index' | 'legal-disclaimer' | 'legal-risk-disclosure' | 'legal-compliance' | 'legal-privacy' | 'legal-terms' | 'legal-cookies' | 'legal-aml-kyc' | 'legal-conflicts' | 'legal-complaints' | 'legal-security' | 'how-it-works' | 'tokenization' | 'spv' | 'data-room' | 'investor-guide' | 'secondary-market' | 'risks' | 'faq' | 'property-owner' | 'not-found';
 
 interface RouterContextType {
   currentRoute: Route;
@@ -55,6 +55,8 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       '/contact': 'contact',
       '/partners': 'partners',
       '/liquidity-provider': 'liquidity-provider',
+      '/legal': 'legal-index',
+      '/legal/': 'legal-index',
       '/legal/disclaimer': 'legal-disclaimer',
       '/legal/risk-disclosure': 'legal-risk-disclosure',
       '/legal/compliance': 'legal-compliance',
@@ -112,6 +114,8 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
         '/contact': 'contact',
         '/partners': 'partners',
         '/liquidity-provider': 'liquidity-provider',
+        '/legal': 'legal-index',
+        '/legal/': 'legal-index',
         '/legal/disclaimer': 'legal-disclaimer',
         '/legal/risk-disclosure': 'legal-risk-disclosure',
         '/legal/compliance': 'legal-compliance',
@@ -167,6 +171,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       contact: '/contact',
       partners: '/partners',
       'liquidity-provider': '/liquidity-provider',
+      'legal-index': '/legal/privacy',
       'legal-disclaimer': '/legal/disclaimer',
       'legal-risk-disclosure': '/legal/risk-disclosure',
       'legal-compliance': '/legal/compliance',
