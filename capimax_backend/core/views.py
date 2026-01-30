@@ -7,8 +7,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from django.conf import settings
-import django
 
 
 @api_view(['GET'])
@@ -16,13 +14,11 @@ import django
 def api_root(request):
     """
     Root API endpoint providing system information and available endpoints.
+    Note: Sensitive information (debug mode, environment, django version) removed for security.
     """
     return Response({
         'message': 'Welcome to Capimax Real Estate Tokenization API',
         'version': 'v1',
-        'django_version': django.get_version(),
-        'debug': settings.DEBUG,
-        'environment': getattr(settings, 'ENVIRONMENT', 'development'),
         'endpoints': {
             'authentication': '/api/v1/auth/',
             'properties': '/api/v1/properties/',
@@ -40,7 +36,6 @@ def api_root(request):
         'support': {
             'email': 'api-support@capimax.com',
             'documentation': '/api/docs/',
-            'status': 'https://status.capimax.com'
         }
     }, status=status.HTTP_200_OK)
 
@@ -50,12 +45,11 @@ def api_root(request):
 def health_check(request):
     """
     Health check endpoint for monitoring and load balancers.
+    Note: Environment info removed for security - use authenticated endpoints for detailed status.
     """
     return Response({
         'status': 'healthy',
         'timestamp': request.META.get('HTTP_DATE'),
-        'version': getattr(settings, 'APP_VERSION', '1.0.0'),
-        'environment': getattr(settings, 'ENVIRONMENT', 'development'),
     }, status=status.HTTP_200_OK)
 
 

@@ -74,20 +74,21 @@ export const Navbar: React.FC = () => {
   };
 
   // Get role-specific dropdown items
+  // Note: Profile, Settings, Portfolio, My Properties, and Referrals all redirect to Dashboard
+  // which handles role-based views. This avoids dead routes while maintaining expected UX.
   const getProfileDropdownItems = () => {
     const baseItems = [
-      { name: 'My Profile', route: 'profile', icon: User },
-      { name: 'Wallet', route: 'wallet', icon: Wallet },
-      { name: 'Settings', route: 'settings', icon: Settings }
+      { name: 'Dashboard', route: 'dashboard', icon: LayoutDashboard },
+      { name: 'Wallet', route: 'wallet', icon: Wallet }
     ];
 
-    // Add role-specific items
+    // Add role-specific dashboard label
     if (user?.role === 'investor') {
-      baseItems.splice(1, 0, { name: 'Portfolio', route: 'portfolio', icon: TrendingUp });
+      baseItems[0] = { name: 'My Portfolio', route: 'dashboard', icon: TrendingUp };
     } else if (user?.role === 'property_owner') {
-      baseItems.splice(1, 0, { name: 'My Properties', route: 'my-properties', icon: Building2 });
+      baseItems[0] = { name: 'My Properties', route: 'dashboard', icon: Building2 };
     } else if (user?.role === 'broker') {
-      baseItems.splice(1, 0, { name: 'My Referrals', route: 'referrals', icon: Users });
+      baseItems[0] = { name: 'My Referrals', route: 'dashboard', icon: Users };
     }
 
     return baseItems;

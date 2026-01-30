@@ -67,22 +67,24 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
   const remainingTokens = totalTokens - soldTokens;
   const maxInvestment = remainingTokens * tokenPrice;
 
-  // Calculate investment results
+  // Calculate investment results with zero-division guards
   const calculations: CalculationResults = useMemo(() => {
-    const tokens = Math.floor(investmentAmount / tokenPrice);
+    // Guard against division by zero for tokenPrice
+    const tokens = tokenPrice > 0 ? Math.floor(investmentAmount / tokenPrice) : 0;
     const grossAnnualReturn = (investmentAmount * expectedReturn) / 100;
     const managementFeeCost = (investmentAmount * managementFee) / 100;
     const netAnnualReturn = grossAnnualReturn - managementFeeCost;
-    
+
     const monthlyDividend = netAnnualReturn / 12;
     const quarterlyDividend = netAnnualReturn / 4;
     const yearlyDividend = netAnnualReturn;
-    
+
     const totalReturn5Years = netAnnualReturn * investmentTerm;
     const compoundRate = (expectedReturn - managementFee) / 100;
     const compoundReturn5Years = investmentAmount * (Math.pow(1 + compoundRate, investmentTerm) - 1);
-    
-    const breakEvenMonths = investmentAmount / monthlyDividend;
+
+    // Guard against division by zero for breakEvenMonths
+    const breakEvenMonths = monthlyDividend > 0 ? investmentAmount / monthlyDividend : 0;
 
     return {
       tokens,
@@ -92,7 +94,7 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
       yearlyDividend,
       totalReturn5Years,
       netReturn: netAnnualReturn,
-      breakEvenMonths,
+      breakEvenMonths: Number.isFinite(breakEvenMonths) ? breakEvenMonths : 0,
       compoundReturn5Years,
       managementFeeCost
     };
@@ -318,7 +320,7 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
                     <span className="text-sm text-gray-600 dark:text-gray-400">ROI after {investmentTerm} years</span>
                   </div>
                   <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                    {formatPercent((calculations.compoundReturn5Years / investmentAmount) * 100)}
+                    {formatPercent(investmentAmount > 0 ? (calculations.compoundReturn5Years / investmentAmount) * 100 : 0)}
                   </span>
                 </div>
 

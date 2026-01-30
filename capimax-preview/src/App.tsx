@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { PaymentProvider } from './contexts/PaymentContext';
 import { LoadingProvider } from './contexts/LoadingContext';
 import { NotificationProvider } from './contexts/NotificationContext';
@@ -123,6 +123,69 @@ const LazyLoadError: React.FC<{ error?: Error; retry?: () => void }> = ({ error,
   </main>
 );
 
+// 404 Not Found page
+const NotFoundPage: React.FC = () => {
+  const { navigate } = useRouter();
+  return (
+    <main id="main-content" tabIndex={-1} className="focus:outline-none">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-900">
+        <div className="text-center p-8 max-w-md">
+          <div className="text-8xl font-bold text-emerald-500 mb-4">404</div>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white mb-2">
+            Page Not Found
+          </h1>
+          <p className="text-slate-600 dark:text-slate-300 mb-6">
+            The page you're looking for doesn't exist or has been moved.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={() => navigate('home')}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+            >
+              Go Home
+            </button>
+            <button
+              onClick={() => window.history.back()}
+              className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 px-6 py-2 rounded-lg font-medium transition-colors"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+};
+
+// Protected route wrapper - redirects to login if not authenticated
+const ProtectedRoute: React.FC<{ children: React.ReactNode; fallback?: React.ReactNode }> = ({ children, fallback }) => {
+  const { state: authState } = useAuth();
+  const { navigate } = useRouter();
+
+  // Show loading while checking auth
+  if (authState.isLoading) {
+    return fallback ? <>{fallback}</> : <PageLoader message="Checking authentication..." />;
+  }
+
+  // Redirect to login if not authenticated
+  if (!authState.isAuthenticated) {
+    // Use useEffect-like behavior via requestAnimationFrame to avoid render-time navigation
+    requestAnimationFrame(() => navigate('login'));
+    return (
+      <main id="main-content" tabIndex={-1} className="focus:outline-none">
+        <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-900">
+          <div className="text-center p-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+            <p className="text-slate-600 dark:text-slate-300 font-medium">Redirecting to login...</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  return <>{children}</>;
+};
+
 const AppRouter: React.FC = () => {
   const { currentRoute } = useRouter();
 
@@ -200,19 +263,23 @@ const AppRouter: React.FC = () => {
         );
       case 'kyc':
         return (
-          <main {...mainProps}>
-            <Suspense fallback={<PageLoader message="Loading KYC verification..." />}>
-              <KYCPage />
-            </Suspense>
-          </main>
+          <ProtectedRoute fallback={<PageLoader message="Loading KYC verification..." />}>
+            <main {...mainProps}>
+              <Suspense fallback={<PageLoader message="Loading KYC verification..." />}>
+                <KYCPage />
+              </Suspense>
+            </main>
+          </ProtectedRoute>
         );
       case 'dashboard':
         return (
-          <main {...mainProps}>
-            <Suspense fallback={<PageLoader message="Loading dashboard..." />}>
-              <DashboardPage />
-            </Suspense>
-          </main>
+          <ProtectedRoute fallback={<PageLoader message="Loading dashboard..." />}>
+            <main {...mainProps}>
+              <Suspense fallback={<PageLoader message="Loading dashboard..." />}>
+                <DashboardPage />
+              </Suspense>
+            </main>
+          </ProtectedRoute>
         );
       case 'properties':
         return (
@@ -232,20 +299,24 @@ const AppRouter: React.FC = () => {
         );
       case 'wallet':
         return (
-          <main {...mainProps}>
-            <Suspense fallback={<PageLoader message="Loading wallet..." />}>
-              <WalletManagementPage />
-            </Suspense>
-          </main>
+          <ProtectedRoute fallback={<PageLoader message="Loading wallet..." />}>
+            <main {...mainProps}>
+              <Suspense fallback={<PageLoader message="Loading wallet..." />}>
+                <WalletManagementPage />
+              </Suspense>
+            </main>
+          </ProtectedRoute>
         );
       case 'role-management':
       case 'settings/roles':
         return (
-          <main {...mainProps}>
-            <Suspense fallback={<PageLoader message="Loading role management..." />}>
-              <RoleManagementPage />
-            </Suspense>
-          </main>
+          <ProtectedRoute fallback={<PageLoader message="Loading role management..." />}>
+            <main {...mainProps}>
+              <Suspense fallback={<PageLoader message="Loading role management..." />}>
+                <RoleManagementPage />
+              </Suspense>
+            </main>
+          </ProtectedRoute>
         );
       case 'demo':
         return (
@@ -313,11 +384,13 @@ const AppRouter: React.FC = () => {
         );
       case 'broker-application':
         return (
-          <main {...mainProps}>
-            <Suspense fallback={<PageLoader message="Loading broker application..." />}>
-              <BrokerApplicationPage />
-            </Suspense>
-          </main>
+          <ProtectedRoute fallback={<PageLoader message="Loading broker application..." />}>
+            <main {...mainProps}>
+              <Suspense fallback={<PageLoader message="Loading broker application..." />}>
+                <BrokerApplicationPage />
+              </Suspense>
+            </main>
+          </ProtectedRoute>
         );
       // Legal Pages
       case 'legal-disclaimer':
@@ -474,13 +547,8 @@ const AppRouter: React.FC = () => {
           </main>
         );
       default:
-        return (
-          <main {...mainProps}>
-            <Suspense fallback={<PageLoader message="Loading home page..." />}>
-              <HomePage />
-            </Suspense>
-          </main>
-        );
+        // Show 404 page for unrecognized routes
+        return <NotFoundPage />;
     }
   };
 

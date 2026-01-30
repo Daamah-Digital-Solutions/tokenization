@@ -52,6 +52,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { ConstructionProgress } from '../components/properties/ConstructionProgress';
 import { InstallmentSchedule } from '../components/properties/InstallmentSchedule';
 import { PropertyDetailEnhanced } from '../components/properties/PropertyDetailEnhanced';
+import { KYCGate } from '../components/kyc/KYCGate';
 
 // Property data interfaces
 interface PropertyDetailData {
@@ -281,13 +282,17 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
 
       <Footer />
 
-      {/* Investment Flow Modal */}
-      <InvestmentFlow
-        property={investmentProperty}
-        isOpen={showInvestmentFlow}
-        onClose={() => setShowInvestmentFlow(false)}
-        onComplete={handleInvestmentComplete}
-      />
+      {/* Investment Flow Modal with KYC Gate */}
+      {showInvestmentFlow && (
+        <KYCGate action="make investments">
+          <InvestmentFlow
+            property={investmentProperty}
+            isOpen={showInvestmentFlow}
+            onClose={() => setShowInvestmentFlow(false)}
+            onComplete={handleInvestmentComplete}
+          />
+        </KYCGate>
+      )}
     </div>
   );
 };

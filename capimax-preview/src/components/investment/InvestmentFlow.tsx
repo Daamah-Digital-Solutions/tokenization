@@ -57,7 +57,8 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
   const [investmentData, setInvestmentData] = useState<InvestmentData>({
     amount: property.investment.minInvestment,
-    tokens: Math.floor(property.investment.minInvestment / property.tokenPrice),
+    // Guard against division by zero
+    tokens: property.tokenPrice > 0 ? Math.floor(property.investment.minInvestment / property.tokenPrice) : 0,
     paymentMethod: null
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -76,15 +77,15 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
   const updateInvestmentData = useCallback((updates: Partial<InvestmentData>) => {
     setInvestmentData(prev => {
       const newData = { ...prev, ...updates };
-      
-      // Recalculate tokens when amount changes
+
+      // Recalculate tokens when amount changes (guard against division by zero)
       if (updates.amount) {
-        newData.tokens = Math.floor(updates.amount / property.tokenPrice);
+        newData.tokens = property.tokenPrice > 0 ? Math.floor(updates.amount / property.tokenPrice) : 0;
       }
-      
+
       return newData;
     });
-    
+
     // Clear errors when data is updated
     setErrors({});
   }, [property.tokenPrice]);

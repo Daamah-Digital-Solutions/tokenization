@@ -44,8 +44,9 @@ export const TransactionConfirmation: React.FC<TransactionConfirmationProps> = (
   const calculateReturns = () => {
     const annualReturn = (investmentData.amount * property.investment.avgAnnualReturn) / 100;
     const quarterlyDividend = annualReturn / 4;
-    const totalROI = annualReturn / investmentData.amount * 100;
-    
+    // Guard against division by zero
+    const totalROI = investmentData.amount > 0 ? (annualReturn / investmentData.amount) * 100 : 0;
+
     return { annualReturn, quarterlyDividend, totalROI };
   };
 
