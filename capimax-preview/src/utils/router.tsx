@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Route = 'home' | 'login' | 'register' | 'email-verification' | 'code-verification' | 'password-reset' | 'new-password' | 'complete-google-profile' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'marketplace' | 'broker-program' | 'broker-application' | 'wallet' | 'role-management' | 'demo' | 'integration-test' | 'about' | 'contact' | 'partners' | 'liquidity-provider' | 'legal-disclaimer' | 'legal-risk-disclosure' | 'legal-compliance' | 'legal-privacy' | 'legal-terms' | 'legal-cookies' | 'legal-aml-kyc' | 'legal-conflicts' | 'legal-complaints' | 'legal-security' | 'how-it-works' | 'tokenization' | 'spv' | 'data-room' | 'investor-guide' | 'secondary-market' | 'risks' | 'faq' | 'property-owner';
+type Route = 'home' | 'login' | 'register' | 'email-verification' | 'code-verification' | 'password-reset' | 'new-password' | 'complete-google-profile' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'marketplace' | 'broker-program' | 'broker-application' | 'wallet' | 'role-management' | 'demo' | 'integration-test' | 'about' | 'contact' | 'partners' | 'liquidity-provider' | 'legal-disclaimer' | 'legal-risk-disclosure' | 'legal-compliance' | 'legal-privacy' | 'legal-terms' | 'legal-cookies' | 'legal-aml-kyc' | 'legal-conflicts' | 'legal-complaints' | 'legal-security' | 'how-it-works' | 'tokenization' | 'spv' | 'data-room' | 'investor-guide' | 'secondary-market' | 'risks' | 'faq' | 'property-owner' | 'not-found';
 
 interface RouterContextType {
   currentRoute: Route;
@@ -75,7 +75,9 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       '/faq': 'faq',
       '/property-owner': 'property-owner'
     };
-    return routeMap[path] || initialRoute;
+    // Return 'not-found' for unknown paths instead of falling back to home
+    // This ensures invalid routes show 404 page, not silent redirect to home
+    return routeMap[path] || 'not-found';
   };
 
   const [currentRoute, setCurrentRoute] = useState<Route>(getInitialRouteFromPath());
@@ -131,7 +133,8 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
         '/property-owner': 'property-owner'
       };
 
-      const route = routeMap[path] || 'home';
+      // Return 'not-found' for unknown paths - ensures 404 page shows for invalid URLs
+      const route = routeMap[path] || 'not-found';
       setCurrentRoute(route);
     };
 
@@ -182,7 +185,8 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       'secondary-market': '/secondary-market',
       risks: '/risks',
       faq: '/faq',
-      'property-owner': '/property-owner'
+      'property-owner': '/property-owner',
+      'not-found': '/404'
     };
 
     setCurrentRoute(route);

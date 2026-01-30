@@ -390,6 +390,7 @@ export const FeaturedProperties: React.FC = () => {
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
+                      onClick={() => window.location.href = '/properties'}
                       className="w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 dark:shadow-emerald-500/20 group"
                     >
                       <span>Invest Now</span>
@@ -463,6 +464,7 @@ export const FeaturedProperties: React.FC = () => {
                   variant="primary"
                   size="lg"
                   className="px-8 py-3 rounded-xl font-semibold shadow-lg shadow-emerald-500/25 dark:shadow-emerald-500/20 transition-all"
+                  onClick={() => window.location.href = '/properties'}
                 >
                   <span>Browse All Properties</span>
                   <ArrowRight className="ml-2 w-5 h-5" />
@@ -471,6 +473,7 @@ export const FeaturedProperties: React.FC = () => {
                   variant="ghost"
                   size="lg"
                   className="px-8 py-3 rounded-xl font-semibold transition-all"
+                  onClick={() => window.location.href = '/properties'}
                 >
                   <DollarSign className="mr-2 w-5 h-5" />
                   <span>Investment Calculator</span>

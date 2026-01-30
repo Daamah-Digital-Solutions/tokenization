@@ -546,8 +546,11 @@ const AppRouter: React.FC = () => {
             </Suspense>
           </main>
         );
+      case 'not-found':
+        // Explicit 404 route for invalid URLs
+        return <NotFoundPage />;
       default:
-        // Show 404 page for unrecognized routes
+        // Fallback for any unhandled route (should not happen with proper routing)
         return <NotFoundPage />;
     }
   };

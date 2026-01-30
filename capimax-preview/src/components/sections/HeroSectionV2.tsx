@@ -150,18 +150,19 @@ export const HeroSectionV2: React.FC = () => {
               transition={{ duration: 0.8, delay: 0.6 }}
               className="flex flex-col sm:flex-row gap-6 justify-center items-center"
             >
-              <Button 
+              <Button
                 variant="primary"
-                size="lg" 
+                size="lg"
                 className="group relative px-10 py-5 text-lg font-semibold shadow-2xl hover:shadow-emerald-500/25 dark:shadow-[0_8px_30px_rgba(16,185,129,0.3)] transition-all duration-500 border-0 rounded-2xl overflow-hidden"
+                onClick={() => window.location.href = '/register'}
               >
                 <motion.div
                   animate={{ x: [-100, 300] }}
-                  transition={{ 
-                    duration: 1.5, 
-                    repeat: Infinity, 
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
                     delay: Math.random() * 2,
-                    ease: "easeInOut" 
+                    ease: "easeInOut"
                   }}
                   className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
                 />
@@ -175,11 +176,12 @@ export const HeroSectionV2: React.FC = () => {
                   </motion.div>
                 </span>
               </Button>
-              
-              <Button 
-                variant="ghost" 
-                size="lg" 
+
+              <Button
+                variant="ghost"
+                size="lg"
                 className="group px-10 py-5 text-lg font-semibold transition-all duration-500 rounded-2xl"
+                onClick={() => window.location.href = '/properties'}
               >
                 <Zap className="mr-3 w-5 h-5 group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors duration-300" />
                 Explore Properties
