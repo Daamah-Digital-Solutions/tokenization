@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  CreditCard, 
-  Lock, 
-  Shield, 
-  CheckCircle, 
+import {
+  CreditCard,
+  Lock,
+  Shield,
+  CheckCircle,
   AlertCircle,
   Calendar,
   User,
   MapPin
 } from 'lucide-react';
 import { usePayment } from '../../contexts/PaymentContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 import { formatCurrency } from '../../utils/currencyConverter';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../design-system/forms/Input';
 import { Select } from '../design-system/forms/Select';
+import { ConfirmationDialog } from '../ui/ConfirmationDialog';
 
 interface CreditCardFormProps {
   amount: number;
@@ -67,10 +69,12 @@ const COUNTRIES = [
 
 export function CreditCardForm({ amount, onPaymentComplete, onCancel, className }: CreditCardFormProps) {
   const { addTransaction, setError, clearError } = usePayment();
+  const { error: showError } = useNotifications();
   const [step, setStep] = useState<'details' | 'billing' | 'processing' | 'complete'>('details');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [saveCard, setSaveCard] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   
   const [cardDetails, setCardDetails] = useState<CardDetails>({
     number: '',
@@ -252,7 +256,7 @@ export function CreditCardForm({ amount, onPaymentComplete, onCancel, className 
       onPaymentComplete?.(mockPaymentId);
 
     } catch (error: any) {
-      console.error('Payment failed:', error);
+      showError('Payment Failed', error.message || 'Payment processing failed. Please try again.');
       setError(error.message || 'Payment processing failed');
       setStep('details');
     } finally {
@@ -453,7 +457,7 @@ export function CreditCardForm({ amount, onPaymentComplete, onCancel, className 
         <Button
           onClick={() => {
             if (validateBillingAddress()) {
-              handlePayment();
+              setShowConfirmation(true);
             }
           }}
           className="flex-1 bg-emerald-600 hover:bg-emerald-700"
@@ -571,6 +575,27 @@ export function CreditCardForm({ amount, onPaymentComplete, onCancel, className 
           </motion.div>
         </div>
       </Card>
+
+      {/* Payment Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+        onConfirm={() => {
+          setShowConfirmation(false);
+          handlePayment();
+        }}
+        type="warning"
+        title="Confirm Payment"
+        message="Are you sure you want to proceed with this payment? This action cannot be undone."
+        confirmText="Confirm Payment"
+        cancelText="Cancel"
+        details={[
+          { label: 'Card', value: `•••• •••• •••• ${cardDetails.number.slice(-4)}` },
+          { label: 'Amount', value: formatCurrency(amount, 'USD') },
+          { label: 'Processing Fee', value: formatCurrency(amount * 0.029, 'USD') },
+          { label: 'Total', value: formatCurrency(amount + (amount * 0.029), 'USD') },
+        ]}
+      />
     </div>
   );
 }

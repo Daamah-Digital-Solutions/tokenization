@@ -9,6 +9,7 @@ import {
   Briefcase
 } from 'lucide-react';
 import { useAuth, useUser } from '../../contexts/AuthContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 import { useRouter } from '../../utils/router';
 import { UserRole } from '../../services/api/types';
 import { apiClient } from '../../services/api/ApiClient';
@@ -46,6 +47,7 @@ export const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
 }) => {
   const user = useUser();
   const { navigate } = useRouter();
+  const { error: showError } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const [availableRoles, setAvailableRoles] = useState<UserRole[]>([]);
   const [primaryRole, setPrimaryRole] = useState<UserRole | null>(null);
@@ -62,9 +64,8 @@ export const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
       const response = await apiClient.get<any>('/auth/roles/');
       setAvailableRoles(response.available_roles || [user?.role].filter(Boolean));
       setPrimaryRole(response.primary_role || user?.role || null);
-    } catch (error) {
-      console.error('Failed to fetch user roles:', error);
-      // Fallback to single role from user
+    } catch (error: any) {
+      // Silently fallback to single role - no need to show error to user
       if (user?.role) {
         setAvailableRoles([user.role]);
         setPrimaryRole(user.role);
@@ -86,8 +87,8 @@ export const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
 
       // Notify parent component - this will handle state sync
       onRoleSwitch?.(newRole);
-    } catch (error) {
-      console.error('Failed to switch role:', error);
+    } catch (error: any) {
+      showError('Role Switch Failed', error.message || 'Unable to switch role. Please try again.');
     } finally {
       setIsLoading(false);
     }

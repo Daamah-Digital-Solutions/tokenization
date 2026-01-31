@@ -18,6 +18,7 @@ import { Select } from '../design-system/forms/Select';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 import { UserRole } from '../../services/api/types';
 
 interface RegisterFormProps {
@@ -83,6 +84,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   className
 }) => {
   const { state, register, clearError } = useAuth();
+  const { error: showError } = useNotifications();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<RegisterData>({
     firstName: '',
@@ -188,8 +190,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       // Call success callback if provided, pass email for redirect
       onSuccess?.(formData.email);
     } catch (error: any) {
-      // Error is handled by the auth context
-      console.error('Registration failed:', error);
+      // Show notification for registration error
+      showError('Registration Failed', error.message || 'Unable to create account. Please try again.');
     }
   };
 

@@ -6,6 +6,7 @@ import { LanguageSwitcher } from '../i18n/LanguageSwitcher';
 import { useRouter } from '../../utils/router';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 import CapiMaxLightLogo from '../../assets/tokenization_capi max  tokenization light  uk  copy.svg';
 import CapiMaxDarkLogo from '../../assets/tokenization_capi max tokenization uk dark   copy.svg';
 
@@ -16,6 +17,7 @@ export const Navbar: React.FC = () => {
   const { navigate, currentRoute } = useRouter();
   const { state: authState, logout } = useAuth();
   const { theme } = useTheme();
+  const { error: showError } = useNotifications();
   const { isAuthenticated, user } = authState;
 
   // Close dropdown when clicking outside
@@ -60,8 +62,8 @@ export const Navbar: React.FC = () => {
     try {
       await logout();
       navigate('home');
-    } catch (error) {
-      console.error('Logout failed:', error);
+    } catch (error: any) {
+      showError('Logout Failed', error.message || 'Unable to log out. Please try again.');
     }
     setProfileDropdownOpen(false);
   };
