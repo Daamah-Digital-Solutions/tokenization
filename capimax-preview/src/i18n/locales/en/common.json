@@ -1,0 +1,66 @@
+{
+  "appName": "Capimax RT",
+  "tagline": "Tokenized Real Estate Investment | SPV-Backed | Global Access",
+  "taglineFull": "A global technology platform for tokenizing assets and offering fractional investment opportunities through the SPV model, with document transparency, operational governance, and liquidity options via secondary market and optional liquidity provider.",
+
+  "buttons": {
+    "learnMore": "Learn More",
+    "getStarted": "Get Started",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "retry": "Retry",
+    "download": "Download",
+    "upload": "Upload"
+  },
+
+  "status": {
+    "active": "Active",
+    "pending": "Pending",
+    "completed": "Completed",
+    "failed": "Failed",
+    "processing": "Processing",
+    "approved": "Approved",
+    "rejected": "Rejected"
+  },
+
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} minute ago",
+    "minutesAgo_plural": "{{count}} minutes ago",
+    "hoursAgo": "{{count}} hour ago",
+    "hoursAgo_plural": "{{count}} hours ago",
+    "daysAgo": "{{count}} day ago",
+    "daysAgo_plural": "{{count}} days ago"
+  },
+
+  "currency": {
+    "usd": "USD",
+    "eur": "EUR",
+    "aed": "AED"
+  },
+
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Network error. Please check your connection.",
+    "notFound": "Page not found.",
+    "unauthorized": "You are not authorized to access this page.",
+    "sessionExpired": "Your session has expired. Please log in again."
+  },
+
+  "footer": {
+    "copyright": "© {{year}} Capimax RT. All rights reserved.",
+    "disclaimer": "Capimax RT is a technology platform and does not provide investment advice.",
+    "quickLinks": "Quick Links",
+    "legal": "Legal",
+    "support": "Support"
+  }
+}

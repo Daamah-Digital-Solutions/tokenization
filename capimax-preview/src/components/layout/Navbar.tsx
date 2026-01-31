@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, User, LogOut, Wallet, Settings, ChevronDown, LayoutDashboard, Building2, TrendingUp, Users } from 'lucide-react';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { LanguageSwitcher } from '../i18n/LanguageSwitcher';
 import { useRouter } from '../../utils/router';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -133,6 +134,9 @@ export const Navbar: React.FC = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
+            {/* Language Switcher */}
+            <LanguageSwitcher variant="dropdown" />
+
             {/* Theme Toggle */}
             <ThemeToggle />
 
@@ -226,6 +230,7 @@ export const Navbar: React.FC = () => {
 
           {/* Mobile menu button */}
           <div className="flex items-center space-x-2 md:hidden">
+            <LanguageSwitcher variant="minimal" />
             <ThemeToggle />
             <motion.button
               whileTap={{ scale: 0.95 }}

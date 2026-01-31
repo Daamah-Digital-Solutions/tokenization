@@ -1,0 +1,52 @@
+{
+  "main": {
+    "home": "الرئيسية",
+    "properties": "العقارات",
+    "marketplace": "السوق",
+    "howItWorks": "كيف يعمل",
+    "about": "من نحن",
+    "contact": "اتصل بنا",
+    "partners": "الشركاء"
+  },
+
+  "user": {
+    "dashboard": "لوحة التحكم",
+    "portfolio": "المحفظة",
+    "wallet": "المحفظة المالية",
+    "settings": "الإعدادات",
+    "profile": "الملف الشخصي",
+    "kyc": "التحقق من الهوية",
+    "logout": "تسجيل الخروج"
+  },
+
+  "legal": {
+    "disclaimer": "إخلاء المسؤولية",
+    "riskDisclosure": "الإفصاح عن المخاطر",
+    "compliance": "الامتثال",
+    "privacyPolicy": "سياسة الخصوصية",
+    "termsOfService": "شروط الخدمة",
+    "cookiesPolicy": "سياسة ملفات تعريف الارتباط",
+    "amlKyc": "سياسة مكافحة غسل الأموال",
+    "conflicts": "تضارب المصالح",
+    "complaints": "الشكاوى",
+    "security": "سياسة الأمان"
+  },
+
+  "info": {
+    "tokenization": "الترميز",
+    "spv": "نموذج SPV",
+    "dataRoom": "غرفة البيانات",
+    "investorGuide": "دليل المستثمر",
+    "secondaryMarket": "السوق الثانوي",
+    "risks": "مخاطر الاستثمار",
+    "faq": "الأسئلة الشائعة",
+    "propertyOwner": "لملاك العقارات",
+    "liquidityProvider": "مزود السيولة"
+  },
+
+  "broker": {
+    "program": "برنامج الوسطاء",
+    "apply": "تقدم الآن",
+    "dashboard": "لوحة تحكم الوسيط"
+  }
+}

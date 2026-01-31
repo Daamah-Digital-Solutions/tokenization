@@ -1,0 +1,63 @@
+{
+  "list": {
+    "title": "عقارات استثمارية",
+    "subtitle": "استكشف فرص الاستثمار العقاري المرمّز",
+    "filters": "الفلاتر",
+    "sortBy": "ترتيب حسب",
+    "noResults": "لم يتم العثور على عقارات تطابق معاييرك",
+    "clearFilters": "مسح الفلاتر"
+  },
+
+  "detail": {
+    "overview": "نظرة عامة",
+    "location": "الموقع",
+    "investment": "تفاصيل الاستثمار",
+    "documents": "المستندات",
+    "spvInfo": "معلومات SPV",
+    "updates": "التحديثات",
+    "reviews": "المراجعات"
+  },
+
+  "investment": {
+    "pricePerToken": "سعر الوحدة",
+    "totalTokens": "إجمالي الوحدات",
+    "availableTokens": "الوحدات المتاحة",
+    "soldTokens": "الوحدات المباعة",
+    "minInvestment": "الحد الأدنى للاستثمار",
+    "expectedYield": "العائد المتوقع",
+    "fundingProgress": "تقدم التمويل",
+    "investNow": "استثمر الآن",
+    "addToWatchlist": "إضافة للمفضلة"
+  },
+
+  "types": {
+    "residential": "سكني",
+    "commercial": "تجاري",
+    "industrial": "صناعي",
+    "mixedUse": "متعدد الاستخدامات",
+    "land": "أرض"
+  },
+
+  "status": {
+    "available": "متاح",
+    "fullyFunded": "مموّل بالكامل",
+    "comingSoon": "قريباً",
+    "underConstruction": "قيد الإنشاء"
+  },
+
+  "spv": {
+    "name": "اسم SPV",
+    "jurisdiction": "الولاية القضائية",
+    "formationDate": "تاريخ التأسيس",
+    "viewDocuments": "عرض مستندات SPV"
+  },
+
+  "dataRoom": {
+    "title": "غرفة البيانات",
+    "ownership": "مستندات الملكية",
+    "valuation": "تقارير التقييم",
+    "insurance": "وثائق التأمين",
+    "financial": "التقارير المالية",
+    "legal": "المستندات القانونية"
+  }
+}

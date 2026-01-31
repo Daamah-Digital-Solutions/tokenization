@@ -1,0 +1,66 @@
+{
+  "appName": "Capimax RT",
+  "tagline": "استثمار عقاري مرمّز | مدعوم بـ SPV | وصول عالمي",
+  "taglineFull": "منصة تقنية عالمية لترميز الأصول وتقديم فرص استثمار جزئي عبر نموذج SPV، مع شفافية مستندية، وحوكمة تشغيلية، وخيارات سيولة عبر السوق الثانوي ومزود سيولة اختياري.",
+
+  "buttons": {
+    "learnMore": "معرفة المزيد",
+    "getStarted": "ابدأ الآن",
+    "submit": "إرسال",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "view": "عرض",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "next": "التالي",
+    "confirm": "تأكيد",
+    "loading": "جاري التحميل...",
+    "retry": "إعادة المحاولة",
+    "download": "تحميل",
+    "upload": "رفع"
+  },
+
+  "status": {
+    "active": "نشط",
+    "pending": "قيد الانتظار",
+    "completed": "مكتمل",
+    "failed": "فشل",
+    "processing": "قيد المعالجة",
+    "approved": "موافق عليه",
+    "rejected": "مرفوض"
+  },
+
+  "time": {
+    "justNow": "الآن",
+    "minutesAgo": "منذ دقيقة",
+    "minutesAgo_plural": "منذ {{count}} دقائق",
+    "hoursAgo": "منذ ساعة",
+    "hoursAgo_plural": "منذ {{count}} ساعات",
+    "daysAgo": "منذ يوم",
+    "daysAgo_plural": "منذ {{count}} أيام"
+  },
+
+  "currency": {
+    "usd": "دولار أمريكي",
+    "eur": "يورو",
+    "aed": "درهم إماراتي"
+  },
+
+  "errors": {
+    "generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+    "network": "خطأ في الشبكة. يرجى التحقق من اتصالك.",
+    "notFound": "الصفحة غير موجودة.",
+    "unauthorized": "غير مصرح لك بالوصول إلى هذه الصفحة.",
+    "sessionExpired": "انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى."
+  },
+
+  "footer": {
+    "copyright": "© {{year}} Capimax RT. جميع الحقوق محفوظة.",
+    "disclaimer": "Capimax RT هي منصة تقنية ولا تقدم استشارات استثمارية.",
+    "quickLinks": "روابط سريعة",
+    "legal": "قانوني",
+    "support": "الدعم"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "list": {
+    "title": "Investment Properties",
+    "subtitle": "Explore tokenized real estate opportunities",
+    "filters": "Filters",
+    "sortBy": "Sort By",
+    "noResults": "No properties found matching your criteria",
+    "clearFilters": "Clear Filters"
+  },
+
+  "detail": {
+    "overview": "Overview",
+    "location": "Location",
+    "investment": "Investment Details",
+    "documents": "Documents",
+    "spvInfo": "SPV Information",
+    "updates": "Updates",
+    "reviews": "Reviews"
+  },
+
+  "investment": {
+    "pricePerToken": "Price per Token",
+    "totalTokens": "Total Tokens",
+    "availableTokens": "Available Tokens",
+    "soldTokens": "Sold Tokens",
+    "minInvestment": "Minimum Investment",
+    "expectedYield": "Expected Yield",
+    "fundingProgress": "Funding Progress",
+    "investNow": "Invest Now",
+    "addToWatchlist": "Add to Watchlist"
+  },
+
+  "types": {
+    "residential": "Residential",
+    "commercial": "Commercial",
+    "industrial": "Industrial",
+    "mixedUse": "Mixed Use",
+    "land": "Land"
+  },
+
+  "status": {
+    "available": "Available",
+    "fullyFunded": "Fully Funded",
+    "comingSoon": "Coming Soon",
+    "underConstruction": "Under Construction"
+  },
+
+  "spv": {
+    "name": "SPV Name",
+    "jurisdiction": "Jurisdiction",
+    "formationDate": "Formation Date",
+    "viewDocuments": "View SPV Documents"
+  },
+
+  "dataRoom": {
+    "title": "Data Room",
+    "ownership": "Ownership Documents",
+    "valuation": "Valuation Reports",
+    "insurance": "Insurance Policies",
+    "financial": "Financial Reports",
+    "legal": "Legal Documents"
+  }
+}

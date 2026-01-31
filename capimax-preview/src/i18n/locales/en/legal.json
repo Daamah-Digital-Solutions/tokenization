@@ -1,0 +1,56 @@
+{
+  "disclaimer": {
+    "title": "Platform Disclaimer",
+    "lastUpdated": "Last Updated"
+  },
+
+  "riskDisclosure": {
+    "title": "Investment Risk Disclosure",
+    "intro": "Investing through Capimax RT involves significant risks, including the potential loss of part or all of the invested capital."
+  },
+
+  "compliance": {
+    "title": "Regulatory Compliance"
+  },
+
+  "privacy": {
+    "title": "Privacy Policy",
+    "intro": "Your privacy is important to us. This policy explains how we collect, use, and protect your personal information."
+  },
+
+  "terms": {
+    "title": "Terms of Service",
+    "intro": "By using Capimax RT, you agree to these terms and conditions."
+  },
+
+  "cookies": {
+    "title": "Cookies Policy",
+    "intro": "This website uses cookies to enhance your experience."
+  },
+
+  "amlKyc": {
+    "title": "AML/KYC Policy",
+    "intro": "Capimax RT is committed to preventing money laundering and terrorist financing."
+  },
+
+  "conflicts": {
+    "title": "Conflicts of Interest Policy"
+  },
+
+  "complaints": {
+    "title": "Complaints Procedure",
+    "intro": "We take all complaints seriously and aim to resolve them promptly."
+  },
+
+  "security": {
+    "title": "Security Policy",
+    "intro": "We implement robust security measures to protect your data and investments."
+  },
+
+  "common": {
+    "printPage": "Print Page",
+    "downloadPdf": "Download PDF",
+    "backToLegal": "Back to Legal",
+    "tableOfContents": "Table of Contents"
+  }
+}

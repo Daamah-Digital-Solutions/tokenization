@@ -1,0 +1,52 @@
+{
+  "main": {
+    "home": "Home",
+    "properties": "Properties",
+    "marketplace": "Marketplace",
+    "howItWorks": "How It Works",
+    "about": "About",
+    "contact": "Contact",
+    "partners": "Partners"
+  },
+
+  "user": {
+    "dashboard": "Dashboard",
+    "portfolio": "Portfolio",
+    "wallet": "Wallet",
+    "settings": "Settings",
+    "profile": "Profile",
+    "kyc": "KYC Verification",
+    "logout": "Log Out"
+  },
+
+  "legal": {
+    "disclaimer": "Disclaimer",
+    "riskDisclosure": "Risk Disclosure",
+    "compliance": "Compliance",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "cookiesPolicy": "Cookies Policy",
+    "amlKyc": "AML/KYC Policy",
+    "conflicts": "Conflicts of Interest",
+    "complaints": "Complaints",
+    "security": "Security Policy"
+  },
+
+  "info": {
+    "tokenization": "Tokenization",
+    "spv": "SPV Model",
+    "dataRoom": "Data Room",
+    "investorGuide": "Investor Guide",
+    "secondaryMarket": "Secondary Market",
+    "risks": "Investment Risks",
+    "faq": "FAQ",
+    "propertyOwner": "For Property Owners",
+    "liquidityProvider": "Liquidity Provider"
+  },
+
+  "broker": {
+    "program": "Broker Program",
+    "apply": "Apply Now",
+    "dashboard": "Broker Dashboard"
+  }
+}
