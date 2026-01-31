@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import {
-  Coins,
+  Building2,
   Users,
   FileCheck,
   ArrowRightLeft,
@@ -9,17 +9,19 @@ import {
   Check,
   X,
   ArrowRight,
-  Layers
+  LayoutGrid,
+  Home,
+  MapPin
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 
 export const TokenizationExplainer: React.FC = () => {
   const enablesItems = [
-    { icon: Layers, text: 'Dividing investment into small units' },
-    { icon: TrendingDown, text: 'Lowering the minimum entry threshold' },
+    { icon: LayoutGrid, text: 'Dividing investment into small units' },
+    { icon: Home, text: 'Lowering the minimum entry threshold' },
     { icon: Users, text: 'Expanding the investor base' },
     { icon: FileCheck, text: 'Improving transparency' },
-    { icon: ArrowRightLeft, text: 'Facilitating organized trading' },
+    { icon: Building2, text: 'Facilitating organized trading' },
   ];
 
   const doesNotMeanItems = [
@@ -41,7 +43,7 @@ export const TokenizationExplainer: React.FC = () => {
           className="text-center mb-16"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-full border border-emerald-200 dark:border-emerald-800 mb-6">
-            <Coins className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <Building2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
               Understanding Tokenization
             </span>

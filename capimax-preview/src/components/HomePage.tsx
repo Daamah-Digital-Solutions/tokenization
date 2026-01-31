@@ -17,6 +17,7 @@ import {
   InvestorCTA,
   SecondaryMarketPreview,
   LiquidityProviderCTA,
+  RealEstateVisualSection,
 } from './home';
 
 export const HomePage: React.FC = () => {
@@ -39,6 +40,9 @@ export const HomePage: React.FC = () => {
         {/* 4. SPV Model Explanation - Legal structure benefits */}
         <SPVExplainer />
 
+        {/* 4.5. Real Estate Visual - Global Investment */}
+        <RealEstateVisualSection variant="global" />
+
         {/* 5. For Property Owners - CTA for asset owners */}
         <PropertyOwnerCTA />
 
@@ -47,6 +51,9 @@ export const HomePage: React.FC = () => {
 
         {/* 7. Featured Properties - Property showcase */}
         <FeaturedProperties />
+
+        {/* 7.5. Real Estate Visual - Institutional Assets */}
+        <RealEstateVisualSection variant="institutional" />
 
         {/* 8. Secondary Market Preview - Trading platform teaser */}
         <SecondaryMarketPreview />
