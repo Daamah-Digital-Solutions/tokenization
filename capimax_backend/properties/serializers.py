@@ -47,19 +47,64 @@ class PropertyImageSerializer(serializers.ModelSerializer):
 
 
 class PropertyDocumentSerializer(serializers.ModelSerializer):
-    """Serializer for property documents."""
-    
+    """Enhanced serializer for property documents with Data Room support."""
+
     document_url = serializers.SerializerMethodField()
-    uploaded_by = serializers.StringRelatedField(read_only=True)
-    
+    uploaded_by_name = serializers.SerializerMethodField()
+
     class Meta:
         model = PropertyDocument
         fields = [
             'id', 'name', 'document', 'document_url', 'document_type',
-            'description', 'size', 'uploaded_by', 'uploaded_at'
+            'description', 'size', 'version', 'is_latest',
+            'uploaded_by', 'uploaded_by_name', 'uploaded_at', 'updated_at',
+            'is_public', 'investor_access'
         ]
-        read_only_fields = ['id', 'size', 'uploaded_by', 'uploaded_at']
-    
+        read_only_fields = [
+            'id', 'size', 'version', 'is_latest', 'uploaded_by',
+            'uploaded_at', 'updated_at'
+        ]
+
+    def get_document_url(self, obj):
+        """Get the full URL for the document."""
+        if obj.document:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.document.url)
+        return None
+
+    def get_uploaded_by_name(self, obj):
+        """Get the name of the user who uploaded the document."""
+        if obj.uploaded_by:
+            return obj.uploaded_by.get_full_name() or obj.uploaded_by.email
+        return None
+
+    def create(self, validated_data):
+        """Set uploaded_by and calculate file size on create."""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            validated_data['uploaded_by'] = request.user
+
+        # Calculate file size
+        document_file = validated_data.get('document')
+        if document_file:
+            validated_data['size'] = document_file.size
+
+        return super().create(validated_data)
+
+
+class PropertyDocumentListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for document listings (no file data)."""
+
+    document_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PropertyDocument
+        fields = [
+            'id', 'name', 'document_type', 'description', 'size',
+            'version', 'is_latest', 'uploaded_at', 'document_url'
+        ]
+
     def get_document_url(self, obj):
         """Get the full URL for the document."""
         if obj.document:

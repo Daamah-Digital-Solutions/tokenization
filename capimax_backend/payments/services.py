@@ -53,11 +53,45 @@ class FraudScore:
 
 class PaymentProcessorService:
     """Service for processing payments across different providers."""
-    
+
     def __init__(self):
         self.stripe_key = getattr(settings, 'STRIPE_SECRET_KEY', None)
         self.paypal_client_id = getattr(settings, 'PAYPAL_CLIENT_ID', None)
         self.paypal_secret = getattr(settings, 'PAYPAL_CLIENT_SECRET', None)
+
+    def _ensure_user_wallet(self, user: User, currency: str = 'USD') -> WalletBalance:
+        """
+        Ensure user has a wallet balance for the specified currency.
+        Auto-creates wallet for fiat payment users.
+
+        Args:
+            user: The user to create wallet for
+            currency: Currency code (default: USD)
+
+        Returns:
+            WalletBalance instance (existing or newly created)
+        """
+        from .models import CurrencyType
+
+        # Determine currency type based on currency code
+        crypto_currencies = ['BTC', 'ETH', 'MATIC', 'USDC', 'USDT', 'BNB']
+        currency_type = CurrencyType.CRYPTOCURRENCY if currency.upper() in crypto_currencies else CurrencyType.FIAT
+
+        wallet, created = WalletBalance.objects.get_or_create(
+            user=user,
+            currency=currency.upper(),
+            defaults={
+                'currency_type': currency_type,
+                'available_balance': Decimal('0.00'),
+                'pending_balance': Decimal('0.00'),
+                'locked_balance': Decimal('0.00'),
+            }
+        )
+
+        if created:
+            logger.info(f"Auto-created {currency} wallet for user {user.id} (email: {user.email})")
+
+        return wallet
     
     def process_payment(self, payment: Payment) -> PaymentResult:
         """Process payment based on payment method."""
@@ -105,7 +139,10 @@ class PaymentProcessorService:
                 payment.completed_at = timezone.now()
                 payment.external_transaction_id = payment_intent.id
                 payment.save()
-                
+
+                # Auto-create wallet for fiat payment users
+                self._ensure_user_wallet(payment.user, payment.currency)
+
                 return PaymentResult(
                     success=True,
                     payment_id=str(payment.id),
@@ -225,6 +262,9 @@ class PaymentProcessorService:
             payment.payment_intent_id = bank_transfer.transfer_reference
             payment.processed_at = timezone.now()
             payment.save()
+
+            # Auto-create wallet for fiat payment users (bank transfer)
+            self._ensure_user_wallet(payment.user, payment.currency)
 
             # In a real implementation, this would integrate with banking APIs
             # For now, we simulate the bank transfer initiation

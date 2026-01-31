@@ -38,7 +38,8 @@ from .models import (
 from .serializers import (
     PropertyListSerializer, PropertyDetailSerializer,
     PropertyCreateUpdateSerializer, PropertyImageSerializer,
-    PropertyDocumentSerializer, PropertyUpdateSerializer,
+    PropertyDocumentSerializer, PropertyDocumentListSerializer,
+    PropertyUpdateSerializer,
     PropertySubscriptionSerializer, PropertyReviewSerializer,
     PropertyValuationSerializer, PropertyAnalyticsSerializer,
     PropertySearchSerializer, InstallmentPaymentSerializer,
@@ -2895,3 +2896,177 @@ class PropertyOwnerDocumentsView(APIView):
                 'properties_with_documents': user_properties.filter(documents__isnull=False).distinct().count()
             }
         })
+
+
+# =============================================================================
+# DATA ROOM VIEWS
+# =============================================================================
+
+class DataRoomDocumentListView(generics.ListAPIView):
+    """
+    List all documents in a property's Data Room.
+
+    Access control:
+    - Public documents: accessible to everyone
+    - Investor documents: accessible to verified investors of the property
+    - All documents: accessible to property owner and admins
+    """
+
+    serializer_class = PropertyDocumentListSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        property_id = self.kwargs.get('property_id')
+        property_obj = get_object_or_404(Property, pk=property_id)
+
+        # Base queryset: only latest versions
+        queryset = PropertyDocument.objects.filter(
+            property=property_obj,
+            is_latest=True
+        )
+
+        user = self.request.user
+
+        # Admin or property owner sees all documents
+        if user.is_authenticated:
+            if user.is_staff or (hasattr(property_obj, 'owner') and property_obj.owner == user):
+                return queryset.order_by('document_type', '-uploaded_at')
+
+            # Check if user is an investor in this property
+            is_investor = Investment.objects.filter(
+                user=user,
+                property=property_obj
+            ).exists()
+
+            if is_investor:
+                # Investors see investor_access documents
+                return queryset.filter(investor_access=True).order_by('document_type', '-uploaded_at')
+
+        # Anonymous users or non-investors see only public documents
+        return queryset.filter(is_public=True).order_by('document_type', '-uploaded_at')
+
+
+class DataRoomDocumentUploadView(generics.CreateAPIView):
+    """
+    Upload a document to a property's Data Room.
+
+    Only property owners and admins can upload documents.
+    Automatically handles version control.
+    """
+
+    serializer_class = PropertyDocumentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_queryset(self):
+        return PropertyDocument.objects.all()
+
+    def perform_create(self, serializer):
+        property_id = self.kwargs.get('property_id')
+        property_obj = get_object_or_404(Property, pk=property_id)
+
+        # Check permission: only owner or admin
+        user = self.request.user
+        if not user.is_staff:
+            if hasattr(property_obj, 'owner') and property_obj.owner != user:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("You don't have permission to upload documents to this property.")
+
+        serializer.save(
+            property=property_obj,
+            uploaded_by=user
+        )
+
+
+class DataRoomDocumentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update, or delete a document from the Data Room.
+
+    Access follows the same rules as list view.
+    Only property owners and admins can update/delete.
+    """
+
+    serializer_class = PropertyDocumentSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+    def get_queryset(self):
+        property_id = self.kwargs.get('property_id')
+        return PropertyDocument.objects.filter(property_id=property_id)
+
+    def get_object(self):
+        queryset = self.get_queryset()
+        document_id = self.kwargs.get('document_id')
+        obj = get_object_or_404(queryset, pk=document_id)
+
+        # Check access permissions
+        user = self.request.user
+        property_obj = obj.property
+
+        # Admin or property owner has full access
+        if user.is_authenticated:
+            if user.is_staff or (hasattr(property_obj, 'owner') and property_obj.owner == user):
+                return obj
+
+            # Investors can access investor_access documents
+            is_investor = Investment.objects.filter(
+                user=user,
+                property=property_obj
+            ).exists()
+
+            if is_investor and obj.investor_access:
+                return obj
+
+        # Anonymous users can only access public documents
+        if obj.is_public:
+            return obj
+
+        from rest_framework.exceptions import PermissionDenied
+        raise PermissionDenied("You don't have permission to access this document.")
+
+    def perform_update(self, serializer):
+        # Only allow admin or owner to update
+        user = self.request.user
+        property_obj = self.get_object().property
+
+        if not user.is_staff:
+            if hasattr(property_obj, 'owner') and property_obj.owner != user:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("You don't have permission to update this document.")
+
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        # Only allow admin or owner to delete
+        user = self.request.user
+        property_obj = instance.property
+
+        if not user.is_staff:
+            if hasattr(property_obj, 'owner') and property_obj.owner != user:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("You don't have permission to delete this document.")
+
+        instance.delete()
+
+
+class DataRoomDocumentVersionsView(generics.ListAPIView):
+    """
+    List all versions of a specific document.
+
+    Shows version history for audit purposes.
+    """
+
+    serializer_class = PropertyDocumentListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        property_id = self.kwargs.get('property_id')
+        document_name = self.request.query_params.get('name')
+
+        if not document_name:
+            return PropertyDocument.objects.none()
+
+        # Get all versions of this document
+        return PropertyDocument.objects.filter(
+            property_id=property_id,
+            name=document_name
+        ).order_by('-version')

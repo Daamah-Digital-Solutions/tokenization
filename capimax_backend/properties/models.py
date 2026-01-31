@@ -405,55 +405,128 @@ class PropertyImage(models.Model):
         return f"Image for {self.property.title}"
 
 
+class DocumentType(models.TextChoices):
+    """Document type choices for Data Room."""
+    OWNERSHIP = 'ownership', 'Ownership & Title'
+    VALUATION = 'valuation', 'Valuation Report'
+    INSURANCE = 'insurance', 'Insurance Policy'
+    SPV = 'spv', 'SPV Documents'
+    MANAGEMENT = 'management', 'Property Management'
+    FINANCIAL = 'financial', 'Financial Report'
+    LEGAL = 'legal', 'Legal Documents'
+    TECHNICAL = 'technical', 'Technical Documents'
+    OTHER = 'other', 'Other'
+
+
 class PropertyDocument(models.Model):
     """
-    Property document storage for legal and informational documents.
+    Enhanced property document storage for Data Room functionality.
+
+    Supports version control, access permissions, and audit trail
+    for legal and informational documents.
     """
-    
+
     property = models.ForeignKey(
         Property,
         on_delete=models.CASCADE,
         related_name='documents',
         help_text="Property this document belongs to"
     )
-    
+
     name = models.CharField(
         max_length=255,
         help_text="Document name"
     )
-    
+
     document = models.FileField(
         upload_to='property_documents/',
         help_text="Document file"
     )
-    
+
     document_type = models.CharField(
         max_length=100,
-        help_text="Type of document (e.g., legal, financial, technical)"
+        choices=DocumentType.choices,
+        default=DocumentType.OTHER,
+        help_text="Type of document (ownership, valuation, insurance, spv, management, financial, other)"
     )
-    
+
     description = models.TextField(
         blank=True,
         help_text="Document description"
     )
-    
+
     size = models.PositiveIntegerField(
         help_text="File size in bytes"
     )
-    
+
+    # Version control fields
+    version = models.PositiveIntegerField(
+        default=1,
+        help_text="Document version number"
+    )
+
+    is_latest = models.BooleanField(
+        default=True,
+        help_text="Whether this is the latest version of the document"
+    )
+
+    # Audit trail fields
+    uploaded_by = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='uploaded_documents',
+        help_text="User who uploaded this document"
+    )
+
     uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # Access control fields
+    is_public = models.BooleanField(
+        default=False,
+        help_text="Whether this document is publicly accessible"
+    )
+
+    investor_access = models.BooleanField(
+        default=True,
+        help_text="Whether verified investors can access this document"
+    )
 
     class Meta:
         db_table = 'properties_property_document'
         indexes = [
             models.Index(fields=['property', 'document_type']),
             models.Index(fields=['uploaded_at']),
+            models.Index(fields=['property', 'name', 'is_latest']),
         ]
         verbose_name = 'Property Document'
         verbose_name_plural = 'Property Documents'
+        ordering = ['-uploaded_at']
 
     def __str__(self):
-        return f"{self.name} for {self.property.title}"
+        return f"{self.name} v{self.version} for {self.property.title}"
+
+    def save(self, *args, **kwargs):
+        """Override save to handle version control."""
+        if not self.pk:  # New document
+            # Check if there's an existing document with same name for this property
+            existing = PropertyDocument.objects.filter(
+                property=self.property,
+                name=self.name,
+                is_latest=True
+            ).first()
+
+            if existing:
+                # Mark existing as not latest
+                existing.is_latest = False
+                existing.save(update_fields=['is_latest'])
+                # Set new version number
+                self.version = existing.version + 1
+
+        super().save(*args, **kwargs)
 
 
 class PropertyUpdate(models.Model):

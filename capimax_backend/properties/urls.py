@@ -51,10 +51,24 @@ urlpatterns = [
          views.PropertyImageUploadView.as_view(),
          name='property-image-upload'),
 
-    # Property document upload
+    # Property document upload (legacy)
     path('<uuid:property_id>/documents/',
          views.PropertyDocumentUploadView.as_view(),
          name='property-document-upload'),
+
+    # Data Room endpoints
+    path('<uuid:property_id>/data-room/',
+         views.DataRoomDocumentListView.as_view(),
+         name='data-room-list'),
+    path('<uuid:property_id>/data-room/upload/',
+         views.DataRoomDocumentUploadView.as_view(),
+         name='data-room-upload'),
+    path('<uuid:property_id>/data-room/<int:document_id>/',
+         views.DataRoomDocumentDetailView.as_view(),
+         name='data-room-detail'),
+    path('<uuid:property_id>/data-room/versions/',
+         views.DataRoomDocumentVersionsView.as_view(),
+         name='data-room-versions'),
 
     # Property review creation
     path('<uuid:property_id>/reviews/',
