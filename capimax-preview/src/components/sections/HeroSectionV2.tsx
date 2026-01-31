@@ -1,32 +1,65 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Zap, Star, MapPin, Globe, TrendingUp, Building2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, Sparkles, Zap, Star, MapPin, Globe, TrendingUp, Building2, Home, Building } from 'lucide-react';
 import { Button } from '../ui/Button';
 
-// Real estate background images from Unsplash
+// Real estate background images from Unsplash - Premium property photos
 const HERO_BACKGROUNDS = [
   'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=80', // Modern skyscrapers
   'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1920&q=80', // Luxury apartments
   'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1920&q=80', // Modern villa
+  'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1920&q=80', // Luxury interior
+  'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1920&q=80', // Modern house
 ];
 
 export const HeroSectionV2: React.FC = () => {
-  const [bgIndex] = React.useState(0);
+  const [bgIndex, setBgIndex] = useState(0);
+
+  // Auto-rotate background images
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBgIndex((prev) => (prev + 1) % HERO_BACKGROUNDS.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <section
       className="relative min-h-screen overflow-hidden"
     >
-      {/* Real Estate Background Image */}
+      {/* Real Estate Background Image Carousel */}
       <div className="absolute inset-0">
-        <img
-          src={HERO_BACKGROUNDS[bgIndex]}
-          alt="Real Estate Investment"
-          className="w-full h-full object-cover"
-        />
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={bgIndex}
+            src={HERO_BACKGROUNDS[bgIndex]}
+            alt="Real Estate Investment"
+            className="absolute inset-0 w-full h-full object-cover"
+            initial={{ opacity: 0, scale: 1.1 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.5, ease: "easeInOut" }}
+          />
+        </AnimatePresence>
         {/* Dark overlay gradient for readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/80 via-slate-900/70 to-slate-900/90" />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/60 via-transparent to-slate-900/60" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/85 via-slate-900/70 to-slate-900/95" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/70 via-transparent to-slate-900/70" />
+      </div>
+
+      {/* Background image indicators */}
+      <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-20 flex gap-2">
+        {HERO_BACKGROUNDS.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setBgIndex(index)}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              index === bgIndex
+                ? 'bg-emerald-400 w-6'
+                : 'bg-white/40 hover:bg-white/60'
+            }`}
+            aria-label={`View background ${index + 1}`}
+          />
+        ))}
       </div>
 
       {/* Subtle animated elements on top of background */}

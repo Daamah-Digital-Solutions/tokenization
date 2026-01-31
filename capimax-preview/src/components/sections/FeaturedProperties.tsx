@@ -5,6 +5,35 @@ import { Button } from '../ui/Button';
 import { PropertyService } from '../../services/property/PropertyService';
 import type { Property as BackendProperty } from '../../services/api/types';
 
+// Real estate fallback images by property type
+const FALLBACK_IMAGES = {
+  residential: [
+    'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80', // Luxury apartments
+    'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80', // Modern villa
+    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80', // Modern house
+    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80', // Luxury home
+  ],
+  commercial: [
+    'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80', // Skyscrapers
+    'https://images.unsplash.com/photo-1464938050520-ef2571ea0620?w=800&q=80', // Commercial building
+    'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80', // Office building
+    'https://images.unsplash.com/photo-1554469384-e58fac16e23a?w=800&q=80', // Modern office
+  ],
+  hospitality: [
+    'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80', // Hotel resort
+    'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800&q=80', // Luxury hotel
+    'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80', // Resort pool
+    'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=80', // Hotel lobby
+  ],
+};
+
+// Get random fallback image by property type
+const getPropertyFallbackImage = (propertyType: string, index: number): string => {
+  const type = propertyType.toLowerCase() as keyof typeof FALLBACK_IMAGES;
+  const images = FALLBACK_IMAGES[type] || FALLBACK_IMAGES.residential;
+  return images[index % images.length];
+};
+
 interface Property {
   id: number;
   image: string;
@@ -57,12 +86,13 @@ export const FeaturedProperties: React.FC = () => {
       }
 
       // Convert backend properties to frontend format
-      const frontendProperties: Property[] = backendProperties.map((prop) => {
+      const frontendProperties: Property[] = backendProperties.map((prop, index) => {
         const fundingPercentage = prop.total_tokens > 0 ? (prop.tokens_sold / prop.total_tokens) * 100 : 0;
+        const propertyType = prop.property_type || 'residential';
 
         return {
           id: parseInt(prop.id.replace(/-/g, '').substring(0, 8), 16), // Convert UUID to number for compatibility
-          image: prop.images?.[0] || "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+          image: prop.images?.[0] || getPropertyFallbackImage(propertyType, index),
           title: prop.title,
           location: `${prop.city}${prop.state ? ', ' + prop.state : ''}, ${prop.country}`,
           price: `$${(prop.total_value / 1000000).toFixed(2)}M`,

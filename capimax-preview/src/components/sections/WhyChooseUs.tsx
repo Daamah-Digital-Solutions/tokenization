@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Award, Globe, Users, BarChart3, TrendingUp } from 'lucide-react';
+import { Shield, Building2, Globe, Users, Home, TrendingUp, Building } from 'lucide-react';
 
 export const WhyChooseUs: React.FC = () => {
   const features = [
@@ -10,7 +10,7 @@ export const WhyChooseUs: React.FC = () => {
       description: "Bank-grade security with full regulatory compliance and investor protection."
     },
     {
-      icon: Award,
+      icon: Building2,
       title: "Premium Properties",
       description: "Carefully vetted institutional-grade real estate opportunities."
     },
@@ -30,7 +30,7 @@ export const WhyChooseUs: React.FC = () => {
       description: "Backed by experienced real estate and blockchain professionals."
     },
     {
-      icon: BarChart3,
+      icon: Home,
       title: "Low Minimums",
       description: "Start investing with lower capital requirements than traditional real estate."
     }
@@ -60,8 +60,15 @@ export const WhyChooseUs: React.FC = () => {
 
   return (
     <section id="about" className="relative py-24 bg-slate-50 dark:from-slate-900 dark:via-gray-900 dark:to-slate-800 bg-gradient-to-b overflow-hidden">
-      {/* Clean Background */}
+      {/* Subtle Real Estate Background Pattern */}
       <div className="absolute inset-0 bg-subtle-pattern opacity-50"></div>
+
+      {/* Floating building icons for real estate feel */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-5 dark:opacity-10">
+        <Building2 className="absolute top-20 left-10 w-32 h-32 text-slate-400 dark:text-slate-600" />
+        <Home className="absolute bottom-20 right-20 w-24 h-24 text-slate-400 dark:text-slate-600" />
+        <Building2 className="absolute top-1/2 right-10 w-20 h-20 text-slate-400 dark:text-slate-600" />
+      </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-6">
         {/* Section Header */}
