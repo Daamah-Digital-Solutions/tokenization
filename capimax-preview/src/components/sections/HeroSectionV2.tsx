@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Sparkles, Zap, Star, MapPin, Globe, TrendingUp, Building2, Home, Building } from 'lucide-react';
+import { ArrowRight, Star, MapPin, Globe, TrendingUp, Building2 } from 'lucide-react';
 import { Button } from '../ui/Button';
 
 // Real estate background images from Unsplash - Premium property photos
@@ -62,58 +62,15 @@ export const HeroSectionV2: React.FC = () => {
         ))}
       </div>
 
-      {/* Subtle animated elements on top of background */}
+      {/* Subtle gradient overlays */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Animated gradient orbs */}
-        <motion.div
-          animate={{
-            rotate: [0, 360],
-            scale: [1, 1.1, 1],
-            opacity: [0.05, 0.1, 0.05]
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute top-20 right-20 w-72 h-72 bg-gradient-to-r from-emerald-500/20 to-green-500/20 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            rotate: [360, 0],
-            scale: [1, 1.2, 1],
-            opacity: [0.05, 0.08, 0.05]
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute bottom-20 left-20 w-96 h-96 bg-gradient-to-r from-emerald-500/15 to-cyan-500/15 rounded-full blur-3xl"
-        />
-
-        {/* Subtle floating particles */}
-        {Array.from({ length: 12 }).map((_, i) => (
-          <motion.div
-            key={i}
-            animate={{
-              y: [-20, -100, -20],
-              x: [0, Math.sin(i) * 30, 0],
-              opacity: [0, 0.4, 0],
-              scale: [0.5, 1, 0.5]
-            }}
-            transition={{
-              duration: 10 + i * 0.5,
-              repeat: Infinity,
-              delay: i * 0.4,
-              ease: "easeInOut"
-            }}
-            className="absolute"
-            style={{
-              left: `${10 + (i * 7) % 80}%`,
-              top: `${20 + (i * 5) % 60}%`
-            }}
-          >
-            <Building2 className="w-3 h-3 text-emerald-400/30" />
-          </motion.div>
-        ))}
+        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-to-bl from-emerald-500/10 to-transparent blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-tr from-emerald-500/5 to-transparent blur-3xl" />
       </div>
 
-      {/* Main Content */}
-      <div className="relative z-10 min-h-screen flex items-center">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-20">
+      {/* Main Content - pt-24 accounts for navbar height */}
+      <div className="relative z-10 min-h-screen flex items-center pt-20">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
           
           {/* Center-Aligned Content */}
           <div className="text-center space-y-12">
@@ -122,47 +79,26 @@ export const HeroSectionV2: React.FC = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.1 }}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 shadow-xl"
+              transition={{ duration: 0.6 }}
+              className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20"
             >
-              <div className="relative">
-                <Star className="w-5 h-5 text-amber-400" />
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0"
-                >
-                  <Sparkles className="w-5 h-5 text-amber-300/60" />
-                </motion.div>
-              </div>
-              <span className="text-sm font-semibold text-white/90">Tokenized Real Estate Investment | SPV-Backed | Global Access</span>
+              <Building2 className="w-5 h-5 text-emerald-400" />
+              <span className="text-sm font-medium text-white/90">Tokenized Real Estate Investment | SPV-Backed | Global Access</span>
             </motion.div>
 
             {/* Headlines */}
-            <div className="space-y-8 max-w-4xl mx-auto">
+            <div className="space-y-6 max-w-4xl mx-auto">
               <motion.h1
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2 }}
-                className="text-5xl lg:text-7xl font-bold leading-[1.05] tracking-tight text-white"
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight text-white"
               >
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400 relative">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
                   Capimax Tokenization
-                  <motion.div
-                    animate={{
-                      scaleX: [0, 1, 0],
-                      opacity: [0, 0.8, 0]
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      delay: 1
-                    }}
-                    className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 via-green-400 to-teal-400 rounded-full shadow-[0_2px_10px_rgba(16,185,129,0.5)]"
-                  />
                 </span>
                 <br />
-                <span className="text-white">
+                <span className="text-white mt-2 block">
                   Invest in Real Estate, Not Just Dreams
                 </span>
               </motion.h1>
@@ -177,106 +113,57 @@ export const HeroSectionV2: React.FC = () => {
                 investment opportunities through the SPV model, with document transparency,
                 operational governance, and liquidity options via secondary market.
               </motion.p>
-
-              {/* Property Types Highlight */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.5 }}
-                className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8"
-              >
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/20 backdrop-blur-sm border border-emerald-400/30">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-semibold text-emerald-300">Ready Properties</span>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/20 backdrop-blur-sm border border-amber-400/30">
-                  <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-semibold text-amber-300">Under Construction</span>
-                </div>
-              </motion.div>
             </div>
 
             {/* CTA Buttons */}
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-              className="flex flex-col sm:flex-row gap-6 justify-center items-center"
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             >
               <Button
                 variant="primary"
                 size="lg"
-                className="group relative px-10 py-5 text-lg font-semibold shadow-2xl shadow-emerald-500/30 hover:shadow-emerald-500/40 transition-all duration-500 border-0 rounded-2xl overflow-hidden"
+                className="px-8 py-4 text-base font-semibold rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all"
                 onClick={() => window.location.href = '/register'}
               >
-                <motion.div
-                  animate={{ x: [-100, 300] }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    delay: Math.random() * 2,
-                    ease: "easeInOut"
-                  }}
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
-                />
-                <span className="relative z-10 flex items-center">
-                  Start Your Journey
-                  <motion.div
-                    animate={{ x: [0, 4, 0] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    <ArrowRight className="ml-3 w-5 h-5" />
-                  </motion.div>
-                </span>
+                Start Investing
+                <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
 
               <Button
                 variant="ghost"
                 size="lg"
-                className="group px-10 py-5 text-lg font-semibold transition-all duration-500 rounded-2xl text-white border-white/20 hover:bg-white/10 hover:border-white/30"
+                className="px-8 py-4 text-base font-semibold rounded-xl text-white border-white/30 hover:bg-white/10"
                 onClick={() => window.location.href = '/properties'}
               >
-                <Zap className="mr-3 w-5 h-5 text-emerald-400 group-hover:text-emerald-300 transition-colors duration-300" />
                 Explore Properties
               </Button>
             </motion.div>
 
             {/* Bottom Statistics */}
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 1.2 }}
-              className="mt-20 pt-12"
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="mt-16 pt-8 border-t border-white/10"
             >
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
                 {[
                   { number: "$4.2B+", label: "Global Assets", icon: Globe },
-                  { number: "50K+", label: "Happy Investors", icon: Star },
+                  { number: "50K+", label: "Investors", icon: Star },
                   { number: "1,200+", label: "Properties", icon: MapPin },
                   { number: "22.4%", label: "Avg. Returns", icon: TrendingUp }
                 ].map((stat, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 1.4 + index * 0.1 }}
-                    whileHover={{ scale: 1.05, y: -5 }}
-                    className="space-y-4 group cursor-pointer"
-                  >
-                    <motion.div
-                      whileHover={{ rotate: 360, scale: 1.1 }}
-                      transition={{ duration: 0.6 }}
-                      className="inline-flex p-4 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 group-hover:shadow-lg group-hover:shadow-emerald-500/20 transition-shadow duration-300"
-                    >
-                      <stat.icon className="w-6 h-6 text-emerald-400" />
-                    </motion.div>
-                    <div className="text-3xl md:text-4xl font-bold text-transparent bg-gradient-to-r from-white to-gray-200 bg-clip-text">
+                  <div key={index} className="space-y-2">
+                    <div className="text-2xl md:text-3xl font-bold text-white">
                       {stat.number}
                     </div>
-                    <div className="text-sm text-gray-300 font-medium">
+                    <div className="text-sm text-gray-400">
                       {stat.label}
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
             </motion.div>
