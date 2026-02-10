@@ -65,11 +65,11 @@ export class InvestmentService {
    * Calculate investment details
    */
   static async calculateInvestment(
-    propertyId: string, 
+    propertyId: string,
     tokenAmount: number
   ): Promise<InvestmentCalculation> {
     try {
-      return await apiClient.post<InvestmentCalculation>('/investments/calculate', {
+      return await apiClient.post<InvestmentCalculation>('/investments/calculate/', {
         property_id: propertyId,
         token_amount: tokenAmount
       });
@@ -80,37 +80,44 @@ export class InvestmentService {
   }
 
   /**
-   * Create new investment
+   * Create new investment (returns pending investment requiring payment)
    */
-  static async createInvestment(investmentData: InvestmentCreateData): Promise<Investment> {
+  static async createInvestment(data: {
+    property_id: string;
+    token_amount: number;
+    investment_amount: number;
+    payment_method: string;
+  }): Promise<any> {
     try {
-      // Map frontend format to backend expected format
-      const backendData = {
-        propertyId: investmentData.property_id,
-        tokenAmount: investmentData.token_amount,
-        paymentMethod: investmentData.payment_method?.type || 'credit_card'
-      };
-      
-      const response = await apiClient.post<any>('/investments', backendData);
-      
-      // Map backend response to frontend format
-      return {
-        id: response.investment.id,
-        user_id: response.investment.userId,
-        property_id: response.investment.propertyId,
-        token_amount: response.investment.tokenAmount,
-        investment_amount: response.investment.investmentAmount,
-        status: response.investment.status,
-        payment_method: {
-          type: response.investment.paymentMethod,
-          currency: 'USD'
-        },
-        transaction_hash: response.investment.transactionHash,
-        created_at: new Date(response.investment.createdAt),
-        updated_at: new Date(response.investment.updatedAt)
-      };
+      // Send snake_case fields matching backend InvestmentCreateSerializer
+      return await apiClient.post<any>('/investments/', {
+        property_id: data.property_id,
+        token_amount: data.token_amount,
+        investment_amount: data.investment_amount,
+        payment_method: { type: data.payment_method, currency: 'USD' }
+      });
     } catch (error) {
       console.error('Failed to create investment:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Process wallet-based investment (creates + processes in one step)
+   */
+  static async walletInvest(data: {
+    property_id: string;
+    token_amount: number;
+    investment_amount: number;
+  }): Promise<any> {
+    try {
+      return await apiClient.post<any>('/investments/wallet_invest/', {
+        property_id: data.property_id,
+        token_amount: data.token_amount,
+        investment_amount: data.investment_amount
+      });
+    } catch (error) {
+      console.error('Failed to process wallet investment:', error);
       throw error;
     }
   }
@@ -131,7 +138,7 @@ export class InvestmentService {
       const params: any = { page, limit };
       if (status) params.status = status;
 
-      return await apiClient.get('/investments', params);
+      return await apiClient.get('/investments/', params);
     } catch (error) {
       console.error('Failed to get investments:', error);
       throw error;
@@ -143,7 +150,7 @@ export class InvestmentService {
    */
   static async getInvestment(investmentId: string): Promise<Investment & { property: Property }> {
     try {
-      return await apiClient.get(`/investments/${investmentId}`);
+      return await apiClient.get(`/investments/${investmentId}/`);
     } catch (error) {
       console.error('Failed to get investment:', error);
       throw error;
@@ -155,7 +162,7 @@ export class InvestmentService {
    */
   static async cancelInvestment(investmentId: string): Promise<{ message: string }> {
     try {
-      return await apiClient.post(`/investments/${investmentId}/cancel`);
+      return await apiClient.post(`/investments/${investmentId}/cancel/`);
     } catch (error) {
       console.error('Failed to cancel investment:', error);
       throw error;
@@ -167,7 +174,7 @@ export class InvestmentService {
    */
   static async getPortfolioSummary(): Promise<PortfolioSummary> {
     try {
-      return await apiClient.get<PortfolioSummary>('/investments/portfolio/summary');
+      return await apiClient.get<PortfolioSummary>('/portfolio/summary/');
     } catch (error) {
       console.error('Failed to get portfolio summary:', error);
       throw error;
@@ -185,7 +192,7 @@ export class InvestmentService {
     return_percentage: number;
   }>> {
     try {
-      return await apiClient.get('/investments/portfolio/performance/', { period });
+      return await apiClient.get('/portfolio/performance/', { period });
     } catch (error) {
       console.error('Failed to get portfolio performance:', error);
       throw error;
@@ -211,7 +218,7 @@ export class InvestmentService {
     try {
       const endpoint = investmentId 
         ? `/investments/${investmentId}/transactions`
-        : '/investments/transactions';
+        : '/transactions/';
 
       return await apiClient.get(endpoint, { page, limit });
     } catch (error) {
@@ -229,7 +236,7 @@ export class InvestmentService {
     timeHorizon: number = 60 // months
   ): Promise<InvestmentSimulation> {
     try {
-      return await apiClient.post<InvestmentSimulation>('/investments/simulate', {
+      return await apiClient.post<InvestmentSimulation>('/investments/simulate/', {
         property_id: propertyId,
         investment_amount: investmentAmount,
         time_horizon: timeHorizon
@@ -269,7 +276,7 @@ export class InvestmentService {
     };
   }> {
     try {
-      return await apiClient.get('/investments/dividends', { page, limit });
+      return await apiClient.get('/dividends/', { page, limit });
     } catch (error) {
       console.error('Failed to get dividend history:', error);
       throw error;
@@ -288,7 +295,7 @@ export class InvestmentService {
     match_factors: string[];
   }>> {
     try {
-      return await apiClient.get('/investments/recommendations', { limit });
+      return await apiClient.get('/recommendations/', { limit });
     } catch (error) {
       console.error('Failed to get investment recommendations:', error);
       throw error;
@@ -309,7 +316,7 @@ export class InvestmentService {
     verification_level: string;
   }> {
     try {
-      return await apiClient.get('/investments/limits');
+      return await apiClient.get('/limits/');
     } catch (error) {
       console.error('Failed to get investment limits:', error);
       throw error;
@@ -359,7 +366,7 @@ export class InvestmentService {
     };
   }> {
     try {
-      return await apiClient.get('/investments/withdrawals', { page, limit });
+      return await apiClient.get('/withdrawals/', { page, limit });
     } catch (error) {
       console.error('Failed to get withdrawal requests:', error);
       throw error;
@@ -371,7 +378,7 @@ export class InvestmentService {
    */
   static async cancelWithdrawal(withdrawalId: string): Promise<{ message: string }> {
     try {
-      return await apiClient.post(`/investments/withdrawals/${withdrawalId}/cancel`);
+      return await apiClient.post(`/withdrawals/${withdrawalId}/cancel/`);
     } catch (error) {
       console.error('Failed to cancel withdrawal:', error);
       throw error;
@@ -427,7 +434,7 @@ export class InvestmentService {
     message: string;
   }> {
     try {
-      return await apiClient.post('/investments/auto-invest', config);
+      return await apiClient.post('/auto-invest', config);
     } catch (error) {
       console.error('Failed to setup automatic investment:', error);
       throw error;
@@ -448,7 +455,7 @@ export class InvestmentService {
     created_at: Date;
   }>> {
     try {
-      return await apiClient.get('/investments/auto-invest');
+      return await apiClient.get('/auto-invest');
     } catch (error) {
       console.error('Failed to get automatic investments:', error);
       throw error;
@@ -467,7 +474,7 @@ export class InvestmentService {
     }>
   ): Promise<{ message: string }> {
     try {
-      return await apiClient.put(`/investments/auto-invest/${autoInvestId}`, updates);
+      return await apiClient.put(`/auto-invest/${autoInvestId}`, updates);
     } catch (error) {
       console.error('Failed to update automatic investment:', error);
       throw error;
@@ -479,7 +486,7 @@ export class InvestmentService {
    */
   static async cancelAutomaticInvestment(autoInvestId: string): Promise<{ message: string }> {
     try {
-      return await apiClient.delete(`/investments/auto-invest/${autoInvestId}`);
+      return await apiClient.delete(`/auto-invest/${autoInvestId}`);
     } catch (error) {
       console.error('Failed to cancel automatic investment:', error);
       throw error;

@@ -41,6 +41,7 @@ import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { TransactionManager } from './TransactionManager';
 import { CollaborativeInvestments } from './CollaborativeInvestments';
 import { useUser } from '../../../contexts/AuthContext';
+import { useRouter } from '../../../utils/router';
 import { apiClient } from '../../../services/api/ApiClient';
 import { PropertyService } from '../../../services/property/PropertyService';
 import { cn } from '../../../utils/cn';
@@ -50,7 +51,7 @@ interface InvestorControlPanelProps {
   currentView?: string;
 }
 
-type TabType = 'overview' | 'marketplace' | 'transactions' | 'wallet' | 'settings';
+type TabType = 'overview' | 'marketplace' | 'transactions' | 'wallet' | 'notifications' | 'settings';
 
 interface PriceAlert {
   id: string;
@@ -69,12 +70,16 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
   // Map dashboard sidebar views to internal tabs
   const mapViewToTab = (view: string): TabType => {
     switch (view) {
+      case 'portfolio':
+        return 'overview'; // Portfolio sidebar item maps to the overview/portfolio tab
       case 'marketplace':
         return 'marketplace';
       case 'transactions':
         return 'transactions';
       case 'wallet':
         return 'wallet';
+      case 'notifications':
+        return 'notifications';
       case 'settings':
         return 'settings';
       default:
@@ -202,6 +207,10 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
 
         {activeTab === 'wallet' && (
           <WalletContent portfolio={portfolio} loading={portfolioLoading} />
+        )}
+
+        {activeTab === 'notifications' && (
+          <NotificationsContent />
         )}
 
         {activeTab === 'settings' && (
@@ -500,10 +509,11 @@ const OverviewContent: React.FC<{
 
 // Marketplace Content Component
 const MarketplaceContent: React.FC = () => {
+  const { navigate } = useRouter();
   // Fetch properties from API
   const { data: propertiesData, isLoading: isLoadingProperties, error: propertiesError } = useQuery({
     queryKey: ['properties'],
-    queryFn: () => PropertyService.getProperties({ status: 'approved' }),
+    queryFn: () => PropertyService.getProperties({ status: 'active' }),
     retry: 1,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -553,37 +563,49 @@ const MarketplaceContent: React.FC = () => {
       </div>
     </div>
 
-    {/* Market Stats */}
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <StatsCard
-        title="Available Properties"
-        value="47"
-        subtitle="Ready for investment"
-        icon={Target}
-        variant="default"
-      />
-      <StatsCard
-        title="Total Market Value"
-        value="$12.4M"
-        subtitle="Combined property value"
-        icon={DollarSign}
-        variant="default"
-      />
-      <StatsCard
-        title="Average ROI"
-        value="8.2%"
-        subtitle="Expected annual return"
-        icon={TrendingUp}
-        variant="default"
-      />
-      <StatsCard
-        title="Min. Investment"
-        value="$500"
-        subtitle="Lowest entry point"
-        icon={Wallet}
-        variant="default"
-      />
-    </div>
+    {/* Market Stats - from real data */}
+    {(() => {
+      const properties = propertiesData?.properties || [];
+      const totalValue = properties.reduce((sum: number, p: any) => sum + (p.total_value || 0), 0);
+      const avgRoi = properties.length > 0
+        ? properties.reduce((sum: number, p: any) => sum + (p.expected_return || 0), 0) / properties.length
+        : 0;
+      const minPrice = properties.length > 0
+        ? Math.min(...properties.map((p: any) => p.token_price || 0))
+        : 0;
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <StatsCard
+            title="Available Properties"
+            value={String(properties.length)}
+            subtitle="Ready for investment"
+            icon={Target}
+            variant="default"
+          />
+          <StatsCard
+            title="Total Market Value"
+            value={`$${(totalValue / 1000000).toFixed(1)}M`}
+            subtitle="Combined property value"
+            icon={DollarSign}
+            variant="default"
+          />
+          <StatsCard
+            title="Average ROI"
+            value={`${avgRoi.toFixed(1)}%`}
+            subtitle="Expected annual return"
+            icon={TrendingUp}
+            variant="default"
+          />
+          <StatsCard
+            title="Min. Token Price"
+            value={`$${minPrice.toLocaleString()}`}
+            subtitle="Lowest entry point"
+            icon={Wallet}
+            variant="default"
+          />
+        </div>
+      );
+    })()}
 
     {/* Property Listings */}
     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -652,7 +674,7 @@ const MarketplaceContent: React.FC = () => {
               </div>
             </div>
 
-            <Button className="w-full">
+            <Button className="w-full" onClick={() => navigate('property-detail', { id: property.id })}>
               Invest Now
             </Button>
           </div>
@@ -693,23 +715,23 @@ const WalletContent: React.FC<{
     {/* Wallet Balance Cards */}
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <StatsCard
-        title="Available Balance"
-        value={loading ? '$0' : '$12,450'}
-        subtitle="Ready for investment"
+        title="Portfolio Value"
+        value={loading ? '$0' : `$${(portfolio?.current_value || 0).toLocaleString()}`}
+        subtitle="Current investment value"
         icon={DollarSign}
         variant="gradient"
       />
       <StatsCard
-        title="Pending Transactions"
-        value={loading ? '$0' : '$2,100'}
-        subtitle="Processing payments"
+        title="Total Invested"
+        value={loading ? '$0' : `$${(portfolio?.total_invested || 0).toLocaleString()}`}
+        subtitle="All-time investments"
         icon={RefreshCw}
         variant="accent"
       />
       <StatsCard
-        title="Total Deposits"
-        value={loading ? '$0' : '$45,280'}
-        subtitle="Lifetime deposits"
+        title="Total Returns"
+        value={loading ? '$0' : `$${(portfolio?.total_returns || 0).toLocaleString()}`}
+        subtitle="Earnings to date"
         icon={TrendingUp}
         variant="default"
       />
@@ -814,6 +836,78 @@ const WalletContent: React.FC<{
     </div>
   </div>
 );
+
+// Notifications Content Component
+const NotificationsContent: React.FC = () => {
+  const { data: notifications, isLoading } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => {
+      try {
+        const response = await apiClient.rawClient.get('/notifications/');
+        return response.data?.results || response.data || [];
+      } catch {
+        return [];
+      }
+    },
+    retry: 1,
+  });
+
+  const notificationList = Array.isArray(notifications) ? notifications : [];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <Text variant="h3" weight="semibold" className="mb-2">Notifications</Text>
+          <Text variant="body" color="muted">Stay updated on your investments and platform activity</Text>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        </div>
+      ) : notificationList.length === 0 ? (
+        <Card className="p-12 text-center">
+          <Bell className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+          <Text variant="h4" weight="semibold" className="mb-2">No Notifications</Text>
+          <Text variant="body" color="muted">
+            You're all caught up! New notifications will appear here when there's activity on your investments.
+          </Text>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {notificationList.map((notif: any, index: number) => (
+            <Card key={notif.id || index} className="p-4">
+              <div className="flex items-start gap-3">
+                <div className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
+                  notif.type === 'investment' ? 'bg-emerald-100 dark:bg-emerald-900/30' :
+                  notif.type === 'dividend' ? 'bg-blue-100 dark:bg-blue-900/30' :
+                  'bg-slate-100 dark:bg-slate-800'
+                )}>
+                  <Bell className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <Text variant="body" weight="medium">{notif.title || notif.message || 'Notification'}</Text>
+                  <Text variant="caption" color="muted">{notif.message || notif.description || ''}</Text>
+                  {notif.created_at && (
+                    <Text variant="caption" color="muted" className="mt-1">
+                      {new Date(notif.created_at).toLocaleDateString()}
+                    </Text>
+                  )}
+                </div>
+                {!notif.is_read && (
+                  <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2" />
+                )}
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // Settings Content Component with Role Management Integration
 const SettingsContent: React.FC = () => {

@@ -147,7 +147,7 @@ export class DashboardService {
    */
   static async getPortfolio(): Promise<Portfolio> {
     try {
-      const response = await apiClient.get<Portfolio>('/investments/portfolio/summary/');
+      const response = await apiClient.get<Portfolio>('/portfolio/summary/');
       return response;
     } catch (error) {
       console.error('Failed to fetch portfolio:', error);
@@ -160,7 +160,7 @@ export class DashboardService {
    */
   static async getPortfolioPerformance(periodDays: number = 30): Promise<any> {
     try {
-      const response = await apiClient.get('/investments/portfolio/performance/', {
+      const response = await apiClient.get('/portfolio/performance/', {
         period_days: periodDays
       });
       return response;
@@ -175,7 +175,7 @@ export class DashboardService {
    */
   static async getRecentTransactions(limit: number = 10): Promise<Transaction[]> {
     try {
-      const response = await apiClient.get<Transaction[]>('/investments/transactions/', {
+      const response = await apiClient.get<Transaction[]>('/transactions/', {
         limit,
         ordering: '-created_at'
       });
@@ -327,7 +327,7 @@ export class DashboardService {
    */
   static async getAnalyticsData(period: 'day' | 'week' | 'month' | 'year'): Promise<AnalyticsData> {
     try {
-      const response = await apiClient.get<AnalyticsData>('/investments/portfolio/analytics/', {
+      const response = await apiClient.get<AnalyticsData>('/portfolio/analytics/', {
         period
       });
       return response;

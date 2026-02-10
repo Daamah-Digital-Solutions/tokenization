@@ -37,6 +37,18 @@ export const Footer: React.FC = () => {
       { name: 'FAQ', href: '/faq' },
       { name: 'For Property Owners', href: '/property-owner' }
     ],
+    guides: [
+      { name: 'Capimax RT Guide', href: '/capimax-rt-guide' },
+      { name: 'Investment Guide', href: '/investment-guide' },
+      { name: 'Investment Strategies', href: '/investment-strategies' },
+      { name: 'Investor Guide', href: '/investor-guide' },
+      { name: 'Owner\'s Guide', href: '/owners-guide' },
+      { name: 'Developer Guide', href: '/developer-guide' },
+      { name: 'Broker Guide', href: '/broker-guide' },
+      { name: 'LP Guide', href: '/lp-guide' },
+      { name: 'Technology', href: '/technology' },
+      { name: 'Document Center', href: '/document-center' }
+    ],
     legal: [
       { name: 'Privacy Policy', href: '/legal/privacy' },
       { name: 'Terms & Conditions', href: '/legal/terms' },
@@ -58,7 +70,7 @@ export const Footer: React.FC = () => {
     <footer className="bg-navy-50 dark:bg-navy-900 border-t border-navy-200 dark:border-navy-800">
       <div className="max-w-6xl mx-auto px-6">
         {/* Main Footer Content */}
-        <div className="py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+        <div className="py-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
           {/* Brand Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -89,7 +101,7 @@ export const Footer: React.FC = () => {
               transition={{ duration: 0.6, delay: (index + 1) * 0.1 }}
             >
               <h3 className="text-sm font-semibold mb-4 text-navy-900 dark:text-white uppercase tracking-wide">
-                {category === 'platform' ? 'Platform' : category === 'learn' ? 'Learn' : 'Legal'}
+                {category === 'platform' ? 'Platform' : category === 'learn' ? 'Learn' : category === 'guides' ? 'Guides' : 'Legal'}
               </h3>
               <ul className="space-y-2">
                 {links.map((link) => (

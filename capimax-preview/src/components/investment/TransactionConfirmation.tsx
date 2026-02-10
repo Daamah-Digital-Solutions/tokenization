@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   CheckCircle2,
   Download,
   Share2,
@@ -16,7 +16,9 @@ import {
   Mail,
   Twitter,
   Facebook,
-  Linkedin
+  Linkedin,
+  PieChart,
+  Loader2
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card } from '../design-system/cards/Card';
@@ -29,6 +31,7 @@ interface TransactionConfirmationProps {
   property: InvestmentProperty;
   investmentData: InvestmentData;
   onClose: () => void;
+  onGoToPortfolio?: () => void;
   transactionId?: string;
 }
 
@@ -36,10 +39,13 @@ export const TransactionConfirmation: React.FC<TransactionConfirmationProps> = (
   property,
   investmentData,
   onClose,
+  onGoToPortfolio,
   transactionId = `TXN-${Date.now()}`
 }) => {
   const [showReceipt, setShowReceipt] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const calculateReturns = () => {
     const annualReturn = (investmentData.amount * property.investment.avgAnnualReturn) / 100;
@@ -55,13 +61,52 @@ export const TransactionConfirmation: React.FC<TransactionConfirmationProps> = (
   nextDividendDate.setMonth(nextDividendDate.getMonth() + 3);
 
   const sendConfirmationEmail = async () => {
+    if (emailSending || emailSent) return;
+    setEmailSending(true);
     // Mock email sending
     await new Promise(resolve => setTimeout(resolve, 1500));
+    setEmailSending(false);
     setEmailSent(true);
   };
 
+  const downloadReceiptDirectly = () => {
+    const receiptData = `
+CAPIMAX TOKENIZATION PLATFORM
+Investment Receipt
+
+Transaction ID: ${transactionId}
+Date: ${new Date().toLocaleDateString()}
+Time: ${new Date().toLocaleTimeString()}
+
+PROPERTY DETAILS:
+Property: ${property.title}
+Investment Amount: $${investmentData.amount.toLocaleString()}
+Tokens Purchased: ${investmentData.tokens}
+Token Price: $${property.tokenPrice.toLocaleString()}
+
+EXPECTED RETURNS:
+Annual Return: $${returns.annualReturn.toLocaleString()}
+Quarterly Dividend: $${returns.quarterlyDividend.toLocaleString()}
+ROI: ${returns.totalROI.toFixed(1)}%
+Next Dividend: ${nextDividendDate.toLocaleDateString()}
+
+Payment Method: ${investmentData.paymentMethod}
+Status: Confirmed
+    `.trim();
+
+    const blob = new Blob([receiptData], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `investment-receipt-${transactionId}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const shareInvestment = (platform: string) => {
-    const shareText = `I just invested $${investmentData.amount.toLocaleString()} in ${property.title} through tokenized real estate! 🏢💎`;
+    const shareText = `I just purchased ${investmentData.tokens} property tokens in ${property.title} through tokenized real estate! 🏢💎`;
     const shareUrl = window.location.href;
     
     const shareUrls = {
@@ -76,12 +121,14 @@ export const TransactionConfirmation: React.FC<TransactionConfirmationProps> = (
   const copyInvestmentDetails = async () => {
     const details = `Investment Confirmation
 Property: ${property.title}
-Amount: $${investmentData.amount.toLocaleString()}
-Tokens: ${investmentData.tokens}
+Tokens Purchased: ${investmentData.tokens}
+Total Cost: $${investmentData.amount.toLocaleString()}
 Expected Annual Return: $${returns.annualReturn.toLocaleString()}
 Transaction ID: ${transactionId}`;
-    
+
     await navigator.clipboard.writeText(details);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (showReceipt) {
@@ -141,22 +188,22 @@ Transaction ID: ${transactionId}`;
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Investment Amount */}
+          {/* Property Tokens (Primary) */}
           <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-6 rounded-xl text-center">
-            <Building className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
+            <Gift className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
             <Text variant="h3" className="text-emerald-600 dark:text-emerald-400 mb-1">
-              ${investmentData.amount.toLocaleString()}
+              {investmentData.tokens} {investmentData.tokens === 1 ? 'Token' : 'Tokens'}
             </Text>
-            <Text variant="bodySmall" color="muted">Investment Amount</Text>
+            <Text variant="bodySmall" color="muted">Purchased</Text>
           </div>
 
-          {/* Property Tokens */}
+          {/* Total Cost */}
           <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 rounded-xl text-center">
-            <Gift className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+            <Building className="w-6 h-6 text-blue-600 mx-auto mb-2" />
             <Text variant="h3" className="text-blue-600 dark:text-blue-400 mb-1">
-              {investmentData.tokens}
+              ${investmentData.amount.toLocaleString()}
             </Text>
-            <Text variant="bodySmall" color="muted">Property Tokens</Text>
+            <Text variant="bodySmall" color="muted">Total Cost</Text>
           </div>
 
           {/* Expected Return */}
@@ -199,23 +246,33 @@ Transaction ID: ${transactionId}`;
         </Text>
 
         <div className="space-y-4">
-          <div className="flex items-start gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-            <div className="flex items-center justify-center w-8 h-8 bg-blue-500 text-white rounded-full text-sm font-bold">
+          <div
+            className={cn(
+              "flex items-start gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl",
+              onGoToPortfolio && "cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+            )}
+            onClick={onGoToPortfolio}
+          >
+            <div className="flex items-center justify-center w-8 h-8 bg-blue-500 text-white rounded-full text-sm font-bold flex-shrink-0">
               1
             </div>
-            <div>
-              <Text variant="bodyLarge" weight="semibold" className="mb-1">
-                Portfolio Integration
-              </Text>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <Text variant="bodyLarge" weight="semibold" className="mb-1">
+                  View Your Portfolio
+                </Text>
+                {onGoToPortfolio && (
+                  <ExternalLink className="w-4 h-4 text-blue-500" />
+                )}
+              </div>
               <Text variant="body" color="muted">
-                Your investment will appear in your portfolio dashboard within 24 hours. 
-                You'll be able to track performance and manage your holdings.
+                Your tokens are ready. Track performance, manage holdings, and view dividends in your portfolio.
               </Text>
             </div>
           </div>
 
           <div className="flex items-start gap-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
-            <div className="flex items-center justify-center w-8 h-8 bg-emerald-500 text-white rounded-full text-sm font-bold">
+            <div className="flex items-center justify-center w-8 h-8 bg-emerald-500 text-white rounded-full text-sm font-bold flex-shrink-0">
               2
             </div>
             <div>
@@ -223,14 +280,14 @@ Transaction ID: ${transactionId}`;
                 First Dividend Payment
               </Text>
               <Text variant="body" color="muted">
-                Your first quarterly dividend of ${returns.quarterlyDividend.toLocaleString()} 
-                will be paid on {nextDividendDate.toLocaleDateString()}.
+                Your first quarterly dividend of ${returns.quarterlyDividend.toLocaleString()}
+                is expected on {nextDividendDate.toLocaleDateString()}.
               </Text>
             </div>
           </div>
 
           <div className="flex items-start gap-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
-            <div className="flex items-center justify-center w-8 h-8 bg-purple-500 text-white rounded-full text-sm font-bold">
+            <div className="flex items-center justify-center w-8 h-8 bg-purple-500 text-white rounded-full text-sm font-bold flex-shrink-0">
               3
             </div>
             <div>
@@ -238,8 +295,7 @@ Transaction ID: ${transactionId}`;
                 Investment Certificate
               </Text>
               <Text variant="body" color="muted">
-                A digital certificate of ownership will be sent to your email within 48 hours. 
-                This serves as official proof of your investment.
+                A digital certificate of ownership will be sent to your email within 48 hours.
               </Text>
             </div>
           </div>
@@ -261,7 +317,7 @@ Transaction ID: ${transactionId}`;
         <Button
           variant="secondary"
           size="lg"
-          onClick={() => setShowReceipt(true)}
+          onClick={downloadReceiptDirectly}
           className="flex items-center justify-center gap-2"
         >
           <Download className="w-4 h-4" />
@@ -274,8 +330,8 @@ Transaction ID: ${transactionId}`;
           onClick={copyInvestmentDetails}
           className="flex items-center justify-center gap-2"
         >
-          <Copy className="w-4 h-4" />
-          Copy Details
+          {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+          {copied ? 'Copied!' : 'Copy Details'}
         </Button>
       </div>
 
@@ -297,11 +353,17 @@ Transaction ID: ${transactionId}`;
             variant={emailSent ? "secondary" : "primary"}
             size="md"
             onClick={sendConfirmationEmail}
-            disabled={emailSent}
+            disabled={emailSent || emailSending}
             className="flex items-center gap-2"
           >
-            <Mail className="w-4 h-4" />
-            {emailSent ? "Sent" : "Send Email"}
+            {emailSending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : emailSent ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            ) : (
+              <Mail className="w-4 h-4" />
+            )}
+            {emailSending ? "Sending..." : emailSent ? "Sent!" : "Send Email"}
           </Button>
         </div>
       </Card>
@@ -352,10 +414,21 @@ Transaction ID: ${transactionId}`;
         </div>
       </Card>
 
-      {/* Close Button */}
-      <div className="flex justify-center pt-4">
+      {/* Navigation Buttons */}
+      <div className="flex flex-col sm:flex-row justify-center gap-3 pt-4">
+        {onGoToPortfolio && (
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={onGoToPortfolio}
+            className="min-w-[200px] flex items-center justify-center gap-2"
+          >
+            <PieChart className="w-4 h-4" />
+            Go to My Portfolio
+          </Button>
+        )}
         <Button
-          variant="primary"
+          variant={onGoToPortfolio ? "secondary" : "primary"}
           size="lg"
           onClick={onClose}
           className="min-w-[200px]"

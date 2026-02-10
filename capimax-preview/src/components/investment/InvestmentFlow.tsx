@@ -1,14 +1,15 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  ArrowRight, 
-  CheckCircle, 
-  DollarSign,
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle,
+  Coins,
   CreditCard,
   Wallet,
   Receipt,
-  X
+  X,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card } from '../design-system/cards/Card';
@@ -22,29 +23,29 @@ import { cn } from '../../utils/cn';
 import type { InvestmentProperty, InvestmentData, InvestmentFlowProps } from './types';
 
 const steps = [
-  { 
-    id: 'amount', 
-    title: 'Investment Amount', 
-    description: 'Choose your investment amount',
-    icon: DollarSign 
+  {
+    id: 'amount',
+    title: 'Select Tokens',
+    description: 'Choose how many tokens to purchase',
+    icon: Coins
   },
-  { 
-    id: 'payment', 
-    title: 'Payment Method', 
+  {
+    id: 'payment',
+    title: 'Payment Method',
     description: 'Select how you want to pay',
-    icon: CreditCard 
+    icon: CreditCard
   },
-  { 
-    id: 'process', 
-    title: 'Processing', 
-    description: 'Complete your transaction',
-    icon: Wallet 
+  {
+    id: 'process',
+    title: 'Processing',
+    description: 'Your transaction is being processed',
+    icon: Wallet
   },
-  { 
-    id: 'confirmation', 
-    title: 'Confirmation', 
+  {
+    id: 'confirmation',
+    title: 'Confirmation',
     description: 'Your investment is complete',
-    icon: CheckCircle 
+    icon: CheckCircle
   }
 ];
 
@@ -52,35 +53,33 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
   property,
   isOpen,
   onClose,
-  onComplete
+  onComplete,
+  onGoToPortfolio,
+  initialTokens
 }) => {
-  const [currentStep, setCurrentStep] = useState(0);
+  // If tokens were pre-selected from sidebar, start on Step 1 (payment) instead of Step 0
+  const startStep = (initialTokens && initialTokens > 1) ? 1 : 0;
+  const startTokens = initialTokens || 1;
+
+  const [currentStep, setCurrentStep] = useState(startStep);
   const [investmentData, setInvestmentData] = useState<InvestmentData>({
-    amount: property.investment.minInvestment,
-    // Guard against division by zero
-    tokens: property.tokenPrice > 0 ? Math.floor(property.investment.minInvestment / property.tokenPrice) : 0,
+    tokens: startTokens,
+    amount: startTokens * property.tokenPrice,
     paymentMethod: null
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
-
-  // Debug logging for currentStep changes
-  useEffect(() => {
-    console.log('📍 CURRENT STEP CHANGED TO:', currentStep);
-    console.log('📍 Step name:', steps[currentStep]?.title);
-  }, [currentStep]);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
   const currentStepData = steps[currentStep];
-  const isLastStep = currentStep === steps.length - 1;
-  const isFirstStep = currentStep === 0;
 
   const updateInvestmentData = useCallback((updates: Partial<InvestmentData>) => {
     setInvestmentData(prev => {
       const newData = { ...prev, ...updates };
 
-      // Recalculate tokens when amount changes (guard against division by zero)
-      if (updates.amount) {
-        newData.tokens = property.tokenPrice > 0 ? Math.floor(updates.amount / property.tokenPrice) : 0;
+      // Recalculate amount when tokens change (tokens drive the price)
+      if (updates.tokens !== undefined) {
+        newData.amount = updates.tokens * property.tokenPrice;
       }
 
       return newData;
@@ -92,17 +91,18 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
 
   const validateStep = (stepIndex: number): boolean => {
     const newErrors: Record<string, string> = {};
+    const availableTokens = property.totalTokens - property.soldTokens;
 
     switch (stepIndex) {
-      case 0: // Amount validation
-        if (investmentData.amount < property.investment.minInvestment) {
-          newErrors.amount = `Minimum investment is $${property.investment.minInvestment.toLocaleString()}`;
+      case 0: // Token validation
+        if (investmentData.tokens < 1) {
+          newErrors.tokens = 'You must purchase at least 1 token';
         }
-        if (investmentData.amount > (property.totalTokens - property.soldTokens) * property.tokenPrice) {
-          newErrors.amount = 'Investment amount exceeds available tokens';
+        if (investmentData.tokens > availableTokens) {
+          newErrors.tokens = `Only ${availableTokens.toLocaleString()} tokens available`;
         }
         break;
-      
+
       case 1: // Payment method validation
         if (!investmentData.paymentMethod) {
           newErrors.paymentMethod = 'Please select a payment method';
@@ -122,64 +122,74 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
     }
   };
 
-  const handleAdvanceToProcessing = () => {
-    console.log('🎯 HANDLE ADVANCE TO PROCESSING CALLED!');
-    console.log('🎯 Current step before:', currentStep);
-    setCurrentStep(2); // Move to processing step
-    console.log('🎯 setCurrentStep(2) called - should advance to processing step');
-  };
-
   const handlePrevious = () => {
     if (currentStep > 0) {
       setCurrentStep(prev => prev - 1);
     }
   };
 
-  const handleClose = () => {
-    // If we're on the confirmation step, call onComplete
+  // Handle closing — warn user if mid-flow
+  const handleCloseAttempt = () => {
+    // On confirmation step, safe to close
     if (currentStep === 3) {
-      console.log('✅ Investment flow completed successfully!');
+      handleClose();
+      return;
+    }
+    // During processing, don't allow close
+    if (currentStep === 2 && isProcessing) {
+      return;
+    }
+    // On steps 0-1, if data entered, confirm
+    if (currentStep > 0 || investmentData.tokens > 1 || investmentData.paymentMethod) {
+      setShowCloseConfirm(true);
+      return;
+    }
+    // Default: close directly
+    handleClose();
+  };
+
+  const handleClose = () => {
+    if (currentStep === 3) {
       onComplete?.(investmentData);
     }
 
     setCurrentStep(0);
     setInvestmentData({
-      amount: property.investment.minInvestment,
-      tokens: Math.floor(property.investment.minInvestment / property.tokenPrice),
+      tokens: 1,
+      amount: property.tokenPrice,
       paymentMethod: null
     });
     setErrors({});
     setIsProcessing(false);
+    setShowCloseConfirm(false);
     onClose();
   };
 
   const handleTransactionComplete = (success: boolean, transactionId?: string) => {
     if (success && transactionId) {
-      console.log('🎯 Transaction complete, moving to confirmation step');
       setCurrentStep(3); // Move to confirmation step
-      // DON'T call onComplete here - wait for user to close confirmation!
     }
     setIsProcessing(false);
   };
 
-  const calculateReturns = () => {
-    const annualReturn = (investmentData.amount * property.investment.avgAnnualReturn) / 100;
-    const quarterlyDividend = annualReturn / 4;
-    return { annualReturn, quarterlyDividend };
+  // Handle going back to payment from processing (error recovery)
+  const handleGoBackToPayment = () => {
+    setCurrentStep(1);
+    setIsProcessing(false);
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-[60] overflow-y-auto">
       <div className="flex min-h-full items-center justify-center p-4">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={handleClose}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+          onClick={handleCloseAttempt}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
         />
 
         {/* Modal */}
@@ -187,7 +197,7 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-4xl mx-auto"
+          className="relative w-full max-w-4xl mx-auto z-[61]"
         >
           <Card className="overflow-hidden">
             {/* Header */}
@@ -201,14 +211,17 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                     {currentStepData.description}
                   </Text>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleClose}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
+                {/* Hide close button during processing */}
+                {!(currentStep === 2 && isProcessing) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCloseAttempt}
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
+                )}
               </div>
 
               {/* Progress Steps */}
@@ -244,11 +257,11 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                         </div>
                       </div>
                       {index < steps.length - 1 && (
-                        <div 
+                        <div
                           className={cn(
                             "w-16 sm:w-24 h-0.5 mx-4 transition-colors",
                             index < currentStep ? "bg-emerald-500" : "bg-gray-300 dark:bg-gray-600"
-                          )} 
+                          )}
                         />
                       )}
                     </div>
@@ -282,7 +295,6 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                       investmentData={investmentData}
                       onUpdate={updateInvestmentData}
                       errors={errors}
-                      onAdvanceToProcessing={handleAdvanceToProcessing}
                     />
                   )}
 
@@ -293,6 +305,8 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                       onComplete={handleTransactionComplete}
                       isProcessing={isProcessing}
                       setIsProcessing={setIsProcessing}
+                      autoStart={true}
+                      onGoBack={handleGoBackToPayment}
                     />
                   )}
 
@@ -301,38 +315,40 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                       property={property}
                       investmentData={investmentData}
                       onClose={handleClose}
+                      onGoToPortfolio={() => {
+                        onComplete?.(investmentData);
+                        onGoToPortfolio?.();
+                      }}
                     />
                   )}
                 </motion.div>
               </AnimatePresence>
             </div>
 
-            {/* Footer */}
+            {/* Footer — visible on Steps 0 and 1 only */}
             {currentStep < 2 && (
               <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                   <Button
                     variant="ghost"
                     size="md"
-                    onClick={handlePrevious}
-                    disabled={isFirstStep}
+                    onClick={currentStep === 0 ? handleCloseAttempt : handlePrevious}
                     className="flex items-center gap-2"
                   >
                     <ArrowLeft className="w-4 h-4" />
-                    Previous
+                    {currentStep === 0 ? 'Cancel' : 'Back'}
                   </Button>
 
                   <div className="flex items-center gap-4">
-                    {currentStep === 0 && (
-                      <div className="text-right">
-                        <Text variant="bodySmall" color="muted">
-                          Investment Summary
-                        </Text>
-                        <Text variant="bodyLarge" weight="semibold">
-                          ${investmentData.amount.toLocaleString()} • {investmentData.tokens} tokens
-                        </Text>
-                      </div>
-                    )}
+                    {/* Summary chip */}
+                    <div className="text-right hidden sm:block">
+                      <Text variant="bodySmall" color="muted">
+                        {investmentData.tokens} {investmentData.tokens === 1 ? 'token' : 'tokens'}
+                      </Text>
+                      <Text variant="bodyLarge" weight="semibold">
+                        ${investmentData.amount.toLocaleString()}
+                      </Text>
+                    </div>
 
                     <Button
                       variant="primary"
@@ -340,7 +356,7 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                       onClick={handleNext}
                       className="flex items-center gap-2"
                     >
-                      {isLastStep ? 'Complete Investment' : 'Continue'}
+                      {currentStep === 0 ? 'Choose Payment' : 'Confirm & Pay'}
                       <ArrowRight className="w-4 h-4" />
                     </Button>
                   </div>
@@ -348,6 +364,53 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
               </div>
             )}
           </Card>
+
+          {/* Close Confirmation Dialog */}
+          <AnimatePresence>
+            {showCloseConfirm && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center z-10"
+              >
+                <motion.div
+                  initial={{ scale: 0.9 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0.9 }}
+                  className="bg-white dark:bg-gray-800 rounded-xl p-6 mx-4 max-w-sm shadow-xl"
+                >
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center">
+                      <AlertTriangle className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <Text variant="bodyLarge" weight="semibold">Cancel Investment?</Text>
+                      <Text variant="bodySmall" color="muted">Your progress will be lost</Text>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setShowCloseConfirm(false)}
+                      className="flex-1"
+                    >
+                      Continue Investing
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClose}
+                      className="flex-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
+                      Yes, Cancel
+                    </Button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </div>
     </div>

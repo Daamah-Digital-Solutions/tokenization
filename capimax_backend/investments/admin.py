@@ -493,6 +493,6 @@ class DividendPaymentAdmin(admin.ModelAdmin):
 
 
 # Custom admin site customizations
-admin.site.site_header = 'Capimax Investment Management'
-admin.site.site_title = 'Capimax Admin'
-admin.site.index_title = 'Investment Platform Administration'
+admin.site.site_header = 'Capimax RT Management'
+admin.site.site_title = 'Capimax RT Management'
+admin.site.index_title = 'Welcome to Capimax RT Management'

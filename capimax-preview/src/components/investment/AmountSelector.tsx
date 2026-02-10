@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  DollarSign, 
-  TrendingUp, 
-  PieChart, 
+import {
+  DollarSign,
+  TrendingUp,
+  PieChart,
   Calculator,
   Info,
   Minus,
   Plus,
-  Target
+  Target,
+  Coins
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
-import { Input } from '../design-system/forms/Input';
 import type { InvestmentProperty, InvestmentData } from './types';
 import { cn } from '../../utils/cn';
 
@@ -24,7 +24,7 @@ interface AmountSelectorProps {
   errors: Record<string, string>;
 }
 
-const presetAmounts = [1000, 5000, 10000, 25000, 50000];
+const presetTokenCounts = [1, 5, 10, 25, 50, 100];
 
 export const AmountSelector: React.FC<AmountSelectorProps> = ({
   property,
@@ -32,55 +32,62 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
   onUpdate,
   errors
 }) => {
-  const [customAmount, setCustomAmount] = useState(investmentData.amount.toString());
+  const [customTokens, setCustomTokens] = useState(investmentData.tokens.toString());
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  const maxAvailableInvestment = (property.totalTokens - property.soldTokens) * property.tokenPrice;
+  const availableTokens = property.totalTokens - property.soldTokens;
   const fundingPercentage = Math.round((property.soldTokens / property.totalTokens) * 100);
 
   useEffect(() => {
-    setCustomAmount(investmentData.amount.toString());
-  }, [investmentData.amount]);
+    setCustomTokens(investmentData.tokens.toString());
+  }, [investmentData.tokens]);
 
-  const handleAmountChange = (newAmount: number) => {
-    const clampedAmount = Math.max(property.investment.minInvestment, Math.min(newAmount, maxAvailableInvestment));
-    onUpdate({ amount: clampedAmount });
+  const handleTokenChange = (newTokens: number) => {
+    const clampedTokens = Math.max(1, Math.min(Math.floor(newTokens), availableTokens));
+    onUpdate({ tokens: clampedTokens });
   };
 
-  const handleCustomAmountChange = (value: string) => {
-    setCustomAmount(value);
-    const numValue = parseFloat(value);
+  const handleCustomTokenChange = (value: string) => {
+    setCustomTokens(value);
+    const numValue = parseInt(value, 10);
     if (!isNaN(numValue) && numValue >= 0) {
-      handleAmountChange(numValue);
+      handleTokenChange(numValue);
+    }
+    // Real-time validation feedback
+    if (value === '' || isNaN(numValue)) return;
+    if (numValue < 1) {
+      onUpdate({ tokens: numValue });
+    } else if (numValue > availableTokens) {
+      onUpdate({ tokens: numValue });
     }
   };
 
-  const adjustAmount = (increment: number) => {
-    const newAmount = investmentData.amount + increment;
-    handleAmountChange(newAmount);
+  const adjustTokens = (increment: number) => {
+    const newTokens = investmentData.tokens + increment;
+    handleTokenChange(newTokens);
   };
 
   const calculateReturns = () => {
     const { amount } = investmentData;
     const { avgAnnualReturn, managementFee, dividendFrequency } = property.investment;
-    
+
     const grossAnnualReturn = (amount * avgAnnualReturn) / 100;
     const managementFeeAmount = (amount * managementFee) / 100;
     const netAnnualReturn = grossAnnualReturn - managementFeeAmount;
-    
-    const paymentsPerYear = dividendFrequency === 'Quarterly' ? 4 : 
-                           dividendFrequency === 'Monthly' ? 12 : 
+
+    const paymentsPerYear = dividendFrequency === 'Quarterly' ? 4 :
+                           dividendFrequency === 'Monthly' ? 12 :
                            dividendFrequency === 'Semi-annually' ? 2 : 1;
-    
+
     const dividendPerPayment = netAnnualReturn / paymentsPerYear;
-    
+
     return {
       grossAnnualReturn,
       netAnnualReturn,
       managementFeeAmount,
       dividendPerPayment,
       paymentsPerYear,
-      roi: (netAnnualReturn / amount) * 100
+      roi: amount > 0 ? (netAnnualReturn / amount) * 100 : 0
     };
   };
 
@@ -88,50 +95,50 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
 
   return (
     <div className="space-y-8">
-      {/* Investment Amount Input */}
+      {/* Token Selection Input */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <Text variant="h3" weight="semibold">
-            Choose Your Investment Amount
+            Select Number of Tokens
           </Text>
           <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-            <Target className="w-4 h-4" />
+            <DollarSign className="w-4 h-4" />
             <Text variant="bodySmall" weight="medium">
-              Min: ${property.investment.minInvestment.toLocaleString()}
+              ${property.tokenPrice.toLocaleString()} per token
             </Text>
           </div>
         </div>
 
-        {/* Custom Amount Input */}
+        {/* Token Input Card */}
         <Card className="p-6 mb-6">
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Investment Amount
+                Number of Tokens
               </label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Coins className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="number"
-                  value={customAmount}
-                  onChange={(e) => handleCustomAmountChange(e.target.value)}
-                  min={property.investment.minInvestment}
-                  max={maxAvailableInvestment}
-                  step={100}
+                  value={customTokens}
+                  onChange={(e) => handleCustomTokenChange(e.target.value)}
+                  min={1}
+                  max={availableTokens}
+                  step={1}
                   className={cn(
                     "w-full pl-12 pr-16 py-4 text-xl font-semibold border rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 transition-colors",
-                    errors.amount
+                    errors.tokens
                       ? "border-red-500 focus:ring-red-500"
                       : "border-gray-300 dark:border-gray-600 focus:ring-emerald-500 focus:border-emerald-500"
                   )}
-                  placeholder="Enter amount"
+                  placeholder="Enter tokens"
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => adjustAmount(-1000)}
-                    disabled={investmentData.amount <= property.investment.minInvestment}
+                    onClick={() => adjustTokens(-1)}
+                    disabled={investmentData.tokens <= 1}
                     className="w-8 h-8 p-0"
                   >
                     <Minus className="w-4 h-4" />
@@ -139,58 +146,58 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => adjustAmount(1000)}
-                    disabled={investmentData.amount >= maxAvailableInvestment}
+                    onClick={() => adjustTokens(1)}
+                    disabled={investmentData.tokens >= availableTokens}
                     className="w-8 h-8 p-0"
                   >
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
-              
-              {errors.amount && (
+
+              {errors.tokens && (
                 <Text variant="bodySmall" className="text-red-500 mt-2 flex items-center gap-2">
                   <Info className="w-4 h-4" />
-                  {errors.amount}
+                  {errors.tokens}
                 </Text>
               )}
-              
+
               <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                Available for investment: ${maxAvailableInvestment.toLocaleString()}
+                Available: {availableTokens.toLocaleString()} tokens
               </div>
             </div>
 
-            {/* Token Calculation */}
-            <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-4 rounded-xl text-center min-w-[120px]">
+            {/* Total Cost Calculation */}
+            <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-4 rounded-xl text-center min-w-[140px]">
               <Text variant="bodySmall" color="muted" className="mb-1">
-                You'll receive
+                Total Cost
               </Text>
               <Text variant="h2" className="text-emerald-600 dark:text-emerald-400">
-                {investmentData.tokens}
+                ${investmentData.amount.toLocaleString()}
               </Text>
               <Text variant="bodySmall" color="muted">
-                tokens
+                {investmentData.tokens} x ${property.tokenPrice.toLocaleString()}
               </Text>
             </div>
           </div>
         </Card>
 
-        {/* Preset Amount Buttons */}
+        {/* Preset Token Buttons */}
         <div>
           <Text variant="bodyLarge" weight="medium" className="mb-3">
             Quick Select
           </Text>
-          <div className="grid grid-cols-3 md:grid-cols-5 gap-3">
-            {presetAmounts.map((amount) => (
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+            {presetTokenCounts.map((count) => (
               <Button
-                key={amount}
-                variant={investmentData.amount === amount ? "primary" : "secondary"}
+                key={count}
+                variant={investmentData.tokens === count ? "primary" : "secondary"}
                 size="md"
-                onClick={() => handleAmountChange(amount)}
-                disabled={amount > maxAvailableInvestment}
+                onClick={() => handleTokenChange(count)}
+                disabled={count > availableTokens}
                 className="text-center"
               >
-                ${amount.toLocaleString()}
+                {count} {count === 1 ? 'token' : 'tokens'}
               </Button>
             ))}
           </div>
@@ -210,7 +217,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
             onClick={() => setShowAdvanced(!showAdvanced)}
             className="text-gray-600 dark:text-gray-400"
           >
-            {showAdvanced ? 'Hide' : 'Show'} Details
+            {showAdvanced ? 'Hide' : 'Show'} Advanced Details
           </Button>
         </div>
 
@@ -289,7 +296,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
 
               <div>
                 <Text variant="bodyLarge" weight="semibold" className="mb-3">
-                  Investment Details
+                  Token Details
                 </Text>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -297,7 +304,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
                     <span className="font-medium">${property.tokenPrice.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Tokens Purchased:</span>
+                    <span className="text-gray-600 dark:text-gray-400">Tokens Selected:</span>
                     <span className="font-medium">{investmentData.tokens.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
@@ -305,7 +312,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
                     <span className="font-medium">{property.investment.avgAnnualReturn}%</span>
                   </div>
                   <div className="flex justify-between border-t pt-2">
-                    <span className="text-gray-900 dark:text-white font-medium">Total Investment:</span>
+                    <span className="text-gray-900 dark:text-white font-medium">Total Cost:</span>
                     <span className="font-semibold text-gray-900 dark:text-white">${investmentData.amount.toLocaleString()}</span>
                   </div>
                 </div>
@@ -320,12 +327,12 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
                   {fundingPercentage}% Complete
                 </Text>
               </div>
-              
+
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden mb-2">
                 <motion.div
                   initial={{ width: `${fundingPercentage}%` }}
-                  animate={{ 
-                    width: `${Math.min(100, fundingPercentage + ((investmentData.tokens / property.totalTokens) * 100))}%` 
+                  animate={{
+                    width: `${Math.min(100, fundingPercentage + ((investmentData.tokens / property.totalTokens) * 100))}%`
                   }}
                   transition={{ duration: 1, ease: "easeOut" }}
                   className="h-full bg-gradient-to-r from-emerald-500 to-green-500 rounded-full relative"
@@ -333,7 +340,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
                   <div className="absolute inset-0 bg-white/20 animate-pulse" />
                 </motion.div>
               </div>
-              
+
               <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
                 <span>{property.soldTokens.toLocaleString()} sold</span>
                 <span>+{investmentData.tokens.toLocaleString()} your purchase</span>
@@ -353,7 +360,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
               Investment Risk Disclosure
             </Text>
             <Text variant="bodySmall" className="text-amber-700 dark:text-amber-300 leading-relaxed">
-              Real estate investments involve risk including potential loss of principal. Past performance does not guarantee future results. 
+              Real estate investments involve risk including potential loss of principal. Past performance does not guarantee future results.
               Returns are projections based on current market conditions and are not guaranteed.
             </Text>
           </div>

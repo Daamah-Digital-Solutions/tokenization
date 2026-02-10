@@ -389,7 +389,7 @@ export const InvestorDashboard: React.FC<{ currentView: string }> = ({ currentVi
         InvestmentService.getPortfolioPerformance('1year'),
         InvestmentService.getDividendHistory(1, 50),
         InvestmentService.getInvestments(1, 50),
-        apiClient.get('/investments/transactions', { page: 1, limit: 10 })
+        apiClient.get('/transactions/', { page: 1, limit: 10 })
       ]);
 
       // Transform portfolio summary to stats

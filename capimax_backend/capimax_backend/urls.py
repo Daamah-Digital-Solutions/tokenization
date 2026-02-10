@@ -127,7 +127,7 @@ urlpatterns = [
     path('api/v1/auth/', include('accounts.urls')),
     path('api/v1/payments/', include('payments.urls')),
     path('api/v1/properties/', include('properties.urls')),
-    path('api/v1/investments/', include('investments.urls')),
+    path('api/v1/', include('investments.urls')),
     path('api/v1/kyc/', include('kyc.urls')),
     path('api/v1/construction/', include('construction.urls')),
     path('api/v1/notifications/', include('notifications.urls')),
@@ -138,6 +138,7 @@ urlpatterns = [
     path('api/v1/admin/', include('admin_panel.urls')),
     path('api/v1/blockchain/', include('blockchain.urls')),  # ✅ ENABLED - Phase 1 Blockchain Activation
     path('api/v1/liquidity-provider/', include('liquidity_provider.urls')),
+    path('api/v1/documents/', include('documents.urls')),
 ]
 
 # Serve media files in development

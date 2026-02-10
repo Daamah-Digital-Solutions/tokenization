@@ -75,7 +75,7 @@ class GeneralAnalyticsView(generics.GenericAPIView):
 
             # Calculate analytics metrics
             total_invested = user_investments.filter(status='active').aggregate(
-                total=Sum('amount')
+                total=Sum('investment_amount')
             )['total'] or 0
 
             investment_count = user_investments.count()
@@ -84,17 +84,17 @@ class GeneralAnalyticsView(generics.GenericAPIView):
             daily_investments = user_investments.annotate(
                 day=TruncDay('created_at')
             ).values('day').annotate(
-                amount=Sum('amount'),
+                amount=Sum('investment_amount'),
                 count=Count('id')
             ).order_by('day')
 
             # Get property performance
             property_stats = Property.objects.filter(
-                investment__user=user,
-                investment__created_at__gte=start_date
+                investments__user=user,
+                investments__created_at__gte=start_date
             ).distinct().aggregate(
                 total_properties=Count('id'),
-                avg_roi=Avg('expected_roi')
+                avg_roi=Avg('expected_return')
             )
 
             analytics_data = {
@@ -325,46 +325,46 @@ class InvestmentAnalyticsView(generics.GenericAPIView):
                     'period': "DATE_FORMAT(created_at, '%%Y-%%m-%%d %%H:00:00')"
                 }).values('period').annotate(
                     count=Count('id'),
-                    total_amount=Sum('amount'),
-                    avg_amount=Avg('amount')
+                    total_amount=Sum('investment_amount'),
+                    avg_amount=Avg('investment_amount')
                 ).order_by('period')
             elif group_by == 'week':
                 time_series = investments.extra({
                     'period': "DATE_FORMAT(created_at, '%%Y-%%u')"
                 }).values('period').annotate(
                     count=Count('id'),
-                    total_amount=Sum('amount'),
-                    avg_amount=Avg('amount')
+                    total_amount=Sum('investment_amount'),
+                    avg_amount=Avg('investment_amount')
                 ).order_by('period')
             elif group_by == 'month':
                 time_series = investments.extra({
                     'period': "DATE_FORMAT(created_at, '%%Y-%%m')"
                 }).values('period').annotate(
                     count=Count('id'),
-                    total_amount=Sum('amount'),
-                    avg_amount=Avg('amount')
+                    total_amount=Sum('investment_amount'),
+                    avg_amount=Avg('investment_amount')
                 ).order_by('period')
             else:  # day
                 time_series = investments.extra({
                     'period': "DATE(created_at)"
                 }).values('period').annotate(
                     count=Count('id'),
-                    total_amount=Sum('amount'),
-                    avg_amount=Avg('amount')
+                    total_amount=Sum('investment_amount'),
+                    avg_amount=Avg('investment_amount')
                 ).order_by('period')
             
             # Summary statistics
             summary = investments.aggregate(
                 total_count=Count('id'),
-                total_amount=Sum('amount'),
-                avg_amount=Avg('amount'),
-                max_amount=Max('amount'),
-                min_amount=Min('amount')
+                total_amount=Sum('investment_amount'),
+                avg_amount=Avg('investment_amount'),
+                max_amount=Max('investment_amount'),
+                min_amount=Min('investment_amount')
             )
             
             # Top investors
             top_investors = investments.values('user__email').annotate(
-                total_invested=Sum('amount'),
+                total_invested=Sum('investment_amount'),
                 investment_count=Count('id')
             ).order_by('-total_invested')[:10]
             
@@ -373,7 +373,7 @@ class InvestmentAnalyticsView(generics.GenericAPIView):
                 'property_investment__property_type'
             ).annotate(
                 count=Count('id'),
-                total_amount=Sum('amount')
+                total_amount=Sum('investment_amount')
             ).order_by('-total_amount')
             
             analytics_data = {
@@ -435,9 +435,9 @@ class PaymentAnalyticsView(generics.GenericAPIView):
                 )
                 
                 analytics_data['summary'] = payments.aggregate(
-                    total_volume=Sum('amount'),
+                    total_volume=Sum('investment_amount'),
                     transaction_count=Count('id'),
-                    avg_transaction_size=Avg('amount')
+                    avg_transaction_size=Avg('investment_amount')
                 )
                 
                 # Add success rate calculation based on payment status
@@ -602,7 +602,7 @@ class MarketTrendsView(generics.GenericAPIView):
             )
             
             investment_volume = recent_investments.aggregate(
-                total=Sum('amount')
+                total=Sum('investment_amount')
             )['total'] or Decimal('0.00')
             
             # Calculate average property price (simplified)
@@ -615,7 +615,7 @@ class MarketTrendsView(generics.GenericAPIView):
                 'property_investment__location'
             ).annotate(
                 investment_count=Count('id'),
-                total_invested=Sum('amount')
+                total_invested=Sum('investment_amount')
             ).order_by('-total_invested')[:5]
             
             # Trending property types

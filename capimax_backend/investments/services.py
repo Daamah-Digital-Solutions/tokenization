@@ -914,8 +914,9 @@ class WalletInvestmentService:
                 currency='USD',
                 payment_method='wallet',
                 status='completed',
-                payment_provider='wallet',
-                transaction_id=str(wallet_transaction.id),
+                net_amount=investment_amount,
+                processing_fee=platform_fee,
+                external_transaction_id=str(wallet_transaction.id),
                 metadata={
                     'wallet_transaction_id': str(wallet_transaction.id),
                     'property_id': str(property_id),
@@ -929,14 +930,10 @@ class WalletInvestmentService:
                 property_investment=property_obj,
                 investment_amount=investment_amount,
                 token_amount=token_amount,
-                investment_type='fractional',
-                payment_method='wallet',
+                payment_method={'type': 'wallet', 'currency': 'USD',
+                                'payment_id': str(payment.id),
+                                'wallet_transaction_id': str(wallet_transaction.id)},
                 status=InvestmentStatus.PROCESSING,
-                fees=platform_fee,
-                metadata={
-                    'payment_id': str(payment.id),
-                    'wallet_transaction_id': str(wallet_transaction.id)
-                }
             )
 
             # Step 5: Process investment through existing service (updates property tokens_sold)

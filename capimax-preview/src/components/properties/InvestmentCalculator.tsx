@@ -59,20 +59,20 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
   onInvest,
   className
 }) => {
-  const [investmentAmount, setInvestmentAmount] = useState(minInvestment);
+  const remainingTokens = totalTokens - soldTokens;
+  const [tokenCount, setTokenCount] = useState(1);
   const [investmentTerm, setInvestmentTerm] = useState(5); // years
   const [showDetailedBreakdown, setShowDetailedBreakdown] = useState(false);
   const [riskLevel, setRiskLevel] = useState<'low' | 'medium' | 'high'>('medium');
 
-  const remainingTokens = totalTokens - soldTokens;
-  const maxInvestment = remainingTokens * tokenPrice;
+  const investmentAmount = tokenCount * tokenPrice;
 
   // Calculate investment results with zero-division guards
   const calculations: CalculationResults = useMemo(() => {
-    // Guard against division by zero for tokenPrice
-    const tokens = tokenPrice > 0 ? Math.floor(investmentAmount / tokenPrice) : 0;
-    const grossAnnualReturn = (investmentAmount * expectedReturn) / 100;
-    const managementFeeCost = (investmentAmount * managementFee) / 100;
+    const tokens = tokenCount;
+    const amount = tokens * tokenPrice;
+    const grossAnnualReturn = (amount * expectedReturn) / 100;
+    const managementFeeCost = (amount * managementFee) / 100;
     const netAnnualReturn = grossAnnualReturn - managementFeeCost;
 
     const monthlyDividend = netAnnualReturn / 12;
@@ -81,10 +81,10 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
 
     const totalReturn5Years = netAnnualReturn * investmentTerm;
     const compoundRate = (expectedReturn - managementFee) / 100;
-    const compoundReturn5Years = investmentAmount * (Math.pow(1 + compoundRate, investmentTerm) - 1);
+    const compoundReturn5Years = amount * (Math.pow(1 + compoundRate, investmentTerm) - 1);
 
     // Guard against division by zero for breakEvenMonths
-    const breakEvenMonths = monthlyDividend > 0 ? investmentAmount / monthlyDividend : 0;
+    const breakEvenMonths = monthlyDividend > 0 ? amount / monthlyDividend : 0;
 
     return {
       tokens,
@@ -98,7 +98,7 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
       compoundReturn5Years,
       managementFeeCost
     };
-  }, [investmentAmount, tokenPrice, expectedReturn, managementFee, investmentTerm]);
+  }, [tokenCount, tokenPrice, expectedReturn, managementFee, investmentTerm]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -120,15 +120,15 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
     }
   };
 
-  const handleInvestmentChange = (value: string) => {
-    const numValue = parseFloat(value) || 0;
-    const clampedValue = Math.min(Math.max(numValue, minInvestment), maxInvestment);
-    setInvestmentAmount(clampedValue);
+  const handleTokenCountChange = (value: string) => {
+    const numValue = parseInt(value, 10) || 1;
+    const clampedValue = Math.max(1, Math.min(Math.floor(numValue), remainingTokens));
+    setTokenCount(clampedValue);
   };
 
   const handleInvest = () => {
-    if (calculations.tokens > 0) {
-      onInvest?.(investmentAmount, calculations.tokens);
+    if (tokenCount > 0) {
+      onInvest?.(investmentAmount, tokenCount);
     }
   };
 
@@ -152,45 +152,46 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
       </div>
 
       <div className="p-6 space-y-6">
-        {/* Investment Amount Input */}
+        {/* Token Count Input */}
         <div className="space-y-3">
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-            <DollarSign className="w-4 h-4 text-emerald-600" />
-            Investment Amount
-          </label>
-          
-          <div className="relative">
-            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="number"
-              value={investmentAmount}
-              onChange={(e) => handleInvestmentChange(e.target.value)}
-              min={minInvestment}
-              max={maxInvestment}
-              step={tokenPrice}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-lg font-medium"
-            />
-          </div>
-          
-          <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
-            <span>Min: {formatCurrency(minInvestment)}</span>
-            <span>Max: {formatCurrency(maxInvestment)}</span>
+          <div className="flex items-center justify-between">
+            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+              Number of Tokens
+            </label>
+            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+              {formatCurrency(tokenPrice)}/token
+            </span>
           </div>
 
-          {/* Quick Amount Buttons */}
+          <input
+            type="number"
+            value={tokenCount}
+            onChange={(e) => handleTokenCountChange(e.target.value)}
+            min={1}
+            max={remainingTokens}
+            step={1}
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-lg font-semibold text-center"
+          />
+
+          <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+            <span>Min: 1 token</span>
+            <span>Available: {remainingTokens.toLocaleString()}</span>
+          </div>
+
+          {/* Quick Token Buttons */}
           <div className="flex gap-2 flex-wrap">
-            {[minInvestment, minInvestment * 2, minInvestment * 5, minInvestment * 10].filter(amount => amount <= maxInvestment).map((amount) => (
+            {[1, 5, 10, 25, 50].filter(count => count <= remainingTokens).map((count) => (
               <button
-                key={amount}
-                onClick={() => setInvestmentAmount(amount)}
+                key={count}
+                onClick={() => setTokenCount(count)}
                 className={cn(
                   "px-3 py-1.5 text-sm rounded-lg border transition-all",
-                  investmentAmount === amount
+                  tokenCount === count
                     ? "bg-emerald-100 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300"
                     : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-750"
                 )}
               >
-                {formatCurrency(amount)}
+                {count} {count === 1 ? 'token' : 'tokens'}
               </button>
             ))}
           </div>
@@ -229,13 +230,13 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
             <div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Tokens</div>
               <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
-                {calculations.tokens}
+                {tokenCount}
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Token Price</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Total Cost</div>
               <div className="text-xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(tokenPrice)}
+                {formatCurrency(investmentAmount)}
               </div>
             </div>
           </div>
@@ -381,23 +382,15 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
             variant="primary"
             size="lg"
             onClick={handleInvest}
-            disabled={calculations.tokens === 0}
+            disabled={tokenCount === 0}
             className="w-full font-semibold"
           >
-            <DollarSign className="w-5 h-5 mr-2" />
-            Invest {formatCurrency(investmentAmount)}
+            Buy {tokenCount} {tokenCount === 1 ? 'Token' : 'Tokens'} — {formatCurrency(investmentAmount)}
           </Button>
-          
-          {calculations.tokens === 0 && (
-            <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 justify-center">
-              <AlertTriangle className="w-4 h-4" />
-              <span>Investment amount too low for any tokens</span>
-            </div>
-          )}
-          
+
           <div className="text-center">
             <Text variant="caption" color="muted">
-              You will receive {calculations.tokens} tokens worth {formatCurrency(calculations.tokens * tokenPrice)}
+              {tokenCount} {tokenCount === 1 ? 'token' : 'tokens'} x {formatCurrency(tokenPrice)} = {formatCurrency(investmentAmount)}
             </Text>
           </div>
         </div>

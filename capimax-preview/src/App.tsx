@@ -71,6 +71,19 @@ const SecondaryMarketPage = React.lazy(() => import('./pages/SecondaryMarketPage
 const RisksPage = React.lazy(() => import('./pages/RisksPage').then(m => ({ default: m.RisksPage })));
 const FAQPage = React.lazy(() => import('./pages/FAQPage').then(m => ({ default: m.FAQPage })));
 const PropertyOwnerLandingPage = React.lazy(() => import('./pages/PropertyOwnerLandingPage').then(m => ({ default: m.PropertyOwnerLandingPage })));
+const WhyCapimaxPage = React.lazy(() => import('./pages/WhyCapimaxPage').then(m => ({ default: m.WhyCapimaxPage })));
+const StructurePage = React.lazy(() => import('./pages/StructurePage').then(m => ({ default: m.StructurePage })));
+const DocumentCenterPage = React.lazy(() => import('./pages/DocumentCenterPage').then(m => ({ default: m.DocumentCenterPage })));
+
+// Guide Pages
+const BrokerGuidePage = React.lazy(() => import('./pages/BrokerGuidePage').then(m => ({ default: m.BrokerGuidePage })));
+const CapimaxRTGuidePage = React.lazy(() => import('./pages/CapimaxRTGuidePage').then(m => ({ default: m.CapimaxRTGuidePage })));
+const DeveloperGuidePage = React.lazy(() => import('./pages/DeveloperGuidePage').then(m => ({ default: m.DeveloperGuidePage })));
+const InvestmentGuidePage = React.lazy(() => import('./pages/InvestmentGuidePage').then(m => ({ default: m.InvestmentGuidePage })));
+const InvestmentStrategiesPage = React.lazy(() => import('./pages/InvestmentStrategiesPage').then(m => ({ default: m.InvestmentStrategiesPage })));
+const LiquidityProviderGuidePage = React.lazy(() => import('./pages/LiquidityProviderGuidePage').then(m => ({ default: m.LiquidityProviderGuidePage })));
+const OwnersGuidePage = React.lazy(() => import('./pages/OwnersGuidePage').then(m => ({ default: m.OwnersGuidePage })));
+const TechnologyPage = React.lazy(() => import('./pages/TechnologyPage').then(m => ({ default: m.TechnologyPage })));
 
 // Loading fallback component
 const PageLoader: React.FC<{ message?: string }> = ({ message = 'Loading page...' }) => (
@@ -188,7 +201,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; fallback?: React.Rea
 };
 
 const AppRouter: React.FC = () => {
-  const { currentRoute } = useRouter();
+  const { currentRoute, getQueryParam } = useRouter();
 
   const renderCurrentPage = () => {
     const mainProps = {
@@ -294,7 +307,10 @@ const AppRouter: React.FC = () => {
         return (
           <main {...mainProps}>
             <Suspense fallback={<PageLoader message="Loading property details..." />}>
-              <PropertyDetailPage onBack={() => window.history.back()} />
+              <PropertyDetailPage
+                propertyId={getQueryParam('id') || undefined}
+                onBack={() => window.history.back()}
+              />
             </Suspense>
           </main>
         );
@@ -556,6 +572,95 @@ const AppRouter: React.FC = () => {
           <main {...mainProps}>
             <Suspense fallback={<PageLoader message="Loading property owner page..." />}>
               <PropertyOwnerLandingPage />
+            </Suspense>
+          </main>
+        );
+      case 'why-capimax':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading why Capimax..." />}>
+              <WhyCapimaxPage />
+            </Suspense>
+          </main>
+        );
+      case 'structure':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading structure guide..." />}>
+              <StructurePage />
+            </Suspense>
+          </main>
+        );
+      case 'document-center':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading document center..." />}>
+              <DocumentCenterPage />
+            </Suspense>
+          </main>
+        );
+      // Guide Pages
+      case 'broker-guide':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading broker guide..." />}>
+              <BrokerGuidePage />
+            </Suspense>
+          </main>
+        );
+      case 'capimax-rt-guide':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading Capimax RT guide..." />}>
+              <CapimaxRTGuidePage />
+            </Suspense>
+          </main>
+        );
+      case 'developer-guide':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading developer guide..." />}>
+              <DeveloperGuidePage />
+            </Suspense>
+          </main>
+        );
+      case 'investment-guide':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading investment guide..." />}>
+              <InvestmentGuidePage />
+            </Suspense>
+          </main>
+        );
+      case 'investment-strategies':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading investment strategies..." />}>
+              <InvestmentStrategiesPage />
+            </Suspense>
+          </main>
+        );
+      case 'lp-guide':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading liquidity provider guide..." />}>
+              <LiquidityProviderGuidePage />
+            </Suspense>
+          </main>
+        );
+      case 'owners-guide':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading owner's guide..." />}>
+              <OwnersGuidePage />
+            </Suspense>
+          </main>
+        );
+      case 'technology':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading technology..." />}>
+              <TechnologyPage />
             </Suspense>
           </main>
         );

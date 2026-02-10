@@ -54,6 +54,8 @@ interface DashboardContent {
 
 interface DynamicUserDashboardProps {
   className?: string;
+  userRole?: string;
+  onViewChange?: (view: string) => void;
 }
 
 const roleBasedContent: Record<UserRole, (data: any) => DashboardContent> = {
@@ -292,7 +294,8 @@ const roleBasedContent: Record<UserRole, (data: any) => DashboardContent> = {
 };
 
 export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
-  className
+  className,
+  onViewChange
 }) => {
   const { theme, toggleTheme } = useTheme();
   const [user, setUser] = useState<UserType | null>(null);
@@ -344,6 +347,33 @@ export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
   };
 
   const content = roleBasedContent[user.role](dashboardData);
+
+  // Override quick actions to use proper in-app navigation instead of window.location.href
+  if (user.role === UserRole.INVESTOR && onViewChange) {
+    content.quickActions = [
+      {
+        title: 'Browse Properties',
+        description: 'Discover new investment opportunities',
+        icon: Building,
+        action: () => window.location.href = '/properties',
+        variant: 'primary' as const,
+      },
+      {
+        title: 'View Portfolio',
+        description: 'See your investments & returns',
+        icon: PieChart,
+        action: () => onViewChange('portfolio'),
+        variant: 'secondary' as const,
+      },
+      {
+        title: 'Transaction History',
+        description: 'Track your investment activity',
+        icon: Activity,
+        action: () => onViewChange('transactions'),
+        variant: 'outline' as const,
+      },
+    ];
+  }
 
   return (
     <div className={cn('space-y-6', className)}>

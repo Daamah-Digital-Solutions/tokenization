@@ -91,7 +91,7 @@ export class TransactionService {
         next: string | null;
         previous: string | null;
         results: Transaction[];
-      }>('/investments/transactions/', params);
+      }>('/transactions/', params);
 
       if (!response || !response.results || !Array.isArray(response.results)) {
         throw new Error('Invalid response format from transactions API');
@@ -190,7 +190,7 @@ export class TransactionService {
    */
   static async getTransaction(transactionId: string): Promise<EnhancedTransaction> {
     try {
-      const transaction = await apiClient.get<Transaction>(`/investments/transactions/${transactionId}/`);
+      const transaction = await apiClient.get<Transaction>(`/transactions/${transactionId}/`);
 
       if (!transaction) {
         throw new Error('Transaction not found');
@@ -267,7 +267,7 @@ export class TransactionService {
     }>;
   }> {
     try {
-      return await apiClient.get('/investments/transactions/stats/', { period });
+      return await apiClient.get('/transactions/stats/', { period });
     } catch (error) {
       console.error('Failed to fetch transaction statistics:', error);
       throw error;
@@ -280,7 +280,7 @@ export class TransactionService {
   static async exportTransactions(filters: TransactionFilters = {}): Promise<Blob> {
     try {
       const params = { ...filters, format: 'csv' };
-      return await apiClient.get('/investments/transactions/export/', params, {
+      return await apiClient.get('/transactions/export/', params, {
         responseType: 'blob'
       });
     } catch (error) {
@@ -312,7 +312,7 @@ export class TransactionService {
    */
   static async getTransactionReceipt(transactionId: string): Promise<Blob> {
     try {
-      return await apiClient.get(`/investments/transactions/${transactionId}/receipt/`, {}, {
+      return await apiClient.get(`/transactions/${transactionId}/receipt/`, {}, {
         responseType: 'blob'
       });
     } catch (error) {
@@ -329,7 +329,7 @@ export class TransactionService {
     message: string;
   }> {
     try {
-      return await apiClient.post(`/investments/transactions/${transactionId}/retry/`);
+      return await apiClient.post(`/transactions/${transactionId}/retry/`);
     } catch (error) {
       console.error('Failed to retry transaction:', error);
       throw error;
@@ -343,7 +343,7 @@ export class TransactionService {
     message: string;
   }> {
     try {
-      return await apiClient.post(`/investments/transactions/${transactionId}/cancel/`);
+      return await apiClient.post(`/transactions/${transactionId}/cancel/`);
     } catch (error) {
       console.error('Failed to cancel transaction:', error);
       throw error;

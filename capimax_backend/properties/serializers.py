@@ -365,19 +365,19 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
     def get_total_investment(self, obj):
         """Get total amount invested in this property."""
         total = Investment.objects.filter(
-            property=obj,
+            property_investment=obj,
             status='completed'
         ).aggregate(
-            total=models.Sum('amount')
+            total=models.Sum('investment_amount')
         )['total']
         return total or Decimal('0.00')
-    
+
     def get_investor_count(self, obj):
         """Get number of unique investors."""
         return Investment.objects.filter(
-            property=obj,
+            property_investment=obj,
             status='completed'
-        ).values('investor').distinct().count()
+        ).values('user').distinct().count()
     
     def get_construction_progress(self, obj):
         """Get overall construction progress."""

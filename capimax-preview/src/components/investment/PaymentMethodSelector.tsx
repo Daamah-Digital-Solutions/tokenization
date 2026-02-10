@@ -43,38 +43,38 @@ interface PaymentMethodOption {
 const PAYMENT_METHODS: PaymentMethodOption[] = [
   {
     id: 'wallet',
-    name: 'CapiMax Wallet Balance',
+    name: 'CapiMax Wallet',
     description: 'Use your existing CapiMax wallet balance for instant investment',
     icon: Wallet,
     fee: 'Free',
     processingTime: 'Instant',
     recommended: true,
   },
-  // TODO: Re-enable other payment methods later
-  // {
-  //   id: 'crypto',
-  //   name: 'Cryptocurrency',
-  //   description: 'Pay with Bitcoin, Ethereum, or other cryptocurrencies',
-  //   icon: Bitcoin,
-  //   fee: '0.5%',
-  //   processingTime: '10-30 minutes',
-  // },
-  // {
-  //   id: 'fiat',
-  //   name: 'Credit/Debit Card',
-  //   description: 'Pay instantly with Visa, Mastercard, or American Express',
-  //   icon: CreditCard,
-  //   fee: '2.9% + $0.30',
-  //   processingTime: 'Instant',
-  // },
-  // {
-  //   id: 'bank',
-  //   name: 'Bank Transfer',
-  //   description: 'Direct transfer from your bank account (ACH/Wire)',
-  //   icon: Building2,
-  //   fee: 'Free (ACH)',
-  //   processingTime: '1-3 business days',
-  // },
+  {
+    id: 'crypto',
+    name: 'Cryptocurrency',
+    description: 'Pay with Bitcoin, Ethereum, or other cryptocurrencies',
+    icon: Bitcoin,
+    fee: '0.5%',
+    processingTime: '10-30 minutes',
+    popular: true,
+  },
+  {
+    id: 'fiat',
+    name: 'Credit/Debit Card',
+    description: 'Pay instantly with Visa, Mastercard, or American Express',
+    icon: CreditCard,
+    fee: '2.9% + $0.30',
+    processingTime: 'Instant',
+  },
+  {
+    id: 'bank',
+    name: 'Bank Transfer',
+    description: 'Direct transfer from your bank account (ACH/Wire)',
+    icon: Building2,
+    fee: 'Free (ACH)',
+    processingTime: '1-3 business days',
+  },
 ];
 
 export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
@@ -299,32 +299,25 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
         </Card>
       )}
 
-      {/* Selected Method Info */}
+      {/* Selected Method Confirmation */}
       {selectedMethod && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <Card className="p-6 bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800">
-            <div className="flex items-center gap-4 mb-4">
-              <CheckCircle className="w-8 h-8 text-emerald-600" />
+          <Card className="p-4 bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-6 h-6 text-emerald-600" />
               <div>
-                <Text variant="bodyLarge" weight="semibold" className="text-emerald-800 dark:text-emerald-200">
-                  Payment Method Selected
+                <Text variant="body" weight="semibold" className="text-emerald-800 dark:text-emerald-200">
+                  {PAYMENT_METHODS.find(m => m.id === selectedMethod)?.name} selected
                 </Text>
                 <Text variant="bodySmall" className="text-emerald-700 dark:text-emerald-300">
-                  {PAYMENT_METHODS.find(m => m.id === selectedMethod)?.name} is ready for processing
+                  Click "Confirm & Pay" below to proceed
                 </Text>
               </div>
             </div>
-
-            <Button
-              onClick={handleConfirmPayment}
-              className="w-full bg-emerald-600 hover:bg-emerald-700"
-            >
-              Proceed with {PAYMENT_METHODS.find(m => m.id === selectedMethod)?.name}
-            </Button>
           </Card>
         </motion.div>
       )}

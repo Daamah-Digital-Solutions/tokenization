@@ -144,35 +144,65 @@ export class PropertyService {
    */
   static async getProperty(propertyId: string): Promise<Property> {
     try {
-      const response = await apiClient.get<any>(`/properties/${propertyId}`);
-      const property = response.property;
-      
+      // Use rawClient because backend returns DRF format directly, not wrapped in {data: ...}
+      const response = await apiClient.rawClient.get(`/properties/${propertyId}/`);
+      const property = response.data;
+
+      if (!property) {
+        throw new Error('No property data received');
+      }
+
       // Map backend response to frontend format
       return {
         id: property.id,
         title: property.title,
         description: property.description,
-        property_type: property.propertyType || property.property_type,
+        property_type: property.property_type,
+        property_category: property.property_category,
         status: property.status as PropertyStatus,
-        total_value: property.totalValue || property.total_value,
-        token_price: property.tokenPrice || property.token_price,
-        total_tokens: property.totalTokens || property.total_tokens,
-        tokens_sold: property.tokensSold || property.tokens_sold,
-        expected_return: property.expectedReturn || property.expected_return,
-        rental_yield: property.rentalYield || property.rental_yield,
-        property_size: property.propertySize || property.property_size,
-        year_built: property.yearBuilt || property.year_built,
-        address: property.address,
+        total_value: parseFloat(property.total_value),
+        token_price: parseFloat(property.token_price),
+        total_tokens: property.total_tokens,
+        tokens_sold: property.tokens_sold,
+        tokens_available: property.tokens_available,
+        funding_percentage: property.funding_percentage,
+        is_fully_funded: property.is_fully_funded,
+        can_accept_investments: property.can_accept_investments,
+        expected_return: parseFloat(property.expected_return),
+        rental_yield: parseFloat(property.rental_yield),
+        property_size: parseFloat(property.property_size),
+        year_built: property.year_built,
+        address: property.address || '',
         city: property.city,
-        state: property.state,
+        state: property.state || '',
         country: property.country,
         coordinates: property.coordinates,
-        images: property.images || (property.primary_image ? [property.primary_image] : ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"]),
+        images: property.images && property.images.length > 0
+          ? property.images.map((img: any) => img.image || img.image_url || img)
+          : (property.primary_image ? [property.primary_image] : ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"]),
         documents: property.documents || [],
-        smart_contract_address: property.smartContractAddress || property.smart_contract_address,
-        owner_id: property.ownerId || property.owner_id,
-        created_at: new Date(property.createdAt || property.created_at),
-        updated_at: new Date(property.updatedAt || property.updated_at)
+        smart_contract_address: property.smart_contract_address,
+        owner_id: property.owner?.id || property.owner_id,
+        created_at: new Date(property.created_at),
+        updated_at: new Date(property.updated_at),
+        // Additional fields from detail serializer
+        is_under_construction: property.is_under_construction,
+        is_ready_property: property.is_ready_property,
+        construction_status_display: property.construction_status_display,
+        construction_progress: property.construction_progress,
+        estimated_monthly_return: property.estimated_monthly_return,
+        expected_completion_date: property.expected_completion_date,
+        monthly_rental_income: parseFloat(property.monthly_rental_income || 0),
+        occupancy_rate: parseFloat(property.occupancy_rate || 0),
+        rental_income_active: property.rental_income_active,
+        supports_installments: property.supports_installments,
+        installment_period_months: property.installment_period_months,
+        featured: property.featured,
+        minimum_investment: parseFloat(property.minimum_investment || property.token_price),
+        average_rating: property.average_rating,
+        total_reviews: property.total_reviews,
+        investor_count: property.investor_count,
+        total_investment: property.total_investment
       };
     } catch (error) {
       console.error('Failed to get property:', error);

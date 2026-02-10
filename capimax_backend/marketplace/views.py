@@ -48,17 +48,17 @@ class MarketListingViewSet(viewsets.ModelViewSet):
     """
     
     queryset = MarketListing.objects.select_related(
-        'property', 'seller'
+        'property_listing', 'seller'
     ).prefetch_related(
-        'property__images'
+        'property_listing__images'
     ).all()
     permission_classes = [permissions.IsAuthenticated, MarketplacePermissions]
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
-    filterset_fields = ['listing_type', 'status', 'property', 'seller']
+    filterset_fields = ['listing_type', 'status', 'property_listing', 'seller']
     ordering_fields = ['price_per_token', 'created_at', 'expires_at', 'tokens_remaining']
     ordering = ['-created_at']
-    search_fields = ['property__title', 'property__city', 'notes']
+    search_fields = ['property_listing__title', 'property_listing__city', 'notes']
     
     def get_serializer_class(self):
         """Return appropriate serializer based on action."""
@@ -75,13 +75,13 @@ class MarketListingViewSet(viewsets.ModelViewSet):
         # Filter by property if specified
         property_id = self.request.query_params.get('property_id')
         if property_id:
-            queryset = queryset.filter(property_id=property_id)
-        
+            queryset = queryset.filter(property_listing_id=property_id)
+
         # Filter by listing type if specified
         listing_type = self.request.query_params.get('listing_type')
         if listing_type:
             queryset = queryset.filter(listing_type=listing_type)
-        
+
         # Filter active listings only
         if self.request.query_params.get('active_only', '').lower() == 'true':
             queryset = queryset.filter(
@@ -212,7 +212,7 @@ class TradeOrderViewSet(viewsets.ModelViewSet):
         # Filter by property if specified
         property_id = self.request.query_params.get('property_id')
         if property_id:
-            queryset = queryset.filter(listing__property_id=property_id)
+            queryset = queryset.filter(listing__property_listing_id=property_id)
 
         return queryset
     
@@ -284,12 +284,12 @@ class TradeTransactionViewSet(viewsets.ReadOnlyModelViewSet):
     """
     
     queryset = TradeTransaction.objects.select_related(
-        'buyer', 'seller', 'property', 'listing', 'order'
+        'buyer', 'seller', 'property_traded', 'listing', 'order'
     ).all()
     permission_classes = [permissions.IsAuthenticated, MarketplacePermissions]
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ['status', 'buyer', 'seller', 'property']
+    filterset_fields = ['status', 'buyer', 'seller', 'property_traded']
     ordering_fields = ['price_per_token', 'total_amount', 'created_at', 'completed_at']
     ordering = ['-created_at']
     
@@ -316,7 +316,7 @@ class TradeTransactionViewSet(viewsets.ReadOnlyModelViewSet):
         # Filter by property if specified
         property_id = self.request.query_params.get('property_id')
         if property_id:
-            queryset = queryset.filter(property_id=property_id)
+            queryset = queryset.filter(property_traded_id=property_id)
 
         return queryset
 
@@ -421,11 +421,11 @@ class MarketAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
     with various timeframes and filtering options.
     """
     
-    queryset = MarketAnalytics.objects.select_related('property').all()
+    queryset = MarketAnalytics.objects.select_related('property_analyzed').all()
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ['property', 'timeframe']
+    filterset_fields = ['property_analyzed', 'timeframe']
     ordering_fields = ['volume_usd', 'trade_count', 'period_start']
     ordering = ['-period_start']
     serializer_class = MarketAnalyticsSerializer
@@ -446,7 +446,7 @@ class MarketAnalyticsViewSet(viewsets.ReadOnlyModelViewSet):
             recent_trades = TradeTransaction.objects.filter(
                 status=TransactionStatus.COMPLETED
             ).select_related(
-                'buyer', 'seller', 'property'
+                'buyer', 'seller', 'property_traded'
             ).order_by('-completed_at')[:10]
             
             overview_data = {

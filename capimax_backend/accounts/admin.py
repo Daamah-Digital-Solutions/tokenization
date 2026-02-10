@@ -131,6 +131,6 @@ class UserSessionAdmin(admin.ModelAdmin):
 
 
 # Customize admin site headers
-admin.site.site_header = "Capimax Real Estate Tokenization Admin"
-admin.site.site_title = "Capimax Admin Portal"
-admin.site.index_title = "Welcome to Capimax Administration"
+admin.site.site_header = "Capimax RT Management"
+admin.site.site_title = "Capimax RT Management"
+admin.site.index_title = "Welcome to Capimax RT Management"

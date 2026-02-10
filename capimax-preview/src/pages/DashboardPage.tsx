@@ -55,9 +55,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       case 'investor':
         return [
           ...baseItems,
+          { id: 'portfolio', label: 'My Portfolio', icon: '💼' },
+          { id: 'properties', label: 'Properties', icon: '🏠' },
           { id: 'marketplace', label: 'Marketplace', icon: '🏪' },
           { id: 'transactions', label: 'Transactions', icon: '💳' },
           { id: 'wallet', label: 'Wallet', icon: '💰' },
+          { id: 'notifications', label: 'Notifications', icon: '🔔' },
           { id: 'settings', label: 'Settings', icon: '⚙️' },
         ];
       case 'property_owner':
@@ -95,6 +98,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   // Handle navigation item click with auto-close for mobile
   const handleNavigationClick = (itemId: string) => {
+    // Navigate to external pages for certain items
+    if (itemId === 'properties') {
+      navigate('properties');
+      return;
+    }
     // All navigation items now go through the dashboard view change
     onViewChange(itemId);
     // Auto-close sidebar on mobile after navigation
@@ -263,11 +271,42 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
 // Main Dashboard Page Component
 export const DashboardPage: React.FC = () => {
-  const [currentView, setCurrentView] = useState('overview');
+  // Read initial view from URL query param (e.g., /dashboard?view=portfolio)
+  const initialView = new URLSearchParams(window.location.search).get('view') || 'overview';
+  const [currentView, setCurrentView] = useState(initialView);
   const [activeRole, setActiveRole] = useState<UserRole | null>(null);
   const { state, refreshUser } = useAuth();
-  const { navigate } = useRouter();
+  const { navigate, getQueryParam } = useRouter();
   const authUser = state.user;
+
+  // Sync view with URL query param when navigating to dashboard with ?view=
+  React.useEffect(() => {
+    const handleViewFromUrl = () => {
+      const viewParam = new URLSearchParams(window.location.search).get('view');
+      if (viewParam) {
+        setCurrentView(viewParam);
+      }
+    };
+
+    // Patch pushState to emit custom event (for in-page navigation detection)
+    const originalPushState = window.history.pushState;
+    window.history.pushState = function (...args: any[]) {
+      originalPushState.apply(this, args);
+      window.dispatchEvent(new Event('dashboardpushstate'));
+    };
+
+    window.addEventListener('popstate', handleViewFromUrl);
+    window.addEventListener('dashboardpushstate', handleViewFromUrl);
+
+    // Also check on mount
+    handleViewFromUrl();
+
+    return () => {
+      window.history.pushState = originalPushState;
+      window.removeEventListener('popstate', handleViewFromUrl);
+      window.removeEventListener('dashboardpushstate', handleViewFromUrl);
+    };
+  }, []);
 
   // Initialize active role with user's default role and sync with auth updates
   React.useEffect(() => {
@@ -353,7 +392,7 @@ export const DashboardPage: React.FC = () => {
 
     // For overview, use the new DynamicUserDashboard
     if (currentView === 'overview') {
-      return <DynamicUserDashboard userRole={effectiveRole} />;
+      return <DynamicUserDashboard userRole={effectiveRole} onViewChange={setCurrentView} />;
     }
 
     // For investor role, use the new InvestorControlPanel for all investor-specific views

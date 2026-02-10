@@ -54,7 +54,7 @@ class PropertyApprovalListView(APIView):
                     Q(property__title__icontains=search) |
                     Q(property__owner__first_name__icontains=search) |
                     Q(property__owner__last_name__icontains=search) |
-                    Q(property__location__icontains=search)
+                    Q(property__city__icontains=search)
                 )
 
             # Pagination
@@ -75,9 +75,9 @@ class PropertyApprovalListView(APIView):
                         'name': f"{approval.property.owner.first_name} {approval.property.owner.last_name}",
                         'email': approval.property.owner.email
                     },
-                    'category': approval.property.category,
-                    'type': approval.property.type,
-                    'location': approval.property.location,
+                    'category': approval.property.property_category,
+                    'type': approval.property.property_type,
+                    'location': f"{approval.property.city}, {approval.property.country}" if approval.property.city else approval.property.address or '',
                     'total_value': str(approval.property.total_value),
                     'status': approval.status,
                     'reviewer': {
@@ -92,7 +92,7 @@ class PropertyApprovalListView(APIView):
                     'images_count': approval.property.images.count()
                 })
 
-            return create_success_response(
+            return Response(create_success_response(
                 data={
                     'approvals': approval_data,
                     'pagination': {
@@ -105,18 +105,18 @@ class PropertyApprovalListView(APIView):
                     }
                 },
                 message="Property approvals retrieved successfully"
-            )
+            ))
 
         except ValueError as e:
-            return create_error_response(
+            return Response(create_error_response(
                 message="Invalid parameters provided",
                 status_code=status.HTTP_400_BAD_REQUEST
-            )
+            ), status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return create_error_response(
+            return Response(create_error_response(
                 message="Failed to retrieve property approvals",
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            ), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class PropertyApprovalDetailView(APIView):
@@ -161,15 +161,15 @@ class PropertyApprovalDetailView(APIView):
                     'id': str(property_obj.id),
                     'title': property_obj.title,
                     'description': property_obj.description,
-                    'category': property_obj.category,
-                    'type': property_obj.type,
-                    'location': property_obj.location,
+                    'category': property_obj.property_category,
+                    'type': property_obj.property_type,
+                    'location': f"{property_obj.city}, {property_obj.country}" if property_obj.city else property_obj.address or '',
                     'address': property_obj.address,
                     'total_value': str(property_obj.total_value),
                     'token_price': str(property_obj.token_price),
                     'total_tokens': property_obj.total_tokens,
-                    'expected_annual_return': str(property_obj.expected_annual_return),
-                    'construction_completion_date': property_obj.construction_completion_date.isoformat() if property_obj.construction_completion_date else None,
+                    'expected_annual_return': str(property_obj.expected_return),
+                    'construction_completion_date': property_obj.expected_completion_date.isoformat() if property_obj.expected_completion_date else None,
                     'owner': {
                         'id': str(property_obj.owner.id),
                         'name': f"{property_obj.owner.first_name} {property_obj.owner.last_name}",
@@ -194,16 +194,16 @@ class PropertyApprovalDetailView(APIView):
                 'images': images
             }
 
-            return create_success_response(
+            return Response(create_success_response(
                 data=approval_data,
                 message="Property approval details retrieved successfully"
-            )
+            ))
 
         except Exception as e:
-            return create_error_response(
+            return Response(create_error_response(
                 message="Failed to retrieve property approval details",
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            ), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def post(self, request, property_id):
         """
@@ -218,10 +218,10 @@ class PropertyApprovalDetailView(APIView):
             required_changes = request.data.get('required_changes', '')
 
             if action not in ['approve', 'reject', 'request_changes']:
-                return create_error_response(
+                return Response(create_error_response(
                     message="Invalid action. Must be 'approve', 'reject', or 'request_changes'",
                     status_code=status.HTTP_400_BAD_REQUEST
-                )
+                ), status=status.HTTP_400_BAD_REQUEST)
 
             # Update approval record
             approval.reviewer = request.user
@@ -244,20 +244,20 @@ class PropertyApprovalDetailView(APIView):
             approval.save()
             property_obj.save()
 
-            return create_success_response(
+            return Response(create_success_response(
                 data={
                     'property_id': str(property_obj.id),
                     'new_status': approval.status,
                     'property_status': property_obj.status
                 },
                 message=f"Property {action.replace('_', ' ')}d successfully"
-            )
+            ))
 
         except Exception as e:
-            return create_error_response(
+            return Response(create_error_response(
                 message="Failed to process property approval",
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            ), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class AssignReviewerView(APIView):
@@ -275,10 +275,10 @@ class AssignReviewerView(APIView):
 
             reviewer_id = request.data.get('reviewer_id')
             if not reviewer_id:
-                return create_error_response(
+                return Response(create_error_response(
                     message="Reviewer ID is required",
                     status_code=status.HTTP_400_BAD_REQUEST
-                )
+                ), status=status.HTTP_400_BAD_REQUEST)
 
             reviewer = get_object_or_404(User, id=reviewer_id, role='admin')
 
@@ -286,7 +286,7 @@ class AssignReviewerView(APIView):
             approval.status = 'under_review'
             approval.save()
 
-            return create_success_response(
+            return Response(create_success_response(
                 data={
                     'property_id': str(property_obj.id),
                     'reviewer': {
@@ -296,13 +296,13 @@ class AssignReviewerView(APIView):
                     'status': approval.status
                 },
                 message="Reviewer assigned successfully"
-            )
+            ))
 
         except Exception as e:
-            return create_error_response(
+            return Response(create_error_response(
                 message="Failed to assign reviewer",
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            ), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ApprovalStatsView(APIView):
@@ -380,7 +380,7 @@ class ApprovalStatsView(APIView):
                     'review_count': reviewer['review_count']
                 })
 
-            return create_success_response(
+            return Response(create_success_response(
                 data={
                     'overview': {
                         'total_approvals': total_approvals,
@@ -401,18 +401,18 @@ class ApprovalStatsView(APIView):
                     'top_reviewers': reviewer_stats
                 },
                 message="Approval statistics retrieved successfully"
-            )
+            ))
 
         except ValueError:
-            return create_error_response(
+            return Response(create_error_response(
                 message="Invalid days parameter",
                 status_code=status.HTTP_400_BAD_REQUEST
-            )
+            ), status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return create_error_response(
+            return Response(create_error_response(
                 message="Failed to retrieve approval statistics",
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            ), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class DocumentDownloadView(APIView):
@@ -440,12 +440,12 @@ class DocumentDownloadView(APIView):
             return response
 
         except Http404:
-            return create_error_response(
+            return Response(create_error_response(
                 message="Document not found",
                 status_code=status.HTTP_404_NOT_FOUND
-            )
+            ), status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            return create_error_response(
+            return Response(create_error_response(
                 message="Failed to download document",
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            ), status=status.HTTP_500_INTERNAL_SERVER_ERROR)

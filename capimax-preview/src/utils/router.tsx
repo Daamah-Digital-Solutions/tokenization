@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Route = 'home' | 'login' | 'register' | 'email-verification' | 'code-verification' | 'password-reset' | 'new-password' | 'complete-google-profile' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'marketplace' | 'broker-program' | 'broker-application' | 'wallet' | 'role-management' | 'demo' | 'integration-test' | 'about' | 'contact' | 'partners' | 'liquidity-provider' | 'legal-index' | 'legal-disclaimer' | 'legal-risk-disclosure' | 'legal-compliance' | 'legal-privacy' | 'legal-terms' | 'legal-cookies' | 'legal-aml-kyc' | 'legal-conflicts' | 'legal-complaints' | 'legal-security' | 'how-it-works' | 'tokenization' | 'spv' | 'data-room' | 'investor-guide' | 'secondary-market' | 'risks' | 'faq' | 'property-owner' | 'not-found';
+type Route = 'home' | 'login' | 'register' | 'email-verification' | 'code-verification' | 'password-reset' | 'new-password' | 'complete-google-profile' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'marketplace' | 'broker-program' | 'broker-application' | 'wallet' | 'role-management' | 'demo' | 'integration-test' | 'about' | 'contact' | 'partners' | 'liquidity-provider' | 'legal-index' | 'legal-disclaimer' | 'legal-risk-disclosure' | 'legal-compliance' | 'legal-privacy' | 'legal-terms' | 'legal-cookies' | 'legal-aml-kyc' | 'legal-conflicts' | 'legal-complaints' | 'legal-security' | 'how-it-works' | 'tokenization' | 'spv' | 'data-room' | 'investor-guide' | 'secondary-market' | 'risks' | 'faq' | 'property-owner' | 'why-capimax' | 'structure' | 'document-center' | 'broker-guide' | 'capimax-rt-guide' | 'developer-guide' | 'investment-guide' | 'investment-strategies' | 'lp-guide' | 'owners-guide' | 'technology' | 'not-found';
 
 interface RouterContextType {
   currentRoute: Route;
-  navigate: (route: Route) => void;
+  navigate: (route: Route, params?: Record<string, string>) => void;
   goBack: () => void;
+  getQueryParam: (key: string) => string | null;
 }
 
 const RouterContext = createContext<RouterContextType | undefined>(undefined);
@@ -27,7 +28,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
   children,
   initialRoute = 'home'
 }) => {
-  // Get initial route from current URL path
+  // Get initial route from current URL path (ignoring query params)
   const getInitialRouteFromPath = (): Route => {
     const path = window.location.pathname;
     const routeMap: Record<string, Route> = {
@@ -75,7 +76,18 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       '/secondary-market': 'secondary-market',
       '/risks': 'risks',
       '/faq': 'faq',
-      '/property-owner': 'property-owner'
+      '/property-owner': 'property-owner',
+      '/why-capimax': 'why-capimax',
+      '/structure': 'structure',
+      '/document-center': 'document-center',
+      '/broker-guide': 'broker-guide',
+      '/capimax-rt-guide': 'capimax-rt-guide',
+      '/developer-guide': 'developer-guide',
+      '/investment-guide': 'investment-guide',
+      '/investment-strategies': 'investment-strategies',
+      '/lp-guide': 'lp-guide',
+      '/owners-guide': 'owners-guide',
+      '/technology': 'technology'
     };
     // Return 'not-found' for unknown paths instead of falling back to home
     // This ensures invalid routes show 404 page, not silent redirect to home
@@ -134,7 +146,18 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
         '/secondary-market': 'secondary-market',
         '/risks': 'risks',
         '/faq': 'faq',
-        '/property-owner': 'property-owner'
+        '/property-owner': 'property-owner',
+        '/why-capimax': 'why-capimax',
+        '/structure': 'structure',
+        '/document-center': 'document-center',
+        '/broker-guide': 'broker-guide',
+        '/capimax-rt-guide': 'capimax-rt-guide',
+        '/developer-guide': 'developer-guide',
+        '/investment-guide': 'investment-guide',
+        '/investment-strategies': 'investment-strategies',
+        '/lp-guide': 'lp-guide',
+        '/owners-guide': 'owners-guide',
+        '/technology': 'technology'
       };
 
       // Return 'not-found' for unknown paths - ensures 404 page shows for invalid URLs
@@ -146,7 +169,12 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const navigate = (route: Route) => {
+  const getQueryParam = (key: string): string | null => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(key);
+  };
+
+  const navigate = (route: Route, params?: Record<string, string>) => {
     const pathMap: Record<Route, string> = {
       home: '/',
       login: '/login',
@@ -191,14 +219,32 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       risks: '/risks',
       faq: '/faq',
       'property-owner': '/property-owner',
+      'why-capimax': '/why-capimax',
+      structure: '/structure',
+      'document-center': '/document-center',
+      'broker-guide': '/broker-guide',
+      'capimax-rt-guide': '/capimax-rt-guide',
+      'developer-guide': '/developer-guide',
+      'investment-guide': '/investment-guide',
+      'investment-strategies': '/investment-strategies',
+      'lp-guide': '/lp-guide',
+      'owners-guide': '/owners-guide',
+      technology: '/technology',
       'not-found': '/404'
     };
 
     setCurrentRoute(route);
     setHistory(prev => [...prev, route]);
-    
+
+    // Build URL with optional query parameters
+    let url = pathMap[route];
+    if (params && Object.keys(params).length > 0) {
+      const searchParams = new URLSearchParams(params);
+      url += '?' + searchParams.toString();
+    }
+
     // Update browser URL without full page reload
-    window.history.pushState({ route }, '', pathMap[route]);
+    window.history.pushState({ route }, '', url);
   };
 
   const goBack = () => {
@@ -213,7 +259,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
   };
 
   return (
-    <RouterContext.Provider value={{ currentRoute, navigate, goBack }}>
+    <RouterContext.Provider value={{ currentRoute, navigate, goBack, getQueryParam }}>
       {children}
     </RouterContext.Provider>
   );

@@ -37,6 +37,7 @@ from .services import (
     WalletInvestmentService
 )
 from core.permissions import IsOwnerOrReadOnly, CanInvestWithKYC, IsNotSuspended
+from core.utils import create_success_response, create_error_response
 from core.exceptions import InvestmentError
 
 logger = logging.getLogger(__name__)
@@ -75,10 +76,48 @@ class InvestmentViewSet(viewsets.ModelViewSet):
             return InvestmentCreateSerializer
         return InvestmentSerializer
     
-    def perform_create(self, serializer):
-        """Create investment with user context."""
-        serializer.save(user=self.request.user)
-    
+    def create(self, request, *args, **kwargs):
+        """Create investment and return wrapped response."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            create_success_response(
+                data=InvestmentSerializer(serializer.instance).data,
+                message="Investment created successfully"
+            ),
+            status=status.HTTP_201_CREATED
+        )
+
+    def list(self, request, *args, **kwargs):
+        """List investments and return wrapped response."""
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            paginator = self.paginator
+            return Response(create_success_response(data={
+                'investments': serializer.data,
+                'pagination': {
+                    'page': paginator.page.number,
+                    'limit': paginator.page_size,
+                    'total': paginator.page.paginator.count,
+                    'pages': paginator.page.paginator.num_pages,
+                }
+            }))
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(
+            create_success_response(data={'investments': serializer.data})
+        )
+
+    def retrieve(self, request, *args, **kwargs):
+        """Retrieve single investment and return wrapped response."""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(
+            create_success_response(data=serializer.data)
+        )
+
     @action(detail=False, methods=['post'])
     def calculate(self, request):
         """Calculate investment details before creating investment."""
@@ -320,14 +359,14 @@ class PortfolioViewSet(viewsets.ViewSet):
             investments = Investment.objects.filter(
                 user=request.user,
                 status__in=['active', 'pending']
-            ).select_related('property')
+            ).select_related('property_investment')
 
             # Calculate portfolio metrics
             total_invested = investments.filter(status='active').aggregate(
-                total=Sum('amount')
+                total=Sum('investment_amount')
             )['total'] or 0
 
-            properties_count = investments.values('property').distinct().count()
+            properties_count = investments.values('property_investment').distinct().count()
 
             # Get recent performance
             performance = PortfolioService.get_portfolio_performance(request.user, 30)

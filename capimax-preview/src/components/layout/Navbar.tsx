@@ -32,27 +32,41 @@ export const Navbar: React.FC = () => {
 
   // Public navigation items (not logged in)
   const publicNavItems = [
-    { name: 'Home', route: 'home' as const },
-    { name: 'About Us', route: 'about' as const },
+    { name: 'About', route: 'about' as const },
+    { name: 'Why Capimax RT', route: 'why-capimax' as const },
     { name: 'Properties', route: 'properties' as const },
     { name: 'Secondary Market', route: 'marketplace' as const },
-    { name: 'Our Partners', route: 'partners' as const },
-    { name: 'Broker Program', route: 'broker-program' as const },
-    { name: 'Contact Us', route: 'contact' as const }
+    { name: 'Structure', route: 'structure' as const },
+    { name: 'Document Center', route: 'document-center' as const },
+    { name: 'Support', route: 'contact' as const }
   ];
 
-  // Authenticated navigation items
-  const authNavItems = [
-    { name: 'Home', route: 'home' as const },
-    { name: 'Properties', route: 'properties' as const },
-    { name: 'Secondary Market', route: 'marketplace' as const },
-    { name: 'Dashboard', route: 'dashboard' as const }
-  ];
+  // Authenticated navigation items — role-aware
+  const getAuthNavItems = () => {
+    const items: Array<{ name: string; route: string; params?: Record<string, string> }> = [
+      { name: 'Home', route: 'home' },
+      { name: 'Properties', route: 'properties' },
+    ];
+
+    // Add "My Portfolio" for investors as a direct link
+    if (user?.role === 'investor') {
+      items.push({ name: 'My Portfolio', route: 'dashboard', params: { view: 'portfolio' } });
+    }
+
+    items.push(
+      { name: 'Secondary Market', route: 'marketplace' },
+      { name: 'Document Center', route: 'document-center' },
+      { name: 'Dashboard', route: 'dashboard' }
+    );
+    return items;
+  };
+
+  const authNavItems = getAuthNavItems();
 
   const navItems = isAuthenticated ? authNavItems : publicNavItems;
 
-  const handleNavClick = (route: string) => {
-    navigate(route as any);
+  const handleNavClick = (route: string, params?: Record<string, string>) => {
+    navigate(route as any, params);
     setIsOpen(false);
     setProfileDropdownOpen(false);
   };
@@ -76,17 +90,15 @@ export const Navbar: React.FC = () => {
   };
 
   // Get role-specific dropdown items
-  // Note: Profile, Settings, Portfolio, My Properties, and Referrals all redirect to Dashboard
-  // which handles role-based views. This avoids dead routes while maintaining expected UX.
   const getProfileDropdownItems = () => {
-    const baseItems = [
+    const baseItems: Array<{ name: string; route: string; icon: any; params?: Record<string, string> }> = [
       { name: 'Dashboard', route: 'dashboard', icon: LayoutDashboard },
       { name: 'Wallet', route: 'wallet', icon: Wallet }
     ];
 
-    // Add role-specific dashboard label
+    // Add role-specific dashboard label with appropriate params
     if (user?.role === 'investor') {
-      baseItems[0] = { name: 'My Portfolio', route: 'dashboard', icon: TrendingUp };
+      baseItems[0] = { name: 'My Portfolio', route: 'dashboard', icon: TrendingUp, params: { view: 'portfolio' } };
     } else if (user?.role === 'property_owner') {
       baseItems[0] = { name: 'My Properties', route: 'dashboard', icon: Building2 };
     } else if (user?.role === 'broker') {
@@ -105,27 +117,29 @@ export const Navbar: React.FC = () => {
     >
       <div className="max-w-6xl mx-auto px-6">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <motion.div
+          {/* Logo - click to go home */}
+          <motion.button
             whileHover={{ scale: 1.02 }}
-            className="flex items-center space-x-3"
+            onClick={() => handleNavClick('home')}
+            className="flex items-center space-x-3 cursor-pointer"
+            aria-label="Go to home page"
           >
             <img
               src={theme === 'dark' ? CapiMaxLightLogo : CapiMaxDarkLogo}
               alt="CapiMax"
               className="h-8 w-auto"
             />
-          </motion.div>
+          </motion.button>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
             {navItems.map((item) => (
               <motion.button
                 key={item.name}
-                onClick={() => handleNavClick(item.route)}
+                onClick={() => handleNavClick(item.route, 'params' in item ? (item as any).params : undefined)}
                 whileHover={{ y: -1 }}
                 className={`text-navy-600 dark:text-navy-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium transition-colors duration-200 text-sm ${
-                  currentRoute === item.route ? 'text-emerald-600 dark:text-emerald-400' : ''
+                  currentRoute === item.route && !('params' in item) ? 'text-emerald-600 dark:text-emerald-400' : ''
                 }`}
               >
                 {item.name}
@@ -182,7 +196,7 @@ export const Navbar: React.FC = () => {
                         {getProfileDropdownItems().map((item) => (
                           <button
                             key={item.name}
-                            onClick={() => handleNavClick(item.route)}
+                            onClick={() => handleNavClick(item.route, item.params)}
                             className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-navy-600 dark:text-navy-300 hover:bg-navy-50 dark:hover:bg-navy-700 transition-colors duration-150"
                           >
                             <item.icon className="w-4 h-4" />
@@ -256,10 +270,10 @@ export const Navbar: React.FC = () => {
                 {navItems.map((item) => (
                   <motion.button
                     key={item.name}
-                    onClick={() => handleNavClick(item.route)}
+                    onClick={() => handleNavClick(item.route, 'params' in item ? (item as any).params : undefined)}
                     whileTap={{ scale: 0.98 }}
                     className={`block w-full text-left px-4 py-2 text-navy-600 dark:text-navy-300 hover:bg-navy-100 dark:hover:bg-navy-800 rounded-lg transition-colors duration-200 text-sm font-medium ${
-                      currentRoute === item.route ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : ''
+                      currentRoute === item.route && !('params' in item) ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : ''
                     }`}
                   >
                     {item.name}
@@ -290,7 +304,7 @@ export const Navbar: React.FC = () => {
                       {getProfileDropdownItems().map((item) => (
                         <button
                           key={item.name}
-                          onClick={() => handleNavClick(item.route)}
+                          onClick={() => handleNavClick(item.route, item.params)}
                           className="flex items-center space-x-3 p-2 text-sm text-navy-600 dark:text-navy-300 hover:bg-navy-100 dark:hover:bg-navy-800 rounded-lg transition-colors duration-200"
                         >
                           <item.icon className="w-4 h-4" />

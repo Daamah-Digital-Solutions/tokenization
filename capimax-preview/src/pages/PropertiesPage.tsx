@@ -9,6 +9,7 @@ import { Input } from '../components/design-system/forms/Input';
 import { PropertyCard } from '../components/design-system/cards/PropertyCard';
 import { SearchBar } from '../components/properties/SearchBar';
 import { cn } from '../utils/cn';
+import { useRouter } from '../utils/router';
 import { PropertyService } from '../services/property/PropertyService';
 import type { Property } from '../services/api/types';
 import { InvestmentFlow, type InvestmentProperty, type InvestmentData } from '../components/investment';
@@ -18,6 +19,7 @@ type ViewMode = 'grid' | 'list' | 'map';
 type SortOption = 'featured' | 'price-low' | 'price-high' | 'return-high' | 'return-low' | 'newest' | 'oldest';
 
 export const PropertiesPage: React.FC = () => {
+  const { navigate } = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -470,7 +472,11 @@ export const PropertiesPage: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
-                  <PropertyCard {...property} onInvestClick={() => handleInvestClick(property)} />
+                  <PropertyCard
+                    {...property}
+                    onCardClick={() => navigate('property-detail', { id: property.id })}
+                    onInvestClick={() => handleInvestClick(property)}
+                  />
                 </motion.div>
               ))}
             </motion.div>
@@ -537,7 +543,11 @@ export const PropertiesPage: React.FC = () => {
                           {Math.round((property.tokens_sold / property.total_tokens) * 100)}% funded
                         </div>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate('property-detail', { id: property.id })}
+                          >
                             View Details
                           </Button>
                           <Button

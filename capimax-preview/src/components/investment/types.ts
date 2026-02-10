@@ -43,4 +43,6 @@ export interface InvestmentFlowProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete?: (investment: InvestmentData) => void;
+  onGoToPortfolio?: () => void;
+  initialTokens?: number;
 }

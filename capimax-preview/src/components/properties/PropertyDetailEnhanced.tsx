@@ -46,7 +46,7 @@ interface PropertyDetailEnhancedProps {
   documents?: PropertyDocuments[];
   isUnderConstruction?: boolean;
   constructionProgressData?: any;
-  onInvestClick?: () => void;
+  onInvestClick?: (tokenCount?: number) => void;
   onImageClick?: (index: number) => void;
   currentImageIndex?: number;
 }
@@ -65,7 +65,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
   currentImageIndex: externalImageIndex
 }) => {
   const [internalImageIndex, setInternalImageIndex] = useState(0);
-  const [investmentAmount, setInvestmentAmount] = useState(property.token_price || 500);
+  const [tokenCount, setTokenCount] = useState(1);
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
@@ -117,16 +117,18 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
     }
   };
 
+  const availableTokens = property.total_tokens - property.tokens_sold;
+
   const calculateReturns = () => {
-    const tokens = Math.floor(investmentAmount / property.token_price);
+    const investmentAmount = tokenCount * property.token_price;
     const returnRate = property.expected_return || 10;
     const annualReturn = (investmentAmount * returnRate) / 100;
     const quarterlyDividend = annualReturn / 4;
     const monthlyDividend = annualReturn / 12;
-    return { tokens, annualReturn, quarterlyDividend, monthlyDividend };
+    return { investmentAmount, annualReturn, quarterlyDividend, monthlyDividend };
   };
 
-  const { tokens, annualReturn, quarterlyDividend, monthlyDividend } = calculateReturns();
+  const { investmentAmount, annualReturn, quarterlyDividend, monthlyDividend } = calculateReturns();
 
   // SPV Information (would come from backend in real app)
   const spvInfo = {
@@ -470,23 +472,43 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
 
                   <div className="p-6 space-y-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Investment Amount
-                      </label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                          type="number"
-                          value={investmentAmount}
-                          onChange={(e) => setInvestmentAmount(Number(e.target.value))}
-                          min={property.token_price}
-                          step={property.token_price}
-                          className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                        />
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Number of Tokens
+                        </label>
+                        <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                          {formatCurrency(property.token_price)}/token
+                        </span>
                       </div>
+                      <input
+                        type="number"
+                        value={tokenCount}
+                        onChange={(e) => setTokenCount(Math.max(1, Math.min(Math.floor(Number(e.target.value) || 1), availableTokens)))}
+                        min={1}
+                        max={availableTokens}
+                        step={1}
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-lg font-semibold text-center"
+                      />
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Minimum: {formatCurrency(property.token_price)}
+                        Available: {availableTokens.toLocaleString()} tokens
                       </p>
+                      {/* Quick token select */}
+                      <div className="flex gap-2 mt-2">
+                        {[1, 5, 10, 25].filter(n => n <= availableTokens).map((count) => (
+                          <button
+                            key={count}
+                            onClick={() => setTokenCount(count)}
+                            className={cn(
+                              "flex-1 px-2 py-1.5 text-xs font-medium rounded-lg border transition-all",
+                              tokenCount === count
+                                ? "bg-emerald-100 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300"
+                                : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-750"
+                            )}
+                          >
+                            {count}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-4 rounded-xl">
@@ -494,12 +516,16 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-600 dark:text-gray-400">Tokens:</span>
-                          <span className="font-semibold text-gray-900 dark:text-white">{tokens}</span>
+                          <span className="font-semibold text-gray-900 dark:text-white">{tokenCount}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600 dark:text-gray-400">Total Cost:</span>
+                          <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(investmentAmount)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600 dark:text-gray-400">Ownership:</span>
                           <span className="font-semibold text-gray-900 dark:text-white">
-                            {((tokens / property.total_tokens) * 100).toFixed(4)}%
+                            {((tokenCount / property.total_tokens) * 100).toFixed(4)}%
                           </span>
                         </div>
                         <div className="flex justify-between">
@@ -523,10 +549,9 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                       variant="primary"
                       size="lg"
                       className="w-full"
-                      onClick={onInvestClick}
+                      onClick={() => onInvestClick?.(tokenCount)}
                     >
-                      <DollarSign className="w-4 h-4 mr-2" />
-                      Invest {formatCurrency(investmentAmount)}
+                      Buy {tokenCount} {tokenCount === 1 ? 'Token' : 'Tokens'} — {formatCurrency(investmentAmount)}
                     </Button>
                   </div>
                 </Card>

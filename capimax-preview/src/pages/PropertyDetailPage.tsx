@@ -49,6 +49,7 @@ import type { Property, PropertyDocuments } from '../services/api/types';
 import { PropertyCategory } from '../services/api/types';
 import { PropertyService } from '../services/property/PropertyService';
 import { useAuth } from '../contexts/AuthContext';
+import { useRouter } from '../utils/router';
 import { ConstructionProgress } from '../components/properties/ConstructionProgress';
 import { InstallmentSchedule } from '../components/properties/InstallmentSchedule';
 import { PropertyDetailEnhanced } from '../components/properties/PropertyDetailEnhanced';
@@ -69,14 +70,18 @@ interface PropertyDetailPageProps {
   onBack?: () => void;
 }
 
-export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({ 
-  propertyId,
-  onBack 
+export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
+  propertyId: propertyIdProp,
+  onBack
 }) => {
   const { state } = useAuth();
+  const { navigate } = useRouter();
+  // Read propertyId from prop or fall back to URL query parameter
+  const propertyId = propertyIdProp || new URLSearchParams(window.location.search).get('id') || undefined;
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showInvestmentFlow, setShowInvestmentFlow] = useState(false);
+  const [initialTokens, setInitialTokens] = useState<number>(1);
   
   const [propertyData, setPropertyData] = useState<PropertyDetailData>({
     property: null,
@@ -125,6 +130,31 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
       }));
     }
   };
+
+  // No property ID provided
+  if (!propertyId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-gray-900 dark:to-slate-800">
+        <Navbar />
+        <Container className="py-8 pt-24">
+          <div className="text-center py-16">
+            <div className="w-16 h-16 mx-auto bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mb-4">
+              <Info className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
+            </div>
+            <Text variant="headingLarge" className="mb-2">No Property Selected</Text>
+            <Text variant="body" color="muted" className="mb-6">
+              Please select a property from the properties page to view its details.
+            </Text>
+            <Button variant="primary" onClick={onBack || (() => window.history.back())}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Browse Properties
+            </Button>
+          </div>
+        </Container>
+        <Footer />
+      </div>
+    );
+  }
 
   // Loading state
   if (propertyData.loading) {
@@ -220,8 +250,12 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
 
   const handleInvestmentComplete = (investment: InvestmentData) => {
     console.log('Investment completed:', investment);
-    // In a real app, you would update the portfolio, send to backend, etc.
     setShowInvestmentFlow(false);
+  };
+
+  const handleGoToPortfolio = () => {
+    setShowInvestmentFlow(false);
+    navigate('dashboard', { view: 'portfolio' });
   };
 
   return (
@@ -274,7 +308,10 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
           documents={propertyData.documents}
           isUnderConstruction={isUnderConstruction}
           constructionProgressData={constructionProgressData}
-          onInvestClick={() => setShowInvestmentFlow(true)}
+          onInvestClick={(tokenCount) => {
+            if (tokenCount) setInitialTokens(tokenCount);
+            setShowInvestmentFlow(true);
+          }}
           onImageClick={(index) => setCurrentImageIndex(index)}
           currentImageIndex={currentImageIndex}
         />
@@ -290,6 +327,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
             isOpen={showInvestmentFlow}
             onClose={() => setShowInvestmentFlow(false)}
             onComplete={handleInvestmentComplete}
+            onGoToPortfolio={handleGoToPortfolio}
+            initialTokens={initialTokens}
           />
         </KYCGate>
       )}

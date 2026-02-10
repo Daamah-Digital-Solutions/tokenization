@@ -85,8 +85,9 @@ export class ApiClient {
 
         // Handle 401 Unauthorized
         if (error.response.status === 401) {
+          const hadToken = !!this.authToken;
           this.clearAuthToken();
-          
+
           // Don't retry login/register requests
           if (originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/register')) {
             throw new ApiError(
@@ -96,11 +97,13 @@ export class ApiClient {
             );
           }
 
-          // Redirect to login for other protected routes
-          if (typeof window !== 'undefined') {
+          // Only redirect to login if user was previously authenticated (token expired/invalid)
+          // If no token existed, the caller is accessing a protected endpoint without auth —
+          // let it fail gracefully so public pages can handle optional auth calls
+          if (hadToken && typeof window !== 'undefined') {
             window.location.href = '/login';
           }
-          
+
           throw new ApiError('AUTH_REQUIRED', 'Authentication required. Please login again.');
         }
 

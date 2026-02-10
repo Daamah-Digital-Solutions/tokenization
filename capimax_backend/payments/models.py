@@ -18,6 +18,7 @@ class PaymentMethod(models.TextChoices):
     CREDIT_CARD = 'credit_card', 'Credit Card'
     BANK_TRANSFER = 'bank_transfer', 'Bank Transfer'
     PAYPAL = 'paypal', 'PayPal'
+    WALLET = 'wallet', 'Wallet'
 
 
 class PaymentStatus(models.TextChoices):
