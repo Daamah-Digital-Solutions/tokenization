@@ -129,7 +129,7 @@ export const Footer: React.FC = () => {
           className="py-8 border-t border-navy-200 dark:border-navy-800 flex flex-col md:flex-row justify-between items-center"
         >
           <div className="text-navy-500 dark:text-navy-400 text-sm mb-4 md:mb-0">
-            © 2024 Capimax. All rights reserved.
+            © 2026 Capimax. All rights reserved.
           </div>
 
           {/* Social Links */}
