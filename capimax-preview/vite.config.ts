@@ -12,6 +12,7 @@ export default defineConfig({
       manifest: false, // Use public/manifest.json
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        navigateFallbackDenylist: [/^\/admin/, /^\/api/, /^\/static/, /^\/media/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\./i,
