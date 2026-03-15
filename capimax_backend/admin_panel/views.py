@@ -16,7 +16,13 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 from datetime import datetime, timedelta
 
-from properties.models import Property, PropertyApproval, PropertyDocument
+from rest_framework import generics
+from properties.models import Property, PropertyApproval, PropertyDocument, PropertyValuation
+from properties.serializers import PropertyValuationSerializer
+from payments.models import NovaSukukPayment
+from payments.serializers import NovaSukukAdminSerializer
+from investments.services import InvestmentProcessingService
+from notifications.services import NotificationService
 from core.permissions import IsAdminUser
 from core.utils import create_success_response, create_error_response
 
@@ -449,3 +455,138 @@ class DocumentDownloadView(APIView):
                 message="Failed to download document",
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             ), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class PropertyValuationListView(generics.ListAPIView):
+    """
+    List all valuations for a property (admin only).
+
+    GET /api/v1/admin/properties/{property_id}/valuations/
+    """
+    serializer_class = PropertyValuationSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        property_id = self.kwargs['property_id']
+        return PropertyValuation.objects.filter(
+            property_id=property_id
+        ).order_by('-valuation_date')
+
+
+class NovaSukukListView(generics.ListAPIView):
+    """
+    List all Nova Sukuk payments for admin review.
+
+    GET /api/v1/admin/nova-sukuk/?status=pending
+    """
+    serializer_class = NovaSukukAdminSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        qs = NovaSukukPayment.objects.select_related(
+            'investment', 'investment__user', 'investment__property_investment',
+            'reviewed_by'
+        ).order_by('-created_at')
+        status_filter = self.request.query_params.get('status')
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        return qs
+
+
+class NovaSukukReviewView(APIView):
+    """
+    Approve or reject a Nova Sukuk payment.
+
+    POST /api/v1/admin/nova-sukuk/{id}/review/
+    Body: { "action": "approve" | "reject", "review_note": "..." }
+    """
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, pk):
+        try:
+            sukuk = NovaSukukPayment.objects.select_related(
+                'investment', 'investment__user', 'investment__property_investment', 'payment'
+            ).get(id=pk)
+        except NovaSukukPayment.DoesNotExist:
+            return Response(create_error_response(
+                message="Nova Sukuk payment not found", status_code=404
+            ), status=status.HTTP_404_NOT_FOUND)
+
+        if sukuk.status != 'pending':
+            return Response(create_error_response(
+                message=f"Cannot review a payment with status '{sukuk.status}'", status_code=400
+            ), status=status.HTTP_400_BAD_REQUEST)
+
+        action_type = request.data.get('action')
+        review_note = request.data.get('review_note', '')
+
+        if action_type not in ('approve', 'reject'):
+            return Response(create_error_response(
+                message="Action must be 'approve' or 'reject'", status_code=400
+            ), status=status.HTTP_400_BAD_REQUEST)
+
+        sukuk.reviewed_by = request.user
+        sukuk.reviewed_at = timezone.now()
+        sukuk.review_note = review_note
+
+        investment = sukuk.investment
+        payment = sukuk.payment
+
+        if action_type == 'approve':
+            sukuk.status = 'approved'
+            sukuk.save()
+
+            if payment:
+                payment.status = 'completed'
+                payment.completed_at = timezone.now()
+                payment.save(update_fields=['status', 'completed_at', 'updated_at'])
+
+            InvestmentProcessingService.process_investment(investment, payment)
+
+            NotificationService.create_notification(
+                user=investment.user,
+                title="Nova Sukuk Payment Approved",
+                message=(
+                    f"Your Nova Sukuk payment (Ref: {sukuk.sukuk_reference_number}) "
+                    f"for {investment.property_investment.title} has been approved. "
+                    f"Tokens have been allocated to your account."
+                ),
+                notification_type='payment',
+                priority='high',
+                send_email=True,
+                send_real_time=True,
+            )
+
+            return Response(create_success_response(
+                data=NovaSukukAdminSerializer(sukuk, context={'request': request}).data,
+                message="Nova Sukuk payment approved and investment completed"
+            ))
+
+        else:  # reject
+            sukuk.status = 'rejected'
+            sukuk.save()
+
+            investment.status = 'failed'
+            investment.save(update_fields=['status', 'updated_at'])
+
+            if payment:
+                payment.status = 'failed'
+                payment.save(update_fields=['status', 'updated_at'])
+
+            NotificationService.create_notification(
+                user=investment.user,
+                title="Nova Sukuk Payment Rejected",
+                message=(
+                    f"Your Nova Sukuk payment (Ref: {sukuk.sukuk_reference_number}) "
+                    f"has been rejected. Reason: {review_note or 'No reason provided.'}"
+                ),
+                notification_type='payment',
+                priority='high',
+                send_email=True,
+                send_real_time=True,
+            )
+
+            return Response(create_success_response(
+                data=NovaSukukAdminSerializer(sukuk, context={'request': request}).data,
+                message="Nova Sukuk payment rejected"
+            ))

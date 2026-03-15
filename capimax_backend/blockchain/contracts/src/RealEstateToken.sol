@@ -345,7 +345,8 @@ contract RealEstateToken is ERC1155, Pausable, ReentrancyGuard, AccessControl {
         investors[tokenId][msg.sender].lastDistributionClaim = block.timestamp;
         
         // Transfer rental income (assuming contract holds the funds)
-        payable(msg.sender).transfer(claimAmount);
+        (bool success, ) = payable(msg.sender).call{value: claimAmount}("");
+        require(success, "Transfer failed");
         
         emit RentalIncomeClaimed(tokenId, distributionId, msg.sender, claimAmount);
     }
@@ -378,7 +379,8 @@ contract RealEstateToken is ERC1155, Pausable, ReentrancyGuard, AccessControl {
         investorInfo.hasEarlyExit = true;
         
         // Transfer net amount (assuming contract holds the funds)
-        payable(msg.sender).transfer(netAmount);
+        (bool success, ) = payable(msg.sender).call{value: netAmount}("");
+        require(success, "Transfer failed");
         
         emit EarlyExit(tokenId, msg.sender, tokensToExit, feeAmount);
     }
@@ -609,9 +611,10 @@ contract RealEstateToken is ERC1155, Pausable, ReentrancyGuard, AccessControl {
     function withdrawBalance(address payable to, uint256 amount) external onlyRole(ADMIN_ROLE) {
         require(to != address(0), "Invalid recipient");
         require(amount <= address(this).balance, "Insufficient balance");
-        to.transfer(amount);
+        (bool success, ) = to.call{value: amount}("");
+        require(success, "Transfer failed");
     }
-    
+
     // Fallback functions
     receive() external payable {}
     fallback() external payable {}

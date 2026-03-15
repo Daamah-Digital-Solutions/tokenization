@@ -141,11 +141,10 @@ class PropertyTokenizationService:
                 property_obj.smart_contract_address = token_contract.contract_address
                 property_obj.total_tokens = total_tokens
                 property_obj.token_price = token_price
-                property_obj.is_tokenized = True
-                property_obj.tokenization_date = timezone.now()
+                property_obj.status = 'tokenized'
                 property_obj.save(update_fields=[
                     'smart_contract_address', 'total_tokens', 'token_price',
-                    'is_tokenized', 'tokenization_date'
+                    'status'
                 ])
             
             # Set up rental income distribution for ready properties

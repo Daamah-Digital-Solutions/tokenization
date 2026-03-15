@@ -66,6 +66,14 @@ class PropertyAdmin(admin.ModelAdmin):
         ('Platform Settings', {
             'fields': ('featured', 'smart_contract_address')
         }),
+        ('SPV (Special Purpose Vehicle)', {
+            'fields': (
+                'spv_company_name', 'spv_registration_number',
+                'spv_bank_account_number', 'spv_bank_name',
+                'spv_establishment_date'
+            ),
+            'description': 'Legal entity details for this property. Fill after SPV is legally established.',
+        }),
         ('Computed Fields', {
             'fields': (
                 'tokens_available', 'funding_percentage', 'is_fully_funded',

@@ -31,4 +31,18 @@ urlpatterns = [
     path('documents/<uuid:document_id>/download/',
          views.DocumentDownloadView.as_view(),
          name='document-download'),
+
+    # Valuation history
+    path('properties/<uuid:property_id>/valuations/',
+         views.PropertyValuationListView.as_view(),
+         name='property-valuation-list'),
+
+    # Nova Sukuk admin review
+    path('nova-sukuk/',
+         views.NovaSukukListView.as_view(),
+         name='nova-sukuk-list'),
+
+    path('nova-sukuk/<uuid:pk>/review/',
+         views.NovaSukukReviewView.as_view(),
+         name='nova-sukuk-review'),
 ]

@@ -491,6 +491,21 @@ def nowpayments_ipn_callback(request):
                     description=f"Crypto payment (NOWPayments) - {nowpayments_tx.pay_currency}"
                 )
 
+                # Process linked investment (allocate tokens)
+                if payment.investment:
+                    try:
+                        from investments.services import InvestmentProcessingService
+                        InvestmentProcessingService.process_investment(
+                            payment.investment, payment
+                        )
+                        logger.info(
+                            f"Investment {payment.investment.id} completed via NOWPayments"
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"Failed to process investment {payment.investment.id}: {str(e)}"
+                        )
+
                 # Send notification email
                 try:
                     transaction_details = {

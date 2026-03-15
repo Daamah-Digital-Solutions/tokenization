@@ -36,9 +36,17 @@ from .services import (
     DividendDistributionService, InvestmentRecommendationService,
     WalletInvestmentService
 )
+from rest_framework.parsers import MultiPartParser, FormParser
 from core.permissions import IsOwnerOrReadOnly, CanInvestWithKYC, IsNotSuspended
 from core.utils import create_success_response, create_error_response
 from core.exceptions import InvestmentError
+from payments.models import Payment, PaymentMethod, PaymentStatus, NovaSukukPayment, PronovaPayment
+from payments.serializers import (
+    NovaSukukCreateSerializer, NovaSukukDetailSerializer,
+    PronovaCreateSerializer, PronovaConfirmSerializer, PronovaDetailSerializer
+)
+from properties.models import Property
+from notifications.services import NotificationService
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +62,8 @@ class InvestmentViewSet(viewsets.ModelViewSet):
         Return different permissions based on action.
         Create and wallet_invest require KYC approval.
         """
-        if self.action in ['create', 'wallet_invest', 'validate_wallet_investment']:
+        if self.action in ['create', 'wallet_invest', 'validate_wallet_investment',
+                          'nova_sukuk_invest', 'pronova_invest', 'confirm_pronova']:
             # Financial actions require KYC approval + not suspended
             return [CanInvestWithKYC()]
         elif self.action in ['calculate']:
@@ -342,6 +351,170 @@ class InvestmentViewSet(viewsets.ModelViewSet):
                 'success': False,
                 'error': 'Validation failed'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+    # --- Nova Sukuk Investment ---
+
+    @action(detail=False, methods=['post'], parser_classes=[MultiPartParser, FormParser])
+    def nova_sukuk_invest(self, request):
+        """Create an investment paid via Nova Sukuk (manual PDF review)."""
+        serializer = NovaSukukCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        try:
+            property_obj = Property.objects.get(
+                id=data['property_id'], status__in=['active', 'tokenized']
+            )
+        except Property.DoesNotExist:
+            return Response(create_error_response(
+                message="Property not found or not available for investment",
+                status_code=404
+            ), status=status.HTTP_404_NOT_FOUND)
+
+        available = property_obj.total_tokens - property_obj.tokens_sold
+        if data['token_amount'] > available:
+            return Response(create_error_response(
+                message=f"Only {available} tokens available",
+                status_code=400
+            ), status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+            investment = Investment.objects.create(
+                user=request.user,
+                property_investment=property_obj,
+                token_amount=data['token_amount'],
+                investment_amount=data['investment_amount'],
+                status='pending',
+            )
+
+            payment = Payment.objects.create(
+                user=request.user,
+                investment=investment,
+                amount=data['investment_amount'],
+                payment_method=PaymentMethod.NOVA_SUKUK,
+                status=PaymentStatus.PENDING,
+            )
+
+            sukuk = NovaSukukPayment.objects.create(
+                investment=investment,
+                payment=payment,
+                sukuk_pdf=data['sukuk_pdf'],
+                sukuk_reference_number=data['sukuk_reference_number'],
+            )
+
+        return Response(create_success_response(
+            data={
+                'investment_id': str(investment.id),
+                'sukuk_payment_id': str(sukuk.id),
+                'status': 'pending',
+                'message': 'Your Nova Sukuk payment has been submitted for admin review.'
+            },
+            message="Nova Sukuk investment submitted successfully"
+        ), status=status.HTTP_201_CREATED)
+
+    # --- Pronova Crypto Investment ---
+
+    @action(detail=False, methods=['post'])
+    def pronova_invest(self, request):
+        """Create an investment paid via Pronova crypto (5% discount)."""
+        serializer = PronovaCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        try:
+            property_obj = Property.objects.get(
+                id=data['property_id'], status__in=['active', 'tokenized']
+            )
+        except Property.DoesNotExist:
+            return Response(create_error_response(
+                message="Property not found or not available for investment",
+                status_code=404
+            ), status=status.HTTP_404_NOT_FOUND)
+
+        available = property_obj.total_tokens - property_obj.tokens_sold
+        if data['token_amount'] > available:
+            return Response(create_error_response(
+                message=f"Only {available} tokens available",
+                status_code=400
+            ), status=status.HTTP_400_BAD_REQUEST)
+
+        from django.conf import settings as django_settings
+        pronova_config = getattr(django_settings, 'PRONOVA_CONFIG', {})
+        platform_wallet = pronova_config.get('PLATFORM_WALLET_ADDRESS', '')
+        discount_pct = pronova_config.get('DISCOUNT_PERCENTAGE', Decimal('5.00'))
+
+        original_amount = data['investment_amount']
+        discounted_amount = original_amount * (Decimal('1') - discount_pct / Decimal('100'))
+
+        with transaction.atomic():
+            investment = Investment.objects.create(
+                user=request.user,
+                property_investment=property_obj,
+                token_amount=data['token_amount'],
+                investment_amount=original_amount,
+                status='pending',
+            )
+
+            payment = Payment.objects.create(
+                user=request.user,
+                investment=investment,
+                amount=discounted_amount,
+                payment_method=PaymentMethod.PRONOVA,
+                status=PaymentStatus.PENDING,
+            )
+
+            pronova = PronovaPayment.objects.create(
+                investment=investment,
+                payment=payment,
+                pronova_amount=Decimal('0'),  # Set when user confirms tx
+                usd_equivalent=original_amount,
+                discount_applied=discount_pct,
+                discounted_amount=discounted_amount,
+                platform_wallet_address=platform_wallet,
+            )
+
+        return Response(create_success_response(
+            data={
+                'investment_id': str(investment.id),
+                'pronova_payment_id': str(pronova.id),
+                'platform_wallet_address': platform_wallet,
+                'original_amount': str(original_amount),
+                'discounted_amount': str(discounted_amount),
+                'discount_percentage': str(discount_pct),
+                'status': 'pending',
+            },
+            message="Pronova investment created. Send payment to the platform wallet address."
+        ), status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'])
+    def confirm_pronova(self, request, pk=None):
+        """Confirm a Pronova payment by providing the on-chain tx_hash."""
+        investment = self.get_object()
+        serializer = PronovaConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            pronova = PronovaPayment.objects.get(investment=investment, status='pending')
+        except PronovaPayment.DoesNotExist:
+            return Response(create_error_response(
+                message="No pending Pronova payment found for this investment",
+                status_code=404
+            ), status=status.HTTP_404_NOT_FOUND)
+
+        pronova.tx_hash = serializer.validated_data['tx_hash']
+        pronova.sender_wallet_address = serializer.validated_data['sender_wallet_address']
+        pronova.status = 'confirming'
+        pronova.save(update_fields=['tx_hash', 'sender_wallet_address', 'status', 'updated_at'])
+
+        # Trigger async verification task
+        from payments.tasks import verify_pronova_transaction
+        verify_pronova_transaction.delay(str(pronova.id))
+
+        return Response(create_success_response(
+            data=PronovaDetailSerializer(pronova).data,
+            message="Transaction hash submitted. Verification in progress."
+        ))
 
 
 class PortfolioViewSet(viewsets.ViewSet):

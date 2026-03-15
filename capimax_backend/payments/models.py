@@ -19,6 +19,8 @@ class PaymentMethod(models.TextChoices):
     BANK_TRANSFER = 'bank_transfer', 'Bank Transfer'
     PAYPAL = 'paypal', 'PayPal'
     WALLET = 'wallet', 'Wallet'
+    NOVA_SUKUK = 'nova_sukuk', 'Nova Sukuk'
+    PRONOVA = 'pronova', 'Pronova'
 
 
 class PaymentStatus(models.TextChoices):
@@ -1657,3 +1659,85 @@ class NOWPaymentsTransaction(models.Model):
     def is_failed(self):
         """Check if payment failed."""
         return self.payment_status in ['failed', 'expired']
+
+
+class NovaSukukPayment(models.Model):
+    """Nova Sukuk payment — investor uploads a Sukuk PDF for manual admin review."""
+
+    SUKUK_STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    investment = models.ForeignKey(
+        'investments.Investment', on_delete=models.CASCADE,
+        related_name='nova_sukuk_payments'
+    )
+    payment = models.ForeignKey(
+        'payments.Payment', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='nova_sukuk_detail'
+    )
+    sukuk_pdf = models.FileField(upload_to='nova_sukuk_documents/')
+    sukuk_reference_number = models.CharField(max_length=100)
+    status = models.CharField(max_length=20, choices=SUKUK_STATUS_CHOICES, default='pending')
+    reviewed_by = models.ForeignKey(
+        'accounts.User', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='reviewed_sukuk_payments'
+    )
+    review_note = models.TextField(blank=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"NovaSukuk #{self.sukuk_reference_number} - {self.status}"
+
+
+class PronovaPayment(models.Model):
+    """Pronova crypto payment with automatic 5% discount and on-chain verification."""
+
+    PRONOVA_STATUS_CHOICES = [
+        ('pending', 'Pending Payment'),
+        ('confirming', 'Confirming on Chain'),
+        ('confirmed', 'Confirmed'),
+        ('failed', 'Failed'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    investment = models.ForeignKey(
+        'investments.Investment', on_delete=models.CASCADE,
+        related_name='pronova_payments'
+    )
+    payment = models.ForeignKey(
+        'payments.Payment', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='pronova_detail'
+    )
+    pronova_amount = models.DecimalField(max_digits=18, decimal_places=8)
+    usd_equivalent = models.DecimalField(max_digits=12, decimal_places=2)
+    discount_applied = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal('5.00'),
+        help_text="Discount percentage applied (default 5%)"
+    )
+    discounted_amount = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        help_text="USD amount after discount"
+    )
+    tx_hash = models.CharField(max_length=66, blank=True)
+    platform_wallet_address = models.CharField(max_length=42)
+    sender_wallet_address = models.CharField(max_length=42, blank=True)
+    status = models.CharField(max_length=20, choices=PRONOVA_STATUS_CHOICES, default='pending')
+    confirmations = models.PositiveIntegerField(default=0)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Pronova {self.pronova_amount} - {self.status}"

@@ -369,8 +369,8 @@ class PropertyOwnerActivityFeedView(APIView):
             })
 
         # Get installment payments
-        from properties.models import InstallmentPayment
-        recent_installments = InstallmentPayment.objects.filter(
+        from properties.models import ConstructionInstallment
+        recent_installments = ConstructionInstallment.objects.filter(
             property_investment__in=user_properties,
             updated_at__gte=recent_date,
             payments_made__gt=0

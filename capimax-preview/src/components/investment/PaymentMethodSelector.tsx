@@ -12,7 +12,8 @@ import {
   Info,
   AlertCircle,
   Star,
-  DollarSign
+  DollarSign,
+  FileText
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card } from '../design-system/cards/Card';
@@ -38,6 +39,7 @@ interface PaymentMethodOption {
   processingTime: string;
   recommended?: boolean;
   popular?: boolean;
+  discount?: string;
 }
 
 const PAYMENT_METHODS: PaymentMethodOption[] = [
@@ -75,6 +77,24 @@ const PAYMENT_METHODS: PaymentMethodOption[] = [
     fee: 'Free (ACH)',
     processingTime: '1-3 business days',
   },
+  {
+    id: 'nova_sukuk',
+    name: 'Nova Sukuk',
+    description: 'Pay with Nova Sukuk certificate - upload PDF for admin review',
+    icon: FileText,
+    fee: 'Free',
+    processingTime: '1-2 business days',
+  },
+  {
+    id: 'pronova',
+    name: 'Pronova',
+    description: 'Pay with Pronova crypto on BNB Smart Chain - get 5% discount!',
+    icon: Coins,
+    fee: 'Free',
+    processingTime: '5-15 minutes',
+    recommended: true,
+    discount: '5% OFF',
+  },
 ];
 
 export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
@@ -94,7 +114,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
 
     // Update the investment data with the selected payment method
     onUpdate({
-      paymentMethod: methodId as 'crypto' | 'fiat' | 'wallet',
+      paymentMethod: methodId as 'crypto' | 'fiat' | 'wallet' | 'nova_sukuk' | 'pronova',
     });
   };
 
@@ -116,7 +136,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
 
     // Update investment data with payment completion
     onUpdate({
-      paymentMethod: selectedMethod as 'crypto' | 'fiat' | 'wallet',
+      paymentMethod: selectedMethod as 'crypto' | 'fiat' | 'wallet' | 'nova_sukuk' | 'pronova',
       paymentId: paymentId,
       paymentStatus: 'pending'
     });
@@ -168,6 +188,10 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
         return 0; // Free
       case 'wallet':
         return 0; // Free
+      case 'nova_sukuk':
+        return 0; // Free
+      case 'pronova':
+        return -(investmentData.amount * 0.05); // 5% discount
       default:
         return 0;
     }
@@ -211,6 +235,11 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
                 {/* Badges */}
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex gap-2">
+                    {method.discount && (
+                      <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full font-bold">
+                        {method.discount}
+                      </span>
+                    )}
                     {method.recommended && (
                       <span className="px-2 py-1 text-xs bg-emerald-100 text-emerald-800 rounded-full font-medium">
                         Recommended
@@ -235,6 +264,8 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
                     method.id === 'crypto' ? 'bg-orange-100' :
                     method.id === 'fiat' ? 'bg-blue-100' :
                     method.id === 'bank' ? 'bg-emerald-100' :
+                    method.id === 'nova_sukuk' ? 'bg-indigo-100' :
+                    method.id === 'pronova' ? 'bg-yellow-100' :
                     'bg-purple-100'
                   )}>
                     <method.icon className={cn(
@@ -242,6 +273,8 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
                       method.id === 'crypto' ? 'text-orange-600' :
                       method.id === 'fiat' ? 'text-blue-600' :
                       method.id === 'bank' ? 'text-emerald-600' :
+                      method.id === 'nova_sukuk' ? 'text-indigo-600' :
+                      method.id === 'pronova' ? 'text-yellow-600' :
                       'text-purple-600'
                     )} />
                   </div>
@@ -261,9 +294,11 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
                   <div>
                     <div className="flex items-center gap-1 text-gray-600 mb-1">
                       <DollarSign className="h-3 w-3" />
-                      <span>Fee</span>
+                      <span>{fee < 0 ? 'Discount' : 'Fee'}</span>
                     </div>
-                    <div className="font-medium">${fee.toFixed(2)}</div>
+                    <div className={cn("font-medium", fee < 0 && "text-emerald-600")}>
+                      {fee < 0 ? `-$${Math.abs(fee).toFixed(2)}` : `$${fee.toFixed(2)}`}
+                    </div>
                     <div className="text-xs text-gray-500">{method.fee}</div>
                   </div>
 

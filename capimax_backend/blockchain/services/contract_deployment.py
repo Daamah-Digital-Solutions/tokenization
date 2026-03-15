@@ -409,121 +409,50 @@ class ContractDeploymentService:
             return False
     
     def _load_contract_artifacts(self) -> Dict[str, Dict]:
-        """Load compiled contract artifacts (ABI, bytecode, etc.)."""
+        """Load compiled contract artifacts (ABI, bytecode) from Hardhat build output."""
         artifacts = {}
-        
+        contracts_dir = Path(__file__).resolve().parent.parent / 'contracts' / 'artifacts' / 'src'
+
+        contract_files = {
+            'RealEstateToken': contracts_dir / 'RealEstateToken.sol' / 'RealEstateToken.json',
+            'RentalIncomeDistributor': contracts_dir / 'RentalIncomeDistributor.sol' / 'RentalIncomeDistributor.json',
+            'PropertyContractFactory': contracts_dir / 'PropertyContractFactory.sol' / 'PropertyContractFactory.json',
+        }
+
         try:
-            # In a real implementation, these would be loaded from compiled contract files
-            # For now, we'll return basic structures
-            
-            artifacts['RealEstateToken'] = {
-                'abi': self._get_real_estate_token_abi(),
-                'bytecode': self._get_real_estate_token_bytecode(),
-                'source_code': '',
-                'compiler_version': '0.8.19'
-            }
-            
-            artifacts['RentalIncomeDistributor'] = {
-                'abi': self._get_rental_distributor_abi(),
-                'bytecode': self._get_rental_distributor_bytecode(),
-                'source_code': '',
-                'compiler_version': '0.8.19'
-            }
-            
-            artifacts['PropertyContractFactory'] = {
-                'abi': self._get_factory_abi(),
-                'bytecode': self._get_factory_bytecode(),
-                'source_code': '',
-                'compiler_version': '0.8.19'
-            }
-            
-            logger.info("Loaded contract artifacts")
+            for name, artifact_path in contract_files.items():
+                if artifact_path.exists():
+                    with open(artifact_path, 'r') as f:
+                        artifact = json.load(f)
+                    artifacts[name] = {
+                        'abi': artifact.get('abi', []),
+                        'bytecode': artifact.get('bytecode', ''),
+                        'source_code': '',
+                        'compiler_version': '0.8.19'
+                    }
+                    logger.info(f"Loaded artifact for {name} from {artifact_path}")
+                else:
+                    logger.warning(
+                        f"Artifact not found for {name} at {artifact_path}. "
+                        f"Run 'npx hardhat compile' in the blockchain directory first."
+                    )
+
+            if not artifacts:
+                logger.error(
+                    "No contract artifacts found. Compile contracts with: "
+                    "cd capimax_backend/blockchain && npx hardhat compile"
+                )
+
             return artifacts
-            
+
         except Exception as e:
             logger.error(f"Error loading contract artifacts: {str(e)}")
             return {}
-    
+
     def _generate_property_uri(self, property_obj: Property) -> str:
         """Generate metadata URI for property NFT."""
-        # In a real implementation, this would generate IPFS URI or API endpoint
         base_url = getattr(settings, 'PROPERTY_METADATA_BASE_URL', 'https://api.capimax.com/metadata/')
         return f"{base_url}property/{property_obj.id}"
-    
-    # Placeholder methods for contract ABIs and bytecode
-    # In a real implementation, these would load from compiled contract files
-    
-    def _get_real_estate_token_abi(self) -> List[Dict]:
-        """Get Real Estate Token contract ABI."""
-        return [
-            {
-                "inputs": [
-                    {"internalType": "string", "name": "uri", "type": "string"},
-                    {"internalType": "address[]", "name": "_owners", "type": "address[]"},
-                    {"internalType": "uint256", "name": "_requiredConfirmations", "type": "uint256"}
-                ],
-                "stateMutability": "nonpayable",
-                "type": "constructor"
-            },
-            {
-                "inputs": [
-                    {"internalType": "uint256", "name": "totalSupply", "type": "uint256"},
-                    {"internalType": "uint8", "name": "category", "type": "uint8"},
-                    {"internalType": "uint256", "name": "tokenPrice", "type": "uint256"},
-                    {"internalType": "uint256", "name": "lockupPeriod", "type": "uint256"},
-                    {"internalType": "uint256", "name": "earlyExitFeeRate", "type": "uint256"},
-                    {"internalType": "uint256", "name": "rentalYieldRate", "type": "uint256"},
-                    {"internalType": "address", "name": "propertyManager", "type": "address"},
-                    {"internalType": "string", "name": "propertyURI", "type": "string"}
-                ],
-                "name": "createProperty",
-                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
-                "name": "activateProperty",
-                "outputs": [],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            }
-            # Add more ABI entries as needed
-        ]
-    
-    def _get_real_estate_token_bytecode(self) -> str:
-        """Get Real Estate Token contract bytecode."""
-        return "0x608060405234801561001057600080fd5b50..."  # Placeholder
-    
-    def _get_rental_distributor_abi(self) -> List[Dict]:
-        """Get Rental Income Distributor contract ABI."""
-        return [
-            {
-                "inputs": [
-                    {"internalType": "address", "name": "_realEstateToken", "type": "address"},
-                    {"internalType": "address", "name": "_platformTreasury", "type": "address"},
-                    {"internalType": "address[]", "name": "_supportedTokenAddresses", "type": "address[]"},
-                    {"internalType": "uint8[]", "name": "_tokenTypes", "type": "uint8[]"}
-                ],
-                "stateMutability": "nonpayable",
-                "type": "constructor"
-            }
-            # Add more ABI entries as needed
-        ]
-    
-    def _get_rental_distributor_bytecode(self) -> str:
-        """Get Rental Income Distributor contract bytecode."""
-        return "0x608060405234801561001057600080fd5b50..."  # Placeholder
-    
-    def _get_factory_abi(self) -> List[Dict]:
-        """Get Property Contract Factory ABI."""
-        return [
-            # Factory contract ABI would go here
-        ]
-    
-    def _get_factory_bytecode(self) -> str:
-        """Get Property Contract Factory bytecode."""
-        return "0x608060405234801561001057600080fd5b50..."  # Placeholder
 
 
 class ContractUpgradeService:

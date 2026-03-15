@@ -151,7 +151,7 @@ contract RentalIncomeDistributor is ReentrancyGuard, AccessControl, Pausable {
         require(_platformTreasuryAddr != address(0), "Invalid platform treasury address");
         require(_supportedTokenAddresses.length == _tokenTypes.length, "Mismatched token arrays");
         
-        _realEstateToken = RealEstateToken(_realEstateTokenAddr);
+        _realEstateToken = RealEstateToken(payable(_realEstateTokenAddr));
         _platformTreasury = _platformTreasuryAddr;
         
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -466,7 +466,8 @@ contract RentalIncomeDistributor is ReentrancyGuard, AccessControl, Pausable {
         
         if (token == address(0)) {
             require(amount <= address(this).balance, "Insufficient ETH balance");
-            payable(recipient).transfer(amount);
+            (bool success, ) = payable(recipient).call{value: amount}("");
+            require(success, "ETH transfer failed");
         } else {
             IERC20 tokenContract = IERC20(token);
             require(amount <= tokenContract.balanceOf(address(this)), "Insufficient token balance");
@@ -516,7 +517,8 @@ contract RentalIncomeDistributor is ReentrancyGuard, AccessControl, Pausable {
         if (tokenAddress == address(0)) {
             // Transfer ETH
             require(address(this).balance >= amount, "Insufficient ETH balance");
-            payable(to).transfer(amount);
+            (bool success, ) = payable(to).call{value: amount}("");
+            require(success, "ETH transfer failed");
         } else {
             // Transfer ERC20 token
             IERC20 token = IERC20(tokenAddress);

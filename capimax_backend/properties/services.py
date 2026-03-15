@@ -15,7 +15,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 
-from .models import InstallmentPayment, Property, RentalIncomeDistribution
+from .models import ConstructionInstallment, Property, RentalIncomeDistribution
 from accounts.models import User
 from payments.models import Payment, PaymentStatus, UserPaymentMethod, WalletBalance
 from investments.models import Investment
@@ -57,7 +57,7 @@ class InstallmentProcessingService:
         today = timezone.now().date()
         
         # Get all due installment payments
-        due_payments = InstallmentPayment.objects.filter(
+        due_payments = ConstructionInstallment.objects.filter(
             next_payment_date__lte=today,
             status='pending',
             payments_made__lt=models.F('total_installments')
@@ -114,12 +114,12 @@ class InstallmentProcessingService:
         return results
     
     @transaction.atomic
-    def _process_single_installment(self, installment: InstallmentPayment) -> Dict[str, Any]:
+    def _process_single_installment(self, installment: ConstructionInstallment) -> Dict[str, Any]:
         """
         Process a single installment payment.
         
         Args:
-            installment: InstallmentPayment instance to process
+            installment: ConstructionInstallment instance to process
             
         Returns:
             Dictionary with processing result
@@ -216,14 +216,14 @@ class InstallmentProcessingService:
     @transaction.atomic
     def _collect_installment_payment(
         self, 
-        installment: InstallmentPayment, 
+        installment: ConstructionInstallment, 
         payment_method: UserPaymentMethod
     ) -> Dict[str, Any]:
         """
         Collect payment for an installment using the specified payment method.
         
         Args:
-            installment: InstallmentPayment instance
+            installment: ConstructionInstallment instance
             payment_method: UserPaymentMethod to use for payment
             
         Returns:
@@ -292,14 +292,14 @@ class InstallmentProcessingService:
     
     def _release_tokens_to_investor(
         self, 
-        installment: InstallmentPayment, 
+        installment: ConstructionInstallment, 
         token_count: int
     ) -> Dict[str, Any]:
         """
         Release tokens to investor's wallet via blockchain.
         
         Args:
-            installment: InstallmentPayment instance
+            installment: ConstructionInstallment instance
             token_count: Number of tokens to release
             
         Returns:
@@ -363,7 +363,7 @@ class InstallmentProcessingService:
         """
         reminder_date = timezone.now().date() + timedelta(days=days_before_due)
         
-        upcoming_payments = InstallmentPayment.objects.filter(
+        upcoming_payments = ConstructionInstallment.objects.filter(
             next_payment_date=reminder_date,
             status='pending',
             payments_made__lt=models.F('total_installments')
@@ -409,7 +409,7 @@ class InstallmentProcessingService:
         today = timezone.now().date()
         
         # Find overdue payments
-        overdue_payments = InstallmentPayment.objects.filter(
+        overdue_payments = ConstructionInstallment.objects.filter(
             status='pending',
             payments_made__lt=models.F('total_installments')
         ).select_related('investor', 'property_investment')
@@ -451,7 +451,7 @@ class InstallmentProcessingService:
         
         return results
     
-    def _apply_late_fee(self, installment: InstallmentPayment) -> bool:
+    def _apply_late_fee(self, installment: ConstructionInstallment) -> bool:
         """Apply late payment fee to installment."""
         try:
             # In a production system, you'd track late fees more precisely
@@ -475,7 +475,7 @@ class InstallmentProcessingService:
             logger.error(f"Error applying late fee for installment {installment.id}: {e}")
             return False
     
-    def _handle_severely_overdue_payment(self, installment: InstallmentPayment):
+    def _handle_severely_overdue_payment(self, installment: ConstructionInstallment):
         """Handle payments that are severely overdue."""
         try:
             # Cancel the installment plan
@@ -512,7 +512,7 @@ class InstallmentProcessingService:
         except Exception as e:
             logger.error(f"Error handling overdue payment {installment.id}: {e}")
     
-    def _send_payment_reminder_notification(self, installment: InstallmentPayment, days_before: int):
+    def _send_payment_reminder_notification(self, installment: ConstructionInstallment, days_before: int):
         """Send payment reminder notification to investor."""
         Notification.objects.create(
             user=installment.investor,
@@ -525,7 +525,7 @@ class InstallmentProcessingService:
             action_label="View Installment Details"
         )
     
-    def _send_payment_success_notification(self, installment: InstallmentPayment, amount_paid: Decimal):
+    def _send_payment_success_notification(self, installment: ConstructionInstallment, amount_paid: Decimal):
         """Send payment success notification to investor."""
         tokens_message = ""
         if installment.graduated_release and installment.tokens_per_payment:
@@ -542,7 +542,7 @@ class InstallmentProcessingService:
             action_label="View Installment Details"
         )
     
-    def _send_payment_failure_notification(self, installment: InstallmentPayment, error_message: str):
+    def _send_payment_failure_notification(self, installment: ConstructionInstallment, error_message: str):
         """Send payment failure notification to investor."""
         Notification.objects.create(
             user=installment.investor,
@@ -555,7 +555,7 @@ class InstallmentProcessingService:
             action_label="Update Payment Method"
         )
     
-    def _send_late_payment_notification(self, installment: InstallmentPayment):
+    def _send_late_payment_notification(self, installment: ConstructionInstallment):
         """Send late payment notification to investor."""
         Notification.objects.create(
             user=installment.investor,

@@ -16,7 +16,7 @@ from django.db import transaction
 from django.conf import settings
 
 from .services import InstallmentProcessingService
-from .models import InstallmentPayment, Property
+from .models import ConstructionInstallment, Property
 from notifications.models import SystemAlert
 
 logger = logging.getLogger(__name__)
@@ -193,7 +193,7 @@ def process_installment_payment(self, installment_id: str) -> Dict[str, Any]:
     Process a specific installment payment (for manual/immediate processing).
     
     Args:
-        installment_id: UUID of the InstallmentPayment to process
+        installment_id: UUID of the ConstructionInstallment to process
         
     Returns:
         Dictionary with processing result
@@ -201,7 +201,7 @@ def process_installment_payment(self, installment_id: str) -> Dict[str, Any]:
     try:
         logger.info(f"Processing individual installment payment: {installment_id}")
         
-        installment = InstallmentPayment.objects.get(id=installment_id)
+        installment = ConstructionInstallment.objects.get(id=installment_id)
         service = InstallmentProcessingService()
         
         result = service._process_single_installment(installment)
@@ -213,8 +213,8 @@ def process_installment_payment(self, installment_id: str) -> Dict[str, Any]:
         
         return result
         
-    except InstallmentPayment.DoesNotExist:
-        error_msg = f"InstallmentPayment with id {installment_id} not found"
+    except ConstructionInstallment.DoesNotExist:
+        error_msg = f"ConstructionInstallment with id {installment_id} not found"
         logger.error(error_msg)
         return {
             'success': False,
@@ -242,14 +242,14 @@ def send_payment_reminder(self, installment_id: str, days_before: int = 3) -> Di
     Send payment reminder for a specific installment.
     
     Args:
-        installment_id: UUID of the InstallmentPayment
+        installment_id: UUID of the ConstructionInstallment
         days_before: Number of days before due date
         
     Returns:
         Dictionary with reminder result
     """
     try:
-        installment = InstallmentPayment.objects.select_related(
+        installment = ConstructionInstallment.objects.select_related(
             'investor', 'property_investment'
         ).get(id=installment_id)
         
@@ -264,8 +264,8 @@ def send_payment_reminder(self, installment_id: str, days_before: int = 3) -> Di
             'recipient': installment.investor.email
         }
         
-    except InstallmentPayment.DoesNotExist:
-        error_msg = f"InstallmentPayment with id {installment_id} not found"
+    except ConstructionInstallment.DoesNotExist:
+        error_msg = f"ConstructionInstallment with id {installment_id} not found"
         logger.error(error_msg)
         return {
             'success': False,
@@ -292,13 +292,13 @@ def release_tokens_for_completed_installment(self, installment_id: str) -> Dict[
     and uses non-graduated release (tokens released at completion).
     
     Args:
-        installment_id: UUID of the completed InstallmentPayment
+        installment_id: UUID of the completed ConstructionInstallment
         
     Returns:
         Dictionary with token release result
     """
     try:
-        installment = InstallmentPayment.objects.select_related(
+        installment = ConstructionInstallment.objects.select_related(
             'investor', 'property_investment'
         ).get(id=installment_id)
         
@@ -345,8 +345,8 @@ def release_tokens_for_completed_installment(self, installment_id: str) -> Dict[
             'blockchain_tx': result.get('transaction_hash')
         }
         
-    except InstallmentPayment.DoesNotExist:
-        error_msg = f"InstallmentPayment with id {installment_id} not found"
+    except ConstructionInstallment.DoesNotExist:
+        error_msg = f"ConstructionInstallment with id {installment_id} not found"
         logger.error(error_msg)
         return {
             'success': False,
@@ -511,7 +511,7 @@ def test_installment_processing() -> str:
     """Test task for verifying installment processing system."""
     try:
         # Count pending installments
-        pending_count = InstallmentPayment.objects.filter(
+        pending_count = ConstructionInstallment.objects.filter(
             status='pending',
             next_payment_date__lte=timezone.now().date()
         ).count()

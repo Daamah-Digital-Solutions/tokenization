@@ -165,7 +165,7 @@ def _execute_blockchain_mint(investment: Investment) -> dict:
         user = investment.user
 
         # Check if property is tokenized
-        if not getattr(property_obj, 'is_tokenized', False) or not getattr(property_obj, 'smart_contract_address', None):
+        if property_obj.status != 'tokenized' or not getattr(property_obj, 'smart_contract_address', None):
             return {
                 'success': False,
                 'error': 'Property is not tokenized or missing contract address'

@@ -233,6 +233,69 @@ Perfect for diversified real estate investment portfolio.''',
     return property_obj
 
 
+def create_construction_property(owner_user):
+    """Create an under-construction property for demo"""
+    print("Creating under-construction property...")
+
+    property_obj, created = Property.objects.get_or_create(
+        title="Marina Bay Waterfront Residences",
+        defaults={
+            'description': '''Premium waterfront residential development currently under construction.
+
+Features:
+• 200 luxury waterfront units with marina views
+• Private marina access and yacht club membership
+• Rooftop infinity pool and sky lounge
+• Smart home technology throughout
+• Expected completion: Q1 2027
+• Construction progress: 35%
+
+Early-stage investment opportunity in a high-growth waterfront district with projected strong capital appreciation upon completion.''',
+
+            'owner': owner_user,
+            'property_type': 'residential',
+            'property_category': PropertyCategory.UNDER_CONSTRUCTION,
+            'status': PropertyStatus.ACTIVE,
+
+            # Financial details
+            'total_value': Decimal('4200000.00'),
+            'token_price': Decimal('120.00'),
+            'total_tokens': 35000,
+            'tokens_sold': 0,
+            'expected_return': Decimal('12.50'),
+            'rental_yield': Decimal('0.00'),
+            'minimum_investment': Decimal('1200.00'),
+
+            # Construction-specific
+            'rental_income_active': False,
+            'monthly_rental_income': Decimal('0.00'),
+            'occupancy_rate': Decimal('0.00'),
+            'expected_completion_date': (timezone.now() + timedelta(days=365)).date(),
+            'construction_progress': Decimal('35.00'),
+
+            # Location
+            'address': '100 Marina Bay Drive, Waterfront District',
+            'city': 'Dubai',
+            'state': 'Dubai',
+            'country': 'United Arab Emirates',
+            'latitude': Decimal('25.2048'),
+            'longitude': Decimal('55.2708'),
+
+            # Property details
+            'property_size': Decimal('120000.00'),
+            'year_built': None,
+            'featured': True,
+
+            'created_at': timezone.now() - timedelta(days=15)
+        }
+    )
+
+    print(f"Created construction property: {property_obj.title}")
+    print(f"   Construction Progress: {property_obj.construction_progress}%")
+    print(f"   Expected Completion: {property_obj.expected_completion_date}")
+    return property_obj
+
+
 def simulate_investments(investor_user, owner_user, luxury_property):
     """Simulate the investment transactions for the demo scenario"""
     print("Simulating investment transactions...")
@@ -540,6 +603,7 @@ def main():
         # Step 3: Create properties
         luxury_property = create_luxury_property(owner_user)
         secondary_property = create_secondary_property(owner_user)
+        construction_property = create_construction_property(owner_user)
 
         # Step 4: Simulate transactions
         investment1, investment2 = simulate_investments(investor_user, owner_user, luxury_property)

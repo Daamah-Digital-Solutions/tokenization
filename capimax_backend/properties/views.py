@@ -26,13 +26,14 @@ from typing import Dict, Any, List
 import logging
 
 from core.permissions import IsOwnerOrReadOnly, AdminOrReadOnly
-from core.utils import get_client_ip, CustomPagination
+from core.utils import get_client_ip, CustomPagination, calculate_token_price
 from core.services.email_service import EmailService
+from notifications.services import NotificationService
 from .models import (
     Property, PropertyImage, PropertyDocument, PropertyUpdate,
     PropertySubscription, PropertyReview, PropertyValuation,
     PropertyAnalytics, PropertyViewLog, PropertyApproval,
-    PropertyMarketData, PropertyStatus, PropertyType, InstallmentPayment,
+    PropertyMarketData, PropertyStatus, PropertyType, ConstructionInstallment,
     RentalIncomeDistribution
 )
 from .serializers import (
@@ -42,8 +43,8 @@ from .serializers import (
     PropertyUpdateSerializer,
     PropertySubscriptionSerializer, PropertyReviewSerializer,
     PropertyValuationSerializer, PropertyAnalyticsSerializer,
-    PropertySearchSerializer, InstallmentPaymentSerializer,
-    InstallmentPaymentCreateSerializer, InstallmentPaymentUpdateSerializer,
+    PropertySearchSerializer, ConstructionInstallmentSerializer,
+    ConstructionInstallmentCreateSerializer, ConstructionInstallmentUpdateSerializer,
     RentalIncomeDistributionSerializer, RentalIncomeDistributionDetailSerializer
 )
 from investments.models import Investment
@@ -220,7 +221,7 @@ class PropertyViewSet(ModelViewSet):
             try:
                 property_details = {
                     'title': property_obj.title,
-                    'location': property_obj.location,
+                    'location': f"{property_obj.city}, {property_obj.country}",
                     'property_type': property_obj.property_type,
                     'estimated_value': str(property_obj.total_value),
                     'square_footage': str(property_obj.square_footage) if property_obj.square_footage else 'N/A',
@@ -853,7 +854,52 @@ class PropertyValuationCreateView(generics.CreateAPIView):
                 "Only property owner or admin can create valuations."
             )
         
-        serializer.save(property=property_obj)
+        valuation = serializer.save(property=property_obj)
+
+        # Auto-update property token price based on new valuation
+        old_price = property_obj.token_price
+        property_obj.total_value = valuation.current_value
+        property_obj.token_price = calculate_token_price(
+            property_obj.total_value, property_obj.total_tokens
+        )
+        property_obj.save(update_fields=['total_value', 'token_price', 'updated_at'])
+        new_price = property_obj.token_price
+
+        # Notify all investors who hold tokens in this property
+        investor_ids = Investment.objects.filter(
+            property_investment=property_obj,
+            status='completed'
+        ).values_list('user', flat=True).distinct()
+
+        for user_id in investor_ids:
+            try:
+                from accounts.models import User
+                investor = User.objects.get(id=user_id)
+                NotificationService.create_notification(
+                    user=investor,
+                    title=f"Price Update: {property_obj.title}",
+                    message=(
+                        f"The token price for {property_obj.title} has been updated "
+                        f"from ${old_price} to ${new_price} based on a new property valuation."
+                    ),
+                    notification_type='property',
+                    priority='high',
+                    send_email=True,
+                    send_real_time=True,
+                    content_object=property_obj,
+                )
+            except Exception as e:
+                logger.warning(f"Failed to notify investor {user_id}: {str(e)}")
+
+        # Touch marketplace listings so serializers pick up new token_price
+        try:
+            from marketplace.models import MarketListing
+            MarketListing.objects.filter(
+                property_listing=property_obj,
+                status='active'
+            ).update(updated_at=timezone.now())
+        except Exception:
+            pass
 
 
 class PropertyApprovalView(APIView):
@@ -1232,7 +1278,7 @@ class MarketInsightsView(APIView):
         return Response(insights_data)
 
 
-class InstallmentPaymentViewSet(ModelViewSet):
+class ConstructionInstallmentViewSet(ModelViewSet):
     """
     ViewSet for managing installment payment plans.
     
@@ -1240,7 +1286,7 @@ class InstallmentPaymentViewSet(ModelViewSet):
     actions for payment processing and status management.
     """
     
-    serializer_class = InstallmentPaymentSerializer
+    serializer_class = ConstructionInstallmentSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
@@ -1252,24 +1298,24 @@ class InstallmentPaymentViewSet(ModelViewSet):
         """Get installment payments for the current user."""
         # Handle schema generation for drf-yasg
         if getattr(self, 'swagger_fake_view', False):
-            return InstallmentPayment.objects.none()
-        return InstallmentPayment.objects.filter(
+            return ConstructionInstallment.objects.none()
+        return ConstructionInstallment.objects.filter(
             investor=self.request.user
         ).select_related('property_investment', 'investor').order_by('-created_at')
     
     def get_serializer_class(self):
         """Return appropriate serializer based on action."""
         if self.action == 'create':
-            return InstallmentPaymentCreateSerializer
+            return ConstructionInstallmentCreateSerializer
         elif self.action in ['update', 'partial_update']:
-            return InstallmentPaymentUpdateSerializer
-        return InstallmentPaymentSerializer
+            return ConstructionInstallmentUpdateSerializer
+        return ConstructionInstallmentSerializer
     
     @swagger_auto_schema(
         operation_description="Create a new installment payment plan",
-        request_body=InstallmentPaymentCreateSerializer,
+        request_body=ConstructionInstallmentCreateSerializer,
         responses={
-            201: InstallmentPaymentSerializer,
+            201: ConstructionInstallmentSerializer,
             400: "Validation error"
         }
     )
@@ -1280,7 +1326,7 @@ class InstallmentPaymentViewSet(ModelViewSet):
         
         # Check if user already has an active installment plan for this property
         property_id = serializer.validated_data['property_investment'].id
-        existing_plan = InstallmentPayment.objects.filter(
+        existing_plan = ConstructionInstallment.objects.filter(
             investor=request.user,
             property_investment_id=property_id,
             status__in=['pending', 'processing']
@@ -1293,7 +1339,7 @@ class InstallmentPaymentViewSet(ModelViewSet):
             )
         
         installment_plan = serializer.save()
-        response_serializer = InstallmentPaymentSerializer(installment_plan, context={'request': request})
+        response_serializer = ConstructionInstallmentSerializer(installment_plan, context={'request': request})
         
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
     

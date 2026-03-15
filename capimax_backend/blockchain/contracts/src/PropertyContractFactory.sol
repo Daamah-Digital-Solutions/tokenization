@@ -143,14 +143,14 @@ contract PropertyContractFactory is AccessControl, ReentrancyGuard {
         tokenContract = Clones.clone(realEstateTokenTemplate);
         
         // Initialize token contract
-        RealEstateToken(tokenContract).initialize(
+        RealEstateToken(payable(tokenContract)).initialize(
             propertyURI,
             multiSigOwners_,
             requiredConfirmations
         );
         
         // Create the property in the token contract
-        uint256 tokenId = RealEstateToken(tokenContract).createProperty(
+        uint256 tokenId = RealEstateToken(payable(tokenContract)).createProperty(
             totalSupply,
             category,
             tokenPrice,
@@ -168,7 +168,7 @@ contract PropertyContractFactory is AccessControl, ReentrancyGuard {
             // Initialize distributor
             address[] memory supportedTokens = new address[](4);
             supportedTokens[0] = address(0); // ETH
-            supportedTokens[1] = 0xA0b86a33E6441E70C06ef1b6f8b4A6aBd8A8Ac4e; // USDC (example)
+            supportedTokens[1] = 0xA0B86a33e6441e70c06Ef1b6F8B4a6ABD8a8AC4E; // USDC (example)
             supportedTokens[2] = 0x55d398326f99059fF775485246999027B3197955; // USDT (example)
             supportedTokens[3] = 0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d; // DAI (example)
             
@@ -178,7 +178,7 @@ contract PropertyContractFactory is AccessControl, ReentrancyGuard {
             tokenTypes[2] = RentalIncomeDistributor.PaymentToken.USDT;
             tokenTypes[3] = RentalIncomeDistributor.PaymentToken.DAI;
             
-            RentalIncomeDistributor(distributorContract).initialize(
+            RentalIncomeDistributor(payable(distributorContract)).initialize(
                 tokenContract,
                 platformTreasury,
                 supportedTokens,
@@ -186,7 +186,7 @@ contract PropertyContractFactory is AccessControl, ReentrancyGuard {
             );
             
             // Register property in distributor
-            RentalIncomeDistributor(distributorContract).registerProperty(
+            RentalIncomeDistributor(payable(distributorContract)).registerProperty(
                 tokenId,
                 distributionFrequency,
                 paymentToken,
@@ -218,9 +218,10 @@ contract PropertyContractFactory is AccessControl, ReentrancyGuard {
         
         // Transfer deployment fee to treasury
         if (msg.value > 0) {
-            payable(platformTreasury).transfer(msg.value);
+            (bool success, ) = payable(platformTreasury).call{value: msg.value}("");
+            require(success, "Fee transfer failed");
         }
-        
+
         emit PropertyDeployed(propertyId, tokenContract, distributorContract, msg.sender);
         
         return (propertyId, tokenContract, distributorContract);
@@ -247,7 +248,8 @@ contract PropertyContractFactory is AccessControl, ReentrancyGuard {
         
         // Transfer total deployment fee to treasury
         if (msg.value > 0) {
-            payable(platformTreasury).transfer(msg.value);
+            (bool success, ) = payable(platformTreasury).call{value: msg.value}("");
+            require(success, "Fee transfer failed");
         }
         
         return propertyIds;
@@ -268,7 +270,7 @@ contract PropertyContractFactory is AccessControl, ReentrancyGuard {
         require(!deployed.isActive, "Property already active");
         
         // Activate property in token contract
-        RealEstateToken(deployed.tokenContract).activateProperty(deployed.propertyTokenId);
+        RealEstateToken(payable(deployed.tokenContract)).activateProperty(deployed.propertyTokenId);
         
         deployed.isActive = true;
         factoryStats.activeProperties++;
@@ -289,7 +291,7 @@ contract PropertyContractFactory is AccessControl, ReentrancyGuard {
         DeployedContracts storage deployed = deployedContracts[propertyId];
         
         // Pause property in token contract
-        RealEstateToken(deployed.tokenContract).pauseProperty(deployed.propertyTokenId);
+        RealEstateToken(payable(deployed.tokenContract)).pauseProperty(deployed.propertyTokenId);
         
         deployed.isActive = false;
         factoryStats.activeProperties--;
@@ -426,7 +428,8 @@ contract PropertyContractFactory is AccessControl, ReentrancyGuard {
     function withdrawFees() external onlyRole(ADMIN_ROLE) {
         uint256 balance = address(this).balance;
         require(balance > 0, "No fees to withdraw");
-        payable(platformTreasury).transfer(balance);
+        (bool success, ) = payable(platformTreasury).call{value: balance}("");
+        require(success, "Withdrawal failed");
     }
     
     // Structs for batch operations

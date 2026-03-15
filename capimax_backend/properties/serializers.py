@@ -16,7 +16,7 @@ from .models import (
     Property, PropertyImage, PropertyDocument, PropertyUpdate,
     PropertySubscription, PropertyReview, PropertyValuation,
     PropertyType, PropertyStatus, PropertyCategory, RentalIncomeDistribution,
-    InstallmentPayment
+    ConstructionInstallment
 )
 from construction.models import ConstructionMilestone
 from investments.models import Investment
@@ -339,6 +339,8 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
             'installment_period_months', 'is_under_construction', 'is_ready_property',
             'construction_status_display', 'estimated_monthly_return',
             'owner', 'featured', 'minimum_investment',
+            'spv_company_name', 'spv_registration_number',
+            'spv_bank_account_number', 'spv_bank_name', 'spv_establishment_date',
             'images', 'documents', 'updates', 'reviews', 'valuations',
             'construction_milestones', 'rental_distributions', 'average_rating', 'total_reviews',
             'total_investment', 'investor_count', 'created_at', 'updated_at'
@@ -347,6 +349,8 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
             'id', 'tokens_available', 'funding_percentage', 'is_fully_funded',
             'can_accept_investments', 'average_rating', 'total_reviews',
             'total_investment', 'investor_count', 'construction_progress',
+            'spv_company_name', 'spv_registration_number',
+            'spv_bank_account_number', 'spv_bank_name', 'spv_establishment_date',
             'created_at', 'updated_at'
         ]
     
@@ -553,8 +557,8 @@ class PropertySearchSerializer(serializers.Serializer):
     )
 
 
-class InstallmentPaymentSerializer(serializers.ModelSerializer):
-    """Serializer for InstallmentPayment model."""
+class ConstructionInstallmentSerializer(serializers.ModelSerializer):
+    """Serializer for ConstructionInstallment model."""
     
     # Computed fields
     remaining_amount = serializers.ReadOnlyField()
@@ -573,7 +577,7 @@ class InstallmentPaymentSerializer(serializers.ModelSerializer):
     investor_email = serializers.CharField(source='investor.email', read_only=True)
     
     class Meta:
-        model = InstallmentPayment
+        model = ConstructionInstallment
         fields = [
             'id', 'property_investment', 'investor', 'total_investment_amount',
             'token_allocation', 'installment_amount', 'total_installments',
@@ -661,11 +665,11 @@ class InstallmentPaymentSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class InstallmentPaymentCreateSerializer(serializers.ModelSerializer):
+class ConstructionInstallmentCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating installment payment plans."""
     
     class Meta:
-        model = InstallmentPayment
+        model = ConstructionInstallment
         fields = [
             'property_investment', 'total_investment_amount', 'token_allocation',
             'total_installments', 'frequency', 'graduated_release',
@@ -741,11 +745,11 @@ class InstallmentPaymentCreateSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class InstallmentPaymentUpdateSerializer(serializers.ModelSerializer):
+class ConstructionInstallmentUpdateSerializer(serializers.ModelSerializer):
     """Serializer for updating installment payment plans."""
     
     class Meta:
-        model = InstallmentPayment
+        model = ConstructionInstallment
         fields = [
             'status', 'notes', 'late_payment_fee', 'grace_period_days'
         ]

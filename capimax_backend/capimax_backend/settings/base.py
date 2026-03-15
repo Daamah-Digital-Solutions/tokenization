@@ -6,6 +6,7 @@ Contains common settings shared across all environments.
 import os
 from pathlib import Path
 from datetime import timedelta
+from decimal import Decimal
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -231,6 +232,16 @@ BLOCKCHAIN_SETTINGS = {
     'POLYGON_RPC_URL': os.environ.get('POLYGON_RPC_URL', 'https://polygon-rpc.com/'),
     'PRIVATE_KEY': os.environ.get('BLOCKCHAIN_PRIVATE_KEY', ''),
     'CONTRACT_FACTORY_ADDRESS': os.environ.get('CONTRACT_FACTORY_ADDRESS', ''),
+}
+
+# Pronova Crypto Payment Configuration
+PRONOVA_CONFIG = {
+    'PLATFORM_WALLET_ADDRESS': os.environ.get('PRONOVA_WALLET_ADDRESS', ''),
+    'DISCOUNT_PERCENTAGE': Decimal('5.00'),
+    'REQUIRED_CONFIRMATIONS': int(os.environ.get('PRONOVA_CONFIRMATIONS', '12')),
+    'NETWORK': os.environ.get('PRONOVA_NETWORK', 'bsc'),
+    'RPC_URL': os.environ.get('PRONOVA_RPC_URL', 'https://bsc-dataseed.binance.org/'),
+    'CONTRACT_ADDRESS': os.environ.get('PRONOVA_CONTRACT_ADDRESS', ''),
 }
 
 # Email Configuration

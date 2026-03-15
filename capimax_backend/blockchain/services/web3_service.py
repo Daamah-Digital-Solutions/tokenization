@@ -41,7 +41,7 @@ class Web3Service:
     and balance tracking across multiple blockchain networks.
     """
     
-    def __init__(self, network_id: str = None):
+    def __init__(self, network_id: str = None, rpc_url: str = None):
         """Initialize Web3 service with network configuration."""
         self.network = None
         self.w3 = None
@@ -51,6 +51,8 @@ class Web3Service:
 
         if network_id:
             self.initialize_network(network_id)
+        elif rpc_url:
+            self.initialize_from_rpc(rpc_url)
 
     def initialize_network(self, network_id: str) -> bool:
         """
@@ -105,6 +107,41 @@ class Web3Service:
             return False
         except Exception as e:
             logger.error(f"Failed to initialize network {network_id}: {str(e)}")
+            return False
+
+    def initialize_from_rpc(self, rpc_url: str, block_confirmations: int = 12, block_time: float = 3.0) -> bool:
+        """
+        Initialize Web3 connection directly from an RPC URL without a DB network record.
+        Used for Pronova BSC verification and other direct RPC connections.
+        """
+        try:
+            connected = self._try_connect_rpc(rpc_url)
+            if not connected:
+                logger.error(f"Failed to connect to RPC: {rpc_url}")
+                return False
+
+            self.active_rpc_url = rpc_url
+
+            # Create a lightweight network-like object for monitor_transaction compatibility
+            class _NetworkStub:
+                def __init__(self, confirmations, avg_block_time):
+                    self.block_confirmation_count = confirmations
+                    self.average_block_time = avg_block_time
+                    self.name = f"Direct RPC ({rpc_url[:40]}...)"
+                    self.chain_id = self.w3.eth.chain_id if hasattr(self, 'w3') else 0
+
+            self.network = _NetworkStub(block_confirmations, block_time)
+            # Fix chain_id after w3 is set
+            try:
+                self.network.chain_id = self.w3.eth.chain_id
+            except Exception:
+                pass
+
+            logger.info(f"Connected directly to RPC: {rpc_url}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to initialize from RPC {rpc_url}: {str(e)}")
             return False
 
     def _try_connect_rpc(self, rpc_url: str) -> bool:

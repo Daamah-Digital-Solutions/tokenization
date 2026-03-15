@@ -328,7 +328,7 @@ class InvestmentProcessingService:
             try:
                 investment_details = {
                     'property_name': property_obj.title,
-                    'property_location': property_obj.location,
+                    'property_location': f"{property_obj.city}, {property_obj.country}",
                     'property_type': property_obj.property_type,
                     'amount': str(investment.investment_amount),
                     'shares': str(investment.token_amount),
@@ -551,7 +551,7 @@ class DividendDistributionService:
                     try:
                         dividend_details = {
                             'property_name': dividend.investment.property_investment.title,
-                            'property_location': dividend.investment.property_investment.location,
+                            'property_location': f"{dividend.investment.property_investment.city}, {dividend.investment.property_investment.country}",
                             'amount': str(dividend_amount),
                             'period': f"{dividend.period_start.strftime('%B %Y')}",
                             'ownership_percentage': f"{dividend.investment.ownership_percentage}%",

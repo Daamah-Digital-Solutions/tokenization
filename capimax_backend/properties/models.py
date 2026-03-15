@@ -250,7 +250,7 @@ class Property(models.Model):
         default=False,
         help_text="Whether property is featured"
     )
-    
+
     minimum_investment = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -259,7 +259,38 @@ class Property(models.Model):
         validators=[MinValueValidator(Decimal('0.01'))],
         help_text="Minimum investment amount"
     )
-    
+
+    # SPV (Special Purpose Vehicle) fields
+    spv_company_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="SPV company name for this property"
+    )
+    spv_registration_number = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="SPV registration/license number"
+    )
+    spv_bank_account_number = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="SPV dedicated bank account number"
+    )
+    spv_bank_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="SPV bank name"
+    )
+    spv_establishment_date = models.DateField(
+        blank=True,
+        null=True,
+        help_text="Date the SPV was legally established"
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -963,7 +994,7 @@ class PropertyApproval(models.Model):
 
             property_details = {
                 'title': self.property.title,
-                'location': self.property.location,
+                'location': f"{self.property.city}, {self.property.country}",
                 'submission_date': self.submitted_at.strftime('%B %d, %Y')
             }
 
@@ -1175,10 +1206,10 @@ class PropertyMarketData(models.Model):
         return f"Market data for {self.property.title} ({self.data_date})"
 
 
-class InstallmentPayment(models.Model):
+class ConstructionInstallment(models.Model):
     """
     Installment payment tracking for construction properties.
-    
+
     Allows investors to pay for their property investments in installments
     over a specified period, particularly useful for under-construction properties.
     """

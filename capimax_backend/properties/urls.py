@@ -8,10 +8,10 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 
-# Create a router for the PropertyViewSet, InstallmentPaymentViewSet, and RentalIncomeDistributionViewSet
+# Create a router for the PropertyViewSet, ConstructionInstallmentViewSet, and RentalIncomeDistributionViewSet
 router = DefaultRouter()
 router.register(r'', views.PropertyViewSet, basename='property')
-router.register(r'installments', views.InstallmentPaymentViewSet, basename='installment-payment')
+router.register(r'installments', views.ConstructionInstallmentViewSet, basename='installment-payment')
 router.register(r'rental-distributions', views.RentalIncomeDistributionViewSet, basename='rental-distribution')
 
 app_name = 'properties'

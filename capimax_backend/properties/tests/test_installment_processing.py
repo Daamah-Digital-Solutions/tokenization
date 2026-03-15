@@ -16,7 +16,7 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 
 from accounts.models import User
-from properties.models import Property, InstallmentPayment, PropertyStatus
+from properties.models import Property, ConstructionInstallment, PropertyStatus
 from properties.services import InstallmentProcessingService
 from properties.tasks import process_due_installments, send_payment_reminders
 from payments.models import WalletBalance, Payment, UserPaymentMethod
@@ -52,7 +52,7 @@ class InstallmentProcessingServiceTests(TestCase):
             owner=self.user
         )
         
-        self.installment = InstallmentPayment.objects.create(
+        self.installment = ConstructionInstallment.objects.create(
             property_investment=self.property,
             investor=self.user,
             total_investment_amount=Decimal('5000.00'),
@@ -200,7 +200,7 @@ class InstallmentTaskTests(TestCase):
             owner=self.user
         )
         
-        self.installment = InstallmentPayment.objects.create(
+        self.installment = ConstructionInstallment.objects.create(
             property_investment=self.property,
             investor=self.user,
             total_investment_amount=Decimal('5000.00'),
@@ -287,7 +287,7 @@ class InstallmentAPITests(APITestCase):
             owner=self.user
         )
         
-        self.installment = InstallmentPayment.objects.create(
+        self.installment = ConstructionInstallment.objects.create(
             property_investment=self.property,
             investor=self.user,
             total_investment_amount=Decimal('5000.00'),
@@ -344,7 +344,7 @@ class InstallmentAPITests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         
         # Check installment was created
-        installment = InstallmentPayment.objects.get(id=response.data['id'])
+        installment = ConstructionInstallment.objects.get(id=response.data['id'])
         self.assertEqual(installment.investor, self.user)
         self.assertEqual(installment.property_investment, property2)
     
@@ -358,7 +358,7 @@ class InstallmentAPITests(APITestCase):
             'payment_method': 'wallet'
         }
         
-        with patch.object(InstallmentPayment, 'process_payment') as mock_process:
+        with patch.object(ConstructionInstallment, 'process_payment') as mock_process:
             mock_process.return_value = (True, 'Payment processed successfully', Decimal('5'))
             
             response = self.client.post(url, data, format='json')
@@ -422,7 +422,7 @@ class InstallmentAPITests(APITestCase):
 
 
 class InstallmentModelTests(TestCase):
-    """Test cases for InstallmentPayment model methods and properties."""
+    """Test cases for ConstructionInstallment model methods and properties."""
     
     def setUp(self):
         """Set up test data."""
@@ -445,7 +445,7 @@ class InstallmentModelTests(TestCase):
             owner=self.user
         )
         
-        self.installment = InstallmentPayment.objects.create(
+        self.installment = ConstructionInstallment.objects.create(
             property_investment=self.property,
             investor=self.user,
             total_investment_amount=Decimal('5000.00'),

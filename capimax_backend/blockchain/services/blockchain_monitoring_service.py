@@ -173,9 +173,8 @@ class BlockchainMonitoringService:
         try:
             property_obj = event_record.contract.property_reference
             if property_obj:
-                property_obj.is_tokenized = True
-                property_obj.tokenization_date = timezone.now()
-                property_obj.save(update_fields=['is_tokenized', 'tokenization_date'])
+                property_obj.status = 'tokenized'
+                property_obj.save(update_fields=['status'])
                 
             logger.info(f"Property created event processed for property {property_obj.id if property_obj else 'unknown'}")
             
@@ -554,7 +553,7 @@ def auto_distribute_rental_income(self):
         ready_properties = Property.objects.filter(
             property_category='ready_property',
             rental_income_active=True,
-            is_tokenized=True
+            status='tokenized'
         )
         
         distributed_count = 0

@@ -15,7 +15,7 @@ import re
 from .models import (
     Payment, UserPaymentMethod, WalletBalance, WalletTransaction,
     CryptoPayment, Refund, RecurringPayment, PaymentMethod, PaymentStatus,
-    BankTransfer
+    BankTransfer, NovaSukukPayment, PronovaPayment
 )
 from core.utils import validate_investment_amount, calculate_tokens_for_amount
 
@@ -610,3 +610,94 @@ class BankTransferStatusSerializer(serializers.Serializer):
         allow_blank=True
     )
     completed_at = serializers.DateTimeField(required=False)
+
+
+# --- Nova Sukuk Serializers ---
+
+class NovaSukukCreateSerializer(serializers.Serializer):
+    """Serializer for creating a Nova Sukuk investment."""
+    property_id = serializers.UUIDField()
+    token_amount = serializers.IntegerField(min_value=1)
+    investment_amount = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal('1.00'))
+    sukuk_pdf = serializers.FileField()
+    sukuk_reference_number = serializers.CharField(max_length=100)
+
+
+class NovaSukukDetailSerializer(serializers.ModelSerializer):
+    """Serializer for Nova Sukuk payment details."""
+    pdf_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = NovaSukukPayment
+        fields = [
+            'id', 'investment', 'sukuk_reference_number', 'status',
+            'pdf_url', 'review_note', 'reviewed_by', 'reviewed_at',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = fields
+
+    def get_pdf_url(self, obj):
+        if obj.sukuk_pdf:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.sukuk_pdf.url)
+        return None
+
+
+class NovaSukukAdminSerializer(serializers.ModelSerializer):
+    """Serializer for admin review of Nova Sukuk payments."""
+    pdf_url = serializers.SerializerMethodField()
+    investor_email = serializers.CharField(source='investment.user.email', read_only=True)
+    property_title = serializers.CharField(source='investment.property_investment.title', read_only=True)
+    investment_amount = serializers.DecimalField(
+        source='investment.investment_amount', read_only=True,
+        max_digits=12, decimal_places=2
+    )
+    token_amount = serializers.IntegerField(source='investment.token_amount', read_only=True)
+
+    class Meta:
+        model = NovaSukukPayment
+        fields = [
+            'id', 'investment', 'sukuk_reference_number', 'status',
+            'pdf_url', 'review_note', 'reviewed_by', 'reviewed_at',
+            'investor_email', 'property_title', 'investment_amount', 'token_amount',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = fields
+
+    def get_pdf_url(self, obj):
+        if obj.sukuk_pdf:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.sukuk_pdf.url)
+        return None
+
+
+# --- Pronova Serializers ---
+
+class PronovaCreateSerializer(serializers.Serializer):
+    """Serializer for creating a Pronova crypto investment."""
+    property_id = serializers.UUIDField()
+    token_amount = serializers.IntegerField(min_value=1)
+    investment_amount = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal('1.00'))
+
+
+class PronovaConfirmSerializer(serializers.Serializer):
+    """Serializer for confirming a Pronova payment with tx_hash."""
+    tx_hash = serializers.CharField(max_length=66)
+    sender_wallet_address = serializers.CharField(max_length=42)
+
+
+class PronovaDetailSerializer(serializers.ModelSerializer):
+    """Serializer for Pronova payment details."""
+
+    class Meta:
+        model = PronovaPayment
+        fields = [
+            'id', 'investment', 'pronova_amount', 'usd_equivalent',
+            'discount_applied', 'discounted_amount', 'tx_hash',
+            'platform_wallet_address', 'sender_wallet_address',
+            'status', 'confirmations', 'confirmed_at',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = fields

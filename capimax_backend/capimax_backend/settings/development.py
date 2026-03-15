@@ -44,7 +44,7 @@ CHANNEL_LAYERS = {
 # Try to use Redis if available, fallback to in-memory
 try:
     import redis
-    r = redis.Redis(host='localhost', port=6379, db=0)
+    r = redis.Redis(host='localhost', port=6379, db=0, socket_connect_timeout=1, socket_timeout=1, retry_on_timeout=False)
     r.ping()
     # Redis is available, use it
     CHANNEL_LAYERS = {
@@ -73,7 +73,7 @@ CACHES = {
 # Try to use Redis for caching if available
 try:
     import redis
-    r = redis.Redis(host='localhost', port=6379, db=0)
+    r = redis.Redis(host='localhost', port=6379, db=0, socket_connect_timeout=1, socket_timeout=1, retry_on_timeout=False)
     r.ping()
     CACHES = {
         'default': {

@@ -8,6 +8,7 @@ module.exports = {
   solidity: {
     version: "0.8.19",
     settings: {
+      viaIR: true,
       optimizer: {
         enabled: true,
         runs: 200
@@ -57,7 +58,7 @@ module.exports = {
     }
   },
   paths: {
-    sources: "./",
+    sources: "./src",
     tests: "./test",
     cache: "./cache",
     artifacts: "./artifacts"
