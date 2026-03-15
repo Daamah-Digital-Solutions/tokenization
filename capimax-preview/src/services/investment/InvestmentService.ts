@@ -123,6 +123,66 @@ export class InvestmentService {
   }
 
   /**
+   * Create Nova Sukuk investment (PDF upload + admin review)
+   */
+  static async novaSukukInvest(data: {
+    property_id: string;
+    token_amount: number;
+    investment_amount: number;
+    sukuk_pdf: File;
+    sukuk_reference_number: string;
+  }): Promise<any> {
+    try {
+      const formData = new FormData();
+      formData.append('property_id', data.property_id);
+      formData.append('token_amount', data.token_amount.toString());
+      formData.append('investment_amount', data.investment_amount.toString());
+      formData.append('sukuk_pdf', data.sukuk_pdf);
+      formData.append('sukuk_reference_number', data.sukuk_reference_number);
+
+      return await apiClient.post<any>('/investments/nova_sukuk_invest/', formData);
+    } catch (error) {
+      console.error('Failed to create Nova Sukuk investment:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create Pronova crypto investment (5% discount)
+   */
+  static async pronovaInvest(data: {
+    property_id: string;
+    token_amount: number;
+    investment_amount: number;
+  }): Promise<any> {
+    try {
+      return await apiClient.post<any>('/investments/pronova_invest/', {
+        property_id: data.property_id,
+        token_amount: data.token_amount,
+        investment_amount: data.investment_amount
+      });
+    } catch (error) {
+      console.error('Failed to create Pronova investment:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Confirm Pronova payment with transaction hash
+   */
+  static async confirmPronovaPayment(investmentId: string, data: {
+    tx_hash: string;
+    sender_wallet_address: string;
+  }): Promise<any> {
+    try {
+      return await apiClient.post<any>(`/investments/${investmentId}/confirm_pronova/`, data);
+    } catch (error) {
+      console.error('Failed to confirm Pronova payment:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get user's investments
    */
   static async getInvestments(page = 1, limit = 20, status?: InvestmentStatus): Promise<{

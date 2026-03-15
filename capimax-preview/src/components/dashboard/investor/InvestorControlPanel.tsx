@@ -44,6 +44,7 @@ import { useUser } from '../../../contexts/AuthContext';
 import { useRouter } from '../../../utils/router';
 import { apiClient } from '../../../services/api/ApiClient';
 import { PropertyService } from '../../../services/property/PropertyService';
+import { PaymentService } from '../../../services/payment/PaymentService';
 import { cn } from '../../../utils/cn';
 
 interface InvestorControlPanelProps {
@@ -122,6 +123,17 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
     refetchInterval: 300000, // Refetch every 5 minutes
   });
 
+  // Fetch wallet balance
+  const { data: walletData, isLoading: walletLoading } = useQuery({
+    queryKey: ['wallet-balance'],
+    queryFn: () => PaymentService.getWalletBalance(),
+    refetchInterval: 30000,
+  });
+
+  const walletBalance = walletData?.total_value_usd || walletData?.balances?.reduce(
+    (sum: number, b: any) => sum + (parseFloat(b.available_balance) || 0), 0
+  ) || 0;
+
   // Refresh all data
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['investor-portfolio'] });
@@ -194,6 +206,7 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
             formatCurrency={formatCurrency}
             formatPercentage={formatPercentage}
             setActiveTab={setActiveTab}
+            walletBalance={walletBalance}
           />
         )}
 
@@ -206,7 +219,7 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
         )}
 
         {activeTab === 'wallet' && (
-          <WalletContent portfolio={portfolio} loading={portfolioLoading} />
+          <WalletContent portfolio={portfolio} loading={portfolioLoading} walletBalance={walletBalance} walletLoading={walletLoading} />
         )}
 
         {activeTab === 'notifications' && (
@@ -230,8 +243,31 @@ const OverviewContent: React.FC<{
   formatCurrency: (amount: number | undefined | null) => string;
   formatPercentage: (value: number | undefined | null) => string;
   setActiveTab: (tab: TabType) => void;
-}> = ({ portfolio, marketInsights, loading, showBalances, formatCurrency, formatPercentage, setActiveTab }) => (
+  walletBalance: number;
+}> = ({ portfolio, marketInsights, loading, showBalances, formatCurrency, formatPercentage, setActiveTab, walletBalance }) => (
   <div className="space-y-6">
+    {/* Wallet Balance Banner */}
+    {walletBalance > 0 && (
+      <Card className="p-4 bg-gradient-to-r from-emerald-500 to-teal-600 border-0">
+        <div className="flex items-center justify-between">
+          <div>
+            <Text variant="bodySmall" className="text-emerald-100">Wallet Balance</Text>
+            <Text variant="h2" weight="bold" className="text-white">
+              {showBalances ? `$${walletBalance.toLocaleString()}` : '$****'}
+            </Text>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-white/30 text-white hover:bg-white/10"
+            onClick={() => setActiveTab('wallet')}
+          >
+            Manage Wallet
+          </Button>
+        </div>
+      </Card>
+    )}
+
     {/* Portfolio Summary Cards */}
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <AnimatePresence>
@@ -689,7 +725,9 @@ const MarketplaceContent: React.FC = () => {
 const WalletContent: React.FC<{
   portfolio: Portfolio | undefined;
   loading: boolean;
-}> = ({ portfolio, loading }) => (
+  walletBalance: number;
+  walletLoading: boolean;
+}> = ({ portfolio, loading, walletBalance, walletLoading }) => (
   <div className="space-y-6">
     <div className="flex justify-between items-center">
       <div>
@@ -713,27 +751,32 @@ const WalletContent: React.FC<{
     </div>
 
     {/* Wallet Balance Cards */}
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <StatsCard
+        title="Wallet Balance"
+        value={walletLoading ? '$0' : `$${walletBalance.toLocaleString()}`}
+        subtitle="Available funds"
+        icon={Wallet}
+        variant="gradient"
+      />
       <StatsCard
         title="Portfolio Value"
         value={loading ? '$0' : `$${(portfolio?.current_value || 0).toLocaleString()}`}
         subtitle="Current investment value"
         icon={DollarSign}
-        variant="gradient"
+        variant="accent"
       />
       <StatsCard
         title="Total Invested"
         value={loading ? '$0' : `$${(portfolio?.total_invested || 0).toLocaleString()}`}
         subtitle="All-time investments"
         icon={RefreshCw}
-        variant="accent"
       />
       <StatsCard
         title="Total Returns"
         value={loading ? '$0' : `$${(portfolio?.total_returns || 0).toLocaleString()}`}
         subtitle="Earnings to date"
         icon={TrendingUp}
-        variant="default"
       />
     </div>
 

@@ -142,8 +142,8 @@ const roleBasedContent: Record<UserRole, (data: any) => DashboardContent> = {
         icon: Users,
       },
       {
-        title: 'Success Rate',
-        value: '95%',
+        title: 'Occupancy Rate',
+        value: data.stats?.occupancyRate ? `${data.stats.occupancyRate}%` : '--',
         icon: TrendingUp,
       },
     ],
@@ -199,8 +199,8 @@ const roleBasedContent: Record<UserRole, (data: any) => DashboardContent> = {
         icon: Building,
       },
       {
-        title: 'Success Rate',
-        value: '87%',
+        title: 'Conversion Rate',
+        value: data.stats?.conversionRate ? `${data.stats.conversionRate}%` : '--',
         icon: TrendingUp,
       },
     ],

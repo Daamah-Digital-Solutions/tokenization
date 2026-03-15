@@ -2,114 +2,53 @@ import React, { useState } from 'react';
 import { DashboardStats, ActivityFeed, PerformanceChart, QuickActions } from '../';
 import type { StatItem, ActivityItem, ChartDataPoint, QuickAction } from '../';
 
-// Mock data for broker dashboard
+// Broker stats - populated from API when available, zeros by default
 const mockBrokerStats: StatItem[] = [
   {
     id: 'total-referrals',
     label: 'Total Referrals',
-    value: '127',
-    change: '+23',
-    changeType: 'positive',
+    value: '0',
+    change: '--',
+    changeType: 'neutral' as any,
     icon: '🤝',
-    description: 'Referred clients this month'
+    description: 'No referrals yet'
   },
   {
     id: 'total-commission',
     label: 'Total Commission',
-    value: '$24,680',
-    change: '+15.4%',
-    changeType: 'positive',
+    value: '$0',
+    change: '--',
+    changeType: 'neutral' as any,
     icon: '💰',
-    description: 'Total commission earned'
+    description: 'No commission earned yet'
   },
   {
     id: 'active-clients',
     label: 'Active Clients',
-    value: '89',
-    change: '+12',
-    changeType: 'positive',
+    value: '0',
+    change: '--',
+    changeType: 'neutral' as any,
     icon: '👥',
-    description: 'Currently active referrals'
+    description: 'No active referrals yet'
   },
   {
     id: 'monthly-commission',
     label: 'Monthly Commission',
-    value: '$3,450',
-    change: '+18.7%',
-    changeType: 'positive',
+    value: '$0',
+    change: '--',
+    changeType: 'neutral' as any,
     icon: '📈',
-    description: 'This month\'s earnings'
+    description: 'No earnings this month'
   }
 ];
 
-const mockCommissionData: ChartDataPoint[] = [
-  { date: '2024-01-01', value: 1200, label: 'Jan' },
-  { date: '2024-02-01', value: 1450, label: 'Feb' },
-  { date: '2024-03-01', value: 1800, label: 'Mar' },
-  { date: '2024-04-01', value: 2100, label: 'Apr' },
-  { date: '2024-05-01', value: 2400, label: 'May' },
-  { date: '2024-06-01', value: 2800, label: 'Jun' },
-  { date: '2024-07-01', value: 3100, label: 'Jul' },
-  { date: '2024-08-01', value: 3450, label: 'Aug' }
-];
+// Empty chart data - will be populated from API when broker system is active
+const mockCommissionData: ChartDataPoint[] = [];
 
-const mockReferralData: ChartDataPoint[] = [
-  { date: '2024-01-01', value: 8 },
-  { date: '2024-02-01', value: 12 },
-  { date: '2024-03-01', value: 15 },
-  { date: '2024-04-01', value: 18 },
-  { date: '2024-05-01', value: 22 },
-  { date: '2024-06-01', value: 19 },
-  { date: '2024-07-01', value: 25 },
-  { date: '2024-08-01', value: 23 }
-];
+const mockReferralData: ChartDataPoint[] = [];
 
-const mockBrokerActivities: ActivityItem[] = [
-  {
-    id: '1',
-    type: 'referral',
-    title: 'New Client Referral',
-    description: 'John Smith referred for Luxury Apartment Complex',
-    amount: '+$500',
-    timestamp: '2024-08-26T10:30:00Z',
-    status: 'completed'
-  },
-  {
-    id: '2',
-    type: 'commission',
-    title: 'Commission Payment',
-    description: 'Monthly commission for Q2 referrals',
-    amount: '+$2,340',
-    timestamp: '2024-08-25T09:15:00Z',
-    status: 'completed'
-  },
-  {
-    id: '3',
-    type: 'referral_success',
-    title: 'Referral Investment',
-    description: 'Sarah Johnson completed $25k investment',
-    amount: '+$750',
-    timestamp: '2024-08-24T14:20:00Z',
-    status: 'completed'
-  },
-  {
-    id: '4',
-    type: 'milestone',
-    title: 'Performance Milestone',
-    description: 'Reached 100 total referrals milestone',
-    timestamp: '2024-08-20T11:00:00Z',
-    status: 'completed'
-  },
-  {
-    id: '5',
-    type: 'commission',
-    title: 'Pending Commission',
-    description: 'Commission for recent referrals pending',
-    amount: '+$1,250',
-    timestamp: '2024-08-18T16:45:00Z',
-    status: 'pending'
-  }
-];
+// Empty activities - will be populated from API when broker system is active
+const mockBrokerActivities: ActivityItem[] = [];
 
 interface ReferralClient {
   id: string;
@@ -123,52 +62,8 @@ interface ReferralClient {
   referralSource: string;
 }
 
-const mockReferrals: ReferralClient[] = [
-  {
-    id: '1',
-    name: 'John Smith',
-    email: 'john.smith@example.com',
-    joinDate: '2024-08-20',
-    status: 'invested',
-    totalInvestment: 45000,
-    commissionEarned: 1350,
-    lastActivity: '2024-08-26T10:30:00Z',
-    referralSource: 'LinkedIn'
-  },
-  {
-    id: '2',
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@example.com',
-    joinDate: '2024-08-18',
-    status: 'active',
-    totalInvestment: 0,
-    commissionEarned: 0,
-    lastActivity: '2024-08-26T09:15:00Z',
-    referralSource: 'Direct Contact'
-  },
-  {
-    id: '3',
-    name: 'Michael Chen',
-    email: 'michael.chen@example.com',
-    joinDate: '2024-08-15',
-    status: 'invested',
-    totalInvestment: 82000,
-    commissionEarned: 2460,
-    lastActivity: '2024-08-25T18:45:00Z',
-    referralSource: 'Website'
-  },
-  {
-    id: '4',
-    name: 'Emily Davis',
-    email: 'emily.davis@example.com',
-    joinDate: '2024-08-12',
-    status: 'pending',
-    totalInvestment: 0,
-    commissionEarned: 0,
-    lastActivity: '2024-08-24T14:20:00Z',
-    referralSource: 'Social Media'
-  }
-];
+// Empty referrals - will be populated from API when broker system is active
+const mockReferrals: ReferralClient[] = [];
 
 const PerformanceOverview: React.FC = () => {
   return (
@@ -297,10 +192,10 @@ const ReferralTracker: React.FC = () => {
 
 const CommissionBreakdown: React.FC = () => {
   const commissionBreakdown = [
-    { period: 'This Month', amount: 3450, change: '+18.7%', color: 'text-green-600' },
-    { period: 'Last Month', amount: 2910, change: '+12.4%', color: 'text-green-600' },
-    { period: 'Q3 Total', amount: 8760, change: '+25.2%', color: 'text-green-600' },
-    { period: 'Year to Date', amount: 24680, change: '+31.8%', color: 'text-green-600' }
+    { period: 'This Month', amount: 0, change: '--', color: 'text-neutral-500' },
+    { period: 'Last Month', amount: 0, change: '--', color: 'text-neutral-500' },
+    { period: 'This Quarter', amount: 0, change: '--', color: 'text-neutral-500' },
+    { period: 'Year to Date', amount: 0, change: '--', color: 'text-neutral-500' }
   ];
 
   return (
@@ -335,13 +230,7 @@ const CommissionBreakdown: React.FC = () => {
 };
 
 const MarketingMaterials: React.FC = () => {
-  const materials = [
-    { id: 1, name: 'Investment Overview Brochure', type: 'PDF', size: '2.4MB', downloads: 45 },
-    { id: 2, name: 'Platform Demo Video', type: 'MP4', size: '25.6MB', downloads: 78 },
-    { id: 3, name: 'ROI Calculator Spreadsheet', type: 'XLSX', size: '1.2MB', downloads: 32 },
-    { id: 4, name: 'Property Portfolio Images', type: 'ZIP', size: '15.8MB', downloads: 23 },
-    { id: 5, name: 'Tokenization Guide', type: 'PDF', size: '3.1MB', downloads: 67 }
-  ];
+  const materials: { id: number; name: string; type: string; size: string; downloads: number }[] = [];
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">

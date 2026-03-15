@@ -70,8 +70,12 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
       case 'fiat':
         paymentFee = investmentData.amount * 0.029 + 0.30; // 2.9% + $0.30
         break;
+      case 'pronova':
+        paymentFee = investmentData.amount * -0.05; // 5% discount
+        break;
       case 'bank':
       case 'wallet':
+      case 'nova_sukuk':
       default:
         paymentFee = 0;
         break;
@@ -89,6 +93,8 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
       case 'fiat': return 'Credit/Debit Card';
       case 'bank': return 'Bank Transfer';
       case 'wallet': return 'CapiMax Wallet';
+      case 'nova_sukuk': return 'Nova Sukuk';
+      case 'pronova': return 'Pronova';
       default: return 'Payment';
     }
   };
@@ -100,6 +106,8 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
       case 'fiat': return 'credit_card';
       case 'bank': return 'bank_transfer';
       case 'wallet': return 'wallet';
+      case 'nova_sukuk': return 'nova_sukuk';
+      case 'pronova': return 'pronova';
       default: return 'credit_card';
     }
   };
@@ -112,6 +120,18 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
         { id: 'validate', title: 'Validate Investment', description: 'Verifying availability and limits', status: 'pending', estimatedTime: '10s' },
         { id: 'transaction', title: 'Process Payment', description: 'Execute investment transaction', status: 'pending', estimatedTime: '30s' },
         { id: 'tokens', title: 'Confirm Tokens', description: 'Confirming your property tokens', status: 'pending', estimatedTime: '10s' }
+      ]);
+    } else if (investmentData.paymentMethod === 'nova_sukuk') {
+      setSteps([
+        { id: 'validate', title: 'Validate Investment', description: 'Verifying availability and limits', status: 'pending', estimatedTime: '10s' },
+        { id: 'process', title: 'Upload Sukuk Document', description: 'Submitting PDF for admin review', status: 'pending', estimatedTime: '15s' },
+        { id: 'tokens', title: 'Pending Review', description: 'Admin will review and approve your payment', status: 'pending' }
+      ]);
+    } else if (investmentData.paymentMethod === 'pronova') {
+      setSteps([
+        { id: 'validate', title: 'Validate Investment', description: 'Verifying availability and calculating 5% discount', status: 'pending', estimatedTime: '10s' },
+        { id: 'process', title: 'Create Payment', description: 'Setting up Pronova payment with discount', status: 'pending', estimatedTime: '15s' },
+        { id: 'tokens', title: 'Awaiting Payment', description: 'Send Pronova to platform wallet to complete', status: 'pending' }
       ]);
     } else {
       setSteps([
@@ -194,6 +214,25 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
       if (investmentData.paymentMethod === 'wallet') {
         // Wallet: all-in-one endpoint (create + debit wallet + confirm)
         investmentResult = await InvestmentService.walletInvest({
+          property_id: propertyId,
+          token_amount: investmentData.tokens,
+          investment_amount: investmentData.amount
+        });
+      } else if (investmentData.paymentMethod === 'nova_sukuk') {
+        // Nova Sukuk: upload PDF for admin review
+        if (!investmentData.sukukPdf || !investmentData.sukukReferenceNumber) {
+          throw new Error('Please upload the Sukuk PDF and enter the reference number.');
+        }
+        investmentResult = await InvestmentService.novaSukukInvest({
+          property_id: propertyId,
+          token_amount: investmentData.tokens,
+          investment_amount: investmentData.amount,
+          sukuk_pdf: investmentData.sukukPdf,
+          sukuk_reference_number: investmentData.sukukReferenceNumber
+        });
+      } else if (investmentData.paymentMethod === 'pronova') {
+        // Pronova: create investment with 5% discount, get platform wallet
+        investmentResult = await InvestmentService.pronovaInvest({
           property_id: propertyId,
           token_amount: investmentData.tokens,
           investment_amount: investmentData.amount

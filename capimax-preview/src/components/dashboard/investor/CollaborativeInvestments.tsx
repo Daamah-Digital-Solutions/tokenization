@@ -72,37 +72,19 @@ export const CollaborativeInvestments: React.FC<CollaborativeInvestmentsProps> =
     },
   });
 
-  // Mock additional data for better UX
+  // Extend investments with computed metrics from real data only
   const extendedInvestments = useMemo(() => {
     if (!collaborativeInvestments) return [];
-    
-    return collaborativeInvestments.map((investment, index) => ({
+
+    return collaborativeInvestments.map((investment) => ({
       ...investment,
       property: {
         ...investment,
-        type: ['residential', 'commercial', 'mixed_use'][index % 3] as PropertyType,
-        location: ['New York, NY', 'Los Angeles, CA', 'Chicago, IL', 'Miami, FL'][index % 4],
-        expectedROI: 8.5 + Math.random() * 4,
-        images: [`/images/property-${index + 1}.jpg`],
-        description: `Premium ${investment.propertyName.toLowerCase()} offering excellent investment potential with strong rental yields and appreciation prospects.`,
-        features: ['Prime Location', 'High ROI', 'Managed Property', 'Tax Benefits'],
-        totalValue: investment.totalAmount * (3 + Math.random() * 2),
-        tokenPrice: investment.totalAmount / (1000 + Math.random() * 4000),
-      },
-      chat: {
-        lastMessage: 'Great property! Looking forward to investing.',
-        lastMessageTime: new Date(Date.now() - Math.random() * 86400000 * 7),
-        messageCount: Math.floor(Math.random() * 50) + 5,
-      },
-      leadInvestor: {
-        name: ['Alice Johnson', 'Bob Smith', 'Carol Davis', 'David Wilson'][index % 4],
-        avatar: `/avatars/user-${index + 1}.jpg`,
-        reputation: Math.floor(Math.random() * 100) + 850,
-        completedDeals: Math.floor(Math.random() * 25) + 5,
-        rating: 4.2 + Math.random() * 0.8,
+        type: investment.propertyType || 'residential',
+        description: investment.description || '',
       },
       metrics: {
-        averageInvestment: investment.currentAmount / Math.max(investment.investors.length, 1),
+        averageInvestment: investment.currentAmount / Math.max(investment.investors?.length || 1, 1),
         completion: (investment.currentAmount / investment.totalAmount) * 100,
         timeLeft: Math.max(0, new Date(investment.deadline).getTime() - Date.now()),
       }
@@ -119,8 +101,7 @@ export const CollaborativeInvestments: React.FC<CollaborativeInvestmentsProps> =
         filtered = filtered.filter(inv => inv.status === 'open');
         break;
       case 'joined':
-        // In a real app, this would check if current user is in investors array
-        filtered = filtered.filter(inv => inv.status === 'open' && Math.random() > 0.7);
+        filtered = filtered.filter(inv => inv.isJoined === true);
         break;
       case 'completed':
         filtered = filtered.filter(inv => inv.status === 'completed');
@@ -130,8 +111,7 @@ export const CollaborativeInvestments: React.FC<CollaborativeInvestmentsProps> =
     // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(inv =>
-        inv.propertyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inv.property.location.toLowerCase().includes(searchTerm.toLowerCase())
+        inv.propertyName?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 

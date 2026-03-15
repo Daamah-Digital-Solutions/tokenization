@@ -91,52 +91,29 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     enabled: !!selectedPeriod,
   });
 
-  // Mock data generation for demonstration
+  // Use real portfolio data or show empty state
   const performanceData = useMemo(() => {
-    const data = [];
-    const now = new Date();
-    const days = selectedPeriod === 'day' ? 7 : selectedPeriod === 'week' ? 4 : selectedPeriod === 'month' ? 12 : 24;
-    
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date(now);
-      if (selectedPeriod === 'day') {
-        date.setDate(date.getDate() - i);
-      } else if (selectedPeriod === 'week') {
-        date.setDate(date.getDate() - (i * 7));
-      } else if (selectedPeriod === 'month') {
-        date.setMonth(date.getMonth() - i);
-      } else {
-        date.setFullYear(date.getFullYear() - i);
-      }
-      
-      const baseValue = 50000 + Math.random() * 25000;
-      const growth = (days - i) * 500 + Math.random() * 2000;
-      
-      data.push({
-        date: date.toLocaleDateString('en-US', { 
-          month: selectedPeriod === 'day' ? 'short' : 'short',
-          day: selectedPeriod === 'day' ? 'numeric' : undefined,
-          year: selectedPeriod === 'year' ? 'numeric' : undefined
-        }),
-        portfolioValue: baseValue + growth,
-        invested: baseValue,
-        return: growth,
-        roi: ((growth / baseValue) * 100),
-        dividends: Math.random() * 500 + 200,
-        marketAverage: baseValue + growth * 0.8,
-      });
+    if (periodData?.performance && periodData.performance.length > 0) {
+      return periodData.performance;
     }
-    return data;
-  }, [selectedPeriod]);
+    // Return real summary as a single data point if we have portfolio data
+    if (portfolio) {
+      return [{
+        date: 'Current',
+        portfolioValue: portfolio.total_value || 0,
+        invested: portfolio.total_invested || 0,
+        return: (portfolio.total_value || 0) - (portfolio.total_invested || 0),
+        roi: portfolio.total_invested ? (((portfolio.total_value || 0) - portfolio.total_invested) / portfolio.total_invested * 100) : 0,
+        dividends: portfolio.total_dividends || 0,
+        marketAverage: 0,
+      }];
+    }
+    return [];
+  }, [selectedPeriod, periodData, portfolio]);
 
   const allocationData = useMemo(() => {
-    if (!portfolio?.asset_allocation) {
-      return [
-        { name: 'Residential', value: 45, type: PropertyType.RESIDENTIAL },
-        { name: 'Commercial', value: 30, type: PropertyType.COMMERCIAL },
-        { name: 'Mixed Use', value: 15, type: PropertyType.MIXED_USE },
-        { name: 'Industrial', value: 10, type: PropertyType.INDUSTRIAL },
-      ];
+    if (!portfolio?.asset_allocation || portfolio.asset_allocation.length === 0) {
+      return [];
     }
     
     return portfolio.asset_allocation.map(allocation => ({
@@ -149,36 +126,26 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   }, [portfolio?.asset_allocation]);
 
   const incomeData = useMemo(() => {
-    const data = [];
-    const now = new Date();
-    
-    for (let i = 11; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const income = 2000 + Math.random() * 1000;
-      const expenses = 200 + Math.random() * 300;
-      
-      data.push({
-        month: date.toLocaleDateString('en-US', { month: 'short' }),
-        income,
-        expenses,
-        net: income - expenses,
-        dividends: income * 0.8,
-        fees: expenses * 0.6,
-      });
+    if (periodData?.income && periodData.income.length > 0) {
+      return periodData.income;
     }
-    return data;
-  }, []);
+    // No data available — return empty array (chart will show empty state)
+    return [];
+  }, [periodData]);
 
   const riskMetrics = useMemo(() => {
+    if (periodData?.risk_metrics) {
+      return periodData.risk_metrics;
+    }
     return {
-      volatility: 12.5,
-      sharpeRatio: 1.8,
-      maxDrawdown: -8.3,
-      beta: 0.9,
-      alpha: 4.2,
-      var95: -5.2,
+      volatility: 0,
+      sharpeRatio: 0,
+      maxDrawdown: 0,
+      beta: 0,
+      alpha: 0,
+      var95: 0,
     };
-  }, []);
+  }, [periodData]);
 
   const formatCurrency = (value: number | undefined | null) => {
     if (typeof value !== 'number' || isNaN(value)) {

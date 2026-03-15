@@ -537,10 +537,21 @@ class WalletManagementView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        """Get user's wallet balances."""
+        """Get user's wallet balances. Auto-creates USD wallet if none exist."""
         balances = WalletBalance.objects.filter(user=request.user)
+        if not balances.exists():
+            WalletBalance.objects.create(
+                user=request.user,
+                currency='USD',
+                currency_type='fiat',
+                available_balance=0,
+                pending_balance=0,
+                locked_balance=0,
+                is_active=True,
+            )
+            balances = WalletBalance.objects.filter(user=request.user)
         serializer = WalletBalanceSerializer(balances, many=True)
-        
+
         return Response(create_success_response(data={
             'balances': serializer.data,
             'total_value_usd': self._calculate_total_wallet_value(balances)
