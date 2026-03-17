@@ -7,6 +7,9 @@ export interface InvestmentProperty {
   expectedReturn: number;
   totalTokens: number;
   soldTokens: number;
+  location?: string;
+  propertyType?: string;
+  totalValue?: number;
   investment: {
     minInvestment: number;
     avgAnnualReturn: number;

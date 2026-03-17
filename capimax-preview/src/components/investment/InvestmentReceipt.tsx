@@ -261,20 +261,20 @@ Status: Confirmed
                   </Text>
                   <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-4">
                     <MapPin className="w-4 h-4" />
-                    <Text variant="body">New York, NY 10016</Text>
+                    <Text variant="body">{property.location || 'Location not available'}</Text>
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <Text variant="body" color="muted">Property Type:</Text>
-                      <Text variant="body" weight="medium">Residential</Text>
+                      <Text variant="body" weight="medium">{property.propertyType ? property.propertyType.charAt(0).toUpperCase() + property.propertyType.slice(1) : 'Residential'}</Text>
                     </div>
                     <div className="flex justify-between">
-                      <Text variant="body" color="muted">Year Built:</Text>
-                      <Text variant="body" weight="medium">{property.yearBuilt}</Text>
+                      <Text variant="body" color="muted">Token Price:</Text>
+                      <Text variant="body" weight="medium">${property.tokenPrice.toLocaleString()}</Text>
                     </div>
                     <div className="flex justify-between">
                       <Text variant="body" color="muted">Total Property Value:</Text>
-                      <Text variant="body" weight="medium">{property.price}</Text>
+                      <Text variant="body" weight="medium">${(property.totalValue || 0).toLocaleString()}</Text>
                     </div>
                   </div>
                 </div>
@@ -325,10 +325,10 @@ Status: Confirmed
               <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl text-center">
                 <Text variant="bodySmall" color="muted" className="mb-1">Annual Return</Text>
                 <Text variant="h3" className="text-blue-600 dark:text-blue-400 mb-1">
-                  ${returns.netAnnualReturn.toLocaleString()}
+                  {returns.totalROI.toFixed(1)}% ROI
                 </Text>
                 <Text variant="bodySmall" className="text-blue-700 dark:text-blue-300">
-                  {returns.totalROI.toFixed(1)}% ROI
+                  Est. ${returns.netAnnualReturn.toLocaleString()}/year
                 </Text>
               </div>
               

@@ -132,7 +132,18 @@ export const OfflineIndicator: React.FC = () => {
     }
   }, [isOnline, wasOffline]);
 
-  if (!showOfflineMessage && isOnline && !isSlowConnection) {
+  // Track if user dismissed the banner in this session
+  const [dismissed, setDismissed] = useState(() => {
+    try { return sessionStorage.getItem('offline-banner-dismissed') === 'true'; } catch { return false; }
+  });
+
+  const handleDismiss = () => {
+    setShowOfflineMessage(false);
+    setDismissed(true);
+    try { sessionStorage.setItem('offline-banner-dismissed', 'true'); } catch {}
+  };
+
+  if (dismissed || (!showOfflineMessage && isOnline && !isSlowConnection)) {
     return null;
   }
 
@@ -226,7 +237,7 @@ export const OfflineIndicator: React.FC = () => {
                 
                 <motion.button
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowOfflineMessage(false)}
+                  onClick={handleDismiss}
                   className={`
                     p-1 rounded-lg transition-colors duration-200
                     ${isOnline 

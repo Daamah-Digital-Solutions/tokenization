@@ -156,10 +156,10 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
     },
     {
       label: 'Active Traders',
-      value: '1,247',
+      value: marketStats?.active_traders || 0,
       icon: Users,
-      change: '+5.3%',
-      changeType: 'positive' as const
+      change: marketStats?.active_traders ? `${marketStats.active_traders}` : '0',
+      changeType: 'neutral' as const
     }
   ];
 

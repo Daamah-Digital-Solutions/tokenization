@@ -149,18 +149,20 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
     { id: 'settings', label: 'Settings', icon: Settings },
   ] as const;
 
-  const formatCurrency = (amount: number | undefined | null) => {
-    if (typeof amount !== 'number' || isNaN(amount)) {
+  const formatCurrency = (amount: number | string | undefined | null) => {
+    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+    if (typeof num !== 'number' || isNaN(num)) {
       return showBalances ? '$0' : '$****';
     }
-    return showBalances ? `$${amount.toLocaleString()}` : '$****';
+    return showBalances ? `$${num.toLocaleString()}` : '$****';
   };
 
-  const formatPercentage = (value: number | undefined | null) => {
-    if (typeof value !== 'number' || isNaN(value)) {
+  const formatPercentage = (value: number | string | undefined | null) => {
+    const num = typeof value === 'string' ? parseFloat(value) : value;
+    if (typeof num !== 'number' || isNaN(num)) {
       return showBalances ? '0.00%' : '**%';
     }
-    const formatted = `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+    const formatted = `${num >= 0 ? '+' : ''}${num.toFixed(2)}%`;
     return showBalances ? formatted : '**%';
   };
 
@@ -650,7 +652,7 @@ const MarketplaceContent: React.FC = () => {
           <div className="aspect-video bg-slate-200 dark:bg-slate-700 relative">
             {property.images && property.images.length > 0 ? (
               <img
-                src={property.images[0].image}
+                src={typeof property.images[0] === 'string' ? property.images[0] : property.images[0].image}
                 alt={property.title}
                 className="w-full h-full object-cover"
               />
@@ -761,20 +763,20 @@ const WalletContent: React.FC<{
       />
       <StatsCard
         title="Portfolio Value"
-        value={loading ? '$0' : `$${(portfolio?.current_value || 0).toLocaleString()}`}
+        value={loading ? '$0' : `$${(parseFloat(String(portfolio?.current_value || 0))).toLocaleString()}`}
         subtitle="Current investment value"
         icon={DollarSign}
         variant="accent"
       />
       <StatsCard
         title="Total Invested"
-        value={loading ? '$0' : `$${(portfolio?.total_invested || 0).toLocaleString()}`}
+        value={loading ? '$0' : `$${(parseFloat(String(portfolio?.total_invested || 0))).toLocaleString()}`}
         subtitle="All-time investments"
         icon={RefreshCw}
       />
       <StatsCard
         title="Total Returns"
-        value={loading ? '$0' : `$${(portfolio?.total_returns || 0).toLocaleString()}`}
+        value={loading ? '$0' : `$${(parseFloat(String(portfolio?.total_returns || portfolio?.total_return || 0))).toLocaleString()}`}
         subtitle="Earnings to date"
         icon={TrendingUp}
       />
@@ -958,6 +960,7 @@ const SettingsContent: React.FC = () => {
   const [userRoles, setUserRoles] = useState<any[]>([]);
   const [isLoadingRoles, setIsLoadingRoles] = useState(true);
   const [activeSettingsTab, setActiveSettingsTab] = useState('profile');
+  const [settingsModal, setSettingsModal] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUserRoles();
@@ -1128,21 +1131,21 @@ const SettingsContent: React.FC = () => {
                     <Text variant="body" weight="medium">Two-Factor Authentication</Text>
                     <Text variant="caption" color="muted">Add an extra layer of security</Text>
                   </div>
-                  <Button variant="outline" size="sm">Enable</Button>
+                  <Button variant="outline" size="sm" onClick={() => setSettingsModal('2fa')}>Enable</Button>
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <Text variant="body" weight="medium">Change Password</Text>
                     <Text variant="caption" color="muted">Update your login credentials</Text>
                   </div>
-                  <Button variant="outline" size="sm">Change</Button>
+                  <Button variant="outline" size="sm" onClick={() => setSettingsModal('password')}>Change</Button>
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
                     <Text variant="body" weight="medium">Login Sessions</Text>
                     <Text variant="caption" color="muted">Manage active sessions</Text>
                   </div>
-                  <Button variant="outline" size="sm">View</Button>
+                  <Button variant="outline" size="sm" onClick={() => setSettingsModal('sessions')}>View</Button>
                 </div>
               </div>
             </Card>
@@ -1333,15 +1336,15 @@ const SettingsContent: React.FC = () => {
                 Account Actions
               </Text>
               <div className="space-y-3">
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start" onClick={() => setSettingsModal('export')}>
                   <Download className="w-4 h-4 mr-3" />
                   Export Data
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start" onClick={() => setSettingsModal('tax')}>
                   <FileText className="w-4 h-4 mr-3" />
                   Download Tax Documents
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start" onClick={() => setSettingsModal('reports')}>
                   <FileText className="w-4 h-4 mr-3" />
                   Download Investment Reports
                 </Button>
@@ -1370,6 +1373,75 @@ const SettingsContent: React.FC = () => {
           </div>
         )}
       </motion.div>
+
+      {/* Settings Modals */}
+      <AnimatePresence>
+        {settingsModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={() => setSettingsModal(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {settingsModal === '2fa' && (
+                <>
+                  <Text variant="h3" weight="bold" className="mb-3">Enable Two-Factor Authentication</Text>
+                  <Text variant="body" color="muted" className="mb-4">
+                    Two-factor authentication adds an extra layer of security to your account. You will need an authenticator app like Google Authenticator or Authy.
+                  </Text>
+                  <Text variant="caption" color="muted" className="mb-4 block">This feature is coming soon. We are working on integrating 2FA.</Text>
+                  <Button onClick={() => setSettingsModal(null)} className="w-full">Close</Button>
+                </>
+              )}
+              {settingsModal === 'password' && (
+                <>
+                  <Text variant="h3" weight="bold" className="mb-3">Change Password</Text>
+                  <div className="space-y-3 mb-4">
+                    <input type="password" placeholder="Current password" className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
+                    <input type="password" placeholder="New password" className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
+                    <input type="password" placeholder="Confirm new password" className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
+                  </div>
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => setSettingsModal(null)} className="flex-1">Cancel</Button>
+                    <Button onClick={() => { alert('Password change submitted'); setSettingsModal(null); }} className="flex-1">Update Password</Button>
+                  </div>
+                </>
+              )}
+              {settingsModal === 'sessions' && (
+                <>
+                  <Text variant="h3" weight="bold" className="mb-3">Active Sessions</Text>
+                  <div className="space-y-3 mb-4">
+                    <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                      <Text variant="body" weight="medium">Current Session</Text>
+                      <Text variant="caption" color="muted">This device - Active now</Text>
+                    </div>
+                  </div>
+                  <Button onClick={() => setSettingsModal(null)} className="w-full">Close</Button>
+                </>
+              )}
+              {(settingsModal === 'export' || settingsModal === 'tax' || settingsModal === 'reports') && (
+                <>
+                  <Text variant="h3" weight="bold" className="mb-3">
+                    {settingsModal === 'export' ? 'Export Data' : settingsModal === 'tax' ? 'Tax Documents' : 'Investment Reports'}
+                  </Text>
+                  <Text variant="body" color="muted" className="mb-4">
+                    This feature is coming soon. Your {settingsModal === 'export' ? 'account data export' : settingsModal === 'tax' ? 'tax documents' : 'investment reports'} will be available for download once generated.
+                  </Text>
+                  <Button onClick={() => setSettingsModal(null)} className="w-full">Close</Button>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

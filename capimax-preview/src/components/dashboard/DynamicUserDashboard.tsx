@@ -402,12 +402,12 @@ export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
             )}
           </Button>
           
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => onViewChange?.('notifications')}>
             <Bell className="w-4 h-4 mr-2" />
             Notifications
           </Button>
-          
-          <Button variant="outline" size="sm">
+
+          <Button variant="outline" size="sm" onClick={() => onViewChange?.('settings')}>
             <Settings className="w-4 h-4 mr-2" />
             Settings
           </Button>
@@ -528,14 +528,14 @@ const RecentTransactions: React.FC<{ data: any; loading: boolean }> = ({ data, l
         ))}
       </div>
     ) : (
-      data.transactions?.slice(0, 5).map((transaction: Transaction) => (
+      (Array.isArray(data.transactions) ? data.transactions : [])?.slice(0, 5).map((transaction: Transaction) => (
         <div key={transaction.id} className="flex items-center justify-between py-2">
           <div>
             <Text variant="body" weight="medium">
               {transaction.description}
             </Text>
             <Text variant="caption" color="muted">
-              {new Date(transaction.created_at).toLocaleDateString()}
+              {new Date(transaction.date || transaction.created_at).toLocaleDateString()}
             </Text>
           </div>
           <Text variant="body" weight="semibold">

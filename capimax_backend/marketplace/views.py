@@ -35,6 +35,7 @@ from .services import (
 from .permissions import MarketplacePermissions
 from properties.models import Property
 from core.pagination import StandardResultsSetPagination
+from core.utils import create_success_response
 
 logger = logging.getLogger(__name__)
 
@@ -68,10 +69,27 @@ class MarketListingViewSet(viewsets.ModelViewSet):
             return MarketListingListSerializer
         return MarketListingSerializer
     
+    def list(self, request, *args, **kwargs):
+        """List marketplace listings with wrapped response for frontend apiClient."""
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            paginated = self.paginator.get_paginated_response(serializer.data)
+            return Response(create_success_response(data=paginated.data))
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(create_success_response(data=serializer.data))
+
+    def retrieve(self, request, *args, **kwargs):
+        """Get single listing with wrapped response."""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(create_success_response(data=serializer.data))
+
     def get_queryset(self):
         """Filter queryset based on user permissions and request parameters."""
         queryset = super().get_queryset()
-        
+
         # Filter by property if specified
         property_id = self.request.query_params.get('property_id')
         if property_id:

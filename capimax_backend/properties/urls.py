@@ -21,6 +21,9 @@ urlpatterns = [
     path('', include(router.urls)),
 
     # Property Owner Dashboard Endpoints
+    path('owner/stats/',
+         views.PropertyOwnerStatsView.as_view(),
+         name='property-owner-stats'),
     path('owner/',
          views.PropertyOwnerDashboardView.as_view(),
          name='property-owner-dashboard'),

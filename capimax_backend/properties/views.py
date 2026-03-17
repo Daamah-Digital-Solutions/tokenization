@@ -23,6 +23,7 @@ from drf_yasg import openapi
 from decimal import Decimal
 from datetime import datetime, timedelta
 from typing import Dict, Any, List
+from core.utils import create_success_response
 import logging
 
 from core.permissions import IsOwnerOrReadOnly, AdminOrReadOnly
@@ -1162,12 +1163,11 @@ class MarketInsightsView(APIView):
         
         # Trending properties (based on recent views and investments)
         trending_properties = []
-        recent_date = timezone.now() - timedelta(days=1)
-        
-        # Get properties with recent activity
+        recent_date = timezone.now() - timedelta(days=30)
+
+        # Get properties with recent activity (last 30 days)
         properties_with_activity = Property.objects.filter(
             status__in=[PropertyStatus.ACTIVE, PropertyStatus.TOKENIZED],
-            investments__created_at__gte=recent_date
         ).annotate(
             recent_investments=Count('investments', filter=Q(investments__created_at__gte=recent_date)),
             view_count=Count('view_logs', filter=Q(view_logs__viewed_at__gte=recent_date))
@@ -1261,21 +1261,71 @@ class MarketInsightsView(APIView):
                     'date': timezone.now() - timedelta(hours=6),
                 })
         
+        # Build high-yield properties (top by expected_return)
+        high_yield_qs = Property.objects.filter(
+            status__in=[PropertyStatus.ACTIVE, PropertyStatus.TOKENIZED],
+            expected_return__isnull=False
+        ).order_by('-expected_return')[:5]
+
+        high_yield = []
+        for prop in high_yield_qs:
+            primary_image = prop.images.filter(is_primary=True).first()
+            image_url = request.build_absolute_uri(primary_image.image.url) if primary_image else None
+            high_yield.append({
+                'id': prop.id,
+                'title': prop.title,
+                'property_type': prop.property_type,
+                'city': prop.city,
+                'country': prop.country,
+                'image_url': image_url,
+                'token_price': prop.token_price,
+                'total_value': prop.total_value,
+                'expected_return': prop.expected_return,
+            })
+
+        # Build new listings array (properties created in last 30 days)
+        new_listings_qs = Property.objects.filter(
+            status=PropertyStatus.ACTIVE,
+            created_at__gte=timezone.now() - timedelta(days=30)
+        ).order_by('-created_at')[:5]
+
+        new_listings_list = []
+        for prop in new_listings_qs:
+            primary_image = prop.images.filter(is_primary=True).first()
+            image_url = request.build_absolute_uri(primary_image.image.url) if primary_image else None
+            new_listings_list.append({
+                'id': prop.id,
+                'title': prop.title,
+                'property_type': prop.property_type,
+                'city': prop.city,
+                'country': prop.country,
+                'image_url': image_url,
+                'token_price': prop.token_price,
+                'total_value': prop.total_value,
+                'expected_return': prop.expected_return,
+            })
+
         insights_data = {
             'total_properties': total_properties,
             'total_market_value': total_market_value,
             'total_investors': total_investors,
             'average_roi': average_roi,
             'trending_properties': trending_properties,
+            # Frontend-expected aliases
+            'trending': trending_properties,
+            'highYield': high_yield,
+            'newListings': new_listings_list,
             'market_performance_30d': market_performance_30d,
             'top_performing_cities': top_performing_cities,
             'new_listings': new_listings,
             'fully_funded_properties': fully_funded_properties,
             'market_alerts': market_alerts,
             'price_alerts': price_alerts,
+            'priceAlerts': price_alerts,
+            'marketNews': [],
         }
-        
-        return Response(insights_data)
+
+        return Response(create_success_response(data=insights_data))
 
 
 class ConstructionInstallmentViewSet(ModelViewSet):
@@ -2163,13 +2213,68 @@ class PropertyOwnerDashboardView(APIView):
                 'updated_at': prop.updated_at.isoformat()
             })
 
-        return Response({
+        return Response(create_success_response(data={
             'properties': properties_data,
             'total_properties': len(properties_data),
             'total_value': str(sum(Decimal(p['total_value']) for p in properties_data)),
             'total_funding': str(sum(Decimal(p['funding_amount']) for p in properties_data)),
             'average_funding_percentage': sum(p['funding_percentage'] for p in properties_data) / len(properties_data) if properties_data else 0
-        })
+        }))
+
+
+class PropertyOwnerStatsView(APIView):
+    """Property owner summary statistics for the dashboard overview."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        if not (user.has_role('property_owner') or user.is_staff):
+            return Response(
+                {'detail': 'You must be a property owner to access this endpoint.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        properties = Property.objects.filter(owner=user)
+        total_properties = properties.count()
+
+        # Capital raised
+        from investments.models import Investment
+        capital_raised = Investment.objects.filter(
+            property_investment__in=properties,
+            status='completed'
+        ).aggregate(total=Sum('investment_amount'))['total'] or Decimal('0.00')
+
+        # Active investors
+        active_investors = Investment.objects.filter(
+            property_investment__in=properties,
+            status='completed'
+        ).values('user').distinct().count()
+
+        # Monthly revenue (rental income this month)
+        this_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        from properties.models import RentalIncomeDistribution
+        monthly_revenue = RentalIncomeDistribution.objects.filter(
+            property__in=properties,
+            distribution_date__gte=this_month.date()
+        ).aggregate(total=Sum('total_rental_income'))['total'] or Decimal('0.00')
+
+        # If no distributions yet, estimate from monthly_rental_income
+        if monthly_revenue == 0:
+            monthly_revenue = properties.aggregate(
+                total=Sum('monthly_rental_income')
+            )['total'] or Decimal('0.00')
+
+        return Response(create_success_response(data={
+            'total_properties': total_properties,
+            'total_properties_change': f'+{total_properties}',
+            'capital_raised': float(capital_raised),
+            'capital_raised_change': '+0%',
+            'active_investors': active_investors,
+            'active_investors_change': f'+{active_investors}',
+            'monthly_revenue': float(monthly_revenue),
+            'monthly_revenue_change': '+0%',
+        }))
 
 
 class PropertyOwnerRevenueAnalyticsView(APIView):

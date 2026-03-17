@@ -576,9 +576,48 @@ class PortfolioViewSet(viewsets.ViewSet):
         try:
             summary = PortfolioService.get_portfolio_summary(request.user)
             serializer = PortfolioSummarySerializer(summary)
+            data = dict(serializer.data)
+            # Compute estimated monthly rental income (same as DashboardStatsView)
+            investments = Investment.objects.filter(
+                user=request.user,
+                status='completed'
+            ).select_related('property_investment')
+
+            estimated_monthly_rental = Decimal('0')
+            for inv in investments:
+                prop = inv.property_investment
+                if prop.monthly_rental_income and prop.monthly_rental_income > 0:
+                    ownership_pct = inv.ownership_percentage / Decimal('100') if inv.ownership_percentage else Decimal('0')
+                    estimated_monthly_rental += prop.monthly_rental_income * ownership_pct
+
+            total_dividends = Decimal(str(data.get('total_dividends', 0)))
+            monthly_income = float(total_dividends + estimated_monthly_rental)
+
+            # Add frontend-expected aliases
+            data['monthly_dividends'] = monthly_income
+            data['total_returns'] = data.get('total_return', 0)
+
+            allocation_map = {}
+            total_invested = Decimal('0')
+            for inv in investments:
+                ptype = inv.property_investment.property_type or 'other'
+                allocation_map[ptype] = allocation_map.get(ptype, Decimal('0')) + inv.investment_amount
+                total_invested += inv.investment_amount
+
+            asset_allocation = []
+            if total_invested > 0:
+                for ptype, amount in allocation_map.items():
+                    asset_allocation.append({
+                        'property_type': ptype,
+                        'amount': float(amount),
+                        'percentage': float((amount / total_invested * 100).quantize(Decimal('0.1'))),
+                    })
+
+            data['asset_allocation'] = asset_allocation
+
             return Response({
                 'success': True,
-                'data': serializer.data
+                'data': data
             })
         except Exception as e:
             logger.error(f"Portfolio summary error for user {request.user.id}: {str(e)}")
@@ -1026,10 +1065,20 @@ class InvestmentTransactionsView(APIView):
         transaction_type = request.query_params.get('type')
         if transaction_type:
             transactions = [t for t in transactions if t['type'] == transaction_type]
-        
+
         property_id = request.query_params.get('property_id')
         if property_id:
             transactions = [t for t in transactions if str(t['property_id']) == property_id]
+
+        search = request.query_params.get('search', '').strip().lower()
+        if search:
+            transactions = [
+                t for t in transactions
+                if search in t.get('description', '').lower()
+                or search in t.get('type', '').lower()
+                or search in t.get('property_title', '').lower()
+                or search in t.get('status', '').lower()
+            ]
         
         # Pagination
         page_size = min(int(request.query_params.get('page_size', 20)), 100)
@@ -1038,9 +1087,11 @@ class InvestmentTransactionsView(APIView):
         paginator = Paginator(transactions, page_size)
         page_obj = paginator.get_page(page)
         
-        return Response({
-            'count': paginator.count,
-            'next': f"{request.build_absolute_uri()}?page={page + 1}" if page_obj.has_next() else None,
-            'previous': f"{request.build_absolute_uri()}?page={page - 1}" if page_obj.has_previous() else None,
-            'results': list(page_obj.object_list)
-        })
+        return Response(create_success_response(
+            data={
+                'count': paginator.count,
+                'next': f"{request.build_absolute_uri()}?page={page + 1}" if page_obj.has_next() else None,
+                'previous': f"{request.build_absolute_uri()}?page={page - 1}" if page_obj.has_previous() else None,
+                'results': list(page_obj.object_list)
+            }
+        ))

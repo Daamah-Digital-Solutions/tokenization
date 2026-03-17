@@ -18,6 +18,7 @@ from accounts.models import User
 from properties.models import Property, PropertyAnalytics
 from investments.models import Investment, DividendPayment
 from .serializers import DashboardStatsSerializer
+from core.utils import create_success_response
 
 
 class DashboardStatsView(APIView):
@@ -75,16 +76,27 @@ class DashboardStatsView(APIView):
             total_roi = current_value - total_invested
             roi_percentage = (total_roi / total_invested * 100) if total_invested > 0 else Decimal('0.00')
             
-            # Calculate monthly dividends
+            # Calculate monthly income (dividends + estimated rental income)
             this_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             last_month = (this_month - timedelta(days=1)).replace(day=1)
-            
+
             monthly_dividends = DividendPayment.objects.filter(
                 investment__user=user,
                 payment_date__gte=this_month,
                 status='paid'
             ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-            
+
+            # Calculate estimated monthly rental income from user's investments
+            # Pro-rata share based on token ownership percentage
+            estimated_monthly_rental = Decimal('0.00')
+            for investment in user_investments:
+                prop = investment.property_investment
+                if prop.monthly_rental_income and prop.monthly_rental_income > 0:
+                    ownership_pct = investment.ownership_percentage / Decimal('100') if investment.ownership_percentage else Decimal('0')
+                    estimated_monthly_rental += prop.monthly_rental_income * ownership_pct
+
+            monthly_dividends = monthly_dividends + estimated_monthly_rental
+
             last_month_dividends = DividendPayment.objects.filter(
                 investment__user=user,
                 payment_date__gte=last_month,
@@ -168,7 +180,17 @@ class DashboardStatsView(APIView):
             }
         
         serializer = DashboardStatsSerializer(stats_data)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        data = dict(serializer.data)
+        # Add frontend-expected field aliases
+        data['totalValue'] = float(data.get('current_portfolio_value', 0))
+        data['totalInvestments'] = float(data.get('total_invested', 0))
+        data['totalReturns'] = float(data.get('total_roi', 0))
+        data['activeProperties'] = data.get('properties_count', 0)
+        data['monthlyIncome'] = float(data.get('monthly_dividends', 0))
+        data['roi'] = float(data.get('roi_percentage', 0))
+        data['portfolioGrowth'] = float(data.get('monthly_income_change', 0))
+        data['pendingTransactions'] = data.get('pending_investments', 0)
+        return Response(create_success_response(data=data))
 
 
 class PropertyOwnerActivityFeedView(APIView):
@@ -429,7 +451,7 @@ class PropertyOwnerActivityFeedView(APIView):
         )
         new_subscribers = sum(1 for a in activities if a['type'] == 'new_subscriber')
 
-        return Response({
+        return Response(create_success_response(data={
             'activities': paginated_activities,
             'pagination': {
                 'current_page': page,
@@ -450,4 +472,4 @@ class PropertyOwnerActivityFeedView(APIView):
                     'properties_with_activity': user_properties.count()
                 }
             }
-        })
+        }))

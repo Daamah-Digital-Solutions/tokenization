@@ -147,7 +147,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
       const csvContent = [
         ['Date', 'Type', 'Description', 'Amount', 'Status', 'Currency', 'Property', 'Payment Method'].join(','),
         ...filteredTransactions.map(t => [
-          new Date(t.created_at).toLocaleDateString(),
+          new Date((t as any).date || t.created_at).toLocaleDateString(),
           t.type,
           t.description,
           t.amount,
@@ -522,10 +522,10 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                           
                           <td className="px-6 py-4">
                             <Text variant="body">
-                              {new Date(transaction.created_at).toLocaleDateString()}
+                              {new Date((transaction as any).date || transaction.created_at).toLocaleDateString()}
                             </Text>
                             <Text variant="caption" color="muted">
-                              {new Date(transaction.created_at).toLocaleTimeString()}
+                              {new Date((transaction as any).date || transaction.created_at).toLocaleTimeString()}
                             </Text>
                           </td>
                           

@@ -1,11 +1,13 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Eye, EyeOff, TrendingUp, TrendingDown, Plus, ArrowUpRight, ArrowDownLeft, RefreshCw, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Eye, EyeOff, TrendingUp, TrendingDown, Plus, ArrowUpRight, ArrowDownLeft, RefreshCw, AlertCircle, X } from 'lucide-react';
 import { usePayment } from '../../contexts/PaymentContext';
 import { formatCurrency, getCurrencyInfo } from '../../utils/currencyConverter';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { usePortfolioAnalytics } from '../../hooks/usePortfolioAnalytics';
+
+const DepositWithdrawLazy = React.lazy(() => import('./DepositWithdraw'));
 
 interface WalletBalanceProps {
   className?: string;
@@ -17,6 +19,7 @@ export function WalletBalance({ className, showActions = true, compact = false }
   const { state, getTotalUSDBalance, openPaymentModal } = usePayment();
   const [showBalances, setShowBalances] = React.useState(true);
   const [showPortfolioGrowth, setShowPortfolioGrowth] = React.useState(true);
+  const [walletModal, setWalletModal] = React.useState<'deposit' | 'withdraw' | null>(null);
 
   // Get portfolio analytics data
   const {
@@ -147,6 +150,7 @@ export function WalletBalance({ className, showActions = true, compact = false }
               <Button
                 variant="outline"
                 className="flex items-center gap-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                onClick={() => setWalletModal('withdraw')}
               >
                 <ArrowUpRight className="h-4 w-4" />
                 Withdraw
@@ -262,6 +266,7 @@ export function WalletBalance({ className, showActions = true, compact = false }
                           size="sm"
                           variant="outline"
                           className="flex items-center gap-1 text-xs"
+                          onClick={() => setWalletModal('deposit')}
                         >
                           <ArrowDownLeft className="h-3 w-3" />
                           Deposit
@@ -271,6 +276,7 @@ export function WalletBalance({ className, showActions = true, compact = false }
                           variant="outline"
                           className="flex items-center gap-1 text-xs"
                           disabled={!isPositive}
+                          onClick={() => setWalletModal('withdraw')}
                         >
                           <ArrowUpRight className="h-3 w-3" />
                           Withdraw
@@ -331,6 +337,42 @@ export function WalletBalance({ className, showActions = true, compact = false }
           </Card>
         </motion.div>
       )}
+
+      {/* Deposit/Withdraw Modal */}
+      <AnimatePresence>
+        {walletModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={() => setWalletModal(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-700">
+                <h3 className="text-lg font-semibold">
+                  {walletModal === 'deposit' ? 'Add Funds' : 'Withdraw Funds'}
+                </h3>
+                <button onClick={() => setWalletModal(null)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <React.Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+                <DepositWithdrawLazy
+                  mode={walletModal}
+                  onClose={() => setWalletModal(null)}
+                />
+              </React.Suspense>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

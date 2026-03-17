@@ -175,10 +175,17 @@ export class DashboardService {
    */
   static async getRecentTransactions(limit: number = 10): Promise<Transaction[]> {
     try {
-      const response = await apiClient.get<Transaction[]>('/transactions/', {
+      const response = await apiClient.get<any>('/transactions/', {
         limit,
         ordering: '-created_at'
       });
+      // Handle both array and paginated {results: [...]} formats
+      if (Array.isArray(response)) {
+        return response;
+      }
+      if (response?.results && Array.isArray(response.results)) {
+        return response.results;
+      }
       return response || [];
     } catch (error) {
       console.error('Failed to fetch transactions:', error);

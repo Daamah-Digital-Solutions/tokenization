@@ -237,6 +237,9 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
     expectedReturn: property.expected_return || 10,
     totalTokens: property.total_tokens,
     soldTokens: property.tokens_sold,
+    location: `${property.city || ''}, ${property.country || ''}`.replace(/^, |, $/, ''),
+    propertyType: property.property_type,
+    totalValue: property.total_value,
     investment: {
       minInvestment: property.token_price,
       avgAnnualReturn: property.expected_return || 10,
@@ -251,6 +254,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
   const handleInvestmentComplete = (investment: InvestmentData) => {
     console.log('Investment completed:', investment);
     setShowInvestmentFlow(false);
+    // Refetch property data to update funding progress (tokens_sold, funding_percentage)
+    loadPropertyData();
   };
 
   const handleGoToPortfolio = () => {

@@ -121,6 +121,9 @@ export const PropertiesPage: React.FC = () => {
       expectedReturn: property.expected_return || 10,
       totalTokens: property.total_tokens,
       soldTokens: property.tokens_sold,
+      location: `${property.city || ''}, ${property.country || ''}`.replace(/^, |, $/, ''),
+      propertyType: property.property_type,
+      totalValue: property.total_value,
       investment: {
         minInvestment: property.minimum_investment || property.token_price,
         avgAnnualReturn: property.expected_return || 10,
@@ -141,7 +144,7 @@ export const PropertiesPage: React.FC = () => {
     let filtered = searchableProperties.filter(property => {
       const matchesSearch = property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                            property.searchableLocation.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesType = selectedType === 'all' || property.searchableType === selectedType;
+      const matchesType = selectedType === 'all' || property.searchableType.toLowerCase() === selectedType.toLowerCase();
       const matchesStatus = selectedStatus === 'all' || property.displayStatus === selectedStatus ||
                           (selectedStatus === 'approved' && property.displayStatus === 'funding');
 
