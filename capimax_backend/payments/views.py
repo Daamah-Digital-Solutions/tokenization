@@ -66,21 +66,197 @@ class PaymentMethodViewSet(ModelViewSet):
     def set_default(self, request, pk=None):
         """Set payment method as default."""
         payment_method = self.get_object()
-        
+
         # Remove default from other payment methods
         UserPaymentMethod.objects.filter(
-            user=request.user, 
+            user=request.user,
             is_default=True
         ).update(is_default=False)
-        
+
         # Set this as default
         payment_method.is_default = True
         payment_method.save()
-        
+
         return Response(create_success_response(
             data=PaymentMethodSerializer(payment_method).data,
             message="Payment method set as default"
         ))
+
+    # ------------------------------------------------------------------
+    # Stripe SetupIntent flow — PCI-compliant add-card pipeline.
+    #
+    # Frontend never sends raw card numbers to our backend. Instead:
+    #   1. POST /methods/setup-intent/ → returns ``client_secret``.
+    #   2. Frontend calls ``stripe.confirmCardSetup(client_secret, {...})``
+    #      with the user's card details, collected in a Stripe Elements
+    #      iframe so the PAN never touches our origin.
+    #   3. On success Stripe returns a ``payment_method`` id, which the
+    #      frontend POSTs to /methods/attach/ to persist as a saved card.
+    # ------------------------------------------------------------------
+
+    def _get_or_create_stripe_customer(self, user) -> str:
+        """
+        Resolve the Stripe Customer ID for ``user``.
+
+        Resolution order:
+
+        1. Local cache — a previously persisted ``UserPaymentMethod`` row
+           carries the customer ID on its ``external_id`` column.
+        2. Stripe-side lookup by email — handles the case where the user
+           started an add-card flow but never finished, so no local row
+           exists yet but Stripe already knows them. Without this, every
+           SetupIntent would create a brand-new customer and the eventual
+           ``attach`` would 403 ("PaymentMethod not attached to this user")
+           because the SetupIntent and attach pick different customers.
+        3. Create a fresh Stripe customer.
+
+        We avoid adding a column to the User model; ``UserPaymentMethod``
+        is the source of truth once any card is saved, and the Stripe-side
+        lookup covers the gap between SetupIntent and attach.
+        """
+        existing = UserPaymentMethod.objects.filter(
+            user=user,
+            method_type=PaymentMethod.CREDIT_CARD,
+            external_id__startswith='cus_',
+        ).exclude(external_id='').first()
+        if existing:
+            return existing.external_id
+
+        # No local record — check Stripe by email. ``list`` returns at most
+        # one customer per email under normal usage of this code.
+        try:
+            found = stripe.Customer.list(email=user.email, limit=1)
+            if found.data:
+                return found.data[0].id
+        except stripe.error.StripeError:
+            # If the search fails we still want to allow create() to run.
+            logger.warning("Stripe customer lookup by email failed; falling through to create",
+                           exc_info=True)
+
+        customer = stripe.Customer.create(
+            email=user.email,
+            name=f"{user.first_name} {user.last_name}".strip() or user.email,
+            metadata={'user_id': str(user.id)},
+        )
+        return customer.id
+
+    @action(detail=False, methods=['post'], url_path='setup-intent')
+    def setup_intent(self, request):
+        """
+        Create a Stripe SetupIntent so the user can add a saved card.
+
+        Returns ``client_secret`` (consumed by Stripe.js on the frontend)
+        and ``customer_id`` so the ``attach`` step can verify ownership.
+        """
+        if not stripe.api_key:
+            return Response(
+                create_error_response("Stripe is not configured on this server."),
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        try:
+            customer_id = self._get_or_create_stripe_customer(request.user)
+            intent = stripe.SetupIntent.create(
+                customer=customer_id,
+                payment_method_types=['card'],
+                # off_session lets us charge this card later (for recurring
+                # installments, dividends, etc.) without re-authenticating.
+                usage='off_session',
+                metadata={'user_id': str(request.user.id)},
+            )
+            return Response(create_success_response(data={
+                'client_secret': intent.client_secret,
+                'setup_intent_id': intent.id,
+                'customer_id': customer_id,
+            }, message="SetupIntent created"))
+        except stripe.error.StripeError as e:
+            logger.error("Stripe SetupIntent creation failed for user %s: %s", request.user.id, e)
+            return Response(
+                create_error_response(f"Stripe error: {e.user_message or str(e)}"),
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+    @action(detail=False, methods=['post'])
+    def attach(self, request):
+        """
+        Persist a Stripe PaymentMethod that the frontend has confirmed.
+
+        Expects ``payment_method_id`` (returned by Stripe.js after the
+        user completes the SetupIntent). The PaymentMethod must already
+        be attached to the user's Stripe customer — Stripe.js handles
+        the attach as part of confirmCardSetup.
+        """
+        if not stripe.api_key:
+            return Response(
+                create_error_response("Stripe is not configured on this server."),
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+
+        pm_id = request.data.get('payment_method_id')
+        if not pm_id or not isinstance(pm_id, str) or not pm_id.startswith('pm_'):
+            return Response(
+                create_error_response("payment_method_id is required."),
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Idempotency: if we've already saved this Stripe PM for this user,
+        # return the existing row instead of creating a duplicate.
+        existing = UserPaymentMethod.objects.filter(
+            user=request.user,
+            metadata__stripe_payment_method_id=pm_id,
+        ).first()
+        if existing:
+            return Response(create_success_response(
+                data=PaymentMethodSerializer(existing).data,
+                message="Payment method already saved.",
+            ))
+
+        try:
+            pm = stripe.PaymentMethod.retrieve(pm_id)
+        except stripe.error.StripeError as e:
+            logger.error("Stripe PaymentMethod retrieve failed: %s", e)
+            return Response(
+                create_error_response(f"Stripe error: {e.user_message or str(e)}"),
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        # The PaymentMethod must belong to this user's Stripe Customer.
+        # Reject anything else — it would let one user save another user's
+        # card by passing a guessed pm_ id.
+        customer_id = self._get_or_create_stripe_customer(request.user)
+        if pm.customer != customer_id:
+            return Response(
+                create_error_response("PaymentMethod is not attached to this user."),
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        # ``pm.card`` is a StripeObject (not a dict) so use attribute access
+        # with ``getattr`` defaults instead of ``.get()``.
+        card = pm.card
+        exp_month = getattr(card, 'exp_month', None)
+        exp_year = getattr(card, 'exp_year', None)
+        expiry = f"{exp_month:02d}/{exp_year}" if exp_month and exp_year else ''
+        brand = getattr(card, 'brand', '') or ''
+        last4 = getattr(card, 'last4', '') or ''
+
+        # First saved card becomes default automatically.
+        is_first = not UserPaymentMethod.objects.filter(user=request.user).exists()
+
+        method = UserPaymentMethod.objects.create(
+            user=request.user,
+            method_type=PaymentMethod.CREDIT_CARD,
+            display_name=f"{brand.title() or 'Card'} •••• {last4 or '????'}",
+            last_four=last4,
+            brand=brand,
+            expiry_date=expiry,
+            is_default=is_first,
+            is_verified=True,
+            external_id=customer_id,
+            metadata={'stripe_payment_method_id': pm_id},
+        )
+        return Response(create_success_response(
+            data=PaymentMethodSerializer(method).data,
+            message="Payment method saved.",
+        ), status=status.HTTP_201_CREATED)
 
 
 class PaymentViewSet(ModelViewSet):
@@ -535,9 +711,13 @@ class WalletManagementView(APIView):
     """Handle wallet management operations."""
     
     permission_classes = [IsAuthenticated]
-    
-    def get(self, request):
-        """Get user's wallet balances. Auto-creates USD wallet if none exist."""
+
+    def get(self, request, action=None):
+        """Get user's wallet balances. Auto-creates USD wallet if none exist.
+
+        Accepts (and ignores) the ``action`` URL kwarg so the ``wallet/<str:action>/``
+        route doesn't 500 on GET. The action is only meaningful for POST.
+        """
         balances = WalletBalance.objects.filter(user=request.user)
         if not balances.exists():
             WalletBalance.objects.create(
@@ -1002,7 +1182,29 @@ class StripeWebhookView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Handle the event
+        # Replay protection: Stripe may deliver the same event multiple times.
+        from .middleware import webhook_event_is_replay, WebhookTimestampGuard
+        event_id = event.get('id', '')
+        if event_id and webhook_event_is_replay('stripe', event_id):
+            return Response(
+                {'status': 'duplicate ignored'},
+                status=status.HTTP_200_OK,
+            )
+
+        # Reject events too old or too far in the future (clock skew or replay)
+        event_created = event.get('created', 0)
+        if event_created and not WebhookTimestampGuard.within_tolerance(int(event_created)):
+            # NB: `created` is a reserved attribute on LogRecord — using it
+            # as an `extra` key raises KeyError. Rename to event_created_at.
+            logger.warning(
+                "Stripe webhook timestamp outside tolerance window",
+                extra={'event_id': event_id, 'event_created_at': event_created},
+            )
+            return Response(
+                {'error': 'Event timestamp outside tolerance window'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         event_type = event['type']
         logger.info(f"Received Stripe webhook event: {event_type}")
 

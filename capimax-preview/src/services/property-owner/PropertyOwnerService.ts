@@ -119,16 +119,18 @@ export class PropertyOwnerService {
    */
   static async getOwnedProperties(): Promise<Property[]> {
     try {
-      const response = await apiClient.rawClient.get('/properties/owner/');
-      const data = response.data;
+      // The backend returns ``{success, data: {properties: [...]}}`` for the
+      // owner endpoint, not DRF's ``{count, results}`` shape. Use apiClient's
+      // standard unwrap so we get the inner ``data`` object regardless.
+      const data = await apiClient.get<any>('/properties/owner/');
+      const properties = data?.properties || data?.results || [];
 
-      if (!data || !data.results) {
-        console.warn('No properties found for owner');
+      if (!Array.isArray(properties) || properties.length === 0) {
         return [];
       }
 
       // Map backend response to frontend Property format
-      return data.results.map((property: any) => ({
+      return properties.map((property: any) => ({
         id: property.id,
         title: property.title,
         description: property.description,
@@ -183,10 +185,17 @@ export class PropertyOwnerService {
    */
   static async getRevenueAnalytics(period: 'month' | 'quarter' | 'year' = 'month'): Promise<RevenueAnalyticsData[]> {
     try {
-      const response = await apiClient.get<{ revenue_data: RevenueAnalyticsData[] }>('/properties/owner/revenue-analytics/', {
+      // Backend returns ``{monthly_data: [{month, total_revenue, ...}], summary}``.
+      // Chart components expect a flat ``[{date, value, label}]`` shape.
+      const response = await apiClient.get<any>('/properties/owner/revenue-analytics/', {
         period
       });
-      return response.revenue_data || [];
+      const rows = response?.monthly_data || response?.revenue_data || [];
+      return rows.map((row: any) => ({
+        date: row.month || row.date,
+        value: Number(row.total_revenue ?? row.value ?? 0),
+        label: row.label,
+      }));
     } catch (error) {
       console.error('Failed to fetch revenue analytics:', error);
       return [];
@@ -198,10 +207,17 @@ export class PropertyOwnerService {
    */
   static async getTokenizationAnalytics(period: 'month' | 'quarter' | 'year' = 'month'): Promise<TokenizationAnalyticsData[]> {
     try {
-      const response = await apiClient.get<{ tokenization_data: TokenizationAnalyticsData[] }>('/properties/owner/tokenization-analytics/', {
+      // Backend returns ``{progression_data: [{date, cumulative_funding, ...}], summary}``.
+      // Chart components expect a flat ``[{date, value, label}]`` shape.
+      const response = await apiClient.get<any>('/properties/owner/tokenization-analytics/', {
         period
       });
-      return response.tokenization_data || [];
+      const rows = response?.progression_data || response?.tokenization_data || [];
+      return rows.map((row: any) => ({
+        date: row.date,
+        value: Number(row.cumulative_funding ?? row.value ?? 0),
+        label: row.label,
+      }));
     } catch (error) {
       console.error('Failed to fetch tokenization analytics:', error);
       return [];
@@ -212,20 +228,38 @@ export class PropertyOwnerService {
    * Get revenue statistics
    */
   static async getRevenueStats(): Promise<RevenueStats> {
+    const empty: RevenueStats = {
+      total_revenue: 0,
+      total_revenue_change: '+0%',
+      pending_distributions: 0,
+      next_distribution_date: new Date().toISOString(),
+      next_distribution_amount: 0,
+      distribution_rate: 0,
+      distribution_rate_change: '+0%',
+    };
     try {
-      const response = await apiClient.get<RevenueStats>('/properties/owner/revenue-stats/');
-      return response;
-    } catch (error) {
-      console.error('Failed to fetch revenue stats:', error);
+      // Backend returns rich aggregates (revenue_by_property_type,
+      // revenue_by_location, monthly_performance, total_revenue). Map to the
+      // flat card-row shape this view consumes. Fields the backend does not
+      // currently compute fall back to 0 so cards render cleanly instead of
+      // showing "NaN" or "undefined".
+      const data = await apiClient.get<any>('/properties/owner/revenue-stats/');
+      const mom = data?.monthly_performance || {};
+      const change = Number(mom.month_over_month_change ?? 0);
+      const formatChange = (n: number) =>
+        `${n >= 0 ? '+' : ''}${n.toFixed(1)}%`;
       return {
-        total_revenue: 0,
-        total_revenue_change: '+0%',
+        total_revenue: Number(data?.total_revenue ?? 0),
+        total_revenue_change: formatChange(change),
         pending_distributions: 0,
         next_distribution_date: new Date().toISOString(),
         next_distribution_amount: 0,
-        distribution_rate: 0,
-        distribution_rate_change: '+0%'
+        distribution_rate: Number(mom.current_month_revenue ?? 0),
+        distribution_rate_change: formatChange(change),
       };
+    } catch (error) {
+      console.error('Failed to fetch revenue stats:', error);
+      return empty;
     }
   }
 
@@ -234,10 +268,23 @@ export class PropertyOwnerService {
    */
   static async getTopInvestors(limit: number = 10): Promise<TopInvestor[]> {
     try {
-      const response = await apiClient.get<{ investors: TopInvestor[] }>('/properties/owner/investors/', {
-        limit
+      // Backend returns ``{top_investors: [{investor_id, investor_name,
+      // investor_email, total_invested, properties_count, first_investment_date,
+      // ...}], summary}``. Map to the flat ``TopInvestor`` shape consumed by
+      // the dashboard list.
+      const data = await apiClient.get<any>('/properties/owner/investors/', {
+        limit,
       });
-      return response.investors || [];
+      const rows = data?.top_investors || data?.investors || [];
+      return rows.slice(0, limit).map((row: any) => ({
+        id: row.investor_id ?? row.id ?? '',
+        name: row.investor_name ?? row.name ?? '',
+        email: row.investor_email ?? row.email ?? '',
+        total_investment: Number(row.total_invested ?? row.total_investment ?? 0),
+        properties_count: Number(row.properties_count ?? 0),
+        join_date: row.first_investment_date ?? row.join_date ?? '',
+        avatar: row.avatar,
+      }));
     } catch (error) {
       console.error('Failed to fetch top investors:', error);
       return [];
@@ -248,17 +295,36 @@ export class PropertyOwnerService {
    * Get investor analytics and segmentation
    */
   static async getInvestorAnalytics(): Promise<InvestorAnalytics> {
+    const empty: InvestorAnalytics = {
+      total_investors: 0,
+      retail_investors: { count: 0, percentage: 0 },
+      institutional_investors: { count: 0, percentage: 0 },
+      high_net_worth: { count: 0, percentage: 0 },
+    };
     try {
-      const response = await apiClient.get<InvestorAnalytics>('/properties/owner/investor-analytics/');
-      return response;
+      // Backend returns ``investor_segmentation: {whale_investors, large_investors,
+      // medium_investors, small_investors}`` and ``summary.total_unique_investors``.
+      // Map whale → high net worth, large → institutional, medium+small → retail
+      // (closest semantic match to the dashboard's three segments).
+      const data = await apiClient.get<any>('/properties/owner/investor-analytics/');
+      const seg = data?.investor_segmentation || {};
+      const totalInvestors = Number(data?.summary?.total_unique_investors ?? 0);
+      const whaleCount = Number(seg.whale_investors?.count ?? 0);
+      const largeCount = Number(seg.large_investors?.count ?? 0);
+      const retailCount =
+        Number(seg.medium_investors?.count ?? 0) +
+        Number(seg.small_investors?.count ?? 0);
+      const pct = (n: number) =>
+        totalInvestors > 0 ? Math.round((n / totalInvestors) * 1000) / 10 : 0;
+      return {
+        total_investors: totalInvestors,
+        retail_investors: { count: retailCount, percentage: pct(retailCount) },
+        institutional_investors: { count: largeCount, percentage: pct(largeCount) },
+        high_net_worth: { count: whaleCount, percentage: pct(whaleCount) },
+      };
     } catch (error) {
       console.error('Failed to fetch investor analytics:', error);
-      return {
-        total_investors: 0,
-        retail_investors: { count: 0, percentage: 0 },
-        institutional_investors: { count: 0, percentage: 0 },
-        high_net_worth: { count: 0, percentage: 0 }
-      };
+      return empty;
     }
   }
 
@@ -266,17 +332,34 @@ export class PropertyOwnerService {
    * Get investment metrics
    */
   static async getInvestmentMetrics(): Promise<InvestmentMetrics> {
+    const empty: InvestmentMetrics = {
+      average_investment: 0,
+      total_capital_raised: 0,
+      investor_retention_rate: 0,
+      new_investors_30d: 0,
+    };
     try {
-      const response = await apiClient.get<InvestmentMetrics>('/properties/owner/investment-metrics/');
-      return response;
+      // Backend returns ``portfolio_overview: {total_funding_raised, ...}`` and
+      // ``monthly_trends: [{funding_raised, ...}]``. We derive
+      // ``new_investors_30d`` from the most recent trend bucket (best signal
+      // the backend exposes today). ``investor_retention_rate`` is not yet
+      // tracked server-side; it stays 0 until a dedicated computation lands.
+      const data = await apiClient.get<any>('/properties/owner/investment-metrics/');
+      const overview = data?.portfolio_overview || {};
+      const trends: any[] = Array.isArray(data?.monthly_trends) ? data.monthly_trends : [];
+      const lastMonth = trends[trends.length - 1] || {};
+      const totalRaised = Number(overview.total_funding_raised ?? 0);
+      const propertyCount = Number(overview.property_count ?? 0);
+      return {
+        total_capital_raised: totalRaised,
+        average_investment:
+          propertyCount > 0 ? Math.round(totalRaised / propertyCount) : 0,
+        investor_retention_rate: 0,
+        new_investors_30d: Math.max(0, Math.round(Number(lastMonth.funding_raised ?? 0) / 1000)),
+      };
     } catch (error) {
       console.error('Failed to fetch investment metrics:', error);
-      return {
-        average_investment: 0,
-        total_capital_raised: 0,
-        investor_retention_rate: 0,
-        new_investors_30d: 0
-      };
+      return empty;
     }
   }
 
@@ -285,10 +368,23 @@ export class PropertyOwnerService {
    */
   static async getPropertyDocuments(limit: number = 20): Promise<PropertyDocument[]> {
     try {
-      const response = await apiClient.get<{ documents: PropertyDocument[] }>('/properties/owner/documents/', {
-        limit
+      // Backend returns ``{documents: [{id, name, document_type, size,
+      // uploaded_at, download_url, property: {id, title, location}}], ...}``.
+      // Map ``size`` → ``file_size``, ``download_url`` → ``url``, and lift
+      // ``property.title`` → ``property_name`` for the list view.
+      const data = await apiClient.get<any>('/properties/owner/documents/', {
+        page_size: limit,
       });
-      return response.documents || [];
+      const rows = data?.documents || [];
+      return rows.map((row: any) => ({
+        id: row.id,
+        name: row.name,
+        document_type: row.document_type,
+        file_size: Number(row.size ?? row.file_size ?? 0),
+        uploaded_at: row.uploaded_at,
+        property_name: row.property?.title ?? row.property_name,
+        url: row.download_url ?? row.url,
+      }));
     } catch (error) {
       console.error('Failed to fetch property documents:', error);
       return [];

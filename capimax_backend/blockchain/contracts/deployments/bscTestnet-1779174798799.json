@@ -1,0 +1,21 @@
+{
+  "network": "bscTestnet",
+  "chainId": 97,
+  "deployer": "0x9278A652585779935F7FDbD6D1259f327B12AfD0",
+  "timestamp": "2026-05-19T07:13:18.798Z",
+  "contracts": {
+    "RealEstateTokenTemplate": "0x3C3Ae26693a1CBCB1b032F270dd15F45a3997564",
+    "RentalIncomeDistributorTemplate": "0xAF4431832F72927FB09531E29c0fA998513987dc",
+    "PropertyContractFactory": "0x7e42afF015e6A3Bc88653233475B4F3E7c7e30A2",
+    "PlatformTreasury": "0x9278A652585779935F7FDbD6D1259f327B12AfD0"
+  },
+  "configuration": {
+    "multiSigOwners": [
+      "0x9278A652585779935F7FDbD6D1259f327B12AfD0"
+    ],
+    "requiredConfirmations": 1,
+    "deploymentFee": "0.01",
+    "platformFeeRate": 250
+  },
+  "notes": "Factory redeployed with activateProperty idempotency patch."
+}

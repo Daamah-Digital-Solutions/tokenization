@@ -1,0 +1,13 @@
+# Hardhat build outputs — regenerated on every compile.
+artifacts/
+cache/
+
+# Local secrets / per-developer config. Committed values would be a
+# leak; per-env values live in deployment secret managers.
+.env
+
+# Local npm install. Always re-run npm install on a fresh clone.
+node_modules/
+
+# Keep deployments/ tracked — those JSON files are the audit trail of
+# what's actually live on each network.

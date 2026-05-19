@@ -1,84 +1,97 @@
-# Essential Django requirements
-Django==4.2.7
+# =============================================================================
+# CapimaxRT Backend Requirements — Python 3.11.9 required
+# =============================================================================
+# IMPORTANT: This stack is incompatible with Python 3.13.x due to web3.py,
+# psycopg2-binary, and gevent depending on Python 3.11 ABI.
+# Use pyenv (.python-version pins 3.11.9) or a Docker base image with 3.11.
+# =============================================================================
 
-# Production WSGI Server
+# ---- Core framework ----
+Django==4.2.7
+djangorestframework==3.14.0
+django-filter==23.5
+drf-yasg==1.21.7
+django-cors-headers==4.3.1
+
+# ---- WSGI/ASGI servers ----
 gunicorn==21.2.0
 gevent==23.9.1
+uvicorn[standard]==0.27.0
+# Daphne is required at runtime because we register it in INSTALLED_APPS so
+# `manage.py runserver` upgrades to ASGI for WebSockets. Without this pin,
+# fresh installs lose realtime functionality silently.
+daphne>=4.2.0,<5.0
 
-# Database Connection Pooling
+# ---- Database ----
 dj-database-url==2.1.0
 psycopg2-binary==2.9.9
 
-# Redis for Caching and Sessions
+# ---- Cache / queue / channels ----
 django-redis==5.4.0
 redis==5.0.1
-
-# Static File Serving
-whitenoise==6.6.0
-
-# AWS S3 Storage (optional)
-boto3==1.34.0
-django-storages==1.14.2
-
-# Monitoring and Error Tracking
-sentry-sdk==1.39.2
-
-# Performance Monitoring
-django-health-check==3.17.0
-
-
-
-# Background Tasks
-celery==5.3.4
-django-celery-beat==2.5.0
-
-# API Documentation
-djangorestframework==3.14.0
-drf-yasg==1.21.7
-django-filter==23.5
-
-# CORS handling
-django-cors-headers==4.3.1
-
-# JWT Authentication
-djangorestframework-simplejwt==5.3.0
-
-# Google OAuth
-google-auth==2.27.0
-google-auth-oauthlib==1.2.0
-
-# Two-Factor Authentication
-pyotp==2.9.0
-qrcode==7.4.2
-
-# Payment Processing
-stripe==8.0.0
-
-# Environment variables
-python-decouple==3.8
-
-# Image processing
-Pillow==10.1.0
-
-# Date/time handling
-python-dateutil==2.8.2
-
-# HTTP requests
-requests==2.31.0
-
-# WebSocket support
 channels==4.0.0
 channels-redis==4.1.0
 
-# Cryptocurrency support
+# ---- Environment configuration ----
+# Loads ``.env`` files into os.environ. Required at startup before any
+# settings module reads ``os.environ.get(...)``; manage.py / wsgi.py /
+# asgi.py call ``load_dotenv()`` themselves so this is a hard dependency.
+python-dotenv==1.0.1
+
+# ---- Static files ----
+whitenoise==6.6.0
+
+# ---- Cloud storage ----
+boto3==1.34.0
+django-storages==1.14.2
+
+# ---- Monitoring / observability ----
+sentry-sdk==1.39.2
+django-health-check==3.17.0
+python-json-logger==2.0.7
+django-prometheus==2.3.1
+
+# ---- Background tasks ----
+celery==5.3.4
+django-celery-beat==2.5.0
+flower==2.0.1
+
+# ---- Auth ----
+djangorestframework-simplejwt==5.3.0
+google-auth==2.27.0
+google-auth-oauthlib==1.2.0
+pyotp==2.9.0
+qrcode==7.4.2
+
+# ---- Rate limiting / throttling ----
+django-ratelimit==4.1.0
+
+# ---- Payments ----
+stripe==8.0.0
+
+# ---- Configuration ----
+python-decouple==3.8
+
+# ---- Media ----
+Pillow==10.1.0
+
+# ---- Utilities ----
+python-dateutil==2.8.2
+requests==2.31.0
+
+# ---- Blockchain ----
 web3==6.12.0
 
-# Testing (kept for staging environments)
+# ---- PDF generation (subscription agreements) ----
+weasyprint==60.2
+
+# ---- Testing ----
 factory-boy==3.3.3
 faker==22.0.0
 pytest==8.0.0
 pytest-django==4.7.0
 pytest-cov==4.1.0
+pytest-asyncio==0.23.3
 
-# Development tools (optional in prod)
+# ---- Dev tools ----
 django-extensions==3.2.3

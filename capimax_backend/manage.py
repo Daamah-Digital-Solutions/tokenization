@@ -2,6 +2,17 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+from pathlib import Path
+
+# Load .env BEFORE Django settings are imported. settings/*.py read directly
+# from os.environ, so the file is silently ignored if loaded any later.
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parent / '.env', override=False)
+except ImportError:
+    # python-dotenv is listed in requirements.txt; missing locally means an
+    # incomplete install but shouldn't block CLI commands like `pip install`.
+    pass
 
 
 def main():
