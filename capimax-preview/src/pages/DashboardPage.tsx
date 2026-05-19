@@ -64,9 +64,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           { id: 'settings', label: 'Settings', icon: '⚙️' },
         ];
       case 'property_owner':
+        // ``my-properties`` (not ``properties``) — the handleNavigationClick
+        // shortcut below treats id==='properties' as a redirect to the public
+        // marketplace, which would kick the owner out of their dashboard.
         return [
           ...baseItems,
-          { id: 'properties', label: 'My Properties', icon: '🏢' },
+          { id: 'my-properties', label: 'My Properties', icon: '🏢' },
           { id: 'tokenization', label: 'Tokenization', icon: '🪙' },
           { id: 'revenue', label: 'Revenue', icon: '💸' },
           { id: 'investors', label: 'Investors', icon: '👥' },
@@ -212,8 +215,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
               {/* Desktop: Page title and welcome message */}
               <div className="min-w-0 flex-1 hidden md:block">
-                <h1 className="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-slate-100 capitalize truncate">
-                  {currentView.replace('-', ' ')} Dashboard
+                <h1 className="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-slate-100 truncate">
+                  {currentView
+                    .replace(/-/g, ' ')
+                    .replace(/\b\w/g, (c) => c.toUpperCase())} Dashboard
                 </h1>
                 <p className="text-sm text-neutral-500 dark:text-slate-400 mt-1">
                   Welcome back, {user.name}

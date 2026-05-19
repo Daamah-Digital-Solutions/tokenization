@@ -165,44 +165,87 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
     }
   };
 
-  const handleDocumentUpload = (documentType: string, file: File) => {
+  /**
+   * Upload a KYC document to the real backend.
+   *
+   * Previously this used setTimeout + Math.random() to fake approval/rejection.
+   * That created the dangerous illusion of KYC working without sending any
+   * actual document to the compliance pipeline.
+   *
+   * Now: POST /kyc/documents/upload/ with multipart form data. The document
+   * starts in `pending` status server-side; the UI shows it as `processing`
+   * until an admin or automated check transitions it. Polling for status is
+   * out of scope for this method — the review step refreshes /kyc/status/.
+   */
+  const handleDocumentUpload = async (documentType: string, file: File) => {
     setLoading(true);
-    
-    // Simulate upload process
-    setTimeout(() => {
-      const uploadedFile: UploadedFile = {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        url: URL.createObjectURL(file),
-        uploadDate: new Date(),
-        status: 'processing'
-      };
 
+    // Optimistic UI: show the file immediately in "processing" state.
+    const optimisticFile: UploadedFile = {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      url: URL.createObjectURL(file),
+      uploadDate: new Date(),
+      status: 'processing',
+    };
+    setKYCData(prev => ({
+      ...prev,
+      documents: { ...prev.documents, [documentType]: optimisticFile },
+    }));
+
+    try {
+      const { KYCService } = await import('../../services/user/KYCService');
+
+      // Map UI-side document keys to backend DocumentType choices.
+      const documentTypeMap: Record<string, string> = {
+        passport: 'passport',
+        nationalId: 'national_id',
+        utilityBill: 'utility_bill',
+        bankStatement: 'bank_statement',
+      };
+      const backendDocType = documentTypeMap[documentType] || documentType;
+
+      const uploaded = await KYCService.uploadDocument({
+        file,
+        document_type: backendDocType as any,
+      });
+
+      // Reflect the backend's status verbatim. The backend uses lowercase
+      // strings ('pending', 'approved', 'rejected', etc.). If the type is
+      // unknown, fall back to 'processing' so the UI doesn't lie about it.
+      const backendStatus = (uploaded as any)?.status || 'processing';
       setKYCData(prev => ({
         ...prev,
         documents: {
           ...prev.documents,
-          [documentType]: uploadedFile
-        }
+          [documentType]: {
+            ...optimisticFile,
+            status: backendStatus === 'approved' ? 'approved'
+                  : backendStatus === 'rejected' ? 'rejected'
+                  : 'processing',
+            rejectionReason: (uploaded as any)?.rejection_reason || undefined,
+          },
+        },
       }));
-
-      // Simulate processing
-      setTimeout(() => {
-        setKYCData(prev => ({
-          ...prev,
-          documents: {
-            ...prev.documents,
-            [documentType]: {
-              ...uploadedFile,
-              status: Math.random() > 0.1 ? 'approved' : 'rejected',
-              rejectionReason: Math.random() > 0.1 ? undefined : 'Document image is not clear enough. Please upload a higher quality image.'
-            }
-          }
-        }));
-        setLoading(false);
-      }, 2000);
-    }, 1000);
+    } catch (apiError: any) {
+      console.error('KYC document upload failed:', apiError);
+      // Surface the failure so the user knows the upload didn't go through.
+      setKYCData(prev => ({
+        ...prev,
+        documents: {
+          ...prev.documents,
+          [documentType]: {
+            ...optimisticFile,
+            status: 'rejected',
+            rejectionReason:
+              apiError?.message || 'Upload failed. Please try again.',
+          },
+        },
+      }));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDocumentRemove = (documentType: string) => {
@@ -226,25 +269,24 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
     setLoading(true);
 
     try {
-      // Submit personal info (including DOB) to backend
+      // 1. Save personal info (including DOB) to /kyc/personal-info/. If this
+      //    fails we MUST abort the submission — proceeding with stale DOB
+      //    creates a compliance hole. The earlier version of this code logged
+      //    the error and continued, which is exactly what the audit flagged.
       const personalInfo = kycData.personalInfo;
       if (personalInfo?.dateOfBirth) {
-        try {
-          const { apiClient } = await import('../../services/api/ApiClient');
-          await apiClient.patch('/kyc/personal-info/', {
-            date_of_birth: personalInfo.dateOfBirth,
-            nationality: personalInfo.nationality,
-            residency_country: personalInfo.residencyCountry
-          });
-        } catch (apiError) {
-          console.error('Failed to update personal info:', apiError);
-          // Continue with KYC submission even if personal info update fails
-          // The backend will handle validation
-        }
+        const { apiClient } = await import('../../services/api/ApiClient');
+        await apiClient.patch('/kyc/personal-info/', {
+          date_of_birth: personalInfo.dateOfBirth,
+          nationality: personalInfo.nationality,
+          residency_country: personalInfo.residencyCountry,
+        });
       }
 
-      // Simulate API submission for documents
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // 2. Submit the KYC profile for review. The backend transitions
+      //    status PENDING → IN_REVIEW and queues the compliance workflow.
+      const { KYCService } = await import('../../services/user/KYCService');
+      await KYCService.submitForReview();
 
       const completeData: KYCData = {
         personalInfo: {

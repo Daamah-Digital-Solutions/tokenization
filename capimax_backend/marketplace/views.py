@@ -88,6 +88,8 @@ class MarketListingViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Filter queryset based on user permissions and request parameters."""
+        if getattr(self, 'swagger_fake_view', False):
+            return self.queryset.none()
         queryset = super().get_queryset()
 
         # Filter by property if specified
@@ -124,38 +126,50 @@ class MarketListingViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
-        """Cancel a market listing."""
+        """Cancel a market listing.
+
+        Note: do NOT wrap `self.get_object()` in a bare except — DRF raises
+        `PermissionDenied` / `NotAuthenticated` / `Http404` from there, and
+        each must be allowed to bubble so DRF can render the correct
+        status code. Otherwise a 403 becomes a 500.
+        """
+        from rest_framework.exceptions import (
+            APIException, NotAuthenticated, PermissionDenied,
+        )
+        from django.http import Http404
+
+        # get_object() runs permission_classes — let auth errors bubble.
+        listing = self.get_object()
+
+        # Belt-and-braces ownership check (DRF's permission already enforced).
+        if listing.seller != request.user and not request.user.is_staff:
+            return Response(
+                {'error': 'You can only cancel your own listings.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        if listing.status not in [ListingStatus.ACTIVE, ListingStatus.PARTIALLY_FILLED]:
+            return Response(
+                {'error': 'Only active listings can be cancelled.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         try:
-            listing = self.get_object()
-            
-            # Check permissions
-            if listing.seller != request.user and not request.user.is_staff:
-                return Response(
-                    {'error': 'You can only cancel your own listings.'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            
-            # Check if listing can be cancelled
-            if listing.status not in [ListingStatus.ACTIVE, ListingStatus.PARTIALLY_FILLED]:
-                return Response(
-                    {'error': 'Only active listings can be cancelled.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            
             reason = request.data.get('reason', 'Cancelled by user')
             listing.cancel_listing(reason)
-            
-            return Response(
-                {'message': 'Listing cancelled successfully.'},
-                status=status.HTTP_200_OK
-            )
-            
+        except (NotAuthenticated, PermissionDenied, Http404, APIException):
+            raise
         except Exception as e:
             logger.error(f"Listing cancellation failed: {str(e)}")
             return Response(
                 {'error': 'Failed to cancel listing.'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+        return Response(
+            {'message': 'Listing cancelled successfully.'},
+            status=status.HTTP_200_OK
+        )
     
     @action(detail=True, methods=['post'])
     def extend(self, request, pk=None):
@@ -669,12 +683,12 @@ class TradingPairViewSet(viewsets.ModelViewSet):
     """
     
     queryset = TradingPair.objects.select_related(
-        'base_property', 'quote_property'
+        'base_property_pair', 'quote_property_pair'
     ).all()
     permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ['pair_type', 'status', 'base_property']
+    filterset_fields = ['pair_type', 'status', 'base_property_pair']
     ordering_fields = ['symbol', 'created_at']
     ordering = ['symbol']
     serializer_class = TradingPairSerializer

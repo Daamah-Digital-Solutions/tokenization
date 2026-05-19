@@ -425,8 +425,14 @@ export const InvestorDashboard: React.FC<{ currentView: string }> = ({ currentVi
           id: 'monthly-income',
           label: 'Monthly Income',
           value: `$${portfolioSummary.monthly_dividends.toLocaleString()}`,
-          change: dividendHistory.summary.this_month > dividendHistory.summary.average_monthly ? `+${((dividendHistory.summary.this_month / dividendHistory.summary.average_monthly - 1) * 100).toFixed(1)}%` : '0%',
-          changeType: dividendHistory.summary.this_month > dividendHistory.summary.average_monthly ? 'positive' : 'neutral',
+          // Dividend history is a plain paginated list — there is no
+          // `summary.this_month` on the response. Compute the trend from
+          // the portfolio summary instead, and fall back to a neutral
+          // indicator when no comparable baseline exists.
+          change: portfolioSummary.return_percentage > 0
+            ? `+${portfolioSummary.return_percentage.toFixed(1)}%`
+            : '0%',
+          changeType: portfolioSummary.return_percentage > 0 ? 'positive' : 'neutral',
           icon: '💵',
           description: 'Rental income this month'
         }
@@ -464,12 +470,30 @@ export const InvestorDashboard: React.FC<{ currentView: string }> = ({ currentVi
       for (const investment of investments.investments) {
         if (investment.status === 'completed') {
           try {
-            const propertyData = await apiClient.get(`/properties/${investment.property_id}`);
+            const propertyData = await apiClient.get(`/properties/${investment.property_id}/`);
             const property = propertyData as Property;
-            
-            const currentValue = investment.investment_amount * 1.1; // Simplified calculation
+
+            // Prefer a real current valuation when the backend supplies
+            // one — `analytics.current_valuation` on the property detail
+            // serializer reflects the latest appraisal. Fall back to
+            // the initial investment amount (zero appreciation) so a
+            // newly-listed property doesn't fabricate a +10% bump.
+            const currentValuation = Number(
+              (property as any).current_valuation ?? (property as any).analytics?.current_valuation ?? 0
+            );
+            const originalValue = Number(property.total_value || 0);
+            const investmentShare = originalValue > 0
+              ? investment.investment_amount / originalValue
+              : 0;
+            const projectedFromValuation =
+              currentValuation > 0 ? currentValuation * investmentShare : 0;
+            const currentValue = projectedFromValuation > 0
+              ? projectedFromValuation
+              : investment.investment_amount;
             const yield_rate = property.rental_yield || 0;
-            const change = ((currentValue - investment.investment_amount) / investment.investment_amount) * 100;
+            const change = investment.investment_amount > 0
+              ? ((currentValue - investment.investment_amount) / investment.investment_amount) * 100
+              : 0;
             
             if (holdingsMap.has(investment.property_id)) {
               const existing = holdingsMap.get(investment.property_id)!;

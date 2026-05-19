@@ -11,6 +11,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'testserver']
 
+# Frontend URL for password reset, email links, OAuth callbacks
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+
 # Database Configuration - SQLite for development
 DATABASES = {
     'default': {

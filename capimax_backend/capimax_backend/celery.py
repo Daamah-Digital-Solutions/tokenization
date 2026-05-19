@@ -10,6 +10,7 @@ This module configures Celery for asynchronous task processing including:
 
 import os
 from celery import Celery
+from celery.schedules import crontab
 from django.conf import settings
 
 # Set the default Django settings module for the 'celery' program
@@ -30,6 +31,27 @@ app.conf.beat_schedule = {
     'process-pending-mints': {
         'task': 'investments.tasks.process_pending_mints',
         'schedule': 120.0,  # Every 2 minutes
+        'kwargs': {},
+    },
+
+    # Cancel abandoned payments after PAYMENT_TIMEOUT_HOURS
+    'expire-pending-payments': {
+        'task': 'payments.tasks.expire_pending_payments',
+        'schedule': 60.0 * 10.0,  # Every 10 minutes
+        'kwargs': {},
+    },
+
+    # Daily Stripe reconciliation
+    'reconcile-stripe-payments': {
+        'task': 'payments.tasks.reconcile_stripe_payments',
+        'schedule': 60.0 * 60.0 * 24.0,
+        'kwargs': {},
+    },
+
+    # Token balance reconciliation (every 6 hours)
+    'reconcile-token-balances': {
+        'task': 'blockchain.tasks.reconcile_token_balances',
+        'schedule': 60.0 * 60.0 * 6.0,
         'kwargs': {},
     },
 
@@ -54,10 +76,11 @@ app.conf.beat_schedule = {
         'kwargs': {},
     },
     
-    # Monthly rental income distribution
+    # Monthly rental income distribution — runs on the 1st of every month
+    # to align with calendar months (not every 30 days which drifts).
     'distribute-monthly-rental-income': {
         'task': 'core.tasks.distribute_monthly_rental_income',
-        'schedule': 60.0 * 60.0 * 24.0 * 30.0,  # Every month
+        'schedule': crontab(day_of_month=1, hour=0, minute=30),
         'kwargs': {},
     },
     

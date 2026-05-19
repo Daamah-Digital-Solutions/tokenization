@@ -60,9 +60,12 @@ urlpatterns = [
     path('nowpayments/ipn/', nowpayments_ipn_callback, name='nowpayments-ipn'),
 
     # Wallet Management
+    # NOTE: order matters — `wallet/transactions/` MUST come before
+    # `wallet/<str:action>/` or the latter swallows the former and
+    # raises a 500 on every transactions-history fetch.
     path('wallet/', WalletManagementView.as_view(), name='wallet-balance'),
-    path('wallet/<str:action>/', WalletManagementView.as_view(), name='wallet-action'),
     path('wallet/transactions/', get_wallet_transactions, name='wallet-transactions'),
+    path('wallet/<str:action>/', WalletManagementView.as_view(), name='wallet-action'),
 
     # Bank Transfer Integration
     path('bank-transfer/<str:action>/', BankTransferView.as_view(), name='bank-transfer'),

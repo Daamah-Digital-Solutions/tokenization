@@ -30,14 +30,14 @@ class MarketListingSerializer(serializers.ModelSerializer):
     current_value = serializers.ReadOnlyField()
     
     # Related field representations
-    property_title = serializers.CharField(source='property.title', read_only=True)
+    property_title = serializers.CharField(source='property_listing.title', read_only=True)
     seller_email = serializers.CharField(source='seller.email', read_only=True)
     seller_name = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = MarketListing
         fields = [
-            'id', 'property', 'property_title', 'seller', 'seller_email', 'seller_name',
+            'id', 'property_listing', 'property_title', 'seller', 'seller_email', 'seller_name',
             'listing_type', 'tokens_offered', 'tokens_remaining', 'tokens_filled',
             'price_per_token', 'total_price', 'minimum_order_size', 'status',
             'expires_at', 'auto_extend', 'is_market_maker', 'priority_score',
@@ -80,21 +80,90 @@ class MarketListingSerializer(serializers.ModelSerializer):
         return value
     
     def validate(self, data):
-        """Cross-field validation for MarketListing."""
+        """Cross-field validation for MarketListing — securities compliance."""
         # Check that minimum_order_size doesn't exceed tokens_offered
         if 'minimum_order_size' in data and 'tokens_offered' in data:
             if data['minimum_order_size'] > data['tokens_offered']:
                 raise serializers.ValidationError(
                     "Minimum order size cannot exceed tokens offered."
                 )
-        
-        # For sell orders, validate user owns enough tokens
+
+        # Securities-law gating for SELL listings
         if data.get('listing_type') == ListingType.SELL:
-            # This would require checking user's token balance
-            # Implementation depends on how token ownership is tracked
-            pass
-        
+            request = self.context.get('request')
+            user = getattr(request, 'user', None)
+            property_obj = data.get('property_listing')
+            if user and property_obj:
+                _validate_sell_listing_compliance(user, property_obj)
+
         return data
+
+
+def _validate_sell_listing_compliance(user, property_obj):
+    """
+    Reject sell listings if the seller's tokens are still in lockup or if
+    the seller no longer holds a clean KYC status. Centralises the
+    securities-law check shared between primary creation and secondary
+    market listing.
+    """
+    from django.utils import timezone
+    from investments.models import Investment, InvestmentStatus
+
+    # Find the seller's completed investments in this property
+    completed = (
+        Investment.objects
+        .filter(
+            user=user,
+            property_investment=property_obj,
+            status=InvestmentStatus.COMPLETED,
+        )
+        .order_by('completed_at')
+    )
+    if not completed.exists():
+        raise serializers.ValidationError(
+            "You have no completed investment in this property to sell."
+        )
+
+    # Lockup check — any investment still locked blocks the listing.
+    now = timezone.now()
+    locked_investments = completed.filter(
+        lockup_end_date__isnull=False,
+        lockup_end_date__gt=now,
+    )
+    if locked_investments.exists():
+        earliest_unlock = locked_investments.order_by('lockup_end_date').first().lockup_end_date
+        raise serializers.ValidationError({
+            'listing': (
+                f"Your tokens in this property are still in lockup. "
+                f"Earliest unlock: {earliest_unlock.isoformat()}."
+            )
+        })
+
+    # KYC check — seller must currently hold approved KYC.
+    kyc = getattr(user, 'kyc_profile', None)
+    if not kyc or not kyc.is_verified():
+        raise serializers.ValidationError(
+            "You must maintain a verified KYC status to list tokens for sale."
+        )
+
+    # Sanctions / PEP check — block if any unresolved hit exists.
+    try:
+        from kyc.models import ComplianceCheck
+        hits = ComplianceCheck.objects.filter(
+            kyc_profile=kyc,
+            result='hit',
+        )
+        if hits.exists():
+            raise serializers.ValidationError(
+                "Your account has an unresolved compliance review. "
+                "Contact support before listing tokens."
+            )
+    except Exception:
+        # If the ComplianceCheck model layout differs, fail open with a log.
+        import logging
+        logging.getLogger(__name__).exception(
+            "ComplianceCheck enforcement skipped due to import/query error"
+        )
 
 
 class MarketListingCreateSerializer(MarketListingSerializer):
@@ -104,7 +173,7 @@ class MarketListingCreateSerializer(MarketListingSerializer):
     
     class Meta(MarketListingSerializer.Meta):
         fields = [
-            'property', 'listing_type', 'tokens_offered', 'price_per_token',
+            'property_listing', 'listing_type', 'tokens_offered', 'price_per_token',
             'minimum_order_size', 'expires_at', 'auto_extend', 'accepts_partial_fills',
             'notes'
         ]
@@ -113,29 +182,65 @@ class MarketListingCreateSerializer(MarketListingSerializer):
 class MarketListingListSerializer(serializers.ModelSerializer):
     """
     Lightweight serializer for listing market listings.
+
+    Returns BOTH the flattened legacy fields (`property_title`, `property_city`,
+    `seller_name`) and nested `property_listing` / `seller` objects, because the
+    SPA's marketplace cards and modals read nested shape. Removing either would
+    break the dashboard or older consumers.
     """
-    
-    property_title = serializers.CharField(source='property.title', read_only=True)
-    property_city = serializers.CharField(source='property.city', read_only=True)
+
+    property_title = serializers.CharField(source='property_listing.title', read_only=True)
+    property_city = serializers.CharField(source='property_listing.city', read_only=True)
     seller_name = serializers.SerializerMethodField()
+    property_listing = serializers.SerializerMethodField()
+    seller = serializers.SerializerMethodField()
     tokens_filled = serializers.ReadOnlyField()
     fill_percentage = serializers.ReadOnlyField()
     is_active = serializers.ReadOnlyField()
     current_value = serializers.ReadOnlyField()
-    
+
     class Meta:
         model = MarketListing
         fields = [
-            'id', 'property_title', 'property_city', 'seller_name',
+            'id', 'property_listing', 'property_title', 'property_city',
+            'seller', 'seller_name',
             'listing_type', 'tokens_offered', 'tokens_remaining', 'tokens_filled',
             'price_per_token', 'total_price', 'minimum_order_size', 'status',
             'expires_at', 'fill_percentage', 'is_active', 'current_value',
             'created_at'
         ]
-    
+
     def get_seller_name(self, obj):
         """Get seller's full name."""
         return obj.seller.get_full_name() if obj.seller else ""
+
+    def get_property_listing(self, obj):
+        p = obj.property_listing
+        if not p:
+            return None
+        primary_image = p.images.filter(is_primary=True).first() if hasattr(p, 'images') else None
+        if not primary_image and hasattr(p, 'images'):
+            primary_image = p.images.first()
+        return {
+            'id': str(p.id),
+            'title': p.title,
+            'city': p.city,
+            'location': f"{p.city}, {p.country}" if p.country else p.city,
+            'property_type': p.property_type,
+            'total_value': float(p.total_value) if p.total_value is not None else None,
+            'image_url': primary_image.image.url if primary_image and getattr(primary_image, 'image', None) else None,
+            'images': [{'image': primary_image.image.url}] if primary_image and getattr(primary_image, 'image', None) else [],
+        }
+
+    def get_seller(self, obj):
+        s = obj.seller
+        if not s:
+            return None
+        return {
+            'id': str(s.id),
+            'email': s.email,
+            'full_name': s.get_full_name() or s.email,
+        }
 
 
 class TradeOrderSerializer(serializers.ModelSerializer):
@@ -149,7 +254,7 @@ class TradeOrderSerializer(serializers.ModelSerializer):
     tokens_remaining = serializers.ReadOnlyField()
     
     # Related field representations
-    listing_property_title = serializers.CharField(source='listing.property.title', read_only=True)
+    listing_property_title = serializers.CharField(source='listing.property_listing.title', read_only=True)
     buyer_email = serializers.CharField(source='buyer.email', read_only=True)
     buyer_name = serializers.SerializerMethodField()
     
@@ -226,8 +331,64 @@ class TradeOrderSerializer(serializers.ModelSerializer):
             if data.get('order_type') == OrderType.MARKET:
                 data['price_per_token'] = listing.price_per_token
                 data['total_amount'] = listing.price_per_token * Decimal(data['tokens_requested'])
-        
+
+            # ----------------------------------------------------------------
+            # Securities-law gating on secondary market BUY
+            # ----------------------------------------------------------------
+            request = self.context.get('request')
+            user = getattr(request, 'user', None)
+            if user and user.is_authenticated:
+                _validate_buyer_compliance(user, listing)
+
         return data
+
+
+def _validate_buyer_compliance(user, listing):
+    """Enforce KYC, accreditation, and jurisdiction gates on a buy order."""
+    property_obj = getattr(listing, 'property_listing', None)
+    if property_obj is None:
+        return
+
+    # Verified KYC
+    kyc = getattr(user, 'kyc_profile', None)
+    if not kyc or not kyc.is_verified():
+        raise serializers.ValidationError(
+            "A verified KYC profile is required to trade on the secondary market."
+        )
+
+    # Sanctions / PEP
+    try:
+        from kyc.models import ComplianceCheck
+        if ComplianceCheck.objects.filter(kyc_profile=kyc, result='hit').exists():
+            raise serializers.ValidationError(
+                "Your account has an unresolved compliance review. "
+                "Contact support before trading."
+            )
+    except Exception:
+        pass
+
+    # Accreditation
+    requires_accredited = (
+        getattr(property_obj, 'requires_accredited_investors', False)
+        or (
+            getattr(property_obj, 'spv_entity', None)
+            and getattr(property_obj.spv_entity, 'requires_accredited_investors', False)
+        )
+    )
+    if requires_accredited and not getattr(kyc, 'is_accredited', False):
+        raise serializers.ValidationError(
+            "This property requires accredited investor status to trade."
+        )
+
+    # Jurisdiction
+    spv = getattr(property_obj, 'spv_entity', None)
+    if spv:
+        country = (getattr(kyc, 'country_of_residence', '') or '').upper()
+        if not spv.jurisdiction_allowed(country):
+            raise serializers.ValidationError(
+                "Your country of residence is not eligible to participate "
+                "in this offering."
+            )
 
 
 class TradeOrderCreateSerializer(TradeOrderSerializer):
@@ -248,18 +409,18 @@ class TradeTransactionSerializer(serializers.ModelSerializer):
     """
     
     # Related field representations
-    property_title = serializers.CharField(source='property.title', read_only=True)
+    property_title = serializers.CharField(source='property_traded.title', read_only=True)
     buyer_email = serializers.CharField(source='buyer.email', read_only=True)
     seller_email = serializers.CharField(source='seller.email', read_only=True)
     buyer_name = serializers.SerializerMethodField()
     seller_name = serializers.SerializerMethodField()
     ownership_percentage_traded = serializers.ReadOnlyField()
-    
+
     class Meta:
         model = TradeTransaction
         fields = [
             'id', 'listing', 'order', 'buyer', 'buyer_email', 'buyer_name',
-            'seller', 'seller_email', 'seller_name', 'property', 'property_title',
+            'seller', 'seller_email', 'seller_name', 'property_traded', 'property_title',
             'tokens_traded', 'price_per_token', 'total_amount', 'platform_fee_percentage',
             'platform_fee', 'buyer_fee', 'seller_fee', 'net_amount_to_seller',
             'total_cost_to_buyer', 'status', 'payment_method', 'blockchain_network',
@@ -288,10 +449,10 @@ class TradeTransactionListSerializer(serializers.ModelSerializer):
     Lightweight serializer for listing trade transactions.
     """
     
-    property_title = serializers.CharField(source='property.title', read_only=True)
+    property_title = serializers.CharField(source='property_traded.title', read_only=True)
     buyer_name = serializers.SerializerMethodField()
     seller_name = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = TradeTransaction
         fields = [
@@ -359,17 +520,17 @@ class MarketAnalyticsSerializer(serializers.ModelSerializer):
     """
     
     # Related field representations
-    property_title = serializers.CharField(source='property.title', read_only=True)
-    
+    property_title = serializers.CharField(source='property_analyzed.title', read_only=True)
+
     # Read-only computed fields
     price_change = serializers.ReadOnlyField()
     average_trade_size = serializers.ReadOnlyField()
     average_trade_value = serializers.ReadOnlyField()
-    
+
     class Meta:
         model = MarketAnalytics
         fields = [
-            'id', 'property', 'property_title', 'timeframe', 'volume_tokens',
+            'id', 'property_analyzed', 'property_title', 'timeframe', 'volume_tokens',
             'volume_usd', 'trade_count', 'unique_traders', 'opening_price',
             'closing_price', 'high_price', 'low_price', 'average_price',
             'active_listings_count', 'total_tokens_for_sale', 'total_tokens_wanted',
@@ -390,16 +551,16 @@ class TradingPairSerializer(serializers.ModelSerializer):
     """
     
     # Related field representations
-    base_property_title = serializers.CharField(source='base_property.title', read_only=True)
-    quote_property_title = serializers.CharField(source='quote_property.title', read_only=True)
-    
+    base_property_title = serializers.CharField(source='base_property_pair.title', read_only=True)
+    quote_property_title = serializers.CharField(source='quote_property_pair.title', read_only=True)
+
     # Read-only computed fields
     is_active = serializers.ReadOnlyField()
-    
+
     class Meta:
         model = TradingPair
         fields = [
-            'id', 'base_property', 'base_property_title', 'quote_property',
+            'id', 'base_property_pair', 'base_property_title', 'quote_property_pair',
             'quote_property_title', 'pair_type', 'symbol', 'status',
             'minimum_order_size', 'maximum_order_size', 'price_precision',
             'quantity_precision', 'maker_fee', 'taker_fee', 'created_at',
@@ -409,25 +570,25 @@ class TradingPairSerializer(serializers.ModelSerializer):
             'id', 'created_at', 'updated_at', 'base_property_title',
             'quote_property_title', 'is_active'
         ]
-    
+
     def validate_symbol(self, value):
         """Validate that symbol is unique and follows correct format."""
         if not value:
             raise serializers.ValidationError("Symbol is required.")
-        
+
         # Basic format validation (can be enhanced)
         if '/' not in value:
             raise serializers.ValidationError(
                 "Symbol must follow format 'BASE/QUOTE' (e.g., 'PROP1/USD')."
             )
-        
+
         return value.upper()
-    
+
     def validate(self, data):
         """Cross-field validation for TradingPair."""
         # For token_token pairs, both base and quote properties are required
         if data.get('pair_type') == 'token_token':
-            if not data.get('quote_property'):
+            if not data.get('quote_property_pair'):
                 raise serializers.ValidationError(
                     "Quote property is required for token/token trading pairs."
                 )

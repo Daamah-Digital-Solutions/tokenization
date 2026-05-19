@@ -89,11 +89,11 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='investment',
-            constraint=models.CheckConstraint(check=models.Q(('token_amount__gt', 0)), name='investment_token_amount_positive'),
+            constraint=models.CheckConstraint(condition=models.Q(('token_amount__gt', 0)), name='investment_token_amount_positive'),
         ),
         migrations.AddConstraint(
             model_name='investment',
-            constraint=models.CheckConstraint(check=models.Q(('investment_amount__gt', 0)), name='investment_amount_positive'),
+            constraint=models.CheckConstraint(condition=models.Q(('investment_amount__gt', 0)), name='investment_amount_positive'),
         ),
         migrations.AddIndex(
             model_name='installmentpayment',

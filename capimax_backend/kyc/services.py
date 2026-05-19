@@ -317,35 +317,52 @@ class ComplianceService:
     
     @staticmethod
     def _run_aml_check(user: User) -> ComplianceCheck:
-        """Run AML check using external provider."""
-        # Mock implementation - would integrate with actual AML provider
-        provider = getattr(settings, 'AML_PROVIDER', 'chainalysis')
-        
-        if provider == 'chainalysis':
-            return ComplianceService._chainalysis_check(user, 'aml')
-        else:
-            return ComplianceService._mock_compliance_check(user, 'aml')
-    
+        return ComplianceService._run_check_via_provider(user, 'aml')
+
     @staticmethod
     def _run_sanctions_check(user: User) -> ComplianceCheck:
-        """Run sanctions screening."""
-        # Mock implementation
-        return ComplianceService._mock_compliance_check(user, 'sanctions')
-    
+        return ComplianceService._run_check_via_provider(user, 'sanctions')
+
     @staticmethod
     def _run_pep_check(user: User) -> ComplianceCheck:
-        """Run PEP (Politically Exposed Person) screening."""
-        return ComplianceService._mock_compliance_check(user, 'pep')
-    
+        return ComplianceService._run_check_via_provider(user, 'pep')
+
     @staticmethod
     def _run_adverse_media_check(user: User) -> ComplianceCheck:
-        """Run adverse media screening."""
-        return ComplianceService._mock_compliance_check(user, 'adverse_media')
-    
+        return ComplianceService._run_check_via_provider(user, 'adverse_media')
+
     @staticmethod
     def _run_watchlist_check(user: User) -> ComplianceCheck:
-        """Run watchlist screening."""
-        return ComplianceService._mock_compliance_check(user, 'watchlist')
+        return ComplianceService._run_check_via_provider(user, 'watchlist')
+
+    @staticmethod
+    def _run_check_via_provider(user: User, check_type: str) -> ComplianceCheck:
+        """Execute a compliance check via the configured provider."""
+        from .providers import get_compliance_provider
+        provider = get_compliance_provider()
+
+        kyc = getattr(user, 'kyc_profile', None)
+        country = getattr(kyc, 'country_of_residence', None) if kyc else None
+        dob = getattr(kyc, 'date_of_birth', None) if kyc else None
+
+        result = provider.screen(
+            full_name=user.get_full_name() or user.email,
+            date_of_birth=str(dob) if dob else None,
+            country_code=country,
+            check_type=check_type,
+            user_reference=str(user.id),
+        )
+
+        return ComplianceCheck.objects.create(
+            user=user,
+            check_type=check_type,
+            result=result.result,
+            confidence_score=result.confidence,
+            provider=result.provider or 'unknown',
+            reference_id=result.provider_reference,
+            raw_response=result.raw_response,
+            hits_data=result.hits,
+        )
     
     @staticmethod
     def _chainalysis_check(user: User, check_type: str) -> ComplianceCheck:
@@ -407,27 +424,37 @@ class BiometricService:
     """Service class for biometric verification operations."""
     
     @staticmethod
-    def start_verification_session(kyc_profile: KYCProfile) -> str:
-        """Start biometric verification session."""
-        biometric, created = BiometricVerification.objects.get_or_create(
+    def start_verification_session(kyc_profile: KYCProfile, return_url: str = '') -> str:
+        """Start a biometric verification session via the configured provider."""
+        from .providers import get_biometric_provider
+
+        biometric, _ = BiometricVerification.objects.get_or_create(
             kyc_profile=kyc_profile,
             defaults={
-                'provider': getattr(settings, 'BIOMETRIC_PROVIDER', 'onfido'),
+                'provider': getattr(settings, 'KYC_BIOMETRIC_PROVIDER', 'mock'),
                 'status': 'pending'
             }
         )
-        
+
         if not biometric.can_attempt():
             raise ValueError("Maximum verification attempts exceeded")
-        
-        # Mock session creation - would integrate with actual provider
-        session_id = f"session_{kyc_profile.user.id}_{timezone.now().timestamp()}"
-        
-        biometric.verification_session_id = session_id
+
+        provider = get_biometric_provider()
+        session = provider.start_session(
+            user_reference=str(kyc_profile.user.id),
+            return_url=return_url or getattr(settings, 'FRONTEND_URL', 'https://app.capimax.com'),
+        )
+        if not session.success:
+            biometric.status = 'failed'
+            biometric.save(update_fields=['status'])
+            raise RuntimeError(f'Biometric session start failed: {session.error}')
+
+        biometric.verification_session_id = session.session_id
         biometric.status = 'in_progress'
         biometric.record_attempt()
-        
-        return session_id
+        biometric.save(update_fields=['verification_session_id', 'status'])
+
+        return session.session_id
     
     @staticmethod
     def complete_verification(session_id: str, results: Dict) -> BiometricVerification:
@@ -476,18 +503,49 @@ class OCRService:
     
     @staticmethod
     def extract_document_data(document: KYCDocument) -> Dict:
-        """Extract data from document using OCR."""
+        """
+        Extract OCR data from a document.
+
+        Delegates to the configured document verification provider (which
+        typically performs OCR as part of the verification flow). For
+        non-production environments, the mock provider returns deterministic
+        canned data, which is acceptable for dev/tests.
+        """
         if not document.file_path:
             return {}
-        
-        # Mock OCR implementation - would integrate with actual OCR service
-        mock_data = OCRService._generate_mock_ocr_data(document)
-        
-        # Update document with OCR data
-        document.ocr_data = mock_data
-        document.save()
-        
-        return mock_data
+
+        try:
+            from .providers import get_document_provider
+            provider = get_document_provider()
+
+            # Read file bytes if accessible
+            file_bytes = b''
+            try:
+                with open(document.file_path.path, 'rb') as fh:
+                    file_bytes = fh.read()
+            except Exception:
+                logger.warning('Could not read document file for OCR',
+                               extra={'document_id': str(document.id)})
+
+            result = provider.verify_document(
+                document_type=document.document_type,
+                file_bytes=file_bytes,
+                file_name=document.file_path.name if document.file_path else '',
+                user_reference=str(document.kyc_profile.user.id),
+            )
+
+            ocr_data = result.extracted_data or {}
+            ocr_data['_provider_reference'] = result.provider_reference
+            ocr_data['_confidence'] = float(result.confidence)
+            document.ocr_data = ocr_data
+            document.save(update_fields=['ocr_data'])
+            return ocr_data
+        except Exception:
+            logger.exception(
+                'OCR extraction failed',
+                extra={'document_id': str(document.id)},
+            )
+            return {}
     
     @staticmethod
     def _generate_mock_ocr_data(document: KYCDocument) -> Dict:

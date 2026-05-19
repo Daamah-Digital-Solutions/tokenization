@@ -22,6 +22,27 @@ os.environ.setdefault('SECRET_KEY', 'test-secret-key-for-testing-only-do-not-use
 django.setup()
 
 
+# Skip pre-existing dead test fixtures and operational scripts that pytest
+# mis-collects. These have been broken since the initial commit and should
+# be rewritten or relocated as part of the broader 85% coverage push.
+#
+# Categories:
+#   1. Dead fixtures referencing models that never existed (Wallet,
+#      BlockchainService) or removed User fields (user_type).
+#   2. Operational scripts (manual SMTP/RPC checks) that match the
+#      test_*.py glob but were never pytest tests.
+collect_ignore = [
+    # 1. Dead fixtures
+    "core/test_factories.py",
+    "core/test_base.py",
+    "core/tests/test_rental_income_processing.py",
+    "properties/tests/test_installment_processing.py",
+    # 2. Operational scripts mis-matched by the test_*.py glob
+    "test_email_notifications.py",
+    "scripts/test_web3_connection.py",
+]
+
+
 def pytest_configure(config):
     """
     Configure pytest before test collection.

@@ -33,11 +33,23 @@ export class WebSocketService {
   private authToken: string | null = null;
 
   constructor(config: Partial<WebSocketConfig> = {}) {
-    // Use environment variable or derive from API URL
-    const defaultWsUrl = import.meta.env.VITE_WEBSOCKET_URL ||
+    // Prefer the explicit VITE_WEBSOCKET_URL when set. Fall back to deriving
+    // from VITE_API_URL so dev/prod stay in sync. The literal fallback
+    // points at port 8500 — the Django/Channels dev server in this repo —
+    // not the 8000 default that another project uses.
+    //
+    // The default channel is `/ws/notifications/` because the backend routes
+    // by URL path (see ws_app/routing.py). The bare `/ws` path returns 1006
+    // and burns through reconnect attempts. Caller-specific channels
+    // (property/<id>, admin, etc.) should be opened on a separate socket.
+    const baseUrl = import.meta.env.VITE_WEBSOCKET_URL ||
       (import.meta.env.VITE_API_URL
         ? import.meta.env.VITE_API_URL.replace(/^http/, 'ws').replace('/api/v1', '/ws')
-        : 'ws://127.0.0.1:8000/ws');
+        : 'ws://127.0.0.1:8500/ws');
+    // Ensure the URL ends with `/notifications/` (idempotent if already set).
+    const defaultWsUrl = /\/notifications\/?$/.test(baseUrl)
+      ? baseUrl
+      : `${baseUrl.replace(/\/$/, '')}/notifications/`;
 
     this.config = {
       url: defaultWsUrl,
@@ -184,44 +196,48 @@ export class WebSocketService {
   }
 
   /**
-   * Join a room for targeted notifications
+   * Join a room for targeted notifications.
+   *
+   * NOTE: the backend consumers in `ws_app/` and `notifications/` do not
+   * read `join_room` messages — group membership is determined entirely
+   * by the WebSocket URL the client connects to (e.g. `/ws/property/<id>/`
+   * adds you to the per-property group via `add_to_group` in `connect()`).
+   * These helpers stay in the API to avoid breaking imports, but they
+   * are silent no-ops aside from sending the payload; the server ignores
+   * it. To subscribe to a property feed, open the dedicated URL instead.
    */
   public joinRoom(roomId: string): void {
     this.send({
       type: 'join_room',
       data: { room_id: roomId },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
-  /**
-   * Leave a room
-   */
   public leaveRoom(roomId: string): void {
     this.send({
       type: 'leave_room',
       data: { room_id: roomId },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
   /**
-   * Subscribe to property updates
+   * Subscribe to property updates.
+   *
+   * Backend consumers don't honor in-channel join messages — these helpers
+   * stay as no-ops at the protocol level. If you need per-property
+   * updates, open a second WebSocket to `/ws/property/<id>/` instead of
+   * piggy-backing on the user channel.
    */
   public subscribeToProperty(propertyId: string): void {
     this.joinRoom(`property_${propertyId}`);
   }
 
-  /**
-   * Unsubscribe from property updates
-   */
   public unsubscribeFromProperty(propertyId: string): void {
     this.leaveRoom(`property_${propertyId}`);
   }
 
-  /**
-   * Subscribe to user-specific notifications
-   */
   public subscribeToUserNotifications(userId: string): void {
     this.joinRoom(`user_${userId}`);
   }

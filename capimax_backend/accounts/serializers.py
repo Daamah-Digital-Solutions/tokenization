@@ -425,10 +425,13 @@ class PasswordResetRequestSerializer(serializers.Serializer):
                 expires_at=timezone.now() + timedelta(hours=1)
             )
 
-            # Build reset URL - Always point to frontend
+            # Build reset URL — always use the configured frontend origin.
+            # Never hardcode localhost; the production settings enforce a real
+            # FRONTEND_URL so this email always links to the deployed SPA.
+            from django.conf import settings as _settings
+            frontend_url = getattr(_settings, 'FRONTEND_URL', None) or 'http://localhost:5173'
+            reset_url = f"{frontend_url.rstrip('/')}/new-password?token={reset_token.token}"
             request = self.context.get('request')
-            # Always use frontend URL regardless of request presence
-            reset_url = f"http://localhost:5173/new-password?token={reset_token.token}"
 
             if request:
                 request_info = {

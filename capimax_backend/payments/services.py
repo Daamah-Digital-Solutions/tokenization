@@ -393,9 +393,21 @@ class FraudDetectionService:
         return count
     
     def _is_suspicious_location(self, ip_address: str) -> bool:
-        """Check if IP address is from suspicious location."""
-        # Mock implementation - in production, use IP geolocation service
-        return False
+        """Geolocate `ip_address` and flag if high-risk or anonymising."""
+        if not ip_address:
+            return False
+        try:
+            from kyc.providers import get_geolocation_provider
+            geo = get_geolocation_provider().lookup(ip_address)
+            if not geo.success:
+                return False
+            return geo.is_high_risk or geo.is_suspicious
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception(
+                'Geolocation lookup failed; defaulting to not-suspicious'
+            )
+            return False
     
     def _is_unusual_amount(self, user: User, amount: Decimal) -> bool:
         """Check if payment amount is unusual for this user."""
@@ -855,3 +867,111 @@ class RecurringPaymentService:
             return current_date + timedelta(days=365)
         else:
             return current_date + timedelta(days=30)  # Default to monthly
+
+
+# ============================================================================
+# RefundService — single entry point for all refund creation
+# ============================================================================
+
+class RefundService:
+    """
+    Refund orchestration.
+
+    The previous codebase had refund creation logic inline inside views.py.
+    This service consolidates that logic so it can be invoked from:
+    - the RefundViewSet (admin-initiated refund)
+    - the auto_refund_failed_mint Celery task
+    - the Stripe charge.refunded webhook handler
+
+    For Stripe payments, the actual refund happens via Stripe API. For
+    crypto/bank/Sukuk payments, the refund is created in `manual_review`
+    status — operators must process those out of band.
+    """
+
+    @staticmethod
+    def create_refund(
+        payment,
+        amount=None,
+        reason: str = '',
+        initiated_by=None,
+        initiated_by_system: bool = False,
+    ):
+        """
+        Create a Refund record and execute the refund where possible.
+
+        Returns the created Refund instance. Caller is responsible for
+        ensuring the payment is in a refundable state.
+        """
+        if amount is None:
+            amount = payment.amount
+
+        if amount > payment.amount:
+            raise ValueError("Refund amount exceeds payment amount")
+
+        # Atomic refund creation + payment update
+        with transaction.atomic():
+            payment_locked = Payment.objects.select_for_update().get(pk=payment.pk)
+
+            # Already fully refunded?
+            existing_total = payment_locked.refunds.filter(
+                status__in=['pending', 'processing', 'completed']
+            ).aggregate(s=Sum('amount'))['s'] or Decimal('0')
+
+            if existing_total + amount > payment_locked.amount:
+                raise ValueError(
+                    f"Cumulative refunds would exceed payment amount "
+                    f"(existing {existing_total}, requested {amount}, "
+                    f"payment {payment_locked.amount})"
+                )
+
+            refund = Refund.objects.create(
+                payment=payment_locked,
+                amount=amount,
+                reason=reason or 'no_reason_given',
+                status='pending',
+            )
+
+        # Execute the refund per payment method
+        try:
+            if payment.payment_method == PaymentMethod.CREDIT_CARD and payment.payment_intent_id:
+                RefundService._execute_stripe_refund(refund)
+            else:
+                # Crypto, bank, Nova Sukuk, wallet — these require manual ops.
+                refund.status = 'pending'
+                refund.save(update_fields=['status'])
+                logger.info(
+                    "Refund created for manual processing",
+                    extra={
+                        'refund_id': str(refund.id),
+                        'payment_id': str(payment.pk),
+                        'method': payment.payment_method,
+                    }
+                )
+        except Exception as e:
+            logger.exception("Refund execution failed")
+            refund.status = 'failed'
+            refund.save(update_fields=['status'])
+            raise
+
+        return refund
+
+    @staticmethod
+    def _execute_stripe_refund(refund):
+        """Call Stripe's refund API and update the refund record."""
+        try:
+            stripe_refund = stripe.Refund.create(
+                payment_intent=refund.payment.payment_intent_id,
+                amount=int(refund.amount * 100),
+                metadata={'refund_id': str(refund.id)},
+            )
+            refund.external_refund_id = stripe_refund.id
+            refund.status = 'processing'
+            refund.save(update_fields=['external_refund_id', 'status'])
+        except stripe.error.StripeError as e:
+            logger.error(
+                "Stripe refund failed",
+                extra={'refund_id': str(refund.id), 'error': str(e)},
+            )
+            refund.status = 'failed'
+            refund.save(update_fields=['status'])
+            raise

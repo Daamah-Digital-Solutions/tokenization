@@ -56,7 +56,45 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
   const [steps, setSteps] = useState<TransactionStep[]>([]);
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Compliance-gate errors come from the backend with stable phrases; we
+  // map them to a CTA so the user has a clear next step instead of just
+  // "Try Again" (which won't help when the gate is structural).
+  const [complianceCta, setComplianceCta] = useState<{
+    label: string;
+    href?: string;
+    onClick?: () => void;
+  } | null>(null);
   const hasAutoStarted = useRef(false);
+
+  function classifyComplianceError(message: string): {
+    label: string;
+    href?: string;
+    onClick?: () => void;
+  } | null {
+    const m = message.toLowerCase();
+    if (m.includes('verified kyc profile')) {
+      return { label: 'Complete KYC', href: '/kyc' };
+    }
+    if (m.includes('unresolved compliance review')) {
+      return {
+        label: 'Contact support',
+        href: 'mailto:support@capimax.com?subject=Compliance%20review',
+      };
+    }
+    if (m.includes('annual limit')) {
+      return {
+        label: 'Reduce investment amount',
+        onClick: () => onGoBack?.(),
+      };
+    }
+    if (m.includes('accredited investors')) {
+      return { label: 'Apply for accredited status', href: '/kyc?upgrade=accredited' };
+    }
+    if (m.includes('country of residence is not eligible')) {
+      return { label: 'Browse eligible properties', href: '/properties' };
+    }
+    return null;
+  }
 
   // Calculate fees consistently
   const calculateFees = () => {
@@ -309,6 +347,7 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
       }));
 
       setError(errorMessage);
+      setComplianceCta(classifyComplianceError(errorMessage));
       onComplete(false);
     } finally {
       setIsProcessing(false);
@@ -317,6 +356,7 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
 
   const retryTransaction = () => {
     setError(null);
+    setComplianceCta(null);
     hasAutoStarted.current = false;
     setCurrentStep(0);
     setSteps(prev => prev.map(step => ({ ...step, status: step.id === 'wallet' && walletConnected ? 'completed' : 'pending' })));
@@ -455,15 +495,35 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
                     {error}
                   </Text>
                   <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={retryTransaction}
-                      className="flex items-center gap-2"
-                    >
-                      <RefreshCw className="w-3 h-3" />
-                      Try Again
-                    </Button>
+                    {complianceCta ? (
+                      complianceCta.href ? (
+                        <a
+                          href={complianceCta.href}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md bg-red-600 text-white hover:bg-red-700"
+                        >
+                          {complianceCta.label}
+                        </a>
+                      ) : (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={complianceCta.onClick}
+                          className="flex items-center gap-2"
+                        >
+                          {complianceCta.label}
+                        </Button>
+                      )
+                    ) : (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={retryTransaction}
+                        className="flex items-center gap-2"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                        Try Again
+                      </Button>
+                    )}
                     {onGoBack && (
                       <Button
                         variant="ghost"

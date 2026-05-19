@@ -17,10 +17,12 @@ router.register(r'rental-distributions', views.RentalIncomeDistributionViewSet, 
 app_name = 'properties'
 
 urlpatterns = [
-    # Property ViewSet routes (CRUD + custom actions)
-    path('', include(router.urls)),
-
     # Property Owner Dashboard Endpoints
+    #
+    # These MUST come before ``path('', include(router.urls))`` below.
+    # DefaultRouter registers a detail route at ``<pk>/`` which would otherwise
+    # try to resolve ``/properties/owner/`` as a property whose pk='owner',
+    # making the whole owner dashboard return 404.
     path('owner/stats/',
          views.PropertyOwnerStatsView.as_view(),
          name='property-owner-stats'),
@@ -48,6 +50,9 @@ urlpatterns = [
     path('owner/documents/',
          views.PropertyOwnerDocumentsView.as_view(),
          name='property-owner-documents'),
+
+    # Property ViewSet routes (CRUD + custom actions)
+    path('', include(router.urls)),
 
     # Property image upload
     path('<uuid:property_id>/images/',

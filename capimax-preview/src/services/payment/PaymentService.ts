@@ -71,7 +71,7 @@ export class PaymentService {
    */
   static async getPaymentMethods(): Promise<PaymentMethodInfo[]> {
     try {
-      return await apiClient.get<PaymentMethodInfo[]>('/payments/methods');
+      return await apiClient.get<PaymentMethodInfo[]>('/payments/methods/');
     } catch (error) {
       console.error('Failed to get payment methods:', error);
       throw error;
@@ -94,7 +94,7 @@ export class PaymentService {
     };
   }): Promise<PaymentMethodInfo> {
     try {
-      return await apiClient.post<PaymentMethodInfo>('/payments/methods', methodData);
+      return await apiClient.post<PaymentMethodInfo>('/payments/methods/', methodData);
     } catch (error) {
       console.error('Failed to add payment method:', error);
       throw error;
@@ -106,7 +106,7 @@ export class PaymentService {
    */
   static async removePaymentMethod(methodId: string): Promise<{ message: string }> {
     try {
-      return await apiClient.delete(`/payments/methods/${methodId}`);
+      return await apiClient.delete(`/payments/methods/${methodId}/`);
     } catch (error) {
       console.error('Failed to remove payment method:', error);
       throw error;
@@ -118,7 +118,8 @@ export class PaymentService {
    */
   static async setDefaultPaymentMethod(methodId: string): Promise<{ message: string }> {
     try {
-      return await apiClient.put(`/payments/methods/${methodId}/default`);
+      // Backend action: POST /payments/methods/<id>/set_default/ (router auto-route)
+      return await apiClient.post(`/payments/methods/${methodId}/set_default/`);
     } catch (error) {
       console.error('Failed to set default payment method:', error);
       throw error;
@@ -138,7 +139,8 @@ export class PaymentService {
     payment_intent_id: string;
   }> {
     try {
-      return await apiClient.post('/payments/stripe/payment-intent', data);
+      // Backend URL pattern: /payments/stripe/<action>/ — must include trailing slash
+      return await apiClient.post('/payments/stripe/create-payment-intent/', data);
     } catch (error) {
       console.error('Failed to create Stripe payment intent:', error);
       throw error;
@@ -150,7 +152,7 @@ export class PaymentService {
    */
   static async confirmStripePayment(paymentIntentId: string): Promise<Payment> {
     try {
-      return await apiClient.post<Payment>('/payments/stripe/confirm', {
+      return await apiClient.post<Payment>('/payments/stripe/confirm-payment/', {
         payment_intent_id: paymentIntentId
       });
     } catch (error) {
@@ -173,7 +175,8 @@ export class PaymentService {
     estimated_confirmation_time: string;
   }> {
     try {
-      return await apiClient.post('/payments/crypto', paymentData);
+      // Backend URL pattern: /payments/crypto/<action>/ — must include action + trailing slash
+      return await apiClient.post('/payments/crypto/create-payment/', paymentData);
     } catch (error) {
       console.error('Failed to process crypto payment:', error);
       throw error;
@@ -189,7 +192,7 @@ export class PaymentService {
     amount: number
   ): Promise<CryptoQuote> {
     try {
-      return await apiClient.get<CryptoQuote>('/payments/crypto/quote', {
+      return await apiClient.get<CryptoQuote>('/payments/crypto/get-quote/', {
         from_currency: fromCurrency,
         to_currency: toCurrency,
         amount
@@ -201,42 +204,29 @@ export class PaymentService {
   }
 
   /**
-   * Process PayPal payment
+   * @deprecated PayPal payment processing is NOT IMPLEMENTED on the backend.
+   * The endpoint `/payments/paypal/...` does not exist; calls will 404.
+   * Until backend PayPalView is added, do not call these. Kept here only so
+   * existing imports don't break at build time.
    */
-  static async processPayPalPayment(data: {
+  static async processPayPalPayment(_data: {
     amount: number;
     currency: string;
     investment_id?: string;
     return_url: string;
     cancel_url: string;
-  }): Promise<{
-    payment_id: string;
-    approval_url: string;
-  }> {
-    try {
-      return await apiClient.post('/payments/paypal', data);
-    } catch (error) {
-      console.error('Failed to process PayPal payment:', error);
-      throw error;
-    }
+  }): Promise<never> {
+    throw new Error(
+      'PayPal payments are not yet implemented on the backend. ' +
+      'Use Stripe (credit card) or NOWPayments (crypto) instead.'
+    );
   }
 
-  /**
-   * Confirm PayPal payment
-   */
-  static async confirmPayPalPayment(
-    paymentId: string,
-    payerId: string
-  ): Promise<Payment> {
-    try {
-      return await apiClient.post<Payment>('/payments/paypal/confirm', {
-        payment_id: paymentId,
-        payer_id: payerId
-      });
-    } catch (error) {
-      console.error('Failed to confirm PayPal payment:', error);
-      throw error;
-    }
+  /** @deprecated See processPayPalPayment. */
+  static async confirmPayPalPayment(_paymentId: string, _payerId: string): Promise<never> {
+    throw new Error(
+      'PayPal payments are not yet implemented on the backend.'
+    );
   }
 
   /**
@@ -255,7 +245,8 @@ export class PaymentService {
       const params: any = { page, limit };
       if (status) params.status = status;
 
-      return await apiClient.get('/payments', params);
+      // Backend mounts PaymentViewSet at /payments/payments/ (router-pluralised)
+      return await apiClient.get('/payments/payments/', params);
     } catch (error) {
       console.error('Failed to get payment history:', error);
       throw error;
@@ -267,7 +258,7 @@ export class PaymentService {
    */
   static async getPayment(paymentId: string): Promise<Payment> {
     try {
-      return await apiClient.get<Payment>(`/payments/${paymentId}`);
+      return await apiClient.get<Payment>(`/payments/payments/${paymentId}/`);
     } catch (error) {
       console.error('Failed to get payment:', error);
       throw error;
@@ -279,7 +270,7 @@ export class PaymentService {
    */
   static async cancelPayment(paymentId: string): Promise<{ message: string }> {
     try {
-      return await apiClient.post(`/payments/${paymentId}/cancel`);
+      return await apiClient.post(`/payments/payments/${paymentId}/cancel/`);
     } catch (error) {
       console.error('Failed to cancel payment:', error);
       throw error;
@@ -295,7 +286,11 @@ export class PaymentService {
     estimated_completion: string;
   }> {
     try {
-      return await apiClient.post(`/payments/${paymentId}/refund`, { reason });
+      // Backend route is POST /payments/refunds/ (RefundViewSet) — not /payments/{id}/refund.
+      return await apiClient.post('/payments/refunds/', {
+        payment: paymentId,
+        reason,
+      });
     } catch (error) {
       console.error('Failed to request refund:', error);
       throw error;
@@ -337,7 +332,7 @@ export class PaymentService {
     total_value_usd: number;
   }> {
     try {
-      return await apiClient.get('/payments/wallet');
+      return await apiClient.get('/payments/wallet/');
     } catch (error) {
       console.error('Failed to get wallet balance:', error);
       throw error;
@@ -357,7 +352,7 @@ export class PaymentService {
     estimated_completion: string;
   }> {
     try {
-      return await apiClient.post('/payments/wallet/deposit', data);
+      return await apiClient.post('/payments/wallet/deposit/', data);
     } catch (error) {
       console.error('Failed to add funds:', error);
       throw error;
@@ -374,9 +369,140 @@ export class PaymentService {
     processing_fee: number;
   }> {
     try {
-      return await apiClient.post('/payments/wallet/withdraw', data);
+      return await apiClient.post('/payments/wallet/withdraw/', data);
     } catch (error) {
       console.error('Failed to withdraw funds:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get wallet transaction history (deposits, withdrawals, dividends, fees, etc.)
+   * Backend: GET /payments/wallet/transactions/
+   */
+  static async getWalletTransactions(page = 1, pageSize = 20): Promise<{
+    transactions: Array<{
+      id: string;
+      transaction_type: string;
+      amount: string;
+      currency: string;
+      balance_before: string;
+      balance_after: string;
+      description: string;
+      created_at: string;
+    }>;
+    pagination: { page: number; page_size: number; total_count: number; total_pages: number };
+  }> {
+    try {
+      return await apiClient.get('/payments/wallet/transactions/', { page, page_size: pageSize });
+    } catch (error) {
+      console.error('Failed to get wallet transactions:', error);
+      throw error;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // NOWPayments — cryptocurrency payment gateway
+  // -------------------------------------------------------------------------
+
+  /** GET /payments/nowpayments/currencies/ — list supported crypto currencies. */
+  static async getNowPaymentsCurrencies(): Promise<{ currencies: string[] }> {
+    try {
+      return await apiClient.get('/payments/nowpayments/currencies/');
+    } catch (error) {
+      console.error('Failed to get NOWPayments currencies:', error);
+      throw error;
+    }
+  }
+
+  /** POST /payments/nowpayments/estimate/ — estimate USD→crypto exchange. */
+  static async getNowPaymentsEstimate(data: {
+    amount: number;
+    currency_from: string;
+    currency_to: string;
+  }): Promise<{
+    amount: string;
+    currency_from: string;
+    currency_to: string;
+    estimated_amount: string;
+    min_amount: string | null;
+    exchange_rate: string | null;
+    valid_until: string;
+  }> {
+    try {
+      return await apiClient.post('/payments/nowpayments/estimate/', data);
+    } catch (error) {
+      console.error('Failed to estimate NOWPayments price:', error);
+      throw error;
+    }
+  }
+
+  /** POST /payments/nowpayments/create-payment/ — direct-pay (user already chose crypto). */
+  static async createNowPaymentsPayment(data: {
+    amount: number;
+    currency: string;
+    pay_currency: string;
+    order_description?: string;
+    investment_id?: string;
+    success_url?: string;
+    cancel_url?: string;
+  }): Promise<{
+    payment_id: string;
+    nowpayments_payment_id: string;
+    pay_address: string;
+    pay_amount: string;
+    pay_currency: string;
+    payment_status: string;
+    payment_url: string;
+    created_at: string;
+  }> {
+    try {
+      return await apiClient.post('/payments/nowpayments/create-payment/', data);
+    } catch (error) {
+      console.error('Failed to create NOWPayments payment:', error);
+      throw error;
+    }
+  }
+
+  /** POST /payments/nowpayments/create-invoice/ — hosted invoice page (user picks crypto). */
+  static async createNowPaymentsInvoice(data: {
+    amount: number;
+    currency?: string;
+    order_description?: string;
+    investment_id?: string;
+    success_url?: string;
+    cancel_url?: string;
+  }): Promise<{
+    payment_id: string;
+    invoice_id: string;
+    invoice_url: string;
+    created_at: string;
+  }> {
+    try {
+      return await apiClient.post('/payments/nowpayments/create-invoice/', data);
+    } catch (error) {
+      console.error('Failed to create NOWPayments invoice:', error);
+      throw error;
+    }
+  }
+
+  /** GET /payments/nowpayments/status/<payment_id>/ — poll on-chain status. */
+  static async getNowPaymentsStatus(paymentId: string): Promise<{
+    payment_id: string;
+    nowpayments_payment_id: string;
+    payment_status: string;
+    pay_address: string;
+    pay_amount: string;
+    pay_currency: string;
+    actually_paid: string;
+    is_completed: boolean;
+    is_pending: boolean;
+    is_failed: boolean;
+  }> {
+    try {
+      return await apiClient.get(`/payments/nowpayments/status/${paymentId}/`);
+    } catch (error) {
+      console.error('Failed to fetch NOWPayments status:', error);
       throw error;
     }
   }
@@ -405,7 +531,8 @@ export class PaymentService {
     };
   }> {
     try {
-      return await apiClient.get('/payments/withdrawals', { page, limit });
+      // Backend mounts investment-withdrawals under /api/v1/withdrawals/ (not /payments/)
+      return await apiClient.get('/withdrawals/', { page, page_size: limit });
     } catch (error) {
       console.error('Failed to get withdrawals:', error);
       throw error;

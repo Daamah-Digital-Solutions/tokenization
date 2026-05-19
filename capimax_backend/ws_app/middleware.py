@@ -3,6 +3,7 @@ WebSocket authentication and security middleware.
 """
 
 import logging
+from http.cookies import SimpleCookie
 from urllib.parse import parse_qs
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
@@ -59,6 +60,8 @@ class JWTAuthMiddleware(BaseMiddleware):
     1. Authorization header: Bearer <token>
     2. Query parameter: ?token=<token>
     3. Subprotocol: Sec-WebSocket-Protocol header
+    4. ``access_token`` cookie (set by /auth/login/, httpOnly, sent
+       automatically by browsers on WebSocket upgrades)
     """
     
     def __init__(self, inner):
@@ -107,7 +110,28 @@ class JWTAuthMiddleware(BaseMiddleware):
                     token = protocol.replace("token.", "")
                     logger.debug("Found token in subprotocol")
                     break
-        
+
+        # Method 4: Check the ``access_token`` cookie. The SPA stores the JWT
+        # in an httpOnly cookie that JS cannot read, so the frontend cannot
+        # append ?token=... to the WebSocket URL — but browsers DO send the
+        # cookie on the upgrade request automatically.
+        #
+        # We parse the Cookie header manually because ``SimpleCookie.load()``
+        # rejects the entire header if any one cookie value contains characters
+        # it considers illegal (Google's ``g_state`` cookie holds raw JSON with
+        # ``{}`` and ``"`` which makes SimpleCookie return an empty jar). A
+        # split-on-``;`` parse is more forgiving and sufficient because we only
+        # need one specific cookie by name.
+        if not token:
+            cookie_header = headers.get(b"cookie", b"").decode("latin-1")
+            if cookie_header:
+                for part in cookie_header.split(";"):
+                    name, _, value = part.strip().partition("=")
+                    if name == "access_token" and value:
+                        token = value
+                        logger.debug("Found token in access_token cookie")
+                        break
+
         # If no token found, return anonymous user
         if not token:
             logger.debug("No authentication token found in WebSocket connection")

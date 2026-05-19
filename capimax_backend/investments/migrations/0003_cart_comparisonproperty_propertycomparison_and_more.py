@@ -139,11 +139,11 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='cartitem',
-            constraint=models.CheckConstraint(check=models.Q(('tokens_quantity__gt', 0)), name='cart_item_tokens_positive'),
+            constraint=models.CheckConstraint(condition=models.Q(('tokens_quantity__gt', 0)), name='cart_item_tokens_positive'),
         ),
         migrations.AddConstraint(
             model_name='cartitem',
-            constraint=models.CheckConstraint(check=models.Q(('total_amount__gt', 0)), name='cart_item_total_positive'),
+            constraint=models.CheckConstraint(condition=models.Q(('total_amount__gt', 0)), name='cart_item_total_positive'),
         ),
         migrations.AlterUniqueTogether(
             name='cartitem',

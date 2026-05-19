@@ -1,0 +1,334 @@
+# =============================================================================
+# CapimaxRT — PRODUCTION docker-compose
+# =============================================================================
+# Hard rules enforced by this file (do not weaken without security review):
+#   1. DB, Redis, Prometheus, Grafana NEVER bind to host ports.
+#   2. Web/Celery containers MUST consume DJANGO_SETTINGS_MODULE=capimax_backend.settings.production
+#      which refuses to start if required env vars are absent.
+#   3. Gunicorn binds to 127.0.0.1:8000 inside its container — Nginx is the
+#      only external entry point and terminates TLS.
+#   4. Grafana credentials MUST be provided via env vars. There is no fallback.
+#   5. Every service has resource limits and a restart policy.
+# =============================================================================
+
+version: '3.8'
+
+x-django-environment: &django-environment
+  DJANGO_SETTINGS_MODULE: capimax_backend.settings.production
+  DEBUG: "False"
+  PYTHONUNBUFFERED: "1"
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Django application (Gunicorn)
+  # ---------------------------------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: capimax_web
+    restart: unless-stopped
+    expose:
+      - "8000"  # internal only — nginx proxies in
+    volumes:
+      - ./media:/app/media
+      - ./logs:/app/logs
+      - ./staticfiles:/app/staticfiles
+    environment:
+      <<: *django-environment
+    env_file:
+      - .env.production
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - capimax_internal
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    command: >
+      sh -c "
+        python manage.py migrate --noinput &&
+        python manage.py collectstatic --noinput &&
+        gunicorn
+          --bind 127.0.0.1:8000
+          --workers ${GUNICORN_WORKERS:-4}
+          --worker-class gevent
+          --worker-connections 1000
+          --timeout 60
+          --keep-alive 5
+          --max-requests 1000
+          --max-requests-jitter 100
+          --access-logfile -
+          --error-logfile -
+          capimax_backend.wsgi:application
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/api/v1/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL — NO host port mapping
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:15-alpine
+    container_name: capimax_db
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - capimax_internal
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 4G
+        reservations:
+          cpus: "1"
+          memory: 2G
+    command: >
+      postgres
+      -c shared_preload_libraries=pg_stat_statements
+      -c pg_stat_statements.track=all
+      -c max_connections=200
+      -c shared_buffers=512MB
+      -c effective_cache_size=2GB
+      -c maintenance_work_mem=128MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c ssl=on
+      -c ssl_cert_file=/etc/postgresql/server.crt
+      -c ssl_key_file=/etc/postgresql/server.key
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Redis — NO host port mapping, password required
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: capimax_redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: >
+      redis-server /usr/local/etc/redis/redis.conf
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+    networks:
+      - capimax_internal
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1.5G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Celery worker — separate queues so financial tasks don't compete
+  # ---------------------------------------------------------------------------
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: capimax_celery
+    restart: unless-stopped
+    volumes:
+      - ./media:/app/media
+      - ./logs:/app/logs
+    environment:
+      <<: *django-environment
+    env_file:
+      - .env.production
+    depends_on:
+      - db
+      - redis
+    networks:
+      - capimax_internal
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2G
+    command: >
+      celery -A capimax_backend worker
+      -l info
+      --concurrency=${CELERY_CONCURRENCY:-4}
+      -Q high_priority,medium_priority,low_priority,blockchain
+
+  # ---------------------------------------------------------------------------
+  # Celery beat — persistent schedule via DatabaseScheduler
+  # ---------------------------------------------------------------------------
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: capimax_celery_beat
+    restart: unless-stopped
+    volumes:
+      - ./media:/app/media
+      - ./logs:/app/logs
+      - celery_data:/app/celerybeat
+    environment:
+      <<: *django-environment
+    env_file:
+      - .env.production
+    depends_on:
+      - db
+      - redis
+    networks:
+      - capimax_internal
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+    command: celery -A capimax_backend beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+
+  # ---------------------------------------------------------------------------
+  # Nginx reverse proxy — sole public ingress
+  # ---------------------------------------------------------------------------
+  nginx:
+    image: nginx:alpine
+    container_name: capimax_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./staticfiles:/app/staticfiles:ro
+      - ./media:/app/media:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - web
+    networks:
+      - capimax_internal
+      - capimax_public
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+
+  # ---------------------------------------------------------------------------
+  # Prometheus — no host port; accessed via nginx with basic auth
+  # ---------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: capimax_prometheus
+    restart: unless-stopped
+    expose:
+      - "9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts:/etc/prometheus/alerts:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    networks:
+      - capimax_internal
+
+  # ---------------------------------------------------------------------------
+  # Grafana — no host port; accessed via nginx with basic auth + Grafana login
+  # ---------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:latest
+    container_name: capimax_grafana
+    restart: unless-stopped
+    expose:
+      - "3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:?GRAFANA_USER is required}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?GRAFANA_PASSWORD is required}
+      GF_SECURITY_DISABLE_GRAVATAR: "true"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_DOMAIN: ${GRAFANA_DOMAIN:?GRAFANA_DOMAIN is required}
+      GF_SERVER_ROOT_URL: "https://${GRAFANA_DOMAIN}/grafana"
+    networks:
+      - capimax_internal
+
+  # ---------------------------------------------------------------------------
+  # Flower — Celery monitoring UI (internal only)
+  # ---------------------------------------------------------------------------
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: capimax_flower
+    restart: unless-stopped
+    expose:
+      - "5555"
+    environment:
+      <<: *django-environment
+    env_file:
+      - .env.production
+    depends_on:
+      - redis
+    networks:
+      - capimax_internal
+    command: >
+      celery -A capimax_backend flower
+      --port=5555
+      --basic_auth=${FLOWER_USER}:${FLOWER_PASSWORD}
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  celery_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  # Internal network — services talk to each other here, not exposed to host
+  capimax_internal:
+    driver: bridge
+    internal: false  # set to true if no service needs egress at all
+  # Public-facing network for nginx only
+  capimax_public:
+    driver: bridge

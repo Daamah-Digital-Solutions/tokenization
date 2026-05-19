@@ -232,15 +232,15 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='tradetransaction',
-            constraint=models.CheckConstraint(check=models.Q(('total_amount__gt', 0)), name='marketplace_transaction_total_positive'),
+            constraint=models.CheckConstraint(condition=models.Q(('total_amount__gt', 0)), name='marketplace_transaction_total_positive'),
         ),
         migrations.AddConstraint(
             model_name='tradetransaction',
-            constraint=models.CheckConstraint(check=models.Q(('net_amount_to_seller__gte', 0)), name='marketplace_transaction_seller_amount_valid'),
+            constraint=models.CheckConstraint(condition=models.Q(('net_amount_to_seller__gte', 0)), name='marketplace_transaction_seller_amount_valid'),
         ),
         migrations.AddConstraint(
             model_name='tradetransaction',
-            constraint=models.CheckConstraint(check=models.Q(('total_cost_to_buyer__gt', 0)), name='marketplace_transaction_buyer_cost_positive'),
+            constraint=models.CheckConstraint(condition=models.Q(('total_cost_to_buyer__gt', 0)), name='marketplace_transaction_buyer_cost_positive'),
         ),
         migrations.AddIndex(
             model_name='tradeorder',
@@ -264,11 +264,11 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='tradeorder',
-            constraint=models.CheckConstraint(check=models.Q(('tokens_filled__lte', models.F('tokens_requested'))), name='marketplace_order_tokens_filled_valid'),
+            constraint=models.CheckConstraint(condition=models.Q(('tokens_filled__lte', models.F('tokens_requested'))), name='marketplace_order_tokens_filled_valid'),
         ),
         migrations.AddConstraint(
             model_name='tradeorder',
-            constraint=models.CheckConstraint(check=models.Q(('total_amount__gt', 0)), name='marketplace_order_total_amount_positive'),
+            constraint=models.CheckConstraint(condition=models.Q(('total_amount__gt', 0)), name='marketplace_order_total_amount_positive'),
         ),
         migrations.AddIndex(
             model_name='marketlisting',
@@ -296,15 +296,15 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='marketlisting',
-            constraint=models.CheckConstraint(check=models.Q(('tokens_remaining__lte', models.F('tokens_offered'))), name='marketplace_tokens_remaining_valid'),
+            constraint=models.CheckConstraint(condition=models.Q(('tokens_remaining__lte', models.F('tokens_offered'))), name='marketplace_tokens_remaining_valid'),
         ),
         migrations.AddConstraint(
             model_name='marketlisting',
-            constraint=models.CheckConstraint(check=models.Q(('minimum_order_size__lte', models.F('tokens_offered'))), name='marketplace_minimum_order_valid'),
+            constraint=models.CheckConstraint(condition=models.Q(('minimum_order_size__lte', models.F('tokens_offered'))), name='marketplace_minimum_order_valid'),
         ),
         migrations.AddConstraint(
             model_name='marketlisting',
-            constraint=models.CheckConstraint(check=models.Q(('total_price__gt', 0)), name='marketplace_total_price_positive'),
+            constraint=models.CheckConstraint(condition=models.Q(('total_price__gt', 0)), name='marketplace_total_price_positive'),
         ),
         migrations.AddIndex(
             model_name='marketanalytics',
@@ -344,6 +344,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='escrowaccount',
-            constraint=models.CheckConstraint(check=models.Q(('amount_held__gte', 0)), name='marketplace_escrow_amount_positive'),
+            constraint=models.CheckConstraint(condition=models.Q(('amount_held__gte', 0)), name='marketplace_escrow_amount_positive'),
         ),
     ]

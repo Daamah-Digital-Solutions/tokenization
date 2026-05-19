@@ -278,21 +278,45 @@ contract RentalIncomeDistributor is ReentrancyGuard, AccessControl, Pausable {
     }
     
     /**
-     * @dev Process batch distribution for gas optimization
-     * @param propertyTokenId Token ID of the property
-     * @param distributionId Distribution ID
+     * @dev Finalise the distribution and open it for pull-based claims.
+     *
+     * The contract uses a pull pattern: each investor calls `claimIncome`
+     * to receive their pro-rata share. This function performs the safety
+     * checks that must hold before claims can be opened, then marks the
+     * distribution COMPLETED.
+     *
+     * Checks:
+     *  - Eligible token supply is non-zero (no zero-divisor on claim).
+     *  - The contract holds enough of the payment token to cover the
+     *    full netAmount that investors will collectively claim.
+     *  - The distribution is not already completed (idempotency).
      */
     function _processBatchDistribution(
         uint256 propertyTokenId,
         uint256 distributionId
     ) internal {
         DistributionRecord storage record = distributionRecords[propertyTokenId][distributionId];
+        require(record.status == DistributionStatus.PENDING, "Wrong status");
+        require(record.eligibleTokens > 0, "No eligible token supply");
+
         record.status = DistributionStatus.PROCESSING;
-        
-        // This would typically be called by a keeper or through a separate transaction
-        // For now, we'll mark it as ready for individual claims
+
+        // Funds-on-hand check. If the distribution will be paid in ETH the
+        // contract must hold at least `netAmount` in balance. For ERC-20
+        // payments we check the token balance.
+        PropertyDistribution storage propDist = propertyDistributions[propertyTokenId];
+        address tokenAddr = propDist.paymentTokenAddress;
+        uint256 required = record.netAmount;
+        uint256 onHand;
+
+        if (tokenAddr == address(0)) {
+            onHand = address(this).balance;
+        } else {
+            onHand = IERC20(tokenAddr).balanceOf(address(this));
+        }
+        require(onHand >= required, "Insufficient distributor balance");
+
         record.status = DistributionStatus.COMPLETED;
-        
         emit DistributionCompleted(propertyTokenId, distributionId);
     }
     

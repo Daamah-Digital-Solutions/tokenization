@@ -183,15 +183,15 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='walletbalance',
-            constraint=models.CheckConstraint(check=models.Q(('available_balance__gte', 0)), name='wallet_available_balance_non_negative'),
+            constraint=models.CheckConstraint(condition=models.Q(('available_balance__gte', 0)), name='wallet_available_balance_non_negative'),
         ),
         migrations.AddConstraint(
             model_name='walletbalance',
-            constraint=models.CheckConstraint(check=models.Q(('pending_balance__gte', 0)), name='wallet_pending_balance_non_negative'),
+            constraint=models.CheckConstraint(condition=models.Q(('pending_balance__gte', 0)), name='wallet_pending_balance_non_negative'),
         ),
         migrations.AddConstraint(
             model_name='walletbalance',
-            constraint=models.CheckConstraint(check=models.Q(('locked_balance__gte', 0)), name='wallet_locked_balance_non_negative'),
+            constraint=models.CheckConstraint(condition=models.Q(('locked_balance__gte', 0)), name='wallet_locked_balance_non_negative'),
         ),
         migrations.AddField(
             model_name='walletwithdrawal',

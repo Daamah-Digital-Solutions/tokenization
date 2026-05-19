@@ -51,14 +51,14 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='installmentpayment',
-            constraint=models.CheckConstraint(check=models.Q(('total_amount_paid__lte', models.F('total_investment_amount'))), name='installment_paid_not_exceed_total'),
+            constraint=models.CheckConstraint(condition=models.Q(('total_amount_paid__lte', models.F('total_investment_amount'))), name='installment_paid_not_exceed_total'),
         ),
         migrations.AddConstraint(
             model_name='installmentpayment',
-            constraint=models.CheckConstraint(check=models.Q(('payments_made__lte', models.F('total_installments'))), name='installment_payments_not_exceed_total'),
+            constraint=models.CheckConstraint(condition=models.Q(('payments_made__lte', models.F('total_installments'))), name='installment_payments_not_exceed_total'),
         ),
         migrations.AddConstraint(
             model_name='installmentpayment',
-            constraint=models.CheckConstraint(check=models.Q(('tokens_released__lte', models.F('token_allocation'))), name='installment_tokens_not_exceed_allocation'),
+            constraint=models.CheckConstraint(condition=models.Q(('tokens_released__lte', models.F('token_allocation'))), name='installment_tokens_not_exceed_allocation'),
         ),
     ]

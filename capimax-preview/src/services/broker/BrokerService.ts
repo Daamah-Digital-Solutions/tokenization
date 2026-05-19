@@ -181,7 +181,7 @@ export class BrokerService {
       const params: any = { page, page_size: limit };
       if (status) params.status = status;
 
-      const response = await apiClient.get('/broker/commissions/', { params });
+      const response = await apiClient.get('/broker/commissions/', params);
       return {
         commissions: response.results || response,
         pagination: {
@@ -218,7 +218,7 @@ export class BrokerService {
     property: Property;
   }> {
     try {
-      return await apiClient.get(`/brokers/commissions/${commissionId}`);
+      return await apiClient.get(`/broker/commissions/${commissionId}/`);
     } catch (error) {
       console.error('Failed to get commission details:', error);
       throw error;
@@ -241,7 +241,7 @@ export class BrokerService {
       const params: any = { page, page_size: limit };
       if (status) params.status = status;
 
-      const response = await apiClient.get('/broker/referrals/', { params });
+      const response = await apiClient.get('/broker/referrals/', params);
       return {
         referrals: response.results || response,
         pagination: {
@@ -296,7 +296,7 @@ export class BrokerService {
       const params: any = { page, page_size: limit };
       if (type) params.material_type = type;
 
-      const response = await apiClient.get('/broker/materials/', { params });
+      const response = await apiClient.get('/broker/materials/', params);
       return {
         materials: response.results || response,
         pagination: {
@@ -317,10 +317,13 @@ export class BrokerService {
    */
   static async downloadMarketingMaterial(materialId: string): Promise<Blob> {
     try {
-      const response = await apiClient.get(`/broker/materials/${materialId}/download/`, {
-        responseType: 'blob',
-      });
-      return response;
+      // Bypass the wrapped ApiClient because the response is a binary blob,
+      // not a JSON envelope. Send credentials so the auth cookies travel.
+      const response = await apiClient.rawClient.get(
+        `/broker/materials/${materialId}/download/`,
+        { responseType: 'blob' }
+      );
+      return response.data;
     } catch (error) {
       console.error('Failed to download marketing material:', error);
       throw error;
@@ -336,7 +339,7 @@ export class BrokerService {
       if (startDate) params.start_date = startDate;
       if (endDate) params.end_date = endDate;
 
-      const response = await apiClient.get('/broker/performance/', { params });
+      const response = await apiClient.get('/broker/performance/', params);
       return response.results || response;
     } catch (error) {
       console.error('Failed to get performance metrics:', error);
@@ -440,7 +443,7 @@ export class BrokerService {
       const params: any = { page, page_size: limit };
       if (status) params.status = status;
 
-      const response = await apiClient.get('/broker/admin/applications/', { params });
+      const response = await apiClient.get('/broker/admin/applications/', params);
       return {
         applications: response.results || response,
         pagination: {
@@ -517,7 +520,7 @@ export class BrokerService {
       const params: any = { page, page_size: limit };
       if (status) params.status = status;
 
-      const response = await apiClient.get('/broker/admin/brokers/', { params });
+      const response = await apiClient.get('/broker/admin/brokers/', params);
       return {
         brokers: response.results || response,
         pagination: {
@@ -547,7 +550,7 @@ export class BrokerService {
   }> {
     try {
       const params = { page, page_size: limit };
-      const response = await apiClient.get('/broker/admin/commissions/', { params });
+      const response = await apiClient.get('/broker/admin/commissions/', params);
 
       return {
         commissions: response.results || response,

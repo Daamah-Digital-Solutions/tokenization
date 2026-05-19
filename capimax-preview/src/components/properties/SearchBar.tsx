@@ -97,12 +97,16 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     }
   ];
 
+  // Use the suggestions the caller provided (real API results). If the
+  // caller hasn't wired suggestions yet, fall back to the local example
+  // set ONLY during typing so the placeholder dropdown isn't empty in dev.
+  const sourceSuggestions = suggestions.length > 0 ? suggestions : mockSuggestions;
   const filteredSuggestions = value
-    ? mockSuggestions.filter(suggestion => 
+    ? sourceSuggestions.filter((suggestion) =>
         suggestion.title.toLowerCase().includes(value.toLowerCase()) ||
         suggestion.subtitle?.toLowerCase().includes(value.toLowerCase())
       )
-    : mockSuggestions;
+    : sourceSuggestions;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;

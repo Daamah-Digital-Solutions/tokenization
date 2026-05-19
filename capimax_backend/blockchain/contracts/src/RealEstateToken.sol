@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "./ComplianceRegistry.sol";
 
 /**
  * @title RealEstateToken
@@ -85,6 +86,15 @@ contract RealEstateToken is ERC1155, Pausable, ReentrancyGuard, AccessControl {
     mapping(uint256 => mapping(address => InvestorInfo)) public investors;
     mapping(uint256 => mapping(uint256 => RentalDistribution)) public rentalDistributions;
     mapping(uint256 => uint256) public distributionCounter;
+
+    // -------------------------------------------------------------------
+    // Compliance registry — optional KYC/sanctions gate. When set, every
+    // transfer (including secondary trades) is gated through
+    // `ComplianceRegistry.canTransfer`. When unset, only the lockup rule
+    // applies (preserving backward compatibility with older deployments).
+    // -------------------------------------------------------------------
+    address public complianceRegistry;
+    event ComplianceRegistrySet(address indexed registry);
     
     // Multi-signature variables
     mapping(uint256 => MultiSigTransaction) public transactions;
@@ -564,6 +574,18 @@ contract RealEstateToken is ERC1155, Pausable, ReentrancyGuard, AccessControl {
         _unpause();
     }
     
+    /**
+     * @notice Set the compliance registry that gates every transfer.
+     * @dev Can be configured by ADMIN_ROLE at any time. Pass `address(0)`
+     *      to disable on-chain compliance enforcement (kept for emergency
+     *      operational override; off-chain enforcement always remains in
+     *      effect via the backend marketplace serializer).
+     */
+    function setComplianceRegistry(address registry) external onlyRole(ADMIN_ROLE) {
+        complianceRegistry = registry;
+        emit ComplianceRegistrySet(registry);
+    }
+
     function _beforeTokenTransfer(
         address operator,
         address from,
@@ -573,8 +595,8 @@ contract RealEstateToken is ERC1155, Pausable, ReentrancyGuard, AccessControl {
         bytes memory data
     ) internal override whenNotPaused {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
-        
-        // Check lockup periods for transfers (except minting and burning)
+
+        // Lockup enforcement — skips mints (from == 0) and burns (to == 0).
         if (from != address(0) && to != address(0)) {
             for (uint256 i = 0; i < ids.length; i++) {
                 uint256 tokenId = ids[i];
@@ -585,6 +607,20 @@ contract RealEstateToken is ERC1155, Pausable, ReentrancyGuard, AccessControl {
                         "Tokens are locked up"
                     );
                 }
+            }
+        }
+
+        // Compliance registry enforcement — runs on EVERY transfer including
+        // mints and burns, so a sanctioned recipient cannot receive a mint
+        // and a sanctioned sender cannot offload via burn.
+        if (complianceRegistry != address(0)) {
+            for (uint256 i = 0; i < ids.length; i++) {
+                require(
+                    IComplianceRegistry(complianceRegistry).canTransfer(
+                        from, to, ids[i], amounts[i]
+                    ),
+                    "Transfer blocked by compliance"
+                );
             }
         }
     }

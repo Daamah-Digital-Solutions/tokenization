@@ -260,35 +260,69 @@ class Property(models.Model):
         help_text="Minimum investment amount"
     )
 
-    # SPV (Special Purpose Vehicle) fields
+    # SPV (Special Purpose Vehicle) fields — legacy free-text columns retained
+    # for the data migration to LegalEntity. New code MUST use `spv_entity`.
     spv_company_name = models.CharField(
         max_length=255,
         blank=True,
         null=True,
-        help_text="SPV company name for this property"
+        help_text="DEPRECATED — use spv_entity. Free-text SPV company name."
     )
     spv_registration_number = models.CharField(
         max_length=100,
         blank=True,
         null=True,
-        help_text="SPV registration/license number"
+        help_text="DEPRECATED — use spv_entity."
     )
     spv_bank_account_number = models.CharField(
         max_length=100,
         blank=True,
         null=True,
-        help_text="SPV dedicated bank account number"
+        help_text="DEPRECATED — use spv_entity."
     )
     spv_bank_name = models.CharField(
         max_length=255,
         blank=True,
         null=True,
-        help_text="SPV bank name"
+        help_text="DEPRECATED — use spv_entity."
     )
     spv_establishment_date = models.DateField(
         blank=True,
         null=True,
-        help_text="Date the SPV was legally established"
+        help_text="DEPRECATED — use spv_entity."
+    )
+
+    # Authoritative SPV link
+    spv_entity = models.ForeignKey(
+        'legal.LegalEntity',
+        on_delete=models.PROTECT,
+        related_name='properties',
+        null=True,
+        blank=True,
+        help_text="The Special Purpose Vehicle that legally owns this property."
+    )
+
+    # Offering / compliance metadata
+    OFFERING_TYPE_CHOICES = [
+        ('reg_d', 'Reg D (Accredited US Investors)'),
+        ('reg_cf', 'Reg CF (Crowdfunding)'),
+        ('reg_a', 'Reg A (Mini-IPO)'),
+        ('reg_s', 'Reg S (Non-US Investors)'),
+        ('private', 'Private Placement'),
+    ]
+    offering_type = models.CharField(
+        max_length=20,
+        choices=OFFERING_TYPE_CHOICES,
+        default='private',
+        help_text="Securities offering exemption / structure used for this property."
+    )
+    requires_accredited_investors = models.BooleanField(
+        default=False,
+        help_text="If True, only investors flagged as accredited may participate."
+    )
+    lockup_months = models.PositiveIntegerField(
+        default=12,
+        help_text="Lockup period from mint date before tokens may be transferred."
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -305,15 +339,15 @@ class Property(models.Model):
         ]
         constraints = [
             models.CheckConstraint(
-                check=models.Q(tokens_sold__lte=models.F('total_tokens')),
+                condition=models.Q(tokens_sold__lte=models.F('total_tokens')),
                 name='tokens_sold_not_exceed_total'
             ),
             models.CheckConstraint(
-                check=models.Q(total_value__gt=0),
+                condition=models.Q(total_value__gt=0),
                 name='total_value_positive'
             ),
             models.CheckConstraint(
-                check=models.Q(token_price__gt=0),
+                condition=models.Q(token_price__gt=0),
                 name='token_price_positive'
             ),
         ]
@@ -1381,15 +1415,15 @@ class ConstructionInstallment(models.Model):
         ]
         constraints = [
             models.CheckConstraint(
-                check=models.Q(total_amount_paid__lte=models.F('total_investment_amount')),
+                condition=models.Q(total_amount_paid__lte=models.F('total_investment_amount')),
                 name='installment_paid_not_exceed_total'
             ),
             models.CheckConstraint(
-                check=models.Q(payments_made__lte=models.F('total_installments')),
+                condition=models.Q(payments_made__lte=models.F('total_installments')),
                 name='installment_payments_not_exceed_total'
             ),
             models.CheckConstraint(
-                check=models.Q(tokens_released__lte=models.F('token_allocation')),
+                condition=models.Q(tokens_released__lte=models.F('token_allocation')),
                 name='installment_tokens_not_exceed_allocation'
             ),
         ]

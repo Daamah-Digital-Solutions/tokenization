@@ -1,80 +1,112 @@
 import axios, { type AxiosRequestConfig } from 'axios';
 import type { APIResponse } from './types';
 
+/**
+ * ApiClient — central HTTP client for the CapimaxRT frontend.
+ *
+ * Auth model (Phase 5):
+ *  - Tokens live in httpOnly cookies set by the backend on login.
+ *  - The frontend NEVER reads, writes, or stores access/refresh tokens.
+ *  - All requests use `withCredentials: true` so the cookies travel.
+ *  - The CSRF token is read from a non-httpOnly `csrftoken` cookie and
+ *    sent back in the `X-CSRFToken` header on state-changing requests.
+ *  - On a 401 we attempt one silent refresh by calling
+ *    `/auth/token/refresh/` (which itself uses the refresh cookie). The
+ *    original request is retried once. A second 401 redirects to /login.
+ *
+ * `isAuthenticated()` is now an authoritative call: the legacy
+ * synchronous version returns `false` only when the cookie has been
+ * explicitly cleared by `clearAuthToken()` (used by logout).
+ */
+
+const CSRF_COOKIE_NAME = 'csrftoken';
+const AUTH_FLAG_KEY = 'auth_flag'; // non-sensitive flag — just remembers if we have a session
+
+const PUBLIC_ENDPOINTS = [
+  '/auth/register/',
+  '/auth/login/',
+  '/auth/password/reset/',
+  '/auth/password/reset/confirm/',
+  '/auth/check-email/',
+  '/auth/token/refresh/',
+];
+
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
 export class ApiClient {
   private client: any;
-  private authToken: string | null = null;
+  private isRefreshing = false;
+  private pendingRetryQueue: Array<{
+    resolve: (value: unknown) => void;
+    reject: (reason?: any) => void;
+    config: AxiosRequestConfig;
+  }> = [];
 
-  // Getter to access the raw axios client when needed
   public get rawClient() {
     return this.client;
   }
 
-  constructor(baseURL: string = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1') {
+  constructor(
+    baseURL: string = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1'
+  ) {
     this.client = axios.create({
       baseURL,
       timeout: 30000,
+      withCredentials: true, // critical — httpOnly cookies must travel
       headers: {
         'Content-Type': 'application/json',
       },
     });
-
     this.setupInterceptors();
-    this.loadStoredToken();
   }
 
+  // -------------------------------------------------------------------
+  // Interceptors
+  // -------------------------------------------------------------------
+
   private setupInterceptors(): void {
-    // Public endpoints that should not include auth token
-    const publicEndpoints = [
-      '/auth/register/',
-      '/auth/login/',
-      '/auth/password/reset/',
-      '/auth/password/reset/confirm/',
-      '/auth/check-email/'
-    ];
-
-    // Request interceptor to add auth token
     this.client.interceptors.request.use(
-      (config) => {
-        // Check if this is a public endpoint
-        const isPublicEndpoint = publicEndpoints.some(endpoint =>
-          config.url?.includes(endpoint)
-        );
-
-        // Only add auth token for non-public endpoints
-        if (this.authToken && !isPublicEndpoint) {
-          config.headers.Authorization = `Bearer ${this.authToken}`;
+      (config: any) => {
+        // CSRF token for state-changing requests
+        const method = (config.method || 'get').toLowerCase();
+        if (['post', 'put', 'patch', 'delete'].includes(method)) {
+          const csrf = getCookie(CSRF_COOKIE_NAME);
+          if (csrf) {
+            config.headers = config.headers || {};
+            config.headers['X-CSRFToken'] = csrf;
+          }
         }
-
-        // Add request timestamp for monitoring
-        (config as any).metadata = { requestStartTime: new Date().getTime() };
-        
+        config.metadata = { requestStartTime: Date.now() };
         return config;
       },
-      (error) => Promise.reject(error)
+      (error: any) => Promise.reject(error)
     );
 
-    // Response interceptor for error handling and token refresh
     this.client.interceptors.response.use(
       (response: any) => {
-        // Log response time for monitoring
-        const requestStartTime = (response.config as any).metadata?.requestStartTime;
-        if (requestStartTime) {
-          const responseTime = new Date().getTime() - requestStartTime;
-          console.debug(`API Request to ${response.config.url} took ${responseTime}ms`);
+        const requestStart = response.config?.metadata?.requestStartTime;
+        if (requestStart && import.meta.env.DEV) {
+          // eslint-disable-next-line no-console
+          console.debug(
+            `API ${response.config.url} took ${Date.now() - requestStart}ms`
+          );
         }
-
-        // Check if the response indicates success
-        if (response.data && !response.data.success && response.data.error) {
-          throw new ApiError(response.data.error.code, response.data.error.message, response.data.error.details);
+        if (response.data && response.data.success === false && response.data.error) {
+          throw new ApiError(
+            response.data.error.code,
+            response.data.error.message,
+            response.data.error.details
+          );
         }
-
         return response;
       },
-      async (error) => {
-        const originalRequest = error.config;
+      async (error: any) => {
+        const originalRequest = error.config || {};
 
-        // Handle network errors
         if (!error.response) {
           throw new ApiError(
             'NETWORK_ERROR',
@@ -83,31 +115,48 @@ export class ApiClient {
           );
         }
 
-        // Handle 401 Unauthorized
-        if (error.response.status === 401) {
-          const hadToken = !!this.authToken;
-          this.clearAuthToken();
+        // ---- 401: try a single silent refresh and retry ----
+        if (
+          error.response.status === 401 &&
+          !originalRequest._retried &&
+          !this.isPublicEndpoint(originalRequest.url)
+        ) {
+          originalRequest._retried = true;
+          try {
+            await this.silentRefresh();
+            return this.client(originalRequest);
+          } catch (refreshError) {
+            this.clearAuthToken();
+            if (
+              typeof window !== 'undefined' &&
+              !this.isPublicEndpoint(originalRequest.url)
+            ) {
+              window.location.href = '/login';
+            }
+            throw new ApiError(
+              'AUTH_REQUIRED',
+              'Authentication required. Please login again.'
+            );
+          }
+        }
 
-          // Don't retry login/register requests
-          if (originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/register')) {
+        if (error.response.status === 401) {
+          if (
+            originalRequest.url?.includes('/auth/login') ||
+            originalRequest.url?.includes('/auth/register')
+          ) {
             throw new ApiError(
               'AUTH_FAILED',
               error.response.data?.error?.message || 'Authentication failed',
               error.response.data?.error?.details
             );
           }
-
-          // Only redirect to login if user was previously authenticated (token expired/invalid)
-          // If no token existed, the caller is accessing a protected endpoint without auth —
-          // let it fail gracefully so public pages can handle optional auth calls
-          if (hadToken && typeof window !== 'undefined') {
-            window.location.href = '/login';
-          }
-
-          throw new ApiError('AUTH_REQUIRED', 'Authentication required. Please login again.');
+          throw new ApiError(
+            'AUTH_REQUIRED',
+            'Authentication required. Please login again.'
+          );
         }
 
-        // Handle 403 Forbidden
         if (error.response.status === 403) {
           throw new ApiError(
             'ACCESS_DENIED',
@@ -116,11 +165,12 @@ export class ApiClient {
           );
         }
 
-        // Handle 409 Conflict (Duplicate Resource)
         if (error.response.status === 409) {
-          const message = error.response.data?.error || 
-                         error.response.data?.message || 
-                         'This resource already exists';
+          const message =
+            error.response.data?.error?.message ||
+            error.response.data?.error ||
+            error.response.data?.message ||
+            'This resource already exists';
           throw new ApiError(
             'DUPLICATE_RESOURCE',
             message,
@@ -128,7 +178,6 @@ export class ApiClient {
           );
         }
 
-        // Handle 422 Validation Errors
         if (error.response.status === 422) {
           throw new ApiError(
             'VALIDATION_ERROR',
@@ -137,7 +186,6 @@ export class ApiClient {
           );
         }
 
-        // Handle 429 Rate Limiting
         if (error.response.status === 429) {
           throw new ApiError(
             'RATE_LIMIT_EXCEEDED',
@@ -146,25 +194,22 @@ export class ApiClient {
           );
         }
 
-        // Handle 500+ server errors
         if (error.response.status >= 500) {
-          // Extract actual error message from backend response
-          const serverMessage = error.response.data?.error?.message ||
-                               error.response.data?.message ||
-                               error.response.data?.detail ||
-                               'Server error occurred. Please try again later.';
-          throw new ApiError(
-            'SERVER_ERROR',
-            serverMessage,
-            { status: error.response.status, details: error.response.data?.error?.details }
-          );
+          const serverMessage =
+            error.response.data?.error?.message ||
+            error.response.data?.message ||
+            error.response.data?.detail ||
+            'Server error occurred. Please try again later.';
+          throw new ApiError('SERVER_ERROR', serverMessage, {
+            status: error.response.status,
+            details: error.response.data?.error?.details,
+          });
         }
 
-        // Handle other HTTP errors
-        const errorMessage = error.response.data?.error?.message || 
-                           error.response.data?.message || 
-                           `HTTP ${error.response.status} Error`;
-        
+        const errorMessage =
+          error.response.data?.error?.message ||
+          error.response.data?.message ||
+          `HTTP ${error.response.status} Error`;
         throw new ApiError(
           error.response.data?.error?.code || 'HTTP_ERROR',
           errorMessage,
@@ -174,91 +219,153 @@ export class ApiClient {
     );
   }
 
-  private loadStoredToken(): void {
+  // -------------------------------------------------------------------
+  // Silent refresh
+  // -------------------------------------------------------------------
+
+  private async silentRefresh(): Promise<void> {
+    if (this.isRefreshing) {
+      // Coalesce concurrent refreshes
+      return new Promise((resolve, reject) => {
+        this.pendingRetryQueue.push({ resolve, reject, config: {} });
+      });
+    }
+    this.isRefreshing = true;
     try {
-      const token = localStorage.getItem('auth_token');
-      console.log('📦 Loading stored token:', token ? `Present (${token.length} chars)` : 'Not found');
-      if (token) {
-        this.authToken = token;
-      }
-    } catch (error) {
-      console.warn('Failed to load stored auth token:', error);
+      await axios.post(
+        `${this.client.defaults.baseURL}/auth/token/refresh/`,
+        {},
+        { withCredentials: true }
+      );
+      // Notify queued callers
+      this.pendingRetryQueue.forEach(({ resolve }) => resolve(undefined));
+      this.pendingRetryQueue = [];
+    } catch (err) {
+      this.pendingRetryQueue.forEach(({ reject }) => reject(err));
+      this.pendingRetryQueue = [];
+      throw err;
+    } finally {
+      this.isRefreshing = false;
     }
   }
 
-  public setAuthToken(token: string): void {
-    console.log('💾 Setting auth token:', token ? `Present (${token.length} chars)` : 'Empty token');
-    this.authToken = token;
+  private isPublicEndpoint(url?: string): boolean {
+    if (!url) return false;
+    return PUBLIC_ENDPOINTS.some((p) => url.includes(p));
+  }
+
+  // -------------------------------------------------------------------
+  // Auth surface — kept for backward compatibility with call sites
+  // -------------------------------------------------------------------
+
+  /**
+   * @deprecated Tokens are now in httpOnly cookies. This setter only
+   * records an "authenticated" flag in localStorage for the SPA to
+   * detect logged-in state without an extra round trip.
+   */
+  public setAuthToken(_token: string): void {
     try {
-      localStorage.setItem('auth_token', token);
-      console.log('✅ Token saved to localStorage');
-    } catch (error) {
-      console.warn('Failed to store auth token:', error);
+      localStorage.setItem(AUTH_FLAG_KEY, '1');
+    } catch {
+      /* ignore */
     }
   }
 
   public clearAuthToken(): void {
-    this.authToken = null;
     try {
-      localStorage.removeItem('auth_token');
-    } catch (error) {
-      console.warn('Failed to clear stored auth token:', error);
+      localStorage.removeItem(AUTH_FLAG_KEY);
+    } catch {
+      /* ignore */
     }
   }
 
+  /**
+   * @deprecated The access token is httpOnly and cannot be read from JS.
+   * Returns null. Use `isAuthenticated()` to test login state.
+   */
   public getAuthToken(): string | null {
-    return this.authToken;
+    return null;
   }
 
   public isAuthenticated(): boolean {
-    return !!this.authToken;
+    try {
+      return !!localStorage.getItem(AUTH_FLAG_KEY);
+    } catch {
+      return false;
+    }
   }
 
-  // Generic HTTP methods
+  // -------------------------------------------------------------------
+  // HTTP methods
+  // -------------------------------------------------------------------
+
+  /**
+   * Unwrap the response body.
+   *
+   * The backend is inconsistent: some views wrap their response in
+   * `create_success_response(data=...)` (returns `{ success, data, ... }`),
+   * others — particularly default DRF ModelViewSet actions — return the
+   * serialized payload directly. Callers shouldn't have to know which is
+   * which, so we prefer `body.data` when the envelope looks present and
+   * fall back to the raw body otherwise.
+   *
+   * Detection rule: if the body has BOTH a `success` boolean and a `data`
+   * key, treat it as the wrapped envelope. Otherwise return the body
+   * verbatim — that way DRF lists (`{count, results}`) and DRF objects
+   * survive untouched.
+   */
+  private unwrap<T = any>(body: any): T {
+    if (
+      body &&
+      typeof body === 'object' &&
+      'success' in body &&
+      'data' in body
+    ) {
+      return body.data as T;
+    }
+    return body as T;
+  }
+
   public async get<T = any>(endpoint: string, params?: any, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.get<APIResponse<T>>(endpoint, {
       params,
       ...config,
     });
-    return response.data.data!;
+    return this.unwrap<T>(response.data);
   }
 
   public async post<T = any>(endpoint: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.post<APIResponse<T>>(endpoint, data, config);
-    return response.data.data!;
+    return this.unwrap<T>(response.data);
   }
 
   public async put<T = any>(endpoint: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.put<APIResponse<T>>(endpoint, data, config);
-    return response.data.data!;
+    return this.unwrap<T>(response.data);
   }
 
   public async patch<T = any>(endpoint: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.patch<APIResponse<T>>(endpoint, data, config);
-    return response.data.data!;
+    return this.unwrap<T>(response.data);
   }
 
   public async delete<T = any>(endpoint: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.delete<APIResponse<T>>(endpoint, config);
-    return response.data.data!;
+    return this.unwrap<T>(response.data);
   }
 
-  // Multipart form data upload
   public async uploadFile<T = any>(
     endpoint: string,
     formData: FormData,
     config?: AxiosRequestConfig
   ): Promise<T> {
     const response = await this.client.post<APIResponse<T>>(endpoint, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+      headers: { 'Content-Type': 'multipart/form-data' },
       ...config,
     });
     return response.data.data!;
   }
 
-  // Health check
   public async healthCheck(): Promise<{ status: string; timestamp: string }> {
     try {
       const response = await this.client.get('/health');
@@ -268,7 +375,6 @@ export class ApiClient {
     }
   }
 
-  // Get client instance for custom requests
   public getClient(): any {
     return this.client;
   }
@@ -284,10 +390,8 @@ class ApiError extends Error {
     this.name = 'ApiError';
     this.code = code;
     this.details = details;
-
-    // Maintain proper stack trace
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, ApiError);
+    if ((Error as any).captureStackTrace) {
+      (Error as any).captureStackTrace(this, ApiError);
     }
   }
 
@@ -301,8 +405,5 @@ class ApiError extends Error {
   }
 }
 
-// Export singleton instance
 export const apiClient = new ApiClient();
-
-// Export the error class for use in components
 export { ApiError };

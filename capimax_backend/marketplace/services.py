@@ -103,13 +103,13 @@ class OrderMatchingEngine:
     def _find_matching_listings(self, order: TradeOrder) -> List[MarketListing]:
         """Find market listings that match the trade order criteria."""
         # Get the property from the order's listing
-        property_obj = order.listing.property
-        
+        property_obj = order.listing.property_listing
+
         # For buy orders, find sell listings with acceptable prices
         if order.listing.listing_type == ListingType.SELL:
             # This is a buy order - find sell listings
             listings = MarketListing.objects.filter(
-                property=property_obj,
+                property_listing=property_obj,
                 listing_type=ListingType.SELL,
                 status__in=[ListingStatus.ACTIVE, ListingStatus.PARTIALLY_FILLED],
                 tokens_remaining__gt=0,
@@ -117,22 +117,22 @@ class OrderMatchingEngine:
             ).exclude(
                 seller=order.buyer  # Don't match user's own listings
             )
-            
+
             # Filter by acceptable price for limit orders
             if order.order_type == OrderType.LIMIT:
                 listings = listings.filter(price_per_token__lte=order.price_per_token)
-            
+
             # Order by priority: best price first, then priority score, then time
             listings = listings.order_by(
                 'price_per_token',
                 '-priority_score',
                 'created_at'
             )
-        
+
         else:
             # This is a sell order - find buy listings
             listings = MarketListing.objects.filter(
-                property=property_obj,
+                property_listing=property_obj,
                 listing_type=ListingType.BUY,
                 status__in=[ListingStatus.ACTIVE, ListingStatus.PARTIALLY_FILLED],
                 tokens_remaining__gt=0,
@@ -172,14 +172,14 @@ class OrderMatchingEngine:
                 order=order,
                 buyer=order.buyer,
                 seller=listing.seller,
-                property=listing.property,
+                property_traded=listing.property_listing,
                 tokens_traded=tokens_to_trade,
                 price_per_token=trade_price,
                 total_amount=trade_amount,
                 status=TransactionStatus.PROCESSING,
                 payment_method={'type': 'marketplace_trade'},
-                market_cap_at_trade=self._calculate_market_cap(listing.property),
-                volume_24h=self._get_24h_volume(listing.property)
+                market_cap_at_trade=self._calculate_market_cap(listing.property_listing),
+                volume_24h=self._get_24h_volume(listing.property_listing)
             )
             
             # Update listing tokens remaining
@@ -214,7 +214,7 @@ class OrderMatchingEngine:
     def _calculate_market_cap(self, property_obj: Property) -> Decimal:
         """Calculate current market cap of a property based on latest trades."""
         latest_trade = TradeTransaction.objects.filter(
-            property=property_obj,
+            property_traded=property_obj,
             status=TransactionStatus.COMPLETED
         ).order_by('-completed_at').first()
         
@@ -227,7 +227,7 @@ class OrderMatchingEngine:
         """Get 24-hour trading volume for a property."""
         since = timezone.now() - timedelta(hours=24)
         volume = TradeTransaction.objects.filter(
-            property=property_obj,
+            property_traded=property_obj,
             status=TransactionStatus.COMPLETED,
             completed_at__gte=since
         ).aggregate(
@@ -349,7 +349,7 @@ class MarketAnalyticsService:
             )
             
             if property_obj:
-                transactions_query = transactions_query.filter(property=property_obj)
+                transactions_query = transactions_query.filter(property_traded=property_obj)
             
             # Calculate volume metrics
             volume_data = transactions_query.aggregate(
@@ -442,7 +442,7 @@ class MarketAnalyticsService:
         )
         
         if property_obj:
-            listings_query = listings_query.filter(property=property_obj)
+            listings_query = listings_query.filter(property_listing=property_obj)
         
         # Separate buy and sell orders
         sell_orders = listings_query.filter(listing_type=ListingType.SELL)
@@ -476,7 +476,7 @@ class MarketAnalyticsService:
         """Store analytics data in the database."""
         try:
             MarketAnalytics.objects.update_or_create(
-                property=property_obj,
+                property_analyzed=property_obj,
                 timeframe=timeframe,
                 period_start=analytics['period_start'],
                 defaults={
@@ -524,16 +524,16 @@ class MarketDataService:
         try:
             # Get active sell orders (asks) - lowest price first
             asks = MarketListing.objects.filter(
-                property=property_obj,
+                property_listing=property_obj,
                 listing_type=ListingType.SELL,
                 status__in=[ListingStatus.ACTIVE, ListingStatus.PARTIALLY_FILLED],
                 tokens_remaining__gt=0,
                 expires_at__gt=timezone.now()
             ).order_by('price_per_token')[:depth]
-            
+
             # Get active buy orders (bids) - highest price first
             bids = MarketListing.objects.filter(
-                property=property_obj,
+                property_listing=property_obj,
                 listing_type=ListingType.BUY,
                 status__in=[ListingStatus.ACTIVE, ListingStatus.PARTIALLY_FILLED],
                 tokens_remaining__gt=0,
@@ -551,7 +551,7 @@ class MarketDataService:
             
             # Get last trade price
             last_trade = TradeTransaction.objects.filter(
-                property=property_obj,
+                property_traded=property_obj,
                 status=TransactionStatus.COMPLETED
             ).order_by('-completed_at').first()
             
@@ -590,7 +590,7 @@ class MarketDataService:
             
             # Get recent trades
             recent_trades = TradeTransaction.objects.filter(
-                property=property_obj,
+                property_traded=property_obj,
                 status=TransactionStatus.COMPLETED,
                 completed_at__range=(period_start, period_end)
             ).order_by('-completed_at')[:limit]

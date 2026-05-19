@@ -14,7 +14,7 @@ from rest_framework.mixins import (
     ListModelMixin, RetrieveModelMixin, 
     UpdateModelMixin, DestroyModelMixin
 )
-from rest_framework.parsers import MultiPartParser, JSONParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.utils import timezone

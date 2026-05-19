@@ -1,0 +1,146 @@
+groups:
+  - name: capimax_financial
+    interval: 30s
+    rules:
+      # Mint failure rate — if more than 5% of mints fail in a 5-minute window,
+      # something is seriously wrong (RPC down, contract issue, etc.).
+      - alert: HighMintFailureRate
+        expr: |
+          (
+            sum(rate(capimax_mint_failures_total[5m]))
+            /
+            sum(rate(capimax_mint_attempts_total[5m]))
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          team: blockchain
+        annotations:
+          summary: 'Mint failure rate above 5%'
+          description: |
+            More than 5% of mints have failed in the last 5 minutes.
+            Investigate blockchain RPC health and contract state.
+
+      # Payments stuck pending too long. Should be cleared by
+      # `expire_pending_payments` every 10 min.
+      - alert: PaymentsPendingTooLong
+        expr: |
+          max(capimax_payment_pending_age_seconds) > 7200
+        for: 10m
+        labels:
+          severity: warning
+          team: payments
+        annotations:
+          summary: 'Payment pending for over 2 hours'
+          description: |
+            A payment has been in PENDING state for >2h. The timeout task
+            should have cancelled it. Check Celery beat health.
+
+      # Webhook signature failures — possible attack
+      - alert: WebhookSignatureFailures
+        expr: |
+          sum(rate(capimax_webhook_signature_failures_total[1m])) > 10
+        for: 1m
+        labels:
+          severity: critical
+          team: security
+        annotations:
+          summary: 'High rate of webhook signature failures'
+          description: |
+            More than 10 webhook signature failures per minute. Possible
+            replay attack or webhook secret rotation issue.
+
+      # On-chain / DB ownership drift
+      - alert: TokenBalanceDrift
+        expr: |
+          sum(capimax_token_balance_drift_count) > 0
+        for: 5m
+        labels:
+          severity: critical
+          team: blockchain
+        annotations:
+          summary: 'Token balance drift detected'
+          description: |
+            The reconciliation task found at least one TokenBalance row whose
+            DB value differs from the on-chain `balanceOf()` reading.
+
+      # Celery queue depth — backlog
+      - alert: CeleryQueueDepthHigh
+        expr: |
+          celery_queue_length > 100
+        for: 5m
+        labels:
+          severity: warning
+          team: ops
+        annotations:
+          summary: 'Celery queue {{ $labels.queue }} backlog over 100'
+          description: |
+            Queue {{ $labels.queue }} has more than 100 pending tasks.
+            Possible worker crash or slow downstream.
+
+      # Mint pipeline silent for too long — beat task may have stopped
+      - alert: MintProcessorIdle
+        expr: |
+          time() - max(capimax_mint_processor_last_run_timestamp) > 600
+        for: 5m
+        labels:
+          severity: critical
+          team: blockchain
+        annotations:
+          summary: 'process_pending_mints has not run in 10 minutes'
+          description: |
+            The mint dispatcher should run every 2 minutes. It has not
+            reported a heartbeat for over 10 minutes.
+
+  - name: capimax_infrastructure
+    interval: 30s
+    rules:
+      - alert: PostgresDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: ops
+        annotations:
+          summary: 'PostgreSQL is down'
+
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          team: ops
+        annotations:
+          summary: 'Redis is down'
+
+      - alert: DjangoErrorRateHigh
+        expr: |
+          sum(rate(django_http_responses_total_by_status_total{status=~"5.."}[5m]))
+          /
+          sum(rate(django_http_responses_total_by_status_total[5m]))
+          > 0.02
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: 'Django 5xx rate above 2%'
+
+      - alert: HostHighCPU
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 90
+        for: 10m
+        labels:
+          severity: warning
+          team: ops
+        annotations:
+          summary: 'Host {{ $labels.instance }} CPU above 90% for 10 minutes'
+
+      - alert: HostDiskFull
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+        for: 5m
+        labels:
+          severity: critical
+          team: ops
+        annotations:
+          summary: 'Host {{ $labels.instance }} root filesystem under 10% free'

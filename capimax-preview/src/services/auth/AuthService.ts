@@ -199,7 +199,7 @@ export class AuthService {
    */
   static async logout(): Promise<void> {
     try {
-      await apiClient.post('/auth/logout');
+      await apiClient.post('/auth/logout/');
     } catch (error) {
       console.error('Logout request failed:', error);
       // Continue with local logout even if server request fails
@@ -214,32 +214,31 @@ export class AuthService {
    */
   static async getCurrentUser(): Promise<User> {
     try {
-      console.log('🔄 AuthService: Using UPDATED endpoint /auth/profile/');
       const response = await apiClient.get<any>('/auth/profile/');
-      // Backend wraps response in create_success_response() which puts data in response.data
-      const backendUser = response.data || response.user || response;
-      
-      // Map backend user format to frontend User interface
+      // ApiClient.unwrap has already stripped the envelope when present.
+      // Fall through to `response.user` (legacy) or the raw response.
+      const backendUser = response?.user ?? response ?? {};
+
       const mappedUser: User = {
         id: backendUser.id,
         email: backendUser.email,
-        first_name: backendUser.firstName || backendUser.first_name,
-        last_name: backendUser.lastName || backendUser.last_name,
+        first_name: backendUser.first_name ?? '',
+        last_name: backendUser.last_name ?? '',
         role: backendUser.role,
-        phone: backendUser.phone,
-        country: backendUser.country || '',
-        date_of_birth: backendUser.dateOfBirth || backendUser.date_of_birth,
-        address: backendUser.address,
-        city: backendUser.city,
-        state: backendUser.state,
-        postal_code: backendUser.postalCode || backendUser.postal_code,
-        kyc_status: backendUser.kycStatus || backendUser.kyc_status,
-        is_verified: backendUser.isVerified || backendUser.is_verified || false,
-        wallet_address: backendUser.walletAddress || backendUser.wallet_address,
-        created_at: new Date(backendUser.createdAt || backendUser.created_at),
-        updated_at: new Date(backendUser.updatedAt || backendUser.updated_at)
+        phone: backendUser.phone ?? '',
+        country: backendUser.country ?? '',
+        date_of_birth: backendUser.date_of_birth ?? '',
+        address: backendUser.address ?? '',
+        city: backendUser.city ?? '',
+        state: backendUser.state ?? '',
+        postal_code: backendUser.postal_code ?? '',
+        kyc_status: backendUser.kyc_status ?? 'not_started',
+        is_verified: Boolean(backendUser.is_verified),
+        wallet_address: backendUser.wallet_address ?? '',
+        created_at: new Date(backendUser.created_at ?? Date.now()),
+        updated_at: new Date(backendUser.updated_at ?? Date.now()),
       };
-      
+
       return mappedUser;
     } catch (error) {
       console.error('Failed to get current user:', error);
@@ -248,23 +247,29 @@ export class AuthService {
   }
 
   /**
-   * Refresh authentication token
+   * Refresh authentication token.
+   *
+   * The backend reads the refresh token from the httpOnly `refresh_token`
+   * cookie and writes a new access cookie on success — the SPA never sees
+   * the raw refresh value. We accept (and ignore) the legacy `refreshToken`
+   * argument so existing call sites keep type-checking; once those are
+   * migrated to the no-arg form we can drop it.
    */
-  static async refreshToken(refreshToken: string): Promise<RefreshTokenResponse> {
+  static async refreshToken(_refreshToken?: string): Promise<RefreshTokenResponse> {
     try {
-      const response = await apiClient.post<any>('/auth/refresh', {
-        refreshToken
-      });
-      
-      // Backend returns response.data with tokens
+      const response = await apiClient.post<any>('/auth/token/refresh/');
+
       const tokenResponse: RefreshTokenResponse = {
-        token: response.access || response.token,
-        refreshToken: response.refresh
+        token: response?.access || response?.token || '',
+        refreshToken: response?.refresh,
       };
-      
-      // Update stored token
-      apiClient.setAuthToken(tokenResponse.token);
-      
+
+      // Cookie-auth keeps the access token in an httpOnly cookie. We only
+      // update local storage if the backend echoed a body token (legacy).
+      if (tokenResponse.token) {
+        apiClient.setAuthToken(tokenResponse.token);
+      }
+
       return tokenResponse;
     } catch (error) {
       console.error('Token refresh failed:', error);
@@ -303,7 +308,7 @@ export class AuthService {
    */
   static async changePassword(data: ChangePasswordRequest): Promise<{ message: string }> {
     try {
-      return await apiClient.post('/auth/password/change', data);
+      return await apiClient.post('/auth/password/change/', data);
     } catch (error) {
       console.error('Password change failed:', error);
       throw error;
@@ -315,7 +320,7 @@ export class AuthService {
    */
   static async setupTwoFactor(): Promise<TwoFactorSetup> {
     try {
-      return await apiClient.post<TwoFactorSetup>('/auth/2fa/setup');
+      return await apiClient.post<TwoFactorSetup>('/auth/2fa/setup/');
     } catch (error) {
       console.error('2FA setup failed:', error);
       throw error;
@@ -327,7 +332,7 @@ export class AuthService {
    */
   static async verifyTwoFactor(data: TwoFactorVerification): Promise<{ success: boolean; backupCodes: string[] }> {
     try {
-      return await apiClient.post('/auth/2fa/verify', data);
+      return await apiClient.post('/auth/2fa/verify/', data);
     } catch (error) {
       console.error('2FA verification failed:', error);
       throw error;
@@ -339,7 +344,7 @@ export class AuthService {
    */
   static async disableTwoFactor(data: TwoFactorVerification): Promise<{ message: string }> {
     try {
-      return await apiClient.post('/auth/2fa/disable', data);
+      return await apiClient.post('/auth/2fa/disable/', data);
     } catch (error) {
       console.error('2FA disable failed:', error);
       throw error;
@@ -347,15 +352,16 @@ export class AuthService {
   }
 
   /**
-   * Generate new backup codes
+   * Generate new backup codes.
+   *
+   * Not implemented on the backend yet — the current 2FA setup endpoint
+   * already issues backup codes once. Throw rather than silently 404 so
+   * the UI surfaces the gap instead of pretending it worked.
    */
   static async generateBackupCodes(): Promise<{ backupCodes: string[] }> {
-    try {
-      return await apiClient.post('/auth/2fa/backup-codes/generate');
-    } catch (error) {
-      console.error('Backup codes generation failed:', error);
-      throw error;
-    }
+    throw new Error(
+      'Backup code regeneration is not yet supported. Re-run 2FA setup to get a fresh set.'
+    );
   }
 
   /**
@@ -363,7 +369,7 @@ export class AuthService {
    */
   static async verifyEmail(token: string): Promise<{ message: string }> {
     try {
-      return await apiClient.post('/auth/email/verify', { token });
+      return await apiClient.post('/auth/email/verify/', { token });
     } catch (error) {
       console.error('Email verification failed:', error);
       throw error;
@@ -441,7 +447,7 @@ export class AuthService {
    */
   static async resendEmailVerification(): Promise<{ message: string }> {
     try {
-      return await apiClient.post('/auth/email/resend-verification');
+      return await apiClient.post('/auth/email/resend-verification/');
     } catch (error) {
       console.error('Resend email verification failed:', error);
       throw error;

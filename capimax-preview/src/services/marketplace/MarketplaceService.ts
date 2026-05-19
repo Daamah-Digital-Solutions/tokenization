@@ -42,7 +42,10 @@ export interface MarketplaceFilters {
   max_price?: number;
   min_tokens?: number;
   max_tokens?: number;
-  listing_type?: 'IMMEDIATE' | 'AUCTION';
+  // Backend stores listing_type as 'sell'/'buy' on `MarketListing`.
+  // The legacy IMMEDIATE/AUCTION values never matched a real column and
+  // would silently drop the filter at the DRF filterset.
+  listing_type?: 'sell' | 'buy';
   status?: string;
   sort_by?: 'price_asc' | 'price_desc' | 'tokens_asc' | 'tokens_desc' | 'created_asc' | 'created_desc';
 }
@@ -111,7 +114,9 @@ export interface MarketplaceActivity {
 }
 
 export class MarketplaceService {
-  private readonly baseEndpoint = '/api/v1/marketplace';
+  // NB: ApiClient already prepends `/api/v1`. Do NOT include it here or
+  // every call ends up at /api/v1/api/v1/marketplace/... and 404s.
+  private readonly baseEndpoint = '/marketplace';
 
   /**
    * Get all marketplace listings with optional filters
@@ -172,113 +177,122 @@ export class MarketplaceService {
     return await apiClient.post(`${this.baseEndpoint}/orders/`, data);
   }
 
-  /**
-   * Place a bid on an auction listing
-   */
-  async placeBid(data: BidRequest): Promise<MarketplaceBid> {
-    return await apiClient.post(`${this.baseEndpoint}/bids/`, data);
+  // -------------------------------------------------------------------
+  // Bids — NOT YET IMPLEMENTED on the backend.
+  //
+  // There is no Bid model or BidViewSet in marketplace/. These methods
+  // throw rather than silently 404 so the UI can surface a clear error
+  // instead of pretending an auction action succeeded.
+  // -------------------------------------------------------------------
+
+  async placeBid(_data: BidRequest): Promise<MarketplaceBid> {
+    throw new Error('Bid placement is not yet implemented on the backend.');
   }
 
-  /**
-   * Get bids for a specific listing
-   */
   async getListingBids(
-    listingId: string,
-    page: number = 1,
-    pageSize: number = 20
+    _listingId: string,
+    _page: number = 1,
+    _pageSize: number = 20
   ): Promise<PaginatedResponse<MarketplaceBid>> {
-    const params = { page, page_size: pageSize };
-    return await apiClient.get(`${this.baseEndpoint}/listings/${listingId}/bids/`, params);
+    throw new Error('Bid listing is not yet implemented on the backend.');
   }
 
-  /**
-   * Get user's own bids
-   */
   async getUserBids(
-    page: number = 1,
-    pageSize: number = 20
+    _page: number = 1,
+    _pageSize: number = 20
   ): Promise<PaginatedResponse<MarketplaceBid>> {
-    const params = { page, page_size: pageSize };
-    return await apiClient.get(`${this.baseEndpoint}/my-bids/`, params);
+    throw new Error('User bid history is not yet implemented on the backend.');
   }
 
-  /**
-   * Accept a bid on a listing (for listing owners)
-   */
-  async acceptBid(bidId: string): Promise<{
+  async acceptBid(_bidId: string): Promise<{
     success: boolean;
     transaction_id: string;
     message: string;
   }> {
-    return await apiClient.post(`${this.baseEndpoint}/bids/${bidId}/accept/`);
+    throw new Error('Bid acceptance is not yet implemented on the backend.');
+  }
+
+  async rejectBid(_bidId: string): Promise<{ success: boolean; message: string }> {
+    throw new Error('Bid rejection is not yet implemented on the backend.');
   }
 
   /**
-   * Reject a bid on a listing (for listing owners)
-   */
-  async rejectBid(bidId: string): Promise<{ success: boolean; message: string }> {
-    return await apiClient.post(`${this.baseEndpoint}/bids/${bidId}/reject/`);
-  }
-
-  /**
-   * Get user's own marketplace listings
+   * Get user's own marketplace listings.
+   *
+   * Backend supports this via the `my_listings=true` query parameter on
+   * the main listings endpoint — there is no separate `/my-listings/`
+   * route.
    */
   async getUserListings(
     status?: string,
     page: number = 1,
     pageSize: number = 20
   ): Promise<PaginatedResponse<SecondaryMarketListing>> {
-    const params = {
-      ...(status && { status }),
+    const params: any = {
+      my_listings: 'true',
       page,
       page_size: pageSize,
     };
-    return await apiClient.get(`${this.baseEndpoint}/my-listings/`, params);
+    if (status) params.status = status;
+    return await apiClient.get(`${this.baseEndpoint}/listings/`, params);
   }
 
   /**
-   * Get marketplace statistics
+   * Get marketplace statistics.
+   *
+   * Mapped to the analytics overview action — `/analytics/overview/`.
+   * Shape differs slightly from the `MarketplaceStats` interface; callers
+   * should treat the response as best-effort.
    */
   async getMarketplaceStats(): Promise<MarketplaceStats> {
-    return await apiClient.get(`${this.baseEndpoint}/stats/`);
+    return await apiClient.get(`${this.baseEndpoint}/analytics/overview/`);
   }
 
   /**
-   * Get recent marketplace activity
+   * Get recent marketplace activity.
+   *
+   * No dedicated activity feed exists yet — the closest backend equivalent
+   * is the transactions list, but the response shape is different. Throw
+   * rather than return wrong data.
    */
   async getMarketplaceActivity(
-    page: number = 1,
-    pageSize: number = 20
+    _page: number = 1,
+    _pageSize: number = 20
   ): Promise<PaginatedResponse<MarketplaceActivity>> {
-    const params = { page, page_size: pageSize };
-    return await apiClient.get(`${this.baseEndpoint}/activity/`, params);
+    throw new Error('Marketplace activity feed is not yet implemented on the backend.');
   }
 
   /**
-   * Get property-specific marketplace listings
+   * Get property-specific marketplace listings.
+   *
+   * Mapped to `?property_id=<id>` on the main listings endpoint, which the
+   * backend honours via custom queryset filtering.
    */
   async getPropertyListings(
     propertyId: string,
     page: number = 1,
     pageSize: number = 20
   ): Promise<PaginatedResponse<SecondaryMarketListing>> {
-    const params = { page, page_size: pageSize };
-    return await apiClient.get(`${this.baseEndpoint}/properties/${propertyId}/listings/`, params);
+    const params = { property_id: propertyId, page, page_size: pageSize };
+    return await apiClient.get(`${this.baseEndpoint}/listings/`, params);
   }
 
   /**
-   * Get recommended listings for a user
+   * Get recommended listings for a user.
+   *
+   * No recommendation engine in marketplace yet. Throw rather than 404.
    */
   async getRecommendedListings(
-    page: number = 1,
-    pageSize: number = 10
+    _page: number = 1,
+    _pageSize: number = 10
   ): Promise<PaginatedResponse<SecondaryMarketListing>> {
-    const params = { page, page_size: pageSize };
-    return await apiClient.get(`${this.baseEndpoint}/recommended/`, params);
+    throw new Error('Marketplace recommendations are not yet implemented on the backend.');
   }
 
   /**
-   * Get trending properties in marketplace
+   * Get trending properties in marketplace.
+   *
+   * No trending endpoint exists. Throw rather than 404.
    */
   async getTrendingProperties(): Promise<{
     most_traded: Array<{
@@ -293,11 +307,14 @@ export class MarketplaceService {
       total_volume: number;
     }>;
   }> {
-    return await apiClient.get(`${this.baseEndpoint}/trending/`);
+    throw new Error('Marketplace trending data is not yet implemented on the backend.');
   }
 
   /**
-   * Search marketplace listings
+   * Search marketplace listings.
+   *
+   * Backend supports SearchFilter on `/listings/?search=<q>` — there is no
+   * dedicated `/search/` route.
    */
   async searchListings(
     query: string,
@@ -306,12 +323,12 @@ export class MarketplaceService {
     pageSize: number = 20
   ): Promise<PaginatedResponse<SecondaryMarketListing>> {
     const params = {
-      q: query,
+      search: query,
       ...filters,
       page,
       page_size: pageSize,
     };
-    return await apiClient.get(`${this.baseEndpoint}/search/`, params);
+    return await apiClient.get(`${this.baseEndpoint}/listings/`, params);
   }
 }
 

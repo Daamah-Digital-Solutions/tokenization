@@ -75,20 +75,29 @@ export class PropertyApprovalService {
     };
   }> {
     try {
-      const response = await apiClient.get('/admin/property-approvals/', {
+      const response: any = await apiClient.get('/admin/property-approvals/', {
         page,
-        limit,
+        page_size: limit,
         status: 'pending'
       });
 
+      // DRF paginated response: { count, next, previous, results }.
+      // There is no `pagination` sub-object — build one from `count`.
+      const results = response?.results ?? [];
+      const total = Number(response?.count ?? results.length);
       return {
-        approvals: response.results.map((approval: any) => ({
+        approvals: results.map((approval: any) => ({
           ...approval,
           submitted_at: new Date(approval.submitted_at),
           reviewed_at: approval.reviewed_at ? new Date(approval.reviewed_at) : undefined,
           approved_at: approval.approved_at ? new Date(approval.approved_at) : undefined,
         })),
-        pagination: response.pagination
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.max(1, Math.ceil(total / limit)),
+        },
       };
     } catch (error) {
       console.error('Failed to fetch pending approvals:', error);
@@ -114,20 +123,27 @@ export class PropertyApprovalService {
     };
   }> {
     try {
-      const params: any = { page, limit };
+      const params: any = { page, page_size: limit };
       if (status) params.status = status;
       if (search) params.search = search;
 
-      const response = await apiClient.get('/admin/property-approvals/', params);
+      const response: any = await apiClient.get('/admin/property-approvals/', params);
 
+      const results = response?.results ?? [];
+      const total = Number(response?.count ?? results.length);
       return {
-        approvals: response.results.map((approval: any) => ({
+        approvals: results.map((approval: any) => ({
           ...approval,
           submitted_at: new Date(approval.submitted_at),
           reviewed_at: approval.reviewed_at ? new Date(approval.reviewed_at) : undefined,
           approved_at: approval.approved_at ? new Date(approval.approved_at) : undefined,
         })),
-        pagination: response.pagination
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.max(1, Math.ceil(total / limit)),
+        },
       };
     } catch (error) {
       console.error('Failed to fetch approvals:', error);

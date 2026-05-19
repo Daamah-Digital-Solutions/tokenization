@@ -1,32 +1,55 @@
+/**
+ * UserService — backed by the REAL CapimaxRT backend endpoints.
+ *
+ * History: an earlier version of this file pointed at a non-existent
+ * `/users/*` prefix. Every call silently 404'd in production. This rewrite
+ * routes each method to the actual backend path. Methods with no backend
+ * implementation are kept (callers exist) but throw a clear error rather
+ * than silently failing.
+ *
+ * Backend endpoint mapping:
+ *
+ *   Profile           GET/PUT     /auth/profile/
+ *   Stats             GET         /auth/stats/
+ *   Notifications     GET/...     /notifications/  (use NotificationService.ts)
+ *   Portfolio         GET         /portfolio/summary/
+ *   Transactions      GET         /transactions/   (investment-level)
+ *   Wallet balance    GET         /payments/wallet/
+ *   KYC status        GET         /kyc/status/
+ *
+ * NB: ApiClient already prepends `/api/v1`. Paths here MUST NOT include it.
+ */
+
 import { apiClient } from '../api/ApiClient';
-import type { 
-  User, 
-  UserProfileData, 
+import type {
+  User,
+  UserProfileData,
   Notification,
   Transaction,
-  Investment
+  Investment,
 } from '../api/types';
 
 export class UserService {
-  /**
-   * Get user profile
-   */
-  static async getProfile(userId?: string): Promise<User> {
+  // -------------------------------------------------------------------------
+  // Profile
+  // -------------------------------------------------------------------------
+
+  /** GET /auth/profile/ — get the authenticated user's profile. */
+  static async getProfile(_userId?: string): Promise<User> {
+    // The backend exposes only the authenticated user's profile.
+    // Looking up by id is an admin-only operation and not supported here.
     try {
-      const endpoint = userId ? `/users/${userId}` : '/users/profile';
-      return await apiClient.get<User>(endpoint);
+      return await apiClient.get<User>('/auth/profile/');
     } catch (error) {
       console.error('Failed to get user profile:', error);
       throw error;
     }
   }
 
-  /**
-   * Update user profile
-   */
+  /** PUT /auth/profile/ — update the authenticated user's profile. */
   static async updateProfile(profileData: UserProfileData): Promise<User> {
     try {
-      return await apiClient.put<User>('/users/profile', profileData);
+      return await apiClient.put<User>('/auth/profile/', profileData);
     } catch (error) {
       console.error('Failed to update profile:', error);
       throw error;
@@ -34,81 +57,68 @@ export class UserService {
   }
 
   /**
-   * Upload profile avatar
+   * @deprecated Avatar upload is not implemented on the backend. Either add a
+   * backend endpoint (e.g. POST /auth/profile/avatar/) or use the profile PUT
+   * with a base64-encoded image field once the User model supports one.
    */
-  static async uploadAvatar(file: File): Promise<{ avatar_url: string }> {
-    try {
-      const formData = new FormData();
-      formData.append('avatar', file);
-
-      return await apiClient.uploadFile<{ avatar_url: string }>('/users/avatar', formData);
-    } catch (error) {
-      console.error('Failed to upload avatar:', error);
-      throw error;
-    }
+  static async uploadAvatar(_file: File): Promise<{ avatar_url: string }> {
+    throw new Error(
+      'Avatar upload is not yet implemented on the backend.'
+    );
   }
 
   /**
-   * Delete user account
+   * @deprecated Account self-deletion is not implemented on the backend.
+   * Until added, route the user to support for account closure.
    */
-  static async deleteAccount(password: string): Promise<{ message: string }> {
-    try {
-      return await apiClient.delete('/users/account', {
-        data: { password }
-      });
-    } catch (error) {
-      console.error('Failed to delete account:', error);
-      throw error;
-    }
+  static async deleteAccount(_password: string): Promise<{ message: string }> {
+    throw new Error(
+      'Account deletion is not implemented. Please contact support.'
+    );
   }
 
-  /**
-   * Get user notifications
-   */
+  // -------------------------------------------------------------------------
+  // Notifications — thin pass-through to the real notifications API.
+  // -------------------------------------------------------------------------
+
+  /** GET /notifications/ — paginated list. */
   static async getNotifications(page = 1, limit = 20): Promise<{
     notifications: Notification[];
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      pages: number;
-    };
+    pagination: { page: number; limit: number; total: number; pages: number };
   }> {
     try {
-      return await apiClient.get('/users/notifications', { page, limit });
+      return await apiClient.get('/notifications/', { page, page_size: limit });
     } catch (error) {
       console.error('Failed to get notifications:', error);
       throw error;
     }
   }
 
-  /**
-   * Mark notification as read
-   */
+  /** POST /notifications/<id>/mark-read/ — mark a single notification read. */
   static async markNotificationRead(notificationId: string): Promise<{ message: string }> {
     try {
-      return await apiClient.put(`/users/notifications/${notificationId}/read`);
+      return await apiClient.post(`/notifications/${notificationId}/mark-read/`);
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
       throw error;
     }
   }
 
-  /**
-   * Mark all notifications as read
-   */
+  /** POST /notifications/mark-all-read/ — mark every unread notification read. */
   static async markAllNotificationsRead(): Promise<{ message: string }> {
     try {
-      return await apiClient.put('/users/notifications/read-all');
+      return await apiClient.post('/notifications/mark-all-read/');
     } catch (error) {
       console.error('Failed to mark all notifications as read:', error);
       throw error;
     }
   }
 
-  /**
-   * Get user investment portfolio
-   */
+  // -------------------------------------------------------------------------
+  // Portfolio / transactions — investment-level.
+  // -------------------------------------------------------------------------
+
+  /** GET /portfolio/summary/ — investment portfolio summary. */
   static async getPortfolio(): Promise<{
     investments: Investment[];
     total_invested: number;
@@ -117,36 +127,27 @@ export class UserService {
     return_percentage: number;
   }> {
     try {
-      return await apiClient.get('/users/portfolio');
+      return await apiClient.get('/portfolio/summary/');
     } catch (error) {
       console.error('Failed to get portfolio:', error);
       throw error;
     }
   }
 
-  /**
-   * Get user transaction history
-   */
+  /** GET /transactions/ — investment transaction history. */
   static async getTransactionHistory(page = 1, limit = 20): Promise<{
     transactions: Transaction[];
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      pages: number;
-    };
+    pagination: { page: number; limit: number; total: number; pages: number };
   }> {
     try {
-      return await apiClient.get('/users/transactions', { page, limit });
+      return await apiClient.get('/transactions/', { page, page_size: limit });
     } catch (error) {
       console.error('Failed to get transaction history:', error);
       throw error;
     }
   }
 
-  /**
-   * Get user dashboard statistics
-   */
+  /** GET /dashboard/stats/ — top-level dashboard statistics for the user. */
   static async getDashboardStats(): Promise<{
     total_invested: number;
     current_value: number;
@@ -158,16 +159,18 @@ export class UserService {
     monthly_dividends: number;
   }> {
     try {
-      return await apiClient.get('/users/dashboard/stats');
+      return await apiClient.get('/dashboard/stats/');
     } catch (error) {
       console.error('Failed to get dashboard stats:', error);
       throw error;
     }
   }
 
-  /**
-   * Update notification preferences
-   */
+  // -------------------------------------------------------------------------
+  // Notification preferences — backed by /notifications/preferences/.
+  // -------------------------------------------------------------------------
+
+  /** PUT /notifications/preferences/ */
   static async updateNotificationPreferences(preferences: {
     email_notifications: boolean;
     push_notifications: boolean;
@@ -178,16 +181,14 @@ export class UserService {
     marketing_emails: boolean;
   }): Promise<{ message: string }> {
     try {
-      return await apiClient.put('/users/preferences/notifications', preferences);
+      return await apiClient.put('/notifications/preferences/', preferences);
     } catch (error) {
       console.error('Failed to update notification preferences:', error);
       throw error;
     }
   }
 
-  /**
-   * Get notification preferences
-   */
+  /** GET /notifications/preferences/ */
   static async getNotificationPreferences(): Promise<{
     email_notifications: boolean;
     push_notifications: boolean;
@@ -198,19 +199,23 @@ export class UserService {
     marketing_emails: boolean;
   }> {
     try {
-      return await apiClient.get('/users/preferences/notifications');
+      return await apiClient.get('/notifications/preferences/');
     } catch (error) {
       console.error('Failed to get notification preferences:', error);
       throw error;
     }
   }
 
-  /**
-   * Update wallet address
-   */
+  // -------------------------------------------------------------------------
+  // Wallet — blockchain wallet address management.
+  // -------------------------------------------------------------------------
+
+  /** PUT /auth/profile/ — update wallet_address on the user profile. */
   static async updateWalletAddress(walletAddress: string): Promise<User> {
     try {
-      return await apiClient.put<User>('/users/wallet', { wallet_address: walletAddress });
+      return await apiClient.put<User>('/auth/profile/', {
+        wallet_address: walletAddress,
+      });
     } catch (error) {
       console.error('Failed to update wallet address:', error);
       throw error;
@@ -218,71 +223,21 @@ export class UserService {
   }
 
   /**
-   * Verify wallet ownership
+   * @deprecated On-chain wallet signature verification is not yet implemented
+   * on the backend. The wallet address can be set on the profile, but
+   * cryptographic ownership proofs are not yet validated server-side.
    */
-  static async verifyWallet(signature: string, message: string): Promise<{ verified: boolean }> {
-    try {
-      return await apiClient.post('/users/wallet/verify', { signature, message });
-    } catch (error) {
-      console.error('Failed to verify wallet:', error);
-      throw error;
-    }
+  static async verifyWallet(_signature: string, _message: string): Promise<{ verified: boolean }> {
+    throw new Error(
+      'Wallet signature verification is not yet implemented on the backend.'
+    );
   }
 
-  /**
-   * Get user activity feed
-   */
-  static async getActivityFeed(page = 1, limit = 20): Promise<{
-    activities: Array<{
-      id: string;
-      type: string;
-      title: string;
-      description: string;
-      metadata?: any;
-      created_at: Date;
-    }>;
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      pages: number;
-    };
-  }> {
-    try {
-      return await apiClient.get('/users/activity', { page, limit });
-    } catch (error) {
-      console.error('Failed to get activity feed:', error);
-      throw error;
-    }
-  }
+  // -------------------------------------------------------------------------
+  // Verification (KYC) — thin façade over the real /kyc/ endpoints.
+  // -------------------------------------------------------------------------
 
-  /**
-   * Export user data (GDPR compliance)
-   */
-  static async exportUserData(): Promise<{ download_url: string }> {
-    try {
-      return await apiClient.post('/users/export');
-    } catch (error) {
-      console.error('Failed to export user data:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Request account verification
-   */
-  static async requestVerification(): Promise<{ message: string }> {
-    try {
-      return await apiClient.post('/users/verification/request');
-    } catch (error) {
-      console.error('Failed to request verification:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get verification status
-   */
+  /** GET /kyc/status/ — current KYC status for the user. */
   static async getVerificationStatus(): Promise<{
     is_verified: boolean;
     verification_level: string;
@@ -291,47 +246,57 @@ export class UserService {
     pending_documents: string[];
   }> {
     try {
-      return await apiClient.get('/users/verification/status');
+      return await apiClient.get('/kyc/status/');
     } catch (error) {
       console.error('Failed to get verification status:', error);
       throw error;
     }
   }
 
+  /** POST /kyc/submit/ — submit the KYC profile for review. */
+  static async requestVerification(): Promise<{ message: string }> {
+    try {
+      return await apiClient.post('/kyc/submit/');
+    } catch (error) {
+      console.error('Failed to request verification:', error);
+      throw error;
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Activity / data export / preferences — not yet implemented.
+  // -------------------------------------------------------------------------
+
   /**
-   * Update user preferences
+   * @deprecated Activity feed endpoint is not implemented on the backend.
+   * Re-use /transactions/ or build a dedicated /activity/ view.
    */
-  static async updatePreferences(preferences: {
+  static async getActivityFeed(_page = 1, _limit = 20): Promise<never> {
+    throw new Error('Activity feed is not yet implemented on the backend.');
+  }
+
+  /** @deprecated GDPR data export is not implemented on the backend. */
+  static async exportUserData(): Promise<never> {
+    throw new Error('User data export is not yet implemented on the backend.');
+  }
+
+  /**
+   * @deprecated UI preferences (theme, language, currency) are stored client-side
+   * only. Re-implement on top of the User model once added server-side.
+   */
+  static async updatePreferences(_preferences: {
     language: string;
     currency: string;
     timezone: string;
     theme: string;
     dashboard_layout: string;
   }): Promise<{ message: string }> {
-    try {
-      return await apiClient.put('/users/preferences', preferences);
-    } catch (error) {
-      console.error('Failed to update preferences:', error);
-      throw error;
-    }
+    throw new Error('User preferences are not yet stored on the backend.');
   }
 
-  /**
-   * Get user preferences
-   */
-  static async getPreferences(): Promise<{
-    language: string;
-    currency: string;
-    timezone: string;
-    theme: string;
-    dashboard_layout: string;
-  }> {
-    try {
-      return await apiClient.get('/users/preferences');
-    } catch (error) {
-      console.error('Failed to get preferences:', error);
-      throw error;
-    }
+  /** @deprecated See updatePreferences. */
+  static async getPreferences(): Promise<never> {
+    throw new Error('User preferences are not yet stored on the backend.');
   }
 }
 

@@ -478,6 +478,3 @@ class UserTokenPortfolioSerializer(serializers.Serializer):
     
     # Available rental claims
     pending_rental_claims = serializers.DecimalField(max_digits=20, decimal_places=8)
-    
-    class Meta:
-        read_only_fields = '__all__'

@@ -16,7 +16,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -180,6 +180,8 @@ class PropertyViewSet(ModelViewSet):
     
     def get_queryset(self):
         """Filter queryset based on user permissions."""
+        if getattr(self, 'swagger_fake_view', False):
+            return self.queryset.none()
         queryset = super().get_queryset()
         user = self.request.user
         
@@ -640,7 +642,7 @@ class PropertyImageUploadView(APIView):
     """
     
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     @swagger_auto_schema(
         manual_parameters=[
@@ -712,7 +714,7 @@ class PropertyDocumentUploadView(APIView):
     """
     
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     @swagger_auto_schema(
         manual_parameters=[
@@ -839,7 +841,7 @@ class PropertyValuationCreateView(generics.CreateAPIView):
     
     serializer_class = PropertyValuationSerializer
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     def perform_create(self, serializer):
         """Create a valuation for the property."""
@@ -2649,7 +2651,7 @@ class PropertyOwnerInvestorsView(APIView):
                 'total_investment_amount': float(total_investment_amount),
                 'average_investment_per_investor': float(average_investment_per_investor),
                 'top_investor_contribution': float(top_investors[0]['total_invested']) if top_investors else 0,
-                'top_investor_percentage': float((top_investors[0]['total_invested'] / total_investment_amount * 100)) if top_investors and total_investment_amount > 0 else 0
+                'top_investor_percentage': float(top_investors[0]['total_invested']) / float(total_investment_amount) * 100 if top_investors and total_investment_amount > 0 else 0
             }
         })
 
@@ -3107,7 +3109,7 @@ class DataRoomDocumentUploadView(generics.CreateAPIView):
 
     serializer_class = PropertyDocumentSerializer
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_queryset(self):
         return PropertyDocument.objects.all()

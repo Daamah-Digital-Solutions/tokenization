@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 
 import { DashboardService, type DashboardStats, type MarketInsights } from '../../services/dashboard/DashboardService';
+import PropertyOwnerService from '../../services/property-owner/PropertyOwnerService';
 import { AuthService } from '../../services/auth/AuthService';
 import { UserRole, type User as UserType, type Transaction } from '../../services/api/types';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -313,11 +314,34 @@ export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
     fetchUser();
   }, []);
 
-  // Fetch dashboard data
+  // Fetch dashboard data.
+  //
+  // For PROPERTY_OWNER we hit the owner-scoped endpoint and map its shape onto
+  // the same {activeProperties, totalValue, totalInvestments, monthlyIncome}
+  // keys the role-aware roleBasedContent[] entries already read — otherwise
+  // the owner sees zeros even though they own properties (investor stats
+  // endpoint returns nothing for them).
+  const dashboardRole = user?.role;
   const { data: dashboardStats, isLoading: statsLoading } = useQuery({
-    queryKey: ['dashboard-stats'],
-    queryFn: DashboardService.getDashboardStats,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    queryKey: ['dashboard-stats', dashboardRole],
+    enabled: !!dashboardRole,
+    queryFn: async () => {
+      if (dashboardRole === UserRole.PROPERTY_OWNER) {
+        const ownerStats = await PropertyOwnerService.getOwnerStats();
+        return {
+          totalInvestments: ownerStats.active_investors,
+          totalValue: ownerStats.capital_raised,
+          totalReturns: 0,
+          activeProperties: ownerStats.total_properties,
+          pendingTransactions: 0,
+          roi: 0,
+          monthlyIncome: ownerStats.monthly_revenue,
+          portfolioGrowth: 0,
+        } as DashboardStats;
+      }
+      return DashboardService.getDashboardStats();
+    },
+    refetchInterval: 30000,
   });
 
   const { data: marketInsights, isLoading: marketLoading } = useQuery({

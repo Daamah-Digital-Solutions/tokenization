@@ -415,7 +415,7 @@ def nowpayments_ipn_callback(request):
     when payment status changes.
     """
     try:
-        # Verify IPN signature
+        # ---- Step 1: verify HMAC signature on the raw body ----
         signature = request.headers.get('x-nowpayments-sig', '')
         service = NOWPaymentsService()
 
@@ -426,15 +426,21 @@ def nowpayments_ipn_callback(request):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Parse IPN data
+        # ---- Step 2: parse and replay-protect ----
         ipn_data = json.loads(request.body)
         logger.info(f"NOWPayments IPN received: {ipn_data}")
+
+        from .middleware import webhook_event_is_replay
+        replay_key = ipn_data.get('ipn_id') or ipn_data.get('payment_id') or ''
+        if replay_key and webhook_event_is_replay('nowpayments', str(replay_key)):
+            # Already processed — silently acknowledge so NOWPayments stops retrying.
+            return Response(create_success_response(message="Already processed"))
 
         payment_status = ipn_data.get('payment_status')
         nowpayments_payment_id = str(ipn_data.get('payment_id', ''))
         order_id = ipn_data.get('order_id', '')
 
-        # Find NOWPayments transaction
+        # ---- Step 3: load and update the NOWPayments transaction ----
         try:
             nowpayments_tx = NOWPaymentsTransaction.objects.get(
                 nowpayments_payment_id=nowpayments_payment_id
@@ -443,7 +449,6 @@ def nowpayments_ipn_callback(request):
             logger.warning(f"NOWPayments transaction not found: {nowpayments_payment_id}")
             return Response(create_success_response(message="Transaction not found"))
 
-        # Update transaction with new data
         nowpayments_tx.payment_status = payment_status
         nowpayments_tx.actually_paid = Decimal(str(ipn_data.get('actually_paid', 0)))
 
@@ -458,40 +463,71 @@ def nowpayments_ipn_callback(request):
 
         nowpayments_tx.save()
 
-        # Update payment status
         payment = nowpayments_tx.payment
 
+        # ---- Step 4: process based on terminal status ----
         if payment_status == 'finished':
+            # All wallet writes happen inside a single atomic block with a
+            # row lock on WalletBalance. This prevents duplicate IPN deliveries
+            # from racing and double-crediting the user.
             with transaction.atomic():
-                payment.status = PaymentStatus.COMPLETED
-                payment.completed_at = timezone.now()
-                payment.transaction_hash = ipn_data.get('tx_hash')
-                payment.save()
+                # Re-fetch payment under a row lock and verify it's not already
+                # completed. If a concurrent webhook already finalised this
+                # payment, exit early.
+                locked_payment = Payment.objects.select_for_update().get(id=payment.id)
+                if locked_payment.status == PaymentStatus.COMPLETED:
+                    return Response(create_success_response(
+                        message="Payment already completed (duplicate IPN)"
+                    ))
 
-                # Credit wallet balance
-                wallet_balance, created = WalletBalance.objects.get_or_create(
-                    user=payment.user,
-                    currency=payment.currency,
-                    defaults={'available_balance': Decimal('0.00')}
+                locked_payment.status = PaymentStatus.COMPLETED
+                locked_payment.completed_at = timezone.now()
+                locked_payment.transaction_hash = ipn_data.get('tx_hash')
+                locked_payment.save(update_fields=[
+                    'status', 'completed_at', 'transaction_hash'
+                ])
+
+                # Row-locked wallet balance update. The first webhook win,
+                # all subsequent ones see status=COMPLETED above and bail.
+                wallet_balance = (
+                    WalletBalance.objects
+                    .select_for_update()
+                    .filter(user=locked_payment.user, currency=locked_payment.currency)
+                    .first()
                 )
+                if wallet_balance is None:
+                    wallet_balance = WalletBalance.objects.create(
+                        user=locked_payment.user,
+                        currency=locked_payment.currency,
+                        available_balance=Decimal('0.00'),
+                    )
 
                 previous_balance = wallet_balance.available_balance
-                wallet_balance.available_balance += payment.net_amount
-                wallet_balance.save()
+                wallet_balance.available_balance = (
+                    previous_balance + locked_payment.net_amount
+                )
+                wallet_balance.save(update_fields=['available_balance'])
 
-                # Create wallet transaction record
                 wallet_tx = WalletTransaction.objects.create(
-                    user=payment.user,
+                    user=locked_payment.user,
                     transaction_type='deposit',
-                    amount=payment.net_amount,
-                    currency=payment.currency,
+                    amount=locked_payment.net_amount,
+                    currency=locked_payment.currency,
                     balance_before=previous_balance,
                     balance_after=wallet_balance.available_balance,
-                    reference_id=payment.id,
-                    description=f"Crypto payment (NOWPayments) - {nowpayments_tx.pay_currency}"
+                    reference_id=locked_payment.id,
+                    description=(
+                        f"Crypto payment (NOWPayments) - {nowpayments_tx.pay_currency}"
+                    ),
                 )
 
-                # Process linked investment (allocate tokens)
+                # Use the locked payment instance from here on
+                payment = locked_payment
+
+                # Process linked investment OUTSIDE the wallet credit block
+                # would be ideal, but we keep it inside so a downstream failure
+                # rolls back the credit. Investment processing is expected
+                # to be atomic and idempotent in InvestmentProcessingService.
                 if payment.investment:
                     try:
                         from investments.services import InvestmentProcessingService

@@ -17,6 +17,15 @@ import { Button } from '../ui/Button';
 import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
 import { cn } from '../../utils/cn';
+import {
+  connectWallet,
+  detectInjectedWallet,
+  getNativeBalance,
+  formatEther,
+  subscribe,
+  WalletConnectionError,
+  type WalletProvider,
+} from '../../utils/web3';
 
 interface WalletConnectorProps {
   onConnect?: (walletAddress: string, walletType: string) => void;
@@ -76,44 +85,93 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Mock wallet detection
+  // Real injected-wallet detection via EIP-1193.
   useEffect(() => {
-    // In a real app, you would check for installed wallets
-    const checkWalletInstallation = () => {
-      walletOptions.forEach(wallet => {
-        if (wallet.id === 'metamask') {
-          wallet.installed = typeof window !== 'undefined' && window.ethereum;
-        }
-        // Add other wallet checks here
-      });
-    };
-    
-    checkWalletInstallation();
+    const detected = detectInjectedWallet();
+    walletOptions.forEach(wallet => {
+      if (wallet.id === 'metamask') {
+        wallet.installed = detected === 'metamask';
+      } else if (wallet.id === 'coinbase') {
+        wallet.installed =
+          detected === 'coinbase' ||
+          (typeof window !== 'undefined' && !!window.coinbaseWalletExtension);
+      } else if (wallet.id === 'walletconnect') {
+        // WalletConnect is server-mediated; mark unavailable until configured.
+        wallet.installed = false;
+      } else if (wallet.id === 'phantom') {
+        wallet.installed = typeof (window as any).phantom !== 'undefined';
+      }
+    });
   }, []);
+
+  // Refresh balance on account / chain change while connected.
+  useEffect(() => {
+    if (!connectedAddress) return;
+    const detach = subscribe(
+      async (accounts) => {
+        if (accounts.length === 0) {
+          handleDisconnect();
+        } else {
+          setConnectedAddress(accounts[0]);
+          try {
+            const wei = await getNativeBalance(accounts[0]);
+            setBalance(`${formatEther(wei)} ETH`);
+          } catch {
+            setBalance(null);
+          }
+        }
+      },
+      (chainId) => {
+        setNetwork(chainIdToName(chainId));
+      }
+    );
+    return detach;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connectedAddress]);
 
   const handleWalletConnect = async (walletId: string) => {
     setLoading(true);
     setError(null);
-
     try {
-      // Mock wallet connection - in real app, use actual wallet connection logic
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Mock successful connection
-      const mockAddress = '0x1234567890123456789012345678901234567890';
+      const conn = await connectWallet(walletId as WalletProvider);
       const walletName = walletOptions.find(w => w.id === walletId)?.name || 'Wallet';
-      
+
       setConnectedWallet(walletName);
-      setConnectedAddress(mockAddress);
-      setBalance('2.5 ETH');
-      
-      onConnect?.(mockAddress, walletName);
+      setConnectedAddress(conn.address);
+      setNetwork(chainIdToName(conn.chainId));
+
+      try {
+        const wei = await getNativeBalance(conn.address);
+        setBalance(`${formatEther(wei)} ETH`);
+      } catch {
+        setBalance(null);
+      }
+
+      onConnect?.(conn.address, walletName);
     } catch (err) {
-      setError('Failed to connect wallet. Please try again.');
+      if (err instanceof WalletConnectionError) {
+        setError(err.message);
+      } else {
+        setError('Failed to connect wallet. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  function chainIdToName(id: number): string {
+    switch (id) {
+      case 1: return 'Ethereum Mainnet';
+      case 5: return 'Goerli Testnet';
+      case 11155111: return 'Sepolia Testnet';
+      case 56: return 'BNB Smart Chain';
+      case 97: return 'BSC Testnet';
+      case 137: return 'Polygon Mainnet';
+      case 80001: return 'Polygon Mumbai';
+      case 8453: return 'Base';
+      default: return `Chain ${id}`;
+    }
+  }
 
   const handleDisconnect = () => {
     setConnectedWallet(null);

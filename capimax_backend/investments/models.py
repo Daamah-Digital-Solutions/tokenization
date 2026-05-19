@@ -141,6 +141,31 @@ class Investment(models.Model):
         help_text="Timestamp when investment was completed"
     )
 
+    # ------------------------------------------------------------------
+    # Lockup & compliance snapshot (Phase 2)
+    # ------------------------------------------------------------------
+    lockup_end_date = models.DateTimeField(
+        null=True, blank=True,
+        help_text=(
+            "Date/time when this investment's tokens become transferable on "
+            "the secondary market. Set when the mint completes; enforced by "
+            "the marketplace listing validator and the on-chain compliance "
+            "registry."
+        ),
+    )
+    accredited_at_investment_time = models.BooleanField(
+        default=False,
+        help_text=(
+            "Snapshot of the investor's accredited status at investment "
+            "creation. Used for audit trail even if status changes later."
+        ),
+    )
+    jurisdiction_at_investment_time = models.CharField(
+        max_length=2,
+        blank=True,
+        help_text="ISO country code of investor at investment creation.",
+    )
+
     class Meta:
         db_table = 'investments_investment'
         indexes = [
@@ -153,11 +178,11 @@ class Investment(models.Model):
         ]
         constraints = [
             models.CheckConstraint(
-                check=models.Q(token_amount__gt=0),
+                condition=models.Q(token_amount__gt=0),
                 name='investment_token_amount_positive'
             ),
             models.CheckConstraint(
-                check=models.Q(investment_amount__gt=0),
+                condition=models.Q(investment_amount__gt=0),
                 name='investment_amount_positive'
             ),
         ]
@@ -192,16 +217,26 @@ class Investment(models.Model):
         self.save(update_fields=['status', 'mint_last_attempt'])
 
     def mark_mint_success(self, tx_hash: str, tokens_minted: int):
-        """Mark minting as successful."""
+        """Mark minting as successful and set the lockup expiry."""
+        from datetime import timedelta
         self.status = InvestmentStatus.COMPLETED
         self.transaction_hash = tx_hash
         self.tokens_minted = tokens_minted
         self.blockchain_confirmed = True
         self.completed_at = timezone.now()
         self.mint_error = None
+
+        # Compute lockup end from the property's policy. Default 12 months.
+        lockup_months = getattr(self.property_investment, 'lockup_months', 12) or 0
+        if lockup_months > 0:
+            # 30 days per "month" is acceptable approximation; refine later
+            # if calendar-precise lockups become a requirement.
+            self.lockup_end_date = self.completed_at + timedelta(days=30 * lockup_months)
+
         self.save(update_fields=[
             'status', 'transaction_hash', 'tokens_minted',
-            'blockchain_confirmed', 'completed_at', 'mint_error'
+            'blockchain_confirmed', 'completed_at', 'mint_error',
+            'lockup_end_date',
         ])
 
     def mark_mint_failed(self, error_message: str):
@@ -946,11 +981,11 @@ class CartItem(models.Model):
         ]
         constraints = [
             models.CheckConstraint(
-                check=models.Q(tokens_quantity__gt=0),
+                condition=models.Q(tokens_quantity__gt=0),
                 name='cart_item_tokens_positive'
             ),
             models.CheckConstraint(
-                check=models.Q(total_amount__gt=0),
+                condition=models.Q(total_amount__gt=0),
                 name='cart_item_total_positive'
             ),
         ]

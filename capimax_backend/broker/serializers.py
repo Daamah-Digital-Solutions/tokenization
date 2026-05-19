@@ -473,7 +473,8 @@ class BrokerApplicationStatusSerializer(serializers.ModelSerializer):
             'id', 'full_name', 'email', 'application_status', 'status_display',
             'reviewed_at', 'rejection_reason', 'created_at'
         ]
-        read_only_fields = '__all__'
+        read_only_fields = ['id', 'full_name', 'email', 'application_status', 'status_display',
+            'reviewed_at', 'rejection_reason', 'created_at']
 
     def get_full_name(self, obj):
         """Get applicant's full name."""

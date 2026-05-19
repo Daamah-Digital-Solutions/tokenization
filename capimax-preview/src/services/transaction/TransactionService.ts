@@ -378,7 +378,19 @@ export class TransactionService {
     explorer_url: string;
   }> {
     try {
-      return await apiClient.get(`/blockchain/transactions/${transactionHash}/`, { network });
+      // The backend `TokenTransaction` ViewSet uses a UUID `pk`, not the
+      // transaction hash, for detail lookups. Hash is a search field,
+      // so we hit the list endpoint with `?search=<hash>` and pick the
+      // single result.
+      const params: any = { search: transactionHash };
+      if (network) params.network = network;
+      const response: any = await apiClient.get('/blockchain/transactions/', params);
+      const results = response?.results ?? response ?? [];
+      if (!results.length) {
+        throw new Error(`No on-chain record found for hash ${transactionHash}`);
+      }
+      // Return the first match — hashes are globally unique.
+      return results[0];
     } catch (error) {
       console.error('Failed to get blockchain transaction details:', error);
       throw error;

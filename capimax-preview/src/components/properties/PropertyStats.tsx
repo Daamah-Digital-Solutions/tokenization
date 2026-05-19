@@ -99,6 +99,10 @@ const mockStatsData: PropertyStatsData = {
 };
 
 export const PropertyStats: React.FC<PropertyStatsProps> = ({
+  // Caller is expected to pass real stats from PropertyService.getStats().
+  // The previous default of mockStatsData (showing $2.85B made-up TVL etc.)
+  // was misleading. We now default to an empty/zeroed object so the UI
+  // surfaces "no data" rather than fictional numbers.
   data = mockStatsData,
   timeRange = '30d',
   onTimeRangeChange,

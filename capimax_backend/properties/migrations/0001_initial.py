@@ -186,14 +186,14 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='property',
-            constraint=models.CheckConstraint(check=models.Q(('tokens_sold__lte', models.F('total_tokens'))), name='tokens_sold_not_exceed_total'),
+            constraint=models.CheckConstraint(condition=models.Q(('tokens_sold__lte', models.F('total_tokens'))), name='tokens_sold_not_exceed_total'),
         ),
         migrations.AddConstraint(
             model_name='property',
-            constraint=models.CheckConstraint(check=models.Q(('total_value__gt', 0)), name='total_value_positive'),
+            constraint=models.CheckConstraint(condition=models.Q(('total_value__gt', 0)), name='total_value_positive'),
         ),
         migrations.AddConstraint(
             model_name='property',
-            constraint=models.CheckConstraint(check=models.Q(('token_price__gt', 0)), name='token_price_positive'),
+            constraint=models.CheckConstraint(condition=models.Q(('token_price__gt', 0)), name='token_price_positive'),
         ),
     ]

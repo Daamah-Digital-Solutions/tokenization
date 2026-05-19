@@ -183,15 +183,15 @@ class MarketListing(models.Model):
         ]
         constraints = [
             models.CheckConstraint(
-                check=models.Q(tokens_remaining__lte=models.F('tokens_offered')),
+                condition=models.Q(tokens_remaining__lte=models.F('tokens_offered')),
                 name='marketplace_tokens_remaining_valid'
             ),
             models.CheckConstraint(
-                check=models.Q(minimum_order_size__lte=models.F('tokens_offered')),
+                condition=models.Q(minimum_order_size__lte=models.F('tokens_offered')),
                 name='marketplace_minimum_order_valid'
             ),
             models.CheckConstraint(
-                check=models.Q(total_price__gt=0),
+                condition=models.Q(total_price__gt=0),
                 name='marketplace_total_price_positive'
             ),
         ]
@@ -413,11 +413,11 @@ class TradeOrder(models.Model):
         ]
         constraints = [
             models.CheckConstraint(
-                check=models.Q(tokens_filled__lte=models.F('tokens_requested')),
+                condition=models.Q(tokens_filled__lte=models.F('tokens_requested')),
                 name='marketplace_order_tokens_filled_valid'
             ),
             models.CheckConstraint(
-                check=models.Q(total_amount__gt=0),
+                condition=models.Q(total_amount__gt=0),
                 name='marketplace_order_total_amount_positive'
             ),
         ]
@@ -677,15 +677,15 @@ class TradeTransaction(models.Model):
         ]
         constraints = [
             models.CheckConstraint(
-                check=models.Q(total_amount__gt=0),
+                condition=models.Q(total_amount__gt=0),
                 name='marketplace_transaction_total_positive'
             ),
             models.CheckConstraint(
-                check=models.Q(net_amount_to_seller__gte=0),
+                condition=models.Q(net_amount_to_seller__gte=0),
                 name='marketplace_transaction_seller_amount_valid'
             ),
             models.CheckConstraint(
-                check=models.Q(total_cost_to_buyer__gt=0),
+                condition=models.Q(total_cost_to_buyer__gt=0),
                 name='marketplace_transaction_buyer_cost_positive'
             ),
         ]
@@ -858,7 +858,7 @@ class EscrowAccount(models.Model):
         ]
         constraints = [
             models.CheckConstraint(
-                check=models.Q(amount_held__gte=0),
+                condition=models.Q(amount_held__gte=0),
                 name='marketplace_escrow_amount_positive'
             ),
         ]

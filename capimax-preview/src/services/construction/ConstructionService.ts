@@ -1,4 +1,27 @@
 import { apiClient } from '../api/ApiClient';
+
+/**
+ * ConstructionService — wraps the `construction/` Django app.
+ *
+ * Real backend routes (see capimax_backend/construction/urls.py):
+ *   /construction/<property_id>/milestones/              CRUD via nested ViewSet
+ *   /construction/<property_id>/milestones/<id>/          detail
+ *   /construction/<property_id>/progress/                 progress overview
+ *   /construction/<property_id>/milestones/<id>/updates/  progress updates (POST)
+ *   /construction/<property_id>/milestones/<id>/images/   image uploads (POST)
+ *   /construction/<property_id>/milestones/<id>/documents/ doc uploads (POST)
+ *
+ * Anything else this service used to call (project endpoints, inspections,
+ * installment schedules, issues, subscribe, timeline, analytics, etc.) is
+ * phantom — see each method for the equivalent real flow (where one exists).
+ *
+ * Phantom methods throw with a descriptive error rather than silently 404,
+ * so the UI surfaces the gap instead of rendering empty data.
+ */
+const CONSTRUCTION_NOT_IMPLEMENTED = (method: string, hint?: string): never => {
+  const detail = hint ? ` ${hint}` : '';
+  throw new Error(`ConstructionService.${method} is not implemented on the backend.${detail}`);
+};
 import type { 
   ConstructionMilestone,
   InstallmentPayment,
@@ -97,23 +120,42 @@ export interface InstallmentSchedule {
 
 export class ConstructionService {
   /**
-   * Get construction project details
+   * Get construction project details.
+   *
+   * Phantom — no `/construction/projects/<id>/` endpoint. The "project"
+   * concept lives on the `Property` model; use PropertyService.getProperty()
+   * combined with `getConstructionProgress()` below.
    */
-  static async getConstructionProject(propertyId: string): Promise<ConstructionProject> {
+  static async getConstructionProject(_propertyId: string): Promise<ConstructionProject> {
+    return CONSTRUCTION_NOT_IMPLEMENTED(
+      'getConstructionProject',
+      'Use PropertyService.getProperty() plus getConstructionProgress() instead.'
+    );
+  }
+
+  /**
+   * Construction progress overview (real endpoint).
+   */
+  static async getConstructionProgress(propertyId: string): Promise<any> {
     try {
-      return await apiClient.get<ConstructionProject>(`/construction/projects/${propertyId}`);
+      return await apiClient.get(`/construction/${propertyId}/progress/`);
     } catch (error) {
-      console.error('Failed to get construction project:', error);
+      console.error('Failed to get construction progress:', error);
       throw error;
     }
   }
 
   /**
-   * Get all construction milestones for a property
+   * Get all construction milestones for a property.
    */
   static async getMilestones(propertyId: string): Promise<ConstructionMilestone[]> {
     try {
-      return await apiClient.get<ConstructionMilestone[]>(`/construction/${propertyId}/milestones`);
+      // Backend exposes milestones nested under property — note the
+      // trailing slash, without which Django redirects POST/PATCH bodies
+      // away. The router returns a DRF paginated list, so unwrap results
+      // for the existing caller signature.
+      const response: any = await apiClient.get(`/construction/${propertyId}/milestones/`);
+      return Array.isArray(response) ? response : (response?.results ?? []);
     } catch (error) {
       console.error('Failed to get construction milestones:', error);
       throw error;
@@ -121,11 +163,29 @@ export class ConstructionService {
   }
 
   /**
-   * Get specific milestone details
+   * Get specific milestone details.
+   *
+   * Backend requires both property_id and milestone_id in the path —
+   * the legacy single-id signature has no way to resolve the property.
    */
-  static async getMilestone(milestoneId: string): Promise<ConstructionMilestone> {
+  static async getMilestone(_milestoneId: string): Promise<ConstructionMilestone> {
+    return CONSTRUCTION_NOT_IMPLEMENTED(
+      'getMilestone',
+      'Use getMilestoneNested(propertyId, milestoneId) — the backend route is nested.'
+    );
+  }
+
+  /**
+   * Get a milestone via the nested URL pattern.
+   */
+  static async getMilestoneNested(
+    propertyId: string,
+    milestoneId: string
+  ): Promise<ConstructionMilestone> {
     try {
-      return await apiClient.get<ConstructionMilestone>(`/construction/milestones/${milestoneId}`);
+      return await apiClient.get<ConstructionMilestone>(
+        `/construction/${propertyId}/milestones/${milestoneId}/`
+      );
     } catch (error) {
       console.error('Failed to get milestone details:', error);
       throw error;
@@ -133,9 +193,26 @@ export class ConstructionService {
   }
 
   /**
-   * Update milestone progress (contractor/admin only)
+   * Update milestone progress (contractor/admin only).
+   *
+   * Phantom — backend requires the nested URL `/construction/<propertyId>/
+   * milestones/<milestoneId>/`. Use updateMilestoneNested() below.
    */
-  static async updateMilestone(milestoneId: string, update: MilestoneUpdate): Promise<ConstructionMilestone> {
+  static async updateMilestone(_milestoneId: string, _update: MilestoneUpdate): Promise<ConstructionMilestone> {
+    return CONSTRUCTION_NOT_IMPLEMENTED(
+      'updateMilestone',
+      'Use updateMilestoneNested(propertyId, milestoneId, update) — the path is nested.'
+    );
+  }
+
+  /**
+   * Update a milestone via the nested URL pattern.
+   */
+  static async updateMilestoneNested(
+    propertyId: string,
+    milestoneId: string,
+    update: MilestoneUpdate
+  ): Promise<ConstructionMilestone> {
     try {
       const formData = new FormData();
       formData.append('title', update.title);
@@ -161,7 +238,10 @@ export class ConstructionService {
         });
       }
 
-      return await apiClient.uploadFile(`/construction/milestones/${milestoneId}`, formData);
+      return await apiClient.uploadFile(
+        `/construction/${propertyId}/milestones/${milestoneId}/`,
+        formData
+      );
     } catch (error) {
       console.error('Failed to update milestone:', error);
       throw error;
@@ -169,113 +249,115 @@ export class ConstructionService {
   }
 
   /**
-   * Mark milestone as completed
+   * Mark milestone as completed.
+   *
+   * Phantom — there's no `complete` action on the milestone ViewSet.
+   * Completing means PATCHing `completion_percentage: 100` via
+   * updateMilestoneNested().
    */
-  static async completeMilestone(milestoneId: string): Promise<{
+  static async completeMilestone(_milestoneId: string): Promise<{
     milestone: ConstructionMilestone;
     triggered_payments: string[];
     message: string;
   }> {
-    try {
-      return await apiClient.post(`/construction/milestones/${milestoneId}/complete`);
-    } catch (error) {
-      console.error('Failed to complete milestone:', error);
-      throw error;
-    }
+    return CONSTRUCTION_NOT_IMPLEMENTED(
+      'completeMilestone',
+      'PATCH completion_percentage: 100 via updateMilestoneNested().'
+    );
   }
 
   /**
-   * Submit milestone for verification
+   * Submit milestone for verification.
+   *
+   * Phantom — no `/submit` action exists. Verification follows from
+   * marking the milestone complete and admin review.
    */
-  static async submitForVerification(milestoneId: string): Promise<{ message: string; verification_id: string }> {
-    try {
-      return await apiClient.post(`/construction/milestones/${milestoneId}/submit`);
-    } catch (error) {
-      console.error('Failed to submit milestone for verification:', error);
-      throw error;
-    }
+  static async submitForVerification(_milestoneId: string): Promise<{ message: string; verification_id: string }> {
+    return CONSTRUCTION_NOT_IMPLEMENTED('submitForVerification');
   }
 
   /**
-   * Get milestone reports
+   * Get milestone reports.
+   *
+   * Phantom — no `/reports` action. The closest equivalent is the
+   * milestone `updates` log; use `addMilestoneUpdate()` and list updates
+   * via the property progress endpoint.
    */
-  static async getMilestoneReports(milestoneId: string): Promise<ConstructionReport[]> {
-    try {
-      return await apiClient.get<ConstructionReport[]>(`/construction/milestones/${milestoneId}/reports`);
-    } catch (error) {
-      console.error('Failed to get milestone reports:', error);
-      throw error;
-    }
+  static async getMilestoneReports(_milestoneId: string): Promise<ConstructionReport[]> {
+    return CONSTRUCTION_NOT_IMPLEMENTED(
+      'getMilestoneReports',
+      'List milestone updates via getConstructionProgress() instead.'
+    );
   }
 
   /**
-   * Add progress report
+   * Add progress report.
+   *
+   * Phantom — the legacy `/milestones/<id>/reports` route doesn't exist.
+   * Use `addMilestoneUpdateNested(propertyId, milestoneId, ...)` which
+   * posts to `/construction/<propertyId>/milestones/<milestoneId>/updates/`.
    */
-  static async addProgressReport(milestoneId: string, report: {
+  static async addProgressReport(_milestoneId: string, _report: {
     report_type: 'progress' | 'quality' | 'safety' | 'financial';
     title: string;
     content: string;
     images?: File[];
     documents?: File[];
   }): Promise<ConstructionReport> {
-    try {
-      const formData = new FormData();
-      formData.append('report_type', report.report_type);
-      formData.append('title', report.title);
-      formData.append('content', report.content);
-
-      if (report.images) {
-        report.images.forEach((image, index) => {
-          formData.append(`images[${index}]`, image);
-        });
-      }
-
-      if (report.documents) {
-        report.documents.forEach((doc, index) => {
-          formData.append(`documents[${index}]`, doc);
-        });
-      }
-
-      return await apiClient.uploadFile(`/construction/milestones/${milestoneId}/reports`, formData);
-    } catch (error) {
-      console.error('Failed to add progress report:', error);
-      throw error;
-    }
+    return CONSTRUCTION_NOT_IMPLEMENTED(
+      'addProgressReport',
+      'Use addMilestoneUpdateNested(propertyId, milestoneId, update) instead.'
+    );
   }
 
   /**
-   * Get quality inspections for a milestone
+   * Post a milestone update via the real nested URL. Mirrors the
+   * backend `MilestoneUpdateCreateView`.
    */
-  static async getInspections(milestoneId: string): Promise<QualityInspection[]> {
-    try {
-      return await apiClient.get<QualityInspection[]>(`/construction/milestones/${milestoneId}/inspections`);
-    } catch (error) {
-      console.error('Failed to get quality inspections:', error);
-      throw error;
+  static async addMilestoneUpdateNested(
+    propertyId: string,
+    milestoneId: string,
+    update: {
+      title: string;
+      content?: string;
+      completion_percentage?: number;
+      images?: File[];
+      documents?: File[];
     }
+  ): Promise<ConstructionReport> {
+    const formData = new FormData();
+    formData.append('title', update.title);
+    if (update.content) formData.append('content', update.content);
+    if (update.completion_percentage !== undefined) {
+      formData.append('completion_percentage', String(update.completion_percentage));
+    }
+    update.images?.forEach((img, i) => formData.append(`images[${i}]`, img));
+    update.documents?.forEach((doc, i) => formData.append(`documents[${i}]`, doc));
+    return apiClient.uploadFile(
+      `/construction/${propertyId}/milestones/${milestoneId}/updates/`,
+      formData
+    );
   }
 
   /**
-   * Schedule quality inspection
+   * Quality inspections — phantom. No `inspections` endpoint exists.
+   * Quality data lives in milestone update text for now; if inspection
+   * tracking becomes a real feature it needs its own backend app.
    */
-  static async scheduleInspection(milestoneId: string, inspection: {
+  static async getInspections(_milestoneId: string): Promise<QualityInspection[]> {
+    return CONSTRUCTION_NOT_IMPLEMENTED('getInspections');
+  }
+
+  static async scheduleInspection(_milestoneId: string, _inspection: {
     inspector_id: string;
     inspection_date: Date;
     inspection_type: 'quality' | 'safety' | 'code_compliance';
     checklist_template?: string;
   }): Promise<{ inspection_id: string; message: string }> {
-    try {
-      return await apiClient.post(`/construction/milestones/${milestoneId}/inspections`, inspection);
-    } catch (error) {
-      console.error('Failed to schedule inspection:', error);
-      throw error;
-    }
+    return CONSTRUCTION_NOT_IMPLEMENTED('scheduleInspection');
   }
 
-  /**
-   * Submit inspection results
-   */
-  static async submitInspectionResults(inspectionId: string, results: {
+  static async submitInspectionResults(_inspectionId: string, _results: {
     checklist_items: Array<{
       item: string;
       status: 'pass' | 'fail' | 'needs_attention';
@@ -288,61 +370,36 @@ export class ConstructionService {
     photos?: File[];
     certificate?: File;
   }): Promise<QualityInspection> {
-    try {
-      const formData = new FormData();
-      formData.append('checklist_items', JSON.stringify(results.checklist_items));
-      formData.append('overall_rating', results.overall_rating.toString());
-      formData.append('issues_found', JSON.stringify(results.issues_found));
-      formData.append('recommendations', JSON.stringify(results.recommendations));
-      formData.append('approved', results.approved.toString());
-
-      if (results.photos) {
-        results.photos.forEach((photo, index) => {
-          formData.append(`photos[${index}]`, photo);
-        });
-      }
-
-      if (results.certificate) {
-        formData.append('certificate', results.certificate);
-      }
-
-      return await apiClient.uploadFile(`/construction/inspections/${inspectionId}/results`, formData);
-    } catch (error) {
-      console.error('Failed to submit inspection results:', error);
-      throw error;
-    }
+    return CONSTRUCTION_NOT_IMPLEMENTED('submitInspectionResults');
   }
 
   /**
-   * Get installment payment schedule
+   * Installment schedule + payment — phantom under `/construction/`.
+   *
+   * The real installment system lives in the `properties` app (under
+   * construction-installments) and in the `investments` app (for the
+   * funding-installment variant). Callers should pick the right one:
+   *   - Property build-phase installments  →  PropertyService / construction
+   *     ViewSet via /properties/installments/
+   *   - Investment payment installments    →  investments app
    */
-  static async getInstallmentSchedule(propertyId: string): Promise<InstallmentSchedule> {
-    try {
-      return await apiClient.get<InstallmentSchedule>(`/construction/${propertyId}/installments`);
-    } catch (error) {
-      console.error('Failed to get installment schedule:', error);
-      throw error;
-    }
+  static async getInstallmentSchedule(_propertyId: string): Promise<InstallmentSchedule> {
+    return CONSTRUCTION_NOT_IMPLEMENTED(
+      'getInstallmentSchedule',
+      'Use /properties/installments/?property=<propertyId> instead.'
+    );
   }
 
-  /**
-   * Get user's installment payments
-   */
-  static async getUserInstallments(propertyId: string): Promise<InstallmentPayment[]> {
-    try {
-      return await apiClient.get<InstallmentPayment[]>(`/construction/${propertyId}/my-installments`);
-    } catch (error) {
-      console.error('Failed to get user installments:', error);
-      throw error;
-    }
+  static async getUserInstallments(_propertyId: string): Promise<InstallmentPayment[]> {
+    return CONSTRUCTION_NOT_IMPLEMENTED(
+      'getUserInstallments',
+      'Use /properties/installments/?user=me&property=<propertyId> instead.'
+    );
   }
 
-  /**
-   * Pay installment
-   */
   static async payInstallment(
-    installmentId: string,
-    paymentMethod: {
+    _installmentId: string,
+    _paymentMethod: {
       type: string;
       currency: string;
       wallet_address?: string;
@@ -355,18 +412,17 @@ export class ConstructionService {
     currency: string;
     message: string;
   }> {
-    try {
-      return await apiClient.post(`/construction/installments/${installmentId}/pay`, { payment_method: paymentMethod });
-    } catch (error) {
-      console.error('Failed to pay installment:', error);
-      throw error;
-    }
+    return CONSTRUCTION_NOT_IMPLEMENTED(
+      'payInstallment',
+      'Use the construction-installment ViewSet process-payment action under /properties/installments/.'
+    );
   }
 
   /**
-   * Get construction timeline
+   * Construction timeline — phantom. Aggregate from milestone updates
+   * + progress overview instead.
    */
-  static async getConstructionTimeline(propertyId: string): Promise<Array<{
+  static async getConstructionTimeline(_propertyId: string): Promise<Array<{
     date: Date;
     event_type: 'milestone_start' | 'milestone_complete' | 'inspection' | 'payment' | 'issue' | 'update';
     title: string;
@@ -375,18 +431,17 @@ export class ConstructionService {
     status: 'completed' | 'current' | 'upcoming';
     images?: string[];
   }>> {
-    try {
-      return await apiClient.get(`/construction/${propertyId}/timeline`);
-    } catch (error) {
-      console.error('Failed to get construction timeline:', error);
-      throw error;
-    }
+    return CONSTRUCTION_NOT_IMPLEMENTED(
+      'getConstructionTimeline',
+      'Compose from getConstructionProgress() and per-milestone updates.'
+    );
   }
 
   /**
-   * Get construction analytics
+   * Construction analytics — phantom. Use property analytics endpoint
+   * (`/properties/<id>/analytics/`) which surfaces overall progress.
    */
-  static async getConstructionAnalytics(propertyId: string): Promise<{
+  static async getConstructionAnalytics(_propertyId: string): Promise<{
     overall_progress: number;
     schedule_performance: 'ahead' | 'on_time' | 'delayed';
     days_ahead_behind: number;
@@ -401,18 +456,16 @@ export class ConstructionService {
     milestone_completion_rate: number;
     recent_activity_count: number;
   }> {
-    try {
-      return await apiClient.get(`/construction/${propertyId}/analytics`);
-    } catch (error) {
-      console.error('Failed to get construction analytics:', error);
-      throw error;
-    }
+    return CONSTRUCTION_NOT_IMPLEMENTED(
+      'getConstructionAnalytics',
+      'Use PropertyService.getPropertyAnalytics(propertyId) instead.'
+    );
   }
 
   /**
-   * Report construction issue
+   * Construction issues — phantom. No issue-tracking model exists.
    */
-  static async reportIssue(propertyId: string, issue: {
+  static async reportIssue(_propertyId: string, _issue: {
     type: 'quality' | 'safety' | 'schedule' | 'budget' | 'weather' | 'other';
     severity: 'low' | 'medium' | 'high' | 'critical';
     title: string;
@@ -421,33 +474,10 @@ export class ConstructionService {
     images?: File[];
     location?: string;
   }): Promise<{ issue_id: string; message: string }> {
-    try {
-      const formData = new FormData();
-      formData.append('type', issue.type);
-      formData.append('severity', issue.severity);
-      formData.append('title', issue.title);
-      formData.append('description', issue.description);
-      
-      if (issue.milestone_id) formData.append('milestone_id', issue.milestone_id);
-      if (issue.location) formData.append('location', issue.location);
-
-      if (issue.images) {
-        issue.images.forEach((image, index) => {
-          formData.append(`images[${index}]`, image);
-        });
-      }
-
-      return await apiClient.uploadFile(`/construction/${propertyId}/issues`, formData);
-    } catch (error) {
-      console.error('Failed to report construction issue:', error);
-      throw error;
-    }
+    return CONSTRUCTION_NOT_IMPLEMENTED('reportIssue');
   }
 
-  /**
-   * Get construction issues
-   */
-  static async getConstructionIssues(propertyId: string, status?: string): Promise<Array<{
+  static async getConstructionIssues(_propertyId: string, _status?: string): Promise<Array<{
     id: string;
     type: string;
     severity: string;
@@ -460,45 +490,33 @@ export class ConstructionService {
     resolved_at?: Date;
     images: string[];
   }>> {
-    try {
-      const params: any = {};
-      if (status) params.status = status;
-
-      return await apiClient.get(`/construction/${propertyId}/issues`, params);
-    } catch (error) {
-      console.error('Failed to get construction issues:', error);
-      throw error;
-    }
+    return CONSTRUCTION_NOT_IMPLEMENTED('getConstructionIssues');
   }
 
   /**
-   * Subscribe to construction updates
+   * Subscribe/unsubscribe to construction updates — phantom.
+   * Use PropertyService.subscribeToUpdates() instead; property updates
+   * include construction milestones.
    */
-  static async subscribeToUpdates(propertyId: string): Promise<{ message: string }> {
-    try {
-      return await apiClient.post(`/construction/${propertyId}/subscribe`);
-    } catch (error) {
-      console.error('Failed to subscribe to construction updates:', error);
-      throw error;
-    }
+  static async subscribeToUpdates(_propertyId: string): Promise<{ message: string }> {
+    return CONSTRUCTION_NOT_IMPLEMENTED(
+      'subscribeToUpdates',
+      'Use PropertyService.subscribeToUpdates(propertyId) — property subscriptions cover construction updates.'
+    );
+  }
+
+  static async unsubscribeFromUpdates(_propertyId: string): Promise<{ message: string }> {
+    return CONSTRUCTION_NOT_IMPLEMENTED(
+      'unsubscribeFromUpdates',
+      'Use PropertyService.unsubscribeFromUpdates(propertyId).'
+    );
   }
 
   /**
-   * Unsubscribe from construction updates
+   * Construction documents — phantom under `/construction/<id>/documents/`.
+   * Documents attach to specific milestones; use the nested URL.
    */
-  static async unsubscribeFromUpdates(propertyId: string): Promise<{ message: string }> {
-    try {
-      return await apiClient.delete(`/construction/${propertyId}/subscribe`);
-    } catch (error) {
-      console.error('Failed to unsubscribe from construction updates:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Get construction documents
-   */
-  static async getConstructionDocuments(propertyId: string): Promise<Array<{
+  static async getConstructionDocuments(_propertyId: string): Promise<Array<{
     id: string;
     name: string;
     type: 'blueprint' | 'permit' | 'contract' | 'inspection_report' | 'photo' | 'other';
@@ -508,38 +526,53 @@ export class ConstructionService {
     uploaded_by: string;
     milestone_id?: string;
   }>> {
-    try {
-      return await apiClient.get(`/construction/${propertyId}/documents`);
-    } catch (error) {
-      console.error('Failed to get construction documents:', error);
-      throw error;
-    }
+    return CONSTRUCTION_NOT_IMPLEMENTED(
+      'getConstructionDocuments',
+      'List per-milestone documents via getMilestones() and the data-room endpoint.'
+    );
   }
 
   /**
-   * Upload construction document
+   * Upload a milestone document via the real nested URL.
+   *
+   * Mirrors the backend `MilestoneDocumentUploadView` — requires both
+   * the property id and the milestone id, plus a typed name.
    */
-  static async uploadDocument(propertyId: string, document: {
+  static async uploadMilestoneDocument(
+    propertyId: string,
+    milestoneId: string,
+    document: {
+      file: File;
+      type: 'blueprint' | 'permit' | 'contract' | 'inspection_report' | 'photo' | 'other';
+      name: string;
+      description?: string;
+    }
+  ): Promise<{ document_id: string; url: string; message: string }> {
+    const formData = new FormData();
+    formData.append('file', document.file);
+    formData.append('type', document.type);
+    formData.append('name', document.name);
+    if (document.description) formData.append('description', document.description);
+    return apiClient.uploadFile(
+      `/construction/${propertyId}/milestones/${milestoneId}/documents/`,
+      formData
+    );
+  }
+
+  /**
+   * Legacy upload helper — phantom under the un-nested path.
+   */
+  static async uploadDocument(_propertyId: string, _document: {
     file: File;
     type: 'blueprint' | 'permit' | 'contract' | 'inspection_report' | 'photo' | 'other';
     name: string;
     description?: string;
     milestone_id?: string;
   }): Promise<{ document_id: string; url: string; message: string }> {
-    try {
-      const formData = new FormData();
-      formData.append('file', document.file);
-      formData.append('type', document.type);
-      formData.append('name', document.name);
-      
-      if (document.description) formData.append('description', document.description);
-      if (document.milestone_id) formData.append('milestone_id', document.milestone_id);
-
-      return await apiClient.uploadFile(`/construction/${propertyId}/documents`, formData);
-    } catch (error) {
-      console.error('Failed to upload construction document:', error);
-      throw error;
-    }
+    return CONSTRUCTION_NOT_IMPLEMENTED(
+      'uploadDocument',
+      'Use uploadMilestoneDocument(propertyId, milestoneId, ...) — uploads are nested under a milestone.'
+    );
   }
 }
 

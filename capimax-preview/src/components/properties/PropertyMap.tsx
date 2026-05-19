@@ -92,7 +92,10 @@ const mockMapLocations: PropertyMapPin[] = [
 ];
 
 export const PropertyMap: React.FC<PropertyMapProps> = ({
-  properties = mockMapLocations,
+  // Default to empty — the caller is expected to pass real properties.
+  // The previous `mockMapLocations` default is retained below for the dev
+  // story where this component is rendered in Storybook without props.
+  properties = [],
   selectedProperty,
   onPropertySelect,
   onPropertyClick,

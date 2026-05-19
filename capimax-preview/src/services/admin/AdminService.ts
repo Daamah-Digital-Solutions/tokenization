@@ -314,76 +314,70 @@ export interface SystemAnalytics {
   };
 }
 
+/**
+ * AdminService — frontend wrapper for admin-only backend routes.
+ *
+ * Backend status (P1 audit, 2026-05):
+ *   - `/admin/property-approvals/*` is real (admin_panel app)
+ *   - `/admin/nova-sukuk/*` is real
+ *   - `/kyc/admin/*` is real (under the KYC app, not /admin/)
+ *   - `/broker/admin/*` is real (broker app)
+ *   - Most other endpoints assumed by the admin dashboard (a unified
+ *     `/admin/dashboard`, `/admin/users`, `/admin/financial/*`,
+ *     `/admin/system/*`) are PHANTOM — no backend route exists.
+ *
+ * For phantom methods this service throws an explicit Error so the UI
+ * surfaces a clear failure mode instead of staring at a permanent
+ * loading spinner or rendering stale data.
+ */
+const NOT_IMPLEMENTED = (method: string, hint?: string): never => {
+  const detail = hint ? ` Use ${hint} instead.` : '';
+  throw new Error(`AdminService.${method} is not implemented on the backend yet.${detail}`);
+};
+
 export class AdminService {
   private readonly basePath = '/admin';
 
   /**
-   * Dashboard & Analytics Methods
+   * Dashboard & Analytics Methods.
+   *
+   * No unified admin dashboard endpoint exists. The closest real data
+   * lives in the analytics app — see `/analytics/dashboard/`. The shapes
+   * differ, though, so we throw here and ask callers to compose their
+   * own aggregate from individual endpoints.
    */
   async getDashboardStats(): Promise<DashboardStats> {
-    try {
-      const response = await apiClient.get<DashboardStats>(`${this.basePath}/dashboard`);
-      return response;
-    } catch (error) {
-      console.error('Failed to fetch dashboard stats:', error);
-      throw new ApiError('DASHBOARD_FETCH_FAILED', 'Failed to load dashboard statistics');
-    }
+    return NOT_IMPLEMENTED('getDashboardStats', 'analytics endpoints + property approval stats');
   }
 
-  async getPlatformMetrics(period: '7d' | '30d' | '90d' | '1y' = '30d'): Promise<PlatformMetrics> {
-    try {
-      const response = await apiClient.get<PlatformMetrics>(`${this.basePath}/analytics`, { period });
-      return response;
-    } catch (error) {
-      console.error('Failed to fetch platform metrics:', error);
-      throw new ApiError('METRICS_FETCH_FAILED', 'Failed to load platform metrics');
-    }
+  async getPlatformMetrics(_period: '7d' | '30d' | '90d' | '1y' = '30d'): Promise<PlatformMetrics> {
+    return NOT_IMPLEMENTED('getPlatformMetrics', '/analytics/dashboard/');
   }
 
-  async getSystemAnalytics(period: '7d' | '30d' | '90d' | '1y' = '30d'): Promise<SystemAnalytics> {
-    try {
-      const response = await apiClient.get<SystemAnalytics>(`${this.basePath}/analytics`, { period });
-      return response;
-    } catch (error) {
-      console.error('Failed to fetch system analytics:', error);
-      throw new ApiError('ANALYTICS_FETCH_FAILED', 'Failed to load system analytics');
-    }
+  async getSystemAnalytics(_period: '7d' | '30d' | '90d' | '1y' = '30d'): Promise<SystemAnalytics> {
+    return NOT_IMPLEMENTED('getSystemAnalytics', '/analytics/dashboard/');
   }
 
   /**
-   * User Management Methods
+   * User Management Methods.
+   *
+   * Backend has no `/admin/users/*` surface — user management is
+   * handled exclusively through the Django admin site for now. All
+   * methods here throw so the UI surfaces a clear gap.
    */
-  async getAllUsers(filters: UserFilters = {}): Promise<PaginatedUsers> {
-    try {
-      const response = await apiClient.get<PaginatedUsers>(`${this.basePath}/users`, filters);
-      return response;
-    } catch (error) {
-      console.error('Failed to fetch users:', error);
-      throw new ApiError('USERS_FETCH_FAILED', 'Failed to load users');
-    }
+  async getAllUsers(_filters: UserFilters = {}): Promise<PaginatedUsers> {
+    return NOT_IMPLEMENTED('getAllUsers', 'Django admin site or building a dedicated /admin/users endpoint');
   }
 
-  async getUserActivity(userId: string, limit: number = 50): Promise<UserActivity[]> {
-    try {
-      const response = await apiClient.get<UserActivity[]>(`${this.basePath}/users/${userId}/activity`, { limit });
-      return response;
-    } catch (error) {
-      console.error('Failed to fetch user activity:', error);
-      throw new ApiError('USER_ACTIVITY_FETCH_FAILED', 'Failed to load user activity');
-    }
+  async getUserActivity(_userId: string, _limit: number = 50): Promise<UserActivity[]> {
+    return NOT_IMPLEMENTED('getUserActivity');
   }
 
-  async getUserNotes(userId: string): Promise<AdminNote[]> {
-    try {
-      const response = await apiClient.get<AdminNote[]>(`${this.basePath}/users/${userId}/notes`);
-      return response;
-    } catch (error) {
-      console.error('Failed to fetch user notes:', error);
-      throw new ApiError('USER_NOTES_FETCH_FAILED', 'Failed to load user notes');
-    }
+  async getUserNotes(_userId: string): Promise<AdminNote[]> {
+    return NOT_IMPLEMENTED('getUserNotes');
   }
 
-  async addUserNote(userId: string, noteData: {
+  async addUserNote(_userId: string, _noteData: {
     title?: string;
     content: string;
     noteType?: AdminNote['noteType'];
@@ -392,84 +386,51 @@ export class AdminService {
     isConfidential?: boolean;
     tags?: string[];
   }): Promise<AdminNote> {
-    try {
-      const response = await apiClient.post<AdminNote>(`${this.basePath}/users/${userId}/notes`, noteData);
-      return response;
-    } catch (error) {
-      console.error('Failed to add user note:', error);
-      throw new ApiError('USER_NOTE_ADD_FAILED', 'Failed to add user note');
-    }
+    return NOT_IMPLEMENTED('addUserNote');
   }
 
-  async updateUser(userId: string, updates: {
+  async updateUser(_userId: string, _updates: {
     role?: AdminUser['role'];
     isActive?: boolean;
     kycStatus?: AdminUser['kycStatus'];
     notes?: string;
   }): Promise<AdminUser> {
-    try {
-      const response = await apiClient.put<AdminUser>(`${this.basePath}/users/${userId}`, updates);
-      return response;
-    } catch (error) {
-      console.error('Failed to update user:', error);
-      throw new ApiError('USER_UPDATE_FAILED', 'Failed to update user');
-    }
+    return NOT_IMPLEMENTED('updateUser');
   }
 
-  async suspendUser(userId: string, reason: string, duration?: number): Promise<void> {
-    try {
-      await apiClient.post<void>(`${this.basePath}/users/${userId}/suspend`, { reason, duration });
-    } catch (error) {
-      console.error('Failed to suspend user:', error);
-      throw new ApiError('USER_SUSPEND_FAILED', 'Failed to suspend user');
-    }
+  async suspendUser(_userId: string, _reason: string, _duration?: number): Promise<void> {
+    return NOT_IMPLEMENTED('suspendUser');
   }
 
-  async unsuspendUser(userId: string, notes?: string): Promise<void> {
-    try {
-      await apiClient.post<void>(`${this.basePath}/users/${userId}/unsuspend`, { notes });
-    } catch (error) {
-      console.error('Failed to unsuspend user:', error);
-      throw new ApiError('USER_UNSUSPEND_FAILED', 'Failed to unsuspend user');
-    }
+  async unsuspendUser(_userId: string, _notes?: string): Promise<void> {
+    return NOT_IMPLEMENTED('unsuspendUser');
   }
 
-  async forceVerifyUser(userId: string, notes?: string): Promise<void> {
-    try {
-      await apiClient.post<void>(`${this.basePath}/users/${userId}/verify`, { notes });
-    } catch (error) {
-      console.error('Failed to verify user:', error);
-      throw new ApiError('USER_VERIFY_FAILED', 'Failed to verify user');
-    }
+  async forceVerifyUser(_userId: string, _notes?: string): Promise<void> {
+    return NOT_IMPLEMENTED('forceVerifyUser', '/kyc/admin/approve/<id>/');
   }
 
-  async getUserInvestments(userId: string, page: number = 1, limit: number = 20): Promise<any> {
-    try {
-      const response = await apiClient.get(`${this.basePath}/users/${userId}/investments`, { page, limit });
-      return response;
-    } catch (error) {
-      console.error('Failed to fetch user investments:', error);
-      throw new ApiError('USER_INVESTMENTS_FETCH_FAILED', 'Failed to load user investments');
-    }
+  async getUserInvestments(_userId: string, _page: number = 1, _limit: number = 20): Promise<any> {
+    return NOT_IMPLEMENTED('getUserInvestments');
   }
 
-  async getUserTransactions(userId: string, page: number = 1, limit: number = 20, type?: string): Promise<any> {
-    try {
-      const response = await apiClient.get(`${this.basePath}/users/${userId}/transactions`, { page, limit, type });
-      return response;
-    } catch (error) {
-      console.error('Failed to fetch user transactions:', error);
-      throw new ApiError('USER_TRANSACTIONS_FETCH_FAILED', 'Failed to load user transactions');
-    }
+  async getUserTransactions(_userId: string, _page: number = 1, _limit: number = 20, _type?: string): Promise<any> {
+    return NOT_IMPLEMENTED('getUserTransactions');
   }
 
   /**
-   * Property Management Methods
+   * Property Management Methods.
+   *
+   * `getAllProperties` repoints to the real property-approvals queue.
+   * approve/reject go through `/properties/<id>/approve/` which is the
+   * canonical approval endpoint (in the properties app, not admin_panel).
    */
   async getAllProperties(filters: PropertyFilters = {}): Promise<PaginatedProperties> {
     try {
-      const response = await apiClient.get<PaginatedProperties>(`${this.basePath}/properties`, filters);
-      return response;
+      return await apiClient.get<PaginatedProperties>(
+        `${this.basePath}/property-approvals/`,
+        filters
+      );
     } catch (error) {
       console.error('Failed to fetch properties:', error);
       throw new ApiError('PROPERTIES_FETCH_FAILED', 'Failed to load properties');
@@ -478,7 +439,7 @@ export class AdminService {
 
   async approveProperty(propertyId: string): Promise<void> {
     try {
-      await apiClient.put<void>(`${this.basePath}/properties/${propertyId}/status`, { status: 'active' });
+      await apiClient.post<void>(`/properties/${propertyId}/approve/`, { decision: 'approved' });
     } catch (error) {
       console.error('Failed to approve property:', error);
       throw new ApiError('PROPERTY_APPROVE_FAILED', 'Failed to approve property');
@@ -487,9 +448,9 @@ export class AdminService {
 
   async rejectProperty(propertyId: string, rejectionReason: string): Promise<void> {
     try {
-      await apiClient.put<void>(`${this.basePath}/properties/${propertyId}/status`, { 
-        status: 'rejected', 
-        rejectionReason 
+      await apiClient.post<void>(`/properties/${propertyId}/approve/`, {
+        decision: 'rejected',
+        rejection_reason: rejectionReason,
       });
     } catch (error) {
       console.error('Failed to reject property:', error);
@@ -498,76 +459,52 @@ export class AdminService {
   }
 
   /**
-   * Financial Management Methods
+   * Financial Management Methods.
+   *
+   * No `/admin/financial/*` surface exists. Withdrawal admin happens via
+   * the investments app — see `/withdrawals/<id>/` PATCH for state
+   * transitions (admin-only) — but the shape differs from this class's
+   * WithdrawalRequest type. Throwing forces callers to migrate.
    */
-  async getFinancialDashboard(period: '7d' | '30d' | '90d' | '1y' = '30d'): Promise<FinancialMetrics> {
-    try {
-      const response = await apiClient.get<FinancialMetrics>(`${this.basePath}/financial/dashboard`, { period });
-      return response;
-    } catch (error) {
-      console.error('Failed to fetch financial dashboard:', error);
-      throw new ApiError('FINANCIAL_DASHBOARD_FETCH_FAILED', 'Failed to load financial dashboard');
-    }
+  async getFinancialDashboard(_period: '7d' | '30d' | '90d' | '1y' = '30d'): Promise<FinancialMetrics> {
+    return NOT_IMPLEMENTED('getFinancialDashboard', '/analytics/dashboard/ + dividend summary');
   }
 
-  async getDetailedTransactions(filters: TransactionFilters = {}): Promise<PaginatedTransactions> {
-    try {
-      const response = await apiClient.get<PaginatedTransactions>(`${this.basePath}/financial/transactions`, filters);
-      return response;
-    } catch (error) {
-      console.error('Failed to fetch transactions:', error);
-      throw new ApiError('TRANSACTIONS_FETCH_FAILED', 'Failed to load transactions');
-    }
+  async getDetailedTransactions(_filters: TransactionFilters = {}): Promise<PaginatedTransactions> {
+    return NOT_IMPLEMENTED('getDetailedTransactions', '/transactions/ with admin scope');
   }
 
-  async getPendingWithdrawals(page: number = 1, limit: number = 20): Promise<WithdrawalRequest[]> {
-    try {
-      const response = await apiClient.get<WithdrawalRequest[]>(`${this.basePath}/financial/withdrawals`, { page, limit });
-      return response;
-    } catch (error) {
-      console.error('Failed to fetch pending withdrawals:', error);
-      throw new ApiError('WITHDRAWALS_FETCH_FAILED', 'Failed to load pending withdrawals');
-    }
+  async getPendingWithdrawals(_page: number = 1, _limit: number = 20): Promise<WithdrawalRequest[]> {
+    return NOT_IMPLEMENTED('getPendingWithdrawals', '/withdrawals/?status=pending');
   }
 
-  async approveWithdrawal(withdrawalId: string, notes?: string): Promise<void> {
-    try {
-      await apiClient.put<void>(`${this.basePath}/financial/withdrawals/${withdrawalId}/approve`, { notes });
-    } catch (error) {
-      console.error('Failed to approve withdrawal:', error);
-      throw new ApiError('WITHDRAWAL_APPROVE_FAILED', 'Failed to approve withdrawal');
-    }
+  async approveWithdrawal(_withdrawalId: string, _notes?: string): Promise<void> {
+    return NOT_IMPLEMENTED('approveWithdrawal', 'PATCH /withdrawals/<id>/ {status:"completed"}');
   }
 
-  async rejectWithdrawal(withdrawalId: string, reason: string): Promise<void> {
-    try {
-      await apiClient.put<void>(`${this.basePath}/financial/withdrawals/${withdrawalId}/reject`, { reason });
-    } catch (error) {
-      console.error('Failed to reject withdrawal:', error);
-      throw new ApiError('WITHDRAWAL_REJECT_FAILED', 'Failed to reject withdrawal');
-    }
+  async rejectWithdrawal(_withdrawalId: string, _reason: string): Promise<void> {
+    return NOT_IMPLEMENTED('rejectWithdrawal', 'PATCH /withdrawals/<id>/ {status:"cancelled"}');
   }
 
   /**
-   * System Management Methods
+   * System Management Methods.
+   *
+   * Backend exposes Prometheus metrics at `/metrics` and ships a Grafana
+   * dashboard for ops, but there is no JSON `/admin/system/*` surface
+   * for the SPA. These calls are aspirational — throw rather than 404.
    */
   async getSystemHealth(): Promise<SystemHealth> {
-    try {
-      const response = await apiClient.get<SystemHealth>(`${this.basePath}/system/health`);
-      return response;
-    } catch (error) {
-      console.error('Failed to fetch system health:', error);
-      throw new ApiError('SYSTEM_HEALTH_FETCH_FAILED', 'Failed to load system health');
-    }
+    return NOT_IMPLEMENTED('getSystemHealth', 'Prometheus + Grafana dashboards');
   }
 
-  async getSystemAlerts(filters: {
+  async getSystemAlerts(_filters: {
     status?: SystemAlert['status'];
     severity?: SystemAlert['severity'];
     limit?: number;
   } = {}): Promise<SystemAlert[]> {
     try {
-      const response = await apiClient.get<SystemAlert[]>(`${this.basePath}/system/alerts`, filters);
+      // System-alerts is real under notifications — admins post alerts there.
+      const response = await apiClient.get<SystemAlert[]>('/notifications/admin/system-alerts/', _filters);
       return response;
     } catch (error) {
       console.error('Failed to fetch system alerts:', error);
@@ -575,56 +512,41 @@ export class AdminService {
     }
   }
 
-  async acknowledgeAlert(alertId: string): Promise<void> {
-    try {
-      await apiClient.put<void>(`${this.basePath}/system/alerts/${alertId}/acknowledge`);
-    } catch (error) {
-      console.error('Failed to acknowledge alert:', error);
-      throw new ApiError('ALERT_ACKNOWLEDGE_FAILED', 'Failed to acknowledge alert');
-    }
+  async acknowledgeAlert(_alertId: string): Promise<void> {
+    return NOT_IMPLEMENTED('acknowledgeAlert', '/notifications/admin/system-alerts/<id>/resolve/');
   }
 
   async resolveAlert(alertId: string, resolution: string): Promise<void> {
     try {
-      await apiClient.put<void>(`${this.basePath}/system/alerts/${alertId}/resolve`, { resolution });
+      await apiClient.post(`/notifications/admin/system-alerts/${alertId}/resolve/`, { resolution });
     } catch (error) {
       console.error('Failed to resolve alert:', error);
       throw new ApiError('ALERT_RESOLVE_FAILED', 'Failed to resolve alert');
     }
   }
 
-  async getSystemPerformance(period: '1h' | '24h' | '7d' | '30d' = '24h'): Promise<any> {
-    try {
-      const response = await apiClient.get(`${this.basePath}/system/performance`, { period });
-      return response;
-    } catch (error) {
-      console.error('Failed to fetch system performance:', error);
-      throw new ApiError('SYSTEM_PERFORMANCE_FETCH_FAILED', 'Failed to load system performance');
-    }
+  async getSystemPerformance(_period: '1h' | '24h' | '7d' | '30d' = '24h'): Promise<any> {
+    return NOT_IMPLEMENTED('getSystemPerformance', 'Prometheus query API');
   }
 
-  async getSystemLogs(filters: {
+  async getSystemLogs(_filters: {
     level?: 'error' | 'warn' | 'info' | 'debug' | 'admin' | 'all';
     limit?: number;
     startDate?: string;
     endDate?: string;
   } = {}): Promise<any> {
-    try {
-      const response = await apiClient.get(`${this.basePath}/system/logs`, filters);
-      return response;
-    } catch (error) {
-      console.error('Failed to fetch system logs:', error);
-      throw new ApiError('SYSTEM_LOGS_FETCH_FAILED', 'Failed to load system logs');
-    }
+    return NOT_IMPLEMENTED('getSystemLogs', 'log aggregation tool (not exposed to SPA)');
   }
 
   /**
-   * KYC Management Methods
+   * KYC Management Methods.
+   *
+   * Repoint to the real KYC admin endpoints — under `/kyc/admin/`, not
+   * `/admin/kyc/`.
    */
   async getPendingKYCReviews(page: number = 1, limit: number = 20): Promise<any> {
     try {
-      const response = await apiClient.get(`${this.basePath}/kyc/pending`, { page, limit });
-      return response;
+      return await apiClient.get('/kyc/admin/pending/', { page, page_size: limit });
     } catch (error) {
       console.error('Failed to fetch pending KYC reviews:', error);
       throw new ApiError('KYC_PENDING_FETCH_FAILED', 'Failed to load pending KYC reviews');
@@ -633,7 +555,10 @@ export class AdminService {
 
   async reviewKYCDocument(documentId: string, status: 'verified' | 'rejected', notes?: string): Promise<void> {
     try {
-      await apiClient.put<void>(`${this.basePath}/kyc/${documentId}/review`, { status, notes });
+      // The backend exposes per-document approve/reject actions rather
+      // than a single review endpoint with a status field.
+      const action = status === 'verified' ? 'approve' : 'reject';
+      await apiClient.post(`/kyc/documents/${documentId}/${action}/`, { notes });
     } catch (error) {
       console.error('Failed to review KYC document:', error);
       throw new ApiError('KYC_REVIEW_FAILED', 'Failed to review KYC document');
@@ -641,12 +566,17 @@ export class AdminService {
   }
 
   /**
-   * Commission Management Methods
+   * Commission Management Methods.
+   *
+   * Repoint to the broker admin commission endpoints under `/broker/admin/`.
    */
   async getPendingCommissionRequests(page: number = 1, limit: number = 20): Promise<any> {
     try {
-      const response = await apiClient.get(`${this.basePath}/commissions/pending`, { page, limit });
-      return response;
+      return await apiClient.get('/broker/admin/commissions/', {
+        page,
+        page_size: limit,
+        status: 'pending',
+      });
     } catch (error) {
       console.error('Failed to fetch pending commission requests:', error);
       throw new ApiError('COMMISSIONS_FETCH_FAILED', 'Failed to load pending commission requests');
@@ -654,17 +584,17 @@ export class AdminService {
   }
 
   async processCommissionRequest(
-    requestId: string, 
-    approved: boolean, 
-    paymentReference?: string, 
-    processingNotes?: string
+    requestId: string,
+    approved: boolean,
+    _paymentReference?: string,
+    _processingNotes?: string
   ): Promise<void> {
+    if (!approved) {
+      // Backend has no reject endpoint — only approve. Surface that gap.
+      return NOT_IMPLEMENTED('processCommissionRequest (reject branch)');
+    }
     try {
-      await apiClient.put<void>(`${this.basePath}/commissions/${requestId}/process`, {
-        approved,
-        paymentReference,
-        processingNotes
-      });
+      await apiClient.post(`/broker/admin/commissions/${requestId}/approve/`);
     } catch (error) {
       console.error('Failed to process commission request:', error);
       throw new ApiError('COMMISSION_PROCESS_FAILED', 'Failed to process commission request');

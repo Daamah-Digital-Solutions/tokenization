@@ -249,6 +249,8 @@ class ExitRequestViewSet(viewsets.ModelViewSet):
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return ExitRequest.objects.none()
         user = self.request.user
 
         # LP sees their exit requests
@@ -469,6 +471,8 @@ class LiquidityTransactionViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return LiquidityTransaction.objects.none()
         user = self.request.user
 
         # LP sees their transactions

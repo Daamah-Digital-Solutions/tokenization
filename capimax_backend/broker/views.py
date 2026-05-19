@@ -8,7 +8,7 @@ referral systems, marketing materials, and performance analytics.
 from rest_framework import generics, status, permissions, filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from django.db.models import Sum, Count, Avg, Q
@@ -32,6 +32,27 @@ from .serializers import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _get_or_create_broker_profile(user):
+    """
+    Return the BrokerProfile for ``user``, creating it on first access.
+
+    The SPA expects ``/broker/dashboard/`` and ``/broker/commissions/summary/``
+    to succeed on first login for any user with role=broker, but those views
+    used to 404 until ``/broker/profile/`` had been called once (which is the
+    only place that ran get_or_create). This helper unifies that behavior so
+    every broker-scoped read auto-creates the placeholder profile.
+    """
+    profile, _ = BrokerProfile.objects.get_or_create(
+        user=user,
+        defaults={
+            'license_number': f'TEMP-{user.id}',
+            'license_state': 'Unknown',
+            'license_expiry': timezone.now().date() + timedelta(days=365),
+        },
+    )
+    return profile
 
 
 class BrokerProfileView(generics.RetrieveUpdateAPIView):
@@ -110,7 +131,7 @@ class BrokerCommissionSummaryView(generics.GenericAPIView):
     def get(self, request):
         """Get commission summary for current broker."""
         try:
-            broker_profile = request.user.broker_profile
+            broker_profile = _get_or_create_broker_profile(request.user)
             commissions = BrokerCommission.objects.filter(broker=broker_profile)
             
             # Calculate summary statistics
@@ -418,8 +439,8 @@ class BrokerDashboardView(generics.GenericAPIView):
     def get(self, request):
         """Get broker dashboard summary data."""
         try:
-            broker_profile = request.user.broker_profile
-            
+            broker_profile = _get_or_create_broker_profile(request.user)
+
             # Get current month metrics
             current_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0).date()
             current_metrics = BrokerPerformanceMetrics.objects.filter(

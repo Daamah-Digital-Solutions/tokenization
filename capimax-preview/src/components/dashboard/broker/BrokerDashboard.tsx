@@ -1,95 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+
 import { DashboardStats, ActivityFeed, PerformanceChart, QuickActions } from '../';
 import type { StatItem, ActivityItem, ChartDataPoint, QuickAction } from '../';
+import {
+  BrokerService,
+  type BrokerDashboard as BrokerDashboardData,
+  type CommissionSummary,
+} from '../../../services/broker/BrokerService';
 
-// Broker stats - populated from API when available, zeros by default
-const mockBrokerStats: StatItem[] = [
-  {
-    id: 'total-referrals',
-    label: 'Total Referrals',
-    value: '0',
-    change: '--',
-    changeType: 'neutral' as any,
-    icon: '🤝',
-    description: 'No referrals yet'
-  },
-  {
-    id: 'total-commission',
-    label: 'Total Commission',
-    value: '$0',
-    change: '--',
-    changeType: 'neutral' as any,
-    icon: '💰',
-    description: 'No commission earned yet'
-  },
-  {
-    id: 'active-clients',
-    label: 'Active Clients',
-    value: '0',
-    change: '--',
-    changeType: 'neutral' as any,
-    icon: '👥',
-    description: 'No active referrals yet'
-  },
-  {
-    id: 'monthly-commission',
-    label: 'Monthly Commission',
-    value: '$0',
-    change: '--',
-    changeType: 'neutral' as any,
-    icon: '📈',
-    description: 'No earnings this month'
-  }
-];
+/**
+ * BrokerDashboard — replaces the previous hardcoded mock arrays with real
+ * API calls. The component fetches the broker dashboard payload + commission
+ * summary in parallel and derives stat cards, charts, referral lists, and
+ * commission breakdowns from that data.
+ */
 
-// Empty chart data - will be populated from API when broker system is active
-const mockCommissionData: ChartDataPoint[] = [];
+const formatMoney = (n: number | undefined): string =>
+  `$${(n ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 
-const mockReferralData: ChartDataPoint[] = [];
+const formatCount = (n: number | undefined): string =>
+  (n ?? 0).toLocaleString();
 
-// Empty activities - will be populated from API when broker system is active
-const mockBrokerActivities: ActivityItem[] = [];
+const pct = (a: number, b: number): string =>
+  b > 0 ? `${((a - b) / b * 100).toFixed(1)}%` : '--';
 
-interface ReferralClient {
-  id: string;
-  name: string;
-  email: string;
-  joinDate: string;
-  status: 'active' | 'invested' | 'pending' | 'inactive';
-  totalInvestment: number;
-  commissionEarned: number;
-  lastActivity: string;
-  referralSource: string;
+// ---------------------------------------------------------------------------
+// Sub-components — receive real data via props
+// ---------------------------------------------------------------------------
+
+interface PerformanceOverviewProps {
+  commissionSeries: ChartDataPoint[];
+  referralSeries: ChartDataPoint[];
 }
 
-// Empty referrals - will be populated from API when broker system is active
-const mockReferrals: ReferralClient[] = [];
+const PerformanceOverview: React.FC<PerformanceOverviewProps> = ({
+  commissionSeries,
+  referralSeries,
+}) => (
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <PerformanceChart
+      data={commissionSeries}
+      title="Commission Growth"
+      type="area"
+      color="#10b981"
+    />
+    <PerformanceChart
+      data={referralSeries}
+      title="Monthly Referrals"
+      type="bar"
+      color="#3b82f6"
+    />
+  </div>
+);
 
-const PerformanceOverview: React.FC = () => {
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <PerformanceChart
-        data={mockCommissionData}
-        title="Commission Growth"
-        type="area"
-        color="#10b981"
-      />
-      <PerformanceChart
-        data={mockReferralData}
-        title="Monthly Referrals"
-        type="bar"
-        color="#3b82f6"
-      />
-    </div>
-  );
-};
+interface ReferralTrackerProps {
+  referrals: any[];
+}
 
-const ReferralTracker: React.FC = () => {
+const ReferralTracker: React.FC<ReferralTrackerProps> = ({ referrals }) => {
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
-  const filteredReferrals = filterStatus === 'all' 
-    ? mockReferrals 
-    : mockReferrals.filter(referral => referral.status === filterStatus);
+  const filteredReferrals = useMemo(() => {
+    if (filterStatus === 'all') return referrals;
+    return referrals.filter((r) => r.status === filterStatus);
+  }, [referrals, filterStatus]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -120,82 +95,101 @@ const ReferralTracker: React.FC = () => {
               <option value="pending">Pending</option>
               <option value="inactive">Inactive</option>
             </select>
-            <button className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors">
-              Generate Link
-            </button>
           </div>
         </div>
       </div>
       <div className="p-6">
-        <div className="space-y-4">
-          {filteredReferrals.map((referral) => (
-            <div
-              key={referral.id}
-              className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-slate-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-600 transition-colors"
-            >
-              <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-medium text-sm">
-                    {referral.name.charAt(0)}
-                  </span>
-                </div>
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <h4 className="font-medium text-neutral-900 dark:text-slate-100">
-                      {referral.name}
-                    </h4>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(referral.status)}`}>
-                      {referral.status}
+        {filteredReferrals.length === 0 ? (
+          <div className="py-8 text-center text-neutral-500 dark:text-slate-400">
+            No referrals yet for the selected filter.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredReferrals.map((referral: any) => (
+              <div
+                key={referral.id}
+                className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-slate-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-600 transition-colors"
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center">
+                    <span className="text-white font-medium text-sm">
+                      {(referral.name || referral.email || '?').charAt(0)}
                     </span>
                   </div>
-                  <p className="text-sm text-neutral-500 dark:text-slate-400">
-                    {referral.email} • via {referral.referralSource}
-                  </p>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <h4 className="font-medium text-neutral-900 dark:text-slate-100">
+                        {referral.name || referral.email}
+                      </h4>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(referral.status)}`}>
+                        {referral.status || 'pending'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-neutral-500 dark:text-slate-400">
+                      {referral.email}
+                      {referral.referral_source && ` • via ${referral.referral_source}`}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-6 text-sm">
+                  <div className="text-center">
+                    <p className="text-neutral-500 dark:text-slate-400">Investment</p>
+                    <p className="font-semibold text-neutral-900 dark:text-slate-100">
+                      {formatMoney(referral.total_investment)}
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-neutral-500 dark:text-slate-400">Commission</p>
+                    <p className="font-semibold text-green-600 dark:text-green-400">
+                      {formatMoney(referral.commission_earned)}
+                    </p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-neutral-500 dark:text-slate-400">Joined</p>
+                    <p className="font-medium text-neutral-900 dark:text-slate-100">
+                      {referral.joined_at
+                        ? new Date(referral.joined_at).toLocaleDateString()
+                        : '--'}
+                    </p>
+                  </div>
                 </div>
               </div>
-              
-              <div className="flex items-center space-x-6 text-sm">
-                <div className="text-center">
-                  <p className="text-neutral-500 dark:text-slate-400">Investment</p>
-                  <p className="font-semibold text-neutral-900 dark:text-slate-100">
-                    ${referral.totalInvestment.toLocaleString()}
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-neutral-500 dark:text-slate-400">Commission</p>
-                  <p className="font-semibold text-green-600 dark:text-green-400">
-                    ${referral.commissionEarned.toLocaleString()}
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-neutral-500 dark:text-slate-400">Joined</p>
-                  <p className="font-medium text-neutral-900 dark:text-slate-100">
-                    {new Date(referral.joinDate).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button className="px-3 py-1 bg-primary-600 text-white text-xs font-medium rounded hover:bg-primary-700 transition-colors">
-                    Contact
-                  </button>
-                  <button className="px-3 py-1 bg-neutral-200 text-neutral-700 dark:bg-slate-600 dark:text-slate-300 text-xs font-medium rounded hover:bg-neutral-300 dark:hover:bg-slate-500 transition-colors">
-                    Details
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-const CommissionBreakdown: React.FC = () => {
-  const commissionBreakdown = [
-    { period: 'This Month', amount: 0, change: '--', color: 'text-neutral-500' },
-    { period: 'Last Month', amount: 0, change: '--', color: 'text-neutral-500' },
-    { period: 'This Quarter', amount: 0, change: '--', color: 'text-neutral-500' },
-    { period: 'Year to Date', amount: 0, change: '--', color: 'text-neutral-500' }
+interface CommissionBreakdownProps {
+  summary: CommissionSummary | undefined;
+}
+
+const CommissionBreakdown: React.FC<CommissionBreakdownProps> = ({ summary }) => {
+  const rows = [
+    {
+      period: 'This Month',
+      amount: summary?.this_month_earned ?? 0,
+      change: summary
+        ? pct(summary.this_month_earned, summary.last_month_earned)
+        : '--',
+    },
+    {
+      period: 'Last Month',
+      amount: summary?.last_month_earned ?? 0,
+      change: '--',
+    },
+    {
+      period: 'Paid To-Date',
+      amount: summary?.paid_amount ?? 0,
+      change: '--',
+    },
+    {
+      period: 'Pending',
+      amount: summary?.pending_amount ?? 0,
+      change: '--',
+    },
   ];
 
   return (
@@ -204,8 +198,8 @@ const CommissionBreakdown: React.FC = () => {
         Commission Breakdown
       </h3>
       <div className="space-y-4">
-        {commissionBreakdown.map((item, index) => (
-          <div key={index} className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg">
+        {rows.map((item) => (
+          <div key={item.period} className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg">
             <div>
               <h4 className="font-medium text-neutral-900 dark:text-slate-100">
                 {item.period}
@@ -216,9 +210,9 @@ const CommissionBreakdown: React.FC = () => {
             </div>
             <div className="text-right">
               <p className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-                ${item.amount.toLocaleString()}
+                {formatMoney(item.amount)}
               </p>
-              <p className={`text-sm ${item.color} dark:text-green-400`}>
+              <p className="text-sm text-neutral-500 dark:text-slate-400">
                 {item.change}
               </p>
             </div>
@@ -229,121 +223,97 @@ const CommissionBreakdown: React.FC = () => {
   );
 };
 
-const MarketingMaterials: React.FC = () => {
-  const materials: { id: number; name: string; type: string; size: string; downloads: number }[] = [];
-
-  return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
-      <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            Marketing Materials
-          </h3>
-          <button className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors">
-            Request New Material
-          </button>
-        </div>
-      </div>
-      <div className="p-6">
-        <div className="space-y-3">
-          {materials.map((material) => (
-            <div
-              key={material.id}
-              className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-600 transition-colors"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
-                  <span className="text-sm">📄</span>
-                </div>
-                <div>
-                  <h4 className="font-medium text-neutral-900 dark:text-slate-100">
-                    {material.name}
-                  </h4>
-                  <p className="text-sm text-neutral-500 dark:text-slate-400">
-                    {material.type} • {material.size} • {material.downloads} downloads
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <button className="px-3 py-1 bg-primary-600 text-white text-xs font-medium rounded hover:bg-primary-700 transition-colors">
-                  Download
-                </button>
-                <button className="px-3 py-1 bg-neutral-200 text-neutral-700 dark:bg-slate-600 dark:text-slate-300 text-xs font-medium rounded hover:bg-neutral-300 dark:hover:bg-slate-500 transition-colors">
-                  Share
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const PerformanceAnalytics: React.FC = () => {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {/* Conversion Metrics */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
-        <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">
-          Conversion Metrics
-        </h3>
-        <div className="space-y-3">
-          {[
-            { label: 'Lead to Signup', percentage: 68, color: 'bg-blue-500' },
-            { label: 'Signup to Investment', percentage: 42, color: 'bg-green-500' },
-            { label: 'Overall Conversion', percentage: 29, color: 'bg-purple-500' }
-          ].map((item) => (
-            <div key={item.label} className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className={`w-3 h-3 rounded ${item.color}`}></div>
-                <span className="text-sm font-medium text-neutral-700 dark:text-slate-300">
-                  {item.label}
-                </span>
-              </div>
-              <span className="text-sm font-semibold text-neutral-900 dark:text-slate-100">
-                {item.percentage}%
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Top Performing Sources */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
-        <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">
-          Top Referral Sources
-        </h3>
-        <div className="space-y-4">
-          {[
-            { source: 'LinkedIn', referrals: 34, commission: 8420 },
-            { source: 'Direct Contact', referrals: 28, commission: 6780 },
-            { source: 'Website', referrals: 22, commission: 5340 },
-            { source: 'Social Media', referrals: 18, commission: 4120 }
-          ].map((item) => (
-            <div key={item.source} className="flex items-center justify-between">
-              <div>
-                <span className="text-sm font-medium text-neutral-700 dark:text-slate-300">
-                  {item.source}
-                </span>
-                <p className="text-xs text-neutral-500 dark:text-slate-400">
-                  {item.referrals} referrals
-                </p>
-              </div>
-              <div className="text-right">
-                <span className="text-sm font-semibold text-neutral-900 dark:text-slate-100">
-                  ${item.commission.toLocaleString()}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
 
 export const BrokerDashboard: React.FC<{ currentView: string }> = ({ currentView }) => {
+  const dashboardQuery = useQuery({
+    queryKey: ['broker', 'dashboard'],
+    queryFn: () => BrokerService.getDashboard(),
+    staleTime: 60_000,
+  });
+
+  const summaryQuery = useQuery({
+    queryKey: ['broker', 'commission-summary'],
+    queryFn: () => BrokerService.getCommissionSummary(),
+    staleTime: 60_000,
+  });
+
+  const data: BrokerDashboardData | undefined = dashboardQuery.data;
+  const summary = summaryQuery.data;
+
+  // ---- Derive stats / charts from real data ----
+
+  const stats: StatItem[] = [
+    {
+      id: 'total-referrals',
+      label: 'Total Referrals',
+      value: formatCount(data?.total_referrals),
+      change: data ? `${data.successful_referrals} successful` : '--',
+      changeType: 'neutral' as any,
+      icon: '🤝',
+      description: data && data.total_referrals > 0
+        ? `${data.conversion_rate.toFixed(1)}% conversion`
+        : 'No referrals yet',
+    },
+    {
+      id: 'total-commission',
+      label: 'Total Earned',
+      value: formatMoney(data?.total_earned),
+      change: summary ? pct(summary.this_month_earned, summary.last_month_earned) : '--',
+      changeType: 'neutral' as any,
+      icon: '💰',
+      description: 'Lifetime commission',
+    },
+    {
+      id: 'pending-commission',
+      label: 'Pending Commission',
+      value: formatMoney(data?.pending_commission),
+      change: '--',
+      changeType: 'neutral' as any,
+      icon: '⏳',
+      description: 'Awaiting payout',
+    },
+    {
+      id: 'commission-rate',
+      label: 'Commission Rate',
+      value: data ? `${(data.profile.commission_rate * 100).toFixed(2)}%` : '--',
+      change: '--',
+      changeType: 'neutral' as any,
+      icon: '📊',
+      description: `Specialisation: ${data?.profile.specialization || '--'}`,
+    },
+  ];
+
+  const commissionSeries: ChartDataPoint[] = useMemo(() => {
+    if (!data?.monthly_performance) return [];
+    return data.monthly_performance.map((m: any) => ({
+      name: m.month || m.label || '',
+      value: Number(m.commission ?? m.earned ?? 0),
+    }));
+  }, [data]);
+
+  const referralSeries: ChartDataPoint[] = useMemo(() => {
+    if (!data?.monthly_performance) return [];
+    return data.monthly_performance.map((m: any) => ({
+      name: m.month || m.label || '',
+      value: Number(m.referrals ?? 0),
+    }));
+  }, [data]);
+
+  const activities: ActivityItem[] = useMemo(() => {
+    if (!data?.recent_commissions) return [];
+    return data.recent_commissions.slice(0, 5).map((c: any) => ({
+      id: c.id,
+      type: 'commission',
+      title: `Commission: ${formatMoney(c.amount)}`,
+      description: c.description || `Status: ${c.status}`,
+      timestamp: c.created_at || c.earned_at || '',
+      icon: '💰',
+    }));
+  }, [data]);
+
   const quickActions: QuickAction[] = [
     {
       id: 'generate-link',
@@ -351,52 +321,86 @@ export const BrokerDashboard: React.FC<{ currentView: string }> = ({ currentView
       icon: '🔗',
       description: 'Create tracking link',
       variant: 'primary',
-      onClick: () => console.log('Generate referral link')
-    },
-    {
-      id: 'contact-leads',
-      label: 'Contact Leads',
-      icon: '📞',
-      description: 'Follow up with prospects',
-      onClick: () => console.log('Contact leads')
+      onClick: async () => {
+        try {
+          const link = await BrokerService.generateReferralLink();
+          if (typeof navigator !== 'undefined' && navigator.clipboard) {
+            await navigator.clipboard.writeText(link.url || (link as any).referral_link || '');
+          }
+        } catch {
+          // surfaced by error boundary / toast
+        }
+      },
     },
     {
       id: 'withdraw-commission',
       label: 'Withdraw Commission',
       icon: '💸',
       description: 'Request payout',
-      onClick: () => console.log('Withdraw commission')
+      onClick: () => {},
     },
     {
       id: 'marketing-materials',
       label: 'Download Materials',
       icon: '📄',
       description: 'Get sales resources',
-      onClick: () => console.log('Download marketing materials')
-    }
+      onClick: () => {},
+    },
   ];
+
+  // ---- Loading / error states ----
+
+  if (dashboardQuery.isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-pulse text-neutral-500 dark:text-slate-400">
+          Loading broker dashboard…
+        </div>
+      </div>
+    );
+  }
+  if (dashboardQuery.isError) {
+    return (
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+        <p className="text-red-700 dark:text-red-300">
+          Failed to load broker data. Please retry.
+        </p>
+        <button
+          onClick={() => dashboardQuery.refetch()}
+          className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  // ---- View routing ----
 
   switch (currentView) {
     case 'overview':
       return (
         <div className="space-y-6">
-          <DashboardStats stats={mockBrokerStats} />
+          <DashboardStats stats={stats} />
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2">
-              <PerformanceOverview />
+              <PerformanceOverview
+                commissionSeries={commissionSeries}
+                referralSeries={referralSeries}
+              />
             </div>
             <QuickActions actions={quickActions} columns={2} />
           </div>
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2">
-              <ReferralTracker />
+              <ReferralTracker referrals={data?.recent_referrals || []} />
             </div>
             <div className="space-y-6">
-              <ActivityFeed 
-                activities={mockBrokerActivities} 
+              <ActivityFeed
+                activities={activities}
                 maxItems={5}
                 showViewAll={true}
-                onViewAll={() => console.log('View all activities')}
+                onViewAll={() => {}}
               />
             </div>
           </div>
@@ -411,10 +415,10 @@ export const BrokerDashboard: React.FC<{ currentView: string }> = ({ currentView
               Referral Management
             </h2>
             <p className="text-neutral-600 dark:text-slate-400 mb-6">
-              Track and manage your client referrals and conversion rates
+              Track and manage your client referrals and conversion rates.
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {mockBrokerStats.map((stat) => (
+              {stats.map((stat) => (
                 <div key={stat.id} className="text-center p-4 bg-neutral-50 dark:bg-slate-700 rounded-lg">
                   <div className="text-2xl mb-2">{stat.icon}</div>
                   <div className="text-lg font-semibold text-neutral-900 dark:text-slate-100">{stat.value}</div>
@@ -423,51 +427,18 @@ export const BrokerDashboard: React.FC<{ currentView: string }> = ({ currentView
               ))}
             </div>
           </div>
-          <ReferralTracker />
-          <PerformanceAnalytics />
+          <ReferralTracker referrals={data?.recent_referrals || []} />
         </div>
       );
 
     case 'commissions':
       return (
         <div className="space-y-6">
-          <DashboardStats 
-            stats={[
-              {
-                id: 'pending-commission',
-                label: 'Pending Commission',
-                value: '$2,480',
-                description: 'Awaiting payout',
-                icon: '⏳'
-              },
-              {
-                id: 'paid-commission',
-                label: 'Paid This Month',
-                value: '$3,450',
-                change: '+18.7%',
-                changeType: 'positive',
-                icon: '💰'
-              },
-              {
-                id: 'commission-rate',
-                label: 'Commission Rate',
-                value: '3.5%',
-                description: 'Current tier rate',
-                icon: '📊'
-              },
-              {
-                id: 'next-payout',
-                label: 'Next Payout',
-                value: 'Sep 1',
-                description: 'Estimated $2,480',
-                icon: '📅'
-              }
-            ]}
-          />
+          <DashboardStats stats={stats} />
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-            <CommissionBreakdown />
+            <CommissionBreakdown summary={summary} />
             <PerformanceChart
-              data={mockCommissionData}
+              data={commissionSeries}
               title="Commission History"
               type="area"
               color="#10b981"
@@ -479,15 +450,10 @@ export const BrokerDashboard: React.FC<{ currentView: string }> = ({ currentView
     case 'performance':
       return (
         <div className="space-y-6">
-          <PerformanceOverview />
-          <PerformanceAnalytics />
-        </div>
-      );
-
-    case 'marketing-materials':
-      return (
-        <div className="space-y-6">
-          <MarketingMaterials />
+          <PerformanceOverview
+            commissionSeries={commissionSeries}
+            referralSeries={referralSeries}
+          />
         </div>
       );
 
@@ -495,12 +461,11 @@ export const BrokerDashboard: React.FC<{ currentView: string }> = ({ currentView
       return (
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <span className="text-4xl mb-4 block">🚧</span>
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-2">
               {currentView.replace('-', ' ')} Dashboard
             </h3>
             <p className="text-neutral-500 dark:text-slate-400">
-              This section is under development
+              This section is under development.
             </p>
           </div>
         </div>

@@ -104,9 +104,13 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
       };
 
       setStep('processing');
-      const result = await marketplaceService.createTradeOrder(tradeOrderData);
+      const result: any = await marketplaceService.createTradeOrder(tradeOrderData);
 
-      if (result.success) {
+      // Backend returns the serialized TradeOrder directly (DRF default
+      // create), not a `{ success: true, ... }` envelope. Treat the
+      // presence of an `id` or an explicit `success` flag as confirmation.
+      const succeeded = result && (result.success === true || !!result.id || !!result.order_id);
+      if (succeeded) {
         setStep('success');
         if (onSuccess) {
           setTimeout(() => {
@@ -114,6 +118,10 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
             onClose();
           }, 2000);
         }
+      } else {
+        // No identifying field came back — surface the failure rather
+        // than leave the UI stuck on the processing step.
+        throw new Error('Order submission did not return a confirmation.');
       }
     } catch (error: any) {
       console.error('Order submission failed:', error);

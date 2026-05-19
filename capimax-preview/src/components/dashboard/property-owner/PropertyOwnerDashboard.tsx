@@ -1073,6 +1073,7 @@ export const PropertyOwnerDashboard: React.FC<{ currentView: string }> = ({ curr
       return <PropertyOwnerOverview />;
 
     case 'properties':
+    case 'my-properties':
       return (
         <div className="space-y-6">
           <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">

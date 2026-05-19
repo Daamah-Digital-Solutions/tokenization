@@ -249,7 +249,12 @@ interface PaymentProviderProps {
 // Payment Provider Component
 export function PaymentProvider({ children }: PaymentProviderProps) {
   const [state, dispatch] = useReducer(paymentReducer, initialState);
-  const { user, isAuthenticated } = useAuth();
+  // AuthContext exposes its state on a nested `state` field (rather than
+  // spreading user/isAuthenticated at the top level), so destructure from
+  // there. The previous form silently produced `undefined` and the auth
+  // guard below was a no-op.
+  const { state: authState } = useAuth();
+  const { user, isAuthenticated } = authState;
 
   // Function to fetch wallet balances
   const refreshWalletBalances = async () => {
@@ -261,21 +266,23 @@ export function PaymentProvider({ children }: PaymentProviderProps) {
     try {
       const response = await PaymentService.getWalletBalance();
 
-      // Transform the response to match our WalletBalance interface
-      const balances: WalletBalance[] = response.balances.map(b => ({
+      // The wallet endpoint can return `null`, `{}`, or `{balances: []}`
+      // when a brand-new user has no wallet yet — guard before .map.
+      const rawBalances = Array.isArray(response?.balances) ? response.balances : [];
+      const balances: WalletBalance[] = rawBalances.map(b => ({
         currency: b.currency,
         balance: b.available_balance,
         locked: b.pending_balance,
-        usdValue: b.currency === 'USD' ? b.available_balance : undefined
+        usdValue: b.currency === 'USD' ? b.available_balance : undefined,
       }));
 
       dispatch({ type: 'SET_BALANCES', payload: balances });
 
       // Set exchange rates based on total USD value if available
-      if (response.total_value_usd) {
+      if (response?.total_value_usd) {
         const rates: Record<string, number> = { USD: 1 };
         balances.forEach(b => {
-          if (b.currency !== 'USD' && b.usdValue) {
+          if (b.currency !== 'USD' && b.usdValue && b.balance > 0) {
             rates[b.currency] = b.usdValue / b.balance;
           }
         });

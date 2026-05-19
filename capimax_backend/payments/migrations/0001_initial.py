@@ -229,11 +229,11 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='payment',
-            constraint=models.CheckConstraint(check=models.Q(('amount__gt', 0)), name='payment_amount_positive'),
+            constraint=models.CheckConstraint(condition=models.Q(('amount__gt', 0)), name='payment_amount_positive'),
         ),
         migrations.AddConstraint(
             model_name='payment',
-            constraint=models.CheckConstraint(check=models.Q(('processing_fee__gte', 0)), name='payment_fee_non_negative'),
+            constraint=models.CheckConstraint(condition=models.Q(('processing_fee__gte', 0)), name='payment_fee_non_negative'),
         ),
         migrations.AddIndex(
             model_name='cryptopayment',

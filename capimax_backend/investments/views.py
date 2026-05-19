@@ -36,7 +36,7 @@ from .services import (
     DividendDistributionService, InvestmentRecommendationService,
     WalletInvestmentService
 )
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from core.permissions import IsOwnerOrReadOnly, CanInvestWithKYC, IsNotSuspended
 from core.utils import create_success_response, create_error_response
 from core.exceptions import InvestmentError
@@ -86,10 +86,40 @@ class InvestmentViewSet(viewsets.ModelViewSet):
         return InvestmentSerializer
     
     def create(self, request, *args, **kwargs):
-        """Create investment and return wrapped response."""
+        """
+        Create investment with full pre-flight compliance enforcement.
+
+        Checks (in order, all must pass):
+          1. User has verified, non-expired KYC.
+          2. No outstanding compliance hits (PEP / sanctions / adverse media).
+          3. Cumulative annual investment within KYC investment_limit.
+          4. Accreditation status if the property requires it.
+          5. Investor's jurisdiction allowed by the SPV (if SPV is linked).
+        """
+        self._enforce_compliance_gate(request)
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        investment = serializer.save()
+
+        # Snapshot the investor's compliance state at creation time so we
+        # have audit evidence the gate was honoured.
+        self._record_compliance_snapshot(investment, request.user)
+
+        # Create the subscription agreement (pending_signature). The frontend
+        # then prompts the investor to sign before the payment is captured.
+        try:
+            from legal.services import SubscriptionAgreementService
+            SubscriptionAgreementService.create_for_investment(investment)
+        except Exception as exc:
+            # Legal app may not yet be wired for older properties without an
+            # SPV. Log but don't block the investment creation.
+            import logging
+            logging.getLogger(__name__).warning(
+                "Could not create SubscriptionAgreement",
+                extra={'investment_id': str(investment.id), 'error': str(exc)},
+            )
+
         return Response(
             create_success_response(
                 data=InvestmentSerializer(serializer.instance).data,
@@ -97,6 +127,108 @@ class InvestmentViewSet(viewsets.ModelViewSet):
             ),
             status=status.HTTP_201_CREATED
         )
+
+    # ---------------------------------------------------------------
+    # Compliance gate helpers
+    # ---------------------------------------------------------------
+    def _enforce_compliance_gate(self, request) -> None:
+        from rest_framework.exceptions import PermissionDenied, ValidationError
+        from decimal import Decimal
+
+        user = request.user
+        property_id = request.data.get('property_id') or request.data.get('property')
+        amount = Decimal(str(request.data.get('investment_amount') or 0))
+
+        kyc = getattr(user, 'kyc_profile', None)
+        if not kyc or not kyc.is_verified():
+            raise PermissionDenied("A verified KYC profile is required to invest.")
+
+        # PEP / sanctions / adverse media hits block investing entirely.
+        # ComplianceCheck links directly to User, not to KYCProfile.
+        try:
+            from kyc.models import ComplianceCheck
+            if ComplianceCheck.objects.filter(user=user, result='hit').exists():
+                raise PermissionDenied(
+                    "Your account has an unresolved compliance review. "
+                    "Contact support to invest."
+                )
+        except ImportError:
+            pass
+
+        # Annual investment cap enforced by KYC tier.
+        if getattr(kyc, 'investment_limit', None):
+            from datetime import timedelta
+            from django.utils import timezone
+            from django.db.models import Sum
+            from .models import Investment, InvestmentStatus
+
+            year_ago = timezone.now() - timedelta(days=365)
+            ytd_total = (
+                Investment.objects
+                .filter(
+                    user=user,
+                    created_at__gte=year_ago,
+                )
+                .exclude(status__in=[
+                    InvestmentStatus.CANCELLED,
+                    InvestmentStatus.FAILED,
+                    InvestmentStatus.REFUNDED,
+                ])
+                .aggregate(s=Sum('investment_amount'))['s'] or Decimal('0')
+            )
+            if ytd_total + amount > Decimal(str(kyc.investment_limit)):
+                raise ValidationError({
+                    'investment_amount': (
+                        f"This investment would exceed your annual limit of "
+                        f"${kyc.investment_limit}. Current YTD: ${ytd_total}."
+                    )
+                })
+
+        # Property-level gates
+        if not property_id:
+            return
+        try:
+            from properties.models import Property
+            property_obj = Property.objects.get(pk=property_id)
+        except Exception:
+            return  # serializer will reject in the next step
+
+        requires_accredited = (
+            getattr(property_obj, 'requires_accredited_investors', False)
+            or (
+                getattr(property_obj, 'spv_entity', None)
+                and getattr(property_obj.spv_entity, 'requires_accredited_investors', False)
+            )
+        )
+        if requires_accredited and not getattr(kyc, 'is_accredited', False):
+            raise PermissionDenied(
+                "This property is restricted to accredited investors."
+            )
+
+        spv = getattr(property_obj, 'spv_entity', None)
+        if spv:
+            country = (getattr(kyc, 'country_of_residence', '') or '').upper()
+            if not spv.jurisdiction_allowed(country):
+                raise PermissionDenied(
+                    "Your country of residence is not eligible to "
+                    "participate in this offering."
+                )
+
+    def _record_compliance_snapshot(self, investment, user) -> None:
+        """Snapshot accreditation + jurisdiction onto the investment."""
+        kyc = getattr(user, 'kyc_profile', None)
+        if not kyc:
+            return
+        investment.accredited_at_investment_time = bool(
+            getattr(kyc, 'is_accredited', False)
+        )
+        investment.jurisdiction_at_investment_time = (
+            (getattr(kyc, 'country_of_residence', '') or '').upper()[:2]
+        )
+        investment.save(update_fields=[
+            'accredited_at_investment_time',
+            'jurisdiction_at_investment_time',
+        ])
 
     def list(self, request, *args, **kwargs):
         """List investments and return wrapped response."""
@@ -156,29 +288,55 @@ class InvestmentViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
-        """Cancel pending investment."""
-        investment = self.get_object()
-        
-        if investment.status not in ['pending', 'processing']:
-            return Response({
-                'success': False,
-                'error': 'Cannot cancel investment in current status'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
+        """
+        Cancel a pending investment.
+
+        Only `PENDING` is cancellable by the user via this endpoint. Once a
+        payment is initiated (`PROCESSING`), the user must wait for the
+        payment provider to settle and follow the refund flow. This prevents
+        the refund-plus-keep-tokens race.
+        """
+        from .models import InvestmentStatus
+
+        # Re-fetch under row lock; the cached instance from get_object()
+        # cannot be trusted because the state may have changed during a
+        # concurrent payment webhook.
         with transaction.atomic():
-            investment.status = 'cancelled'
+            try:
+                investment = (
+                    Investment.objects
+                    .select_for_update()
+                    .get(pk=pk, user=request.user)
+                )
+            except Investment.DoesNotExist:
+                return Response(
+                    {'success': False, 'error': 'Investment not found'},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            cancellable = {InvestmentStatus.PENDING}
+            if investment.status not in cancellable:
+                return Response({
+                    'success': False,
+                    'error': (
+                        f'Cannot cancel investment in status "{investment.status}". '
+                        'If a payment has been completed, contact support to '
+                        'request a refund.'
+                    ),
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            investment.status = InvestmentStatus.CANCELLED
             investment.save(update_fields=['status'])
-            
-            # Release any token reservations
+
             TokenReservation.objects.filter(
                 user=investment.user,
                 property_investment=investment.property_investment,
-                released=False
+                released=False,
             ).update(released=True)
-        
+
         return Response({
             'success': True,
-            'message': 'Investment cancelled successfully'
+            'message': 'Investment cancelled successfully',
         })
     
     @action(detail=False, methods=['get'])

@@ -276,8 +276,8 @@ export class InvestmentService {
     };
   }> {
     try {
-      const endpoint = investmentId 
-        ? `/investments/${investmentId}/transactions`
+      const endpoint = investmentId
+        ? `/investments/${investmentId}/transactions/`
         : '/transactions/';
 
       return await apiClient.get(endpoint, { page, limit });
@@ -308,7 +308,11 @@ export class InvestmentService {
   }
 
   /**
-   * Get dividend history
+   * Get dividend history.
+   *
+   * Backend returns a stock DRF paginated list — there is no `summary`
+   * field on this response. Call `getDividendSummary()` separately for
+   * aggregates.
    */
   static async getDividendHistory(page = 1, limit = 20): Promise<{
     dividends: Array<{
@@ -328,17 +332,50 @@ export class InvestmentService {
       total: number;
       pages: number;
     };
-    summary: {
-      total_dividends: number;
-      this_month: number;
-      this_year: number;
-      average_monthly: number;
-    };
   }> {
     try {
-      return await apiClient.get('/dividends/', { page, limit });
+      const response: any = await apiClient.get('/dividends/', { page, page_size: limit });
+      const dividends = response?.results || response?.dividends || [];
+      const total = response?.count ?? dividends.length;
+      return {
+        dividends,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.max(1, Math.ceil(total / limit)),
+        },
+      };
     } catch (error) {
       console.error('Failed to get dividend history:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get aggregated dividend summary (paid dividends, totals, by-property).
+   *
+   * Separate endpoint from the dividend list. Returns server-side keys —
+   * `total_dividends`, `dividend_count`, `average_dividend`, `by_property` —
+   * which is intentionally NOT the same shape the dashboard expects, so
+   * call sites must map fields explicitly rather than relying on a
+   * frontend-invented schema.
+   */
+  static async getDividendSummary(params: { start_date?: string; end_date?: string } = {}): Promise<{
+    total_dividends: number;
+    dividend_count: number;
+    average_dividend: number;
+    by_property: Array<{
+      property_id: string;
+      property_title: string;
+      total_dividends: number;
+      dividend_count: number;
+    }>;
+  }> {
+    try {
+      return await apiClient.get('/dividends/summary/', params);
+    } catch (error) {
+      console.error('Failed to get dividend summary:', error);
       throw error;
     }
   }
@@ -384,7 +421,11 @@ export class InvestmentService {
   }
 
   /**
-   * Request investment withdrawal/sale
+   * Request investment withdrawal/sale.
+   *
+   * Backend exposes withdrawals as their own resource — the create call
+   * goes to /withdrawals/ with the investment id in the body, not to
+   * /investments/<id>/withdraw (which was a frontend invention).
    */
   static async requestWithdrawal(investmentId: string, tokenAmount: number): Promise<{
     withdrawal_id: string;
@@ -394,8 +435,9 @@ export class InvestmentService {
     message: string;
   }> {
     try {
-      return await apiClient.post(`/investments/${investmentId}/withdraw`, {
-        token_amount: tokenAmount
+      return await apiClient.post('/withdrawals/', {
+        investment: investmentId,
+        token_amount: tokenAmount,
       });
     } catch (error) {
       console.error('Failed to request withdrawal:', error);
@@ -434,11 +476,14 @@ export class InvestmentService {
   }
 
   /**
-   * Cancel withdrawal request
+   * Cancel withdrawal request.
+   *
+   * The withdrawal viewset is a stock ModelViewSet with no custom `cancel`
+   * action — destruction of a pending row is the cancel operation.
    */
   static async cancelWithdrawal(withdrawalId: string): Promise<{ message: string }> {
     try {
-      return await apiClient.post(`/withdrawals/${withdrawalId}/cancel/`);
+      return await apiClient.delete(`/withdrawals/${withdrawalId}/`);
     } catch (error) {
       console.error('Failed to cancel withdrawal:', error);
       throw error;
@@ -470,7 +515,9 @@ export class InvestmentService {
     }>;
   }> {
     try {
-      return await apiClient.get('/investments/market/analytics');
+      // Backend exposes market data via properties/market/insights/ —
+      // there's no /investments/market/analytics endpoint.
+      return await apiClient.get('/properties/market/insights/');
     } catch (error) {
       console.error('Failed to get market analytics:', error);
       throw error;
@@ -494,7 +541,7 @@ export class InvestmentService {
     message: string;
   }> {
     try {
-      return await apiClient.post('/auto-invest', config);
+      return await apiClient.post('/auto-invest/', config);
     } catch (error) {
       console.error('Failed to setup automatic investment:', error);
       throw error;
@@ -515,7 +562,7 @@ export class InvestmentService {
     created_at: Date;
   }>> {
     try {
-      return await apiClient.get('/auto-invest');
+      return await apiClient.get('/auto-invest/');
     } catch (error) {
       console.error('Failed to get automatic investments:', error);
       throw error;
@@ -534,7 +581,7 @@ export class InvestmentService {
     }>
   ): Promise<{ message: string }> {
     try {
-      return await apiClient.put(`/auto-invest/${autoInvestId}`, updates);
+      return await apiClient.patch(`/auto-invest/${autoInvestId}/`, updates);
     } catch (error) {
       console.error('Failed to update automatic investment:', error);
       throw error;
@@ -546,7 +593,7 @@ export class InvestmentService {
    */
   static async cancelAutomaticInvestment(autoInvestId: string): Promise<{ message: string }> {
     try {
-      return await apiClient.delete(`/auto-invest/${autoInvestId}`);
+      return await apiClient.delete(`/auto-invest/${autoInvestId}/`);
     } catch (error) {
       console.error('Failed to cancel automatic investment:', error);
       throw error;

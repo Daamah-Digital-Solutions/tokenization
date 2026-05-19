@@ -212,12 +212,20 @@ class RentalIncomeDistributionSerializer(serializers.ModelSerializer):
 
 
 class PropertyOwnerSerializer(serializers.ModelSerializer):
-    """Serializer for property owner information."""
-    
+    """
+    Serializer for property owner information surfaced on public-facing property
+    list / detail responses.
+
+    Deliberately omits ``email`` — the public ``/properties/`` endpoint is
+    anonymously readable, and exposing owner emails enabled scraping. Admin
+    views that legitimately need contact info should serialize ``User`` directly
+    rather than reuse this class.
+    """
+
     class Meta:
         model = User
-        fields = ['id', 'email', 'first_name', 'last_name', 'date_joined']
-        read_only_fields = ['id', 'email', 'date_joined']
+        fields = ['id', 'first_name', 'last_name', 'date_joined']
+        read_only_fields = ['id', 'date_joined']
 
 
 class PropertyListSerializer(serializers.ModelSerializer):
@@ -777,14 +785,11 @@ class ConstructionInstallmentUpdateSerializer(serializers.ModelSerializer):
         return value
 
 
-class RentalIncomeDistributionSerializer(serializers.ModelSerializer):
+class RentalIncomeDistributionMetricsSerializer(serializers.ModelSerializer):
     """
-    Serializer for rental income distribution records.
-    
-    Provides detailed information about rental income distributions
-    including calculated metrics and property information.
+    Serializer for rental income distribution records with calculated metrics.
     """
-    
+
     property_title = serializers.CharField(source='property.title', read_only=True)
     property_type = serializers.CharField(source='property.property_type', read_only=True)
     property_city = serializers.CharField(source='property.city', read_only=True)

@@ -114,31 +114,160 @@ class UserRegistrationView(generics.CreateAPIView):
         )
 
 
+def _set_auth_cookies(response, *, access: str, refresh: str | None) -> None:
+    """
+    Attach access/refresh tokens as httpOnly cookies.
+
+    The frontend never reads these — it just sends them automatically on
+    each request because the SPA uses `withCredentials: true`. The access
+    cookie has a short lifetime; the refresh cookie has a longer one and
+    is restricted to the refresh endpoint via `path=`.
+    """
+    from django.conf import settings as _settings
+
+    secure = not getattr(_settings, 'DEBUG', False)
+    samesite = 'Strict' if not _settings.DEBUG else 'Lax'
+
+    response.set_cookie(
+        key='access_token',
+        value=access,
+        httponly=True,
+        secure=secure,
+        samesite=samesite,
+        max_age=int(_settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'].total_seconds())
+            if isinstance(getattr(_settings, 'SIMPLE_JWT', {}), dict) and 'ACCESS_TOKEN_LIFETIME' in _settings.SIMPLE_JWT
+            else 3600,
+        path='/',
+    )
+    if refresh:
+        response.set_cookie(
+            key='refresh_token',
+            value=refresh,
+            httponly=True,
+            secure=secure,
+            samesite=samesite,
+            max_age=int(_settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds())
+                if isinstance(getattr(_settings, 'SIMPLE_JWT', {}), dict) and 'REFRESH_TOKEN_LIFETIME' in _settings.SIMPLE_JWT
+                else 7 * 24 * 3600,
+            path='/api/v1/auth/',
+        )
+
+
+def _clear_auth_cookies(response) -> None:
+    response.delete_cookie('access_token', path='/')
+    response.delete_cookie('refresh_token', path='/api/v1/auth/')
+
+
+class CookieTokenRefreshView(APIView):
+    """
+    Refresh the access token using the httpOnly refresh cookie.
+
+    Frontend never sends the refresh token in a header or body — the cookie
+    is delivered automatically by the browser. The response sets a new
+    access cookie and (if rotation is enabled) a new refresh cookie. The
+    previous refresh token is blacklisted via simplejwt's rotation flow.
+    """
+
+    permission_classes = []  # Anonymous — the cookie is the credential.
+    authentication_classes = []
+
+    def post(self, request):
+        from rest_framework_simplejwt.tokens import RefreshToken
+        from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+
+        raw_refresh = request.COOKIES.get('refresh_token')
+        if not raw_refresh:
+            return Response(
+                create_error_response(
+                    message="Missing refresh token",
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                ),
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        try:
+            refresh = RefreshToken(raw_refresh)
+        except (TokenError, InvalidToken):
+            response = Response(
+                create_error_response(
+                    message="Refresh token invalid or expired",
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                ),
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+            _clear_auth_cookies(response)
+            return response
+
+        # New access token
+        access_str = str(refresh.access_token)
+
+        # Optional refresh rotation (controlled by SIMPLE_JWT settings)
+        new_refresh_str: str | None = None
+        from django.conf import settings as _settings
+        rotate = getattr(_settings, 'SIMPLE_JWT', {}).get('ROTATE_REFRESH_TOKENS', False)
+        blacklist_after = getattr(_settings, 'SIMPLE_JWT', {}).get('BLACKLIST_AFTER_ROTATION', False)
+
+        if rotate:
+            try:
+                if blacklist_after:
+                    refresh.blacklist()
+            except Exception:
+                # If blacklisting isn't installed, continue with rotation
+                pass
+            # Mint a new refresh token from the same user
+            new_refresh = RefreshToken.for_user(
+                refresh.payload.get('user_id') and
+                __import__('django.contrib.auth', fromlist=['get_user_model']).get_user_model().objects.get(
+                    pk=refresh.payload['user_id']
+                )
+            ) if 'user_id' in refresh.payload else None
+            if new_refresh is not None:
+                new_refresh_str = str(new_refresh)
+
+        response = Response(create_success_response(
+            data={'access': access_str},
+            message="Token refreshed",
+        ))
+        _set_auth_cookies(response, access=access_str, refresh=new_refresh_str)
+        return response
+
+
 class CustomTokenObtainPairView(TokenObtainPairView):
     """
     Custom JWT token obtain view with 2FA support.
-    
-    Handles user login with optional two-factor authentication
-    and returns user information along with tokens.
+
+    Returns the access token in the response body (for legacy clients that
+    still expect it) AND as an httpOnly cookie (preferred — used by the
+    new SPA flow with `withCredentials: true`). The refresh token is sent
+    only via httpOnly cookie restricted to /api/v1/auth/.
     """
-    
+
     serializer_class = CustomTokenObtainPairSerializer
-    
+
     def post(self, request, *args, **kwargs):
-        """Authenticate user and return tokens with user info."""
         try:
             response = super().post(request, *args, **kwargs)
-            
+
             if response.status_code == status.HTTP_200_OK:
-                # Wrap response in standard format
-                return Response(
-                    create_success_response(
-                        data=response.data,
-                        message="Login successful"
-                    )
-                )
+                access = response.data.get('access')
+                refresh = response.data.get('refresh')
+
+                # Build the success response and attach cookies. The
+                # response body intentionally still contains the user
+                # info but the tokens are also delivered via cookies so
+                # the SPA never has to store them in JS.
+                payload = dict(response.data)
+                # Remove the refresh token from the body — cookie-only.
+                payload.pop('refresh', None)
+                wrapped = Response(create_success_response(
+                    data=payload,
+                    message="Login successful",
+                ))
+                if access:
+                    _set_auth_cookies(wrapped, access=access, refresh=refresh)
+                return wrapped
             return response
-            
+
         except Exception as e:
             return Response(
                 create_error_response(
@@ -160,20 +289,25 @@ class UserLogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def post(self, request):
-        """Logout user by blacklisting refresh token."""
+        """Logout user by blacklisting refresh token and clearing cookies."""
         try:
-            refresh_token = request.data.get("refresh_token")
-            if refresh_token:
-                token = RefreshToken(refresh_token)
-                token.blacklist()
-            
-            logout(request)
-            
-            return Response(
-                create_success_response(
-                    message="Logged out successfully"
-                )
+            # Try body first (legacy), then cookie (new flow).
+            refresh_token = (
+                request.data.get("refresh_token")
+                or request.COOKIES.get('refresh_token')
             )
+            if refresh_token:
+                try:
+                    token = RefreshToken(refresh_token)
+                    token.blacklist()
+                except Exception:
+                    pass  # already invalid — clearing the cookie below is enough
+
+            logout(request)
+
+            response = Response(create_success_response(message="Logged out successfully"))
+            _clear_auth_cookies(response)
+            return response
         except Exception as e:
             return Response(
                 create_error_response(

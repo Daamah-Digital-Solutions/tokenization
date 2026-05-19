@@ -215,7 +215,7 @@ export class PropertyService {
    */
   static async createProperty(propertyData: PropertyCreateData): Promise<Property> {
     try {
-      return await apiClient.post<Property>('/properties', propertyData);
+      return await apiClient.post<Property>('/properties/', propertyData);
     } catch (error) {
       console.error('Failed to create property:', error);
       throw error;
@@ -227,7 +227,7 @@ export class PropertyService {
    */
   static async updateProperty(propertyId: string, updates: Partial<PropertyCreateData>): Promise<Property> {
     try {
-      return await apiClient.put<Property>(`/properties/${propertyId}`, updates);
+      return await apiClient.patch<Property>(`/properties/${propertyId}/`, updates);
     } catch (error) {
       console.error('Failed to update property:', error);
       throw error;
@@ -239,7 +239,7 @@ export class PropertyService {
    */
   static async deleteProperty(propertyId: string): Promise<{ message: string }> {
     try {
-      return await apiClient.delete(`/properties/${propertyId}`);
+      return await apiClient.delete(`/properties/${propertyId}/`);
     } catch (error) {
       console.error('Failed to delete property:', error);
       throw error;
@@ -285,7 +285,7 @@ export class PropertyService {
    */
   static async getPropertyAnalytics(propertyId: string): Promise<PropertyAnalytics> {
     try {
-      return await apiClient.get<PropertyAnalytics>(`/properties/${propertyId}/analytics`);
+      return await apiClient.get<PropertyAnalytics>(`/properties/${propertyId}/analytics/`);
     } catch (error) {
       console.error('Failed to get property analytics:', error);
       throw error;
@@ -313,7 +313,7 @@ export class PropertyService {
     };
   }> {
     try {
-      return await apiClient.get(`/properties/${propertyId}/investors`, { page, limit });
+      return await apiClient.get(`/properties/${propertyId}/investors/`, { page, limit });
     } catch (error) {
       console.error('Failed to get property investors:', error);
       throw error;
@@ -333,7 +333,7 @@ export class PropertyService {
     };
   }> {
     try {
-      return await apiClient.get(`/properties/${propertyId}/investments`, { page, limit });
+      return await apiClient.get(`/properties/${propertyId}/investments/`, { page, limit });
     } catch (error) {
       console.error('Failed to get investment history:', error);
       throw error;
@@ -341,11 +341,15 @@ export class PropertyService {
   }
 
   /**
-   * Get property documents
+   * Get property documents.
+   *
+   * The legacy `/documents/` route is upload-only (POST). Documents the
+   * investor can browse live in the data room — same data, different
+   * endpoint with proper permissioning.
    */
   static async getDocuments(propertyId: string): Promise<PropertyDocuments[]> {
     try {
-      return await apiClient.get<PropertyDocuments[]>(`/properties/${propertyId}/documents`);
+      return await apiClient.get<PropertyDocuments[]>(`/properties/${propertyId}/data-room/`);
     } catch (error) {
       console.error('Failed to get property documents:', error);
       throw error;
@@ -365,7 +369,7 @@ export class PropertyService {
     };
   }> {
     try {
-      return await apiClient.get(`/properties/${propertyId}/updates`, { page, limit });
+      return await apiClient.get(`/properties/${propertyId}/updates/`, { page, limit });
     } catch (error) {
       console.error('Failed to get property updates:', error);
       throw error;
@@ -400,7 +404,7 @@ export class PropertyService {
         });
       }
 
-      return await apiClient.uploadFile(`/properties/${propertyId}/updates`, formData);
+      return await apiClient.uploadFile(`/properties/${propertyId}/updates/`, formData);
     } catch (error) {
       console.error('Failed to add property update:', error);
       throw error;
@@ -436,7 +440,7 @@ export class PropertyService {
    */
   static async submitForApproval(propertyId: string): Promise<{ message: string; submission_id: string }> {
     try {
-      return await apiClient.post(`/properties/${propertyId}/submit`);
+      return await apiClient.post(`/properties/${propertyId}/submit-for-approval/`);
     } catch (error) {
       console.error('Failed to submit property for approval:', error);
       throw error;
@@ -455,7 +459,7 @@ export class PropertyService {
    */
   static async getFeaturedProperties(limit = 6): Promise<Property[]> {
     try {
-      const response = await apiClient.rawClient.get('/properties/featured', {
+      const response = await apiClient.rawClient.get('/properties/featured/', {
         params: { limit }
       });
 
@@ -520,7 +524,7 @@ export class PropertyService {
    */
   static async getTrendingProperties(limit = 6): Promise<Property[]> {
     try {
-      return await apiClient.get<Property[]>('/properties/trending', { limit });
+      return await apiClient.get<Property[]>('/properties/trending/', { limit });
     } catch (error) {
       console.error('Failed to get trending properties:', error);
       throw error;
@@ -528,25 +532,18 @@ export class PropertyService {
   }
 
   /**
-   * Get properties by location
+   * Get properties by location.
+   *
+   * No backend endpoint exists yet — the search route supports city/country
+   * filtering but not lat/lng radius. Surface the gap rather than 404.
    */
   static async getPropertiesByLocation(
-    latitude: number, 
-    longitude: number, 
-    radius: number = 10,
-    limit = 20
+    _latitude: number,
+    _longitude: number,
+    _radius: number = 10,
+    _limit = 20
   ): Promise<Property[]> {
-    try {
-      return await apiClient.get<Property[]>('/properties/nearby', {
-        lat: latitude,
-        lng: longitude,
-        radius,
-        limit
-      });
-    } catch (error) {
-      console.error('Failed to get properties by location:', error);
-      throw error;
-    }
+    throw new Error('Geo-radius property search is not yet implemented on the backend.');
   }
 
   /**
@@ -554,7 +551,7 @@ export class PropertyService {
    */
   static async searchProperties(query: string, filters?: PropertyFilterOptions): Promise<PropertySearchResult> {
     try {
-      return await apiClient.get<PropertySearchResult>('/properties/search', {
+      return await apiClient.get<PropertySearchResult>('/properties/search/', {
         q: query,
         ...filters
       });
@@ -565,26 +562,28 @@ export class PropertyService {
   }
 
   /**
-   * Get property price history
+   * Get property price history.
+   *
+   * Phantom endpoint — no backend implementation. The marketplace
+   * analytics surface provides token volume data; appreciation lives in
+   * the property analytics endpoint.
    */
-  static async getPriceHistory(propertyId: string, period = '1year'): Promise<Array<{
+  static async getPriceHistory(_propertyId: string, _period = '1year'): Promise<Array<{
     date: string;
     token_price: number;
     market_value: number;
     volume: number;
   }>> {
-    try {
-      return await apiClient.get(`/properties/${propertyId}/price-history`, { period });
-    } catch (error) {
-      console.error('Failed to get price history:', error);
-      throw error;
-    }
+    throw new Error('Property price history endpoint is not yet implemented.');
   }
 
   /**
-   * Get property valuation
+   * Get property valuation.
+   *
+   * Phantom — backend stores valuations but exposes them only via the
+   * analytics endpoint's `current_valuation` / `appreciation_rate` fields.
    */
-  static async getValuation(propertyId: string): Promise<{
+  static async getValuation(_propertyId: string): Promise<{
     current_value: number;
     last_valuation_date: Date;
     valuation_method: string;
@@ -601,20 +600,18 @@ export class PropertyService {
       forecast_12months: number;
     };
   }> {
-    try {
-      return await apiClient.get(`/properties/${propertyId}/valuation`);
-    } catch (error) {
-      console.error('Failed to get property valuation:', error);
-      throw error;
-    }
+    throw new Error('Property valuation endpoint is not yet implemented. Use getPropertyAnalytics() instead.');
   }
 
   /**
-   * Subscribe to property updates
+   * Subscribe to property updates.
+   *
+   * Backend exposes one POST endpoint that toggles via a `subscribe`
+   * boolean, not separate subscribe/unsubscribe routes.
    */
   static async subscribeToUpdates(propertyId: string): Promise<{ message: string }> {
     try {
-      return await apiClient.post(`/properties/${propertyId}/subscribe`);
+      return await apiClient.post(`/properties/${propertyId}/subscribe/`, { subscribe: true });
     } catch (error) {
       console.error('Failed to subscribe to property updates:', error);
       throw error;
@@ -626,7 +623,7 @@ export class PropertyService {
    */
   static async unsubscribeFromUpdates(propertyId: string): Promise<{ message: string }> {
     try {
-      return await apiClient.delete(`/properties/${propertyId}/subscribe`);
+      return await apiClient.post(`/properties/${propertyId}/subscribe/`, { subscribe: false });
     } catch (error) {
       console.error('Failed to unsubscribe from property updates:', error);
       throw error;
@@ -634,29 +631,17 @@ export class PropertyService {
   }
 
   /**
-   * Report property issue
+   * Report property issue.
+   *
+   * No backend endpoint yet — issue reporting goes through the support
+   * channel for now. Throw rather than 404 silently.
    */
-  static async reportIssue(propertyId: string, issue: {
+  static async reportIssue(_propertyId: string, _issue: {
     type: 'incorrect_information' | 'fraud' | 'technical' | 'other';
     description: string;
     evidence?: File[];
   }): Promise<{ report_id: string; message: string }> {
-    try {
-      const formData = new FormData();
-      formData.append('type', issue.type);
-      formData.append('description', issue.description);
-
-      if (issue.evidence) {
-        issue.evidence.forEach((file, index) => {
-          formData.append(`evidence[${index}]`, file);
-        });
-      }
-
-      return await apiClient.uploadFile(`/properties/${propertyId}/report`, formData);
-    } catch (error) {
-      console.error('Failed to report property issue:', error);
-      throw error;
-    }
+    throw new Error('Property issue reporting is not yet implemented. Contact support directly.');
   }
 }
 

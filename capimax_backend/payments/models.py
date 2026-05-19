@@ -147,11 +147,11 @@ class Payment(models.Model):
         ]
         constraints = [
             models.CheckConstraint(
-                check=models.Q(amount__gt=0),
+                condition=models.Q(amount__gt=0),
                 name='payment_amount_positive'
             ),
             models.CheckConstraint(
-                check=models.Q(processing_fee__gte=0),
+                condition=models.Q(processing_fee__gte=0),
                 name='payment_fee_non_negative'
             ),
         ]
@@ -389,15 +389,15 @@ class WalletBalance(models.Model):
         ]
         constraints = [
             models.CheckConstraint(
-                check=models.Q(available_balance__gte=0),
+                condition=models.Q(available_balance__gte=0),
                 name='wallet_available_balance_non_negative'
             ),
             models.CheckConstraint(
-                check=models.Q(pending_balance__gte=0),
+                condition=models.Q(pending_balance__gte=0),
                 name='wallet_pending_balance_non_negative'
             ),
             models.CheckConstraint(
-                check=models.Q(locked_balance__gte=0),
+                condition=models.Q(locked_balance__gte=0),
                 name='wallet_locked_balance_non_negative'
             ),
         ]

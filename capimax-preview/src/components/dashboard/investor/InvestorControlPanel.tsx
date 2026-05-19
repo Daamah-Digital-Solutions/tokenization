@@ -794,34 +794,14 @@ const WalletContent: React.FC<{
           </Button>
         </div>
 
-        <div className="space-y-4">
-          {/* Mock payment methods */}
-          {[
-            { id: '1', type: 'Credit Card', last4: '4242', brand: 'Visa', default: true },
-            { id: '2', type: 'Bank Account', last4: '8965', brand: 'Chase', default: false },
-            { id: '3', type: 'Crypto Wallet', last4: 'a7f3', brand: 'MetaMask', default: false }
-          ].map((method) => (
-            <div key={method.id} className="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-lg">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center">
-                  <Wallet className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                </div>
-                <div>
-                  <Text variant="body" weight="medium">
-                    {method.brand} •••• {method.last4}
-                  </Text>
-                  <Text variant="caption" color="muted">
-                    {method.type}
-                  </Text>
-                </div>
-              </div>
-              {method.default && (
-                <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
-                  Default
-                </div>
-              )}
-            </div>
-          ))}
+        <div className="py-10 text-center">
+          <Wallet className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+          <Text variant="body" weight="medium" className="mb-1">
+            No payment methods yet
+          </Text>
+          <Text variant="caption" color="muted">
+            Add a card, bank account, or crypto wallet during your next investment.
+          </Text>
         </div>
       </Card>
 
@@ -831,51 +811,14 @@ const WalletContent: React.FC<{
           Recent Transactions
         </Text>
 
-        <div className="space-y-4">
-          {/* Mock transactions */}
-          {[
-            { id: '1', type: 'Deposit', amount: 5000, status: 'completed', date: '2024-01-15' },
-            { id: '2', type: 'Investment', amount: -2500, status: 'completed', date: '2024-01-14' },
-            { id: '3', type: 'Dividend', amount: 125, status: 'completed', date: '2024-01-10' },
-            { id: '4', type: 'Deposit', amount: 1000, status: 'pending', date: '2024-01-09' }
-          ].map((transaction) => (
-            <div key={transaction.id} className="flex items-center justify-between py-3 border-b border-slate-200 dark:border-slate-700 last:border-b-0">
-              <div className="flex items-center space-x-3">
-                <div className={cn(
-                  'w-8 h-8 rounded-full flex items-center justify-center',
-                  transaction.amount > 0
-                    ? 'bg-emerald-100 dark:bg-emerald-900/30'
-                    : 'bg-red-100 dark:bg-red-900/30'
-                )}>
-                  {transaction.amount > 0 ? (
-                    <Plus className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  ) : (
-                    <Minus className="w-4 h-4 text-red-600 dark:text-red-400" />
-                  )}
-                </div>
-                <div>
-                  <Text variant="body" weight="medium">
-                    {transaction.type}
-                  </Text>
-                  <Text variant="caption" color="muted">
-                    {new Date(transaction.date).toLocaleDateString()}
-                  </Text>
-                </div>
-              </div>
-              <div className="text-right">
-                <Text variant="body" weight="semibold" className={cn(
-                  transaction.amount > 0 ? 'text-emerald-600' : 'text-red-600'
-                )}>
-                  {transaction.amount > 0 ? '+' : ''}${Math.abs(transaction.amount).toLocaleString()}
-                </Text>
-                <Text variant="caption" className={cn(
-                  transaction.status === 'completed' ? 'text-emerald-600' : 'text-orange-600'
-                )}>
-                  {transaction.status.toUpperCase()}
-                </Text>
-              </div>
-            </div>
-          ))}
+        <div className="py-10 text-center">
+          <RefreshCw className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+          <Text variant="body" weight="medium" className="mb-1">
+            No recent activity
+          </Text>
+          <Text variant="caption" color="muted">
+            Deposits, investments and dividends will appear here.
+          </Text>
         </div>
       </Card>
     </div>

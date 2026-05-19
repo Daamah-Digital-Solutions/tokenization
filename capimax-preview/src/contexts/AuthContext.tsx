@@ -278,10 +278,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     confirmPassword: string
   ): Promise<void> => {
     try {
+      // Backend `PasswordResetConfirmSerializer` expects snake_case
+      // `new_password` and `confirm_password`; the previous keys
+      // (`password`, `confirmPassword`) were silently dropped, which
+      // surfaced as a "missing fields" 400 with no obvious user feedback.
       await AuthService.resetPassword({
         token,
-        password,
-        confirmPassword,
+        new_password: password,
+        confirm_password: confirmPassword,
       });
     } catch (error: any) {
       console.error('Password reset failed:', error);

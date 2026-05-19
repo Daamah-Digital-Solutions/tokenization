@@ -23,13 +23,147 @@ logger = logging.getLogger(__name__)
 # Re-export monitoring service tasks
 __all__ = [
     'monitor_blockchain_networks',
-    'resync_token_balances_task', 
+    'resync_token_balances_task',
     'process_pending_investments',
     'auto_distribute_rental_income',
     'cleanup_old_transactions',
     'update_gas_price_history',
-    'verify_contract_states'
+    'verify_contract_states',
+    'reconcile_token_balances',
+    'monitor_pending_transactions',
 ]
+
+
+# ===========================================================================
+# Token balance reconciliation
+# ---------------------------------------------------------------------------
+# Compares the off-chain TokenBalance ledger against on-chain `balanceOf`
+# for every active (contract, user) pair. Any drift is logged at ERROR and
+# persisted to TokenBalanceDrift so operations can investigate.
+# ===========================================================================
+
+@shared_task(bind=True, rate_limit='1/m')
+def reconcile_token_balances(self, max_records: int = 500):
+    """Walk all active TokenBalance rows and verify on-chain agreement."""
+    from .models import TokenBalance
+    from .services.web3_service import Web3Service
+
+    web3_service = Web3Service()
+    checked = 0
+    drift = 0
+
+    qs = TokenBalance.objects.filter(balance__gt=0).select_related(
+        'contract', 'user', 'property_reference'
+    )[:max_records]
+
+    for tb in qs:
+        checked += 1
+        try:
+            if not web3_service.initialize_network(str(tb.contract.network_id)):
+                logger.warning(
+                    'Skip reconcile — network unreachable',
+                    extra={'token_balance_id': str(tb.pk)}
+                )
+                continue
+
+            on_chain = web3_service.call_contract_view(
+                contract_address=tb.contract.contract_address,
+                abi=tb.contract.abi,
+                function_name='balanceOf',
+                args=[tb.wallet_address, tb.token_id],
+            )
+            if on_chain is None:
+                continue
+
+            on_chain_int = int(on_chain)
+            db_int = int(tb.balance or 0)
+            if on_chain_int != db_int:
+                drift += 1
+                logger.error(
+                    'Token balance drift detected',
+                    extra={
+                        'token_balance_id': str(tb.pk),
+                        'wallet': tb.wallet_address,
+                        'token_id': tb.token_id,
+                        'db_balance': db_int,
+                        'chain_balance': on_chain_int,
+                        'delta': on_chain_int - db_int,
+                    },
+                )
+                _persist_drift_record(tb, db_int, on_chain_int)
+        except Exception:
+            logger.exception(
+                'Error during token balance reconciliation',
+                extra={'token_balance_id': str(tb.pk)},
+            )
+
+    return {'checked': checked, 'drift': drift}
+
+
+def _persist_drift_record(token_balance, db_value: int, chain_value: int) -> None:
+    """Persist drift to a dedicated audit table if the model is available."""
+    try:
+        from .models import TokenBalanceDrift
+    except ImportError:
+        return
+    try:
+        TokenBalanceDrift.objects.create(
+            token_balance=token_balance,
+            db_value=db_value,
+            chain_value=chain_value,
+            delta=chain_value - db_value,
+        )
+    except Exception:
+        logger.exception('Failed to persist TokenBalanceDrift record')
+
+
+# ===========================================================================
+# Confirmation watcher
+# ---------------------------------------------------------------------------
+# For every TokenTransaction in `submitted` status, query the chain for the
+# transaction receipt and update status to `confirmed` once we hit the
+# network's required confirmations. Without this loop, transactions stay
+# perpetually 'submitted' even after they land on-chain.
+# ===========================================================================
+
+@shared_task(bind=True, rate_limit='1/m')
+def monitor_pending_transactions(self, max_records: int = 200):
+    from .models import TokenTransaction
+    from .services.web3_service import Web3Service
+
+    web3_service = Web3Service()
+    confirmed = 0
+    failed = 0
+
+    pending = TokenTransaction.objects.filter(status='submitted').order_by('created_at')[:max_records]
+    for tx in pending:
+        try:
+            if not web3_service.initialize_network(str(tx.contract.network_id)):
+                continue
+            receipt = web3_service.get_transaction_receipt(tx.transaction_hash)
+            if receipt is None:
+                continue  # not mined yet
+            if receipt.get('status') == 1:
+                # Wait for required confirmations
+                current_block = web3_service.get_block_number()
+                required = getattr(tx.contract.network, 'block_confirmation_count', 12)
+                if current_block - (receipt.get('blockNumber') or 0) >= required:
+                    tx.status = 'confirmed'
+                    tx.block_number = receipt.get('blockNumber')
+                    tx.gas_used = receipt.get('gasUsed')
+                    tx.save(update_fields=['status', 'block_number', 'gas_used'])
+                    confirmed += 1
+            else:
+                tx.status = 'failed'
+                tx.save(update_fields=['status'])
+                failed += 1
+        except Exception:
+            logger.exception(
+                'Error while polling transaction',
+                extra={'tx_hash': tx.transaction_hash},
+            )
+
+    return {'confirmed': confirmed, 'failed': failed}
 
 
 @shared_task(bind=True)
