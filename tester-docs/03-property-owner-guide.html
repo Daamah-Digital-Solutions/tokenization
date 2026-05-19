@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Property Owner Guide — Capimax Tester Documentation</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <h1 class="brand">Capimax</h1>
+  <p class="brand-sub">Tester Documentation v1</p>
+  <nav>
+    <div class="nav-section">Start Here</div>
+    <a href="index.html">Documentation Home</a>
+    <a href="01-tester-onboarding.html">1. Tester Onboarding</a>
+
+    <div class="nav-section">Role Guides</div>
+    <a href="02-investor-guide.html">2. Investor</a>
+    <a href="03-property-owner-guide.html" class="current">3. Property Owner</a>
+    <a href="04-broker-guide.html">4. Broker</a>
+    <a href="05-admin-guide.html">5. Admin</a>
+
+    <div class="nav-section">Workflows</div>
+    <a href="06-workflow-under-construction.html">6. Under-Construction Lifecycle</a>
+    <a href="07-workflow-ready-property.html">7. Ready Property Lifecycle</a>
+    <a href="08-workflow-marketplace.html">8. Marketplace Trading</a>
+    <a href="09-workflow-onchain-verification.html">9. On-Chain Verification</a>
+  </nav>
+</aside>
+
+<main class="main">
+
+<header class="cover">
+  <p class="eyebrow">Guide 3 of 9 &middot; <span class="pill role-owner">Property Owner</span></p>
+  <h1>Property Owner Guide</h1>
+  <p class="lede">
+    Everything a property owner does on the platform: account setup,
+    SPV onboarding, listing both ready and under-construction
+    properties, managing tokenization, adding construction milestones,
+    distributing rental income, and monitoring investors.
+  </p>
+  <div class="meta">
+    <div><strong>Time:</strong> ~60 minutes</div>
+    <div><strong>Prereqs:</strong> <a href="01-tester-onboarding.html">Tester Onboarding</a></div>
+    <div><strong>Test account:</strong> <code>owner@test.com</code></div>
+  </div>
+</header>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#dashboard">The owner dashboard</a></li>
+    <li><a href="#spv">SPV setup</a></li>
+    <li><a href="#create-ready">Listing a Ready property</a></li>
+    <li><a href="#create-construction">Listing an Under-Construction property</a></li>
+    <li><a href="#approval">The approval workflow</a></li>
+    <li><a href="#tokenization">Tokenization &mdash; deploying smart contracts</a></li>
+    <li><a href="#investors">Watching investors come in</a></li>
+    <li><a href="#milestones">Construction milestones</a></li>
+    <li><a href="#rental">Distributing rental income</a></li>
+    <li><a href="#documents">Property documents</a></li>
+    <li><a href="#reports">Reports &amp; analytics</a></li>
+    <li><a href="#error-paths">Error paths to test</a></li>
+    <li><a href="#checklist">Tester checklist</a></li>
+  </ol>
+</div>
+
+<h2 id="dashboard">1. The owner dashboard</h2>
+
+<p>
+  Log in as <code>owner@test.com</code> / <code>TestPass123!</code>.
+  You'll land on the Property Owner dashboard.
+</p>
+
+<h3>1.1 What you should see on Overview</h3>
+
+<table>
+  <thead><tr><th>Widget</th><th>Contents</th></tr></thead>
+  <tbody>
+    <tr><td>Stat cards (top row)</td><td>Total Properties, Capital Raised, Active Investors, Monthly Revenue &mdash; each with a delta from last period</td></tr>
+    <tr><td>Tokenization chart</td><td>Cumulative funding raised over time across all your properties</td></tr>
+    <tr><td>Revenue chart</td><td>Monthly revenue from rentals + new investments</td></tr>
+    <tr><td>Recent activity</td><td>Investments, property updates, distributions, milestone updates</td></tr>
+    <tr><td>Quick actions</td><td>Add Property, Manage Investors, Upload Documents, Distribute Revenue</td></tr>
+  </tbody>
+</table>
+
+<h3>1.2 Side navigation</h3>
+
+<ul>
+  <li><strong>Overview</strong> &mdash; the dashboard summary</li>
+  <li><strong>My Properties</strong> &mdash; list of your properties + funding status</li>
+  <li><strong>Tokenization</strong> &mdash; per-property tokenization status, contract addresses, mint history</li>
+  <li><strong>Revenue</strong> &mdash; cards (Total Revenue, Pending Distributions, Next Distribution, Distribution Rate) and the historical chart</li>
+  <li><strong>Investors</strong> &mdash; top investors, distribution by segment, investor analytics</li>
+  <li><strong>Documents</strong> &mdash; all property documents in one place</li>
+</ul>
+
+<h2 id="spv">2. SPV setup</h2>
+
+<p>
+  Each property is held by a Special Purpose Vehicle (legal entity).
+  Real platforms require this for regulatory reasons. In our test
+  environment, the SPV fields are optional until the property is
+  approved &mdash; you can fill them later.
+</p>
+
+<h3>2.1 Where to set SPV details</h3>
+
+<ol class="steps">
+  <li>
+    <p>My Properties &rarr; pick a property &rarr; Edit</p>
+  </li>
+  <li>
+    <p>Open the "SPV (Special Purpose Vehicle)" section</p>
+    <p>You'll see:</p>
+    <ul>
+      <li>SPV company name</li>
+      <li>SPV registration number</li>
+      <li>SPV bank account number</li>
+      <li>SPV bank name</li>
+      <li>SPV establishment date</li>
+    </ul>
+  </li>
+  <li>
+    <p>Fill the fields with sensible test data (any string is fine)</p>
+  </li>
+  <li>
+    <p>Save</p>
+    <p>The property page now shows "SPV: {company name}" in the metadata bar.</p>
+  </li>
+</ol>
+
+<h2 id="create-ready">3. Listing a Ready property</h2>
+
+<p>
+  Ready properties are income-generating (already built, rented out).
+  Investors buy tokens and receive a share of the rental income.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>From the dashboard, click <strong>Add New Property</strong></p>
+  </li>
+  <li>
+    <p><strong>Step 1: Basic Information</strong></p>
+    <ul>
+      <li>Title: e.g. "Downtown Apartment Complex"</li>
+      <li>Description: a paragraph of plain text</li>
+      <li>Property type: Residential / Commercial / Industrial / Mixed-use / Land</li>
+      <li>Property category: choose <strong>Ready Property</strong></li>
+    </ul>
+  </li>
+  <li>
+    <p><strong>Step 2: Financial Details</strong></p>
+    <ul>
+      <li>Total value (e.g. 500000)</li>
+      <li>Token price (e.g. 100)</li>
+      <li>Total tokens (auto-calculates from value/price; you can override)</li>
+      <li>Expected return (% annual)</li>
+      <li>Rental yield (% annual)</li>
+      <li>Minimum investment (e.g. 100)</li>
+    </ul>
+  </li>
+  <li>
+    <p><strong>Step 3: Property Details</strong></p>
+    <ul>
+      <li>Address, city, state, country, postcode</li>
+      <li>Property size (sqm)</li>
+      <li>Year built</li>
+      <li>Latitude / longitude (auto-populates from address if available)</li>
+    </ul>
+  </li>
+  <li>
+    <p><strong>Step 4: Rental income (Ready-property specific)</strong></p>
+    <ul>
+      <li>Monthly rental income (e.g. 4000)</li>
+      <li>Rental distribution frequency: Monthly / Quarterly / Semi-annual / Annual</li>
+      <li>Occupancy rate (%)</li>
+      <li>Rental income active (toggle ON)</li>
+    </ul>
+  </li>
+  <li>
+    <p><strong>Step 5: Images</strong></p>
+    <p>Upload 1+ image files. Drag &amp; drop or click to select. Mark one as primary.</p>
+  </li>
+  <li>
+    <p><strong>Step 6: Documents</strong> (optional)</p>
+    <p>Upload PDF / DOCX files. Tag each with a document_type (lease, deed, valuation, etc.)</p>
+  </li>
+  <li>
+    <p>Click <strong>Submit for Approval</strong></p>
+    <p>Status moves to <em>Pending approval</em>. The property won't appear in the public listings until admin approves it.</p>
+  </li>
+</ol>
+
+<div class="callout">
+  <p class="label">What should NOT appear for Ready properties</p>
+  <p>
+    Construction completion date, construction progress, installment
+    toggle. If they show up on the Ready property form, that's a bug.
+  </p>
+</div>
+
+<h2 id="create-construction">4. Listing an Under-Construction property</h2>
+
+<p>
+  Under-construction properties offer optional installment payments and
+  show construction progress. Investors lock in their stake during
+  construction and graduate to full ownership as construction completes.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Click <strong>Add New Property</strong></p>
+  </li>
+  <li>
+    <p><strong>Step 1: Basic Information</strong></p>
+    <p>Same as Ready, but set Property category to <strong>Under Construction</strong>.</p>
+  </li>
+  <li>
+    <p><strong>Step 2: Financial Details</strong></p>
+    <p>Same fields. Set Expected return based on completion value.</p>
+  </li>
+  <li>
+    <p><strong>Step 3: Property Details</strong></p>
+    <p>Same fields, plus:</p>
+    <ul>
+      <li>Expected completion date (required)</li>
+      <li>Construction progress (%): start at 0</li>
+      <li>Construction phase (Foundation, Framing, Interior, Finishing &hellip;)</li>
+    </ul>
+  </li>
+  <li>
+    <p><strong>Step 4: Installments (Under-construction specific)</strong></p>
+    <ul>
+      <li>Supports installments &mdash; toggle ON to enable installment investing</li>
+      <li>Installment period (months) &mdash; e.g. 12</li>
+      <li>(Optional) Down payment percentage</li>
+    </ul>
+    <p>If you keep "Supports installments" OFF, investors can only pay upfront.</p>
+  </li>
+  <li>
+    <p>Continue with Images and Documents as in the Ready flow</p>
+  </li>
+  <li>
+    <p>Click <strong>Submit for Approval</strong></p>
+  </li>
+</ol>
+
+<div class="callout">
+  <p class="label">What should NOT appear for Under-Construction</p>
+  <p>
+    Monthly rental income, rental distribution frequency, occupancy
+    rate. The "Rental income active" toggle should be hidden or default
+    off. Under-construction properties don't generate rental until
+    completion.
+  </p>
+</div>
+
+<h2 id="approval">5. The approval workflow</h2>
+
+<p>
+  After submission, your property is in <em>pending_approval</em>
+  state. The admin reviews it via Django Admin (see
+  <a href="05-admin-guide.html">Admin guide</a>). One of three
+  outcomes:
+</p>
+
+<ul>
+  <li><strong>Approved</strong> &mdash; status flips to <em>approved</em>. You can now tokenize.</li>
+  <li><strong>Rejected</strong> &mdash; status flips to <em>rejected</em>. Notes from admin appear in the approval card. You can edit and resubmit.</li>
+  <li><strong>Under review</strong> &mdash; admin needs more info. They'll comment; you respond.</li>
+</ul>
+
+<h3>5.1 Tracking your approval</h3>
+
+<ol class="steps">
+  <li>
+    <p>My Properties &rarr; your property &rarr; the approval panel at the top</p>
+    <p>Shows: current status, who's reviewing, when submitted, comments thread</p>
+  </li>
+  <li>
+    <p>Approved properties show "Tokenize this property" button</p>
+  </li>
+</ol>
+
+<h2 id="tokenization">6. Tokenization &mdash; deploying smart contracts</h2>
+
+<p>
+  Tokenization deploys the smart contracts that represent ownership of
+  this property on the blockchain. Once tokenized, the property accepts
+  investments and tokens get minted to investor wallets.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>On an approved property, click <strong>Tokenize this property</strong></p>
+  </li>
+  <li>
+    <p>Confirmation dialog shows the parameters:</p>
+    <ul>
+      <li>Total tokens (from your financial details)</li>
+      <li>Token price</li>
+      <li>Lockup period (default 365 days for ready, 730 for construction)</li>
+      <li>Early exit fee rate (default 10%)</li>
+      <li>Multi-sig owners (you + platform treasury, by default)</li>
+      <li>Estimated gas cost in tBNB</li>
+    </ul>
+  </li>
+  <li>
+    <p>Click <strong>Deploy</strong></p>
+    <p>A progress indicator runs through three stages: deploying token contract, deploying distributor contract (Ready only), activating property.</p>
+  </li>
+  <li>
+    <p>On success:</p>
+    <ul>
+      <li>Property status flips to <em>tokenized</em></li>
+      <li>The property's smart-contract address is recorded and shown on the property card</li>
+      <li>"View on BSCScan" button appears</li>
+      <li>The property becomes visible in the investor marketplace</li>
+    </ul>
+  </li>
+</ol>
+
+<div class="callout warning">
+  <p class="label">Deployment failures</p>
+  <p>
+    If deployment fails (out of gas, network error), the property stays
+    in <em>approved</em> state and you can retry. The retry should be
+    idempotent &mdash; you should never end up with two contracts for
+    the same property. If you do, file a bug.
+  </p>
+</div>
+
+<h3>6.1 Verify your contracts on chain</h3>
+
+<p>
+  After deployment, open the BSCScan link. You should see:
+</p>
+
+<ul>
+  <li>Contract creation transaction (your tokenization tx)</li>
+  <li>"Property activated" event (the platform calls <code>activateProperty</code> right after deploy)</li>
+  <li>Contract source &mdash; verified RealEstateToken</li>
+</ul>
+
+<p>See <a href="09-workflow-onchain-verification.html">on-chain verification</a> for the complete walkthrough.</p>
+
+<h2 id="investors">7. Watching investors come in</h2>
+
+<h3>7.1 Investor list</h3>
+
+<ol class="steps">
+  <li>
+    <p>Side nav &rarr; <strong>Investors</strong></p>
+  </li>
+  <li>
+    <p>You see:</p>
+    <ul>
+      <li>Top Investors table: name, total invested, properties count, join date</li>
+      <li>Investor Distribution: Retail / Institutional / High Net Worth segments</li>
+      <li>Investment Metrics: Average Investment, Total Capital Raised, Retention, New Investors (30d)</li>
+    </ul>
+  </li>
+  <li>
+    <p>(Privacy) Investor email addresses are NOT shown to property owners</p>
+    <p>You see names only, never emails. If you can see an investor's email, that's a serious privacy bug &mdash; report immediately.</p>
+  </li>
+</ol>
+
+<h3>7.2 Investment activity</h3>
+
+<ol class="steps">
+  <li>
+    <p>Overview &rarr; Recent activity shows every new investment in your portfolio</p>
+  </li>
+  <li>
+    <p>Each row links to the transaction on chain</p>
+  </li>
+</ol>
+
+<h2 id="milestones">8. Construction milestones</h2>
+
+<p>
+  For under-construction properties, you can add milestones that
+  investors see on the property detail page.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Open an under-construction property &rarr; the Construction Progress section</p>
+  </li>
+  <li>
+    <p>Click <strong>Add Milestone</strong></p>
+  </li>
+  <li>
+    <p>Fill the form:</p>
+    <ul>
+      <li>Title: e.g. "Foundation complete"</li>
+      <li>Description</li>
+      <li>Category: Site preparation / Foundation / Framing / Interior / Finishing / Inspection / Other</li>
+      <li>Target date</li>
+      <li>Completion date (leave blank until done)</li>
+      <li>Progress %</li>
+    </ul>
+  </li>
+  <li>
+    <p>Save. The milestone appears in the investor view immediately.</p>
+  </li>
+  <li>
+    <p>Add a milestone update (sub-event) and attach an image</p>
+    <p>Optional but useful. Investors see "Update: Foundation poured on May 12" with an attached photo.</p>
+  </li>
+  <li>
+    <p>Mark the milestone complete</p>
+    <p>Edit it &rarr; set status to "Completed" &rarr; enter actual completion date. The overall construction progress bar updates.</p>
+  </li>
+</ol>
+
+<h2 id="rental">9. Distributing rental income</h2>
+
+<p>
+  For ready properties only. When you've collected rent, distribute it
+  to token holders.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Open a tokenized ready property &rarr; the Revenue tab</p>
+  </li>
+  <li>
+    <p>Click <strong>Distribute Rental Income</strong></p>
+  </li>
+  <li>
+    <p>Enter:</p>
+    <ul>
+      <li>Total amount (e.g. 4000)</li>
+      <li>Distribution period (e.g. "May 2026" or a date range)</li>
+    </ul>
+  </li>
+  <li>
+    <p>The platform calculates:</p>
+    <ul>
+      <li>Platform fee (2.5%)</li>
+      <li>Net amount to distribute</li>
+      <li>Per-token payout (net / total tokens)</li>
+      <li>List of eligible investors and how much each receives</li>
+    </ul>
+  </li>
+  <li>
+    <p>Click <strong>Confirm distribution</strong></p>
+    <p>On-chain: the RentalIncomeDistributor contract is called with the total amount; each token holder can claim their share. You see a "View on chain" link.</p>
+  </li>
+  <li>
+    <p>Verify in your dashboard</p>
+    <p>Revenue tab &rarr; "Last distribution: ${amount} on {date}". Eligible-investor count updated.</p>
+  </li>
+</ol>
+
+<div class="callout warning">
+  <p class="label">Auto-distribution is stubbed</p>
+  <p>
+    In the current build, the celery cron that auto-triggers
+    distributions on the configured frequency is a stub. Distributions
+    must be triggered manually from this UI for now. Don't file as a
+    bug if you don't see automated distributions appearing.
+  </p>
+</div>
+
+<h2 id="documents">10. Property documents</h2>
+
+<ol class="steps">
+  <li>
+    <p>Side nav &rarr; <strong>Documents</strong> or open a property &rarr; Documents tab</p>
+  </li>
+  <li>
+    <p>Upload a new document</p>
+    <ul>
+      <li>File (PDF, DOCX, JPG, PNG)</li>
+      <li>Name</li>
+      <li>Document type: Lease agreement / Deed / Valuation / Insurance / Permit / Photo / Other</li>
+      <li>Description</li>
+    </ul>
+  </li>
+  <li>
+    <p>Save. The document appears in your list and on the property's public detail page.</p>
+  </li>
+  <li>
+    <p>Try deleting it &mdash; should ask for confirmation, then remove</p>
+  </li>
+  <li>
+    <p>Try uploading a 50MB file &mdash; expect a clear "too large" message</p>
+  </li>
+</ol>
+
+<h2 id="reports">11. Reports &amp; analytics</h2>
+
+<h3>11.1 Revenue tab</h3>
+
+<table>
+  <tbody>
+    <tr><td>Total Revenue</td><td>Sum of all rental income + new investments YTD</td></tr>
+    <tr><td>Pending Distributions</td><td>Amount queued but not yet distributed</td></tr>
+    <tr><td>Next Distribution</td><td>Date of upcoming scheduled distribution (or "TBD")</td></tr>
+    <tr><td>Distribution Rate</td><td>Current month revenue</td></tr>
+  </tbody>
+</table>
+
+<h3>11.2 Per-property performance</h3>
+
+<p>Tokenization tab &rarr; Performance Comparison. Each property row shows:</p>
+<ul>
+  <li>ROI</li>
+  <li>Monthly revenue</li>
+  <li>Occupancy rate (ready) or construction progress (under-construction)</li>
+  <li>Token price change since tokenization</li>
+</ul>
+
+<h3>11.3 Generate a report</h3>
+
+<ol class="steps">
+  <li>
+    <p>My Properties &rarr; pick a property &rarr; <strong>Generate Report</strong></p>
+  </li>
+  <li>
+    <p>Pick a report type:</p>
+    <ul>
+      <li>Financial &mdash; revenue, fees, net</li>
+      <li>Performance &mdash; ROI, occupancy, milestones</li>
+      <li>Investor &mdash; list of holders + amounts (privacy-redacted)</li>
+    </ul>
+  </li>
+  <li>
+    <p>Click Generate. The platform returns a download link.</p>
+  </li>
+</ol>
+
+<h2 id="error-paths">12. Error paths to test</h2>
+
+<table>
+  <thead><tr><th>Scenario</th><th>Expected response</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Submit property with missing required fields</td>
+      <td>Inline errors on each missing field</td>
+    </tr>
+    <tr>
+      <td>Submit Ready property without monthly_rental_income</td>
+      <td>Validation error: "Monthly rental income required when rental_income_active is on"</td>
+    </tr>
+    <tr>
+      <td>Submit Under-Construction without expected_completion_date</td>
+      <td>Validation error: "Expected completion date is required"</td>
+    </tr>
+    <tr>
+      <td>Try to tokenize a property in <em>pending</em> approval status</td>
+      <td>Button disabled, tooltip explains</td>
+    </tr>
+    <tr>
+      <td>Try to tokenize without SPV fields filled</td>
+      <td>Should warn but not block (test environment is lenient)</td>
+    </tr>
+    <tr>
+      <td>Try to distribute rental on an Under-Construction property</td>
+      <td>Distribute button hidden OR rejected with "Not applicable for this property type"</td>
+    </tr>
+    <tr>
+      <td>Try to add milestones to a Ready property</td>
+      <td>Milestone UI hidden OR refused</td>
+    </tr>
+    <tr>
+      <td>Distribute more than property's current month rental</td>
+      <td>Should warn but allow (owner's call &mdash; bonus distribution)</td>
+    </tr>
+    <tr>
+      <td>Edit a property after it's been tokenized</td>
+      <td>Financial fields locked (changing them post-tokenization would break the contract); descriptive fields still editable</td>
+    </tr>
+    <tr>
+      <td>Try to delete a property with investors</td>
+      <td>Refused with "Property has active investments"</td>
+    </tr>
+    <tr>
+      <td>View another owner's properties via URL guessing</td>
+      <td>403 or empty results</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="checklist">13. Tester checklist</h2>
+
+<table>
+  <thead><tr><th>Done</th><th>Action</th></tr></thead>
+  <tbody>
+    <tr><td>&#9633;</td><td>Log in as owner, confirm dashboard renders</td></tr>
+    <tr><td>&#9633;</td><td>Fill SPV details on an existing property</td></tr>
+    <tr><td>&#9633;</td><td>Create a Ready property end-to-end &mdash; confirm rental fields visible, construction hidden</td></tr>
+    <tr><td>&#9633;</td><td>Create an Under-Construction property &mdash; confirm completion-date required, installment toggle works</td></tr>
+    <tr><td>&#9633;</td><td>Submit for approval; admin approves</td></tr>
+    <tr><td>&#9633;</td><td>Tokenize the property; confirm BSCScan tx</td></tr>
+    <tr><td>&#9633;</td><td>Wait for an investor to invest; confirm they appear in Investors tab</td></tr>
+    <tr><td>&#9633;</td><td>Verify investor emails are NOT exposed to owner</td></tr>
+    <tr><td>&#9633;</td><td>For under-construction: add 3 milestones with images</td></tr>
+    <tr><td>&#9633;</td><td>Mark a milestone complete; confirm construction progress bar updates</td></tr>
+    <tr><td>&#9633;</td><td>For ready: distribute rental income; confirm BSCScan tx and investor receives dividend</td></tr>
+    <tr><td>&#9633;</td><td>Upload &amp; delete a document</td></tr>
+    <tr><td>&#9633;</td><td>Generate each report type and download</td></tr>
+    <tr><td>&#9633;</td><td>Exercise every error-path scenario in section 12</td></tr>
+  </tbody>
+</table>
+
+<footer class="footer">
+  <span><a href="02-investor-guide.html">&larr; 2. Investor Guide</a></span>
+  <span>Next: <a href="04-broker-guide.html">4. Broker Guide</a> &rarr;</span>
+</footer>
+
+</main>
+</div>
+</body>
+</html>

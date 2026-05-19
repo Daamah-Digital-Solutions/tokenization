@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketplace Trading — Capimax Tester Documentation</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <h1 class="brand">Capimax</h1>
+  <p class="brand-sub">Tester Documentation v1</p>
+  <nav>
+    <div class="nav-section">Start Here</div>
+    <a href="index.html">Documentation Home</a>
+    <a href="01-tester-onboarding.html">1. Tester Onboarding</a>
+
+    <div class="nav-section">Role Guides</div>
+    <a href="02-investor-guide.html">2. Investor</a>
+    <a href="03-property-owner-guide.html">3. Property Owner</a>
+    <a href="04-broker-guide.html">4. Broker</a>
+    <a href="05-admin-guide.html">5. Admin</a>
+
+    <div class="nav-section">Workflows</div>
+    <a href="06-workflow-under-construction.html">6. Under-Construction Lifecycle</a>
+    <a href="07-workflow-ready-property.html">7. Ready Property Lifecycle</a>
+    <a href="08-workflow-marketplace.html" class="current">8. Marketplace Trading</a>
+    <a href="09-workflow-onchain-verification.html">9. On-Chain Verification</a>
+  </nav>
+</aside>
+
+<main class="main">
+
+<header class="cover">
+  <p class="eyebrow">Workflow 8 of 9</p>
+  <h1>Marketplace Trading</h1>
+  <p class="lede">
+    The secondary market lets investors trade tokens with each other
+    without going through the property owner. This guide covers
+    listing, order placement, matching engine settlement, escrow, fee
+    calculations, and edge cases.
+  </p>
+  <div class="meta">
+    <div><strong>Time:</strong> ~45 minutes</div>
+    <div><strong>Prereqs:</strong> Investor guide, completed an investment in any property</div>
+    <div><strong>Test accounts:</strong> two investor accounts holding tokens</div>
+  </div>
+</header>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#concepts">Marketplace concepts</a></li>
+    <li><a href="#fees">Fee structure</a></li>
+    <li><a href="#prereq">Prerequisites &amp; setup</a></li>
+    <li><a href="#listing">Stage 1: Investor A creates a listing</a></li>
+    <li><a href="#buy-order">Stage 2: Investor B places a buy order</a></li>
+    <li><a href="#matching">Stage 3: Matching engine settles</a></li>
+    <li><a href="#escrow">Stage 4: Escrow lifecycle</a></li>
+    <li><a href="#completion">Stage 5: Completion &amp; verification</a></li>
+    <li><a href="#partial-fill">Partial fills</a></li>
+    <li><a href="#expired">Expired listings</a></li>
+    <li><a href="#cancel">Cancelling a listing or order</a></li>
+    <li><a href="#operator-flows">Operator interventions</a></li>
+    <li><a href="#error-paths">Error paths to test</a></li>
+    <li><a href="#checklist">Tester checklist</a></li>
+  </ol>
+</div>
+
+<h2 id="concepts">1. Marketplace concepts</h2>
+
+<table>
+  <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>MarketListing</td><td>An investor's intent to buy or sell. Has type (BUY or SELL), price per token, total tokens, status</td></tr>
+    <tr><td>TradeOrder</td><td>A counter-party order against a listing. Type LIMIT or MARKET</td></tr>
+    <tr><td>TradeTransaction</td><td>A successful match. Tokens move from seller to buyer; funds move buyer to seller</td></tr>
+    <tr><td>EscrowAccount</td><td>Temporarily holds buyer's funds + seller's tokens until both sides confirm. 24-hour default timeout</td></tr>
+    <tr><td>TradingPair</td><td>A pair of properties that can be traded against each other (token/token swaps). For most testing you'll use property/USD</td></tr>
+    <tr><td>Matching engine</td><td>Backend service that matches buy/sell orders by price priority + time priority</td></tr>
+  </tbody>
+</table>
+
+<h2 id="fees">2. Fee structure</h2>
+
+<table>
+  <thead><tr><th>Volume tier (30d)</th><th>Maker rate</th><th>Taker rate</th></tr></thead>
+  <tbody>
+    <tr><td>Base (0)</td><td>2.0%</td><td>2.5%</td></tr>
+    <tr><td>$10k+</td><td>1.5%</td><td>2.0%</td></tr>
+    <tr><td>$50k+</td><td>1.0%</td><td>1.5%</td></tr>
+    <tr><td>$100k+</td><td>0.5%</td><td>1.0%</td></tr>
+    <tr><td>$500k+</td><td>0.0%</td><td>0.5%</td></tr>
+  </tbody>
+</table>
+
+<ul>
+  <li><strong>Maker</strong> = the side that posted the resting order. Pays lower fee because they provided liquidity.</li>
+  <li><strong>Taker</strong> = the side that matched against an existing order. Pays higher fee.</li>
+  <li>For testing, you'll usually be at base tier (2%/2.5%).</li>
+</ul>
+
+<h2 id="prereq">3. Prerequisites &amp; setup</h2>
+
+<p>Before this workflow, you need:</p>
+
+<ul>
+  <li>A tokenized property (e.g. DIFC Office Park from the Ready property workflow)</li>
+  <li>At least two investor accounts holding tokens in that property</li>
+  <li>Each investor has a valid linked wallet</li>
+</ul>
+
+<p>
+  For the steps below, assume Investor A holds 100 tokens of DIFC
+  Office Park at $80 each. Investor B has no tokens yet but wants to
+  buy. Both have completed KYC.
+</p>
+
+<h2 id="listing">4. Stage 1: Investor A creates a listing</h2>
+
+<p>Browser session A &mdash; <code>investor@test.com</code>.</p>
+
+<ol class="steps">
+  <li>
+    <p>Portfolio &rarr; DIFC Office Park &rarr; <strong>Sell on marketplace</strong></p>
+    <p>OR &mdash; Marketplace &rarr; <strong>Create Listing</strong></p>
+  </li>
+  <li>
+    <p>Listing form:</p>
+    <ul>
+      <li>Property: DIFC Office Park (auto-filled if reached from holding)</li>
+      <li>Listing type: <strong>Sell</strong></li>
+      <li>Tokens offered: 40 (Investor A keeps 60)</li>
+      <li>Price per token: 82 (slightly above purchase price)</li>
+      <li>Minimum order size: 1 (default; can be raised)</li>
+      <li>Expires at: 14 days from now</li>
+      <li>Allow partial fills: ON (default)</li>
+    </ul>
+  </li>
+  <li>
+    <p>Review the listing preview</p>
+    <ul>
+      <li>40 tokens &times; $82 = $3,280 maximum sale</li>
+      <li>Maker fee at base tier (2%): -$65.60</li>
+      <li>You receive: $3,214.40 (if fully sold)</li>
+    </ul>
+  </li>
+  <li>
+    <p>Click <strong>Create Listing</strong></p>
+    <p>On-chain: Investor A's 40 tokens are escrowed on the marketplace contract. Investor A's wallet balance drops from 100 to 60 for this property. Escrow holds 40.</p>
+  </li>
+</ol>
+
+<div class="callout success">
+  <p class="label">Expected end of stage 1</p>
+  <p>
+    MarketListing created with status <em>active</em>. 40 tokens are
+    locked. Listing visible on the marketplace page for everyone.
+    Investor A's portfolio shows 60 active + 40 listed.
+  </p>
+</div>
+
+<h2 id="buy-order">5. Stage 2: Investor B places a buy order</h2>
+
+<p>Browser session B &mdash; <code>investor2@test.com</code>.</p>
+
+<ol class="steps">
+  <li>
+    <p>Marketplace &rarr; find DIFC Office Park &rarr; click on the row</p>
+  </li>
+  <li>
+    <p>Order book view appears:</p>
+    <ul>
+      <li>Asks (sell orders): Investor A's listing at $82 for 40 tokens</li>
+      <li>Bids (buy orders): empty so far</li>
+      <li>Spread: N/A (no bids yet)</li>
+      <li>Last trade price: $80 (the initial mint price)</li>
+    </ul>
+  </li>
+  <li>
+    <p>Click <strong>Buy</strong></p>
+  </li>
+  <li>
+    <p>Order form:</p>
+    <ul>
+      <li>Order type: <strong>Market</strong> (takes the best available ask) OR <strong>Limit</strong></li>
+      <li>Tokens to buy: 25</li>
+      <li>If Limit: price per token (set to 82 to match)</li>
+      <li>Source of funds: platform wallet OR top-up via card</li>
+    </ul>
+    <p>Use Market type for this test &mdash; should match Investor A's $82 ask immediately.</p>
+  </li>
+  <li>
+    <p>Review preview:</p>
+    <ul>
+      <li>25 tokens &times; $82 = $2,050</li>
+      <li>Taker fee at base tier (2.5%): $51.25</li>
+      <li>Total you pay: $2,101.25</li>
+    </ul>
+  </li>
+  <li>
+    <p>Click <strong>Place Order</strong></p>
+  </li>
+</ol>
+
+<div class="callout success">
+  <p class="label">Expected end of stage 2</p>
+  <p>
+    TradeOrder created. Funds escrowed. The matching engine immediately
+    sees this order, matches it against Investor A's listing, and
+    begins settlement (covered next).
+  </p>
+</div>
+
+<h2 id="matching">6. Stage 3: Matching engine settles</h2>
+
+<p>
+  The matching engine runs synchronously when an order is placed. It
+  pairs the highest bid with the lowest ask. Settlement happens in two
+  phases.
+</p>
+
+<h3>6.1 Phase 1 &mdash; create TradeTransaction</h3>
+
+<p>The engine creates a TradeTransaction with:</p>
+<ul>
+  <li>buyer = Investor B</li>
+  <li>seller = Investor A</li>
+  <li>property_traded = DIFC Office Park</li>
+  <li>tokens_traded = 25</li>
+  <li>price_per_token = $82</li>
+  <li>total_amount = $2,050</li>
+  <li>status = PROCESSING &rarr; IN_ESCROW</li>
+</ul>
+
+<h3>6.2 Phase 2 &mdash; escrow holds the trade</h3>
+
+<p>An EscrowAccount is created:</p>
+<ul>
+  <li>transaction = the TradeTransaction</li>
+  <li>amount_held = $2,101.25 (Investor B's payment + their fee)</li>
+  <li>tokens_held = 25 (out of Investor A's 40 listed)</li>
+  <li>timeout_at = 24 hours from now</li>
+  <li>status = HOLDING</li>
+</ul>
+
+<h3>6.3 Phase 3 &mdash; auto-release (default)</h3>
+
+<p>
+  In the standard flow, escrow auto-releases as soon as the on-chain
+  transfer of tokens succeeds. The token transfer is initiated
+  immediately:
+</p>
+
+<ol>
+  <li>Marketplace contract calls <code>safeTransferFrom(seller, buyer, propertyId, 25, "")</code> on the property's token contract</li>
+  <li>Tokens move from Investor A's wallet to Investor B's wallet</li>
+  <li>Marketplace contract emits <code>TradeSettled</code></li>
+  <li>Backend service marks Escrow as RELEASED, TradeTransaction as COMPLETED</li>
+  <li>Buyer's escrowed funds are released to seller (net of fees)</li>
+  <li>Platform fee is taken out</li>
+</ol>
+
+<div class="callout success">
+  <p class="label">Expected end of stage 3</p>
+  <p>
+    TradeTransaction.status = COMPLETED. Escrow.status = RELEASED.
+    Investor B's wallet now holds 25 tokens. Investor A's wallet still
+    holds 60 (plus 15 in escrow because their listing was for 40 and
+    only 25 sold &mdash; we cover partial fills below).
+  </p>
+</div>
+
+<h2 id="escrow">7. Stage 4: Escrow lifecycle</h2>
+
+<p>
+  In the happy path above, escrow opens and closes within seconds. The
+  escrow state machine is more interesting on failure paths.
+</p>
+
+<h3>7.1 Escrow states</h3>
+
+<table>
+  <thead><tr><th>State</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>HOLDING</td><td>Funds + tokens locked; waiting for on-chain transfer</td></tr>
+    <tr><td>RELEASED</td><td>Transfer succeeded; tokens delivered, funds settled</td></tr>
+    <tr><td>REFUNDED</td><td>Buyer got their funds back; tokens returned to seller</td></tr>
+    <tr><td>TIMED_OUT</td><td>24 hours passed without resolution; auto-refund queued</td></tr>
+    <tr><td>DISPUTED</td><td>Operator-flagged; manual review required</td></tr>
+  </tbody>
+</table>
+
+<h3>7.2 Test the timeout path</h3>
+
+<p>
+  To simulate a stuck escrow, an admin can force one into HOLDING
+  state via Django Admin and let it sit. After 24 hours, the
+  auto-refund task runs and flips to TIMED_OUT &rarr; REFUNDED.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Admin creates a TradeTransaction manually (or finds one stuck in IN_ESCROW)</p>
+  </li>
+  <li>
+    <p>Verify escrow row exists with timeout_at &lt; now</p>
+  </li>
+  <li>
+    <p>Either wait for the cron, OR manually trigger the auto-refund task from Django shell</p>
+  </li>
+  <li>
+    <p>Verify escrow.status = REFUNDED, transaction.status = FAILED</p>
+  </li>
+  <li>
+    <p>Verify buyer's funds returned to their wallet, seller's tokens unlocked</p>
+  </li>
+</ol>
+
+<h2 id="completion">8. Stage 5: Completion &amp; verification</h2>
+
+<p>From either investor session, verify:</p>
+
+<table>
+  <thead><tr><th>Check</th><th>Where</th></tr></thead>
+  <tbody>
+    <tr><td>Investor A's portfolio shows 60 active + 15 listed (down from 60 + 40)</td><td>Portfolio &rarr; DIFC Office Park</td></tr>
+    <tr><td>Investor A's wallet balance increased by net proceeds</td><td>Settings &rarr; Wallet</td></tr>
+    <tr><td>Investor B's portfolio shows 25 tokens of DIFC Office Park</td><td>Portfolio overview</td></tr>
+    <tr><td>The trade appears in Activity for both parties</td><td>Activity feed</td></tr>
+    <tr><td>The on-chain transfer event is visible on BSCScan</td><td>See <a href="09-workflow-onchain-verification.html">on-chain guide</a></td></tr>
+    <tr><td>MarketAnalytics row exists for DIFC Office Park</td><td>Owner dashboard or Django Admin</td></tr>
+  </tbody>
+</table>
+
+<h2 id="partial-fill">9. Partial fills</h2>
+
+<p>
+  Investor A's listing was for 40 tokens. Investor B bought 25. The
+  listing is now partially filled with 15 remaining.
+</p>
+
+<h3>9.1 Listing state after partial fill</h3>
+
+<table>
+  <tbody>
+    <tr><td>tokens_offered</td><td>40 (original)</td></tr>
+    <tr><td>tokens_filled</td><td>25</td></tr>
+    <tr><td>tokens_remaining</td><td>15</td></tr>
+    <tr><td>fill_percentage</td><td>62.5%</td></tr>
+    <tr><td>status</td><td>PARTIALLY_FILLED</td></tr>
+  </tbody>
+</table>
+
+<h3>9.2 Place a second buy order</h3>
+
+<ol class="steps">
+  <li>
+    <p>Investor B (or a third investor) places a second buy for 15 tokens at $82</p>
+  </li>
+  <li>
+    <p>Match settles. Listing.tokens_remaining = 0. Status flips to FILLED.</p>
+  </li>
+  <li>
+    <p>Owner-side analytics increment cumulative trade volume</p>
+  </li>
+</ol>
+
+<h3>9.3 Test minimum-order-size enforcement</h3>
+
+<ol class="steps">
+  <li>
+    <p>Create a new listing with minimum_order_size = 10</p>
+  </li>
+  <li>
+    <p>Try to place a buy order for 5 tokens against it</p>
+  </li>
+  <li>
+    <p>Expected: order rejected with "Below minimum order size"</p>
+  </li>
+</ol>
+
+<h2 id="expired">10. Expired listings</h2>
+
+<ol class="steps">
+  <li>
+    <p>Create a listing with expires_at = 1 hour from now</p>
+  </li>
+  <li>
+    <p>Wait (or fast-forward via admin) until past expiry</p>
+  </li>
+  <li>
+    <p>Confirm listing.status = EXPIRED automatically (background task runs every few minutes)</p>
+  </li>
+  <li>
+    <p>Escrowed tokens return to seller's wallet automatically</p>
+  </li>
+</ol>
+
+<h2 id="cancel">11. Cancelling a listing or order</h2>
+
+<h3>11.1 Cancel an active listing</h3>
+
+<ol class="steps">
+  <li>
+    <p>Marketplace &rarr; My Listings &rarr; Cancel a listing in ACTIVE or PARTIALLY_FILLED state</p>
+  </li>
+  <li>
+    <p>Confirmation dialog explains: "Your remaining 15 tokens will return to your wallet"</p>
+  </li>
+  <li>
+    <p>Confirm. Listing.status = CANCELLED. Tokens unescrow.</p>
+  </li>
+</ol>
+
+<h3>11.2 Cancel a pending buy order</h3>
+
+<ol class="steps">
+  <li>
+    <p>If your order is in PENDING (no match yet), you can cancel</p>
+  </li>
+  <li>
+    <p>Order.status = CANCELLED. Any escrowed funds return.</p>
+  </li>
+  <li>
+    <p>If your order is already FILLED or PARTIALLY_FILLED, cancel only removes the unfilled portion</p>
+  </li>
+</ol>
+
+<h2 id="operator-flows">12. Operator interventions</h2>
+
+<p>
+  Admin can intervene in marketplace state. See
+  <a href="05-admin-guide.html#marketplace">Admin Guide &middot;
+  Marketplace moderation</a> for full instructions. Highlights:
+</p>
+
+<ul>
+  <li><strong>Cancel suspicious listings</strong> &mdash; bulk cancel from list view</li>
+  <li><strong>Force release escrow</strong> &mdash; manual settlement when chain state is good but engine got stuck</li>
+  <li><strong>Force refund escrow</strong> &mdash; manual cancel when something went wrong on-chain</li>
+  <li><strong>Mark trade as FAILED</strong> &mdash; terminal failure marker (use after on-chain investigation)</li>
+  <li><strong>Pause the marketplace</strong> &mdash; emergency factory-level pause stops all new trades</li>
+</ul>
+
+<h2 id="error-paths">13. Error paths to test</h2>
+
+<table>
+  <thead><tr><th>Scenario</th><th>Expected response</th></tr></thead>
+  <tbody>
+    <tr><td>Try to sell more tokens than you hold</td><td>Validation error: "You only hold N tokens"</td></tr>
+    <tr><td>Try to sell tokens you have but they're locked (in another listing)</td><td>Validation: "Available tokens: X"</td></tr>
+    <tr><td>Try to buy your own listing</td><td>Rejected: "Cannot match own listings"</td></tr>
+    <tr><td>Listing price = $0</td><td>Validation error</td></tr>
+    <tr><td>Listing tokens = 0</td><td>Validation error</td></tr>
+    <tr><td>Listing expires_at in the past</td><td>Validation error</td></tr>
+    <tr><td>Investor without KYC tries to list</td><td>Refused</td></tr>
+    <tr><td>Investor without wallet linked tries to list</td><td>Refused: "Link a wallet first"</td></tr>
+    <tr><td>Place an order for a non-tokenized property</td><td>404 / refused</td></tr>
+    <tr><td>Place an order with stale listing reference (listing was cancelled mid-flow)</td><td>Refused: "Listing no longer available"</td></tr>
+    <tr><td>Buy more than the listing offers (and partial fills disabled)</td><td>Refused: "Cannot fill at requested size"</td></tr>
+    <tr><td>Two buyers place simultaneous orders that combined exceed listing</td><td>First-come first-served; second gets remainder or rejected</td></tr>
+    <tr><td>On-chain transfer reverts during settlement</td><td>Escrow stays in HOLDING; admin investigates; refund pipeline can rescue</td></tr>
+    <tr><td>Token price recently moved &gt; 10% &mdash; market order at limit price</td><td>Limit orders won't fill below their price; market orders may revert if slippage is too high (subject to platform settings)</td></tr>
+  </tbody>
+</table>
+
+<h2 id="checklist">14. Tester checklist</h2>
+
+<table>
+  <thead><tr><th>Done</th><th>Action</th></tr></thead>
+  <tbody>
+    <tr><td>&#9633;</td><td>As Investor A: create a SELL listing &mdash; tokens are escrowed correctly</td></tr>
+    <tr><td>&#9633;</td><td>As Investor B: place a market buy order against that listing &mdash; trades settle</td></tr>
+    <tr><td>&#9633;</td><td>Confirm token balances on both sides match expectations</td></tr>
+    <tr><td>&#9633;</td><td>Verify the matching tx on BSCScan</td></tr>
+    <tr><td>&#9633;</td><td>Test partial fill: buy less than full listing; listing flips to PARTIALLY_FILLED</td></tr>
+    <tr><td>&#9633;</td><td>Test full fill on a partial: second buyer completes the listing</td></tr>
+    <tr><td>&#9633;</td><td>Test limit order that doesn't match (price too low) &mdash; sits as resting bid</td></tr>
+    <tr><td>&#9633;</td><td>Test listing expiry; tokens auto-unescrow</td></tr>
+    <tr><td>&#9633;</td><td>Cancel a listing; tokens return</td></tr>
+    <tr><td>&#9633;</td><td>Try every error-path in section 13</td></tr>
+    <tr><td>&#9633;</td><td>As admin: force release a stuck escrow</td></tr>
+    <tr><td>&#9633;</td><td>As admin: pause the marketplace globally; verify no new trades go through; lift the pause</td></tr>
+  </tbody>
+</table>
+
+<footer class="footer">
+  <span><a href="07-workflow-ready-property.html">&larr; 7. Ready Property Lifecycle</a></span>
+  <span>Next: <a href="09-workflow-onchain-verification.html">9. On-Chain Verification</a> &rarr;</span>
+</footer>
+
+</main>
+</div>
+</body>
+</html>

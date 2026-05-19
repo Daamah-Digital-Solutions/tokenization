@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capimax Tester Documentation</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <h1 class="brand">Capimax</h1>
+  <p class="brand-sub">Tester Documentation v1</p>
+
+  <nav>
+    <div class="nav-section">Start Here</div>
+    <a href="index.html" class="current">Documentation Home</a>
+    <a href="01-tester-onboarding.html">1. Tester Onboarding</a>
+
+    <div class="nav-section">Role Guides</div>
+    <a href="02-investor-guide.html">2. Investor</a>
+    <a href="03-property-owner-guide.html">3. Property Owner</a>
+    <a href="04-broker-guide.html">4. Broker</a>
+    <a href="05-admin-guide.html">5. Admin</a>
+
+    <div class="nav-section">Workflows</div>
+    <a href="06-workflow-under-construction.html">6. Under-Construction Lifecycle</a>
+    <a href="07-workflow-ready-property.html">7. Ready Property Lifecycle</a>
+    <a href="08-workflow-marketplace.html">8. Marketplace Trading</a>
+    <a href="09-workflow-onchain-verification.html">9. On-Chain Verification</a>
+  </nav>
+</aside>
+
+<main class="main">
+
+<header class="cover">
+  <p class="eyebrow">Capimax — Real Estate Tokenization Platform</p>
+  <h1>Tester Documentation</h1>
+  <p class="lede">
+    Everything you need to test Capimax end-to-end across all roles and
+    workflows. Each guide is a self-contained operational manual — start
+    with Tester Onboarding, then pick the role or workflow you've been
+    asked to exercise.
+  </p>
+  <div class="meta">
+    <div><strong>Version:</strong> 1.0</div>
+    <div><strong>Status:</strong> Internal beta</div>
+    <div><strong>Network:</strong> BSC Testnet · Stripe Test Mode</div>
+  </div>
+</header>
+
+<div class="callout">
+  <p class="label">Read this first</p>
+  <p>
+    Capimax is currently in <strong>testnet/test-mode</strong>. All money
+    movements use Stripe test cards; all token mints land on BSC Testnet.
+    No real funds are at risk and no real-world assets are conveyed by
+    test tokens. <a href="01-tester-onboarding.html">Tester Onboarding</a>
+    explains the environment in detail — please read it before you start.
+  </p>
+</div>
+
+<h2>How this documentation is organized</h2>
+
+<p>
+  Each guide is a stand-alone HTML page with a step-by-step operational
+  walkthrough. The guides are grouped into two sets:
+</p>
+
+<h3>Role guides</h3>
+<p>
+  One per platform role. Each guide covers everything that role can do
+  — account creation, the role's dashboard, the actions they're expected
+  to perform, what they should and should not be able to see.
+</p>
+
+<table>
+  <thead><tr><th>Guide</th><th>Audience</th><th>Time to complete</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><a href="02-investor-guide.html">Investor</a></td>
+      <td>Anyone who's signing up to buy property tokens</td>
+      <td>~45 minutes</td>
+    </tr>
+    <tr>
+      <td><a href="03-property-owner-guide.html">Property Owner</a></td>
+      <td>Anyone listing a property and managing investors</td>
+      <td>~60 minutes</td>
+    </tr>
+    <tr>
+      <td><a href="04-broker-guide.html">Broker</a></td>
+      <td>Anyone bringing investors onto the platform</td>
+      <td>~30 minutes</td>
+    </tr>
+    <tr>
+      <td><a href="05-admin-guide.html">Admin</a></td>
+      <td>Platform operators using Django Admin</td>
+      <td>~60 minutes</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Workflow guides</h3>
+<p>
+  Multi-role end-to-end scenarios. These follow a single property or
+  trade across every role that touches it.
+</p>
+
+<table>
+  <thead><tr><th>Guide</th><th>What you exercise</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><a href="06-workflow-under-construction.html">Under-Construction Lifecycle</a></td>
+      <td>List a construction property &rarr; tokenize &rarr; investor pays in installments &rarr; tokens release as installments are paid &rarr; construction milestones &rarr; completion</td>
+    </tr>
+    <tr>
+      <td><a href="07-workflow-ready-property.html">Ready Property Lifecycle</a></td>
+      <td>List an income-generating property &rarr; tokenize &rarr; investor buys upfront &rarr; rental distribution &rarr; investor receives dividends</td>
+    </tr>
+    <tr>
+      <td><a href="08-workflow-marketplace.html">Marketplace Trading</a></td>
+      <td>List tokens for sale &rarr; another investor places a buy order &rarr; matching engine settles &rarr; escrow &rarr; ownership transfer</td>
+    </tr>
+    <tr>
+      <td><a href="09-workflow-onchain-verification.html">On-Chain Verification</a></td>
+      <td>How to verify your token mints, transfers and balances on BSCScan, and where to find the deployed contract addresses</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>What's in scope vs out of scope</h2>
+
+<h3>In scope for this testing round</h3>
+<ul>
+  <li>Investor sign-up, KYC, browse, invest, portfolio</li>
+  <li>Property owner property creation, both ready and under-construction</li>
+  <li>Stripe payments (test cards only)</li>
+  <li>On-chain token mint, on-chain balance, on-chain installment release</li>
+  <li>Construction milestone tracking</li>
+  <li>Rental distribution (manually triggered by admin or owner)</li>
+  <li>Marketplace listings, buy orders, matching engine, escrow</li>
+  <li>Refund pipeline on terminal mint failure</li>
+  <li>Django Admin moderation flows</li>
+  <li>WebSocket notifications</li>
+</ul>
+
+<h3>Known limitations &mdash; do not file as bugs</h3>
+<ul>
+  <li>
+    Auto-scheduled rental distribution is a stub. Distributions in this
+    build must be triggered manually. The button in the owner dashboard
+    is functional; the daily celery cron is not.
+  </li>
+  <li>
+    Email delivery in localhost mode prints to the server console
+    instead of sending. In staging the configured SMTP is used.
+  </li>
+  <li>
+    Smart-contract addresses on BSC Testnet may change between
+    deployment rounds. The
+    <a href="09-workflow-onchain-verification.html">on-chain verification guide</a>
+    always lists the current addresses.
+  </li>
+  <li>
+    Investors must have a wallet address linked before tokens can be
+    minted. In this round the linking is done through the wallet
+    settings panel using a regular web3 wallet (e.g. MetaMask
+    configured for BSC Testnet).
+  </li>
+  <li>
+    Token transfers between investors via the marketplace work, but the
+    secondary market UI is still being polished. Buy and sell orders are
+    fully functional; some chart components show placeholder data.
+  </li>
+</ul>
+
+<h2>How to file a bug</h2>
+
+<p>
+  When you find something that looks wrong, please file it using this
+  template. Paste it into whatever channel your project lead set up
+  (Linear, Notion, Slack, GitHub Issues).
+</p>
+
+<div class="bug-template">
+  <h4>Bug report template</h4>
+  <dl>
+    <dt>Title</dt>
+    <dd>Short one-line summary of what's broken</dd>
+
+    <dt>Role</dt>
+    <dd>Investor / Property Owner / Broker / Admin</dd>
+
+    <dt>Environment</dt>
+    <dd>Local / Staging / Browser + version</dd>
+
+    <dt>Test account</dt>
+    <dd>e.g. investor@test.com</dd>
+
+    <dt>Steps to reproduce</dt>
+    <dd>Numbered list, starting from logged-out state if possible</dd>
+
+    <dt>Expected behaviour</dt>
+    <dd>What should have happened</dd>
+
+    <dt>Actual behaviour</dt>
+    <dd>What did happen, with exact error messages if any</dd>
+
+    <dt>Screenshots</dt>
+    <dd>Attach if visual</dd>
+
+    <dt>On-chain tx hash</dt>
+    <dd>If the bug involves a blockchain transaction, paste the BSCScan link</dd>
+
+    <dt>Severity</dt>
+    <dd>Blocker / Major / Minor / Cosmetic</dd>
+  </dl>
+</div>
+
+<h2>Quick links</h2>
+<ul>
+  <li><a href="01-tester-onboarding.html">Start with onboarding</a> &mdash; required reading</li>
+  <li><a href="02-investor-guide.html">Investor guide</a> &mdash; the most-trodden path</li>
+  <li><a href="09-workflow-onchain-verification.html">On-chain verification</a> &mdash; how to prove tokens really moved</li>
+</ul>
+
+<footer class="footer">
+  <span>Capimax tester documentation &middot; v1.0</span>
+  <span>Updated 2026-05-19</span>
+</footer>
+
+</main>
+</div>
+</body>
+</html>

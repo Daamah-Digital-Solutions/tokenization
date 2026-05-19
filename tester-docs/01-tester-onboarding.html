@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tester Onboarding — Capimax</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <h1 class="brand">Capimax</h1>
+  <p class="brand-sub">Tester Documentation v1</p>
+  <nav>
+    <div class="nav-section">Start Here</div>
+    <a href="index.html">Documentation Home</a>
+    <a href="01-tester-onboarding.html" class="current">1. Tester Onboarding</a>
+
+    <div class="nav-section">Role Guides</div>
+    <a href="02-investor-guide.html">2. Investor</a>
+    <a href="03-property-owner-guide.html">3. Property Owner</a>
+    <a href="04-broker-guide.html">4. Broker</a>
+    <a href="05-admin-guide.html">5. Admin</a>
+
+    <div class="nav-section">Workflows</div>
+    <a href="06-workflow-under-construction.html">6. Under-Construction Lifecycle</a>
+    <a href="07-workflow-ready-property.html">7. Ready Property Lifecycle</a>
+    <a href="08-workflow-marketplace.html">8. Marketplace Trading</a>
+    <a href="09-workflow-onchain-verification.html">9. On-Chain Verification</a>
+  </nav>
+</aside>
+
+<main class="main">
+
+<header class="cover">
+  <p class="eyebrow">Guide 1 of 9 &middot; <span class="pill role-tester">All testers</span></p>
+  <h1>Tester Onboarding</h1>
+  <p class="lede">
+    Read this before you touch the platform. It covers what Capimax is,
+    what testnet means, how to get into the test environment, which
+    accounts you'll use, and what counts as a real bug vs an expected
+    limitation.
+  </p>
+  <div class="meta">
+    <div><strong>Time:</strong> ~20 minutes</div>
+    <div><strong>Prereqs:</strong> None &mdash; this is the prereq</div>
+  </div>
+</header>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#what">What Capimax does</a></li>
+    <li><a href="#two-models">The two property models</a></li>
+    <li><a href="#environments">Environments &amp; URLs</a></li>
+    <li><a href="#accounts">Test accounts</a></li>
+    <li><a href="#test-cards">Stripe test cards</a></li>
+    <li><a href="#wallet">Crypto wallet for token operations</a></li>
+    <li><a href="#bsctestnet">BSC Testnet setup</a></li>
+    <li><a href="#first-login">Your first login</a></li>
+    <li><a href="#what-to-look-for">What to look for</a></li>
+    <li><a href="#known-issues">Known issues &mdash; do NOT file</a></li>
+    <li><a href="#contact">Where to send bugs and questions</a></li>
+  </ol>
+</div>
+
+<h2 id="what">1. What Capimax does</h2>
+
+<p>
+  Capimax is a real-estate tokenization platform. Property owners list
+  real estate; each listing is split into a fixed number of digital
+  tokens (ERC-1155); investors buy tokens through the platform; each
+  token represents a fractional ownership stake.
+</p>
+
+<p>The platform handles four major flows:</p>
+
+<ol>
+  <li>
+    <strong>Listing &amp; approval</strong> &mdash; property owner enters
+    the property; admin reviews and approves.
+  </li>
+  <li>
+    <strong>Tokenization</strong> &mdash; the property is deployed as a
+    smart contract on the blockchain; tokens become buyable.
+  </li>
+  <li>
+    <strong>Investment</strong> &mdash; investor pays via card, bank
+    transfer, or crypto; tokens are minted to their wallet on the chain.
+  </li>
+  <li>
+    <strong>Returns</strong> &mdash; depending on the property type,
+    investors either receive rental income distributions or hold tokens
+    that appreciate as construction completes.
+  </li>
+</ol>
+
+<p>
+  A secondary marketplace lets investors trade tokens with each other
+  without going through the property owner.
+</p>
+
+<h2 id="two-models">2. The two property models</h2>
+
+<p>
+  Capimax supports two distinct property categories. Each one has its
+  own investment and ownership flow. Both are in scope for this testing
+  round.
+</p>
+
+<table>
+  <thead>
+    <tr><th>Feature</th><th>Ready Property</th><th>Under Construction</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Category code</td>
+      <td><code>ready_property</code></td>
+      <td><code>under_construction</code></td>
+    </tr>
+    <tr>
+      <td>Investor payment</td>
+      <td>Single upfront amount</td>
+      <td>Upfront OR installments (owner enables)</td>
+    </tr>
+    <tr>
+      <td>Token minting</td>
+      <td>Immediate, direct to wallet</td>
+      <td>Upfront: immediate. Installment: tokens escrow on contract; released as each installment is paid</td>
+    </tr>
+    <tr>
+      <td>Returns</td>
+      <td>Rental income distributions</td>
+      <td>Value appreciation through completion + potential later rental</td>
+    </tr>
+    <tr>
+      <td>Required owner fields</td>
+      <td><code>monthly_rental_income</code>, <code>rental_distribution_frequency</code></td>
+      <td><code>expected_completion_date</code>, <code>construction_progress</code>, <code>supports_installments</code>, <code>installment_period_months</code></td>
+    </tr>
+    <tr>
+      <td>Construction milestone tracking</td>
+      <td>N/A</td>
+      <td>Owner adds milestones; investors see progress</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <p class="label">Critical to test</p>
+  <p>
+    Make sure the platform behaves <em>differently</em> for each model.
+    A ready property should never show construction-milestone fields. An
+    under-construction property should never auto-trigger rental income.
+    If you see the wrong category-specific UI, that's a bug.
+  </p>
+</div>
+
+<h2 id="environments">3. Environments &amp; URLs</h2>
+
+<table>
+  <thead>
+    <tr><th>Environment</th><th>Frontend URL</th><th>Backend API</th><th>WebSocket</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Local dev</td>
+      <td><code>http://localhost:5173</code></td>
+      <td><code>http://localhost:8500/api/v1</code></td>
+      <td><code>ws://localhost:8500/ws</code></td>
+    </tr>
+    <tr>
+      <td>Staging</td>
+      <td>(provided by your project lead)</td>
+      <td>(provided by your project lead)</td>
+      <td>(provided)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  The local dev URLs apply if you're running the platform on your own
+  machine. If your project lead pointed you at a hosted staging
+  environment, use the URLs they gave you.
+</p>
+
+<div class="callout warning">
+  <p class="label">If localhost doesn't load</p>
+  <p>
+    The dev server has to be running. If your project lead didn't start
+    it for you, you'll need to start the backend
+    (<code>python manage.py runserver 8500</code> from
+    <code>capimax_backend/</code>) and the frontend
+    (<code>npm run dev</code> from <code>capimax-preview/</code>).
+  </p>
+</div>
+
+<h2 id="accounts">4. Test accounts</h2>
+
+<p>
+  The platform comes seeded with the following accounts. The password
+  is the same for all of them: <code>TestPass123!</code>
+</p>
+
+<table>
+  <thead>
+    <tr><th>Email</th><th>Role</th><th>KYC status</th><th>Use for</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>admin@capimax.com</code></td>
+      <td>Admin (superuser)</td>
+      <td>n/a</td>
+      <td>Django Admin operations, KYC review, property approval, marketplace moderation</td>
+    </tr>
+    <tr>
+      <td><code>owner@test.com</code></td>
+      <td>Property Owner</td>
+      <td>Approved</td>
+      <td>Listing properties, watching investments come in, distributing rental income</td>
+    </tr>
+    <tr>
+      <td><code>broker@test.com</code></td>
+      <td>Broker</td>
+      <td>Approved</td>
+      <td>Bringing investors onto the platform, tracking commissions</td>
+    </tr>
+    <tr>
+      <td><code>investor@test.com</code></td>
+      <td>Investor</td>
+      <td>Approved</td>
+      <td>Primary investor account &mdash; most full investments</td>
+    </tr>
+    <tr>
+      <td><code>investor2@test.com</code></td>
+      <td>Investor</td>
+      <td>Approved</td>
+      <td>Marketplace counter-party for trades</td>
+    </tr>
+    <tr>
+      <td><code>investor3@test.com</code></td>
+      <td>Investor</td>
+      <td>Pending</td>
+      <td>Testing the KYC gate &mdash; should be blocked from investing</td>
+    </tr>
+    <tr>
+      <td><code>investor4@test.com</code></td>
+      <td>Investor</td>
+      <td>Approved &amp; accredited</td>
+      <td>Testing accredited-only properties</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout warning">
+  <p class="label">Do not change the seeded passwords</p>
+  <p>
+    Other testers and automated scripts depend on the seeded passwords.
+    If you want to test the password-change flow, create a new account
+    first (sign up with any email you control).
+  </p>
+</div>
+
+<h2 id="test-cards">5. Stripe test cards</h2>
+
+<p>
+  Capimax uses Stripe in test mode. Real card numbers will be rejected.
+  Use these test cards in the payment dialog:
+</p>
+
+<table>
+  <thead>
+    <tr><th>Card number</th><th>Expected outcome</th><th>Use for</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>4242 4242 4242 4242</code></td>
+      <td>Successful payment</td>
+      <td>The happy path. Any future expiry (e.g. 12/30) and any 3-digit CVC (e.g. 123) work.</td>
+    </tr>
+    <tr>
+      <td><code>4000 0000 0000 9995</code></td>
+      <td>Insufficient funds</td>
+      <td>Testing the "payment failed" message and that no tokens are minted</td>
+    </tr>
+    <tr>
+      <td><code>4000 0025 0000 3155</code></td>
+      <td>3D Secure required</td>
+      <td>Testing the 3DS authentication redirect</td>
+    </tr>
+    <tr>
+      <td><code>4000 0000 0000 0341</code></td>
+      <td>Successful, then disputed after payment</td>
+      <td>Refund pipeline (admin-side)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  The full Stripe test-card matrix is at
+  <a href="https://stripe.com/docs/testing">stripe.com/docs/testing</a>.
+</p>
+
+<h2 id="wallet">6. Crypto wallet for token operations</h2>
+
+<p>
+  Token minting and trading happen on a blockchain. Each investor needs
+  a wallet address. We use BSC Testnet, which is free and isolated from
+  real money.
+</p>
+
+<h3>Option A &mdash; use the platform-provided wallet</h3>
+<p>
+  For most flows, the platform uses a shared test wallet so you don't
+  need to install anything. The investor account you're logged in as is
+  automatically associated with this wallet when you place your first
+  investment. You'll see real token balances against this address.
+</p>
+
+<h3>Option B &mdash; bring your own wallet (MetaMask)</h3>
+<p>
+  If you want to verify token balances independently, install MetaMask
+  and add BSC Testnet. See section <a href="#bsctestnet">7. BSC Testnet
+  setup</a> below.
+</p>
+
+<h2 id="bsctestnet">7. BSC Testnet setup</h2>
+
+<p>
+  Skip this section unless you want to verify token balances in your own
+  wallet. You can complete every test without it &mdash; we'll always
+  provide BSCScan links.
+</p>
+
+<h3>Adding BSC Testnet to MetaMask</h3>
+
+<ol class="steps">
+  <li>
+    <p>Open MetaMask</p>
+    <p>Install from <a href="https://metamask.io/">metamask.io</a> if you don't have it.</p>
+  </li>
+  <li>
+    <p>Click the network dropdown at the top &rarr; "Add network" &rarr; "Add a network manually"</p>
+  </li>
+  <li>
+    <p>Paste these values:</p>
+    <table>
+      <tr><td>Network name</td><td><code>BNB Smart Chain Testnet</code></td></tr>
+      <tr><td>RPC URL</td><td><code>https://data-seed-prebsc-1-s1.binance.org:8545</code></td></tr>
+      <tr><td>Chain ID</td><td><code>97</code></td></tr>
+      <tr><td>Symbol</td><td><code>tBNB</code></td></tr>
+      <tr><td>Block explorer</td><td><code>https://testnet.bscscan.com</code></td></tr>
+    </table>
+  </li>
+  <li>
+    <p>Save and switch to the new network</p>
+  </li>
+  <li>
+    <p>(Optional) Get test BNB from <a href="https://www.bnbchain.org/en/testnet-faucet">the BSC faucet</a></p>
+    <p>You only need test BNB if you intend to pay gas yourself. For platform-mediated investments, the platform pays gas.</p>
+  </li>
+</ol>
+
+<h3>Token visibility</h3>
+
+<p>
+  Property tokens are ERC-1155 with property-specific token IDs.
+  MetaMask doesn't show ERC-1155 balances natively, but you can verify
+  them on BSCScan at any time using the property contract address and
+  token ID (each property's clone uses tokenId = 0). See
+  <a href="09-workflow-onchain-verification.html">on-chain verification</a>.
+</p>
+
+<h2 id="first-login">8. Your first login</h2>
+
+<ol class="steps">
+  <li>
+    <p>Open the frontend URL in a browser</p>
+    <p>Local: <code>http://localhost:5173</code></p>
+  </li>
+  <li>
+    <p>Click <strong>Sign In</strong> in the top-right</p>
+  </li>
+  <li>
+    <p>Use the account assigned to you</p>
+    <p>If you were assigned the investor role, use <code>investor@test.com</code> / <code>TestPass123!</code>. For other roles, see <a href="#accounts">section 4</a>.</p>
+  </li>
+  <li>
+    <p>You should land on the role-specific dashboard</p>
+    <ul>
+      <li>Investor &rarr; Portfolio overview with stat cards (Total Portfolio Value, Monthly Income, Active Properties)</li>
+      <li>Property Owner &rarr; Owner dashboard with My Properties</li>
+      <li>Broker &rarr; Broker dashboard with referral and commission tabs</li>
+      <li>Admin &rarr; Either the operator dashboard or Django Admin at <code>/admin/</code></li>
+    </ul>
+  </li>
+  <li>
+    <p>Confirm the role pill in the top-right</p>
+    <p>The avatar dropdown shows your role (e.g. "Investor"). If it shows the wrong role, log out and back in.</p>
+  </li>
+</ol>
+
+<div class="callout success">
+  <p class="label">Success looks like</p>
+  <p>
+    You're on a dashboard, your name is shown in the top-right, and you
+    don't see a "session expired" banner. If you see one, your cookies
+    didn't get set &mdash; try a different browser or clear cookies and
+    log in again.
+  </p>
+</div>
+
+<h2 id="what-to-look-for">9. What to look for</h2>
+
+<p>
+  We need feedback in <strong>four</strong> categories. Tag your bug
+  reports so triage is faster.
+</p>
+
+<h3>Functional bugs (blocker / major)</h3>
+<ul>
+  <li>A button does nothing or 500s</li>
+  <li>A form submit drops your input or saves the wrong values</li>
+  <li>An investment / payment / mint succeeds but doesn't show up</li>
+  <li>Tokens don't appear in the investor portfolio after a successful payment</li>
+  <li>A refund is owed but doesn't get issued</li>
+</ul>
+
+<h3>Logic bugs (major)</h3>
+<ul>
+  <li>A property classified as ready_property shows construction-milestone fields</li>
+  <li>An under-construction property tries to auto-distribute rental income</li>
+  <li>The KYC gate lets a non-approved investor invest</li>
+  <li>An installment investor sees their tokens before paying all installments</li>
+</ul>
+
+<h3>UX / cosmetic bugs (minor / cosmetic)</h3>
+<ul>
+  <li>Typos, broken layouts, inconsistent fonts</li>
+  <li>Hover/focus states missing</li>
+  <li>Mobile breakage</li>
+  <li>Wrong currency symbol, missing decimal places</li>
+</ul>
+
+<h3>Performance bugs</h3>
+<ul>
+  <li>Page takes &gt; 5 seconds to load on a normal connection</li>
+  <li>Dashboard widgets are loading-spinning forever (and the network panel shows requests succeeded)</li>
+  <li>WebSocket reconnects repeatedly</li>
+</ul>
+
+<h2 id="known-issues">10. Known issues &mdash; do NOT file</h2>
+
+<p>
+  These are intentional limitations of the current build. Please don't
+  file bugs for them.
+</p>
+
+<table>
+  <thead><tr><th>Behaviour</th><th>Reason</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Rental distributions aren't sent automatically on the configured frequency</td>
+      <td>The auto-scheduler is a stub. Distributions in this build are triggered manually by owner/admin and run end-to-end correctly when triggered.</td>
+    </tr>
+    <tr>
+      <td>"Construction milestones" panel is empty for some properties</td>
+      <td>Milestones are loaded from the construction API. Properties without milestones added yet show an empty state &mdash; that's correct behavior, not a bug.</td>
+    </tr>
+    <tr>
+      <td>Investor portfolio shows "0 tokens" briefly after a successful investment</td>
+      <td>The on-chain mint runs asynchronously after payment confirmation. The portfolio refreshes every 30 seconds; refresh manually if impatient.</td>
+    </tr>
+    <tr>
+      <td>Stripe test cards work but real cards are rejected</td>
+      <td>We're in Stripe test mode. This is correct &mdash; real cards must not be charged.</td>
+    </tr>
+    <tr>
+      <td>Some chart axes show $0&ndash;$0</td>
+      <td>The seed data doesn't have enough history yet for meaningful charts.</td>
+    </tr>
+    <tr>
+      <td>Password reset email doesn't arrive in local dev</td>
+      <td>Local SMTP backend prints to console. Check the backend terminal output to see the reset link.</td>
+    </tr>
+    <tr>
+      <td>Smart-contract addresses change between deployments</td>
+      <td>We redeploy as we patch. Always refer to the on-chain verification guide for current addresses.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="contact">11. Where to send bugs and questions</h2>
+
+<p>
+  Your project lead set up a specific channel for bug reports. If you
+  don't know what it is, ask them. If you're testing without a project
+  lead, just open GitHub issues directly on the repo.
+</p>
+
+<p>For urgent questions during testing:</p>
+
+<ul>
+  <li>Platform completely down or broken &mdash; ping immediately</li>
+  <li>I can't log in &mdash; check the password (case-sensitive) and verify the seeded account hasn't been changed</li>
+  <li>I want to know if X is expected behavior &mdash; check the relevant role guide first, then ask</li>
+</ul>
+
+<div class="callout success">
+  <p class="label">You're ready</p>
+  <p>
+    Now jump to your role guide:
+    <a href="02-investor-guide.html">Investor</a> &middot;
+    <a href="03-property-owner-guide.html">Property Owner</a> &middot;
+    <a href="04-broker-guide.html">Broker</a> &middot;
+    <a href="05-admin-guide.html">Admin</a>.
+  </p>
+</div>
+
+<footer class="footer">
+  <span><a href="index.html">&larr; Documentation Home</a></span>
+  <span>Next: <a href="02-investor-guide.html">2. Investor Guide</a> &rarr;</span>
+</footer>
+
+</main>
+</div>
+</body>
+</html>

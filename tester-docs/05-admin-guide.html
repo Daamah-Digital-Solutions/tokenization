@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Guide — Capimax Tester Documentation</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <h1 class="brand">Capimax</h1>
+  <p class="brand-sub">Tester Documentation v1</p>
+  <nav>
+    <div class="nav-section">Start Here</div>
+    <a href="index.html">Documentation Home</a>
+    <a href="01-tester-onboarding.html">1. Tester Onboarding</a>
+
+    <div class="nav-section">Role Guides</div>
+    <a href="02-investor-guide.html">2. Investor</a>
+    <a href="03-property-owner-guide.html">3. Property Owner</a>
+    <a href="04-broker-guide.html">4. Broker</a>
+    <a href="05-admin-guide.html" class="current">5. Admin</a>
+
+    <div class="nav-section">Workflows</div>
+    <a href="06-workflow-under-construction.html">6. Under-Construction Lifecycle</a>
+    <a href="07-workflow-ready-property.html">7. Ready Property Lifecycle</a>
+    <a href="08-workflow-marketplace.html">8. Marketplace Trading</a>
+    <a href="09-workflow-onchain-verification.html">9. On-Chain Verification</a>
+  </nav>
+</aside>
+
+<main class="main">
+
+<header class="cover">
+  <p class="eyebrow">Guide 5 of 9 &middot; <span class="pill role-admin">Admin</span></p>
+  <h1>Admin Guide</h1>
+  <p class="lede">
+    The admin guide covers Django Admin operations: reviewing KYC,
+    approving properties, moderating marketplace activity, managing
+    operator groups, watching transactions, and handling support
+    actions like refunds, payouts, and account changes.
+  </p>
+  <div class="meta">
+    <div><strong>Time:</strong> ~60 minutes</div>
+    <div><strong>Prereqs:</strong> <a href="01-tester-onboarding.html">Tester Onboarding</a></div>
+    <div><strong>Test account:</strong> <code>admin@capimax.com</code> (superuser)</div>
+  </div>
+</header>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#access">Accessing Django Admin</a></li>
+    <li><a href="#layout">Admin layout &amp; navigation</a></li>
+    <li><a href="#operator-groups">Operator groups &amp; staff accounts</a></li>
+    <li><a href="#kyc-review">KYC review queue</a></li>
+    <li><a href="#property-approval">Property approval</a></li>
+    <li><a href="#tokenization-watch">Watching tokenizations</a></li>
+    <li><a href="#investment-mint">Investments &amp; mint status</a></li>
+    <li><a href="#marketplace">Marketplace moderation</a></li>
+    <li><a href="#payouts-refunds">Payouts &amp; refunds</a></li>
+    <li><a href="#broker-applications">Broker applications</a></li>
+    <li><a href="#audit-trail">Audit trail</a></li>
+    <li><a href="#emergency">Emergency procedures</a></li>
+    <li><a href="#error-paths">Error paths to test</a></li>
+    <li><a href="#checklist">Tester checklist</a></li>
+  </ol>
+</div>
+
+<h2 id="access">1. Accessing Django Admin</h2>
+
+<ol class="steps">
+  <li>
+    <p>Open <code>{backend_url}/admin/</code> directly in your browser</p>
+    <p>Local: <code>http://localhost:8500/admin/</code></p>
+  </li>
+  <li>
+    <p>Log in with <code>admin@capimax.com</code> / <code>TestPass123!</code></p>
+  </li>
+  <li>
+    <p>You land on the Django Admin home page</p>
+  </li>
+</ol>
+
+<div class="callout warning">
+  <p class="label">Two admin surfaces</p>
+  <p>
+    Capimax has two distinct admin areas. The <strong>Django Admin</strong>
+    at <code>/admin/</code> is the operational source of truth used in
+    this testing round. There's a separate "Admin Dashboard" surfaced
+    in the SPA &mdash; that's intentionally lightweight in this build.
+    For real moderation work, use Django Admin.
+  </p>
+</div>
+
+<h2 id="layout">2. Admin layout &amp; navigation</h2>
+
+<p>The Django Admin home shows app sections grouped vertically:</p>
+
+<table>
+  <thead><tr><th>App</th><th>Key models to know</th></tr></thead>
+  <tbody>
+    <tr><td>Accounts</td><td>Users, UserRoleAssignment, EmailVerificationToken</td></tr>
+    <tr><td>KYC</td><td>KycProfile, KycDocument, BiometricVerification, ComplianceCheck, KycAuditLog, KycNote</td></tr>
+    <tr><td>Properties</td><td>Property, PropertyApproval, PropertyValuation, PropertyDocument, PropertyImage, PropertyUpdate, RentalIncomeDistribution</td></tr>
+    <tr><td>Construction</td><td>ConstructionMilestone, MilestoneUpdate, MilestoneImage, MilestoneDocument</td></tr>
+    <tr><td>Investments</td><td>Investment, InstallmentPayment, TokenReservation, DividendPayment, InvestmentWithdrawal</td></tr>
+    <tr><td>Payments</td><td>Payment, Refund, UserPaymentMethod, WalletBalance, WalletTransaction, WalletWithdrawal, BankTransfer, CryptoPayment, NovaSukukPayment, ProNovaPayment, NowPaymentsTransaction</td></tr>
+    <tr><td>Marketplace</td><td>MarketListing, TradeOrder, TradeTransaction, EscrowAccount, MarketAnalytics, TradingPair</td></tr>
+    <tr><td>Broker</td><td>BrokerApplication, BrokerProfile, BrokerCommission, BrokerReferral, BrokerPerformanceMetrics, MarketingMaterial</td></tr>
+    <tr><td>Blockchain</td><td>BlockchainNetwork, SmartContract, TokenTransaction, ContractEvent, TokenBalance, GasTracker, RentalDistribution</td></tr>
+    <tr><td>Legal</td><td>LegalEntity, SubscriptionAgreement, CapTableEntry, DistributionAllocation</td></tr>
+    <tr><td>Authentication and Authorization</td><td>Groups, Permissions (Django built-in)</td></tr>
+  </tbody>
+</table>
+
+<p>Use the search box (top right) to jump to any record by ID, email, or title.</p>
+
+<h2 id="operator-groups">3. Operator groups &amp; staff accounts</h2>
+
+<p>
+  Five pre-built groups let you grant scoped admin access to staff
+  without making them superusers. Use these for any new operator
+  account.
+</p>
+
+<table>
+  <thead><tr><th>Group</th><th>Permission scope</th><th>Use for</th></tr></thead>
+  <tbody>
+    <tr><td>KYC Reviewer</td><td>kyc.* (13 perms) + accounts.view_user</td><td>Identity verification reviewers</td></tr>
+    <tr><td>Property Moderator</td><td>properties.* (27 perms) + accounts.view_user</td><td>Listing review and approval</td></tr>
+    <tr><td>Marketplace Operator</td><td>marketplace.* (12 perms) + accounts.view_user</td><td>Secondary-market moderation, escrow resolution</td></tr>
+    <tr><td>Broker Reviewer</td><td>broker.* (12 perms) + accounts.view_user</td><td>Approving new brokers, watching commissions</td></tr>
+    <tr><td>Finance</td><td>payments.* (32 perms) + investments.* + accounts.view_user</td><td>Refunds, payouts, withdrawal approvals</td></tr>
+  </tbody>
+</table>
+
+<h3>3.1 Create a new operator</h3>
+
+<ol class="steps">
+  <li>
+    <p>Accounts &rarr; Users &rarr; <strong>Add user</strong></p>
+  </li>
+  <li>
+    <p>Email, password, first/last name</p>
+  </li>
+  <li>
+    <p>Set <code>is_staff = True</code></p>
+    <p>Important: do NOT set <code>is_superuser = True</code> unless you really mean it. Staff + group permissions is the right combination.</p>
+  </li>
+  <li>
+    <p>Save. The user can now log into <code>/admin/</code> but sees nothing yet.</p>
+  </li>
+  <li>
+    <p>Edit the user &rarr; scroll to Groups &rarr; add the appropriate operator group</p>
+  </li>
+  <li>
+    <p>Save. The user can now see and modify the records that group is allowed to touch.</p>
+  </li>
+</ol>
+
+<div class="callout warning">
+  <p class="label">Privilege escalation check</p>
+  <p>
+    Log out, log back in as the new operator, and try to access an area
+    they shouldn't have. e.g. a KYC Reviewer trying
+    <code>/admin/marketplace/marketlisting/</code> should see "You don't
+    have permission to view or edit anything." If they CAN access it,
+    the group has too many permissions &mdash; file a bug.
+  </p>
+</div>
+
+<h2 id="kyc-review">4. KYC review queue</h2>
+
+<ol class="steps">
+  <li>
+    <p>KYC &rarr; KYC profiles</p>
+  </li>
+  <li>
+    <p>Filter by status = <code>pending</code></p>
+  </li>
+  <li>
+    <p>Open a pending profile</p>
+    <p>You see:</p>
+    <ul>
+      <li>User identity (name, email, DOB, nationality)</li>
+      <li>Submitted documents (passport image, selfie)</li>
+      <li>Compliance checks (sanctions screening, PEP)</li>
+      <li>Notes &amp; audit log</li>
+    </ul>
+  </li>
+  <li>
+    <p>Review the document image (click to enlarge)</p>
+  </li>
+  <li>
+    <p>Make a decision:</p>
+    <ul>
+      <li><strong>Approve</strong> &mdash; flip status to <code>approved</code>. Investor can now invest.</li>
+      <li><strong>Reject</strong> &mdash; status to <code>rejected</code>; require a reason in the notes</li>
+      <li><strong>Require additional documents</strong> &mdash; status stays pending, send back to investor with a comment</li>
+    </ul>
+  </li>
+  <li>
+    <p>Save. The investor receives a notification.</p>
+  </li>
+</ol>
+
+<h3>4.1 Bulk approve</h3>
+
+<ol class="steps">
+  <li>
+    <p>From the list view, check the checkbox next to multiple pending profiles</p>
+  </li>
+  <li>
+    <p>In the "Action" dropdown, choose <strong>Approve selected</strong></p>
+  </li>
+  <li>
+    <p>Click "Go". Each one flips to approved.</p>
+  </li>
+</ol>
+
+<div class="callout">
+  <p class="label">Audit trail</p>
+  <p>
+    Every approval/rejection is logged in KycAuditLog with timestamp,
+    reviewer (you), and a snapshot of the prior state. Review the log to
+    confirm your action was recorded.
+  </p>
+</div>
+
+<h2 id="property-approval">5. Property approval</h2>
+
+<ol class="steps">
+  <li>
+    <p>Properties &rarr; Property approvals</p>
+  </li>
+  <li>
+    <p>Filter by status = <code>pending</code> or <code>submitted</code></p>
+  </li>
+  <li>
+    <p>Open a pending approval</p>
+    <p>You see the property's headline fields, all uploaded documents, the owner's previous track record, and any comments.</p>
+  </li>
+  <li>
+    <p>Review the property detail:</p>
+    <ul>
+      <li>Does the title/description match the documents?</li>
+      <li>Are the financial fields internally consistent (total_value = token_price &times; total_tokens)?</li>
+      <li>For Ready: does monthly_rental_income look plausible vs total_value?</li>
+      <li>For Under-Construction: is expected_completion_date in the future?</li>
+      <li>Are required SPV fields filled?</li>
+    </ul>
+  </li>
+  <li>
+    <p>Choose an action via the dropdown:</p>
+    <ul>
+      <li><strong>Approve selected properties</strong> &mdash; flips Property.status to <em>approved</em>. Owner can now tokenize.</li>
+      <li><strong>Reject selected properties</strong> &mdash; status to <em>rejected</em>; require notes</li>
+      <li><strong>Mark selected as under review</strong> &mdash; intermediate state pending more info</li>
+    </ul>
+  </li>
+  <li>
+    <p>Save</p>
+  </li>
+</ol>
+
+<h2 id="tokenization-watch">6. Watching tokenizations</h2>
+
+<p>
+  After approval, the owner triggers tokenization. As an admin you
+  should watch this happen so you can intervene on failures.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Blockchain &rarr; Smart contracts</p>
+  </li>
+  <li>
+    <p>Filter by network = BNB Smart Chain Testnet</p>
+  </li>
+  <li>
+    <p>You see all deployed contracts:</p>
+    <ul>
+      <li>Templates (RealEstateToken, RentalIncomeDistributor, PropertyContractFactory) &mdash; no property reference</li>
+      <li>Per-property clones &mdash; one row per tokenized property</li>
+    </ul>
+  </li>
+  <li>
+    <p>Click a clone to see its details: address, deployment tx, constructor args, status</p>
+  </li>
+  <li>
+    <p>Blockchain &rarr; Token transactions shows every on-chain action:</p>
+    <ul>
+      <li>Mint (investment-driven)</li>
+      <li>Transfer (marketplace trades)</li>
+      <li>processInstallment (graduated release)</li>
+      <li>distributeRentalIncome</li>
+    </ul>
+  </li>
+</ol>
+
+<h3>6.1 Deployment failure recovery</h3>
+
+<ol class="steps">
+  <li>
+    <p>If a property is stuck in <em>approved</em> with no smart-contract row, the deployment failed</p>
+  </li>
+  <li>
+    <p>Check the platform logs (in dev: backend console)</p>
+  </li>
+  <li>
+    <p>If the gas was the issue, top up the platform treasury wallet on BSC Testnet faucet</p>
+  </li>
+  <li>
+    <p>Ask the owner to retry tokenization from their dashboard. The flow is idempotent.</p>
+  </li>
+</ol>
+
+<h2 id="investment-mint">7. Investments &amp; mint status</h2>
+
+<ol class="steps">
+  <li>
+    <p>Investments &rarr; Investments</p>
+  </li>
+  <li>
+    <p>Filter by status. The key states:</p>
+    <table>
+      <tr><td><code>pending</code></td><td>Created; payment not yet captured</td></tr>
+      <tr><td><code>processing</code></td><td>Payment in flight</td></tr>
+      <tr><td><code>payment_confirmed</code></td><td>Charge succeeded; awaiting mint dispatch</td></tr>
+      <tr><td><code>pending_mint</code></td><td>Mint scheduled</td></tr>
+      <tr><td><code>minting</code></td><td>Mint in flight on chain</td></tr>
+      <tr><td><code>completed</code></td><td>Tokens minted, investor sees them in portfolio</td></tr>
+      <tr><td><code>mint_failed</code></td><td>Mint failed after retries; refund pipeline triggered</td></tr>
+      <tr><td><code>failed</code></td><td>Other terminal failure</td></tr>
+      <tr><td><code>refunded</code></td><td>Automatic or manual refund issued</td></tr>
+      <tr><td><code>cancelled</code></td><td>Investor cancelled before payment captured</td></tr>
+    </table>
+  </li>
+  <li>
+    <p>Open any investment to see the audit trail (status changes, timestamps, related payment, related tx hash)</p>
+  </li>
+</ol>
+
+<h3>7.1 Manual mint retry</h3>
+
+<ol class="steps">
+  <li>
+    <p>Find a stuck investment in <em>mint_failed</em></p>
+  </li>
+  <li>
+    <p>Confirm <code>mint_retry_count</code> &lt; 3</p>
+  </li>
+  <li>
+    <p>Use the "Retry mint" action from the dropdown</p>
+    <p>Behind the scenes this calls <code>retry_failed_mint</code> which resets the retry counter and re-dispatches.</p>
+  </li>
+</ol>
+
+<h3>7.2 Trigger an installment manually (for testing)</h3>
+
+<p>
+  In the test environment installments don't run on schedule. To test
+  the flow, manually fire the next installment.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Investments &rarr; Installment payments</p>
+  </li>
+  <li>
+    <p>Pick the next unpaid installment for the test investor</p>
+  </li>
+  <li>
+    <p>Use the "Process selected" action</p>
+    <p>Charges the saved card, calls <code>processInstallment</code> on chain. The investor's token balance grows.</p>
+  </li>
+</ol>
+
+<h2 id="marketplace">8. Marketplace moderation</h2>
+
+<h3>8.1 Listings</h3>
+
+<ol class="steps">
+  <li>
+    <p>Marketplace &rarr; Market listings</p>
+  </li>
+  <li>
+    <p>Filter by status: <em>active</em>, <em>partially_filled</em>, <em>filled</em>, <em>cancelled</em>, <em>expired</em></p>
+  </li>
+  <li>
+    <p>Operator actions on a listing:</p>
+    <ul>
+      <li><strong>Cancel selected listings</strong> &mdash; force cancel (use for suspicious activity)</li>
+      <li><strong>Mark selected as expired</strong> &mdash; for listings past their expiry that didn't auto-expire</li>
+    </ul>
+  </li>
+</ol>
+
+<h3>8.2 Trade orders</h3>
+
+<ol class="steps">
+  <li>
+    <p>Marketplace &rarr; Trade orders</p>
+  </li>
+  <li>
+    <p>Operator action: <strong>Cancel selected orders</strong></p>
+  </li>
+</ol>
+
+<h3>8.3 Trade transactions</h3>
+
+<ol class="steps">
+  <li>
+    <p>Marketplace &rarr; Trade transactions</p>
+  </li>
+  <li>
+    <p>Stuck transactions (in_escrow longer than 24h) should be reviewed</p>
+  </li>
+  <li>
+    <p>Operator action: <strong>Mark selected as FAILED</strong> &mdash; only use after confirming on-chain state matches</p>
+  </li>
+</ol>
+
+<h3>8.4 Escrow resolution</h3>
+
+<ol class="steps">
+  <li>
+    <p>Marketplace &rarr; Escrow accounts</p>
+  </li>
+  <li>
+    <p>Filter by status = <em>holding</em></p>
+  </li>
+  <li>
+    <p>For each row, two operator actions:</p>
+    <ul>
+      <li><strong>Force release</strong> &mdash; buyer receives tokens, seller receives funds</li>
+      <li><strong>Force refund</strong> &mdash; buyer gets refund</li>
+    </ul>
+  </li>
+</ol>
+
+<div class="callout danger">
+  <p class="label">Use force-release/refund with care</p>
+  <p>
+    These actions bypass the matching engine's normal completion path.
+    Use only when the engine has clearly failed (e.g. an escrow stuck
+    for &gt; 24 hours with no chain activity). Always document the
+    reason in the audit log.
+  </p>
+</div>
+
+<h2 id="payouts-refunds">9. Payouts &amp; refunds</h2>
+
+<h3>9.1 Withdrawal approvals</h3>
+
+<ol class="steps">
+  <li>
+    <p>Payments &rarr; Wallet withdrawals</p>
+  </li>
+  <li>
+    <p>Filter by status = <em>pending</em></p>
+  </li>
+  <li>
+    <p>Review each request:</p>
+    <ul>
+      <li>User's wallet balance covers the amount</li>
+      <li>User has completed KYC</li>
+      <li>No suspicious patterns (e.g. immediate large withdrawal after large deposit)</li>
+    </ul>
+  </li>
+  <li>
+    <p>Approve via the action menu, OR reject with notes</p>
+  </li>
+</ol>
+
+<h3>9.2 Refunds</h3>
+
+<p>
+  Most refunds are triggered automatically by terminal mint failures.
+  The admin's job is to verify they happened correctly. Manual refunds
+  are also possible from the Refunds page.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Payments &rarr; Refunds</p>
+  </li>
+  <li>
+    <p>Filter by status = <em>pending</em> (manual refunds requiring approval)</p>
+  </li>
+  <li>
+    <p>For credit-card refunds, the refund processes through Stripe automatically once approved.</p>
+  </li>
+  <li>
+    <p>For bank/crypto/wallet refunds, status stays in <em>pending</em> until operationally processed off-platform.</p>
+  </li>
+</ol>
+
+<h3>9.3 Manual refund creation</h3>
+
+<ol class="steps">
+  <li>
+    <p>Find the payment in Payments &rarr; Payments</p>
+  </li>
+  <li>
+    <p>Click <strong>Issue refund</strong> (link on the payment detail)</p>
+  </li>
+  <li>
+    <p>Set amount (full or partial), reason</p>
+  </li>
+  <li>
+    <p>Submit. A Refund record is created and processed.</p>
+  </li>
+</ol>
+
+<h3>9.4 Broker commission payouts</h3>
+
+<ol class="steps">
+  <li>
+    <p>Broker &rarr; Broker commissions or Payouts (depending on schema)</p>
+  </li>
+  <li>
+    <p>Approve pending payout requests</p>
+  </li>
+  <li>
+    <p>Mark as paid once funds have actually left the platform</p>
+  </li>
+</ol>
+
+<h2 id="broker-applications">10. Broker applications</h2>
+
+<ol class="steps">
+  <li>
+    <p>Broker &rarr; Broker applications</p>
+  </li>
+  <li>
+    <p>Filter by status = <em>under_review</em></p>
+  </li>
+  <li>
+    <p>Open an application. Review:</p>
+    <ul>
+      <li>Business name + license number</li>
+      <li>Compliance attestation checkboxes</li>
+      <li>Supporting documents</li>
+      <li>Country &mdash; is the platform licensed to operate there?</li>
+    </ul>
+  </li>
+  <li>
+    <p>Approve / reject. On approve, a BrokerProfile is auto-created and a referral code is assigned.</p>
+  </li>
+</ol>
+
+<h2 id="audit-trail">11. Audit trail</h2>
+
+<p>
+  Capimax logs every admin action. The audit trail is useful when
+  you're debugging "who changed what".
+</p>
+
+<ul>
+  <li>KYC &rarr; KYC audit log &mdash; per-profile audit of reviewer decisions</li>
+  <li>AdminPanel &rarr; Admin actions &mdash; cross-app admin action log</li>
+  <li>Blockchain &rarr; Contract events &mdash; per-contract event log decoded from chain</li>
+  <li>Each model also has Django's built-in "History" link in the top-right of the detail page</li>
+</ul>
+
+<h2 id="emergency">12. Emergency procedures</h2>
+
+<h3>12.1 Pause the marketplace</h3>
+
+<p>
+  If you spot exploit-like trading activity, you can globally pause new
+  listings:
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Blockchain &rarr; Smart contracts &rarr; pick the PropertyContractFactory</p>
+  </li>
+  <li>
+    <p>Call <code>emergencyPause</code> (action available to factory admins)</p>
+    <p>This stops all new on-chain activity from the factory.</p>
+  </li>
+  <li>
+    <p>Investigate, then call <code>liftGlobalPause</code> when safe</p>
+  </li>
+</ol>
+
+<h3>12.2 Disable a property</h3>
+
+<ol class="steps">
+  <li>
+    <p>Properties &rarr; pick the property &rarr; set status to <em>suspended</em></p>
+  </li>
+  <li>
+    <p>Investors can no longer invest until status flips back</p>
+  </li>
+</ol>
+
+<h3>12.3 Ban a user</h3>
+
+<ol class="steps">
+  <li>
+    <p>Accounts &rarr; Users &rarr; pick the user</p>
+  </li>
+  <li>
+    <p>Set <code>is_active = False</code></p>
+  </li>
+  <li>
+    <p>Save. The user can no longer log in. Their active investments are preserved.</p>
+  </li>
+</ol>
+
+<h2 id="error-paths">13. Error paths to test</h2>
+
+<table>
+  <thead><tr><th>Scenario</th><th>Expected response</th></tr></thead>
+  <tbody>
+    <tr><td>Log in as a non-staff user at <code>/admin/</code></td><td>"Please enter the correct email address and password" &mdash; <strong>even if the credentials are correct</strong>. Non-staff users must not get any admin context.</td></tr>
+    <tr><td>Log in as a staff user with no groups</td><td>Lands on admin home with zero apps visible</td></tr>
+    <tr><td>Log in as a KYC Reviewer</td><td>Can see and modify KYC; can view Users; cannot see Properties, Marketplace, Payments</td></tr>
+    <tr><td>Try to delete a Property with active investments</td><td>Blocked at model level (FK on_delete=PROTECT or similar)</td></tr>
+    <tr><td>Approve a KYC profile that's already approved</td><td>No-op or harmless update</td></tr>
+    <tr><td>Cancel a marketplace listing that's already filled</td><td>Bulk action shows "0 cancelled (already completed)"</td></tr>
+    <tr><td>Approve a property with missing fields</td><td>Admin should validate and refuse</td></tr>
+    <tr><td>Mark a stuck trade as FAILED when the chain shows it succeeded</td><td>The action goes through but you've now inconsistency &mdash; should be visible in next reconciliation pass. Do NOT do this in production without verifying on-chain.</td></tr>
+    <tr><td>Issue a refund larger than the original payment</td><td>Validation error</td></tr>
+    <tr><td>Issue a refund on a payment that already has a full refund</td><td>Refused</td></tr>
+  </tbody>
+</table>
+
+<h2 id="checklist">14. Tester checklist</h2>
+
+<table>
+  <thead><tr><th>Done</th><th>Action</th></tr></thead>
+  <tbody>
+    <tr><td>&#9633;</td><td>Log in to <code>/admin/</code> as superuser</td></tr>
+    <tr><td>&#9633;</td><td>Create a staff user with the KYC Reviewer group; log in as them; confirm scoped access</td></tr>
+    <tr><td>&#9633;</td><td>Approve a KYC profile; confirm investor can then invest</td></tr>
+    <tr><td>&#9633;</td><td>Reject a KYC profile with a reason</td></tr>
+    <tr><td>&#9633;</td><td>Approve a property submission</td></tr>
+    <tr><td>&#9633;</td><td>Watch tokenization happen; verify the SmartContract row appears</td></tr>
+    <tr><td>&#9633;</td><td>Trigger a mint retry on a failed investment</td></tr>
+    <tr><td>&#9633;</td><td>Trigger an installment payment manually; verify on-chain release</td></tr>
+    <tr><td>&#9633;</td><td>Cancel a suspicious marketplace listing</td></tr>
+    <tr><td>&#9633;</td><td>Force-release an escrow</td></tr>
+    <tr><td>&#9633;</td><td>Approve a wallet withdrawal</td></tr>
+    <tr><td>&#9633;</td><td>Approve a broker application</td></tr>
+    <tr><td>&#9633;</td><td>Review the audit log to confirm your actions were recorded</td></tr>
+    <tr><td>&#9633;</td><td>Walk through every error-path in section 13</td></tr>
+  </tbody>
+</table>
+
+<footer class="footer">
+  <span><a href="04-broker-guide.html">&larr; 4. Broker Guide</a></span>
+  <span>Next: <a href="06-workflow-under-construction.html">6. Under-Construction Lifecycle</a> &rarr;</span>
+</footer>
+
+</main>
+</div>
+</body>
+</html>

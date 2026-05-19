@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ready Property Lifecycle — Capimax Tester Documentation</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <h1 class="brand">Capimax</h1>
+  <p class="brand-sub">Tester Documentation v1</p>
+  <nav>
+    <div class="nav-section">Start Here</div>
+    <a href="index.html">Documentation Home</a>
+    <a href="01-tester-onboarding.html">1. Tester Onboarding</a>
+
+    <div class="nav-section">Role Guides</div>
+    <a href="02-investor-guide.html">2. Investor</a>
+    <a href="03-property-owner-guide.html">3. Property Owner</a>
+    <a href="04-broker-guide.html">4. Broker</a>
+    <a href="05-admin-guide.html">5. Admin</a>
+
+    <div class="nav-section">Workflows</div>
+    <a href="06-workflow-under-construction.html">6. Under-Construction Lifecycle</a>
+    <a href="07-workflow-ready-property.html" class="current">7. Ready Property Lifecycle</a>
+    <a href="08-workflow-marketplace.html">8. Marketplace Trading</a>
+    <a href="09-workflow-onchain-verification.html">9. On-Chain Verification</a>
+  </nav>
+</aside>
+
+<main class="main">
+
+<header class="cover">
+  <p class="eyebrow">Workflow 7 of 9</p>
+  <h1>Ready Property Lifecycle</h1>
+  <p class="lede">
+    Walk a single ready (income-generating) property end-to-end: owner
+    lists it, admin approves, owner tokenizes, three investors buy
+    upfront, owner distributes rental income across three quarters,
+    investors claim dividends.
+  </p>
+  <div class="meta">
+    <div><strong>Time:</strong> ~60 minutes</div>
+    <div><strong>Prereqs:</strong> All four role guides</div>
+    <div><strong>Test accounts:</strong> owner, 3 investors, admin</div>
+  </div>
+</header>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#overview">Overview &amp; cast of accounts</a></li>
+    <li><a href="#stage-1">Stage 1: Owner lists the property</a></li>
+    <li><a href="#stage-2">Stage 2: Admin approves</a></li>
+    <li><a href="#stage-3">Stage 3: Owner tokenizes</a></li>
+    <li><a href="#stage-4">Stage 4: Three investors buy upfront</a></li>
+    <li><a href="#stage-5">Stage 5: Quarter 1 rental distribution</a></li>
+    <li><a href="#stage-6">Stage 6: Investors claim dividends</a></li>
+    <li><a href="#stage-7">Stage 7: Quarters 2 and 3</a></li>
+    <li><a href="#stage-8">Stage 8: Investor exits via early-exit penalty</a></li>
+    <li><a href="#what-can-go-wrong">What can go wrong</a></li>
+    <li><a href="#verification">Verifying it all worked</a></li>
+  </ol>
+</div>
+
+<h2 id="overview">1. Overview &amp; cast of accounts</h2>
+
+<table>
+  <thead><tr><th>Role</th><th>Account</th><th>Stages</th></tr></thead>
+  <tbody>
+    <tr><td>Property owner</td><td><code>owner@test.com</code></td><td>1, 3, 5, 7</td></tr>
+    <tr><td>Admin</td><td><code>admin@capimax.com</code></td><td>2</td></tr>
+    <tr><td>Investor A (large)</td><td><code>investor@test.com</code></td><td>4, 6, 8</td></tr>
+    <tr><td>Investor B (medium)</td><td><code>investor2@test.com</code></td><td>4, 6</td></tr>
+    <tr><td>Investor C (small)</td><td><code>investor4@test.com</code></td><td>4, 6</td></tr>
+  </tbody>
+</table>
+
+<h3>1.1 The property we'll create</h3>
+
+<table>
+  <tbody>
+    <tr><td>Title</td><td>DIFC Office Park, Suite 502 (Walkthrough)</td></tr>
+    <tr><td>Category</td><td>Ready property</td></tr>
+    <tr><td>Total value</td><td>$800,000</td></tr>
+    <tr><td>Token price</td><td>$80</td></tr>
+    <tr><td>Total tokens</td><td>10,000</td></tr>
+    <tr><td>Monthly rental income</td><td>$5,000</td></tr>
+    <tr><td>Rental distribution frequency</td><td>Quarterly</td></tr>
+    <tr><td>Occupancy rate</td><td>100%</td></tr>
+    <tr><td>Expected return</td><td>9% (rental yield)</td></tr>
+  </tbody>
+</table>
+
+<h2 id="stage-1">2. Stage 1: Owner lists the property</h2>
+
+<p>Owner session A.</p>
+
+<ol class="steps">
+  <li>
+    <p>Owner dashboard &rarr; My Properties &rarr; <strong>Add New Property</strong></p>
+  </li>
+  <li>
+    <p>Step 1: Basic info</p>
+    <ul>
+      <li>Title: DIFC Office Park, Suite 502 (Walkthrough)</li>
+      <li>Property type: Commercial</li>
+      <li>Property category: <strong>Ready Property</strong></li>
+    </ul>
+  </li>
+  <li>
+    <p>Step 2: Financial</p>
+    <ul>
+      <li>Total value: 800000</li>
+      <li>Token price: 80</li>
+      <li>Total tokens: 10000</li>
+      <li>Expected return: 9</li>
+      <li>Rental yield: 9</li>
+      <li>Minimum investment: 80</li>
+    </ul>
+  </li>
+  <li>
+    <p>Step 3: Property details</p>
+    <ul>
+      <li>Address, city, country, etc.</li>
+      <li>Property size, year built</li>
+      <li><strong>No</strong> construction completion date / construction progress / construction phase fields shown (this is a Ready property)</li>
+    </ul>
+  </li>
+  <li>
+    <p>Step 4: Rental income</p>
+    <ul>
+      <li>Monthly rental income: 5000</li>
+      <li>Rental distribution frequency: Quarterly</li>
+      <li>Occupancy rate: 100</li>
+      <li>Rental income active: ON</li>
+    </ul>
+  </li>
+  <li>
+    <p>Steps 5 &amp; 6: Images and Documents (1 each)</p>
+  </li>
+  <li>
+    <p>Click <strong>Submit for Approval</strong></p>
+  </li>
+</ol>
+
+<div class="callout success">
+  <p class="label">Expected end of stage 1</p>
+  <p>
+    Property exists, status <em>pending_approval</em>. Construction-only
+    fields are absent throughout the form. Rental-income fields are
+    visible and required.
+  </p>
+</div>
+
+<h2 id="stage-2">3. Stage 2: Admin approves</h2>
+
+<ol class="steps">
+  <li>
+    <p>Admin session B &rarr; Django Admin &rarr; Property approvals</p>
+  </li>
+  <li>
+    <p>Find DIFC Office Park, approve it</p>
+  </li>
+</ol>
+
+<h2 id="stage-3">4. Stage 3: Owner tokenizes</h2>
+
+<ol class="steps">
+  <li>
+    <p>Owner session A &rarr; Tokenize this property</p>
+  </li>
+  <li>
+    <p>Confirm the parameters:</p>
+    <ul>
+      <li>Category sent to factory as 1 (READY_PROPERTY)</li>
+      <li>Lockup 365 days (vs 730 for under-construction)</li>
+      <li>RentalIncomeDistributor IS deployed (this is a Ready property)</li>
+    </ul>
+  </li>
+  <li>
+    <p>Click Deploy. Wait for both contracts to deploy.</p>
+  </li>
+</ol>
+
+<div class="callout success">
+  <p class="label">Expected end of stage 3</p>
+  <p>
+    Property.status = <em>tokenized</em>. Two contract addresses
+    populated: the RealEstateToken clone AND the
+    RentalIncomeDistributor clone. BSCScan shows both deployments and
+    a PropertyActivated event.
+  </p>
+</div>
+
+<h3>3.1 Verify both contracts exist</h3>
+
+<ol class="steps">
+  <li>
+    <p>Django Admin &rarr; Blockchain &rarr; Smart contracts</p>
+  </li>
+  <li>
+    <p>Filter by property = DIFC Office Park</p>
+  </li>
+  <li>
+    <p>You should see two rows:</p>
+    <ul>
+      <li>contract_type = real_estate_token</li>
+      <li>contract_type = rental_distributor</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="stage-4">5. Stage 4: Three investors buy upfront</h2>
+
+<p>Each investor session in parallel.</p>
+
+<h3>5.1 Investor A &mdash; 100 tokens ($8,000)</h3>
+
+<ol class="steps">
+  <li>
+    <p>Open DIFC Office Park</p>
+  </li>
+  <li>
+    <p>Confirm visible: monthly rental income, distribution frequency, occupancy rate, expected dividend per token. NOT visible: construction progress / milestones.</p>
+  </li>
+  <li>
+    <p>Click Invest. Enter 100 tokens. Click <strong>Choose Payment</strong></p>
+    <p>(For a Ready property the schedule step is skipped &mdash; you go straight from amount to payment.)</p>
+  </li>
+  <li>
+    <p>Pay with test card. Receive 100 tokens.</p>
+  </li>
+</ol>
+
+<h3>5.2 Investor B &mdash; 250 tokens ($20,000)</h3>
+
+<p>Same flow, different investor session, different token count.</p>
+
+<h3>5.3 Investor C &mdash; 50 tokens ($4,000)</h3>
+
+<p>Same flow.</p>
+
+<div class="callout success">
+  <p class="label">Expected end of stage 4</p>
+  <p>
+    Property has 3 investors holding 400 tokens total ($32,000 raised
+    of $800,000 target = 4% funded). Each investor's wallet shows the
+    correct token balance.
+  </p>
+</div>
+
+<h2 id="stage-5">6. Stage 5: Quarter 1 rental distribution</h2>
+
+<p>Owner session A.</p>
+
+<ol class="steps">
+  <li>
+    <p>Owner dashboard &rarr; Revenue tab &rarr; pick DIFC Office Park</p>
+  </li>
+  <li>
+    <p>Click <strong>Distribute Rental Income</strong></p>
+  </li>
+  <li>
+    <p>Form:</p>
+    <ul>
+      <li>Total amount: 15000 (one quarter = 3 months &times; $5,000)</li>
+      <li>Distribution period: "Q1 2026"</li>
+    </ul>
+  </li>
+  <li>
+    <p>Review the preview:</p>
+    <ul>
+      <li>Total: $15,000</li>
+      <li>Platform fee (2.5%): $375</li>
+      <li>Net distribution: $14,625</li>
+      <li>Per-token: $14,625 / 10,000 = $1.4625 per token</li>
+      <li>Eligible investors: 3 (A: 100 tokens, B: 250, C: 50)</li>
+      <li>Investor A receives: $146.25</li>
+      <li>Investor B receives: $365.63</li>
+      <li>Investor C receives: $73.13</li>
+      <li>(Note: 9,600 tokens are unclaimed &mdash; the property is only 4% sold. Those don't accrue dividends.)</li>
+    </ul>
+  </li>
+  <li>
+    <p>Click <strong>Confirm distribution</strong></p>
+    <p>On-chain: the RentalIncomeDistributor contract gets called with the total amount. Each investor can claim their share.</p>
+  </li>
+</ol>
+
+<div class="callout success">
+  <p class="label">Expected end of stage 5</p>
+  <p>
+    DistributionId 0 created on chain. RentalIncomeDistributed event
+    emitted. All 3 investors see a "Dividend available to claim"
+    notification. Owner sees "Last distribution: $15,000 on {date}".
+  </p>
+</div>
+
+<h2 id="stage-6">7. Stage 6: Investors claim dividends</h2>
+
+<p>Each investor session.</p>
+
+<ol class="steps">
+  <li>
+    <p>Investor A: Portfolio &rarr; Activity &rarr; "Dividend available" entry &rarr; <strong>Claim</strong></p>
+    <p>The platform calls <code>claimRentalIncome</code> on the distributor contract. Investor's platform wallet is credited $146.25.</p>
+  </li>
+  <li>
+    <p>Investor B: same flow. Credited $365.63.</p>
+  </li>
+  <li>
+    <p>Investor C: same flow. Credited $73.13.</p>
+  </li>
+</ol>
+
+<div class="callout">
+  <p class="label">Alternative: auto-distribute</p>
+  <p>
+    In production, claims are usually automatic &mdash; the platform
+    sends the dividend to the investor's wallet immediately upon
+    distribution. In this build, claims are explicit. Both flows
+    exist; check with your project lead which mode this test
+    environment is in.
+  </p>
+</div>
+
+<h3>7.1 Investor verification</h3>
+
+<table>
+  <thead><tr><th>Check</th><th>Where</th></tr></thead>
+  <tbody>
+    <tr><td>Wallet balance increased by the right amount</td><td>Settings &rarr; Wallet</td></tr>
+    <tr><td>Dividend history row added</td><td>Portfolio &rarr; DIFC Office Park &rarr; Dividend history</td></tr>
+    <tr><td>Total dividends YTD updated on stat card</td><td>Portfolio overview</td></tr>
+    <tr><td>On-chain RentalIncomeClaimed event for this investor</td><td><a href="09-workflow-onchain-verification.html">BSCScan</a></td></tr>
+  </tbody>
+</table>
+
+<h2 id="stage-7">8. Stage 7: Quarters 2 and 3</h2>
+
+<p>
+  Owner triggers two more distributions, simulating the property running
+  through three quarters.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Q2: Owner runs the same distribute flow with $15,000 for "Q2 2026"</p>
+  </li>
+  <li>
+    <p>Each investor claims again</p>
+  </li>
+  <li>
+    <p>Q3: Owner runs once more with $15,000 for "Q3 2026" &mdash; but this time only $13,500 because Investor C decided to sell mid-quarter (see stage 8 for the partial-quarter math)</p>
+  </li>
+</ol>
+
+<h3>8.1 Cumulative checks after Q3</h3>
+
+<table>
+  <tbody>
+    <tr><td>Total distributed</td><td>$15,000 + $15,000 + $13,500 = $43,500</td></tr>
+    <tr><td>Total platform fee</td><td>2.5% of $43,500 = $1,087.50</td></tr>
+    <tr><td>Total to investors</td><td>$42,412.50</td></tr>
+    <tr><td>Per-token cumulative</td><td>$42,412.50 / 10,000 = $4.24 per token</td></tr>
+    <tr><td>Investor A (100 tokens, held throughout)</td><td>~$424</td></tr>
+    <tr><td>Investor B (250 tokens, held throughout)</td><td>~$1,060</td></tr>
+    <tr><td>Investor C (50 tokens, sold mid-Q3)</td><td>~$220 (got full Q1+Q2, partial Q3)</td></tr>
+  </tbody>
+</table>
+
+<h2 id="stage-8">9. Stage 8: Investor exits via early-exit penalty</h2>
+
+<p>
+  The lockup period for Ready properties is 365 days. Within that
+  period, an investor who wants to exit faces an early-exit fee
+  (default 10%). After lockup, they can exit fee-free or sell on the
+  marketplace.
+</p>
+
+<h3>9.1 Investor C decides to exit early</h3>
+
+<ol class="steps">
+  <li>
+    <p>Investor C: Portfolio &rarr; DIFC Office Park &rarr; <strong>Exit early</strong></p>
+  </li>
+  <li>
+    <p>Confirmation dialog shows:</p>
+    <ul>
+      <li>50 tokens &times; $80 = $4,000 buyback at par</li>
+      <li>Early-exit fee (10%): -$400</li>
+      <li>Net to investor: $3,600</li>
+      <li>Tokens get burned on-chain</li>
+    </ul>
+  </li>
+  <li>
+    <p>Investor confirms. The platform:</p>
+    <ul>
+      <li>Calls <code>burnTokens(0, investor_address, 50)</code> on the property contract</li>
+      <li>Credits the investor's platform wallet with $3,600</li>
+      <li>Marks 50 tokens as available again in property.tokens_sold</li>
+    </ul>
+  </li>
+</ol>
+
+<div class="callout">
+  <p class="label">Marketplace alternative</p>
+  <p>
+    Investors can avoid the early-exit fee by listing their tokens on
+    the marketplace at any price. If another investor buys, the seller
+    receives the sale proceeds minus the 2.5% platform fee &mdash;
+    typically a better deal than the 10% early-exit penalty. See
+    <a href="08-workflow-marketplace.html">marketplace workflow</a>.
+  </p>
+</div>
+
+<h2 id="what-can-go-wrong">10. What can go wrong</h2>
+
+<table>
+  <thead><tr><th>Stage</th><th>Failure</th><th>Expected response</th></tr></thead>
+  <tbody>
+    <tr><td>1 (list property)</td><td>Owner submits with rental_income_active=true but no monthly_rental_income</td><td>Backend rejects with validation error</td></tr>
+    <tr><td>3 (tokenize)</td><td>RentalIncomeDistributor deployment fails after RealEstateToken succeeds</td><td>Property has token contract but no distributor; admin must intervene; rental distribution unavailable until fixed</td></tr>
+    <tr><td>4 (invest)</td><td>Tries to over-subscribe (e.g. 11,000 tokens when 10,000 available)</td><td>Validation rejects</td></tr>
+    <tr><td>5 (distribute)</td><td>Owner enters amount = 0</td><td>Validation rejects</td></tr>
+    <tr><td>5 (distribute)</td><td>Owner enters amount &gt; collected rent (no real-world enforcement)</td><td>Allowed &mdash; owner can choose to overpay; warning shown</td></tr>
+    <tr><td>5 (distribute)</td><td>Distribute called on an under-construction property by mistake</td><td>Backend rejects with "Only for ready properties" &mdash; the on-chain contract also has the same guard</td></tr>
+    <tr><td>6 (claim)</td><td>Investor tries to claim twice</td><td>Second attempt rejected; on-chain contract guards against double-claim</td></tr>
+    <tr><td>6 (claim)</td><td>Investor has 0 tokens at distribution time</td><td>Distributor returns "Nothing to claim"</td></tr>
+    <tr><td>8 (early exit)</td><td>Investor in lockup period tries to early-exit but property exit_disabled flag is set</td><td>Refused with "Exits temporarily disabled by platform"</td></tr>
+  </tbody>
+</table>
+
+<h2 id="verification">11. Verifying it all worked</h2>
+
+<h3>11.1 Owner-side checks</h3>
+
+<ul>
+  <li>Owner sees DIFC Office Park in Revenue tab with cumulative distributions = $43,500</li>
+  <li>Per-property analytics shows distribution_count = 3, total_distributed = $43,500</li>
+  <li>Investor count = 3 then 2 (after Investor C exit)</li>
+  <li>Tokens sold went 0 &rarr; 400 &rarr; 350 (after burn)</li>
+</ul>
+
+<h3>11.2 Investor-side checks</h3>
+
+<table>
+  <thead><tr><th>Investor</th><th>Token count</th><th>Cumulative dividends</th><th>Wallet balance impact</th></tr></thead>
+  <tbody>
+    <tr><td>A</td><td>100</td><td>~$424</td><td>+$424</td></tr>
+    <tr><td>B</td><td>250</td><td>~$1,060</td><td>+$1,060</td></tr>
+    <tr><td>C</td><td>0 (sold)</td><td>~$220</td><td>+$220 (dividends) + $3,600 (early-exit proceeds) = +$3,820</td></tr>
+  </tbody>
+</table>
+
+<h3>11.3 On-chain forensics</h3>
+
+<p>
+  See <a href="09-workflow-onchain-verification.html">on-chain verification</a>
+  for full instructions. Quick checks:
+</p>
+
+<ul>
+  <li>Property contract balanceOf returns: 100 for Investor A, 250 for Investor B, 0 for Investor C</li>
+  <li>Distributor's distribution count = 3</li>
+  <li>RentalIncomeDistributed events: 3</li>
+  <li>RentalIncomeClaimed events: 8 (3 distributions &times; 3 investors, minus 1 for Investor C's partial Q3 = 8)</li>
+  <li>TokensBurned event for Investor C's exit</li>
+</ul>
+
+<footer class="footer">
+  <span><a href="06-workflow-under-construction.html">&larr; 6. Under-Construction Lifecycle</a></span>
+  <span>Next: <a href="08-workflow-marketplace.html">8. Marketplace Trading</a> &rarr;</span>
+</footer>
+
+</main>
+</div>
+</body>
+</html>

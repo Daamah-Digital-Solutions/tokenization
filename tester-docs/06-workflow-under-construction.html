@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Under-Construction Lifecycle — Capimax Tester Documentation</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <h1 class="brand">Capimax</h1>
+  <p class="brand-sub">Tester Documentation v1</p>
+  <nav>
+    <div class="nav-section">Start Here</div>
+    <a href="index.html">Documentation Home</a>
+    <a href="01-tester-onboarding.html">1. Tester Onboarding</a>
+
+    <div class="nav-section">Role Guides</div>
+    <a href="02-investor-guide.html">2. Investor</a>
+    <a href="03-property-owner-guide.html">3. Property Owner</a>
+    <a href="04-broker-guide.html">4. Broker</a>
+    <a href="05-admin-guide.html">5. Admin</a>
+
+    <div class="nav-section">Workflows</div>
+    <a href="06-workflow-under-construction.html" class="current">6. Under-Construction Lifecycle</a>
+    <a href="07-workflow-ready-property.html">7. Ready Property Lifecycle</a>
+    <a href="08-workflow-marketplace.html">8. Marketplace Trading</a>
+    <a href="09-workflow-onchain-verification.html">9. On-Chain Verification</a>
+  </nav>
+</aside>
+
+<main class="main">
+
+<header class="cover">
+  <p class="eyebrow">Workflow 6 of 9</p>
+  <h1>Under-Construction Property Lifecycle</h1>
+  <p class="lede">
+    End-to-end walkthrough of a single under-construction property,
+    from the owner's first submission through investor installment
+    payments, on-chain token graduation, milestone updates, and project
+    completion. This guide spans every role.
+  </p>
+  <div class="meta">
+    <div><strong>Time:</strong> ~75 minutes (sequential)</div>
+    <div><strong>Prereqs:</strong> All four role guides</div>
+    <div><strong>Test accounts:</strong> owner, investor (x2), admin</div>
+  </div>
+</header>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#overview">Overview &amp; cast of accounts</a></li>
+    <li><a href="#stage-1">Stage 1: Owner submits property</a></li>
+    <li><a href="#stage-2">Stage 2: Admin approves</a></li>
+    <li><a href="#stage-3">Stage 3: Owner tokenizes (deploys contracts)</a></li>
+    <li><a href="#stage-4">Stage 4: Investor 1 invests in installments</a></li>
+    <li><a href="#stage-5">Stage 5: Investor 2 invests upfront</a></li>
+    <li><a href="#stage-6">Stage 6: Owner adds milestones</a></li>
+    <li><a href="#stage-7">Stage 7: Subsequent installment payments</a></li>
+    <li><a href="#stage-8">Stage 8: Construction completes</a></li>
+    <li><a href="#stage-9">Stage 9: Property converts to income-producing</a></li>
+    <li><a href="#what-can-go-wrong">What can go wrong</a></li>
+    <li><a href="#verification">Verifying it all worked</a></li>
+  </ol>
+</div>
+
+<h2 id="overview">1. Overview &amp; cast of accounts</h2>
+
+<p>
+  This workflow simulates a real construction project. You'll need
+  separate browser sessions (incognito windows are fine) for each role.
+</p>
+
+<table>
+  <thead><tr><th>Role</th><th>Account</th><th>Stages they appear in</th></tr></thead>
+  <tbody>
+    <tr><td>Property owner</td><td><code>owner@test.com</code></td><td>1, 3, 6, 8, 9</td></tr>
+    <tr><td>Admin</td><td><code>admin@capimax.com</code></td><td>2, 7 (manual installment triggers)</td></tr>
+    <tr><td>Investor A (installments)</td><td><code>investor@test.com</code></td><td>4, 7, 9</td></tr>
+    <tr><td>Investor B (upfront)</td><td><code>investor2@test.com</code></td><td>5, 9</td></tr>
+  </tbody>
+</table>
+
+<h3>1.1 The property we'll create</h3>
+
+<table>
+  <tbody>
+    <tr><td>Title</td><td>Marina Tower 12 (Walkthrough)</td></tr>
+    <tr><td>Category</td><td>Under construction</td></tr>
+    <tr><td>Total value</td><td>$1,200,000</td></tr>
+    <tr><td>Token price</td><td>$120</td></tr>
+    <tr><td>Total tokens</td><td>10,000</td></tr>
+    <tr><td>Expected completion</td><td>12 months from today</td></tr>
+    <tr><td>Installments supported</td><td>Yes &mdash; 12-month max</td></tr>
+    <tr><td>Expected return</td><td>15% (post-completion)</td></tr>
+  </tbody>
+</table>
+
+<h2 id="stage-1">2. Stage 1: Owner submits property</h2>
+
+<p>Browser session A &mdash; logged in as <code>owner@test.com</code>.</p>
+
+<ol class="steps">
+  <li>
+    <p>Owner dashboard &rarr; My Properties &rarr; <strong>Add New Property</strong></p>
+  </li>
+  <li>
+    <p>Fill Step 1 (Basic info)</p>
+    <ul>
+      <li>Title: Marina Tower 12 (Walkthrough)</li>
+      <li>Description: 2 paragraphs of plausible-looking copy</li>
+      <li>Property type: Residential</li>
+      <li>Property category: <strong>Under Construction</strong></li>
+    </ul>
+  </li>
+  <li>
+    <p>Step 2 (Financial)</p>
+    <ul>
+      <li>Total value: 1200000</li>
+      <li>Token price: 120</li>
+      <li>Total tokens: 10000 (auto-calc)</li>
+      <li>Expected return: 15</li>
+      <li>Rental yield: 0 (will update post-completion)</li>
+      <li>Minimum investment: 120</li>
+    </ul>
+  </li>
+  <li>
+    <p>Step 3 (Property details)</p>
+    <ul>
+      <li>Address: 12 Marina Way, Dubai</li>
+      <li>City: Dubai, Country: UAE</li>
+      <li>Property size: 1200 sqm</li>
+      <li>Expected completion date: pick a date 12 months from today</li>
+      <li>Construction progress: 0%</li>
+      <li>Construction phase: Foundation</li>
+    </ul>
+  </li>
+  <li>
+    <p>Step 4 (Installments)</p>
+    <ul>
+      <li>Supports installments: <strong>ON</strong></li>
+      <li>Installment period: 12 months</li>
+    </ul>
+  </li>
+  <li>
+    <p>Step 5 (Images)</p>
+    <p>Upload 2&ndash;3 placeholder images. Mark one as primary.</p>
+  </li>
+  <li>
+    <p>Click <strong>Submit for Approval</strong></p>
+  </li>
+</ol>
+
+<div class="callout success">
+  <p class="label">Expected end of stage 1</p>
+  <p>
+    Property exists with status <em>pending_approval</em>. It does NOT
+    appear in the public investor listings yet. Owner sees the approval
+    panel at the top of the property page showing "Awaiting admin
+    review".
+  </p>
+</div>
+
+<h3>2.1 Things to verify at this stage</h3>
+
+<ul>
+  <li>Confirmation message shown</li>
+  <li>Property visible in owner's My Properties as <em>pending</em></li>
+  <li>Property NOT visible to investor accounts (open in another window to verify)</li>
+  <li>No on-chain activity yet (BSC Testnet shows nothing)</li>
+</ul>
+
+<h2 id="stage-2">3. Stage 2: Admin approves</h2>
+
+<p>Browser session B &mdash; logged in as <code>admin@capimax.com</code> at <code>/admin/</code>.</p>
+
+<ol class="steps">
+  <li>
+    <p>Django Admin &rarr; Properties &rarr; Property approvals</p>
+  </li>
+  <li>
+    <p>Filter by status = <em>submitted</em></p>
+  </li>
+  <li>
+    <p>Open the Marina Tower 12 approval</p>
+  </li>
+  <li>
+    <p>Review the headline fields against the documents</p>
+    <p>For testing, everything is plausible; click <strong>Approve</strong>.</p>
+  </li>
+  <li>
+    <p>Save</p>
+  </li>
+</ol>
+
+<div class="callout success">
+  <p class="label">Expected end of stage 2</p>
+  <p>
+    Property.status flips to <em>approved</em>. Owner receives a
+    notification. Owner sees a "Tokenize this property" button on the
+    property page.
+  </p>
+</div>
+
+<h2 id="stage-3">3. Stage 3: Owner tokenizes (deploys contracts)</h2>
+
+<p>Back to owner session A.</p>
+
+<ol class="steps">
+  <li>
+    <p>Refresh the property page &mdash; should now show "Approved" badge + Tokenize button</p>
+  </li>
+  <li>
+    <p>Click <strong>Tokenize this property</strong></p>
+  </li>
+  <li>
+    <p>Review the deployment parameters dialog</p>
+    <p>For an under-construction property, lockup is 730 days (2 years), category sent to factory as 0 (UNDER_CONSTRUCTION).</p>
+  </li>
+  <li>
+    <p>Confirm. The progress indicator runs:</p>
+    <ul>
+      <li>Calling PropertyContractFactory.deployProperty &mdash; tx 1</li>
+      <li>Factory calls clone.createProperty internally</li>
+      <li>Owner's UI calls factory.activateProperty &mdash; tx 2 (necessary because newly deployed properties start in DRAFT state)</li>
+    </ul>
+  </li>
+  <li>
+    <p>On success, copy the contract address from the page (e.g. <code>0xabc&hellip;</code>)</p>
+  </li>
+</ol>
+
+<div class="callout success">
+  <p class="label">Expected end of stage 3</p>
+  <p>
+    Property.status = <em>tokenized</em>. Smart-contract address
+    populated. Two BSCScan transactions visible (deployProperty +
+    activateProperty). Property now appears in the public investor
+    listings. No RentalIncomeDistributor was deployed (this is
+    under-construction).
+  </p>
+</div>
+
+<h3>3.1 Verify on chain</h3>
+
+<p>
+  Open the BSCScan link from the property page. You should see:
+</p>
+<ul>
+  <li>Contract creation tx (initiated by the factory)</li>
+  <li><code>PropertyDeployed</code> event in the factory's logs</li>
+  <li><code>PropertyActivated</code> event after the activate call</li>
+</ul>
+
+<h2 id="stage-4">4. Stage 4: Investor A invests in installments</h2>
+
+<p>Browser session C &mdash; logged in as <code>investor@test.com</code>.</p>
+
+<ol class="steps">
+  <li>
+    <p>Properties &rarr; find Marina Tower 12 (filter by Under Construction)</p>
+  </li>
+  <li>
+    <p>Open the detail page. Confirm:</p>
+    <ul>
+      <li>"Under Construction" badge visible</li>
+      <li>Expected completion date shown</li>
+      <li>Construction progress bar at 0%</li>
+      <li>"Installments available" indicator</li>
+      <li>NO monthly rental income card (correct &mdash; it's not built yet)</li>
+    </ul>
+  </li>
+  <li>
+    <p>Click <strong>Invest</strong></p>
+  </li>
+  <li>
+    <p>Step 1: Select Tokens. Enter 24 tokens ($2,880).</p>
+  </li>
+  <li>
+    <p>Click <strong>Choose Schedule</strong></p>
+    <p>(The next-button label changes from "Choose Payment" to "Choose Schedule" because this property supports installments.)</p>
+  </li>
+  <li>
+    <p>Step 2: Payment Schedule</p>
+    <ul>
+      <li>"Pay upfront" card and "Pay in installments" card visible</li>
+      <li>Pick <strong>Pay in installments</strong> &mdash; expands the form</li>
+      <li>Select 4 installments. The card shows: "$720 per payment &middot; $2,880 total"</li>
+    </ul>
+  </li>
+  <li>
+    <p>Click <strong>Choose Payment</strong></p>
+  </li>
+  <li>
+    <p>Step 3: Payment Method. Pick Credit Card.</p>
+    <p>Tick the "I authorize recurring charges for installments" checkbox.</p>
+  </li>
+  <li>
+    <p>Click <strong>Confirm &amp; Pay</strong></p>
+    <p>Enter Stripe test card 4242 4242 4242 4242.</p>
+  </li>
+  <li>
+    <p>Step 4: Processing. Watch the spinner.</p>
+    <p>Behind the scenes:</p>
+    <ul>
+      <li>Investment row created with status pending</li>
+      <li>First installment captured via Stripe</li>
+      <li>Backend mints 24 tokens with <code>isInstallment=true</code> &rarr; tokens go to ESCROW on the contract</li>
+      <li>Backend calls processInstallment for the first slice (6 tokens) &rarr; 6 tokens released to investor wallet</li>
+    </ul>
+  </li>
+  <li>
+    <p>Step 5: Confirmation. Shows "Installment 1 of 4 paid &middot; 6 of 24 tokens released".</p>
+  </li>
+</ol>
+
+<div class="callout success">
+  <p class="label">Expected end of stage 4</p>
+  <p>
+    Investor A's wallet holds 6 tokens of property Marina Tower 12.
+    Contract holds 18 tokens in escrow. Investment row exists in DB
+    with linked ConstructionInstallment with payments_made = 1, total
+    = 4. BSCScan shows: mintTokens (to escrow) + 1 processInstallment.
+  </p>
+</div>
+
+<h2 id="stage-5">5. Stage 5: Investor B invests upfront</h2>
+
+<p>Browser session D &mdash; logged in as <code>investor2@test.com</code>.</p>
+
+<ol class="steps">
+  <li>
+    <p>Open the same property page</p>
+  </li>
+  <li>
+    <p>Click <strong>Invest</strong></p>
+  </li>
+  <li>
+    <p>Step 1: 50 tokens ($6,000)</p>
+  </li>
+  <li>
+    <p>Click <strong>Choose Schedule</strong></p>
+  </li>
+  <li>
+    <p>Step 2: pick <strong>Pay upfront</strong></p>
+    <p>(Even though the property supports installments, this investor opts for upfront.)</p>
+  </li>
+  <li>
+    <p>Click <strong>Choose Payment</strong></p>
+  </li>
+  <li>
+    <p>Step 3: pick Credit Card, enter test card</p>
+  </li>
+  <li>
+    <p>Step 4: Processing</p>
+    <p>Backend mints 50 tokens with <code>isInstallment=false</code> &rarr; tokens go directly to investor wallet.</p>
+  </li>
+  <li>
+    <p>Step 5: Confirmation</p>
+  </li>
+</ol>
+
+<div class="callout success">
+  <p class="label">Expected end of stage 5</p>
+  <p>
+    Investor B's wallet holds 50 tokens. Property now has two
+    investors. Contract balance: 18 in escrow (Investor A's
+    unreleased) + 0 held by contract for Investor B = 18 total in
+    escrow.
+  </p>
+</div>
+
+<h2 id="stage-6">6. Stage 6: Owner adds milestones</h2>
+
+<p>Back to owner session A.</p>
+
+<ol class="steps">
+  <li>
+    <p>Owner dashboard &rarr; My Properties &rarr; Marina Tower 12 &rarr; Construction tab</p>
+  </li>
+  <li>
+    <p>Add milestone #1</p>
+    <ul>
+      <li>Title: Foundation</li>
+      <li>Category: Foundation</li>
+      <li>Target date: 2 months from now</li>
+      <li>Progress: 100% (already complete)</li>
+      <li>Status: Completed</li>
+    </ul>
+  </li>
+  <li>
+    <p>Add milestone #2</p>
+    <ul>
+      <li>Title: Framing &amp; Structure</li>
+      <li>Category: Framing</li>
+      <li>Target date: 5 months from now</li>
+      <li>Progress: 30%</li>
+      <li>Status: In progress</li>
+    </ul>
+  </li>
+  <li>
+    <p>Add milestone #3</p>
+    <ul>
+      <li>Title: Interior fit-out</li>
+      <li>Category: Interior</li>
+      <li>Target date: 10 months from now</li>
+      <li>Progress: 0%</li>
+      <li>Status: Not started</li>
+    </ul>
+  </li>
+  <li>
+    <p>Save</p>
+  </li>
+  <li>
+    <p>Edit the overall property &mdash; bump construction_progress to 30% to reflect milestone 2's progress</p>
+  </li>
+</ol>
+
+<div class="callout success">
+  <p class="label">Expected end of stage 6</p>
+  <p>
+    Both investors see the construction-progress section populated with
+    3 milestones, current progress 30%, expected completion date
+    visible. Investor A's holding detail also shows the milestones.
+  </p>
+</div>
+
+<h2 id="stage-7">7. Stage 7: Subsequent installment payments</h2>
+
+<p>
+  Switch to admin session B and trigger the remaining installments
+  manually (this simulates the scheduled charge running on a monthly
+  basis).
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Django Admin &rarr; Investments &rarr; Construction installment payments</p>
+  </li>
+  <li>
+    <p>Filter by investor = Investor A &amp; property = Marina Tower 12</p>
+  </li>
+  <li>
+    <p>You see 4 rows: payments_made values 1, 2, 3, 4 in the schedule (only #1 marked paid so far)</p>
+  </li>
+  <li>
+    <p>For the next unpaid installment, use the action menu &rarr; <strong>Process selected</strong></p>
+    <p>The platform charges the saved card, calls processInstallment on chain, releases another 6 tokens to Investor A.</p>
+  </li>
+  <li>
+    <p>Verify Investor A's portfolio now shows 12 tokens (6 + 6)</p>
+  </li>
+  <li>
+    <p>Repeat for installments 3 and 4</p>
+  </li>
+  <li>
+    <p>After installment 4: Investor A has 24 tokens, escrow drops to 0 for this investor</p>
+  </li>
+</ol>
+
+<div class="callout success">
+  <p class="label">Expected end of stage 7</p>
+  <p>
+    Investor A has been issued 4 separate processInstallment
+    transactions on chain, each releasing 6 tokens. ConstructionInstallment
+    payments_made = 4, status = completed. Investor sees "Installments
+    complete" badge in their portfolio.
+  </p>
+</div>
+
+<h2 id="stage-8">8. Stage 8: Construction completes</h2>
+
+<p>Owner advances the property to completion over the course of testing.</p>
+
+<ol class="steps">
+  <li>
+    <p>Owner marks milestone 2 (Framing) complete</p>
+  </li>
+  <li>
+    <p>Owner marks milestone 3 (Interior) complete</p>
+  </li>
+  <li>
+    <p>Owner edits property &rarr; sets construction_progress to 100%, construction_phase to "Complete"</p>
+  </li>
+  <li>
+    <p>Optionally: owner adds a final "Construction complete" milestone and uploads photos</p>
+  </li>
+</ol>
+
+<h2 id="stage-9">9. Stage 9: Property converts to income-producing</h2>
+
+<p>
+  Once construction is complete, the owner converts the property to
+  income-producing. This step is operationally significant.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Owner edits property:</p>
+    <ul>
+      <li>Set monthly_rental_income (e.g. 8000)</li>
+      <li>Set rental_distribution_frequency to Monthly</li>
+      <li>Set rental_income_active to ON</li>
+      <li>Optionally: change property_category to Ready Property (some workflows let you keep it as Under-construction-completed; check with your project lead)</li>
+    </ul>
+  </li>
+  <li>
+    <p>If the category change is supported, the platform now treats this property as a Ready property &mdash; rental distribution becomes available.</p>
+  </li>
+  <li>
+    <p>Owner triggers their first rental distribution (see Stage 5 of <a href="07-workflow-ready-property.html">Ready property workflow</a>)</p>
+  </li>
+  <li>
+    <p>Both investors A and B receive proportional dividends:</p>
+    <ul>
+      <li>Investor A: 24/74 of net distribution (24 tokens of 74 total minted)</li>
+      <li>Investor B: 50/74 of net distribution</li>
+    </ul>
+  </li>
+</ol>
+
+<div class="callout success">
+  <p class="label">Expected end of stage 9</p>
+  <p>
+    Property is now fully built, fully tokenized, generating income.
+    Investors A and B both receive monthly dividends proportional to
+    their token holdings. The full lifecycle is complete.
+  </p>
+</div>
+
+<h2 id="what-can-go-wrong">10. What can go wrong</h2>
+
+<p>Test each of the following failure modes:</p>
+
+<table>
+  <thead><tr><th>Stage</th><th>Failure</th><th>Expected platform behavior</th></tr></thead>
+  <tbody>
+    <tr><td>3 (tokenize)</td><td>Out of gas</td><td>Tokenization fails; property stays in <em>approved</em>; owner can retry</td></tr>
+    <tr><td>3 (tokenize)</td><td>activateProperty call reverts</td><td>Property gets a contract address but mint won't work until manual recovery; admin sees this in monitoring</td></tr>
+    <tr><td>4 (installment invest)</td><td>Stripe card declined</td><td>Investment never created; no mint; investor sees clear error</td></tr>
+    <tr><td>4 (installment invest)</td><td>Mint succeeds but processInstallment reverts</td><td>Tokens stuck in escrow; admin must investigate; refund pipeline can rescue</td></tr>
+    <tr><td>5 (upfront invest)</td><td>Mint fails after 3 retries</td><td>Investment status flips to mint_failed; auto-refund pipeline triggers; investor sees "refunded" status</td></tr>
+    <tr><td>7 (recurring installment)</td><td>Saved card expired</td><td>Installment fails; investor notified; given 7 days to update card before terminal failure</td></tr>
+    <tr><td>9 (rental distribution)</td><td>Distribute called on a property still in under_construction category without conversion</td><td>Refused on-chain with "Only for ready properties"</td></tr>
+  </tbody>
+</table>
+
+<h2 id="verification">11. Verifying it all worked</h2>
+
+<table>
+  <thead><tr><th>Check</th><th>How</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>All 5 stages completed with no admin intervention beyond approvals + manual installment triggers</td>
+      <td>Walk through this guide as a single user; nothing should require database surgery</td>
+    </tr>
+    <tr>
+      <td>Investor A holds exactly 24 tokens after all installments</td>
+      <td>Portfolio &rarr; Marina Tower 12 &rarr; token count, OR check on chain</td>
+    </tr>
+    <tr>
+      <td>Investor B holds exactly 50 tokens</td>
+      <td>Same as above</td>
+    </tr>
+    <tr>
+      <td>Contract escrow = 0 after Investor A's final installment</td>
+      <td>BSCScan: <code>balanceOf(contract_address, 0)</code> = 0</td>
+    </tr>
+    <tr>
+      <td>Both investors received dividend after Stage 9 distribution</td>
+      <td>Each investor's Activity tab shows a Dividend Received entry</td>
+    </tr>
+    <tr>
+      <td>Owner dashboard shows correct totals</td>
+      <td>Capital raised = $2,880 + $6,000 = $8,880. Active investors = 2.</td>
+    </tr>
+    <tr>
+      <td>Audit trail intact</td>
+      <td>Django Admin &rarr; AdminAction log shows every approval, every tokenization, every installment process action</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>11.1 On-chain forensics</h3>
+
+<p>
+  See <a href="09-workflow-onchain-verification.html">On-chain
+  verification</a> for the full BSCScan walkthrough. Quick checks:
+</p>
+<ul>
+  <li><code>balanceOf(investorA_wallet, 0)</code> on the property's contract should return 24</li>
+  <li><code>balanceOf(investorB_wallet, 0)</code> should return 50</li>
+  <li><code>properties(0).status</code> should be 1 (ACTIVE)</li>
+  <li>Event log should contain: 1 PropertyDeployed, 1 PropertyCreated, 1 PropertyActivated, 2 TokensMinted (one with isInstallment=true), 4 InstallmentPaid, 4 TokensGraduated, 1 RentalIncomeDistributed (after stage 9)</li>
+</ul>
+
+<footer class="footer">
+  <span><a href="05-admin-guide.html">&larr; 5. Admin Guide</a></span>
+  <span>Next: <a href="07-workflow-ready-property.html">7. Ready Property Lifecycle</a> &rarr;</span>
+</footer>
+
+</main>
+</div>
+</body>
+</html>

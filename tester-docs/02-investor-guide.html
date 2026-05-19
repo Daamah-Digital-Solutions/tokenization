@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Investor Guide — Capimax Tester Documentation</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <h1 class="brand">Capimax</h1>
+  <p class="brand-sub">Tester Documentation v1</p>
+  <nav>
+    <div class="nav-section">Start Here</div>
+    <a href="index.html">Documentation Home</a>
+    <a href="01-tester-onboarding.html">1. Tester Onboarding</a>
+
+    <div class="nav-section">Role Guides</div>
+    <a href="02-investor-guide.html" class="current">2. Investor</a>
+    <a href="03-property-owner-guide.html">3. Property Owner</a>
+    <a href="04-broker-guide.html">4. Broker</a>
+    <a href="05-admin-guide.html">5. Admin</a>
+
+    <div class="nav-section">Workflows</div>
+    <a href="06-workflow-under-construction.html">6. Under-Construction Lifecycle</a>
+    <a href="07-workflow-ready-property.html">7. Ready Property Lifecycle</a>
+    <a href="08-workflow-marketplace.html">8. Marketplace Trading</a>
+    <a href="09-workflow-onchain-verification.html">9. On-Chain Verification</a>
+  </nav>
+</aside>
+
+<main class="main">
+
+<header class="cover">
+  <p class="eyebrow">Guide 2 of 9 &middot; <span class="pill role-investor">Investor</span></p>
+  <h1>Investor Guide</h1>
+  <p class="lede">
+    A complete walkthrough of the investor journey: signing up,
+    completing KYC, browsing properties, investing in both upfront and
+    installment modes, viewing your portfolio, trading on the
+    marketplace, and withdrawing.
+  </p>
+  <div class="meta">
+    <div><strong>Time:</strong> ~45 minutes</div>
+    <div><strong>Prereqs:</strong> <a href="01-tester-onboarding.html">Tester Onboarding</a></div>
+    <div><strong>Test account:</strong> <code>investor@test.com</code></div>
+  </div>
+</header>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#signup">Sign up &amp; account verification</a></li>
+    <li><a href="#kyc">KYC verification</a></li>
+    <li><a href="#wallet-link">Linking a wallet</a></li>
+    <li><a href="#browse">Browsing properties</a></li>
+    <li><a href="#invest-upfront">Investing &mdash; upfront payment</a></li>
+    <li><a href="#invest-installment">Investing &mdash; installment plan</a></li>
+    <li><a href="#portfolio">Your portfolio</a></li>
+    <li><a href="#dividends">Receiving rental income</a></li>
+    <li><a href="#marketplace">Selling tokens on the marketplace</a></li>
+    <li><a href="#withdraw">Withdrawing funds</a></li>
+    <li><a href="#notifications">Notifications &amp; alerts</a></li>
+    <li><a href="#error-paths">Error paths to test</a></li>
+    <li><a href="#checklist">Tester checklist</a></li>
+  </ol>
+</div>
+
+<h2 id="signup">1. Sign up &amp; account verification</h2>
+
+<p>
+  Pre-seeded accounts already exist. This section covers the brand-new
+  sign-up flow &mdash; only test it once per round (use any email you
+  control, since the email verification step will need to be completed).
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Open the homepage and click <strong>Create Account</strong></p>
+  </li>
+  <li>
+    <p>Fill the form</p>
+    <ul>
+      <li>Email &mdash; any address you can receive mail at</li>
+      <li>Password &mdash; minimum 8 chars, must include letter + number + symbol</li>
+      <li>First and last name</li>
+      <li>Role selector &mdash; choose <strong>Investor</strong></li>
+    </ul>
+  </li>
+  <li>
+    <p>Submit. You'll see a confirmation screen telling you to check your email.</p>
+    <p><strong>Local dev only:</strong> the email is printed to the backend console rather than sent. Look for "Verification link" in the terminal where Django is running.</p>
+    <p><strong>Staging:</strong> the email arrives at the address you entered.</p>
+  </li>
+  <li>
+    <p>Click the verification link in the email</p>
+    <p>You land on a confirmation page. From here, sign in normally with the email + password you just set.</p>
+  </li>
+</ol>
+
+<div class="callout warning">
+  <p class="label">Sign-up does not automatically log you in</p>
+  <p>
+    This is intentional. After verifying your email you must explicitly
+    log in. If you find yourself auto-logged-in, that's a bug.
+  </p>
+</div>
+
+<h2 id="kyc">2. KYC verification</h2>
+
+<p>
+  Before you can invest, you must complete KYC (Know Your Customer).
+  All seeded test investors have status <em>Approved</em>; new sign-ups
+  start as <em>Not started</em>.
+</p>
+
+<h3>2.1 Start the KYC wizard</h3>
+
+<ol class="steps">
+  <li>
+    <p>From the investor dashboard, find the "Complete your verification" banner OR open Settings &rarr; Identity Verification</p>
+  </li>
+  <li>
+    <p>Click <strong>Start verification</strong></p>
+    <p>You'll see a multi-step wizard.</p>
+  </li>
+</ol>
+
+<h3>2.2 Walk through each KYC step</h3>
+
+<table>
+  <thead><tr><th>Step</th><th>What to enter</th><th>Expected outcome</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Personal info</td>
+      <td>Full legal name, date of birth, nationality, phone</td>
+      <td>Saves and advances</td>
+    </tr>
+    <tr>
+      <td>Address</td>
+      <td>Residential address, city, postcode, country</td>
+      <td>Saves and advances</td>
+    </tr>
+    <tr>
+      <td>ID document</td>
+      <td>Upload a passport or driver's license image (use any test image &mdash; even a colored rectangle)</td>
+      <td>File uploads, preview shows, advances</td>
+    </tr>
+    <tr>
+      <td>Selfie / liveness</td>
+      <td>Upload any selfie image, OR skip if the wizard offers it</td>
+      <td>Submits and shows "Under review" state</td>
+    </tr>
+    <tr>
+      <td>Source of funds (optional)</td>
+      <td>Pick an option, enter any amount</td>
+      <td>Saves</td>
+    </tr>
+    <tr>
+      <td>Submit for review</td>
+      <td>Click Submit</td>
+      <td>Status flips from <em>Not started</em> to <em>Pending review</em></td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <p class="label">Approval workflow</p>
+  <p>
+    In production, an external provider (Jumio) reviews the submission.
+    In the test environment, an admin reviews and approves it via Django
+    Admin &mdash; see the <a href="05-admin-guide.html">Admin guide</a>.
+    Once approved, you'll see "Verified" next to your name.
+  </p>
+</div>
+
+<h3>2.3 KYC status states</h3>
+
+<table>
+  <tr><td><code>not_started</code></td><td>Hasn't begun. Cannot invest.</td></tr>
+  <tr><td><code>in_progress</code></td><td>Started but didn't submit. Cannot invest.</td></tr>
+  <tr><td><code>pending</code></td><td>Submitted, waiting for admin. Cannot invest.</td></tr>
+  <tr><td><code>approved</code></td><td>Cleared. Can invest.</td></tr>
+  <tr><td><code>rejected</code></td><td>Failed review. Cannot invest until reapproved.</td></tr>
+</table>
+
+<h3>2.4 Things to test in the KYC flow</h3>
+
+<ul>
+  <li>Field validation &mdash; submit with empty required fields, expect inline errors</li>
+  <li>File upload with very large files (&gt;10MB should fail gracefully)</li>
+  <li>File upload with non-image files (should refuse)</li>
+  <li>Resume the wizard after closing it mid-step (your progress should persist)</li>
+  <li>Try to invest while status is <em>pending</em> &mdash; you should be blocked with a clear message</li>
+</ul>
+
+<h2 id="wallet-link">3. Linking a wallet</h2>
+
+<p>
+  Investors need a blockchain wallet address so tokens can be minted to
+  them. The seeded <code>investor@test.com</code> already has a wallet
+  linked. New accounts must link one before investing.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Go to Settings &rarr; Wallet</p>
+  </li>
+  <li>
+    <p>Click <strong>Connect wallet</strong></p>
+    <p>If MetaMask is installed and unlocked, it pops a connection request. Approve it.</p>
+  </li>
+  <li>
+    <p>Confirm the chosen address</p>
+    <p>The wallet panel shows your address (e.g. <code>0xabc&hellip;def</code>). This is what tokens will mint to.</p>
+  </li>
+  <li>
+    <p>Switch your wallet to BNB Smart Chain Testnet</p>
+    <p>If you're on the wrong network, the platform shows a "Switch network" prompt.</p>
+  </li>
+</ol>
+
+<div class="callout warning">
+  <p class="label">Mainnet vs testnet</p>
+  <p>
+    If your MetaMask is on Ethereum Mainnet or Polygon Mainnet, the
+    platform should refuse to do any blockchain operations. If it tries,
+    that's a serious bug &mdash; report immediately.
+  </p>
+</div>
+
+<h2 id="browse">4. Browsing properties</h2>
+
+<h3>4.1 Properties list</h3>
+
+<ol class="steps">
+  <li>
+    <p>Click <strong>Properties</strong> in the top nav</p>
+    <p>You see a grid of property cards. Each card shows: photo, title, city, type, funding bar, expected return.</p>
+  </li>
+  <li>
+    <p>Use the filters</p>
+    <ul>
+      <li>Property type (Residential / Commercial / Industrial / Mixed-use / Land)</li>
+      <li>Property category (Ready / Under construction)</li>
+      <li>Country / city</li>
+      <li>Price range</li>
+      <li>Minimum investment</li>
+    </ul>
+  </li>
+  <li>
+    <p>Use the search bar</p>
+    <p>Title and description are searchable.</p>
+  </li>
+  <li>
+    <p>Toggle map view (if available)</p>
+    <p>Pin clusters group nearby properties. Click a pin to jump to that property.</p>
+  </li>
+</ol>
+
+<h3>4.2 Property detail page</h3>
+
+<p>Click any card to open the detail page. You'll see:</p>
+
+<ul>
+  <li><strong>Header</strong> &mdash; title, location, type, status</li>
+  <li><strong>Photos</strong> &mdash; carousel with property images</li>
+  <li><strong>Investment summary</strong> &mdash; token price, total tokens, available tokens, funding progress, expected return</li>
+  <li><strong>About</strong> &mdash; description + key facts</li>
+  <li><strong>Documents</strong> &mdash; SPV documents, legal disclosures</li>
+  <li>
+    <strong>For Ready properties:</strong> Monthly rental income card, dividend distribution schedule
+  </li>
+  <li>
+    <strong>For Under-construction properties:</strong> Construction progress bar, expected completion date, milestone list (if owner has added them)
+  </li>
+  <li><strong>Invest button</strong> &mdash; primary CTA, opens the investment flow</li>
+</ul>
+
+<div class="callout">
+  <p class="label">What should differ by category</p>
+  <p>
+    A ready property must NOT show construction progress or milestones.
+    An under-construction property must NOT show monthly rental income
+    or dividend schedule. If you see the wrong fields, file a bug.
+  </p>
+</div>
+
+<h2 id="invest-upfront">5. Investing &mdash; upfront payment</h2>
+
+<p>
+  This is the standard flow. Works for both property types but is the
+  <strong>only</strong> option for ready properties.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>On any property detail page, click <strong>Invest</strong></p>
+    <p>A multi-step modal opens.</p>
+  </li>
+  <li>
+    <p><strong>Step 1: Select Tokens</strong></p>
+    <p>Move the slider or type a number. The total cost updates live (tokens &times; token price). The amount must be &ge; minimum investment and &le; available tokens.</p>
+  </li>
+  <li>
+    <p>For ready properties: click <strong>Choose Payment</strong></p>
+    <p>For under-construction properties with installments enabled, you instead see a Payment Schedule step &mdash; covered in <a href="#invest-installment">section 6</a>. Pick "Pay upfront" to follow this flow.</p>
+  </li>
+  <li>
+    <p><strong>Step 2: Payment Method</strong></p>
+    <p>Select credit card, bank transfer, or crypto. For this test use <strong>credit card</strong>.</p>
+  </li>
+  <li>
+    <p>Click <strong>Confirm &amp; Pay</strong></p>
+    <p>If you have no saved cards, a Stripe Elements form appears. Enter <code>4242 4242 4242 4242</code>, any future expiry (e.g. 12/30), any 3-digit CVC (e.g. 123), any postcode.</p>
+  </li>
+  <li>
+    <p><strong>Step 3: Processing</strong></p>
+    <p>The platform creates a payment intent, charges the test card, marks payment confirmed, dispatches the mint task. Spinner shows live status.</p>
+  </li>
+  <li>
+    <p><strong>Step 4: Confirmation</strong></p>
+    <p>You see a success card with the investment summary, the property name, the token count, and a "View on chain" link to BSCScan. Click it &mdash; you should see the mint transaction.</p>
+  </li>
+</ol>
+
+<div class="callout success">
+  <p class="label">What success looks like</p>
+  <p>
+    Investment ID returned, status = <em>completed</em>, transaction
+    hash present, BSCScan link works, tokens appear in your portfolio
+    within ~30 seconds.
+  </p>
+</div>
+
+<h3>5.1 Failure paths</h3>
+
+<table>
+  <thead><tr><th>Setup</th><th>Expected result</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Use card <code>4000 0000 0000 9995</code> (insufficient funds)</td>
+      <td>Payment fails. Inline error in the dialog. No investment row created. No mint attempted.</td>
+    </tr>
+    <tr>
+      <td>Cancel mid-flow (close the dialog)</td>
+      <td>A "Cancel investment?" confirmation appears. Choose cancel, return to property page. No charge.</td>
+    </tr>
+    <tr>
+      <td>Try to invest more than available tokens</td>
+      <td>Inline validation blocks the input. Cannot proceed.</td>
+    </tr>
+    <tr>
+      <td>Try to invest below minimum</td>
+      <td>Inline validation blocks. Cannot proceed.</td>
+    </tr>
+    <tr>
+      <td>Investor account has KYC = pending</td>
+      <td>The invest button is disabled, or the dialog refuses with a clear "complete KYC first" message.</td>
+    </tr>
+    <tr>
+      <td>Property has <code>requires_accredited_investor = true</code> and investor isn't accredited</td>
+      <td>Refused with 403 "This property is restricted to accredited investors".</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="invest-installment">6. Investing &mdash; installment plan</h2>
+
+<p>
+  Only available on <strong>under-construction</strong> properties whose
+  owner enabled installments. The seeded
+  <code>Tower Build (Installment Demo)</code> property is configured
+  this way.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Open the Tower Build property detail page</p>
+    <p>You should see "Under Construction" badge, completion date, and "Installments available" indicator.</p>
+  </li>
+  <li>
+    <p>Click <strong>Invest</strong></p>
+  </li>
+  <li>
+    <p><strong>Step 1: Select Tokens</strong></p>
+    <p>Pick a token count. Click <strong>Choose Schedule</strong> (the button label changes for installment-eligible properties).</p>
+  </li>
+  <li>
+    <p><strong>Step 2: Payment Schedule</strong></p>
+    <p>This step ONLY appears for installment-eligible properties. You see two cards:</p>
+    <ul>
+      <li><strong>Pay upfront</strong> &mdash; single payment. Tokens mint immediately to your wallet.</li>
+      <li><strong>Pay in installments</strong> &mdash; expandable, lets you pick 3 / 6 / 12 / N installments. Each payment installs a portion of the tokens to your wallet.</li>
+    </ul>
+    <p>Choose <strong>Pay in installments</strong> and pick 4.</p>
+  </li>
+  <li>
+    <p>Click <strong>Choose Payment</strong></p>
+  </li>
+  <li>
+    <p><strong>Step 3: Payment Method</strong></p>
+    <p>Pick credit card. The recurring-charge consent banner appears &mdash; check it.</p>
+  </li>
+  <li>
+    <p>Click <strong>Confirm &amp; Pay</strong></p>
+    <p>Enter test card. The first installment is charged immediately.</p>
+  </li>
+  <li>
+    <p><strong>Step 4: Processing</strong></p>
+    <p>Behind the scenes: investment created, first payment captured, on-chain mint with <code>isInstallment=true</code>, total tokens go into escrow on the contract, first installment's portion of tokens released to your wallet.</p>
+  </li>
+  <li>
+    <p><strong>Step 5: Confirmation</strong></p>
+    <p>You see "Installment 1 of 4 paid". Your wallet holds 1/4 of total tokens. Remaining tokens sit in escrow.</p>
+  </li>
+</ol>
+
+<h3>6.1 Verifying installment escrow on chain</h3>
+
+<p>
+  Open the BSCScan link from the confirmation page. The transaction
+  type is <code>mintTokens</code>. The "to" address is the per-property
+  contract (because tokens go to escrow). Then a second transaction,
+  <code>processInstallment</code>, transfers your first installment's
+  share to your wallet.
+</p>
+
+<p>
+  See <a href="09-workflow-onchain-verification.html">on-chain
+  verification</a> for the full step-by-step.
+</p>
+
+<h3>6.2 Subsequent installments</h3>
+
+<p>
+  Each subsequent installment runs automatically on the schedule. For
+  testing purposes, your project lead or admin can manually trigger
+  installments from the admin panel so you don't wait a month.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>An installment payment fires &mdash; charges your card again, triggers another <code>processInstallment</code> on chain</p>
+  </li>
+  <li>
+    <p>Check Portfolio &rarr; "Tower Build" &mdash; your token count grew by 1/4</p>
+  </li>
+  <li>
+    <p>Check the timeline panel on the property detail page &mdash; payments-made counter increased</p>
+  </li>
+  <li>
+    <p>After the final installment: all tokens are in your wallet, escrow = 0, status flips to "Installments complete"</p>
+  </li>
+</ol>
+
+<div class="callout warning">
+  <p class="label">Failed installment</p>
+  <p>
+    If a recurring charge fails (test by switching your saved card to
+    <code>4000 0000 0000 9995</code>), the platform should retry per the
+    scheduled retry policy. After max retries it marks the installment
+    as failed. Already-released tokens are NOT clawed back &mdash; the
+    investor keeps what they've paid for.
+  </p>
+</div>
+
+<h2 id="portfolio">7. Your portfolio</h2>
+
+<p>Click <strong>Portfolio</strong> (or "My Portfolio") in the side nav.</p>
+
+<h3>7.1 What you should see</h3>
+
+<table>
+  <thead><tr><th>Section</th><th>Contents</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Stat cards (top)</td>
+      <td>Total Portfolio Value, Monthly Income, Active Properties, Total Invested</td>
+    </tr>
+    <tr>
+      <td>Recent activity</td>
+      <td>Latest investments, mints, payments, dividends</td>
+    </tr>
+    <tr>
+      <td>Holdings list</td>
+      <td>One row per property you've invested in. Token count, current value, ROI, last activity</td>
+    </tr>
+    <tr>
+      <td>Performance chart</td>
+      <td>Portfolio value over time (placeholder data is fine during early testing)</td>
+    </tr>
+    <tr>
+      <td>Allocation pie chart</td>
+      <td>Property-type breakdown (Residential %, Commercial %, etc.)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>7.2 Drill into a holding</h3>
+
+<p>Click any row. You should see:</p>
+<ul>
+  <li>The property's headline numbers</li>
+  <li>Your tokens / current value / total invested</li>
+  <li>For ready: dividend history</li>
+  <li>For under-construction: installment schedule (paid / upcoming) + construction progress</li>
+  <li>Buttons: "Sell on marketplace" / "Withdraw" (where applicable)</li>
+</ul>
+
+<h2 id="dividends">8. Receiving rental income</h2>
+
+<p>
+  Only applies to ready properties. When the owner or admin triggers a
+  rental distribution, every token holder receives a proportional
+  payout.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Wait for (or ask admin to trigger) a distribution on a property you hold</p>
+  </li>
+  <li>
+    <p>You receive a notification &mdash; bell icon shows a red dot</p>
+  </li>
+  <li>
+    <p>Open Portfolio &rarr; Activity</p>
+    <p>You see a "Dividend received" entry with amount, property, date, and a "View transaction" link</p>
+  </li>
+  <li>
+    <p>Open the property holding</p>
+    <p>The "Total dividends" counter increased. The distribution shows in the dividend history table.</p>
+  </li>
+  <li>
+    <p>Check Wallet (if you have a wallet balance view)</p>
+    <p>The dividend amount is credited to your platform wallet (or the on-chain payable contract, depending on the distribution mechanism).</p>
+  </li>
+</ol>
+
+<h2 id="marketplace">9. Selling tokens on the marketplace</h2>
+
+<p>Full marketplace flow is covered in
+<a href="08-workflow-marketplace.html">Workflow 8</a>. The short
+version from an investor's POV:</p>
+
+<ol class="steps">
+  <li>
+    <p>Portfolio &rarr; pick a holding &rarr; <strong>Sell on marketplace</strong></p>
+  </li>
+  <li>
+    <p>Listing dialog: how many tokens, price per token, expiry date</p>
+  </li>
+  <li>
+    <p>Submit &mdash; listing status becomes <em>Active</em>. Your tokens are locked in escrow on the contract for the duration of the listing.</p>
+  </li>
+  <li>
+    <p>If another investor buys: matching engine settles, escrow releases buyer's tokens, your platform wallet is credited with the proceeds (minus 2.5% platform fee).</p>
+  </li>
+  <li>
+    <p>Notification appears: "Your listing sold"</p>
+  </li>
+</ol>
+
+<h2 id="withdraw">10. Withdrawing funds</h2>
+
+<p>
+  When you have a platform wallet balance (from dividends, marketplace
+  sales, or future support for fiat top-ups), you can withdraw it.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Settings &rarr; Wallet &rarr; <strong>Withdraw</strong></p>
+  </li>
+  <li>
+    <p>Pick a destination (bank, crypto, etc.) and amount</p>
+  </li>
+  <li>
+    <p>Submit. Status becomes <em>Pending review</em></p>
+    <p>Admin reviews and approves in Django Admin &mdash; see the <a href="05-admin-guide.html">Admin guide</a>.</p>
+  </li>
+  <li>
+    <p>Once approved, the withdrawal status becomes <em>Processed</em>. Funds leave the platform balance.</p>
+  </li>
+</ol>
+
+<h2 id="notifications">11. Notifications &amp; alerts</h2>
+
+<p>
+  The bell icon in the top nav shows unread notifications. They're
+  delivered via WebSocket in near-real-time.
+</p>
+
+<table>
+  <thead><tr><th>Event</th><th>Notification</th></tr></thead>
+  <tbody>
+    <tr><td>Investment created</td><td>"Investment in {Property} confirmed"</td></tr>
+    <tr><td>Tokens minted</td><td>"5 tokens minted to your wallet"</td></tr>
+    <tr><td>Mint failed (and refund issued)</td><td>"Investment refunded — minting failed"</td></tr>
+    <tr><td>Installment due in 3 days</td><td>"Upcoming payment in 3 days"</td></tr>
+    <tr><td>Dividend received</td><td>"Dividend of ${amount} received"</td></tr>
+    <tr><td>Marketplace listing sold</td><td>"Your listing sold"</td></tr>
+    <tr><td>Marketplace buy order filled</td><td>"Your buy order filled"</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <p class="label">WebSocket health</p>
+  <p>
+    A green dot near the bell indicates a live WebSocket connection. If
+    it's grey or red, notifications may be delayed. The connection
+    should auto-reconnect within ~5 seconds; if it doesn't, that's a
+    bug.
+  </p>
+</div>
+
+<h2 id="error-paths">12. Error paths to test</h2>
+
+<p>
+  We need every failure case exercised. Please attempt each row and
+  confirm the behavior.
+</p>
+
+<table>
+  <thead><tr><th>Scenario</th><th>Expected response</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Try to invest while not logged in</td>
+      <td>Redirected to login</td>
+    </tr>
+    <tr>
+      <td>Try to invest with KYC = pending</td>
+      <td>Button disabled OR dialog refuses with "Complete KYC first"</td>
+    </tr>
+    <tr>
+      <td>Try to invest more than available tokens</td>
+      <td>Inline validation error</td>
+    </tr>
+    <tr>
+      <td>Cancel investment mid-flow</td>
+      <td>Confirmation dialog, return to property page</td>
+    </tr>
+    <tr>
+      <td>Use Stripe card <code>4000 0000 0000 9995</code></td>
+      <td>Payment failed, no investment row, no tokens minted</td>
+    </tr>
+    <tr>
+      <td>Use Stripe card <code>4000 0025 0000 3155</code> (3DS)</td>
+      <td>3D Secure challenge appears, completes, payment succeeds</td>
+    </tr>
+    <tr>
+      <td>Sign out mid-investment</td>
+      <td>Dialog closes, investment state preserved (you can resume after re-login)</td>
+    </tr>
+    <tr>
+      <td>Close browser tab during processing step</td>
+      <td>Investment continues in the background. Next login should show it as completed (or failed) in Activity.</td>
+    </tr>
+    <tr>
+      <td>Try to access another investor's portfolio URL</td>
+      <td>403 or redirect to your own portfolio</td>
+    </tr>
+    <tr>
+      <td>WebSocket disconnect (turn off wifi briefly)</td>
+      <td>Indicator goes grey, auto-reconnects when wifi returns</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="checklist">13. Tester checklist</h2>
+
+<p>
+  Tick each box once you've personally completed the action and
+  confirmed expected behavior. If anything fails, file a bug.
+</p>
+
+<table>
+  <thead><tr><th>Done</th><th>Action</th></tr></thead>
+  <tbody>
+    <tr><td>&#9633;</td><td>Sign up a new investor account &amp; verify email</td></tr>
+    <tr><td>&#9633;</td><td>Complete KYC wizard end-to-end &amp; reach <em>pending</em> state</td></tr>
+    <tr><td>&#9633;</td><td>Have admin approve KYC; status flips to <em>approved</em></td></tr>
+    <tr><td>&#9633;</td><td>Link a wallet (MetaMask on BSC Testnet)</td></tr>
+    <tr><td>&#9633;</td><td>Browse properties; filter by category &amp; type</td></tr>
+    <tr><td>&#9633;</td><td>Open a Ready Property detail page; confirm rental-income fields visible, construction fields hidden</td></tr>
+    <tr><td>&#9633;</td><td>Open an Under-Construction detail page; confirm construction fields visible, rental fields hidden</td></tr>
+    <tr><td>&#9633;</td><td>Invest upfront in a Ready property; tokens land in wallet within 30 seconds; BSCScan tx visible</td></tr>
+    <tr><td>&#9633;</td><td>Invest with installments in an Under-Construction property; first installment tokens released; remainder in escrow</td></tr>
+    <tr><td>&#9633;</td><td>Trigger a subsequent installment (via admin); confirm tokens release</td></tr>
+    <tr><td>&#9633;</td><td>Trigger a rental distribution (via admin); confirm dividend appears in portfolio</td></tr>
+    <tr><td>&#9633;</td><td>List tokens on the marketplace</td></tr>
+    <tr><td>&#9633;</td><td>Sell tokens (another investor account places a buy order); listing fills</td></tr>
+    <tr><td>&#9633;</td><td>Request a withdrawal; admin approves; status flips to <em>Processed</em></td></tr>
+    <tr><td>&#9633;</td><td>Exercise every error path in section 12</td></tr>
+    <tr><td>&#9633;</td><td>Verify a token mint on BSCScan independently (<a href="09-workflow-onchain-verification.html">guide 9</a>)</td></tr>
+  </tbody>
+</table>
+
+<footer class="footer">
+  <span><a href="01-tester-onboarding.html">&larr; 1. Tester Onboarding</a></span>
+  <span>Next: <a href="03-property-owner-guide.html">3. Property Owner Guide</a> &rarr;</span>
+</footer>
+
+</main>
+</div>
+</body>
+</html>

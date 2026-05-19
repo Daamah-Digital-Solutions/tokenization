@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>On-Chain Verification — Capimax Tester Documentation</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <h1 class="brand">Capimax</h1>
+  <p class="brand-sub">Tester Documentation v1</p>
+  <nav>
+    <div class="nav-section">Start Here</div>
+    <a href="index.html">Documentation Home</a>
+    <a href="01-tester-onboarding.html">1. Tester Onboarding</a>
+
+    <div class="nav-section">Role Guides</div>
+    <a href="02-investor-guide.html">2. Investor</a>
+    <a href="03-property-owner-guide.html">3. Property Owner</a>
+    <a href="04-broker-guide.html">4. Broker</a>
+    <a href="05-admin-guide.html">5. Admin</a>
+
+    <div class="nav-section">Workflows</div>
+    <a href="06-workflow-under-construction.html">6. Under-Construction Lifecycle</a>
+    <a href="07-workflow-ready-property.html">7. Ready Property Lifecycle</a>
+    <a href="08-workflow-marketplace.html">8. Marketplace Trading</a>
+    <a href="09-workflow-onchain-verification.html" class="current">9. On-Chain Verification</a>
+  </nav>
+</aside>
+
+<main class="main">
+
+<header class="cover">
+  <p class="eyebrow">Workflow 9 of 9</p>
+  <h1>On-Chain Verification</h1>
+  <p class="lede">
+    Everything that happens in the smart contracts is independently
+    verifiable on BSCScan. This guide teaches you how to prove that
+    your tokens were minted, that an installment really released, that
+    a marketplace trade actually settled, and that a rental
+    distribution went out.
+  </p>
+  <div class="meta">
+    <div><strong>Time:</strong> ~30 minutes (familiarization)</div>
+    <div><strong>Prereqs:</strong> Completed at least one investment in <a href="02-investor-guide.html">Investor guide</a></div>
+    <div><strong>Tool:</strong> <a href="https://testnet.bscscan.com">testnet.bscscan.com</a></div>
+  </div>
+</header>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#what">What "verifying on chain" means</a></li>
+    <li><a href="#addresses">Current contract addresses</a></li>
+    <li><a href="#bscscan-basics">BSCScan basics</a></li>
+    <li><a href="#verify-mint">Verify a token mint</a></li>
+    <li><a href="#verify-balance">Verify a token balance</a></li>
+    <li><a href="#verify-installment">Verify an installment release</a></li>
+    <li><a href="#verify-trade">Verify a marketplace trade</a></li>
+    <li><a href="#verify-distribution">Verify a rental distribution</a></li>
+    <li><a href="#read-state">Reading on-chain state directly</a></li>
+    <li><a href="#events-reference">Event reference</a></li>
+    <li><a href="#troubleshoot">When BSCScan and the platform disagree</a></li>
+  </ol>
+</div>
+
+<h2 id="what">1. What "verifying on chain" means</h2>
+
+<p>
+  Capimax stores critical actions in two places: the off-chain database
+  (where it's fast and queryable) and the on-chain smart contract
+  (where it's tamper-evident and public). The on-chain copy is the
+  source of truth.
+</p>
+
+<p>
+  Verifying on chain means: instead of trusting what the platform UI
+  shows you, you read the blockchain directly and confirm the same
+  values. It's the test that proves the platform isn't just pretending.
+</p>
+
+<div class="callout">
+  <p class="label">Why this matters for testing</p>
+  <p>
+    If the platform UI says "you own 25 tokens" but the chain says
+    "you own 0 tokens", that's a serious bug. We need testers to
+    actively check both surfaces and report discrepancies.
+  </p>
+</div>
+
+<h2 id="addresses">2. Current contract addresses</h2>
+
+<p>
+  These addresses are correct as of the current testing round (BSC
+  Testnet, chain 97). They may change on subsequent deployments &mdash;
+  always confirm via Django Admin &rarr; Blockchain &rarr; Smart
+  contracts before relying on them.
+</p>
+
+<table>
+  <thead><tr><th>Contract</th><th>Address</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>RealEstateToken (template)</td>
+      <td>
+        <code>0xd186eFAF6D38ac2225eDaC43DB4Be1db6aFE6B14</code>
+        <br>
+        <a href="https://testnet.bscscan.com/address/0xd186eFAF6D38ac2225eDaC43DB4Be1db6aFE6B14">BSCScan</a>
+      </td>
+    </tr>
+    <tr>
+      <td>RentalIncomeDistributor (template)</td>
+      <td>
+        <code>0x95F3D62Bc0F637F16428665f602BF316863EFD6c</code>
+        <br>
+        <a href="https://testnet.bscscan.com/address/0x95F3D62Bc0F637F16428665f602BF316863EFD6c">BSCScan</a>
+      </td>
+    </tr>
+    <tr>
+      <td>PropertyContractFactory</td>
+      <td>
+        <code>0x4B5301C45B876F4197F3Fc25b7e4dE062382F651</code>
+        <br>
+        <a href="https://testnet.bscscan.com/address/0x4B5301C45B876F4197F3Fc25b7e4dE062382F651">BSCScan</a>
+      </td>
+    </tr>
+    <tr>
+      <td>Platform Treasury (deployer wallet)</td>
+      <td><code>0x9278A652585779935F7FDbD6D1259f327B12AfD0</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>2.1 Per-property contracts</h3>
+
+<p>
+  Each tokenized property gets its own clone of the RealEstateToken
+  template. To find a specific property's contract:
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Open the property detail page on the platform</p>
+  </li>
+  <li>
+    <p>Look for "Contract: 0x&hellip;" or "View on BSCScan" link</p>
+  </li>
+  <li>
+    <p>OR: Django Admin &rarr; Blockchain &rarr; Smart contracts &rarr; filter by property = "{title}"</p>
+  </li>
+</ol>
+
+<h2 id="bscscan-basics">3. BSCScan basics</h2>
+
+<p>
+  BSCScan is the block explorer for the BNB Smart Chain. The testnet
+  version lives at <a href="https://testnet.bscscan.com">testnet.bscscan.com</a>.
+</p>
+
+<h3>3.1 Three ways to search</h3>
+
+<ul>
+  <li>
+    <strong>By address</strong> &mdash; see all activity for a wallet
+    or contract: <code>https://testnet.bscscan.com/address/{address}</code>
+  </li>
+  <li>
+    <strong>By transaction hash</strong> &mdash; see one specific
+    transaction: <code>https://testnet.bscscan.com/tx/{tx_hash}</code>
+  </li>
+  <li>
+    <strong>By block number</strong> &mdash; see all transactions in
+    a block: <code>https://testnet.bscscan.com/block/{block_number}</code>
+  </li>
+</ul>
+
+<h3>3.2 Key tabs on an address page</h3>
+
+<table>
+  <thead><tr><th>Tab</th><th>What it shows</th></tr></thead>
+  <tbody>
+    <tr><td>Transactions</td><td>Outgoing + incoming transactions</td></tr>
+    <tr><td>BEP-20 / Token transfers</td><td>ERC-20-like token movements</td></tr>
+    <tr><td>ERC-1155</td><td>ERC-1155 token movements (Capimax tokens live here)</td></tr>
+    <tr><td>Internal Txns</td><td>Contract-to-contract calls within a tx</td></tr>
+    <tr><td>Contract</td><td>Source code (if verified), read functions, write functions</td></tr>
+    <tr><td>Events</td><td>Decoded log events emitted by this contract</td></tr>
+  </tbody>
+</table>
+
+<h2 id="verify-mint">4. Verify a token mint</h2>
+
+<p>
+  After you invest, the platform shows a transaction hash on the
+  confirmation page. Let's verify it.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Click the BSCScan link from the investment confirmation page</p>
+    <p>OR copy the transaction hash and paste it into BSCScan's search bar</p>
+  </li>
+  <li>
+    <p>You land on the transaction detail page. Verify:</p>
+    <ul>
+      <li><strong>Status</strong>: should be "Success"</li>
+      <li><strong>From</strong>: the platform's deployer wallet
+        (<code>0x9278A6&hellip;</code>) &mdash; the platform signs your mint, not you</li>
+      <li><strong>To</strong>: the per-property contract address</li>
+      <li><strong>Value</strong>: 0 BNB (mint doesn't transfer native currency)</li>
+      <li><strong>Transaction Fee</strong>: a small amount of tBNB (gas)</li>
+    </ul>
+  </li>
+  <li>
+    <p>Scroll to the "Logs" section. You should see an event with topic <code>TransferSingle</code></p>
+    <p>The TransferSingle event is the ERC-1155 standard mint/transfer event. Decoded fields:</p>
+    <ul>
+      <li><code>operator</code>: platform deployer wallet</li>
+      <li><code>from</code>: <code>0x0000000000000000000000000000000000000000</code> (zero address means mint)</li>
+      <li><code>to</code>: your wallet address</li>
+      <li><code>id</code>: 0 (each clone holds one property at tokenId 0)</li>
+      <li><code>value</code>: the number of tokens minted</li>
+    </ul>
+  </li>
+  <li>
+    <p>If the "from" address is NOT the zero address, this wasn't a mint &mdash; it was a transfer. That's a different operation; ensure you opened the right transaction.</p>
+  </li>
+</ol>
+
+<div class="callout success">
+  <p class="label">Mint verified</p>
+  <p>
+    You've now independently confirmed that the platform's claim of
+    "tokens minted" matches a real on-chain event. Anyone with the
+    transaction hash can do this same check.
+  </p>
+</div>
+
+<h2 id="verify-balance">5. Verify a token balance</h2>
+
+<p>
+  Mint events confirm that tokens arrived. But tokens can leave too
+  (transfer, burn, sell). To check current balance, you call the
+  contract directly.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Open the per-property contract on BSCScan</p>
+    <p>e.g. <code>https://testnet.bscscan.com/address/0x32a0858993065C6343C85BC4961c3D462042792D</code></p>
+  </li>
+  <li>
+    <p>Click the <strong>Contract</strong> tab &rarr; <strong>Read Contract</strong></p>
+  </li>
+  <li>
+    <p>Find <code>balanceOf</code> in the function list</p>
+    <p>This is the ERC-1155 balance accessor. Parameters:</p>
+    <ul>
+      <li><code>account</code>: the wallet address whose balance you want</li>
+      <li><code>id</code>: 0 (the propertyId inside this clone)</li>
+    </ul>
+  </li>
+  <li>
+    <p>Enter your wallet address + 0, click <strong>Query</strong></p>
+  </li>
+  <li>
+    <p>The returned value is your current balance in this property</p>
+  </li>
+</ol>
+
+<h3>5.1 Check the escrow balance</h3>
+
+<p>
+  If you're an installment investor, some of your tokens are held in
+  escrow on the contract itself. To see how many:
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Same <code>balanceOf</code> function</p>
+  </li>
+  <li>
+    <p>Pass the CONTRACT'S OWN ADDRESS as the account, and 0 as the id</p>
+    <p>e.g. for the contract at <code>0x32a0&hellip;</code>, pass <code>0x32a0858993065C6343C85BC4961c3D462042792D</code> as account.</p>
+  </li>
+  <li>
+    <p>The result is the total tokens in escrow (across all installment investors)</p>
+  </li>
+</ol>
+
+<h2 id="verify-installment">6. Verify an installment release</h2>
+
+<p>
+  When an installment is paid, the platform calls
+  <code>processInstallment</code> on the contract. That call emits two
+  events: <code>InstallmentPaid</code> and <code>TokensGraduated</code>.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Find the transaction hash for the installment release</p>
+    <p>Either from the investor's notification, or from Django Admin &rarr; Investments &rarr; Construction installment payments &rarr; the row's <code>blockchain_tx_hash</code> field.</p>
+  </li>
+  <li>
+    <p>Open it in BSCScan</p>
+  </li>
+  <li>
+    <p>Logs section should contain three events:</p>
+    <table>
+      <thead><tr><th>Event</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>TransferSingle (from contract to investor)</td><td>Tokens leave escrow, land in investor wallet</td></tr>
+        <tr><td>InstallmentPaid</td><td>Counter incremented; emitted fields: tokenId, investor, installmentNumber</td></tr>
+        <tr><td>TokensGraduated</td><td>Confirmation event: tokenId, investor, amount</td></tr>
+      </tbody>
+    </table>
+  </li>
+  <li>
+    <p>Read the contract state to confirm:</p>
+    <ul>
+      <li>Investor's wallet balance increased</li>
+      <li>Contract's escrow balance decreased by the same amount</li>
+      <li><code>investors(tokenId=0, investor_address).installmentsPaid</code> equals the new paid count</li>
+    </ul>
+  </li>
+</ol>
+
+<h2 id="verify-trade">7. Verify a marketplace trade</h2>
+
+<p>
+  A marketplace trade settlement results in a TransferSingle event
+  where tokens move from seller to buyer (not from zero address).
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Find the transaction from the platform's trade record</p>
+    <p>Marketplace &rarr; Trade transactions &rarr; the row's <code>transaction_hash</code></p>
+  </li>
+  <li>
+    <p>Open in BSCScan, find the TransferSingle event:</p>
+    <ul>
+      <li><code>operator</code>: marketplace contract or matching engine signer</li>
+      <li><code>from</code>: seller wallet</li>
+      <li><code>to</code>: buyer wallet</li>
+      <li><code>id</code>: property tokenId (0 inside the clone)</li>
+      <li><code>value</code>: tokens traded</li>
+    </ul>
+  </li>
+  <li>
+    <p>Verify the balances changed accordingly &mdash; seller's
+    decreased, buyer's increased, by the same amount</p>
+  </li>
+</ol>
+
+<h2 id="verify-distribution">8. Verify a rental distribution</h2>
+
+<p>
+  Rental distributions happen on the per-property
+  RentalIncomeDistributor contract (separate from the token contract).
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Find the distribution's transaction hash</p>
+    <p>Owner dashboard &rarr; Revenue &rarr; Distribution history. Or Django Admin &rarr; Blockchain &rarr; Rental distribution rows.</p>
+  </li>
+  <li>
+    <p>Open in BSCScan</p>
+  </li>
+  <li>
+    <p>Logs should contain a <code>RentalIncomeDistributed</code> event:</p>
+    <ul>
+      <li><code>tokenId</code>: 0</li>
+      <li><code>distributionId</code>: monotonic counter (first distribution = 0)</li>
+      <li><code>totalAmount</code>: amount distributed (in wei)</li>
+    </ul>
+  </li>
+  <li>
+    <p>If individual investor claims have happened, each one emits a
+    <code>RentalIncomeClaimed</code> event:</p>
+    <ul>
+      <li><code>tokenId</code>: 0</li>
+      <li><code>distributionId</code>: which distribution</li>
+      <li><code>investor</code>: claimer's wallet</li>
+      <li><code>amount</code>: their share</li>
+    </ul>
+  </li>
+  <li>
+    <p>To check your eligibility for a distribution, read
+    <code>rentalDistributions(tokenId=0, distributionId)</code> on the
+    distributor contract. It returns total amount, eligible tokens at
+    distribution time, distribution date.</p>
+  </li>
+</ol>
+
+<h2 id="read-state">9. Reading on-chain state directly</h2>
+
+<p>
+  The "Read Contract" tab on any contract page exposes all the public
+  view functions. Useful queries:
+</p>
+
+<table>
+  <thead><tr><th>Function</th><th>Returns</th><th>Use</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>balanceOf(account, id)</code></td>
+      <td>Token balance for a single id</td>
+      <td>Check ownership</td>
+    </tr>
+    <tr>
+      <td><code>properties(tokenId)</code></td>
+      <td>Struct: totalSupply, currentSupply, category, status, lockupPeriod, earlyExitFeeRate, rentalYieldRate, propertyManager, propertyURI, tokenPrice, createdAt, completionDate, rentalIncomeActive</td>
+      <td>Inspect any property's core fields</td>
+    </tr>
+    <tr>
+      <td><code>investors(tokenId, address)</code></td>
+      <td>Struct: tokenBalance, totalInvested, firstInvestmentTime, lockupEndTime, hasEarlyExit, installmentsPaid, totalInstallments</td>
+      <td>Per-investor record</td>
+    </tr>
+    <tr>
+      <td><code>rentalDistributions(tokenId, distributionId)</code></td>
+      <td>Distribution record</td>
+      <td>Past distributions</td>
+    </tr>
+    <tr>
+      <td><code>totalSupply(id)</code></td>
+      <td>Total tokens in circulation for this property</td>
+      <td>Sanity check</td>
+    </tr>
+    <tr>
+      <td><code>uri(id)</code></td>
+      <td>Metadata URI for the property</td>
+      <td>Inspect property metadata</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>9.1 Example: Confirm a property is ACTIVE</h3>
+
+<ol class="steps">
+  <li>
+    <p>Open the per-property contract &rarr; Read Contract</p>
+  </li>
+  <li>
+    <p>Call <code>properties(0)</code></p>
+  </li>
+  <li>
+    <p>Look at the <code>status</code> field</p>
+    <p>PropertyStatus enum values: 0=DRAFT, 1=ACTIVE, 2=PAUSED, 3=COMPLETED, 4=CANCELLED</p>
+    <p>For an investable property, expect 1 (ACTIVE).</p>
+  </li>
+</ol>
+
+<h2 id="events-reference">10. Event reference</h2>
+
+<p>
+  Quick lookup for every event Capimax emits. When debugging "did X
+  happen on chain?", look for the matching event in the Logs section
+  of the relevant transaction.
+</p>
+
+<h3>10.1 RealEstateToken events</h3>
+
+<table>
+  <thead><tr><th>Event</th><th>Fields</th><th>When emitted</th></tr></thead>
+  <tbody>
+    <tr><td><code>PropertyCreated</code></td><td>tokenId, category, totalSupply</td><td>Factory creates a new property in a clone</td></tr>
+    <tr><td><code>TokensMinted</code></td><td>tokenId, investor, amount</td><td>Investor invests &mdash; could be upfront or installment-escrow</td></tr>
+    <tr><td><code>TokensBurned</code></td><td>tokenId, investor, amount</td><td>Investor early-exits</td></tr>
+    <tr><td><code>InstallmentPaid</code></td><td>tokenId, investor, installmentNumber</td><td>Installment payment processed</td></tr>
+    <tr><td><code>TokensGraduated</code></td><td>tokenId, investor, amount</td><td>Tokens released from escrow to investor (after each installment)</td></tr>
+    <tr><td><code>EarlyExit</code></td><td>tokenId, investor, tokensExited, fee</td><td>Investor exits before lockup ends; fee deducted</td></tr>
+    <tr><td><code>RentalIncomeDistributed</code></td><td>tokenId, distributionId, totalAmount</td><td>Owner triggers a distribution</td></tr>
+    <tr><td><code>RentalIncomeClaimed</code></td><td>tokenId, distributionId, investor, amount</td><td>Investor claims their share</td></tr>
+    <tr><td><code>TransferSingle</code> (ERC-1155 standard)</td><td>operator, from, to, id, value</td><td>Any token movement: mint (from=0x0), transfer, burn (to=0x0)</td></tr>
+  </tbody>
+</table>
+
+<h3>10.2 PropertyContractFactory events</h3>
+
+<table>
+  <thead><tr><th>Event</th><th>Fields</th><th>When emitted</th></tr></thead>
+  <tbody>
+    <tr><td><code>PropertyDeployed</code></td><td>propertyId, tokenContract, distributorContract, propertyOwner</td><td>Owner tokenizes a new property</td></tr>
+    <tr><td><code>PropertyActivated</code></td><td>propertyId</td><td>Property's status flips DRAFT &rarr; ACTIVE</td></tr>
+    <tr><td><code>PropertyDeactivated</code></td><td>propertyId</td><td>Admin or owner pauses a property</td></tr>
+  </tbody>
+</table>
+
+<h3>10.3 RentalIncomeDistributor events</h3>
+
+<table>
+  <thead><tr><th>Event</th><th>Fields</th><th>When emitted</th></tr></thead>
+  <tbody>
+    <tr><td><code>DistributionInitiated</code></td><td>propertyId, distributionId, totalAmount</td><td>Distribution starts</td></tr>
+    <tr><td><code>DistributionClaimed</code></td><td>propertyId, distributionId, investor, amount</td><td>Investor claims</td></tr>
+  </tbody>
+</table>
+
+<h2 id="troubleshoot">11. When BSCScan and the platform disagree</h2>
+
+<p>
+  Source of truth: the chain. If the platform UI shows different
+  balances or different transactions than BSCScan, the platform's
+  off-chain database is out of sync.
+</p>
+
+<h3>11.1 Symptoms to file as bugs</h3>
+
+<ul>
+  <li>Platform says you own N tokens; chain says you own M (M != N)</li>
+  <li>Platform shows a transaction as completed; chain shows it reverted</li>
+  <li>Platform shows escrow balance &gt; 0; chain shows the contract holds 0 tokens</li>
+  <li>Dividend amount in platform doesn't match the chain's per-token math</li>
+</ul>
+
+<h3>11.2 What to include in your report</h3>
+
+<ul>
+  <li>BSCScan transaction or address link</li>
+  <li>Screenshot of the platform UI showing the disagreement</li>
+  <li>Your wallet address</li>
+  <li>The exact contract address you queried on chain</li>
+  <li>Result of the <code>balanceOf</code> call (or whatever read function you used)</li>
+  <li>Result of the platform's API call (open browser dev tools &rarr; Network &rarr; copy response body)</li>
+</ul>
+
+<div class="callout danger">
+  <p class="label">Treat chain&ne;platform divergence as a blocker</p>
+  <p>
+    This is the most serious class of bug. It usually means the
+    platform's reconciliation jobs failed or never ran. Ping your
+    project lead immediately &mdash; don't wait for the bug-tracker
+    triage cycle.
+  </p>
+</div>
+
+<footer class="footer">
+  <span><a href="08-workflow-marketplace.html">&larr; 8. Marketplace Trading</a></span>
+  <span><a href="index.html">Back to Documentation Home</a></span>
+</footer>
+
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Broker Guide — Capimax Tester Documentation</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="layout">
+
+<aside class="sidebar">
+  <h1 class="brand">Capimax</h1>
+  <p class="brand-sub">Tester Documentation v1</p>
+  <nav>
+    <div class="nav-section">Start Here</div>
+    <a href="index.html">Documentation Home</a>
+    <a href="01-tester-onboarding.html">1. Tester Onboarding</a>
+
+    <div class="nav-section">Role Guides</div>
+    <a href="02-investor-guide.html">2. Investor</a>
+    <a href="03-property-owner-guide.html">3. Property Owner</a>
+    <a href="04-broker-guide.html" class="current">4. Broker</a>
+    <a href="05-admin-guide.html">5. Admin</a>
+
+    <div class="nav-section">Workflows</div>
+    <a href="06-workflow-under-construction.html">6. Under-Construction Lifecycle</a>
+    <a href="07-workflow-ready-property.html">7. Ready Property Lifecycle</a>
+    <a href="08-workflow-marketplace.html">8. Marketplace Trading</a>
+    <a href="09-workflow-onchain-verification.html">9. On-Chain Verification</a>
+  </nav>
+</aside>
+
+<main class="main">
+
+<header class="cover">
+  <p class="eyebrow">Guide 4 of 9 &middot; <span class="pill role-broker">Broker</span></p>
+  <h1>Broker Guide</h1>
+  <p class="lede">
+    How to apply as a broker, manage your referred clients, track their
+    investments, see your commissions accrue, request payouts, and use
+    marketing materials.
+  </p>
+  <div class="meta">
+    <div><strong>Time:</strong> ~30 minutes</div>
+    <div><strong>Prereqs:</strong> <a href="01-tester-onboarding.html">Tester Onboarding</a></div>
+    <div><strong>Test account:</strong> <code>broker@test.com</code></div>
+  </div>
+</header>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#apply">Broker application</a></li>
+    <li><a href="#dashboard">The broker dashboard</a></li>
+    <li><a href="#referrals">Referring clients</a></li>
+    <li><a href="#commissions">How commissions work</a></li>
+    <li><a href="#performance">Performance metrics</a></li>
+    <li><a href="#materials">Marketing materials</a></li>
+    <li><a href="#payouts">Requesting a commission payout</a></li>
+    <li><a href="#error-paths">Error paths to test</a></li>
+    <li><a href="#checklist">Tester checklist</a></li>
+  </ol>
+</div>
+
+<h2 id="apply">1. Broker application</h2>
+
+<p>
+  Brokers must apply and be approved before they can refer clients.
+  The seeded <code>broker@test.com</code> account is already approved.
+  This section covers the new-broker application path.
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Sign up a new account with role = Broker</p>
+    <p>OR &mdash; from an existing investor account, request a role upgrade in Settings &rarr; Roles.</p>
+  </li>
+  <li>
+    <p>Complete the broker application form</p>
+    <ul>
+      <li>Business name</li>
+      <li>License / registration number</li>
+      <li>Country of operation</li>
+      <li>Years of experience</li>
+      <li>Areas of specialty</li>
+      <li>Compliance attestations (checkboxes)</li>
+      <li>Supporting documents (license PDF, etc.)</li>
+    </ul>
+  </li>
+  <li>
+    <p>Submit. Status flips to <em>Under review</em>.</p>
+  </li>
+  <li>
+    <p>Admin reviews via Django Admin and approves. You receive a notification + email.</p>
+  </li>
+  <li>
+    <p>Status flips to <em>Approved</em>. You now see the broker dashboard.</p>
+  </li>
+</ol>
+
+<h2 id="dashboard">2. The broker dashboard</h2>
+
+<p>Log in as <code>broker@test.com</code>.</p>
+
+<h3>2.1 Overview widgets</h3>
+
+<table>
+  <thead><tr><th>Widget</th><th>Contents</th></tr></thead>
+  <tbody>
+    <tr><td>Stat cards</td><td>Total Clients, Total Volume Referred, Commissions Earned, Pending Payout</td></tr>
+    <tr><td>Referrals chart</td><td>New clients per week/month</td></tr>
+    <tr><td>Commission chart</td><td>Commissions accrued over time</td></tr>
+    <tr><td>Recent activity</td><td>Client signs up &middot; client completes KYC &middot; client invests &middot; commission credited</td></tr>
+    <tr><td>Top properties</td><td>Properties most popular with your clients</td></tr>
+  </tbody>
+</table>
+
+<h3>2.2 Side nav</h3>
+
+<ul>
+  <li><strong>Overview</strong></li>
+  <li><strong>Clients</strong> &mdash; your referred investors</li>
+  <li><strong>Commissions</strong> &mdash; ledger of every commission line</li>
+  <li><strong>Performance</strong> &mdash; per-month metrics, tier progression</li>
+  <li><strong>Marketing</strong> &mdash; materials &amp; trackable referral links</li>
+  <li><strong>Payouts</strong> &mdash; request and history</li>
+</ul>
+
+<h2 id="referrals">3. Referring clients</h2>
+
+<h3>3.1 Get your referral link</h3>
+
+<ol class="steps">
+  <li>
+    <p>Side nav &rarr; <strong>Marketing</strong> &rarr; Referral Links</p>
+  </li>
+  <li>
+    <p>You see one or more pre-generated referral codes</p>
+    <p>Format: <code>https://capimax.com/r/{your-code}</code></p>
+  </li>
+  <li>
+    <p>Click <strong>Copy link</strong></p>
+  </li>
+</ol>
+
+<h3>3.2 Send the link to a prospective investor</h3>
+
+<p>
+  When that prospect signs up via your link, they're tagged with your
+  broker_id automatically. They appear in your Clients tab once they
+  complete KYC.
+</p>
+
+<h3>3.3 Manual referral</h3>
+
+<p>
+  If a client signed up directly (without using your link), you can
+  manually request that they be assigned to you:
+</p>
+
+<ol class="steps">
+  <li>
+    <p>Clients tab &rarr; <strong>Add Referral</strong></p>
+  </li>
+  <li>
+    <p>Enter the client's email</p>
+  </li>
+  <li>
+    <p>Submit. The client receives a confirmation request &mdash; they have to accept.</p>
+  </li>
+  <li>
+    <p>Once accepted, the client appears in your list with status <em>Active</em></p>
+  </li>
+</ol>
+
+<h3>3.4 Tracking a client</h3>
+
+<p>Clients tab shows one row per referred investor with:</p>
+<ul>
+  <li>Name</li>
+  <li>Status (Signed up / KYC pending / KYC approved / Active / Inactive)</li>
+  <li>Joined date</li>
+  <li>Total invested</li>
+  <li>Commission earned from this client</li>
+  <li>Last activity</li>
+</ul>
+
+<p>Click a row to drill in. You see the client's investment history at the property level (not the transaction level &mdash; that's private).</p>
+
+<div class="callout warning">
+  <p class="label">Privacy boundary</p>
+  <p>
+    Brokers see aggregate investment data per client, but NOT
+    transaction-level detail and NOT the client's wallet address or
+    payment-method details. If you can see those, file a privacy bug
+    immediately.
+  </p>
+</div>
+
+<h2 id="commissions">4. How commissions work</h2>
+
+<h3>4.1 Commission structure</h3>
+
+<p>
+  Commissions accrue whenever a referred client invests in a property.
+  The platform pays the broker a percentage of the platform fee on each
+  investment.
+</p>
+
+<table>
+  <thead><tr><th>Tier</th><th>Commission rate</th><th>Requirement</th></tr></thead>
+  <tbody>
+    <tr><td>Bronze</td><td>10% of platform fee</td><td>Default tier for new brokers</td></tr>
+    <tr><td>Silver</td><td>15% of platform fee</td><td>$50,000 referred volume in a quarter</td></tr>
+    <tr><td>Gold</td><td>20% of platform fee</td><td>$250,000 referred volume in a quarter</td></tr>
+    <tr><td>Platinum</td><td>25% of platform fee</td><td>$1,000,000 referred volume in a quarter</td></tr>
+  </tbody>
+</table>
+
+<p>
+  Tier is recalculated at the end of each quarter based on the rolling
+  3-month volume.
+</p>
+
+<h3>4.2 Commission ledger</h3>
+
+<ol class="steps">
+  <li>
+    <p>Side nav &rarr; <strong>Commissions</strong></p>
+  </li>
+  <li>
+    <p>You see a paginated table of every commission line</p>
+    <table>
+      <thead><tr><th>Column</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td>Date</td><td>When the investment was made</td></tr>
+        <tr><td>Client</td><td>Name (no email)</td></tr>
+        <tr><td>Property</td><td>Title</td></tr>
+        <tr><td>Investment</td><td>Amount invested by the client</td></tr>
+        <tr><td>Commission rate</td><td>Tier-based %</td></tr>
+        <tr><td>Commission</td><td>Your earnings on this line</td></tr>
+        <tr><td>Status</td><td>Accrued / Paid / Cancelled</td></tr>
+      </tbody>
+    </table>
+  </li>
+  <li>
+    <p>Filter by date range, status, property, client</p>
+  </li>
+  <li>
+    <p>Export to CSV (button top-right)</p>
+  </li>
+</ol>
+
+<h3>4.3 Reversals</h3>
+
+<p>
+  If a client's investment gets refunded (e.g. terminal mint failure),
+  the corresponding commission line is reversed. The row's status
+  changes to <em>Cancelled</em> and a negative reversal entry is added.
+</p>
+
+<h2 id="performance">5. Performance metrics</h2>
+
+<ol class="steps">
+  <li>
+    <p>Side nav &rarr; <strong>Performance</strong></p>
+  </li>
+  <li>
+    <p>You see your current quarter snapshot:</p>
+    <ul>
+      <li>Current tier</li>
+      <li>Volume this quarter</li>
+      <li>Distance to next tier</li>
+      <li>Active clients</li>
+      <li>Average commission per client</li>
+      <li>Retention rate</li>
+    </ul>
+  </li>
+  <li>
+    <p>Historical chart &mdash; quarter-over-quarter trends</p>
+  </li>
+  <li>
+    <p>Peer benchmark &mdash; how your numbers compare to the broker average (anonymized)</p>
+  </li>
+</ol>
+
+<h2 id="materials">6. Marketing materials</h2>
+
+<ol class="steps">
+  <li>
+    <p>Side nav &rarr; <strong>Marketing</strong></p>
+  </li>
+  <li>
+    <p>Browse the materials library</p>
+    <p>Types: PDF brochures, email templates, social-media graphics, landing-page banners, FAQ documents</p>
+  </li>
+  <li>
+    <p>Each material has:</p>
+    <ul>
+      <li>Title</li>
+      <li>Type</li>
+      <li>Language</li>
+      <li>"Download" button</li>
+      <li>"Share to clipboard" (with your referral code already embedded in any links)</li>
+    </ul>
+  </li>
+  <li>
+    <p>Track which materials are most-used (Performance tab)</p>
+  </li>
+</ol>
+
+<h2 id="payouts">7. Requesting a commission payout</h2>
+
+<ol class="steps">
+  <li>
+    <p>Side nav &rarr; <strong>Payouts</strong> &rarr; <strong>Request Payout</strong></p>
+  </li>
+  <li>
+    <p>Form fields:</p>
+    <ul>
+      <li>Amount (must be &le; Pending Payout balance)</li>
+      <li>Payout method (bank, crypto, or platform wallet)</li>
+      <li>Destination details</li>
+      <li>Notes (optional)</li>
+    </ul>
+  </li>
+  <li>
+    <p>Submit. Status: <em>Pending review</em>.</p>
+  </li>
+  <li>
+    <p>Admin reviews via Django Admin. Once approved, status flips to <em>Processing</em>.</p>
+  </li>
+  <li>
+    <p>When the off-platform transfer is confirmed, status becomes <em>Paid</em>. You see a transaction reference.</p>
+  </li>
+  <li>
+    <p>The corresponding commission ledger lines flip from <em>Accrued</em> to <em>Paid</em>.</p>
+  </li>
+</ol>
+
+<div class="callout">
+  <p class="label">Minimum payout</p>
+  <p>
+    In the test environment the minimum payout is $10. In production
+    this is configurable per region. Try requesting under the minimum
+    &mdash; should be refused with a clear message.
+  </p>
+</div>
+
+<h2 id="error-paths">8. Error paths to test</h2>
+
+<table>
+  <thead><tr><th>Scenario</th><th>Expected response</th></tr></thead>
+  <tbody>
+    <tr><td>Try to invest as a broker</td><td>The platform allows brokers to invest if they have a separate investor role assignment, but blocks self-referral</td></tr>
+    <tr><td>Refer a client who's already referred by another broker</td><td>Rejected with "Client already referred"</td></tr>
+    <tr><td>Manually refer a client who refuses</td><td>Pending state expires after 14 days; never appears in your list</td></tr>
+    <tr><td>Request payout exceeding pending balance</td><td>Validation error</td></tr>
+    <tr><td>Request payout below minimum</td><td>Validation error</td></tr>
+    <tr><td>Request a second payout while one is processing</td><td>Should queue the second one OR block until the first completes (test which one)</td></tr>
+    <tr><td>Try to view a client's wallet address</td><td>Not exposed; should not be visible anywhere in the broker UI</td></tr>
+    <tr><td>Try to view another broker's commissions via URL guess</td><td>403 or empty results</td></tr>
+    <tr><td>Client's investment fails (mint reverted)</td><td>Commission line gets cancelled; payable balance decreases</td></tr>
+    <tr><td>Broker tier downgrade</td><td>If you drop below threshold this quarter, tier flips at quarter end; commission rate falls accordingly on future investments</td></tr>
+  </tbody>
+</table>
+
+<h2 id="checklist">9. Tester checklist</h2>
+
+<table>
+  <thead><tr><th>Done</th><th>Action</th></tr></thead>
+  <tbody>
+    <tr><td>&#9633;</td><td>Apply as a new broker; complete the application; reach <em>Under review</em></td></tr>
+    <tr><td>&#9633;</td><td>Have admin approve; status flips to <em>Approved</em></td></tr>
+    <tr><td>&#9633;</td><td>Get your referral link; verify it routes to signup</td></tr>
+    <tr><td>&#9633;</td><td>Sign up an investor via your link; confirm they appear in your Clients</td></tr>
+    <tr><td>&#9633;</td><td>Trigger an investment from that client (use a different browser/incognito)</td></tr>
+    <tr><td>&#9633;</td><td>Verify the commission line appears in your ledger with status <em>Accrued</em></td></tr>
+    <tr><td>&#9633;</td><td>Force a mint failure on the client's investment; commission line reverses to <em>Cancelled</em></td></tr>
+    <tr><td>&#9633;</td><td>Request a payout; admin approves; status reaches <em>Paid</em></td></tr>
+    <tr><td>&#9633;</td><td>Download a marketing brochure</td></tr>
+    <tr><td>&#9633;</td><td>Verify privacy: no email, no wallet address, no payment-method details exposed</td></tr>
+    <tr><td>&#9633;</td><td>Try to view another broker's data via URL manipulation; expect 403</td></tr>
+  </tbody>
+</table>
+
+<footer class="footer">
+  <span><a href="03-property-owner-guide.html">&larr; 3. Property Owner Guide</a></span>
+  <span>Next: <a href="05-admin-guide.html">5. Admin Guide</a> &rarr;</span>
+</footer>
+
+</main>
+</div>
+</body>
+</html>
