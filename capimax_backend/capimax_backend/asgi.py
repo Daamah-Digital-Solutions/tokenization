@@ -17,7 +17,16 @@ try:
 except ImportError:
     pass
 
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'capimax_backend.settings')
+
+# Initialize Django ASGI application FIRST so the app registry is populated
+# before any module that touches the ORM (channels consumers transitively
+# import ContentType, which requires apps to be ready). Order matters here:
+# don't move these imports above this line.
 from django.core.asgi import get_asgi_application
+django_asgi_app = get_asgi_application()
+
+# Safe to import ORM-touching code now.
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.security.websocket import AllowedHostsOriginValidator
 import ws_app.routing
@@ -25,12 +34,6 @@ from ws_app.middleware import (
     JWTAuthMiddleware, WebSocketSecurityMiddleware,
     WebSocketRateLimitMiddleware, WebSocketLoggingMiddleware
 )
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'capimax_backend.settings')
-
-# Initialize Django ASGI application early to ensure the AppRegistry
-# is populated before importing code that may import ORM models.
-django_asgi_app = get_asgi_application()
 
 application = ProtocolTypeRouter({
     "http": django_asgi_app,
