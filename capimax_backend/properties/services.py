@@ -20,7 +20,10 @@ from accounts.models import User
 from payments.models import Payment, PaymentStatus, UserPaymentMethod, WalletBalance
 from investments.models import Investment
 from notifications.models import Notification, NotificationType, NotificationPriority
-from blockchain.services import BlockchainService
+
+# ``BlockchainService`` no longer exists as a top-level export. Token-release
+# now goes through ``_release_tokens_to_investor`` which uses Web3 directly
+# against the per-property SmartContract row. Keep no module-level import.
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +41,10 @@ class InstallmentProcessingService:
     """
     
     def __init__(self):
-        self.blockchain_service = BlockchainService()
+        # Removed: ``self.blockchain_service`` (BlockchainService no longer
+        # exists as a top-level export). Web3 calls are made inline in
+        # ``_release_tokens_to_investor`` against the per-property
+        # SmartContract row.
         self.platform_commission_rate = getattr(settings, 'CAPIMAX_SETTINGS', {}).get(
             'PLATFORM_COMMISSION_RATE', Decimal('0.025')
         )
@@ -291,65 +297,97 @@ class InstallmentProcessingService:
             }
     
     def _release_tokens_to_investor(
-        self, 
-        installment: ConstructionInstallment, 
+        self,
+        installment: ConstructionInstallment,
         token_count: int
     ) -> Dict[str, Any]:
         """
-        Release tokens to investor's wallet via blockchain.
-        
-        Args:
-            installment: ConstructionInstallment instance
-            token_count: Number of tokens to release
-            
-        Returns:
-            Dictionary with token release result
+        Release tokens to investor's wallet via the on-chain
+        ``processInstallment`` call.
+
+        Under-construction properties pre-mint the investor's total token
+        allotment into escrow on the per-property contract (see RealEstateToken
+        .mintTokens with isInstallment=true). This method moves a slice of
+        that escrow to the investor's wallet whenever they pay an installment.
+
+        Returns a dict ``{success: bool, transaction_hash?: str, error?: str}``.
         """
-        try:
-            if not installment.property_investment.smart_contract_address:
-                return {
-                    'success': False,
-                    'error': 'No smart contract address found for property'
-                }
-            
-            # Get or create investment record for tracking
-            investment, created = Investment.objects.get_or_create(
-                user=installment.investor,
-                property=installment.property_investment,
-                defaults={
-                    'amount_invested': installment.total_amount_paid,
-                    'token_count': installment.tokens_released,
-                    'investment_date': timezone.now(),
-                    'status': 'active'
-                }
-            )
-            
-            if not created:
-                investment.token_count = installment.tokens_released
-                investment.amount_invested = installment.total_amount_paid
-                investment.save()
-            
-            # Call blockchain service to transfer tokens
-            blockchain_result = self.blockchain_service.transfer_tokens(
-                contract_address=installment.property_investment.smart_contract_address,
-                to_address=installment.investor.wallet_address or '',
-                token_count=token_count,
-                metadata={
-                    'installment_id': str(installment.id),
-                    'investor_id': str(installment.investor.id),
-                    'property_id': str(installment.property_investment.id),
-                    'payment_number': installment.payments_made
-                }
-            )
-            
-            return blockchain_result
-            
-        except Exception as e:
-            logger.error(f"Error releasing tokens for installment {installment.id}: {e}")
+        from django.conf import settings
+        from blockchain.models import SmartContract
+        from web3 import Web3
+        from eth_account import Account
+
+        property_obj = installment.property_investment
+        investor = installment.investor
+
+        if not property_obj.smart_contract_address:
+            return {'success': False, 'error': 'Property is not tokenized.'}
+        if not investor.wallet_address:
+            return {'success': False, 'error': 'Investor has no wallet_address.'}
+        if token_count <= 0:
+            return {'success': False, 'error': 'Nothing to release.'}
+
+        # Per-property SmartContract row carries the clone address + ABI.
+        token_sc = SmartContract.objects.filter(
+            property_reference=property_obj,
+            contract_type='real_estate_token',
+            status='active',
+        ).first()
+        if not token_sc:
             return {
                 'success': False,
-                'error': str(e)
+                'error': 'No active per-property token SmartContract row.',
             }
+
+        try:
+            w3 = Web3(Web3.HTTPProvider(token_sc.network.rpc_url))
+            signer = Account.from_key(settings.BLOCKCHAIN_PRIVATE_KEY)
+            token = w3.eth.contract(
+                address=Web3.to_checksum_address(token_sc.contract_address),
+                abi=token_sc.abi,
+            )
+
+            # Each clone holds exactly one property at tokenId=0.
+            CLONE_TOKEN_ID = 0
+            tx = token.functions.processInstallment(
+                CLONE_TOKEN_ID,
+                Web3.to_checksum_address(investor.wallet_address),
+                int(token_count),
+            ).build_transaction({
+                'from': signer.address,
+                'nonce': w3.eth.get_transaction_count(signer.address, 'pending'),
+                'gas': 300_000,
+                'gasPrice': w3.eth.gas_price,
+                'chainId': token_sc.network.chain_id,
+            })
+            signed = w3.eth.account.sign_transaction(tx, settings.BLOCKCHAIN_PRIVATE_KEY)
+            tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
+
+            receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
+            if receipt.status != 1:
+                logger.error(
+                    "processInstallment reverted for installment %s, tx 0x%s",
+                    installment.id, tx_hash,
+                )
+                return {
+                    'success': False,
+                    'error': 'processInstallment reverted on chain',
+                    'transaction_hash': f'0x{tx_hash}',
+                }
+
+            logger.info(
+                "Released %s tokens via installment %s (tx 0x%s)",
+                token_count, installment.id, tx_hash,
+            )
+            return {
+                'success': True,
+                'transaction_hash': f'0x{tx_hash}',
+                'block_number': receipt.blockNumber,
+                'gas_used': receipt.gasUsed,
+            }
+        except Exception as e:
+            logger.exception("Error releasing tokens for installment %s", installment.id)
+            return {'success': False, 'error': str(e)}
     
     def send_payment_reminders(self, days_before_due: int = 3) -> Dict[str, Any]:
         """
@@ -581,7 +619,10 @@ class RentalIncomeProcessingService:
     """
     
     def __init__(self):
-        self.blockchain_service = BlockchainService()
+        # Removed: ``self.blockchain_service`` (BlockchainService no longer
+        # exists as a top-level export). Web3 calls are made inline in
+        # ``_release_tokens_to_investor`` against the per-property
+        # SmartContract row.
         self.platform_commission_rate = getattr(settings, 'CAPIMAX_SETTINGS', {}).get(
             'PLATFORM_COMMISSION_RATE', Decimal('0.025')
         )

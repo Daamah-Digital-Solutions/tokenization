@@ -45,6 +45,10 @@ class Command(BaseCommand):
                             help="Email of investor to mint tokens to.")
         parser.add_argument('--tokens', type=int, default=10,
                             help="Number of tokens to mint.")
+        parser.add_argument('--installments', type=int, default=0,
+                            help="If >0, mint as an installment plan and run that many "
+                                 "processInstallment() calls. Each call releases "
+                                 "tokens/installments to the investor's wallet.")
 
     def handle(self, *args, **opts):
         # ----- Resolve property + investor ------------------------------------
@@ -106,10 +110,11 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING(
                 f"Property already tokenized at {prop.smart_contract_address} — skipping deployProperty."
             ))
-            # Each clone is dedicated to exactly one property and the factory
-            # numbers properties from 0. We persist the propertyId in the
-            # SmartContract row's ``constructor_args`` on first deploy; recover
-            # it from there if available, otherwise fall back to 0.
+            # ``property_id_on_chain`` here is the FACTORY's propertyId,
+            # used for factory.activateProperty(). Inside the clone token
+            # contract every property starts at tokenId=0 because each clone
+            # holds exactly one property — see _mint() / _process_installments
+            # where we explicitly pass 0 to the clone.
             sc_row = SmartContract.objects.get(property_reference=prop, contract_type='real_estate_token')
             property_id_on_chain = int(sc_row.constructor_args.get('property_id', 0))
 
@@ -121,7 +126,8 @@ class Command(BaseCommand):
         if skip_deploy:
             self.stdout.write(f"Reusing on-chain propertyId={property_id_on_chain}")
             # Jump straight to mint section.
-            self._mint(w3, signer, prop, property_id_on_chain, opts['tokens'], None, None)
+            self._mint(w3, signer, prop, property_id_on_chain, opts['tokens'],
+                       None, None, installments=opts['installments'])
             return
 
         deployment_fee = factory.functions.deploymentFee().call()
@@ -220,23 +226,31 @@ class Command(BaseCommand):
                 'status': 'active',
             },
         )
-        SmartContract.objects.update_or_create(
-            network=bsc,
-            property_reference=prop,
-            contract_type='rental_distributor',
-            defaults={
-                'contract_address': distributor_contract_address,
-                'contract_name': 'RentalIncomeDistributor (clone)',
-                'abi': distributor_template.abi,
-                'compiler_version': distributor_template.compiler_version,
-                'constructor_args': {'parent_template': distributor_template.contract_address},
-                'status': 'active',
-            },
-        )
+        # The factory only deploys a distributor for READY_PROPERTY. Under-
+        # construction properties get the zero address — don't persist that
+        # as a SmartContract row, both because it's not actually a contract
+        # and because the unique (network, contract_address) constraint
+        # would collide with any other under-construction property.
+        if distributor_contract_address and \
+                int(distributor_contract_address, 16) != 0:
+            SmartContract.objects.update_or_create(
+                network=bsc,
+                property_reference=prop,
+                contract_type='rental_distributor',
+                defaults={
+                    'contract_address': distributor_contract_address,
+                    'contract_name': 'RentalIncomeDistributor (clone)',
+                    'abi': distributor_template.abi,
+                    'compiler_version': distributor_template.compiler_version,
+                    'constructor_args': {'parent_template': distributor_template.contract_address},
+                    'status': 'active',
+                },
+            )
 
         # ----- 5. Mint tokens directly on the per-property contract -----------
         mint_hash = self._mint(w3, signer, prop, property_id_on_chain, opts['tokens'],
-                               token_contract_address, token_template.abi)
+                               token_contract_address, token_template.abi,
+                               installments=opts['installments'])
 
         # ----- 6. Final summary ----------------------------------------------
         self.stdout.write(self.style.SUCCESS("\n" + "=" * 60))
@@ -249,13 +263,26 @@ class Command(BaseCommand):
         self.stdout.write(f"  Mint tx:    {_bscscan(mint_hash)}")
 
     def _mint(self, w3, signer, prop, property_id_on_chain, tokens_to_mint,
-              token_contract_address=None, token_abi=None):
-        """Submit the on-chain mint and verify the resulting balance."""
+              token_contract_address=None, token_abi=None, installments=0):
+        """Submit the on-chain mint and verify the resulting balance.
+
+        ``property_id_on_chain`` is the FACTORY's propertyId, used only for
+        factory-level calls (activateProperty). On the per-property clone we
+        always reference tokenId=0 since each clone holds exactly one
+        property.
+
+        If ``installments`` > 0, mints as an installment plan (tokens escrowed
+        on the contract) and runs that many ``processInstallment`` calls to
+        release tokens gradually to the investor.
+        """
         # If we got here from the idempotent path, resolve the contract from DB.
         if token_contract_address is None or token_abi is None:
             sc = SmartContract.objects.get(property_reference=prop, contract_type='real_estate_token')
             token_contract_address = sc.contract_address
             token_abi = sc.abi
+
+        # Inside the cloned token contract, the property is always at tokenId=0.
+        CLONE_TOKEN_ID = 0
 
         token = w3.eth.contract(
             address=Web3.to_checksum_address(token_contract_address),
@@ -267,7 +294,7 @@ class Command(BaseCommand):
         # factory itself (granted to ``msg.sender`` during initialize, which
         # is the factory) — so we must go through the factory's
         # ``activateProperty`` shim, which is callable by the property owner.
-        info = token.functions.properties(property_id_on_chain).call()
+        info = token.functions.properties(CLONE_TOKEN_ID).call()
         # PropertyInfo.status is at index 3 (matches the struct ordering).
         # PropertyStatus enum: 0=DRAFT, 1=ACTIVE, 2=PAUSED, 3=COMPLETED, 4=CANCELLED
         if info[3] != 1:
@@ -296,12 +323,13 @@ class Command(BaseCommand):
 
         # mintTokens(uint256 tokenId, address investor, uint256 amount,
         #            bool isInstallment, uint256 totalInstallments)
+        is_installment = installments > 0
         mint_tx = token.functions.mintTokens(
-            property_id_on_chain,
+            CLONE_TOKEN_ID,
             signer.address,
             tokens_to_mint,
-            False,  # isInstallment — false for upfront purchase
-            0,      # totalInstallments — zero when not installment
+            is_installment,
+            installments,
         ).build_transaction({
             'from': signer.address,
             'nonce': w3.eth.get_transaction_count(signer.address, 'pending'),
@@ -311,14 +339,87 @@ class Command(BaseCommand):
         })
         signed_mint = w3.eth.account.sign_transaction(mint_tx, settings.BLOCKCHAIN_PRIVATE_KEY)
         mint_hash = w3.eth.send_raw_transaction(signed_mint.raw_transaction).hex()
-        self.stdout.write(self.style.SUCCESS(f"mintTokens tx: {_bscscan(mint_hash)}"))
+        self.stdout.write(self.style.SUCCESS(
+            f"mintTokens tx ({'installment' if is_installment else 'upfront'}): {_bscscan(mint_hash)}"
+        ))
 
         mint_receipt = w3.eth.wait_for_transaction_receipt(mint_hash, timeout=180)
         if mint_receipt.status != 1:
             raise CommandError(f"mintTokens reverted: {_bscscan(mint_hash)}")
 
-        balance = token.functions.balanceOf(signer.address, property_id_on_chain).call()
-        self.stdout.write(self.style.SUCCESS(
-            f"  on-chain balance of {signer.address} = {balance} tokens (expected ≥ {tokens_to_mint})"
-        ))
+        if is_installment:
+            # Tokens are held in escrow on the contract; the investor wallet
+            # balance is 0 until processInstallment runs.
+            escrow = token.functions.balanceOf(
+                Web3.to_checksum_address(token_contract_address),
+                CLONE_TOKEN_ID,
+            ).call()
+            self.stdout.write(self.style.SUCCESS(
+                f"  on-chain escrow balance (contract holds): {escrow} tokens"
+            ))
+            self._process_installments(
+                w3, signer, prop, CLONE_TOKEN_ID,
+                tokens_to_mint, installments,
+                token_contract_address, token_abi,
+            )
+        else:
+            balance = token.functions.balanceOf(signer.address, CLONE_TOKEN_ID).call()
+            self.stdout.write(self.style.SUCCESS(
+                f"  on-chain balance of {signer.address} = {balance} tokens (expected >= {tokens_to_mint})"
+            ))
         return mint_hash
+
+    def _process_installments(self, w3, signer, prop, property_id_on_chain,
+                              total_tokens, installments, token_contract_address,
+                              token_abi):
+        """Walk through ``installments`` processInstallment calls and verify
+        each one moves tokens from the contract's escrow to the investor."""
+        token = w3.eth.contract(
+            address=Web3.to_checksum_address(token_contract_address),
+            abi=token_abi,
+        )
+        # Even split of total tokens across installments. Remainder goes to
+        # the last installment so we always end up at exactly total_tokens.
+        per_installment = total_tokens // installments
+        tx_hashes = []
+        for i in range(installments):
+            tokens_this_round = per_installment if i < installments - 1 \
+                else (total_tokens - per_installment * (installments - 1))
+            tx = token.functions.processInstallment(
+                property_id_on_chain,
+                signer.address,
+                tokens_this_round,
+            ).build_transaction({
+                'from': signer.address,
+                'nonce': w3.eth.get_transaction_count(signer.address, 'pending'),
+                'gas': 300_000,
+                'gasPrice': w3.eth.gas_price,
+                'chainId': 97,
+            })
+            signed = w3.eth.account.sign_transaction(tx, settings.BLOCKCHAIN_PRIVATE_KEY)
+            tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
+            self.stdout.write(self.style.SUCCESS(
+                f"  Installment {i+1}/{installments} ({tokens_this_round} tokens): {_bscscan(tx_hash)}"
+            ))
+            receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
+            if receipt.status != 1:
+                raise CommandError(f"processInstallment {i+1} reverted: {_bscscan(tx_hash)}")
+            tx_hashes.append(tx_hash)
+
+        # Final assertions: investor balance == total_tokens, escrow == 0.
+        investor_balance = token.functions.balanceOf(
+            signer.address, property_id_on_chain
+        ).call()
+        escrow_balance = token.functions.balanceOf(
+            Web3.to_checksum_address(token_contract_address), property_id_on_chain
+        ).call()
+        self.stdout.write(self.style.SUCCESS(
+            f"  After {installments} installments: investor={investor_balance}, "
+            f"escrow={escrow_balance} (expected {total_tokens} / 0)"
+        ))
+        if investor_balance != total_tokens or escrow_balance != 0:
+            raise CommandError(
+                f"Final balance mismatch: investor={investor_balance}/"
+                f"{total_tokens}, escrow={escrow_balance}/0"
+            )
+        return tx_hashes

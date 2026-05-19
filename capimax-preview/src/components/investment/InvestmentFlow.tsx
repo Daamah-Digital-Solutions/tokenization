@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
   ArrowRight,
+  Calendar,
   CheckCircle,
   Coins,
   CreditCard,
@@ -17,12 +18,17 @@ import { Container } from '../design-system/layout/Container';
 import { Text } from '../design-system/typography/Text';
 import { AmountSelector } from './AmountSelector';
 import { PaymentMethodSelector } from './PaymentMethodSelector';
+import { PaymentScheduleStep } from './PaymentScheduleStep';
 import { TransactionProcessor } from './TransactionProcessor';
 import { TransactionConfirmation } from './TransactionConfirmation';
 import { cn } from '../../utils/cn';
 import type { InvestmentProperty, InvestmentData, InvestmentFlowProps } from './types';
 
-const steps = [
+// The static step list is the upfront-payment path. The schedule step is
+// inserted dynamically right after "amount" when the property is under
+// construction AND its owner explicitly enabled installments. Computed at
+// each render against the live property prop in ``buildSteps`` below.
+const baseSteps = [
   {
     id: 'amount',
     title: 'Select Tokens',
@@ -49,6 +55,22 @@ const steps = [
   }
 ];
 
+function buildSteps(property: InvestmentProperty) {
+  const isInstallmentEligible =
+    !!property.supports_installments && !!property.is_under_construction;
+  if (!isInstallmentEligible) return baseSteps;
+  return [
+    baseSteps[0],
+    {
+      id: 'schedule',
+      title: 'Payment Schedule',
+      description: 'Upfront or installments',
+      icon: Calendar
+    },
+    ...baseSteps.slice(1),
+  ];
+}
+
 export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
   property,
   isOpen,
@@ -71,7 +93,13 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
+  const steps = buildSteps(property);
   const currentStepData = steps[currentStep];
+
+  // For the dynamic-step rendering we don't rely on raw indexes — we match
+  // on step ``id`` so the upfront-only and installment-aware flows share
+  // the same render bodies.
+  const stepId = currentStepData?.id;
 
   const updateInvestmentData = useCallback((updates: Partial<InvestmentData>) => {
     setInvestmentData(prev => {
@@ -128,18 +156,21 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
     }
   };
 
+  const confirmationIndex = steps.findIndex(s => s.id === 'confirmation');
+  const paymentIndex = steps.findIndex(s => s.id === 'payment');
+
   // Handle closing — warn user if mid-flow
   const handleCloseAttempt = () => {
     // On confirmation step, safe to close
-    if (currentStep === 3) {
+    if (stepId === 'confirmation') {
       handleClose();
       return;
     }
     // During processing, don't allow close
-    if (currentStep === 2 && isProcessing) {
+    if (stepId === 'process' && isProcessing) {
       return;
     }
-    // On steps 0-1, if data entered, confirm
+    // Mid-flow with user data entered → confirm
     if (currentStep > 0 || investmentData.tokens > 1 || investmentData.paymentMethod) {
       setShowCloseConfirm(true);
       return;
@@ -149,7 +180,7 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
   };
 
   const handleClose = () => {
-    if (currentStep === 3) {
+    if (stepId === 'confirmation') {
       onComplete?.(investmentData);
     }
 
@@ -167,14 +198,14 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
 
   const handleTransactionComplete = (success: boolean, transactionId?: string) => {
     if (success && transactionId) {
-      setCurrentStep(3); // Move to confirmation step
+      setCurrentStep(confirmationIndex);
     }
     setIsProcessing(false);
   };
 
   // Handle going back to payment from processing (error recovery)
   const handleGoBackToPayment = () => {
-    setCurrentStep(1);
+    setCurrentStep(paymentIndex);
     setIsProcessing(false);
   };
 
@@ -212,7 +243,7 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                   </Text>
                 </div>
                 {/* Hide close button during processing */}
-                {!(currentStep === 2 && isProcessing) && (
+                {!(stepId === 'process' && isProcessing) && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -281,7 +312,7 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                   transition={{ duration: 0.3 }}
                   className="min-h-[400px]"
                 >
-                  {currentStep === 0 && (
+                  {stepId === 'amount' && (
                     <AmountSelector
                       property={property}
                       investmentData={investmentData}
@@ -290,7 +321,15 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                     />
                   )}
 
-                  {currentStep === 1 && (
+                  {stepId === 'schedule' && (
+                    <PaymentScheduleStep
+                      property={property}
+                      investmentData={investmentData}
+                      onUpdate={updateInvestmentData}
+                    />
+                  )}
+
+                  {stepId === 'payment' && (
                     <PaymentMethodSelector
                       investmentData={investmentData}
                       onUpdate={updateInvestmentData}
@@ -298,7 +337,7 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                     />
                   )}
 
-                  {currentStep === 2 && (
+                  {stepId === 'process' && (
                     <TransactionProcessor
                       property={property}
                       investmentData={investmentData}
@@ -310,7 +349,7 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                     />
                   )}
 
-                  {currentStep === 3 && (
+                  {stepId === 'confirmation' && (
                     <TransactionConfirmation
                       property={property}
                       investmentData={investmentData}
@@ -325,8 +364,8 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
               </AnimatePresence>
             </div>
 
-            {/* Footer — visible on Steps 0 and 1 only */}
-            {currentStep < 2 && (
+            {/* Footer — visible on input steps (everything before processing) */}
+            {(stepId === 'amount' || stepId === 'schedule' || stepId === 'payment') && (
               <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between">
                   <Button
@@ -356,7 +395,11 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                       onClick={handleNext}
                       className="flex items-center gap-2"
                     >
-                      {currentStep === 0 ? 'Choose Payment' : 'Confirm & Pay'}
+                      {stepId === 'payment'
+                        ? 'Confirm & Pay'
+                        : steps[currentStep + 1]?.id === 'schedule'
+                          ? 'Choose Schedule'
+                          : 'Choose Payment'}
                       <ArrowRight className="w-4 h-4" />
                     </Button>
                   </div>

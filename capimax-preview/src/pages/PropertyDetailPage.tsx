@@ -54,6 +54,7 @@ import { ConstructionProgress } from '../components/properties/ConstructionProgr
 import { InstallmentSchedule } from '../components/properties/InstallmentSchedule';
 import { PropertyDetailEnhanced } from '../components/properties/PropertyDetailEnhanced';
 import { KYCGate } from '../components/kyc/KYCGate';
+import { ConstructionService } from '../services/construction/ConstructionService';
 
 // Property data interfaces
 interface PropertyDetailData {
@@ -61,6 +62,9 @@ interface PropertyDetailData {
   analytics: any;
   investors: any[];
   documents: PropertyDocuments[];
+  // Construction milestones (only meaningful for under-construction properties).
+  // Loaded from /api/v1/construction/<id>/milestones/ via ConstructionService.
+  milestones: any[];
   loading: boolean;
   error: string | null;
 }
@@ -88,6 +92,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
     analytics: null,
     investors: [],
     documents: [],
+    milestones: [],
     loading: true,
     error: null
   });
@@ -105,11 +110,15 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
     try {
       setPropertyData(prev => ({ ...prev, loading: true, error: null }));
       
-      const [property, analytics, investors, documents] = await Promise.allSettled([
+      const [property, analytics, investors, documents, milestones] = await Promise.allSettled([
         PropertyService.getProperty(propertyId),
         PropertyService.getPropertyAnalytics(propertyId).catch(() => null),
         PropertyService.getPropertyInvestors(propertyId, 1, 10).catch(() => ({ investors: [] })),
-        PropertyService.getDocuments(propertyId).catch(() => [])
+        PropertyService.getDocuments(propertyId).catch(() => []),
+        // Milestones endpoint is only meaningful for under-construction
+        // properties; for ready properties it returns an empty list which
+        // we treat the same as a missing fetch.
+        ConstructionService.getMilestones(propertyId).catch(() => [])
       ]);
 
       setPropertyData({
@@ -117,6 +126,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
         analytics: analytics.status === 'fulfilled' ? analytics.value : null,
         investors: investors.status === 'fulfilled' ? investors.value.investors : [],
         documents: documents.status === 'fulfilled' ? documents.value : [],
+        milestones: milestones.status === 'fulfilled' ? milestones.value : [],
         loading: false,
         error: property.status === 'rejected' ? property.reason?.message || 'Failed to load property' : null
       });
@@ -207,13 +217,14 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
   const isUnderConstruction = property.property_category === PropertyCategory.UNDER_CONSTRUCTION;
   const isReadyProperty = property.property_category === PropertyCategory.READY_PROPERTY;
   
-  // Construction progress data from backend (if available)
+  // Construction progress data — pulled from the construction app's
+  // milestones endpoint when available. Ready properties leave this null.
   const constructionProgressData = isUnderConstruction ? {
     propertyId: property.id,
     propertyName: property.title,
     overallProgress: property.construction_progress || 0,
     currentPhase: property.construction_status_display || 'In Progress',
-    milestones: [], // Would be loaded from construction API endpoint
+    milestones: propertyData.milestones || [],
     lastUpdated: property.updated_at.toISOString(),
     nextInspectionDate: property.expected_completion_date || null,
     developer: {
@@ -228,7 +239,10 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
   } : null;
 
 
-  // Convert property data to match InvestmentFlow interface
+  // Convert property data to match InvestmentFlow interface. The
+  // category-aware fields (is_under_construction / supports_installments /
+  // installment_period_months / expected_completion_date / property_category)
+  // gate the optional "Payment Schedule" step in the investment flow.
   const investmentProperty: InvestmentProperty = {
     id: property.id,
     title: property.title,
@@ -240,6 +254,11 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
     location: `${property.city || ''}, ${property.country || ''}`.replace(/^, |, $/, ''),
     propertyType: property.property_type,
     totalValue: property.total_value,
+    is_under_construction: property.is_under_construction,
+    supports_installments: property.supports_installments,
+    installment_period_months: property.installment_period_months,
+    property_category: property.property_category,
+    expected_completion_date: property.expected_completion_date,
     investment: {
       minInvestment: property.token_price,
       avgAnnualReturn: property.expected_return || 10,

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
@@ -18,7 +19,7 @@ import "./ComplianceRegistry.sol";
  * - Lock-up periods and early exit fees
  * - Support for both construction and ready property categories
  */
-contract RealEstateToken is ERC1155, Pausable, ReentrancyGuard, AccessControl {
+contract RealEstateToken is ERC1155, Pausable, ReentrancyGuard, AccessControl, IERC1155Receiver {
     using Counters for Counters.Counter;
     
     // Role definitions
@@ -267,21 +268,31 @@ contract RealEstateToken is ERC1155, Pausable, ReentrancyGuard, AccessControl {
         require(property.status == PropertyStatus.ACTIVE, "Property not active");
         require(property.currentSupply + amount <= property.totalSupply, "Exceeds total supply");
         require(investor != address(0), "Invalid investor address");
-        
-        // Mint the tokens
-        _mint(investor, tokenId, amount, "");
+
+        // For installment plans, tokens are minted to the contract itself
+        // and held in escrow. ``processInstallment`` releases them gradually
+        // as the investor pays each installment. For upfront purchases the
+        // tokens go straight to the investor wallet.
+        if (isInstallment) {
+            require(totalInstallments > 0, "Installments required");
+            _mint(address(this), tokenId, amount, "");
+        } else {
+            _mint(investor, tokenId, amount, "");
+        }
         property.currentSupply += amount;
-        
-        // Update investor information
+
+        // Investor info tracks the full purchase commitment regardless of
+        // escrow state — ``tokenBalance`` is the contract's view of what
+        // the investor owns once their installments complete.
         InvestorInfo storage investorInfo = investors[tokenId][investor];
         investorInfo.tokenBalance += amount;
         investorInfo.totalInvested += amount * property.tokenPrice;
         investorInfo.lockupEndTime = block.timestamp + property.lockupPeriod;
-        
+
         if (isInstallment) {
             investorInfo.totalInstallments = totalInstallments;
         }
-        
+
         emit TokensMinted(tokenId, investor, amount);
     }
     
@@ -299,12 +310,17 @@ contract RealEstateToken is ERC1155, Pausable, ReentrancyGuard, AccessControl {
         InvestorInfo storage investorInfo = investors[tokenId][investor];
         require(investorInfo.totalInstallments > 0, "Not an installment investor");
         require(investorInfo.installmentsPaid < investorInfo.totalInstallments, "All installments paid");
-        
-        // Release the tokens (they were pre-minted but held in escrow)
+        require(tokensToRelease > 0, "Nothing to release");
+        require(
+            balanceOf(address(this), tokenId) >= tokensToRelease,
+            "Insufficient escrowed tokens"
+        );
+
+        // Release the tokens that were pre-minted to the contract in mintTokens.
         _safeTransferFrom(address(this), investor, tokenId, tokensToRelease, "");
-        
+
         investorInfo.installmentsPaid++;
-        
+
         emit InstallmentPaid(tokenId, investor, investorInfo.installmentsPaid);
         emit TokensGraduated(tokenId, investor, tokensToRelease);
     }
@@ -627,8 +643,36 @@ contract RealEstateToken is ERC1155, Pausable, ReentrancyGuard, AccessControl {
     
     function supportsInterface(
         bytes4 interfaceId
-    ) public view override(ERC1155, AccessControl) returns (bool) {
-        return super.supportsInterface(interfaceId);
+    ) public view override(ERC1155, AccessControl, IERC165) returns (bool) {
+        return
+            interfaceId == type(IERC1155Receiver).interfaceId ||
+            super.supportsInterface(interfaceId);
+    }
+
+    // -------------------------------------------------------------------
+    // IERC1155Receiver — required so the contract can hold its own tokens
+    // in escrow during installment plans (mintTokens mints to address(this)
+    // when isInstallment=true).
+    // -------------------------------------------------------------------
+
+    function onERC1155Received(
+        address /*operator*/,
+        address /*from*/,
+        uint256 /*id*/,
+        uint256 /*value*/,
+        bytes calldata /*data*/
+    ) external pure override returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address /*operator*/,
+        address /*from*/,
+        uint256[] calldata /*ids*/,
+        uint256[] calldata /*values*/,
+        bytes calldata /*data*/
+    ) external pure override returns (bytes4) {
+        return this.onERC1155BatchReceived.selector;
     }
     
     // Emergency functions

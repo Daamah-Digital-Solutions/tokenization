@@ -10,6 +10,15 @@ export interface InvestmentProperty {
   location?: string;
   propertyType?: string;
   totalValue?: number;
+  // Category-aware fields: when present + true, the investment flow
+  // shows the optional installment-schedule step. Both must be true for
+  // installments to be offered; either one false routes the user to the
+  // upfront-payment path only.
+  is_under_construction?: boolean;
+  supports_installments?: boolean;
+  installment_period_months?: number;
+  property_category?: 'under_construction' | 'ready_property';
+  expected_completion_date?: string;
   investment: {
     minInvestment: number;
     avgAnnualReturn: number;
@@ -46,6 +55,13 @@ export interface InvestmentData {
   txHash?: string;
   senderWalletAddress?: string;
   discountedAmount?: number;
+  // Installment plan — only set when the investor chose to pay in
+  // installments on an under-construction property. When true, the
+  // backend ``Investment`` row spawns a ``ConstructionInstallment`` and
+  // the on-chain mint sends ``isInstallment=true`` so tokens land in
+  // contract escrow until each installment is paid.
+  is_installment_purchase?: boolean;
+  total_installments?: number;
 }
 
 export interface InvestmentFlowProps {
