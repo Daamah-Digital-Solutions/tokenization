@@ -20,8 +20,13 @@ export const LoginPage: React.FC = () => {
 
   const handleSuccess = () => {
     setCurrentStep('success');
-    console.log('🚀 Login successful - redirecting to dashboard');
-    // Navigate immediately since login was successful
+    // Operational admins are funnelled to Django Admin — it is the source of
+    // truth for ops work. The custom in-app admin dashboard is intentionally
+    // unmounted to avoid confusion between two parallel admin surfaces.
+    if (authState.user?.role === 'admin') {
+      window.location.href = '/admin/';
+      return;
+    }
     navigate('dashboard');
   };
 

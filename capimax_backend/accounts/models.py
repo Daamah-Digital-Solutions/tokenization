@@ -282,7 +282,16 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.get_full_name()} ({self.email})"
-    
+
+    def save(self, *args, **kwargs):
+        # role='admin' implies operational access to Django Admin. Without this
+        # invariant the user could authenticate against the website API but be
+        # locked out of /admin/ because is_staff=False — exactly the failure
+        # mode that prompted the hybrid-admin cleanup.
+        if self.role == UserRole.ADMIN:
+            self.is_staff = True
+        super().save(*args, **kwargs)
+
     def get_full_name(self):
         """Return the user's full name."""
         return f"{self.first_name} {self.last_name}".strip()

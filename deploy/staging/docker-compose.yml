@@ -149,8 +149,7 @@ services:
       pip install -q --no-cache-dir -r requirements.txt python-json-logger gunicorn &&
       python manage.py migrate --noinput &&
       python manage.py collectstatic --noinput &&
-      python -c \"import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE','capimax_backend.settings'); import django; django.setup(); from django.contrib.auth import get_user_model; U=get_user_model();
-      U.objects.filter(email='admin@capimaxrt.tech').exists() or U.objects.create_superuser(email='admin@capimaxrt.tech', password='$${ADMIN_INITIAL_PASSWORD:-ChangeMeNow2026!}', first_name='Admin', last_name='User', country='US', username='admin'); print('Superuser ensured')\" || echo 'Superuser bootstrap skipped' &&
+      python manage.py promote_admin admin@capimaxrt.tech --create-if-missing --superuser --password=\"$${ADMIN_INITIAL_PASSWORD:-ChangeMeNow2026!}\" || echo 'Admin bootstrap failed (non-fatal)' &&
       echo 'Starting Daphne (ASGI — supports WebSockets) on :8000' &&
       daphne -b 0.0.0.0 -p 8000 --proxy-headers --access-log - capimax_backend.asgi:application"
 

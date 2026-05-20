@@ -6,7 +6,6 @@ import { useTheme } from '../contexts/ThemeContext';
 import { DynamicUserDashboard } from '../components/dashboard/DynamicUserDashboard';
 import { InvestorControlPanel } from '../components/dashboard/investor/InvestorControlPanel';
 import { PropertyOwnerDashboard } from '../components/dashboard/property-owner/PropertyOwnerDashboard';
-import { AdminDashboard } from '../components/dashboard/admin/AdminDashboard';
 import { BrokerDashboard } from '../components/dashboard/broker/BrokerDashboard';
 import { RoleSwitcher } from '../components/dashboard/RoleSwitcher';
 import CapiMaxLightLogo from '../assets/tokenization_capi max  tokenization light  uk  copy.svg';
@@ -350,6 +349,16 @@ export const DashboardPage: React.FC = () => {
     }
   }, [state.isLoading, state.isAuthenticated, navigate]);
 
+  // Operational admins do their work in Django Admin (/admin/), not this
+  // custom dashboard. If an admin lands here (deep link, role switch, etc.)
+  // bounce them straight to Django Admin. There is intentionally no
+  // role='admin' rendering branch in this component anymore.
+  React.useEffect(() => {
+    if (!state.isLoading && state.isAuthenticated && state.user?.role === 'admin') {
+      window.location.href = '/admin/';
+    }
+  }, [state.isLoading, state.isAuthenticated, state.user?.role]);
+
   // Show loading while checking authentication
   if (state.isLoading) {
     return (
@@ -411,7 +420,22 @@ export const DashboardPage: React.FC = () => {
       case 'property_owner':
         return <PropertyOwnerDashboard currentView={currentView} />;
       case 'admin':
-        return <AdminDashboard currentView={currentView} />;
+        // Admins are redirected to /admin/ by the effect above. Render a
+        // lightweight placeholder while the redirect takes effect so the old
+        // custom AdminDashboard is never mounted from this code path.
+        return (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+              <p className="text-slate-600 dark:text-slate-300 font-medium">
+                Redirecting to Django Admin…
+              </p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                Admin operations are now performed in <code>/admin/</code>.
+              </p>
+            </div>
+          </div>
+        );
       case 'broker':
         return <BrokerDashboard currentView={currentView} />;
       default:
