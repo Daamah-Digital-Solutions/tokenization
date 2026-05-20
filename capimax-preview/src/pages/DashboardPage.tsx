@@ -52,14 +52,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
     switch (role) {
       case 'investor':
-        // ``properties`` is intentionally NOT here: the legacy handler at
-        // handleNavigationClick navigated *out* of the dashboard to the
-        // public marketplace, which broke dashboard context. The
-        // ``marketplace`` tab below now serves the same browsing need
-        // while keeping the user inside the dashboard shell.
+        // ``properties`` = primary listings (browse + invest in newly tokenized
+        // properties). ``marketplace`` = secondary market (peer-to-peer token
+        // resale). Both stay inside the dashboard shell — the legacy bug
+        // where Properties navigated OUT to /properties is intentionally gone.
         return [
           ...baseItems,
           { id: 'portfolio', label: 'My Portfolio', icon: '💼' },
+          { id: 'properties', label: 'Properties', icon: '🏠' },
           { id: 'marketplace', label: 'Marketplace', icon: '🏪' },
           { id: 'transactions', label: 'Transactions', icon: '💳' },
           { id: 'wallet', label: 'Wallet', icon: '💰' },

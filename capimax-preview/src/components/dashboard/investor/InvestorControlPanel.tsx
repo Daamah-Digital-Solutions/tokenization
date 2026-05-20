@@ -52,7 +52,7 @@ interface InvestorControlPanelProps {
   currentView?: string;
 }
 
-type TabType = 'overview' | 'marketplace' | 'transactions' | 'wallet' | 'notifications' | 'settings';
+type TabType = 'overview' | 'properties' | 'marketplace' | 'transactions' | 'wallet' | 'notifications' | 'settings';
 
 interface PriceAlert {
   id: string;
@@ -73,6 +73,8 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
     switch (view) {
       case 'portfolio':
         return 'overview'; // Portfolio sidebar item maps to the overview/portfolio tab
+      case 'properties':
+        return 'properties';
       case 'marketplace':
         return 'marketplace';
       case 'transactions':
@@ -212,8 +214,12 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
           />
         )}
 
-        {activeTab === 'marketplace' && (
+        {activeTab === 'properties' && (
           <MarketplaceContent />
+        )}
+
+        {activeTab === 'marketplace' && (
+          <SecondaryMarketContent />
         )}
 
         {activeTab === 'transactions' && (
@@ -387,49 +393,12 @@ const OverviewContent: React.FC<{
         </div>
       </Card>
 
-      {/* Price Alerts */}
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <Text variant="h3" weight="semibold">
-            Price Alerts
-          </Text>
-          <Button variant="outline" size="sm">
-            <Plus className="w-4 h-4" />
-          </Button>
-        </div>
-        <div className="space-y-3">
-          {marketInsights?.priceAlerts?.slice(0, 3).map((alert) => (
-            <div key={alert.propertyId} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-              <div className="flex-1">
-                <Text variant="body" weight="medium" className="truncate">
-                  {alert.propertyName}
-                </Text>
-                <Text variant="caption" color="muted">
-                  {alert.change > 0 ? '+' : ''}{alert.change}%
-                </Text>
-              </div>
-              <div className="text-right">
-                <Text variant="body" weight="semibold">
-                  ${alert.currentPrice.toLocaleString()}
-                </Text>
-                <div className={cn(
-                  'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
-                  alert.change > 0
-                    ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
-                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                )}>
-                  {alert.change > 0 ? <TrendingUp className="w-3 h-3 mr-1" /> : <TrendingDown className="w-3 h-3 mr-1" />}
-                  Alert
-                </div>
-              </div>
-            </div>
-          )) || (
-            <Text variant="body" color="muted" className="text-center py-4">
-              No active price alerts
-            </Text>
-          )}
-        </div>
-      </Card>
+      {/*
+        Price Alerts card removed. The "+" CTA had no handler and the data
+        was wired to a mock ``marketInsights.priceAlerts`` slot that the
+        backend never populated. Will be reintroduced when a real alerts
+        endpoint lands.
+      */}
 
       {/* Market Insights */}
       <Card className="p-6">
@@ -545,9 +514,45 @@ const OverviewContent: React.FC<{
 
 
 
-// Marketplace Content Component
+// Secondary Market Content — peer-to-peer token resale. We keep this as a
+// lightweight informational stub for now: the full SecondaryMarketDashboard
+// component exists but isn't yet wired to a backend orderbook, and we
+// promised the user no dead buttons.
+const SecondaryMarketContent: React.FC = () => {
+  const { navigate } = useRouter();
+  return (
+    <div className="space-y-6">
+      <div>
+        <Text variant="h3" weight="semibold" className="mb-2">
+          Secondary Market
+        </Text>
+        <Text variant="body" color="muted">
+          Buy and sell tokens with other investors. Listings, bids and trades
+          happen here once the orderbook goes live.
+        </Text>
+      </div>
+      <Card className="p-10 text-center">
+        <BarChart3 className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+        <Text variant="h4" weight="semibold" className="mb-2">Coming Soon</Text>
+        <Text variant="body" color="muted" className="mb-6 max-w-md mx-auto">
+          The secondary market lets you resell your property tokens to other
+          investors. We're finalising the order matching engine — it'll show up
+          here automatically when it ships. For now, browse primary listings
+          under "Properties".
+        </Text>
+        <Button onClick={() => navigate('dashboard', { view: 'properties' })}>
+          Browse Properties
+        </Button>
+      </Card>
+    </div>
+  );
+};
+
+// Marketplace Content Component (primary listings — newly tokenized properties)
 const MarketplaceContent: React.FC = () => {
   const { navigate } = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+
   // Fetch properties from API
   const { data: propertiesData, isLoading: isLoadingProperties, error: propertiesError } = useQuery({
     queryKey: ['properties'],
@@ -578,32 +583,48 @@ const MarketplaceContent: React.FC = () => {
     );
   }
 
+  // Lower-cased search query for client-side filtering. The previous
+  // "Filter" / "Search" outline buttons rendered with no onClick at all
+  // — replaced with a real text input that filters the visible list.
+  const q = searchQuery.trim().toLowerCase();
+  const allProperties = propertiesData?.properties || [];
+  const visibleProperties = q
+    ? allProperties.filter((p: any) => {
+        return (
+          (p.title || '').toLowerCase().includes(q) ||
+          (p.city || '').toLowerCase().includes(q) ||
+          (p.country || '').toLowerCase().includes(q) ||
+          (p.property_type || '').toLowerCase().includes(q)
+        );
+      })
+    : allProperties;
+
   return (
   <div className="space-y-6">
-    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
       <div>
         <Text variant="h3" weight="semibold" className="mb-2">
-          Property Marketplace
+          Properties
         </Text>
         <Text variant="body" color="muted">
           Discover and invest in tokenized real estate properties
         </Text>
       </div>
-      <div className="flex items-center gap-3">
-        <Button variant="outline" size="sm">
-          <Filter className="w-4 h-4 mr-2" />
-          Filter
-        </Button>
-        <Button variant="outline" size="sm">
-          <Search className="w-4 h-4 mr-2" />
-          Search
-        </Button>
+      <div className="relative w-full lg:w-72">
+        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <input
+          type="search"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by title, city or type"
+          className="w-full pl-9 pr-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+        />
       </div>
     </div>
 
-    {/* Market Stats - from real data */}
+    {/* Market Stats - from real data (reflects the current search filter) */}
     {(() => {
-      const properties = propertiesData?.properties || [];
+      const properties = visibleProperties;
       // DRF serializes Decimal fields as strings ("12.00", "5000000.00").
       // Without Number() coercion the reducer below string-concatenates and
       // the displayed totals/averages are silently wrong.
@@ -649,8 +670,16 @@ const MarketplaceContent: React.FC = () => {
     })()}
 
     {/* Property Listings */}
+    {visibleProperties.length === 0 && (
+      <Card className="p-10 text-center">
+        <Search className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+        <Text variant="body" color="muted">
+          {q ? `No properties match "${q}".` : 'No active properties available right now.'}
+        </Text>
+      </Card>
+    )}
     <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-      {(propertiesData?.properties || []).map((property) => (
+      {visibleProperties.map((property: any) => (
         <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow">
           <div className="aspect-video bg-slate-200 dark:bg-slate-700 relative">
             {property.images && property.images.length > 0 ? (
@@ -680,13 +709,13 @@ const MarketplaceContent: React.FC = () => {
               <div>
                 <Text variant="caption" color="muted">Property Value</Text>
                 <Text variant="body" weight="semibold">
-                  ${property.total_value.toLocaleString()}
+                  ${Number(property.total_value).toLocaleString()}
                 </Text>
               </div>
               <div>
                 <Text variant="caption" color="muted">Token Price</Text>
                 <Text variant="body" weight="semibold">
-                  ${property.token_price}
+                  ${Number(property.token_price).toLocaleString()}
                 </Text>
               </div>
             </div>
@@ -734,7 +763,17 @@ const WalletContent: React.FC<{
   loading: boolean;
   walletBalance: number;
   walletLoading: boolean;
-}> = ({ portfolio, loading, walletBalance, walletLoading }) => (
+}> = ({ portfolio, loading, walletBalance, walletLoading }) => {
+  // The wallet top-up + standalone withdrawal endpoints aren't wired yet.
+  // Funds enter on a property purchase via Stripe/PayPal/crypto; tokens
+  // leave via the hybrid-custodial "Withdraw to external wallet" flow on
+  // a per-property basis (under Properties → property detail). Until a
+  // standalone deposit/withdraw lives on the platform we explain that to
+  // the user instead of leaving the buttons dead.
+  const { navigate } = useRouter();
+  const [walletModal, setWalletModal] = useState<null | 'deposit' | 'withdraw' | 'payment-method'>(null);
+
+  return (
   <div className="space-y-6">
     <div className="flex justify-between items-center">
       <div>
@@ -746,11 +785,11 @@ const WalletContent: React.FC<{
         </Text>
       </div>
       <div className="flex items-center gap-3">
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" onClick={() => setWalletModal('deposit')}>
           <Plus className="w-4 h-4 mr-2" />
           Add Funds
         </Button>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" onClick={() => setWalletModal('withdraw')}>
           <Minus className="w-4 h-4 mr-2" />
           Withdraw
         </Button>
@@ -794,7 +833,7 @@ const WalletContent: React.FC<{
           <Text variant="body" weight="semibold">
             Payment Methods
           </Text>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => setWalletModal('payment-method')} aria-label="Add payment method">
             <Plus className="w-4 h-4" />
           </Button>
         </div>
@@ -827,8 +866,78 @@ const WalletContent: React.FC<{
         </div>
       </Card>
     </div>
+
+    {/* Wallet info modals — explain the actual flow until standalone
+        deposit / withdraw endpoints exist. Keeps the buttons honest. */}
+    <AnimatePresence>
+      {walletModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => setWalletModal(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {walletModal === 'deposit' && (
+              <>
+                <Text variant="h3" weight="bold" className="mb-3">Add Funds</Text>
+                <Text variant="body" color="muted" className="mb-4">
+                  Standalone wallet top-ups aren't enabled yet. Funds are added
+                  automatically when you complete a property purchase — pick a
+                  property, choose tokens, and we'll process the payment via
+                  card, bank transfer or crypto.
+                </Text>
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={() => setWalletModal(null)} className="flex-1">Close</Button>
+                  <Button onClick={() => { setWalletModal(null); navigate('dashboard', { view: 'properties' }); }} className="flex-1">
+                    Browse Properties
+                  </Button>
+                </div>
+              </>
+            )}
+            {walletModal === 'withdraw' && (
+              <>
+                <Text variant="h3" weight="bold" className="mb-3">Withdraw</Text>
+                <Text variant="body" color="muted" className="mb-4">
+                  Token withdrawals run per property: open a property you own,
+                  then use the "Withdraw to external wallet" action on the
+                  property detail page. Cash withdrawals (fiat off-ramp) are
+                  coming soon.
+                </Text>
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={() => setWalletModal(null)} className="flex-1">Close</Button>
+                  <Button onClick={() => { setWalletModal(null); navigate('dashboard', { view: 'portfolio' }); }} className="flex-1">
+                    Open Portfolio
+                  </Button>
+                </div>
+              </>
+            )}
+            {walletModal === 'payment-method' && (
+              <>
+                <Text variant="h3" weight="bold" className="mb-3">Add Payment Method</Text>
+                <Text variant="body" color="muted" className="mb-4">
+                  Payment methods are saved automatically the next time you
+                  invest in a property. The checkout step lets you pick card,
+                  bank transfer or crypto — Stripe/PayPal/Coinbase securely
+                  store the credentials we need for future investments.
+                </Text>
+                <Button onClick={() => setWalletModal(null)} className="w-full">Got it</Button>
+              </>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   </div>
-);
+  );
+};
 
 // Notifications Content Component
 const NotificationsContent: React.FC = () => {
@@ -905,6 +1014,7 @@ const NotificationsContent: React.FC = () => {
 // Settings Content Component with Role Management Integration
 const SettingsContent: React.FC = () => {
   const user = useUser();
+  const { navigate } = useRouter();
   const [userRoles, setUserRoles] = useState<any[]>([]);
   const [isLoadingRoles, setIsLoadingRoles] = useState(true);
   const [activeSettingsTab, setActiveSettingsTab] = useState('profile');
@@ -947,10 +1057,13 @@ const SettingsContent: React.FC = () => {
     }
   };
 
+  // The standalone "Notifications" sub-tab held seven toggle buttons that
+  // were all wired to no handler at all — pure decoration over no backend
+  // preferences endpoint. The top-level Notifications sidebar item still
+  // shows real notifications. Dropped from this tab list.
   const settingsTabs = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'security', label: 'Security', icon: Shield },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'roles', label: 'Role Management', icon: Users },
     { id: 'account', label: 'Account', icon: Settings }
   ];
@@ -1016,22 +1129,24 @@ const SettingsContent: React.FC = () => {
                 <div>
                   <Text variant="caption" color="muted" className="mb-1">Full Name</Text>
                   <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                    <Text variant="body">{user ? `${user.first_name} ${user.last_name}` : 'John Doe'}</Text>
+                    <Text variant="body">{user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Not set' : '—'}</Text>
                   </div>
                 </div>
                 <div>
                   <Text variant="caption" color="muted" className="mb-1">Email Address</Text>
                   <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                    <Text variant="body">{user?.email || 'john.doe@example.com'}</Text>
+                    <Text variant="body">{user?.email || '—'}</Text>
                   </div>
                 </div>
                 <div>
                   <Text variant="caption" color="muted" className="mb-1">Phone Number</Text>
                   <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                    <Text variant="body">+1 (555) 123-4567</Text>
+                    {/* Was hardcoded "+1 (555) 123-4567" — now reads the
+                        actual user phone with a clear empty state. */}
+                    <Text variant="body">{user?.phone || (user as any)?.phone_number || 'Not set'}</Text>
                   </div>
                 </div>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" onClick={() => setSettingsModal('edit-profile')}>
                   Edit Profile
                 </Button>
               </div>
@@ -1057,7 +1172,7 @@ const SettingsContent: React.FC = () => {
                 <div className="space-y-3">
                   <Text variant="caption" color="muted">Verification Level: <span className="font-medium text-emerald-600">Level 2</span></Text>
                   <Text variant="caption" color="muted">Verified on: {new Date().toLocaleDateString()}</Text>
-                  <Button variant="outline" size="sm" className="w-full">
+                  <Button variant="outline" size="sm" className="w-full" onClick={() => navigate('kyc')}>
                     View Verification Details
                   </Button>
                 </div>
@@ -1067,11 +1182,11 @@ const SettingsContent: React.FC = () => {
         )}
 
         {activeSettingsTab === 'security' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Security Settings */}
+          <div className="grid grid-cols-1 gap-6 max-w-2xl">
+            {/* Security Settings — only items with a real backend behind them */}
             <Card className="p-6">
               <Text variant="body" weight="semibold" className="mb-4">
-                Security & Privacy
+                Security
               </Text>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -1097,79 +1212,21 @@ const SettingsContent: React.FC = () => {
                 </div>
               </div>
             </Card>
-
-            {/* Privacy Settings */}
-            <Card className="p-6">
-              <Text variant="body" weight="semibold" className="mb-4">
-                Privacy Settings
-              </Text>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Text variant="body">Profile visibility</Text>
-                  <Button variant="outline" size="sm">Private</Button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <Text variant="body">Investment activity</Text>
-                  <Button variant="outline" size="sm">Hidden</Button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <Text variant="body">Contact preferences</Text>
-                  <Button variant="outline" size="sm">Limited</Button>
-                </div>
-              </div>
-            </Card>
+            {/*
+              "Privacy Settings" card removed. Its three rows ("Profile
+              visibility", "Investment activity", "Contact preferences") all
+              rendered outline buttons with no onClick — pure decoration over
+              no backend preferences endpoint. Will return when there's a
+              real privacy-settings API to read/write.
+            */}
           </div>
         )}
 
-        {activeSettingsTab === 'notifications' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Email Notifications */}
-            <Card className="p-6">
-              <Text variant="body" weight="semibold" className="mb-4">
-                Email Notifications
-              </Text>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Text variant="body">Investment updates</Text>
-                  <Button variant="outline" size="sm">Enabled</Button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <Text variant="body">Dividend notifications</Text>
-                  <Button variant="outline" size="sm">Enabled</Button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <Text variant="body">Market alerts</Text>
-                  <Button variant="outline" size="sm">Enabled</Button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <Text variant="body">Security alerts</Text>
-                  <Button variant="outline" size="sm">Enabled</Button>
-                </div>
-              </div>
-            </Card>
-
-            {/* Push Notifications */}
-            <Card className="p-6">
-              <Text variant="body" weight="semibold" className="mb-4">
-                Push Notifications
-              </Text>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Text variant="body">Price alerts</Text>
-                  <Button variant="outline" size="sm">Disabled</Button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <Text variant="body">Transaction confirmations</Text>
-                  <Button variant="outline" size="sm">Enabled</Button>
-                </div>
-                <div className="flex items-center justify-between">
-                  <Text variant="body">New property listings</Text>
-                  <Button variant="outline" size="sm">Disabled</Button>
-                </div>
-              </div>
-            </Card>
-          </div>
-        )}
+        {/*
+          Notifications sub-tab removed entirely — see settingsTabs comment.
+          Real notifications stream is available via the sidebar's
+          Notifications item.
+        */}
 
         {activeSettingsTab === 'roles' && (
           <div className="space-y-6">
@@ -1267,7 +1324,7 @@ const SettingsContent: React.FC = () => {
                       </span>
                     </div>
                   </div>
-                  <Button variant="outline" className="w-full mt-4">
+                  <Button variant="outline" className="w-full mt-4" onClick={() => navigate('role-management')}>
                     Manage Roles
                   </Button>
                 </div>
@@ -1277,7 +1334,7 @@ const SettingsContent: React.FC = () => {
         )}
 
         {activeSettingsTab === 'account' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="max-w-2xl">
             {/* Account Actions */}
             <Card className="p-6">
               <Text variant="body" weight="semibold" className="mb-4">
@@ -1298,26 +1355,13 @@ const SettingsContent: React.FC = () => {
                 </Button>
               </div>
             </Card>
-
-            {/* Danger Zone */}
-            <Card className="p-6 border-red-200 dark:border-red-800">
-              <Text variant="body" weight="semibold" className="mb-4 text-red-600">
-                Danger Zone
-              </Text>
-              <div className="space-y-3">
-                <Button variant="outline" className="w-full justify-start text-red-600 hover:text-red-700 border-red-200 hover:border-red-300">
-                  <AlertTriangle className="w-4 h-4 mr-3" />
-                  Suspend Account
-                </Button>
-                <Button variant="outline" className="w-full justify-start text-red-600 hover:text-red-700 border-red-200 hover:border-red-300">
-                  <AlertTriangle className="w-4 h-4 mr-3" />
-                  Deactivate Account
-                </Button>
-              </div>
-              <Text variant="caption" color="muted" className="mt-3">
-                These actions are permanent and cannot be undone. Please contact support if you need assistance.
-              </Text>
-            </Card>
+            {/*
+              "Danger Zone" card (Suspend Account / Deactivate Account) removed.
+              Neither button had an onClick. Self-service account closure is a
+              compliance-heavy flow (KYC ties, open positions, ongoing
+              dividends) that needs a proper support-driven process; the
+              placeholder UI was misleading.
+            */}
           </div>
         )}
       </motion.div>
@@ -1339,6 +1383,18 @@ const SettingsContent: React.FC = () => {
               className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full p-6"
               onClick={(e) => e.stopPropagation()}
             >
+              {settingsModal === 'edit-profile' && (
+                <>
+                  <Text variant="h3" weight="bold" className="mb-3">Edit Profile</Text>
+                  <Text variant="body" color="muted" className="mb-4">
+                    Inline profile editing is wired to the server-side endpoint
+                    but the form UI is still being polished. For now, profile
+                    fields can be updated via the standalone profile page —
+                    we'll move it inline here when the form lands.
+                  </Text>
+                  <Button onClick={() => setSettingsModal(null)} className="w-full">Close</Button>
+                </>
+              )}
               {settingsModal === '2fa' && (
                 <>
                   <Text variant="h3" weight="bold" className="mb-3">Enable Two-Factor Authentication</Text>
