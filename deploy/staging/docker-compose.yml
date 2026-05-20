@@ -61,6 +61,12 @@ services:
       - frontend_dist:/app/dist
     networks:
       - staging_net
+    # IMPORTANT: build the .env one line per command. An earlier
+    # implementation used `printf 'A=…\nB=…\n'` to write the whole file in
+    # one call; YAML folded-scalar handling silently flattened every `\n`
+    # to a literal `n` so the resulting file was one giant line. Vite then
+    # baked the entire content into VITE_API_URL. Chained echoes are
+    # unambiguous and don't depend on escape-sequence interpretation.
     command: >
       sh -c "set -e &&
       apk add --no-cache curl &&
@@ -68,7 +74,17 @@ services:
       echo 'Fetching tokenization@'$${GIT_REF:-main}' …' &&
       curl -fsSL https://github.com/Daamah-Digital-Solutions/tokenization/archive/$${GIT_REF:-main}.tar.gz | tar -xz -C /tmp/build --strip-components=1 &&
       cd /tmp/build/capimax-preview &&
-      printf 'VITE_API_URL=https://capimaxrt.tech/api/v1\nVITE_WEBSOCKET_URL=wss://capimaxrt.tech/ws\nVITE_STRIPE_PUBLISHABLE_KEY=%s\nVITE_GOOGLE_CLIENT_ID=%s\nVITE_ENABLE_CRYPTO_PAYMENTS=true\nVITE_ENABLE_WEBSOCKETS=true\nVITE_ENABLE_2FA=true\nVITE_SUPPORTED_CHAINS=97\n' \"$${VITE_STRIPE_PUBLISHABLE_KEY}\" \"$${VITE_GOOGLE_CLIENT_ID}\" > .env &&
+      : > .env &&
+      echo 'VITE_API_URL=https://capimaxrt.tech/api/v1' >> .env &&
+      echo 'VITE_WEBSOCKET_URL=wss://capimaxrt.tech/ws' >> .env &&
+      echo \"VITE_STRIPE_PUBLISHABLE_KEY=$${VITE_STRIPE_PUBLISHABLE_KEY}\" >> .env &&
+      echo \"VITE_GOOGLE_CLIENT_ID=$${VITE_GOOGLE_CLIENT_ID}\" >> .env &&
+      echo \"VITE_WALLET_CONNECT_PROJECT_ID=$${VITE_WALLET_CONNECT_PROJECT_ID:-}\" >> .env &&
+      echo 'VITE_ENABLE_CRYPTO_PAYMENTS=true' >> .env &&
+      echo 'VITE_ENABLE_WEBSOCKETS=true' >> .env &&
+      echo 'VITE_ENABLE_2FA=true' >> .env &&
+      echo 'VITE_SUPPORTED_CHAINS=97' >> .env &&
+      echo '--- generated frontend .env ---' && cat .env &&
       npm install --no-audit --no-fund &&
       npm run build &&
       rm -rf /app/dist/* && cp -r dist/. /app/dist/ &&
