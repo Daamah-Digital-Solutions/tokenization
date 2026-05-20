@@ -1007,7 +1007,7 @@ class TokenBalance(models.Model):
             models.Index(fields=['property_reference', 'user']),
             models.Index(fields=['lockup_end_time']),
         ]
-        unique_together = ('contract', 'user', 'property_reference', 'token_id')
+        unique_together = ('contract', 'user', 'property_reference', 'token_id', 'wallet_address')
         verbose_name = 'Token Balance'
         verbose_name_plural = 'Token Balances'
 

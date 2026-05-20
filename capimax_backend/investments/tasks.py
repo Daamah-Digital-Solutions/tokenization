@@ -346,6 +346,10 @@ def _execute_blockchain_mint(investment: Investment) -> dict:
                 gas_used=result.get('gas_used'),
             )
 
+            # Match TokenBalance on the full (contract, user, property,
+            # token_id, wallet_address) tuple — keeps custodial and
+            # external slots in separate rows. See migration 0003 for
+            # context.
             token_balance, _ = (
                 TokenBalance.objects
                 .select_for_update()
@@ -353,11 +357,9 @@ def _execute_blockchain_mint(investment: Investment) -> dict:
                     contract=contract,
                     user=user,
                     property_reference=property_obj,
-                    defaults={
-                        'wallet_address': destination,
-                        'token_id': 0,
-                        'balance': 0,
-                    },
+                    token_id=0,
+                    wallet_address=destination,
+                    defaults={'balance': 0},
                 )
             )
             token_balance.balance = (token_balance.balance or 0) + tokens_to_mint

@@ -194,6 +194,27 @@ export interface WalletLinkResult {
   linked_at: number;
 }
 
+// Returned from GET /api/v1/auth/wallet/balances/.
+export interface CustodialBalance {
+  property_id: string;
+  property_title: string;
+  contract_address: string;
+  network: string | null;
+  chain_id: number | null;
+  custodial_balance: string;   // string-encoded int (token count)
+  external_balance: string;
+}
+
+// Returned from POST /api/v1/auth/wallet/withdraw/.
+export interface WithdrawResult {
+  transaction_hash: string;
+  gas_top_up_transaction_hash: string | null;
+  from_wallet: string;
+  to_wallet: string;
+  amount: string;
+  status: string;
+}
+
 export interface UserRegistrationData {
   email: string;
   password: string;

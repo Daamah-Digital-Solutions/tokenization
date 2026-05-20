@@ -19,13 +19,14 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Card } from '../design-system/cards/Card';
 import { WalletService } from '../../services/wallet/WalletService';
-import type { WalletInfo } from '../../services/api/types';
+import type { WalletInfo, CustodialBalance } from '../../services/api/types';
 import {
   connectWallet,
   detectInjectedWallet,
   signMessage,
   WalletConnectionError,
 } from '../../utils/web3';
+import { useAuth } from '../../contexts/AuthContext';
 
 type Status = 'idle' | 'loading' | 'linking' | 'unlinking' | 'error';
 
@@ -36,24 +37,26 @@ interface WalletPanelProps {
   bare?: boolean;
 }
 
-function truncate(addr: string | null | undefined): string {
-  if (!addr) return '';
-  if (addr.length <= 12) return addr;
-  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
-}
-
 const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false }) => {
+  const { refreshUser } = useAuth();
   const [info, setInfo] = useState<WalletInfo | null>(null);
+  const [balances, setBalances] = useState<CustodialBalance[]>([]);
   const [status, setStatus] = useState<Status>('loading');
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [withdrawingProperty, setWithdrawingProperty] = useState<string | null>(null);
+  const [lastWithdrawTx, setLastWithdrawTx] = useState<{ propertyId: string; hash: string } | null>(null);
 
   const refresh = useCallback(async () => {
     setStatus('loading');
     setError(null);
     try {
-      const data = await WalletService.getWalletInfo();
-      setInfo(data);
+      const [walletData, balanceRows] = await Promise.all([
+        WalletService.getWalletInfo(),
+        WalletService.getCustodialBalances().catch(() => []),
+      ]);
+      setInfo(walletData);
+      setBalances(balanceRows);
       setStatus('idle');
     } catch (e: any) {
       setError(e?.message || 'Failed to load wallet info.');
@@ -91,9 +94,9 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
         conn.address,
         async (msg) => signMessage(injected, conn.address, msg),
       );
-      // Refresh from the server so we trust whatever it persisted, not the
-      // address we sent.
-      await refresh();
+      // Refresh server-side data + the global auth user so dashboards
+      // pick up the new external_wallet_address.
+      await Promise.all([refresh(), refreshUser?.()]);
       setError(null);
       return result;
     } catch (e: any) {
@@ -104,19 +107,51 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
       }
       setStatus('idle');
     }
-  }, [refresh]);
+  }, [refresh, refreshUser]);
 
   const handleUnlink = useCallback(async () => {
     setError(null);
     setStatus('unlinking');
     try {
       await WalletService.unlinkExternalWallet();
-      await refresh();
+      await Promise.all([refresh(), refreshUser?.()]);
     } catch (e: any) {
       setError(e?.message || 'Failed to unlink wallet.');
       setStatus('idle');
     }
-  }, [refresh]);
+  }, [refresh, refreshUser]);
+
+  const handleWithdraw = useCallback(
+    async (row: CustodialBalance) => {
+      setError(null);
+      setLastWithdrawTx(null);
+      const tokens = parseInt(row.custodial_balance, 10) || 0;
+      if (tokens <= 0) {
+        setError('Nothing to withdraw for this property.');
+        return;
+      }
+      const ok = window.confirm(
+        `Withdraw ${tokens} token${tokens === 1 ? '' : 's'} of "${row.property_title}" ` +
+          `to your external wallet?\n\nThis sends an on-chain transaction signed by ` +
+          `the Capimax custody system. Gas is paid by the platform.`,
+      );
+      if (!ok) return;
+      setWithdrawingProperty(row.property_id);
+      try {
+        const result = await WalletService.withdrawTokens(row.property_id);
+        setLastWithdrawTx({
+          propertyId: row.property_id,
+          hash: result.transaction_hash,
+        });
+        await refresh();
+      } catch (e: any) {
+        setError(e?.message || 'Withdrawal failed.');
+      } finally {
+        setWithdrawingProperty(null);
+      }
+    },
+    [refresh],
+  );
 
   const body = (
     <div className="space-y-5">
@@ -216,6 +251,80 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
           </div>
         )}
       </section>
+
+      {/* Custodial holdings — per-property balances + withdraw to external */}
+      {info?.has_external && balances.length > 0 && (
+        <section className="space-y-2">
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            Custodial holdings
+          </span>
+          <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-900/50 dark:text-slate-400">
+                <tr>
+                  <th className="px-4 py-2 text-left">Property</th>
+                  <th className="px-4 py-2 text-right">In custody</th>
+                  <th className="px-4 py-2 text-right">In your wallet</th>
+                  <th className="px-4 py-2"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {balances.map((row) => {
+                  const inCustody = parseInt(row.custodial_balance, 10) || 0;
+                  const external = parseInt(row.external_balance, 10) || 0;
+                  const busy = withdrawingProperty === row.property_id;
+                  return (
+                    <tr
+                      key={row.property_id}
+                      className="border-t border-slate-200 dark:border-slate-800"
+                    >
+                      <td className="px-4 py-2 text-slate-700 dark:text-slate-200">
+                        {row.property_title}
+                      </td>
+                      <td className="px-4 py-2 text-right font-mono tabular-nums text-slate-700 dark:text-slate-200">
+                        {inCustody}
+                      </td>
+                      <td className="px-4 py-2 text-right font-mono tabular-nums text-slate-500 dark:text-slate-400">
+                        {external}
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => handleWithdraw(row)}
+                          disabled={busy || inCustody <= 0}
+                          className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-slate-700 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+                        >
+                          {busy ? 'Withdrawing…' : 'Withdraw'}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {lastWithdrawTx && (
+            <p className="text-xs text-emerald-700 dark:text-emerald-300">
+              Withdrawal broadcast.{' '}
+              <a
+                href={`https://testnet.bscscan.com/tx/${lastWithdrawTx.hash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium underline"
+              >
+                View on BscScan ↗
+              </a>
+            </p>
+          )}
+
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Tokens currently held in the platform-managed custodial wallet
+            can be moved to your linked external wallet anytime. Gas is
+            paid by the platform.
+          </p>
+        </section>
+      )}
 
       {error && (
         <p

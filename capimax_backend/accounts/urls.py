@@ -39,6 +39,7 @@ from .wallet_views import (
     link_external_wallet,
     unlink_external_wallet,
 )
+from .wallet_withdraw import withdraw_tokens, custodial_balances
 
 app_name = 'accounts'
 
@@ -86,4 +87,6 @@ urlpatterns = [
     path('wallet/', wallet_info, name='wallet-info'),
     path('wallet/link-external/', link_external_wallet, name='wallet-link-external'),
     path('wallet/unlink-external/', unlink_external_wallet, name='wallet-unlink-external'),
+    path('wallet/balances/', custodial_balances, name='wallet-custodial-balances'),
+    path('wallet/withdraw/', withdraw_tokens, name='wallet-withdraw'),
 ]

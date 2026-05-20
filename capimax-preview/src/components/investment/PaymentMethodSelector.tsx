@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   CreditCard,
@@ -13,13 +13,15 @@ import {
   AlertCircle,
   Star,
   DollarSign,
-  FileText
+  FileText,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
 import { Input } from '../design-system/forms/Input';
 import type { InvestmentData } from './types';
+import type { WalletInfo } from '../../services/api/types';
+import { WalletService } from '../../services/wallet/WalletService';
 import { cn } from '../../utils/cn';
 
 interface PaymentMethodSelectorProps {
@@ -107,6 +109,22 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   const [selectedMethod, setSelectedMethod] = useState<string | null>(
     investmentData.paymentMethod || null
   );
+
+  // Fetch the user's wallet state once so we can warn them inline if they
+  // pick a crypto-native flow without an external wallet linked. We don't
+  // BLOCK the payment (backend safely falls back to custodial); we just
+  // surface the expected destination clearly.
+  const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    WalletService.getWalletInfo()
+      .then((info) => { if (!cancelled) setWalletInfo(info); })
+      .catch(() => { /* non-fatal */ });
+    return () => { cancelled = true; };
+  }, []);
+  const isCryptoLike = selectedMethod === 'crypto' || selectedMethod === 'pronova';
+  const showCryptoWalletGuidance =
+    isCryptoLike && walletInfo && !walletInfo.has_external;
 
   const handleMethodSelect = (methodId: string) => {
     console.log('Payment method selected:', methodId);
@@ -356,6 +374,69 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
           </Card>
         </motion.div>
       )}
+
+      {/* Crypto + no-external-wallet guidance — non-blocking, informational */}
+      {showCryptoWalletGuidance && (
+        <Card className="p-4 bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800">
+          <div className="flex items-start gap-3">
+            <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div className="text-sm text-amber-900 dark:text-amber-200 space-y-2">
+              <div className="font-medium">
+                You haven't linked an external wallet yet
+              </div>
+              <div>
+                If you proceed with a crypto payment, your tokens will land in
+                your <strong>platform-managed Capimax wallet</strong> instead
+                of going directly to MetaMask. You can withdraw them to your
+                own wallet anytime after that.
+              </div>
+              <div className="pt-1">
+                <a
+                  href="/wallet"
+                  className="inline-flex items-center gap-1 rounded-md border border-amber-300 dark:border-amber-700 bg-white dark:bg-amber-950/40 px-3 py-1 text-xs font-medium text-amber-900 dark:text-amber-100 hover:bg-amber-100 dark:hover:bg-amber-900/50"
+                >
+                  Link a wallet first ↗
+                </a>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Destination preview — once we know the wallet info, show where the
+          tokens will end up no matter what method was picked. */}
+      {selectedMethod && walletInfo && (() => {
+        const showExternal = isCryptoLike && walletInfo.has_external && walletInfo.external_wallet;
+        const dest = showExternal ? walletInfo.external_wallet : walletInfo.primary_wallet;
+        if (!dest) return null;
+        return (
+          <Card className="p-3 bg-slate-50 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-3">
+              <Wallet className="h-4 w-4 text-slate-500 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    Tokens will be minted to
+                  </span>
+                  <span
+                    className={cn(
+                      'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium',
+                      showExternal
+                        ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+                        : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+                    )}
+                  >
+                    {showExternal ? 'Your wallet' : 'Platform-managed'}
+                  </span>
+                </div>
+                <code className="block truncate font-mono text-xs text-slate-700 dark:text-slate-200">
+                  {dest}
+                </code>
+              </div>
+            </div>
+          </Card>
+        );
+      })()}
 
       {/* Security Notice */}
       <Card className="p-4 bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800">

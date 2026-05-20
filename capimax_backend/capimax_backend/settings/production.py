@@ -32,6 +32,10 @@ REQUIRED_ENV_VARS = [
     'STRIPE_WEBHOOK_SECRET',
     'NOWPAYMENTS_API_KEY',
     'NOWPAYMENTS_IPN_SECRET',
+    # Hybrid custodial wallets: without the master seed we cannot derive
+    # users' on-chain destinations. Fail-fast in production rather than
+    # silently letting new users sign up with no wallet.
+    'PLATFORM_CUSTODY_MASTER_SEED',
 ]
 
 _missing = [var for var in REQUIRED_ENV_VARS if not os.environ.get(var, '').strip()]

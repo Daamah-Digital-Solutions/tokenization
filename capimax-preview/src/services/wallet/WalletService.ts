@@ -20,6 +20,8 @@ import type {
   WalletInfo,
   WalletLinkChallenge,
   WalletLinkResult,
+  CustodialBalance,
+  WithdrawResult,
 } from '../api/types';
 
 export class WalletService {
@@ -70,5 +72,31 @@ export class WalletService {
       '/auth/wallet/unlink-external/',
       {},
     );
+  }
+
+  /**
+   * Per-property token holdings split between the user's custodial and
+   * external wallet slots. Used to power the withdraw UI.
+   */
+  static async getCustodialBalances(): Promise<CustodialBalance[]> {
+    const data = await apiClient.get<{ balances: CustodialBalance[] }>(
+      '/auth/wallet/balances/',
+    );
+    return data?.balances || [];
+  }
+
+  /**
+   * Move tokens from the user's custodial wallet to their linked external
+   * wallet. Backend signs with the platform-derived custodial key; user
+   * never sees a private key. Pass ``amount`` undefined to withdraw the
+   * full custodial balance for that property.
+   */
+  static async withdrawTokens(
+    propertyId: string,
+    amount?: number,
+  ): Promise<WithdrawResult> {
+    const body: Record<string, unknown> = { property_id: propertyId };
+    if (amount != null) body.amount = amount;
+    return apiClient.post<WithdrawResult>('/auth/wallet/withdraw/', body);
   }
 }
