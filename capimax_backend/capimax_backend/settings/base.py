@@ -302,8 +302,15 @@ EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@capimax.com')
 
-# Google OAuth Configuration
-GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', '')
+# Google OAuth Configuration.
+# Accept either env-var name (GOOGLE_CLIENT_ID is the one the frontend
+# expects via VITE_GOOGLE_CLIENT_ID; GOOGLE_OAUTH_CLIENT_ID is the older
+# name some installs use). Either works; backend reads
+# settings.GOOGLE_OAUTH_CLIENT_ID.
+GOOGLE_OAUTH_CLIENT_ID = (
+    os.environ.get('GOOGLE_OAUTH_CLIENT_ID')
+    or os.environ.get('GOOGLE_CLIENT_ID', '')
+)
 
 # Create logs directory if it doesn't exist
 logs_dir = BASE_DIR / 'logs'
