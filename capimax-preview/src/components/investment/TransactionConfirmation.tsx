@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   CheckCircle2,
@@ -18,13 +18,16 @@ import {
   Facebook,
   Linkedin,
   PieChart,
-  Loader2
+  Loader2,
+  Wallet as WalletIcon,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
 import { InvestmentReceipt } from './InvestmentReceipt';
 import type { InvestmentProperty, InvestmentData } from './types';
+import { WalletService } from '../../services/wallet/WalletService';
+import type { WalletInfo } from '../../services/api/types';
 import { cn } from '../../utils/cn';
 
 interface TransactionConfirmationProps {
@@ -46,6 +49,33 @@ export const TransactionConfirmation: React.FC<TransactionConfirmationProps> = (
   const [emailSent, setEmailSent] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
+  const [walletAddrCopied, setWalletAddrCopied] = useState(false);
+
+  // Hybrid wallet model: fiat payments mint to the user's custodial wallet,
+  // crypto payments mint to the user's external (self-custody) wallet.
+  // Pulling /auth/wallet/ here lets us display the right one alongside the
+  // receipt so the investor knows exactly where their tokens landed.
+  useEffect(() => {
+    let cancelled = false;
+    WalletService.getWalletInfo()
+      .then((info) => { if (!cancelled) setWalletInfo(info); })
+      .catch(() => { /* non-fatal — confirmation still displays */ });
+    return () => { cancelled = true; };
+  }, []);
+
+  const destinationWallet = (() => {
+    if (!walletInfo) return null;
+    const m = String(investmentData.paymentMethod || '').toLowerCase();
+    if (m === 'crypto' && walletInfo.external_wallet) return walletInfo.external_wallet;
+    return walletInfo.primary_wallet;
+  })();
+
+  const destinationKind: 'custodial' | 'external' = (() => {
+    const m = String(investmentData.paymentMethod || '').toLowerCase();
+    if (m === 'crypto' && walletInfo?.external_wallet) return 'external';
+    return walletInfo?.primary_kind || 'custodial';
+  })();
 
   const calculateReturns = () => {
     const annualReturn = (investmentData.amount * property.investment.avgAnnualReturn) / 100;
@@ -236,6 +266,50 @@ Transaction ID: ${transactionId}`;
             </div>
           </div>
         </div>
+
+        {/* Destination wallet — where the freshly-minted tokens are
+            actually held. Hybrid model: custodial for fiat, external for
+            crypto with a linked wallet. */}
+        {destinationWallet && (
+          <div className="mt-4 flex items-center gap-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/60 dark:bg-slate-900/60 p-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300">
+              <WalletIcon className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Tokens delivered to
+                </span>
+                <span
+                  className={cn(
+                    'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium',
+                    destinationKind === 'custodial'
+                      ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+                      : 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+                  )}
+                >
+                  {destinationKind === 'custodial' ? 'Platform-managed' : 'Your wallet'}
+                </span>
+              </div>
+              <code className="block truncate font-mono text-sm text-slate-700 dark:text-slate-200">
+                {destinationWallet}
+              </code>
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(destinationWallet);
+                  setWalletAddrCopied(true);
+                  setTimeout(() => setWalletAddrCopied(false), 1500);
+                } catch { /* clipboard refused */ }
+              }}
+              className="rounded-md px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700"
+            >
+              {walletAddrCopied ? 'Copied' : 'Copy'}
+            </button>
+          </div>
+        )}
       </Card>
 
       {/* What's Next */}

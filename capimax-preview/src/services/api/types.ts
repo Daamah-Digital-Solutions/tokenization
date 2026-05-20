@@ -161,8 +161,37 @@ export interface User {
   kyc_status: KYCStatus;
   is_verified: boolean;
   wallet_address?: string;
+  // Hybrid wallet model — wallet_address above is the primary destination
+  // (custodial by default). external_wallet_address is the optional
+  // self-custody slot set when the user links MetaMask.
+  wallet_kind?: 'custodial' | 'external';
+  external_wallet_address?: string;
   created_at: Date;
   updated_at: Date;
+}
+
+// Returned from GET /api/v1/auth/wallet/
+export interface WalletInfo {
+  primary_wallet: string | null;
+  primary_kind: 'custodial' | 'external';
+  external_wallet: string | null;
+  has_external: boolean;
+  custody_explanation: string;
+}
+
+// Step-1 response from POST /api/v1/auth/wallet/link-external/ (no signature).
+export interface WalletLinkChallenge {
+  step: 'sign_message';
+  address: string;
+  message_to_sign: string;
+  nonce: string;
+  expires_in_seconds: number;
+}
+
+// Step-2 response (with signature).
+export interface WalletLinkResult {
+  address: string;
+  linked_at: number;
 }
 
 export interface UserRegistrationData {

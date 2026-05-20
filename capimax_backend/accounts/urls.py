@@ -34,6 +34,11 @@ from .views import (
     GoogleAuthView,
     GoogleProfileCompletionView,
 )
+from .wallet_views import (
+    wallet_info,
+    link_external_wallet,
+    unlink_external_wallet,
+)
 
 app_name = 'accounts'
 
@@ -76,4 +81,9 @@ urlpatterns = [
     # Google OAuth endpoints
     path('google/auth/', GoogleAuthView.as_view(), name='google-auth'),
     path('google/complete-profile/', GoogleProfileCompletionView.as_view(), name='google-complete-profile'),
+
+    # Hybrid wallet management — custodial info + external link/unlink.
+    path('wallet/', wallet_info, name='wallet-info'),
+    path('wallet/link-external/', link_external_wallet, name='wallet-link-external'),
+    path('wallet/unlink-external/', unlink_external_wallet, name='wallet-unlink-external'),
 ]

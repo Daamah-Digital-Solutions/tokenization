@@ -18,6 +18,7 @@ import DepositWithdraw from './DepositWithdraw';
 import TransactionTracker from './TransactionTracker';
 import PaymentAnalytics from './PaymentAnalytics';
 import PaymentSecurity from './PaymentSecurity';
+import WalletPanel from '../wallet/WalletPanel';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 
@@ -94,8 +95,13 @@ export function WalletManagementPage({ className }: WalletManagementPageProps) {
 
   const renderOverview = () => (
     <div className="space-y-6">
+      {/* Custodial / external blockchain wallet panel — where minted tokens
+          actually live. Sits above the fiat WalletBalance so testers see
+          their on-chain destination first. */}
+      <WalletPanel />
+
       {/* Wallet Balance */}
-      <WalletBalance 
+      <WalletBalance
         showActions={true}
         onDepositClick={() => setShowModal('deposit')}
         onWithdrawClick={() => setShowModal('withdraw')}

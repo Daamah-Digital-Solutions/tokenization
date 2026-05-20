@@ -136,6 +136,41 @@ export async function connectWallet(walletId: WalletProvider): Promise<WalletCon
 }
 
 /**
+ * Ask the wallet to sign a UTF-8 message using EIP-191 personal_sign.
+ *
+ * Used for "prove you own this wallet" flows — e.g. linking an external
+ * wallet to a Capimax account without spending gas or sending a tx.
+ *
+ * The wallet shows the message to the user verbatim; never embed sensitive
+ * data in it. The signature is a 65-byte hex string (0x...).
+ */
+export async function signMessage(
+  walletId: WalletProvider,
+  address: string,
+  message: string,
+): Promise<string> {
+  const provider = getProvider(walletId);
+  try {
+    const signature: string = await provider.request({
+      method: 'personal_sign',
+      params: [message, address],
+    });
+    return signature;
+  } catch (err: any) {
+    if (err?.code === ERR_USER_REJECTED) {
+      throw new WalletConnectionError(
+        'USER_REJECTED',
+        'You rejected the signature request.'
+      );
+    }
+    throw new WalletConnectionError(
+      'SIGN_FAILED',
+      err?.message || 'Wallet refused to sign the message.'
+    );
+  }
+}
+
+/**
  * Read the native-token balance of an address (returns wei as bigint).
  */
 export async function getNativeBalance(address: string): Promise<bigint> {
