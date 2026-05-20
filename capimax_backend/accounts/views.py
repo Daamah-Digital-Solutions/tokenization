@@ -458,7 +458,7 @@ class EmailVerificationView(APIView):
             result = serializer.save()
             user = result['user']
 
-            return Response(
+            response = Response(
                 create_success_response(
                     data={
                         'user': UserProfileSerializer(user).data,
@@ -470,6 +470,11 @@ class EmailVerificationView(APIView):
                     message="Email verified successfully. You are now logged in."
                 )
             )
+            # Same cookie pattern as CustomTokenObtainPairView — the SPA's
+            # auth state is driven by httpOnly cookies, so a "log them in"
+            # response that omits the cookies leaves the dashboard 401-ing.
+            _set_auth_cookies(response, access=result['access'], refresh=result['refresh'])
+            return response
 
         return Response(
             create_error_response(
@@ -1166,24 +1171,32 @@ class GoogleAuthView(APIView):
 
                 # Generate JWT tokens for existing complete user
                 refresh = RefreshToken.for_user(user)
+                access_str = str(refresh.access_token)
+                refresh_str = str(refresh)
 
                 # Update last login
                 user.last_login = timezone.now()
                 user.save(update_fields=['last_login'])
 
-                return Response(
+                response = Response(
                     create_success_response(
                         data={
                             'requires_profile_completion': False,
                             'user': UserProfileSerializer(user).data,
                             'tokens': {
-                                'access': str(refresh.access_token),
-                                'refresh': str(refresh),
+                                'access': access_str,
+                                'refresh': refresh_str,
                             }
                         },
                         message="Login successful"
                     )
                 )
+                # The SPA reads auth from the httpOnly access_token cookie.
+                # Without this the frontend lands on /dashboard with no
+                # credential, the first authenticated call 401s, and the
+                # user is bounced to /login — looking like a broken redirect.
+                _set_auth_cookies(response, access=access_str, refresh=refresh_str)
+                return response
 
             except User.DoesNotExist:
                 # Generate unique username from email (before @) + random suffix
@@ -1265,18 +1278,20 @@ class GoogleAuthView(APIView):
             )
 
     def _is_profile_complete(self, user):
-        """Check if user has completed their profile."""
-        # Required fields for complete profile
+        """Check if user has completed their profile.
+
+        ``last_name`` is intentionally NOT required — Google's ``family_name``
+        is empty for many single-name accounts and historical first-time-only
+        users. Requiring it locks those users into an infinite "complete your
+        profile" loop even after they submit the form, because the next
+        sign-in re-checks the same emptiness.
+        """
         required_fields = [
             user.first_name,
-            user.last_name,
             user.phone_number,
             user.country,
         ]
-
-        # Check if user has at least one role assignment
         has_role = UserRoleAssignment.objects.filter(user=user, is_active=True).exists()
-
         return all(required_fields) and has_role
 
 
@@ -1396,20 +1411,27 @@ class GoogleProfileCompletionView(APIView):
 
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
+        access_str = str(refresh.access_token)
+        refresh_str = str(refresh)
 
         # Update last login
         user.last_login = timezone.now()
         user.save(update_fields=['last_login'])
 
-        return Response(
+        response = Response(
             create_success_response(
                 data={
                     'user': UserProfileSerializer(user).data,
                     'tokens': {
-                        'access': str(refresh.access_token),
-                        'refresh': str(refresh),
+                        'access': access_str,
+                        'refresh': refresh_str,
                     }
                 },
                 message="Profile completed successfully. Welcome to Capimax!"
             )
         )
+        # Without these cookies the dashboard's first authenticated request
+        # 401s and the frontend bounces the user back to /login as if they
+        # never completed the form.
+        _set_auth_cookies(response, access=access_str, refresh=refresh_str)
+        return response
