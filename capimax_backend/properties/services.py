@@ -322,10 +322,30 @@ class InstallmentProcessingService:
 
         if not property_obj.smart_contract_address:
             return {'success': False, 'error': 'Property is not tokenized.'}
-        if not investor.wallet_address:
-            return {'success': False, 'error': 'Investor has no wallet_address.'}
         if token_count <= 0:
             return {'success': False, 'error': 'Nothing to release.'}
+
+        # Hybrid wallet model: prefer the destination_wallet recorded on
+        # the investor's most-recent Investment in this property — that's
+        # the address the investor explicitly committed to at checkout.
+        # Fall back to the investor's primary (custodial) wallet, then
+        # their external one. Worst case: there's truly no address and
+        # we surface the error.
+        from investments.models import Investment
+        latest_inv = (
+            Investment.objects
+            .filter(property_investment=property_obj, user=investor)
+            .order_by('-created_at')
+            .only('destination_wallet')
+            .first()
+        )
+        destination = (
+            (latest_inv.destination_wallet if latest_inv else None)
+            or investor.wallet_address
+            or investor.external_wallet_address
+        )
+        if not destination:
+            return {'success': False, 'error': 'Investor has no destination wallet configured.'}
 
         # Per-property SmartContract row carries the clone address + ABI.
         token_sc = SmartContract.objects.filter(
@@ -351,7 +371,7 @@ class InstallmentProcessingService:
             CLONE_TOKEN_ID = 0
             tx = token.functions.processInstallment(
                 CLONE_TOKEN_ID,
-                Web3.to_checksum_address(investor.wallet_address),
+                Web3.to_checksum_address(destination),
                 int(token_count),
             ).build_transaction({
                 'from': signer.address,

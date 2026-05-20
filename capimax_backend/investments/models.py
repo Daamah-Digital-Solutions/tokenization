@@ -78,7 +78,23 @@ class Investment(models.Model):
         default=dict,
         help_text="Payment method details and metadata"
     )
-    
+
+    destination_wallet = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text=(
+            "On-chain address where this investment's tokens are minted. "
+            "Captured at investment creation time, immutable thereafter. "
+            "Fiat investments default to the investor's custodial wallet; "
+            "crypto investments default to the investor's external/connected "
+            "wallet. Both ready and under-construction (installment) flows "
+            "honor this field as the single source of truth for token "
+            "destination."
+        ),
+    )
+
     transaction_hash = models.CharField(
         max_length=255,
         blank=True,
@@ -191,6 +207,57 @@ class Investment(models.Model):
 
     def __str__(self):
         return f"Investment {self.id} - {self.user.email} - {self.token_amount} tokens in {self.property_investment.title}"
+
+    # -------------------------------------------------------------------------
+    # Destination wallet
+    # -------------------------------------------------------------------------
+
+    # Payment methods that should default to the user's custodial wallet
+    # (platform-managed). Any other value (crypto, wallet-connect, etc.)
+    # falls back to the user's external wallet — those are the flows where
+    # the investor has explicitly connected their own address.
+    FIAT_PAYMENT_KINDS = frozenset({
+        'stripe', 'credit_card', 'debit_card', 'card',
+        'bank_transfer', 'ach', 'wire',
+        'wallet', 'wallet_balance', 'platform_wallet',
+        'paypal',
+    })
+
+    @staticmethod
+    def _payment_kind(payment_method) -> str:
+        """Extract a normalized payment-method label from the JSONField."""
+        if isinstance(payment_method, str):
+            return payment_method.lower()
+        if isinstance(payment_method, dict):
+            for key in ('type', 'method', 'provider', 'kind'):
+                val = payment_method.get(key)
+                if isinstance(val, str):
+                    return val.lower()
+        return ''
+
+    def _resolve_default_destination(self) -> str | None:
+        """Pick the right wallet for this investment based on payment kind."""
+        kind = self._payment_kind(self.payment_method)
+        user = self.user
+        # Fiat (or unknown — safer default) → custodial.
+        if not kind or kind in self.FIAT_PAYMENT_KINDS:
+            return user.wallet_address or user.external_wallet_address
+        # Crypto → user's connected/external wallet first.
+        return user.external_wallet_address or user.wallet_address
+
+    def save(self, *args, **kwargs):
+        # On creation, populate destination_wallet automatically so every
+        # code path (serializers, services, Cart conversion, direct ORM)
+        # ends up with a coherent token destination without each call site
+        # having to remember to set it.
+        if self._state.adding and not self.destination_wallet:
+            try:
+                resolved = self._resolve_default_destination()
+            except Exception:  # noqa: BLE001
+                resolved = None
+            if resolved:
+                self.destination_wallet = resolved
+        super().save(*args, **kwargs)
 
     # -------------------------------------------------------------------------
     # Mint State Machine Methods

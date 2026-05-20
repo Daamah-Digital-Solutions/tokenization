@@ -249,6 +249,25 @@ def process_single_mint(self, investment_id: str):
 # Blockchain execution — pure side-effecting layer
 # ---------------------------------------------------------------------------
 
+def _resolve_destination_wallet(investment: Investment) -> str | None:
+    """
+    Return the on-chain destination for this investment's tokens.
+
+    Source of truth is ``investment.destination_wallet``, captured at
+    creation time. We fall back to ``investment.user.wallet_address`` only
+    for historical rows that pre-date the field — and we lazily backfill so
+    future calls don't re-walk the relation.
+    """
+    if investment.destination_wallet:
+        return investment.destination_wallet
+    user = investment.user
+    fallback = user.wallet_address or user.external_wallet_address
+    if fallback:
+        investment.destination_wallet = fallback
+        investment.save(update_fields=['destination_wallet'])
+    return fallback
+
+
 def _execute_blockchain_mint(investment: Investment) -> dict:
     """Execute the blockchain mintTokens call. Returns a result dict."""
     try:
@@ -264,10 +283,15 @@ def _execute_blockchain_mint(investment: Investment) -> dict:
                 'error': 'Property is not tokenized or missing contract address',
             }
 
-        if not getattr(user, 'wallet_address', None):
+        destination = _resolve_destination_wallet(investment)
+        if not destination:
             return {
                 'success': False,
-                'error': 'User does not have a wallet address configured',
+                'error': (
+                    'Investment has no destination wallet. Custodial '
+                    'auto-assignment may have failed; check '
+                    'PLATFORM_CUSTODY_MASTER_SEED and the post_save signal.'
+                ),
             }
 
         contract = SmartContract.objects.filter(
@@ -284,11 +308,17 @@ def _execute_blockchain_mint(investment: Investment) -> dict:
 
         tokens_to_mint = investment.token_amount
 
+        # Contract ABI: mintTokens(uint256 tokenId, address investor,
+        #                          uint256 amount, bool isInstallment,
+        #                          uint256 totalInstallments).
+        # Investments going through this task are upfront-paid (the
+        # installment escrow + release flow lives in properties/services.py
+        # for under-construction properties). So isInstallment=False here.
         result = web3_service.call_contract_function(
             contract_address=contract.contract_address,
             abi=contract.abi,
             function_name='mintTokens',
-            args=[user.wallet_address, tokens_to_mint, 0],
+            args=[0, destination, tokens_to_mint, False, 0],
             gas_settings={'gas_limit': 500000, 'gas_price': None},
         )
 
@@ -309,7 +339,7 @@ def _execute_blockchain_mint(investment: Investment) -> dict:
                 transaction_type='mint',
                 transaction_hash=result['transaction_hash'],
                 from_address=web3_service.account.address if web3_service.account else '',
-                to_address=user.wallet_address,
+                to_address=destination,
                 token_amount=tokens_to_mint,
                 status='submitted',
                 block_number=result.get('block_number'),
@@ -324,7 +354,7 @@ def _execute_blockchain_mint(investment: Investment) -> dict:
                     user=user,
                     property_reference=property_obj,
                     defaults={
-                        'wallet_address': user.wallet_address,
+                        'wallet_address': destination,
                         'token_id': 0,
                         'balance': 0,
                     },

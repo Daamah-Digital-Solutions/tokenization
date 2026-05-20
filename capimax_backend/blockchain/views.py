@@ -346,7 +346,7 @@ class TokenOperationsView(APIView):
             if result and result['status'] == 1:
                 # Create transaction record
                 from accounts.models import User
-                user = User.objects.filter(wallet_address__iexact=validated_data['investor_address']).first()
+                user = User.objects.lookup_by_wallet(validated_data['investor_address'])
                 
                 tx_record = TokenTransaction.objects.create(
                     contract=contract,

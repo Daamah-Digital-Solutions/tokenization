@@ -203,7 +203,7 @@ class BlockchainMonitoringService:
             
             # Update or create token balance
             from accounts.models import User
-            user = User.objects.filter(wallet_address__iexact=investor_address).first()
+            user = User.objects.lookup_by_wallet(investor_address)
             
             if user:
                 balance, created = TokenBalance.objects.get_or_create(
@@ -236,7 +236,7 @@ class BlockchainMonitoringService:
             
             # Update token balance
             from accounts.models import User
-            user = User.objects.filter(wallet_address__iexact=investor_address).first()
+            user = User.objects.lookup_by_wallet(investor_address)
             
             if user:
                 try:
@@ -298,7 +298,7 @@ class BlockchainMonitoringService:
             
             # Update token balance rental earnings
             from accounts.models import User
-            user = User.objects.filter(wallet_address__iexact=investor_address).first()
+            user = User.objects.lookup_by_wallet(investor_address)
             
             if user:
                 try:
@@ -353,7 +353,7 @@ class BlockchainMonitoringService:
             
             # Update investment installment count
             from accounts.models import User
-            user = User.objects.filter(wallet_address__iexact=investor_address).first()
+            user = User.objects.lookup_by_wallet(investor_address)
             
             if user:
                 investment = Investment.objects.filter(

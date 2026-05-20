@@ -23,19 +23,36 @@ class UserRole(models.TextChoices):
     ADMIN = 'admin', 'Admin'
 
 
+class WalletKind(models.TextChoices):
+    """
+    Where a user's primary tokens live.
+
+    - ``custodial``: platform-managed wallet derived from the master seed.
+      The user does not hold the private key. Default for fiat-paying users.
+    - ``external``: user-controlled wallet (MetaMask, hardware wallet, etc.).
+      The platform never has the private key.
+
+    A user may have BOTH a custodial wallet (``wallet_address``) AND a linked
+    external wallet (``external_wallet_address``). ``wallet_kind`` indicates
+    which one is the user's primary destination for new mints by default.
+    """
+    CUSTODIAL = 'custodial', 'Custodial (platform-managed)'
+    EXTERNAL = 'external', 'External (self-custody)'
+
+
 class UserManager(BaseUserManager):
     """
     Custom user manager for email-based authentication.
-    
+
     Provides methods for creating regular users and superusers
     using email as the primary identifier instead of username.
     """
-    
+
     def create_user(self, email, password=None, **extra_fields):
         """Create and save a regular user with the given email and password."""
         if not email:
             raise ValueError('The Email field must be set')
-        
+
         email = self.normalize_email(email)
         # Use email as username if not provided
         if 'username' not in extra_fields:
@@ -44,6 +61,22 @@ class UserManager(BaseUserManager):
         user.set_password(password)
         user.save(using=self._db)
         return user
+
+    def lookup_by_wallet(self, address):
+        """
+        Find a user by either their primary or external wallet address.
+
+        Used by on-chain event listeners that see an address and need to
+        map it back to a User. Case-insensitive (Ethereum addresses are
+        case-insensitive when not checksummed).
+        """
+        if not address:
+            return None
+        from django.db.models import Q
+        return self.filter(
+            Q(wallet_address__iexact=address)
+            | Q(external_wallet_address__iexact=address)
+        ).first()
     
     def create_superuser(self, email, password=None, **extra_fields):
         """Create and save a superuser with the given email and password."""
@@ -141,7 +174,35 @@ class User(AbstractUser):
         max_length=255,
         blank=True,
         null=True,
-        help_text="User's blockchain wallet address"
+        db_index=True,
+        help_text=(
+            "The user's primary on-chain destination. For fiat-paying users "
+            "this is auto-populated with a deterministically-derived custodial "
+            "address. For crypto-native users it is whichever wallet they "
+            "first connected. Lower-cased / checksummed Ethereum address."
+        ),
+    )
+
+    wallet_kind = models.CharField(
+        max_length=16,
+        choices=WalletKind.choices,
+        default=WalletKind.CUSTODIAL,
+        help_text=(
+            "Whether ``wallet_address`` is platform-custodial or self-custody. "
+            "Drives whether the backend can sign on the user's behalf."
+        ),
+    )
+
+    external_wallet_address = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text=(
+            "Optional self-custody wallet linked by the user (e.g. via "
+            "MetaMask + sign-to-prove). Used as the destination for crypto "
+            "investments and for 'withdraw to my wallet' transfers."
+        ),
     )
 
     google_id = models.CharField(

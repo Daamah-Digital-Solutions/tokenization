@@ -977,7 +977,7 @@ class ContractManager:
             from accounts.models import User
             from properties.models import Property
             
-            user = User.objects.filter(wallet_address=investor_address).first()
+            user = User.objects.lookup_by_wallet(investor_address)
             property_obj = Property.objects.get(id=property_id)
             
             tx_record = TokenTransaction.objects.create(

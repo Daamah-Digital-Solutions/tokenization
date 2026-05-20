@@ -574,7 +574,7 @@ class TransactionMonitor:
             from accounts.models import User
             
             # Find user by wallet address
-            user = User.objects.filter(wallet_address__iexact=wallet_address).first()
+            user = User.objects.lookup_by_wallet(wallet_address)
             if not user:
                 logger.warning(f"User not found for wallet address: {wallet_address}")
                 return
@@ -646,7 +646,7 @@ class TransactionMonitor:
         try:
             from accounts.models import User
             
-            user = User.objects.filter(wallet_address__iexact=wallet_address).first()
+            user = User.objects.lookup_by_wallet(wallet_address)
             if not user:
                 return
             

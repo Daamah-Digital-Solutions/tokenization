@@ -268,6 +268,14 @@ BLOCKCHAIN_PRIVATE_KEY = (
 CONTRACT_FACTORY_ADDRESS = os.environ.get('CONTRACT_FACTORY_ADDRESS', '')
 DEFAULT_CHAIN_ID = int(os.environ.get('DEFAULT_CHAIN_ID', '97'))
 
+# Custodial wallet master seed. Drives ``accounts.custody`` — derives a
+# unique Ethereum-compatible private key per user via HMAC-SHA256. Must be
+# a 64-char hex string (32 bytes). Generate with:
+#   python -c 'import secrets; print(secrets.token_hex(32))'
+# Treat like the production root key — rotation requires moving every
+# investor's tokens on-chain, so set it once and protect it forever.
+PLATFORM_CUSTODY_MASTER_SEED = os.environ.get('PLATFORM_CUSTODY_MASTER_SEED', '')
+
 BLOCKCHAIN_SETTINGS = {
     'ETHEREUM_RPC_URL': os.environ.get('ETHEREUM_RPC_URL', 'https://mainnet.infura.io/v3/'),
     'POLYGON_RPC_URL': os.environ.get('POLYGON_RPC_URL', 'https://polygon-rpc.com/'),
