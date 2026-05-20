@@ -49,7 +49,33 @@ export class UserService {
   /** PUT /auth/profile/ — update the authenticated user's profile. */
   static async updateProfile(profileData: UserProfileData): Promise<User> {
     try {
-      return await apiClient.put<User>('/auth/profile/', profileData);
+      const backendUser = await apiClient.put<any>('/auth/profile/', profileData);
+      // Normalize the response the same way AuthService.getCurrentUser does so
+      // downstream consumers (DashboardPage, etc.) can rely on Date objects
+      // for `created_at` / `updated_at`. Without this normalization, a save
+      // mutation replaces the Date with an ISO string in AuthContext state
+      // and any caller that does `user.created_at.toISOString()` crashes the
+      // dashboard until a full page reload re-hydrates from getCurrentUser.
+      const mappedUser: User = {
+        id: backendUser.id,
+        email: backendUser.email,
+        first_name: backendUser.first_name ?? '',
+        last_name: backendUser.last_name ?? '',
+        role: backendUser.role,
+        phone: backendUser.phone ?? '',
+        country: backendUser.country ?? '',
+        date_of_birth: backendUser.date_of_birth ?? '',
+        address: backendUser.address ?? '',
+        city: backendUser.city ?? '',
+        state: backendUser.state ?? '',
+        postal_code: backendUser.postal_code ?? '',
+        kyc_status: backendUser.kyc_status ?? 'not_started',
+        is_verified: Boolean(backendUser.is_verified),
+        wallet_address: backendUser.wallet_address ?? '',
+        created_at: new Date(backendUser.created_at ?? Date.now()),
+        updated_at: new Date(backendUser.updated_at ?? Date.now()),
+      } as User;
+      return mappedUser;
     } catch (error) {
       console.error('Failed to update profile:', error);
       throw error;

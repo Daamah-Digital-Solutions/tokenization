@@ -24,6 +24,7 @@ import PropertyOwnerService from '../../services/property-owner/PropertyOwnerSer
 import { AuthService } from '../../services/auth/AuthService';
 import { UserRole, type User as UserType, type Transaction } from '../../services/api/types';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useRouter } from '../../utils/router';
 import { StatsCard, Card } from '../design-system';
 import { Text } from '../design-system/typography/Text';
 import { Button } from '../ui/Button';
@@ -171,11 +172,12 @@ const roleBasedContent: Record<UserRole, (data: any) => DashboardContent> = {
         variant: 'outline' as const,
       },
     ],
-    sections: [
-      { title: 'Property Performance', component: PropertyPerformance, priority: 1 },
-      { title: 'Investor Activity', component: InvestorActivity, priority: 2 },
-      { title: 'Pending Approvals', component: PendingApprovals, priority: 3 },
-    ],
+    // The Property Owner role used to render 3 placeholder cards ("Property
+    // Performance content", "Investor Activity content", "Pending Approvals
+    // content") that literally just displayed those strings. The dedicated
+    // sidebar tabs (Tokenization / Revenue / Investors / Documents) already
+    // cover those concerns properly, so the empty stubs were just noise.
+    sections: [],
   }),
 
   [UserRole.BROKER]: (data) => ({
@@ -228,11 +230,10 @@ const roleBasedContent: Record<UserRole, (data: any) => DashboardContent> = {
         variant: 'outline' as const,
       },
     ],
-    sections: [
-      { title: 'Commission Tracking', component: CommissionTracking, priority: 1 },
-      { title: 'Referral Network', component: ReferralNetwork, priority: 2 },
-      { title: 'Performance Analytics', component: BrokerAnalytics, priority: 3 },
-    ],
+    // Same rationale as PROPERTY_OWNER above: the Broker dashboard's own tabs
+    // cover commissions, referrals, and analytics; the placeholder cards here
+    // would just say "Commission tracking content" etc.
+    sections: [],
   }),
 
   [UserRole.ADMIN]: (data) => ({
@@ -299,6 +300,7 @@ export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
   onViewChange
 }) => {
   const { theme, toggleTheme } = useTheme();
+  const { navigate } = useRouter();
   const [user, setUser] = useState<UserType | null>(null);
 
   // Fetch user data
@@ -372,14 +374,21 @@ export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
 
   const content = roleBasedContent[user.role](dashboardData);
 
-  // Override quick actions to use proper in-app navigation instead of window.location.href
+  // Override quick actions to use the SPA router instead of window.location.href.
+  // The raw quickActions arrays defined in `roleBasedContent` above use full
+  // navigations to URLs that don't exist in our custom router (/properties/create,
+  // /dashboard/property-owner, /analytics, /transactions, /referrals/create,
+  // /marketing). Those would dump the user on the 404 page. The overrides below
+  // route through `navigate(route)` (real routes) and `onViewChange('view')`
+  // (in-dashboard tab swap) so every card on the Overview banner actually goes
+  // somewhere useful.
   if (user.role === UserRole.INVESTOR && onViewChange) {
     content.quickActions = [
       {
         title: 'Browse Properties',
         description: 'Discover new investment opportunities',
         icon: Building,
-        action: () => window.location.href = '/properties',
+        action: () => navigate('properties'),
         variant: 'primary' as const,
       },
       {
@@ -394,6 +403,58 @@ export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
         description: 'Track your investment activity',
         icon: Activity,
         action: () => onViewChange('transactions'),
+        variant: 'outline' as const,
+      },
+    ];
+  }
+
+  if (user.role === UserRole.PROPERTY_OWNER && onViewChange) {
+    content.quickActions = [
+      {
+        title: 'List New Property',
+        description: 'Tokenize your next property',
+        icon: Building,
+        action: () => navigate('submit-property'),
+        variant: 'primary' as const,
+      },
+      {
+        title: 'Manage Properties',
+        description: 'View all your listings',
+        icon: Settings,
+        action: () => onViewChange('properties'),
+        variant: 'secondary' as const,
+      },
+      {
+        title: 'View Investors',
+        description: 'See who invested in your properties',
+        icon: Users,
+        action: () => onViewChange('investors'),
+        variant: 'outline' as const,
+      },
+    ];
+  }
+
+  if (user.role === UserRole.BROKER && onViewChange) {
+    content.quickActions = [
+      {
+        title: 'Manage Referrals',
+        description: 'Track your referral network',
+        icon: Users,
+        action: () => onViewChange('referrals'),
+        variant: 'primary' as const,
+      },
+      {
+        title: 'View Commissions',
+        description: 'Track your earnings',
+        icon: DollarSign,
+        action: () => onViewChange('commissions'),
+        variant: 'secondary' as const,
+      },
+      {
+        title: 'Performance Analytics',
+        description: 'Review your conversion metrics',
+        icon: BarChart3,
+        action: () => onViewChange('analytics'),
         variant: 'outline' as const,
       },
     ];

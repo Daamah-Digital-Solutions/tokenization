@@ -384,7 +384,20 @@ export const DashboardPage: React.FC = () => {
     role: activeRole || (authUser.role as UserRole), // Use active role if available, fallback to user's default role
     avatar: undefined,
     isKYCVerified: authUser.kyc_status === 'approved',
-    joinedDate: authUser.created_at?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0]
+    // `created_at` may arrive as a `Date` (from AuthService) or an ISO string
+    // (raw backend payload after a profile-update mutation). Normalize defensively
+    // so a stale string never crashes the dashboard at render time.
+    joinedDate: (() => {
+      const raw = (authUser as any).created_at;
+      if (!raw) return new Date().toISOString().split('T')[0];
+      try {
+        const d = raw instanceof Date ? raw : new Date(raw);
+        const iso = d.toISOString();
+        return iso.split('T')[0];
+      } catch {
+        return new Date().toISOString().split('T')[0];
+      }
+    })()
   } : {
     id: '1',
     name: 'Guest User',

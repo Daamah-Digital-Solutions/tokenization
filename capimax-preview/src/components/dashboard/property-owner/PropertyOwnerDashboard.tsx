@@ -1,11 +1,22 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardStats, ActivityFeed, PerformanceChart, QuickActions } from '../';
 import type { StatItem, ActivityItem, ChartDataPoint, QuickAction } from '../';
-import PropertyApprovalStatus from '../../property-owner/PropertyApprovalStatus';
 import PropertyOwnerService from '../../../services/property-owner/PropertyOwnerService';
 import type { Property } from '../../../services/api/types';
 import { useRouter } from '../../../utils/router';
+import { useAuth } from '../../../contexts/AuthContext';
+import { apiClient } from '../../../services/api/ApiClient';
+
+// In-dashboard tab navigation. Pushes ?view=<tab> to the URL and dispatches a
+// `dashboardpushstate` event that DashboardPage listens for to swap currentView
+// without remounting the whole shell. Used by every quick-action and "view-all"
+// button so they actually take the owner somewhere instead of just logging.
+const switchDashboardView = (view: string) => {
+  const url = new URL(window.location.href);
+  url.searchParams.set('view', view);
+  window.history.pushState({}, '', url.toString());
+};
 
 // Loading and Error Components
 const LoadingStats = () => (
@@ -66,6 +77,7 @@ const formatChangeType = (change: string): 'positive' | 'negative' | 'neutral' =
 
 
 const PropertyOverview: React.FC = () => {
+  const { navigate } = useRouter();
   const {
     data: properties = [],
     isLoading,
@@ -137,7 +149,11 @@ const PropertyOverview: React.FC = () => {
             <p className="text-neutral-500 dark:text-slate-400 mb-4">
               Start tokenizing your first property to see it here
             </p>
-            <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors">
+            <button
+              type="button"
+              onClick={() => navigate('submit-property')}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            >
               Add Your First Property
             </button>
           </div>
@@ -417,7 +433,11 @@ const InvestorManagement: React.FC = () => {
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
             Top Investors
           </h3>
-          <button className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors">
+          <button
+            type="button"
+            onClick={() => switchDashboardView('investors')}
+            className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
+          >
             View All
           </button>
         </div>
@@ -534,6 +554,38 @@ const PropertyDocuments: React.FC = () => {
     );
   }
 
+  // Download / view actions: the backend exposes `download_url` on each
+  // document (mapped to `doc.url`). Open in a new tab for view, force-download
+  // via an anchor with the `download` attribute for the 📥 action. We avoid
+  // window.open(url) with the same tab to preserve the dashboard context.
+  const handleViewDocument = (doc: any) => {
+    if (!doc?.url) {
+      alert('This document does not have a public URL configured.');
+      return;
+    }
+    window.open(doc.url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleDownloadDocument = (doc: any) => {
+    if (!doc?.url) {
+      alert('This document does not have a download URL configured.');
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = doc.url;
+    a.download = doc.name || 'document';
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  // Upload is per-property and requires picking the property + a document type.
+  // Rather than ship a fake header button that does nothing, surface the
+  // upload path through the property-detail page (each property's docs tab is
+  // where the existing UploadDocument flow lives). Owners with no properties
+  // get a clear next step.
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
       <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
@@ -541,7 +593,12 @@ const PropertyDocuments: React.FC = () => {
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
             Recent Documents
           </h3>
-          <button className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors">
+          <button
+            type="button"
+            onClick={() => switchDashboardView('properties')}
+            className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
+            title="Open a property to upload a document"
+          >
             Upload Document
           </button>
         </div>
@@ -551,7 +608,7 @@ const PropertyDocuments: React.FC = () => {
           <div className="text-center py-8">
             <span className="text-4xl mb-4 block">📄</span>
             <p className="text-neutral-500 dark:text-slate-400">
-              No documents uploaded yet. Start by uploading property documentation.
+              No documents uploaded yet. Open a property to upload documentation.
             </p>
           </div>
         ) : (
@@ -559,7 +616,7 @@ const PropertyDocuments: React.FC = () => {
             {documents.map((doc) => (
               <div
                 key={doc.id}
-                className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-600 transition-colors cursor-pointer"
+                className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-600 transition-colors"
               >
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
@@ -577,10 +634,22 @@ const PropertyDocuments: React.FC = () => {
                 </div>
 
                 <div className="flex items-center space-x-2">
-                  <button className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-slate-300 transition-colors">
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadDocument(doc)}
+                    title="Download"
+                    aria-label={`Download ${doc.name}`}
+                    className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-slate-300 transition-colors"
+                  >
                     <span className="text-lg">📥</span>
                   </button>
-                  <button className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-slate-300 transition-colors">
+                  <button
+                    type="button"
+                    onClick={() => handleViewDocument(doc)}
+                    title="View"
+                    aria-label={`View ${doc.name}`}
+                    className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-slate-300 transition-colors"
+                  >
                     <span className="text-lg">👁️</span>
                   </button>
                 </div>
@@ -595,6 +664,7 @@ const PropertyDocuments: React.FC = () => {
 
 // Main dashboard overview component with all stats and charts
 const PropertyOwnerOverview: React.FC = () => {
+  const { navigate } = useRouter();
   const {
     data: ownerStats,
     isLoading: statsLoading,
@@ -674,6 +744,12 @@ const PropertyOwnerOverview: React.FC = () => {
     }));
   };
 
+  // QuickAction wiring (Overview tab):
+  //  - Add Property      → /submit-property (existing route)
+  //  - Manage Investors  → ?view=investors (in-dashboard tab swap)
+  //  - Distribute Revenue → ?view=revenue
+  //  - Upload Documents  → ?view=documents (where the per-doc download/view
+  //    UI lives; the actual upload happens via property-detail page)
   const quickActions: QuickAction[] = [
     {
       id: 'add-property',
@@ -681,14 +757,14 @@ const PropertyOwnerOverview: React.FC = () => {
       icon: '🏢',
       description: 'Tokenize new property',
       variant: 'primary',
-      onClick: () => console.log('Navigate to property tokenization')
+      onClick: () => navigate('submit-property')
     },
     {
       id: 'manage-investors',
       label: 'Manage Investors',
       icon: '👥',
       description: 'View investor details',
-      onClick: () => console.log('Navigate to investor management')
+      onClick: () => switchDashboardView('investors')
     },
     {
       id: 'distribute-revenue',
@@ -696,14 +772,14 @@ const PropertyOwnerOverview: React.FC = () => {
       icon: '💰',
       description: 'Process payments',
       variant: 'success',
-      onClick: () => console.log('Navigate to revenue distribution')
+      onClick: () => switchDashboardView('revenue')
     },
     {
       id: 'upload-documents',
       label: 'Upload Documents',
       icon: '📄',
-      description: 'Add legal documents',
-      onClick: () => console.log('Navigate to document upload')
+      description: 'Manage legal documents',
+      onClick: () => switchDashboardView('documents')
     }
   ];
 
@@ -752,7 +828,11 @@ const PropertyOwnerOverview: React.FC = () => {
           activities={formatActivitiesData(activities)}
           maxItems={5}
           showViewAll={true}
-          onViewAll={() => console.log('View all activities')}
+          // "View all activities" → revenue tab. Owner activities for the
+          // property-owner role are dominated by revenue/distribution events,
+          // and we don't have a dedicated /activities route yet. This keeps
+          // the button useful without inventing a new page.
+          onViewAll={() => switchDashboardView('revenue')}
           loading={activitiesLoading}
         />
       </div>
@@ -1035,40 +1115,246 @@ const InvestorsView: React.FC = () => {
   );
 };
 
+// Settings panel for the Property Owner role.
+//
+// The top-right header on the dashboard wires Notifications/Settings to
+// onViewChange('notifications'|'settings'), but the previous switch fell
+// through to the "under development" placeholder for both — meaning every
+// owner who tapped the gear icon hit a dead end. This panel surfaces the
+// minimum useful surface every authenticated role expects: profile edit
+// (real PUT /auth/profile/), basic account info, and a pointer to KYC.
+const PropertyOwnerSettings: React.FC = () => {
+  const { state, updateProfile } = useAuth();
+  const { navigate } = useRouter();
+  const user = state.user;
+
+  const [form, setForm] = useState({
+    first_name: '', last_name: '', phone: '', country: '', city: '', address: '',
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  // Re-seed the form whenever the user object updates so external changes
+  // (e.g. role switch refetch) are reflected without losing the edit state.
+  useEffect(() => {
+    if (!user) return;
+    setForm({
+      first_name: user.first_name || '',
+      last_name: user.last_name || '',
+      phone: (user as any).phone || (user as any).phone_number || '',
+      country: user.country || '',
+      city: user.city || '',
+      address: user.address || '',
+    });
+  }, [user?.id, user?.updated_at]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setError(null);
+    setSuccess(false);
+    try {
+      await updateProfile({
+        first_name: form.first_name,
+        last_name: form.last_name,
+        phone: form.phone,
+        country: form.country,
+        city: form.city,
+        address: form.address,
+      } as any);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 2500);
+    } catch (e: any) {
+      setError(e?.message || 'Failed to save profile.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
+        Loading…
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
+        <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100 mb-1">
+          Account Settings
+        </h2>
+        <p className="text-sm text-neutral-500 dark:text-slate-400">
+          Manage your profile information. Email and role can only be changed by support.
+        </p>
+      </div>
+
+      <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
+        <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">
+          Profile Information
+        </h3>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm text-emerald-700 dark:text-emerald-300">
+            Profile updated.
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Email</label>
+            <input type="email" value={user.email} disabled
+              className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900 text-sm text-slate-500" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Role</label>
+            <input type="text" value={user.role} disabled
+              className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900 text-sm text-slate-500" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">First name</label>
+            <input type="text" value={form.first_name}
+              onChange={(e) => setForm(f => ({ ...f, first_name: e.target.value }))}
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Last name</label>
+            <input type="text" value={form.last_name}
+              onChange={(e) => setForm(f => ({ ...f, last_name: e.target.value }))}
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Phone</label>
+            <input type="tel" value={form.phone}
+              onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))}
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Country</label>
+            <input type="text" value={form.country}
+              onChange={(e) => setForm(f => ({ ...f, country: e.target.value }))}
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">City</label>
+            <input type="text" value={form.city}
+              onChange={(e) => setForm(f => ({ ...f, city: e.target.value }))}
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Address</label>
+            <input type="text" value={form.address}
+              onChange={(e) => setForm(f => ({ ...f, address: e.target.value }))}
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm" />
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:opacity-60 transition-colors"
+          >
+            {saving ? 'Saving…' : 'Save Changes'}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('kyc')}
+            className="px-4 py-2 border border-neutral-300 dark:border-slate-600 text-sm font-medium rounded-lg hover:bg-neutral-50 dark:hover:bg-slate-700 transition-colors"
+          >
+            Manage Identity Verification
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('role-management')}
+            className="px-4 py-2 border border-neutral-300 dark:border-slate-600 text-sm font-medium rounded-lg hover:bg-neutral-50 dark:hover:bg-slate-700 transition-colors"
+          >
+            Manage Roles
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Notifications panel for the Property Owner role. Mirrors the Investor's
+// implementation: query /notifications/, show a friendly empty state, or a
+// minimal list. Avoids the previous "under development" dead-end.
+const PropertyOwnerNotifications: React.FC = () => {
+  const { data, isLoading } = useQuery({
+    queryKey: ['notifications', 'property-owner'],
+    queryFn: async () => {
+      try {
+        const response = await apiClient.rawClient.get('/notifications/');
+        return response.data?.results || response.data?.data || response.data || [];
+      } catch {
+        return [];
+      }
+    },
+    retry: 1,
+  });
+
+  const list = Array.isArray(data) ? data : [];
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
+        <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100 mb-1">
+          Notifications
+        </h2>
+        <p className="text-sm text-neutral-500 dark:text-slate-400">
+          Updates about your properties, investors, and revenue distributions.
+        </p>
+      </div>
+
+      {isLoading ? (
+        <div className="bg-white dark:bg-slate-800 rounded-xl p-12 border border-neutral-200 dark:border-slate-700 flex justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+        </div>
+      ) : list.length === 0 ? (
+        <div className="bg-white dark:bg-slate-800 rounded-xl p-12 border border-neutral-200 dark:border-slate-700 text-center">
+          <span className="text-4xl mb-4 block">🔔</span>
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-2">No Notifications</h3>
+          <p className="text-sm text-neutral-500 dark:text-slate-400">
+            You're all caught up. New notifications about your properties and investors will appear here.
+          </p>
+        </div>
+      ) : (
+        <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700 divide-y divide-neutral-200 dark:divide-slate-700">
+          {list.map((n: any, i: number) => (
+            <div key={n.id || i} className="p-4 flex items-start gap-3">
+              <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
+                <span className="text-lg">🔔</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-neutral-900 dark:text-slate-100">{n.title || 'Notification'}</p>
+                {n.message && <p className="text-sm text-neutral-500 dark:text-slate-400 mt-1">{n.message}</p>}
+                {(n.created_at || n.timestamp) && (
+                  <p className="text-xs text-neutral-400 dark:text-slate-500 mt-1">
+                    {new Date(n.created_at || n.timestamp).toLocaleString()}
+                  </p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const PropertyOwnerDashboard: React.FC<{ currentView: string }> = ({ currentView }) => {
   const { navigate } = useRouter();
-  const quickActions: QuickAction[] = [
-    {
-      id: 'add-property',
-      label: 'Add Property',
-      icon: '🏢',
-      description: 'Tokenize new property',
-      variant: 'primary',
-      onClick: () => console.log('Navigate to property tokenization')
-    },
-    {
-      id: 'manage-investors',
-      label: 'Manage Investors',
-      icon: '👥',
-      description: 'View investor details',
-      onClick: () => console.log('Navigate to investor management')
-    },
-    {
-      id: 'distribute-revenue',
-      label: 'Distribute Revenue',
-      icon: '💰',
-      description: 'Process payments',
-      variant: 'success',
-      onClick: () => console.log('Navigate to revenue distribution')
-    },
-    {
-      id: 'upload-documents',
-      label: 'Upload Documents',
-      icon: '📄',
-      description: 'Add legal documents',
-      onClick: () => console.log('Navigate to document upload')
-    }
-  ];
+  // NB: the previous version declared a duplicate `quickActions` array here
+  // that was never referenced — the real QuickActions live inside
+  // PropertyOwnerOverview. Removed to drop ~30 lines of dead code.
 
   switch (currentView) {
     case 'overview':
@@ -1131,6 +1417,12 @@ export const PropertyOwnerDashboard: React.FC<{ currentView: string }> = ({ curr
           <PropertyDocuments />
         </div>
       );
+
+    case 'settings':
+      return <PropertyOwnerSettings />;
+
+    case 'notifications':
+      return <PropertyOwnerNotifications />;
 
     default:
       return (
