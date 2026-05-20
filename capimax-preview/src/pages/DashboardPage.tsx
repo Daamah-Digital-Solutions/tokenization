@@ -52,10 +52,14 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
     switch (role) {
       case 'investor':
+        // ``properties`` is intentionally NOT here: the legacy handler at
+        // handleNavigationClick navigated *out* of the dashboard to the
+        // public marketplace, which broke dashboard context. The
+        // ``marketplace`` tab below now serves the same browsing need
+        // while keeping the user inside the dashboard shell.
         return [
           ...baseItems,
           { id: 'portfolio', label: 'My Portfolio', icon: '💼' },
-          { id: 'properties', label: 'Properties', icon: '🏠' },
           { id: 'marketplace', label: 'Marketplace', icon: '🏪' },
           { id: 'transactions', label: 'Transactions', icon: '💳' },
           { id: 'wallet', label: 'Wallet', icon: '💰' },
@@ -100,15 +104,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   // Handle navigation item click with auto-close for mobile
   const handleNavigationClick = (itemId: string) => {
-    // Navigate to external pages for certain items
-    if (itemId === 'properties') {
-      navigate('properties');
-      return;
-    }
-    // All navigation items now go through the dashboard view change
     onViewChange(itemId);
-    // Auto-close sidebar on mobile after navigation
-    if (window.innerWidth < 768) { // md breakpoint
+    if (window.innerWidth < 768) {
       setSidebarOpen(false);
     }
   };
@@ -151,7 +148,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           {navigationItems.map((item) => (
             <button
               key={item.id}
+              type="button"
               onClick={() => handleNavigationClick(item.id)}
+              aria-label={item.label}
+              title={item.label}
               className={`w-full flex items-center ${sidebarOpen ? 'space-x-3 px-3' : 'justify-center px-2'} py-2 rounded-lg transition-colors ${
                 currentView === item.id
                   ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400'

@@ -230,7 +230,7 @@ class PropertyOwnerSerializer(serializers.ModelSerializer):
 
 class PropertyListSerializer(serializers.ModelSerializer):
     """Serializer for property list view with limited fields."""
-    
+
     primary_image = serializers.SerializerMethodField()
     owner = PropertyOwnerSerializer(read_only=True)
     tokens_available = serializers.ReadOnlyField()
@@ -244,6 +244,21 @@ class PropertyListSerializer(serializers.ModelSerializer):
     average_rating = serializers.SerializerMethodField()
     total_reviews = serializers.SerializerMethodField()
     latest_valuation = serializers.SerializerMethodField()
+
+    # DRF defaults Decimal -> string ("12.00") for precision-preservation.
+    # The frontend does arithmetic on these fields and silently
+    # string-concatenated everywhere — totals and averages were wrong.
+    # Coercing to float on the wire is safe for our value range
+    # (property totals comfortably fit in IEEE 754).
+    total_value = serializers.FloatField()
+    token_price = serializers.FloatField()
+    expected_return = serializers.FloatField(allow_null=True, required=False)
+    rental_yield = serializers.FloatField(allow_null=True, required=False)
+    property_size = serializers.FloatField(allow_null=True, required=False)
+    construction_progress = serializers.FloatField(allow_null=True, required=False)
+    monthly_rental_income = serializers.FloatField(allow_null=True, required=False)
+    occupancy_rate = serializers.FloatField(allow_null=True, required=False)
+    minimum_investment = serializers.FloatField(allow_null=True, required=False)
     
     class Meta:
         model = Property
@@ -332,7 +347,18 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
     total_investment = serializers.SerializerMethodField()
     investor_count = serializers.SerializerMethodField()
     construction_progress = serializers.SerializerMethodField()
-    
+
+    # Same decimal-as-string fix as PropertyListSerializer (see comment there).
+    # construction_progress stays a SerializerMethodField so we don't list it here.
+    total_value = serializers.FloatField()
+    token_price = serializers.FloatField()
+    expected_return = serializers.FloatField(allow_null=True, required=False)
+    rental_yield = serializers.FloatField(allow_null=True, required=False)
+    property_size = serializers.FloatField(allow_null=True, required=False)
+    monthly_rental_income = serializers.FloatField(allow_null=True, required=False)
+    occupancy_rate = serializers.FloatField(allow_null=True, required=False)
+    minimum_investment = serializers.FloatField(allow_null=True, required=False)
+
     class Meta:
         model = Property
         fields = [

@@ -339,15 +339,15 @@ export class PropertyOwnerService {
       new_investors_30d: 0,
     };
     try {
-      // Backend returns ``portfolio_overview: {total_funding_raised, ...}`` and
-      // ``monthly_trends: [{funding_raised, ...}]``. We derive
-      // ``new_investors_30d`` from the most recent trend bucket (best signal
-      // the backend exposes today). ``investor_retention_rate`` is not yet
-      // tracked server-side; it stays 0 until a dedicated computation lands.
+      // Backend returns ``portfolio_overview: {total_funding_raised, ...}``.
+      // ``new_investors_30d`` and ``investor_retention_rate`` are not
+      // tracked server-side yet. The previous implementation derived
+      // new_investors_30d as ``last_month_funding / 1000``, which
+      // surfaced absurd values (e.g. "11 new investors" when the platform
+      // had 2 investors total) — pure fabrication, not a metric. Both
+      // fields stay 0 until the backend exposes them properly.
       const data = await apiClient.get<any>('/properties/owner/investment-metrics/');
       const overview = data?.portfolio_overview || {};
-      const trends: any[] = Array.isArray(data?.monthly_trends) ? data.monthly_trends : [];
-      const lastMonth = trends[trends.length - 1] || {};
       const totalRaised = Number(overview.total_funding_raised ?? 0);
       const propertyCount = Number(overview.property_count ?? 0);
       return {
@@ -355,7 +355,7 @@ export class PropertyOwnerService {
         average_investment:
           propertyCount > 0 ? Math.round(totalRaised / propertyCount) : 0,
         investor_retention_rate: 0,
-        new_investors_30d: Math.max(0, Math.round(Number(lastMonth.funding_raised ?? 0) / 1000)),
+        new_investors_30d: 0,
       };
     } catch (error) {
       console.error('Failed to fetch investment metrics:', error);

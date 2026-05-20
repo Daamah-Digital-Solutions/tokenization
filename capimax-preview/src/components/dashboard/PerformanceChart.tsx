@@ -79,9 +79,10 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
           {title}
         </h3>
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-neutral-500 dark:text-slate-400">
-            {data.length} data points
-          </span>
+          {/*
+            "X data points" label removed — it was internal debug copy that
+            leaked into the production UI. The chart speaks for itself.
+          */}
         </div>
       </div>
 
@@ -241,13 +242,20 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
           <div>
             <span className="text-neutral-500 dark:text-slate-400">Change: </span>
             <span className={`font-semibold ${
-              data[data.length - 1]?.value > data[0]?.value 
-                ? 'text-green-600 dark:text-green-400' 
+              data[data.length - 1]?.value > data[0]?.value
+                ? 'text-green-600 dark:text-green-400'
                 : 'text-red-600 dark:text-red-400'
             }`}>
-              {data.length > 1 && (
-                ((data[data.length - 1].value - data[0].value) / data[0].value * 100).toFixed(1)
-              )}%
+              {(() => {
+                // Guard against a zero baseline: dividing by zero rendered
+                // a literal "Infinity%" in the UI when the series started
+                // at $0 (every "first-ever" chart for a new property/owner).
+                if (data.length < 2) return '—';
+                const first = data[0].value;
+                const last = data[data.length - 1].value;
+                if (!first) return last > 0 ? 'New' : '—';
+                return `${((last - first) / first * 100).toFixed(1)}%`;
+              })()}
             </span>
           </div>
         </div>

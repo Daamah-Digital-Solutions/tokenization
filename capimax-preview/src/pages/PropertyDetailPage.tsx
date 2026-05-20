@@ -260,13 +260,17 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
     property_category: property.property_category,
     expected_completion_date: property.expected_completion_date,
     investment: {
-      minInvestment: property.token_price,
-      avgAnnualReturn: property.expected_return || 10,
+      minInvestment: Number(property.token_price) || 0,
+      // DRF returns decimal fields as strings ("12.00"); coerce or the
+      // invest modal does string-concat math and shows wrong percentages.
+      // When the property hasn't published a return yet show 0 rather
+      // than a misleading 10% fabrication.
+      avgAnnualReturn: Number(property.expected_return) || 0,
       dividendFrequency: "Quarterly",
       managementFee: 2.5,
       appreciationForecast: 8,
-      rentalYield: property.rental_yield || 6,
-      totalROI: (property.expected_return || 10) + (property.rental_yield || 6)
+      rentalYield: Number(property.rental_yield) || 0,
+      totalROI: (Number(property.expected_return) || 0) + (Number(property.rental_yield) || 0)
     }
   };
 

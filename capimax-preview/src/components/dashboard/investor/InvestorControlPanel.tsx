@@ -604,12 +604,15 @@ const MarketplaceContent: React.FC = () => {
     {/* Market Stats - from real data */}
     {(() => {
       const properties = propertiesData?.properties || [];
-      const totalValue = properties.reduce((sum: number, p: any) => sum + (p.total_value || 0), 0);
+      // DRF serializes Decimal fields as strings ("12.00", "5000000.00").
+      // Without Number() coercion the reducer below string-concatenates and
+      // the displayed totals/averages are silently wrong.
+      const totalValue = properties.reduce((sum: number, p: any) => sum + (Number(p.total_value) || 0), 0);
       const avgRoi = properties.length > 0
-        ? properties.reduce((sum: number, p: any) => sum + (p.expected_return || 0), 0) / properties.length
+        ? properties.reduce((sum: number, p: any) => sum + (Number(p.expected_return) || 0), 0) / properties.length
         : 0;
       const minPrice = properties.length > 0
-        ? Math.min(...properties.map((p: any) => p.token_price || 0))
+        ? Math.min(...properties.map((p: any) => Number(p.token_price) || 0))
         : 0;
       return (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -707,7 +710,9 @@ const MarketplaceContent: React.FC = () => {
               <div className="flex items-center space-x-2">
                 <Text variant="caption" color="muted">Expected ROI</Text>
                 <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
-                  {property.expected_return || 0}%
+                  {Number(property.expected_return) > 0
+                    ? `${Number(property.expected_return).toFixed(1)}%`
+                    : '—'}
                 </div>
               </div>
             </div>

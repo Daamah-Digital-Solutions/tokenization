@@ -33,6 +33,7 @@ const CodeVerificationPage = React.lazy(() => import('./pages/CodeVerificationPa
 const PasswordResetPage = React.lazy(() => import('./pages/PasswordResetPage').then(m => ({ default: m.PasswordResetPage })));
 const NewPasswordPage = React.lazy(() => import('./pages/NewPasswordPage').then(m => ({ default: m.NewPasswordPage })));
 const CompleteGoogleProfilePage = React.lazy(() => import('./pages/CompleteGoogleProfilePage').then(m => ({ default: m.CompleteGoogleProfilePage })));
+const SubmitPropertyPage = React.lazy(() => import('./pages/SubmitPropertyPage').then(m => ({ default: m.SubmitPropertyPage })));
 const KYCPage = React.lazy(() => import('./pages/KYCPage').then(m => ({ default: m.KYCPage })));
 const PropertiesPage = React.lazy(() => import('./pages/PropertiesPage').then(m => ({ default: m.PropertiesPage })));
 const PropertyDetailPage = React.lazy(() => import('./pages/PropertyDetailPage').then(m => ({ default: m.PropertyDetailPage })));
@@ -274,6 +275,16 @@ const AppRouter: React.FC = () => {
               <CompleteGoogleProfilePage />
             </Suspense>
           </main>
+        );
+      case 'submit-property':
+        return (
+          <ProtectedRoute fallback={<PageLoader message="Loading property form..." />}>
+            <main {...mainProps}>
+              <Suspense fallback={<PageLoader message="Loading property form..." />}>
+                <SubmitPropertyPage />
+              </Suspense>
+            </main>
+          </ProtectedRoute>
         );
       case 'kyc':
         return (

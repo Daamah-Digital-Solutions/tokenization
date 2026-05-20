@@ -15,6 +15,7 @@ export const SkipToContent: React.FC<{ targetId?: string }> = ({
 
   return (
     <button
+      type="button"
       onClick={handleSkip}
       className="
         sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4

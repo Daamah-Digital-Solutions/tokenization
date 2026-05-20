@@ -125,13 +125,17 @@ export const PropertiesPage: React.FC = () => {
       propertyType: property.property_type,
       totalValue: property.total_value,
       investment: {
-        minInvestment: property.minimum_investment || property.token_price,
-        avgAnnualReturn: property.expected_return || 10,
+        minInvestment: Number(property.minimum_investment) || Number(property.token_price) || 0,
+        // Decimal fields arrive as strings from DRF — coerce here so the
+        // downstream invest-modal math doesn't string-concat. Don't invent
+        // a fallback rate (was 10%): if the property hasn't disclosed one,
+        // show 0 and let the UI label it.
+        avgAnnualReturn: Number(property.expected_return) || 0,
         dividendFrequency: "Quarterly",
         managementFee: 2.5,
         appreciationForecast: 8,
-        rentalYield: property.rental_yield || 6,
-        totalROI: (property.expected_return || 10) + (property.rental_yield || 6)
+        rentalYield: Number(property.rental_yield) || 0,
+        totalROI: (Number(property.expected_return) || 0) + (Number(property.rental_yield) || 0)
       }
     };
   };

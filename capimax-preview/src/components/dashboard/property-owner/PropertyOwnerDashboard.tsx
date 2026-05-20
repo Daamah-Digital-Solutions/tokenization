@@ -5,6 +5,7 @@ import type { StatItem, ActivityItem, ChartDataPoint, QuickAction } from '../';
 import PropertyApprovalStatus from '../../property-owner/PropertyApprovalStatus';
 import PropertyOwnerService from '../../../services/property-owner/PropertyOwnerService';
 import type { Property } from '../../../services/api/types';
+import { useRouter } from '../../../utils/router';
 
 // Loading and Error Components
 const LoadingStats = () => (
@@ -1035,6 +1036,7 @@ const InvestorsView: React.FC = () => {
 };
 
 export const PropertyOwnerDashboard: React.FC<{ currentView: string }> = ({ currentView }) => {
+  const { navigate } = useRouter();
   const quickActions: QuickAction[] = [
     {
       id: 'add-property',
@@ -1086,17 +1088,23 @@ export const PropertyOwnerDashboard: React.FC<{ currentView: string }> = ({ curr
                   Manage your tokenized real estate portfolio
                 </p>
               </div>
-              <button className="px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors">
+              <button
+                type="button"
+                onClick={() => navigate('submit-property')}
+                className="px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors"
+              >
                 Add New Property
               </button>
             </div>
           </div>
 
-          {/* Property Approval Status - Example with a property ID */}
-          <PropertyApprovalStatus
-            propertyId="example-property-id"
-            className="mb-6"
-          />
+          {/*
+            The PropertyApprovalStatus card was rendered unconditionally with
+            a hardcoded ``example-property-id``, which made every owner see a
+            "Not Submitted — Submit for Approval" banner regardless of state.
+            Removed; the per-property approval state will surface inside the
+            PropertyOverview cards themselves.
+          */}
 
           <PropertyOverview />
           <TokenizationProgress />
