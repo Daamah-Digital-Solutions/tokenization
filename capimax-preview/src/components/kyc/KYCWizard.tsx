@@ -150,6 +150,13 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
   const requirements = DOCUMENT_REQUIREMENTS[userType];
 
   const handleNext = () => {
+    // Run validation that mutates state ONLY when the user actually clicks
+    // Next. canProceedToNext is called during render to enable/disable the
+    // button — if it triggered setState, every render queued another render
+    // and React's "Too many re-renders" guard kicked in.
+    if (STEPS[currentStep].id === 'personal-info') {
+      if (!validatePersonalInfo()) return;
+    }
     if (currentStep < STEPS.length - 1) {
       const newStep = currentStep + 1;
       setCurrentStep(newStep);
@@ -347,12 +354,20 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
     return Object.keys(errors).length === 0;
   };
 
+  /**
+   * Pure check used during render to decide whether the Next button is
+   * enabled. Must NOT call setState (was previously calling
+   * validatePersonalInfo which set personalInfoErrors → infinite loop).
+   * The mutating validator runs inside handleNext when the user clicks.
+   */
   const canProceedToNext = (): boolean => {
     switch (STEPS[currentStep].id) {
       case 'intro':
         return true;
-      case 'personal-info':
-        return validatePersonalInfo();
+      case 'personal-info': {
+        const info = kycData.personalInfo;
+        return !!(info?.dateOfBirth && info?.nationality?.trim() && info?.residencyCountry?.trim());
+      }
       case 'identity-docs':
         return !!(kycData.documents?.passport || kycData.documents?.nationalId);
       case 'address-docs':

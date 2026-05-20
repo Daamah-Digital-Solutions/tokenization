@@ -40,7 +40,8 @@ import { PortfolioManager } from './PortfolioManager';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { TransactionManager } from './TransactionManager';
 import { CollaborativeInvestments } from './CollaborativeInvestments';
-import { useUser } from '../../../contexts/AuthContext';
+import { SecondaryMarketDashboard } from '../../marketplace/SecondaryMarketDashboard';
+import { useUser, useAuth } from '../../../contexts/AuthContext';
 import { useRouter } from '../../../utils/router';
 import { apiClient } from '../../../services/api/ApiClient';
 import { PropertyService } from '../../../services/property/PropertyService';
@@ -514,39 +515,11 @@ const OverviewContent: React.FC<{
 
 
 
-// Secondary Market Content — peer-to-peer token resale. We keep this as a
-// lightweight informational stub for now: the full SecondaryMarketDashboard
-// component exists but isn't yet wired to a backend orderbook, and we
-// promised the user no dead buttons.
-const SecondaryMarketContent: React.FC = () => {
-  const { navigate } = useRouter();
-  return (
-    <div className="space-y-6">
-      <div>
-        <Text variant="h3" weight="semibold" className="mb-2">
-          Secondary Market
-        </Text>
-        <Text variant="body" color="muted">
-          Buy and sell tokens with other investors. Listings, bids and trades
-          happen here once the orderbook goes live.
-        </Text>
-      </div>
-      <Card className="p-10 text-center">
-        <BarChart3 className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-        <Text variant="h4" weight="semibold" className="mb-2">Coming Soon</Text>
-        <Text variant="body" color="muted" className="mb-6 max-w-md mx-auto">
-          The secondary market lets you resell your property tokens to other
-          investors. We're finalising the order matching engine — it'll show up
-          here automatically when it ships. For now, browse primary listings
-          under "Properties".
-        </Text>
-        <Button onClick={() => navigate('dashboard', { view: 'properties' })}>
-          Browse Properties
-        </Button>
-      </Card>
-    </div>
-  );
-};
+// Secondary Market Content — mounts the real ``SecondaryMarketDashboard``
+// component, which is the same orderbook UI as the standalone /marketplace
+// route. Previously a "Coming Soon" stub here; the user (rightly) flagged
+// that the real implementation already exists.
+const SecondaryMarketContent: React.FC = () => <SecondaryMarketDashboard />;
 
 // Marketplace Content Component (primary listings — newly tokenized properties)
 const MarketplaceContent: React.FC = () => {
@@ -764,37 +737,23 @@ const WalletContent: React.FC<{
   walletBalance: number;
   walletLoading: boolean;
 }> = ({ portfolio, loading, walletBalance, walletLoading }) => {
-  // The wallet top-up + standalone withdrawal endpoints aren't wired yet.
-  // Funds enter on a property purchase via Stripe/PayPal/crypto; tokens
-  // leave via the hybrid-custodial "Withdraw to external wallet" flow on
-  // a per-property basis (under Properties → property detail). Until a
-  // standalone deposit/withdraw lives on the platform we explain that to
-  // the user instead of leaving the buttons dead.
-  const { navigate } = useRouter();
-  const [walletModal, setWalletModal] = useState<null | 'deposit' | 'withdraw' | 'payment-method'>(null);
-
   return (
   <div className="space-y-6">
-    <div className="flex justify-between items-center">
-      <div>
-        <Text variant="h3" weight="semibold" className="mb-2">
-          Wallet & Payments
-        </Text>
-        <Text variant="body" color="muted">
-          Manage your balance and payment methods
-        </Text>
-      </div>
-      <div className="flex items-center gap-3">
-        <Button variant="outline" size="sm" onClick={() => setWalletModal('deposit')}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Funds
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => setWalletModal('withdraw')}>
-          <Minus className="w-4 h-4 mr-2" />
-          Withdraw
-        </Button>
-      </div>
+    <div>
+      <Text variant="h3" weight="semibold" className="mb-2">
+        Wallet & Payments
+      </Text>
+      <Text variant="body" color="muted">
+        Your platform balance, total invested, and earnings to date.
+      </Text>
     </div>
+    {/*
+      "Add Funds" + "Withdraw" header buttons removed per user request.
+      Both endpoints aren't wired (deposits flow through the property
+      purchase checkout; withdrawals run per-property on the property
+      detail page) — having visible CTAs that did nothing useful was
+      misleading.
+    */}
 
     {/* Wallet Balance Cards */}
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -826,115 +785,12 @@ const WalletContent: React.FC<{
       />
     </div>
 
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Payment Methods */}
-      <Card className="p-6">
-        <div className="flex justify-between items-center mb-4">
-          <Text variant="body" weight="semibold">
-            Payment Methods
-          </Text>
-          <Button variant="outline" size="sm" onClick={() => setWalletModal('payment-method')} aria-label="Add payment method">
-            <Plus className="w-4 h-4" />
-          </Button>
-        </div>
-
-        <div className="py-10 text-center">
-          <Wallet className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-          <Text variant="body" weight="medium" className="mb-1">
-            No payment methods yet
-          </Text>
-          <Text variant="caption" color="muted">
-            Add a card, bank account, or crypto wallet during your next investment.
-          </Text>
-        </div>
-      </Card>
-
-      {/* Recent Transactions */}
-      <Card className="p-6">
-        <Text variant="body" weight="semibold" className="mb-4">
-          Recent Transactions
-        </Text>
-
-        <div className="py-10 text-center">
-          <RefreshCw className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-          <Text variant="body" weight="medium" className="mb-1">
-            No recent activity
-          </Text>
-          <Text variant="caption" color="muted">
-            Deposits, investments and dividends will appear here.
-          </Text>
-        </div>
-      </Card>
-    </div>
-
-    {/* Wallet info modals — explain the actual flow until standalone
-        deposit / withdraw endpoints exist. Keeps the buttons honest. */}
-    <AnimatePresence>
-      {walletModal && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-          onClick={() => setWalletModal(null)}
-        >
-          <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {walletModal === 'deposit' && (
-              <>
-                <Text variant="h3" weight="bold" className="mb-3">Add Funds</Text>
-                <Text variant="body" color="muted" className="mb-4">
-                  Standalone wallet top-ups aren't enabled yet. Funds are added
-                  automatically when you complete a property purchase — pick a
-                  property, choose tokens, and we'll process the payment via
-                  card, bank transfer or crypto.
-                </Text>
-                <div className="flex gap-3">
-                  <Button variant="outline" onClick={() => setWalletModal(null)} className="flex-1">Close</Button>
-                  <Button onClick={() => { setWalletModal(null); navigate('dashboard', { view: 'properties' }); }} className="flex-1">
-                    Browse Properties
-                  </Button>
-                </div>
-              </>
-            )}
-            {walletModal === 'withdraw' && (
-              <>
-                <Text variant="h3" weight="bold" className="mb-3">Withdraw</Text>
-                <Text variant="body" color="muted" className="mb-4">
-                  Token withdrawals run per property: open a property you own,
-                  then use the "Withdraw to external wallet" action on the
-                  property detail page. Cash withdrawals (fiat off-ramp) are
-                  coming soon.
-                </Text>
-                <div className="flex gap-3">
-                  <Button variant="outline" onClick={() => setWalletModal(null)} className="flex-1">Close</Button>
-                  <Button onClick={() => { setWalletModal(null); navigate('dashboard', { view: 'portfolio' }); }} className="flex-1">
-                    Open Portfolio
-                  </Button>
-                </div>
-              </>
-            )}
-            {walletModal === 'payment-method' && (
-              <>
-                <Text variant="h3" weight="bold" className="mb-3">Add Payment Method</Text>
-                <Text variant="body" color="muted" className="mb-4">
-                  Payment methods are saved automatically the next time you
-                  invest in a property. The checkout step lets you pick card,
-                  bank transfer or crypto — Stripe/PayPal/Coinbase securely
-                  store the credentials we need for future investments.
-                </Text>
-                <Button onClick={() => setWalletModal(null)} className="w-full">Got it</Button>
-              </>
-            )}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    {/*
+      "Payment Methods" card removed: there's no list-saved-methods or
+      add-method endpoint yet — payment credentials are stored by the
+      provider (Stripe/PayPal/Coinbase) during checkout. The "Recent
+      Transactions" duplicate is handled by the Transactions tab.
+    */}
   </div>
   );
 };
@@ -1014,11 +870,63 @@ const NotificationsContent: React.FC = () => {
 // Settings Content Component with Role Management Integration
 const SettingsContent: React.FC = () => {
   const user = useUser();
+  const { updateProfile } = useAuth();
   const { navigate } = useRouter();
   const [userRoles, setUserRoles] = useState<any[]>([]);
   const [isLoadingRoles, setIsLoadingRoles] = useState(true);
   const [activeSettingsTab, setActiveSettingsTab] = useState('profile');
   const [settingsModal, setSettingsModal] = useState<string | null>(null);
+
+  // Edit-profile form state. Seeded from the current user each time the
+  // modal opens; the actual PUT runs through AuthContext.updateProfile so
+  // the cached user in state updates inline (no refetch needed).
+  const [profileForm, setProfileForm] = useState<{
+    first_name: string;
+    last_name: string;
+    phone: string;
+    country: string;
+    city: string;
+    address: string;
+  }>({ first_name: '', last_name: '', phone: '', country: '', city: '', address: '' });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileSuccess, setProfileSuccess] = useState(false);
+
+  useEffect(() => {
+    if (settingsModal === 'edit-profile' && user) {
+      setProfileForm({
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        phone: (user as any).phone || (user as any).phone_number || '',
+        country: user.country || '',
+        city: user.city || '',
+        address: user.address || '',
+      });
+      setProfileError(null);
+      setProfileSuccess(false);
+    }
+  }, [settingsModal, user]);
+
+  const handleProfileSave = async () => {
+    setProfileSaving(true);
+    setProfileError(null);
+    try {
+      await updateProfile({
+        first_name: profileForm.first_name,
+        last_name: profileForm.last_name,
+        phone: profileForm.phone,
+        country: profileForm.country,
+        city: profileForm.city,
+        address: profileForm.address,
+      } as any);
+      setProfileSuccess(true);
+      setTimeout(() => setSettingsModal(null), 800);
+    } catch (e: any) {
+      setProfileError(e?.message || 'Failed to update profile. Please try again.');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
 
   useEffect(() => {
     fetchUserRoles();
@@ -1386,13 +1294,82 @@ const SettingsContent: React.FC = () => {
               {settingsModal === 'edit-profile' && (
                 <>
                   <Text variant="h3" weight="bold" className="mb-3">Edit Profile</Text>
-                  <Text variant="body" color="muted" className="mb-4">
-                    Inline profile editing is wired to the server-side endpoint
-                    but the form UI is still being polished. For now, profile
-                    fields can be updated via the standalone profile page —
-                    we'll move it inline here when the form lands.
-                  </Text>
-                  <Button onClick={() => setSettingsModal(null)} className="w-full">Close</Button>
+                  {profileError && (
+                    <div className="mb-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
+                      {profileError}
+                    </div>
+                  )}
+                  {profileSuccess && (
+                    <div className="mb-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm text-emerald-700 dark:text-emerald-300">
+                      Profile updated.
+                    </div>
+                  )}
+                  <div className="space-y-3 mb-4 max-h-[60vh] overflow-y-auto">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">First name</label>
+                        <input
+                          type="text"
+                          value={profileForm.first_name}
+                          onChange={(e) => setProfileForm(p => ({ ...p, first_name: e.target.value }))}
+                          className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Last name</label>
+                        <input
+                          type="text"
+                          value={profileForm.last_name}
+                          onChange={(e) => setProfileForm(p => ({ ...p, last_name: e.target.value }))}
+                          className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Phone</label>
+                      <input
+                        type="tel"
+                        value={profileForm.phone}
+                        onChange={(e) => setProfileForm(p => ({ ...p, phone: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Address</label>
+                      <input
+                        type="text"
+                        value={profileForm.address}
+                        onChange={(e) => setProfileForm(p => ({ ...p, address: e.target.value }))}
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">City</label>
+                        <input
+                          type="text"
+                          value={profileForm.city}
+                          onChange={(e) => setProfileForm(p => ({ ...p, city: e.target.value }))}
+                          className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Country</label>
+                        <input
+                          type="text"
+                          value={profileForm.country}
+                          onChange={(e) => setProfileForm(p => ({ ...p, country: e.target.value }))}
+                          className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={() => setSettingsModal(null)} className="flex-1" disabled={profileSaving}>Cancel</Button>
+                    <Button onClick={handleProfileSave} className="flex-1" disabled={profileSaving}>
+                      {profileSaving ? 'Saving…' : 'Save Changes'}
+                    </Button>
+                  </div>
                 </>
               )}
               {settingsModal === '2fa' && (
