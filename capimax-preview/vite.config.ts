@@ -7,7 +7,14 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt' surfaces the update via useRegisterSW().needRefresh so we
+      // can show the user a "Reload now" banner (see UpdatePrompt.tsx).
+      // 'autoUpdate' alone doesn't help here: the new SW activates, but the
+      // already-loaded tab keeps running the OLD precached JS until a
+      // navigation reload — so users would still see the bugs we just
+      // fixed. With 'prompt' the banner forces (or auto-times-out) a
+      // reload, which is the only way to swap in the new chunks.
+      registerType: 'prompt',
       includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
       manifest: false, // Use public/manifest.json
       workbox: {

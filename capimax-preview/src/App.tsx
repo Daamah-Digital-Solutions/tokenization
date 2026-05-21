@@ -10,6 +10,7 @@ import { GlobalErrorBoundary } from './components/ui/GlobalErrorBoundary';
 import { NetworkProvider } from './components/ui/OfflineIndicator';
 import { SkipToContent, KeyboardIndicator } from './components/ui/AccessibilityHelper';
 import { PWAInstallPrompt } from './components/pwa/PWAInstallPrompt';
+import { UpdatePrompt } from './components/system/UpdatePrompt';
 import './App.css'
 
 // Create a client instance
@@ -708,6 +709,7 @@ function App() {
                     <RouterProvider>
                       <AppRouter />
                       <PWAInstallPrompt />
+                      <UpdatePrompt />
                     </RouterProvider>
                   </PaymentProvider>
                 </NotificationProvider>
