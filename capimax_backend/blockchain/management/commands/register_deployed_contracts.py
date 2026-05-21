@@ -89,14 +89,28 @@ class Command(BaseCommand):
                 ))
                 continue
 
-            # Pull ABI from the hardhat artifact.
+            # Pull ABI. Prefer the committed `abis/<name>.json` (ABI-only,
+            # ~25 KB, checked in) over the hardhat artifact (~100 KB,
+            # gitignored because the bytecode is regenerated on every
+            # compile). Falling back to the artifact keeps the local dev
+            # path working when devs have just run `hardhat compile`.
+            abi = None
+            abi_only_path = contracts_dir / 'abis' / f'{artifact_name}.json'
             artifact_path = (
                 contracts_dir / 'artifacts' / 'src' / f'{artifact_name}.sol' / f'{artifact_name}.json'
             )
-            if not artifact_path.exists():
-                raise CommandError(f"Artifact missing: {artifact_path}")
-            artifact = json.loads(artifact_path.read_text())
-            abi = artifact['abi']
+            if abi_only_path.exists():
+                abi = json.loads(abi_only_path.read_text())['abi']
+            elif artifact_path.exists():
+                abi = json.loads(artifact_path.read_text())['abi']
+            else:
+                raise CommandError(
+                    f"ABI not found for {artifact_name}. Tried:\n"
+                    f"  {abi_only_path}\n  {artifact_path}\n"
+                    f"Run `npx hardhat compile` to regenerate artifacts, or "
+                    f"`python -m blockchain.scripts.extract_abis` to refresh "
+                    f"the committed ABI-only files."
+                )
 
             # Constructor args — only the factory has any.
             constructor_args = {}
