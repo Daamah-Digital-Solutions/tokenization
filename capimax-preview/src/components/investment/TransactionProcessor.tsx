@@ -18,6 +18,7 @@ import { Button } from '../ui/Button';
 import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
 import { WalletConnector } from './WalletConnector';
+import { CreditCardForm } from '../payments/CreditCardForm';
 import { InvestmentService } from '../../services/investment/InvestmentService';
 import type { InvestmentProperty, InvestmentData } from './types';
 import { cn } from '../../utils/cn';
@@ -56,6 +57,19 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
   const [steps, setSteps] = useState<TransactionStep[]>([]);
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // When set, render the Stripe card form for the just-created investment.
+  // The full flow:
+  //   1) startTransaction() creates a PENDING Investment via /investments/
+  //   2) CreditCardForm POSTs /payments/stripe/create-payment-intent/ to mint
+  //      a Stripe PaymentIntent linked to that investment
+  //   3) User submits card → stripe.confirmCardPayment() → Stripe webhook
+  //      flips Payment to COMPLETED → Investment to PENDING_MINT → Celery mints
+  // The previous flow created the investment and then immediately reported
+  // success without ever charging the card.
+  const [pendingCardPayment, setPendingCardPayment] = useState<
+    | { investmentId: string; amount: number }
+    | null
+  >(null);
   // Compliance-gate errors come from the backend with stable phrases; we
   // map them to a CTA so the user has a clear next step instead of just
   // "Try Again" (which won't help when the gate is structural).
@@ -289,6 +303,21 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
       const resultId = investmentResult?.id || investmentResult?.investment_id || `INV-${Date.now()}`;
       const resultHash = investmentResult?.transaction_hash || null;
 
+      // ─── Credit-card branch: hand off to Stripe Elements ───
+      // The investment row exists (PENDING). Now we need to actually charge
+      // the card. The card form is rendered inline below; this function
+      // returns early — the rest of the flow continues from the card form's
+      // onPaymentComplete callback.
+      if (investmentData.paymentMethod === 'fiat') {
+        setPendingCardPayment({
+          investmentId: resultId,
+          amount: investmentData.amount,
+        });
+        // Keep processing flag on but stop here. The "Process Payment" step
+        // stays in `processing` state until the card form resolves.
+        return;
+      }
+
       if (resultHash) {
         setTransactionHash(resultHash);
         updateStepStatus(processIdx, 'completed', resultHash);
@@ -357,10 +386,49 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
   const retryTransaction = () => {
     setError(null);
     setComplianceCta(null);
+    setPendingCardPayment(null);
     hasAutoStarted.current = false;
     setCurrentStep(0);
     setSteps(prev => prev.map(step => ({ ...step, status: step.id === 'wallet' && walletConnected ? 'completed' : 'pending' })));
     startTransaction();
+  };
+
+  // -------------------------------------------------------------------
+  // Stripe card-form callbacks
+  // -------------------------------------------------------------------
+
+  const handleCardPaymentComplete = async (paymentIntentId: string) => {
+    // The card actually charged. Mark "Process Payment" complete and walk
+    // through the "Confirm Tokens" step so the UI feedback matches the
+    // other payment branches.
+    //
+    // Step layout for fiat (no wallet pre-step):
+    //   [0] validate (already completed when card form appeared)
+    //   [1] process  (was in 'processing' — finish it now)
+    //   [2] tokens   (advance into it for the brief polish wait)
+    const processIdx = 1;
+    const confirmIdx = 2;
+    updateStepStatus(processIdx, 'completed', paymentIntentId);
+    setCurrentStep(confirmIdx);
+    updateStepStatus(confirmIdx, 'processing');
+    // Brief pause for UI polish — actual mint happens server-side once the
+    // Stripe webhook fires and Celery picks up the PENDING_MINT investment.
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    updateStepStatus(confirmIdx, 'completed');
+    const finalTxId = paymentIntentId;
+    setTransactionHash(finalTxId);
+    setPendingCardPayment(null);
+    setIsProcessing(false);
+    onComplete(true, finalTxId);
+  };
+
+  const handleCardPaymentCancel = () => {
+    setPendingCardPayment(null);
+    setSteps(prev => prev.map(s =>
+      s.status === 'processing' ? { ...s, status: 'failed' } : s
+    ));
+    setError('Card payment was cancelled. You can try again or pick a different method.');
+    setIsProcessing(false);
   };
 
   const copyTransactionHash = async () => {
@@ -417,6 +485,19 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
         <WalletConnector
           onConnect={handleWalletConnect}
           isConnecting={isProcessing}
+        />
+      )}
+
+      {/* Stripe card form — appears after the investment row is created.
+          Collects card details inside Stripe's iframe (PCI-safe), confirms
+          the PaymentIntent, and waits for the server-side Stripe webhook
+          to finalize the Payment + Investment status. */}
+      {pendingCardPayment && (
+        <CreditCardForm
+          amount={pendingCardPayment.amount}
+          investmentId={pendingCardPayment.investmentId}
+          onPaymentComplete={handleCardPaymentComplete}
+          onCancel={handleCardPaymentCancel}
         />
       )}
 

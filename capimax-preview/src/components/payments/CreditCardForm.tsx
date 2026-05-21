@@ -236,10 +236,29 @@ function CreditCardFormInner({
         );
       }
 
-      // 3. Record the transaction locally. The authoritative Payment row is
-      //    created server-side by the Stripe webhook handler
-      //    (`payments/views.py:StripeWebhookView`) on payment_intent.succeeded.
-      //    We never trust client-side success alone for downstream effects.
+      // 3. Tell the backend to finalize. The webhook will ALSO fire, but in
+      //    staging/dev (and in any environment where the Stripe dashboard's
+      //    webhook endpoint isn't configured yet) we can't rely on it
+      //    alone. The /confirm-payment endpoint re-fetches the PaymentIntent
+      //    from Stripe so it never trusts the client's word for the status —
+      //    the only thing the client provides is the intent ID.
+      try {
+        await apiClient.post('/payments/stripe/confirm-payment/', {
+          payment_intent_id: intent.payment_intent_id,
+        });
+      } catch (confirmErr: any) {
+        // Don't fail the whole flow — the webhook may still finalize. Just
+        // log so we can spot mis-configured environments.
+        console.warn(
+          'Stripe confirm-payment fallback failed (webhook may finalize):',
+          confirmErr?.message ?? confirmErr,
+        );
+      }
+
+      // 4. Record the transaction locally. The authoritative Payment row is
+      //    created server-side by either the webhook handler or the
+      //    confirm-payment fallback above. We never trust client-side
+      //    success alone for downstream effects (token minting).
       addTransaction({
         id: intent.payment_intent_id,
         type: 'investment' as const,
