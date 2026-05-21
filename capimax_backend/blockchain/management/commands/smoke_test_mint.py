@@ -32,7 +32,11 @@ from eth_account import Account
 
 
 def _bscscan(tx_hash: str) -> str:
-    return f"https://testnet.bscscan.com/tx/0x{tx_hash}"
+    # web3.py `.hex()` already returns "0x..." prefixed. The earlier version
+    # of this helper prepended another "0x" so links looked like
+    # "...tx/0x0x...". BscScan tolerates it but it's ugly; normalize here.
+    h = tx_hash if tx_hash.startswith('0x') else f'0x{tx_hash}'
+    return f"https://testnet.bscscan.com/tx/{h}"
 
 
 class Command(BaseCommand):
