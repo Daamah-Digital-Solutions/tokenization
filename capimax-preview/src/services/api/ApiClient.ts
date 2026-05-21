@@ -80,6 +80,30 @@ export class ApiClient {
             config.headers['X-CSRFToken'] = csrf;
           }
         }
+
+        // When the payload is FormData, we MUST let the browser set
+        // Content-Type itself so it can append the
+        // `boundary=----WebKitFormBoundary…` parameter needed to parse
+        // multipart bodies. Our axios instance has a default
+        // `Content-Type: application/json` that otherwise leaks through
+        // — the backend then rejects the request with
+        // "Unsupported media type 'application/json'" even though we're
+        // posting a file. Deleting the header here is the canonical fix
+        // (the same problem hits anyone who creates an axios instance
+        // with a default JSON content-type).
+        if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+          if (config.headers && 'Content-Type' in config.headers) {
+            delete config.headers['Content-Type'];
+          }
+          // axios uses a separate `common` headers bucket; clear it too
+          if (config.headers?.common?.['Content-Type']) {
+            delete config.headers.common['Content-Type'];
+          }
+          if (config.headers?.post?.['Content-Type']) {
+            delete config.headers.post['Content-Type'];
+          }
+        }
+
         config.metadata = { requestStartTime: Date.now() };
         return config;
       },
@@ -359,11 +383,13 @@ export class ApiClient {
     formData: FormData,
     config?: AxiosRequestConfig
   ): Promise<T> {
-    const response = await this.client.post<APIResponse<T>>(endpoint, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      ...config,
-    });
-    return response.data.data!;
+    // Don't set Content-Type manually — the request interceptor strips
+    // any pre-set Content-Type when the body is FormData, so the browser
+    // can append the multipart boundary parameter itself. Setting it to
+    // a literal "multipart/form-data" without a boundary (as this method
+    // used to) produced unparseable requests on the backend.
+    const response = await this.client.post<APIResponse<T>>(endpoint, formData, config);
+    return this.unwrap<T>(response.data);
   }
 
   public async healthCheck(): Promise<{ status: string; timestamp: string }> {
