@@ -28,11 +28,17 @@ from core.services.email_service import EmailService
 logger = logging.getLogger(__name__)
 
 
-# Investment limits by KYC verification level
-INVESTMENT_LIMITS = {
-    'basic': {'daily': Decimal('1000'), 'monthly': Decimal('5000')},
-    'enhanced': {'daily': Decimal('5000'), 'monthly': Decimal('25000')},
-    'premium': {'daily': Decimal('25000'), 'monthly': Decimal('100000')},
+# Investment limits by KYC verification level.
+#
+# Mirror of `investments.serializers.INVESTMENT_LIMITS` — kept here to
+# avoid an import cycle. If you change either, update both, or move
+# them to `core/limits.py` and import from a single source.
+from django.conf import settings as _settings  # noqa: E402
+
+INVESTMENT_LIMITS = getattr(_settings, 'INVESTMENT_LIMITS', None) or {
+    'basic':    {'daily': Decimal('10000'),  'monthly': Decimal('100000')},
+    'enhanced': {'daily': Decimal('50000'),  'monthly': Decimal('500000')},
+    'premium':  {'daily': Decimal('500000'), 'monthly': Decimal('5000000')},
 }
 
 

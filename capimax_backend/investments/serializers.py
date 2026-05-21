@@ -21,11 +21,23 @@ from properties.models import Property
 from payments.models import Payment
 
 
-# Investment limits by KYC verification level
-INVESTMENT_LIMITS = {
-    'basic': {'daily': Decimal('1000'), 'monthly': Decimal('5000')},
-    'enhanced': {'daily': Decimal('5000'), 'monthly': Decimal('25000')},
-    'premium': {'daily': Decimal('25000'), 'monthly': Decimal('100000')},
+# Investment limits by KYC verification level.
+#
+# These ceilings are deliberately permissive — they're sized for the
+# demo/staging environment where ops want to drive multiple investments
+# through the flow per day. The values are surfaced via the Django
+# settings so a production deploy can lock them down per regulatory
+# requirements without a code change.
+from django.conf import settings as _settings
+
+INVESTMENT_LIMITS = getattr(_settings, 'INVESTMENT_LIMITS', None) or {
+    # daily / monthly USD caps. The old values
+    # (1k/5k/25k/100k/25k/100k) made any non-trivial demo run hit the
+    # daily ceiling on the third or fourth attempt and surfaced as a
+    # confusing "Remaining today: $30.00" error.
+    'basic':    {'daily': Decimal('10000'),  'monthly': Decimal('100000')},
+    'enhanced': {'daily': Decimal('50000'),  'monthly': Decimal('500000')},
+    'premium':  {'daily': Decimal('500000'), 'monthly': Decimal('5000000')},
 }
 
 
