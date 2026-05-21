@@ -1156,6 +1156,12 @@ class InvestmentTransactionsView(APIView):
         transactions = []
         
         # Get investments
+        # Network name comes from settings.DEFAULT_NETWORK_NAME — on staging
+        # this is 'bsc_testnet', which the frontend's blockchainExplorer
+        # maps to testnet.bscscan.com. Without this hint the frontend
+        # defaults to mainnet bscscan and the on-chain hashes 404.
+        from django.conf import settings as _settings
+        network_name = getattr(_settings, 'DEFAULT_NETWORK_NAME', 'bsc_testnet')
         investments = Investment.objects.filter(user=user).select_related('property_investment')
         for investment in investments:
             transactions.append({
@@ -1171,6 +1177,7 @@ class InvestmentTransactionsView(APIView):
                 'token_amount': investment.token_amount,
                 'token_price': investment.property_investment.token_price,
                 'transaction_hash': investment.transaction_hash,
+                'network': network_name,
                 'blockchain_confirmed': investment.blockchain_confirmed,
             })
         
