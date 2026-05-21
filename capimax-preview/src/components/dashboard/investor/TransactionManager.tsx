@@ -243,17 +243,28 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
     }
   };
 
+  // The investment model has a richer status lifecycle than just
+  // pending/completed/failed: pending → processing → payment_confirmed →
+  // pending_mint → minting → completed (also mint_failed, refunded). Earlier
+  // the switch only knew about the first three so PENDING_MINT and MINTING
+  // fell through to the unstyled default (gray + Clock with no text colour),
+  // which the user flagged. These maps now cover every real status string.
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
       case 'completed':
         return CheckCircle;
       case 'pending':
+      case 'pending_mint':
+      case 'payment_confirmed':
         return Clock;
       case 'processing':
+      case 'minting':
         return RefreshCw;
       case 'failed':
+      case 'mint_failed':
         return XCircle;
       case 'cancelled':
+      case 'refunded':
         return AlertTriangle;
       default:
         return Clock;
@@ -265,17 +276,31 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
       case 'completed':
         return 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30';
       case 'pending':
+      case 'pending_mint':
+      case 'payment_confirmed':
         return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30';
       case 'processing':
+      case 'minting':
         return 'text-blue-600 bg-blue-100 dark:bg-blue-900/30';
       case 'failed':
+      case 'mint_failed':
         return 'text-red-600 bg-red-100 dark:bg-red-900/30';
       case 'cancelled':
+      case 'refunded':
         return 'text-gray-600 bg-gray-100 dark:bg-gray-900/30';
       default:
         return 'text-gray-600 bg-gray-100 dark:bg-gray-900/30';
     }
   };
+
+  // Render a status string like "pending_mint" as "Pending Mint" (Title Case
+  // with spaces) so the badge isn't an ugly UPPERCASE_WITH_UNDERSCORES.
+  const formatStatus = (status: string) =>
+    status
+      .toLowerCase()
+      .split('_')
+      .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : w))
+      .join(' ');
 
   const getAmountColor = (type: TransactionType) => {
     switch (type) {
@@ -516,7 +541,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                               getStatusColor(transaction.status)
                             )}>
                               <StatusIcon className="w-3 h-3 mr-1" />
-                              {transaction.status.toUpperCase()}
+                              {formatStatus(transaction.status)}
                             </div>
                           </td>
                           
@@ -531,6 +556,14 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                           
                           <td className="px-6 py-4 text-right">
                             <div className="flex items-center justify-end gap-2">
+                              {/*
+                                Single chevron toggle for inline details. The
+                                previous version also rendered a separate "Eye"
+                                button that called `setSelectedTransaction` —
+                                but nothing consumed that state, so clicking
+                                it did nothing visible. Dropped it to fix the
+                                dead-button report from the user.
+                              */}
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -543,15 +576,20 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                   <ChevronDown className="w-4 h-4" />
                                 )}
                               </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleViewTransaction(transaction.id)}
-                                title="View transaction details"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                              {transaction.status.toLowerCase() === 'failed' && (
+                              {(transaction as any).property?.id && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    window.location.href = `/property-detail?id=${(transaction as any).property.id}`;
+                                  }}
+                                  title="View property"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              )}
+                              {(transaction.status.toLowerCase() === 'failed' ||
+                                transaction.status.toLowerCase() === 'mint_failed') && (
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -561,6 +599,14 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                   <RefreshCw className="w-4 h-4" />
                                 </Button>
                               )}
+                              {/*
+                                Cancel is only supported by the backend for the
+                                PENDING state — once the investment moves to
+                                PROCESSING / PENDING_MINT / MINTING the payment
+                                or mint is already in flight and the user must
+                                go through refund/support. Only show the
+                                button when it can actually do something.
+                              */}
                               {transaction.status.toLowerCase() === 'pending' && (
                                 <Button
                                   variant="outline"
@@ -617,36 +663,52 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                     </div>
                                   </div>
                                   
-                                  {/* Payment Details */}
-                                  <div>
-                                    <Text variant="body" weight="semibold" className="mb-2">
-                                      Payment Details
-                                    </Text>
-                                    <div className="space-y-2 text-sm">
-                                      <div className="flex justify-between">
-                                        <Text variant="caption" color="muted">Method:</Text>
-                                        <Text variant="caption">
-                                          {transaction.payment_details?.method_display || 'N/A'}
-                                        </Text>
+                                  {/*
+                                    Payment Details panel — only render when
+                                    we actually have something to display.
+                                    The old version always rendered the panel
+                                    with a "Method: N/A" row even for pure
+                                    investment / mint transactions that don't
+                                    have payment metadata. The user flagged
+                                    that row twice in screenshots; dropping
+                                    the whole section when empty is cleaner
+                                    than showing a placeholder.
+                                  */}
+                                  {(transaction.payment_details?.method_display ||
+                                    transaction.payment_details?.transaction_fee ||
+                                    transaction.payment_details?.gas_fee) && (
+                                    <div>
+                                      <Text variant="body" weight="semibold" className="mb-2">
+                                        Payment Details
+                                      </Text>
+                                      <div className="space-y-2 text-sm">
+                                        {transaction.payment_details?.method_display && (
+                                          <div className="flex justify-between">
+                                            <Text variant="caption" color="muted">Method:</Text>
+                                            <Text variant="caption">
+                                              {transaction.payment_details.method_display}
+                                            </Text>
+                                          </div>
+                                        )}
+                                        {transaction.payment_details?.transaction_fee && (
+                                          <div className="flex justify-between">
+                                            <Text variant="caption" color="muted">Transaction Fee:</Text>
+                                            <Text variant="caption">
+                                              ${transaction.payment_details.transaction_fee.toFixed(2)}
+                                            </Text>
+                                          </div>
+                                        )}
+                                        {transaction.payment_details?.gas_fee && (
+                                          <div className="flex justify-between">
+                                            <Text variant="caption" color="muted">Gas Fee:</Text>
+                                            <Text variant="caption">
+                                              ${transaction.payment_details.gas_fee.toFixed(2)}
+                                            </Text>
+                                          </div>
+                                        )}
                                       </div>
-                                      {transaction.payment_details?.transaction_fee && (
-                                        <div className="flex justify-between">
-                                          <Text variant="caption" color="muted">Transaction Fee:</Text>
-                                          <Text variant="caption">
-                                            ${transaction.payment_details.transaction_fee.toFixed(2)}
-                                          </Text>
-                                        </div>
-                                      )}
-                                      {transaction.payment_details?.gas_fee && (
-                                        <div className="flex justify-between">
-                                          <Text variant="caption" color="muted">Gas Fee:</Text>
-                                          <Text variant="caption">
-                                            ${transaction.payment_details.gas_fee.toFixed(2)}
-                                          </Text>
-                                        </div>
-                                      )}
                                     </div>
-                                  </div>
+                                  )}
                                   
                                   {/* Blockchain Details */}
                                   {transaction.blockchain_details && (

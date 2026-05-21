@@ -257,6 +257,11 @@ class Command(BaseCommand):
             offering_type='reg_cf',
             spv_entity=None,
         )
+        self._attach_cover_image(
+            properties['marina'],
+            'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&q=80',
+            'Marina Tower 12 — cover',
+        )
 
         # 2. Accredited-only commercial property with US SPV
         properties['difc'] = self._upsert_property(
@@ -275,6 +280,11 @@ class Command(BaseCommand):
             requires_accredited_investors=True,
             offering_type='reg_d',
             spv_entity=spv_uae,
+        )
+        self._attach_cover_image(
+            properties['difc'],
+            'https://images.unsplash.com/photo-1577415124269-fc1140a69e91?w=1200&q=80',
+            'DIFC Office Park — cover',
         )
 
         # 3. Tokenized residential with lockup + SPV — open to all KYC
@@ -295,6 +305,11 @@ class Command(BaseCommand):
             offering_type='reg_a',
             spv_entity=spv_us,
         )
+        self._attach_cover_image(
+            properties['palm'],
+            'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1200&q=80',
+            'Palm Villa 27 — cover',
+        )
 
         # 4. Under-construction project
         properties['skyline'] = self._upsert_property(
@@ -314,8 +329,58 @@ class Command(BaseCommand):
             offering_type='reg_cf',
             spv_entity=None,
         )
+        self._attach_cover_image(
+            properties['skyline'],
+            'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80',
+            'Skyline Construction Hub — cover',
+        )
 
         return properties
+
+    def _attach_cover_image(self, property_obj, image_url: str, caption: str):
+        """Download a remote stock photo and attach it as the property's
+        primary PropertyImage. Idempotent — if the property already has a
+        primary image we leave it alone (the user may have uploaded their
+        own cover).
+        """
+        import io
+        import urllib.request
+
+        from django.core.files.base import ContentFile
+        from properties.models import PropertyImage
+
+        if PropertyImage.objects.filter(property=property_obj).exists():
+            self.stdout.write(
+                f'  skip image: {property_obj.title} already has one'
+            )
+            return
+
+        try:
+            req = urllib.request.Request(
+                image_url,
+                headers={'User-Agent': 'Mozilla/5.0 (capimax seed_demo_data)'},
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                content = resp.read()
+        except Exception as exc:
+            # Don't fail the whole seed run if Unsplash is unreachable — the
+            # property is still useful without a cover. The marketplace
+            # gracefully falls back to the gradient + Building2 icon.
+            self.stdout.write(self.style.WARNING(
+                f'  skip image for {property_obj.title}: download failed ({exc})'
+            ))
+            return
+
+        filename = f'{property_obj.id}.jpg'
+        image_file = ContentFile(content, name=filename)
+        PropertyImage.objects.create(
+            property=property_obj,
+            caption=caption,
+            is_primary=True,
+            order=0,
+            image=image_file,
+        )
+        self.stdout.write(f'  attached cover image: {property_obj.title}')
 
     def _seed_spvs(self):
         """Create demo Legal Entities. Returns (us_spv, uae_spv)."""

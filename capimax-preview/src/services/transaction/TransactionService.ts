@@ -337,13 +337,17 @@ export class TransactionService {
   }
 
   /**
-   * Cancel pending transaction
+   * Cancel pending transaction.
+   *
+   * Investment-backed transactions are cancellable via
+   * `POST /investments/<id>/cancel/`. The earlier implementation pointed at
+   * `/transactions/<id>/cancel/` which doesn't exist and silently 404'd.
    */
   static async cancelTransaction(transactionId: string): Promise<{
     message: string;
   }> {
     try {
-      return await apiClient.post(`/transactions/${transactionId}/cancel/`);
+      return await apiClient.post(`/investments/${transactionId}/cancel/`);
     } catch (error) {
       console.error('Failed to cancel transaction:', error);
       throw error;
