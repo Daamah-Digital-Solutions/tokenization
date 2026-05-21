@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, User, LogOut, Wallet, Settings, ChevronDown, LayoutDashboard, Building2, TrendingUp, Users } from 'lucide-react';
+import { Menu, X, User, LogOut, Settings, ChevronDown, LayoutDashboard, Building2, TrendingUp, Users } from 'lucide-react';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { useRouter } from '../../utils/router';
 import { useAuth } from '../../contexts/AuthContext';
@@ -105,9 +105,11 @@ export const Navbar: React.FC = () => {
 
   // Get role-specific dropdown items
   const getProfileDropdownItems = () => {
+    // Wallet intentionally NOT here — it's surfaced via the mobile bottom
+    // nav and the dashboard's Wallet card, and the duplicate dropdown entry
+    // led to confused users + a broken-feeling navigation path.
     const baseItems: Array<{ name: string; route: string; icon: any; params?: Record<string, string> }> = [
       { name: 'Dashboard', route: 'dashboard', icon: LayoutDashboard },
-      { name: 'Wallet', route: 'wallet', icon: Wallet }
     ];
 
     // Add role-specific dashboard label with appropriate params
