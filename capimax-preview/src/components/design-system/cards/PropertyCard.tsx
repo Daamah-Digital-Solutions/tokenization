@@ -7,6 +7,7 @@ import { Button } from '../../ui/Button';
 import { Text } from '../typography/Text';
 import { PropertyCategory } from '../../../services/api/types';
 import type { Property } from '../../../services/api/types';
+import { PROPERTY_PLACEHOLDER, handleImageFallback } from '../../../utils/imageFallback';
 
 interface PropertyCardProps extends Omit<Property, 'id'> {
   id: string;
@@ -76,7 +77,7 @@ export const PropertyCard = React.forwardRef<HTMLDivElement, PropertyCardProps>(
   const location = `${city}${address ? ', ' + address : ''}`;
   
   // Get primary image
-  const primaryImage = images && images.length > 0 ? images[0] : '/images/placeholder-property.jpg';
+  const primaryImage = images && images.length > 0 ? images[0] : PROPERTY_PLACEHOLDER;
   
   // Format currency values
   const formatCurrency = (amount?: number) => {
@@ -200,10 +201,7 @@ export const PropertyCard = React.forwardRef<HTMLDivElement, PropertyCardProps>(
             src={primaryImage}
             alt={title}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = '/images/placeholder-property.jpg';
-            }}
+            onError={handleImageFallback}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-slate-800/20 to-transparent" />
           

@@ -38,6 +38,7 @@ import { Text } from '../design-system/typography/Text';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
 import type { Property, PropertyDocuments } from '../../services/api/types';
+import { PROPERTY_PLACEHOLDER, handleImageFallback } from '../../utils/imageFallback';
 
 interface PropertyDetailEnhancedProps {
   property: Property;
@@ -52,6 +53,7 @@ interface PropertyDetailEnhancedProps {
 }
 
 type TabId = 'overview' | 'financials' | 'spv' | 'documents' | 'location';
+
 
 export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
   property,
@@ -160,12 +162,10 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
       <Card className="overflow-hidden">
         <div className="relative h-96 md:h-[500px]">
           <img
-            src={property.images?.[currentImageIndex] || '/default-property.jpg'}
+            src={property.images?.[currentImageIndex] || PROPERTY_PLACEHOLDER}
             alt={property.title}
             className="w-full h-full object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = '/default-property.jpg';
-            }}
+            onError={handleImageFallback}
           />
 
           {/* Image Navigation */}

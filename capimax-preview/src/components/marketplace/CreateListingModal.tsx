@@ -25,6 +25,7 @@ import { marketplaceService, type CreateListingRequest } from '../../services/ma
 import { PropertyService } from '../../services/property/PropertyService';
 import { InvestmentService } from '../../services/investment/InvestmentService';
 import { useAuth } from '../../contexts/AuthContext';
+import { PROPERTY_PLACEHOLDER, handleImageFallback } from '../../utils/imageFallback';
 
 interface CreateListingModalProps {
   isOpen: boolean;
@@ -301,9 +302,10 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                           >
                             <div className="flex gap-4">
                               <img
-                                src={investment.property.image_url || '/placeholder-property.jpg'}
+                                src={investment.property.image_url || PROPERTY_PLACEHOLDER}
                                 alt={investment.property.title}
                                 className="w-16 h-16 rounded-lg object-cover"
+                                onError={handleImageFallback}
                               />
                               <div className="flex-1">
                                 <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
@@ -351,9 +353,10 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                   <Card variant="outline" className="p-4 bg-gray-50 dark:bg-gray-900/50">
                     <div className="flex gap-4">
                       <img
-                        src={selectedProperty.property.image_url || '/placeholder-property.jpg'}
+                        src={selectedProperty.property.image_url || PROPERTY_PLACEHOLDER}
                         alt={selectedProperty.property.title}
                         className="w-20 h-20 rounded-xl object-cover"
+                        onError={handleImageFallback}
                       />
                       <div className="flex-1">
                         <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
@@ -556,9 +559,10 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                   <Card variant="outline" className="p-6">
                     <div className="flex gap-4 mb-6">
                       <img
-                        src={selectedProperty.property.image_url || '/placeholder-property.jpg'}
+                        src={selectedProperty.property.image_url || PROPERTY_PLACEHOLDER}
                         alt={selectedProperty.property.title}
                         className="w-20 h-20 rounded-xl object-cover"
+                        onError={handleImageFallback}
                       />
                       <div className="flex-1">
                         <h4 className="font-semibold text-gray-900 dark:text-white mb-1">

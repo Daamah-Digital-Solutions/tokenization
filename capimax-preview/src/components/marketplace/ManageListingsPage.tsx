@@ -30,6 +30,7 @@ import { Text } from '../design-system/typography/Text';
 import { cn } from '../../utils/cn';
 import { marketplaceService, type SecondaryMarketListing } from '../../services/marketplace/MarketplaceService';
 import { useAuth } from '../../contexts/AuthContext';
+import { PROPERTY_PLACEHOLDER, handleImageFallback } from '../../utils/imageFallback';
 
 interface ManageListingsPageProps {
   className?: string;
@@ -307,9 +308,10 @@ const ListingRow: React.FC<ListingRowProps> = ({
         {/* Property Image and Info */}
         <div className="flex gap-4 flex-1">
           <img
-            src={listing.property_listing.images?.[0]?.image || listing.property_listing.image_url || '/placeholder-property.jpg'}
+            src={listing.property_listing.images?.[0]?.image || listing.property_listing.image_url || PROPERTY_PLACEHOLDER}
             alt={listing.property_listing.title}
             className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
+            onError={handleImageFallback}
           />
           <div className="flex-1">
             <div className="flex items-start justify-between mb-2">

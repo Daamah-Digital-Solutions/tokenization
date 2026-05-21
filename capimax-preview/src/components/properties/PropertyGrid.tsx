@@ -7,6 +7,7 @@ import { cn } from '../../utils/cn';
 import { PropertyFilterOptions } from '../../services/api/types';
 import type { Property } from '../../services/api/types';
 import { PropertyService } from '../../services/property/PropertyService';
+import { PROPERTY_PLACEHOLDER, handleImageFallback } from '../../utils/imageFallback';
 
 export type ViewMode = 'grid' | 'list' | 'map';
 
@@ -314,13 +315,10 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
                 <div className="flex gap-6">
                   <div className="relative flex-shrink-0">
                     <img
-                      src={property.images && property.images.length > 0 ? property.images[0] : '/images/placeholder-property.jpg'}
+                      src={property.images && property.images.length > 0 ? property.images[0] : PROPERTY_PLACEHOLDER}
                       alt={property.title}
                       className="w-32 h-32 object-cover rounded-lg"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = '/images/placeholder-property.jpg';
-                      }}
+                      onError={handleImageFallback}
                     />
                     {property.featured && (
                       <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-bold px-2 py-1 rounded-full">
