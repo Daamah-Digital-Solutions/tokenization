@@ -19,7 +19,8 @@ import {
   ShoppingCart,
   Plus,
   BarChart3,
-  Timer
+  Timer,
+  Building2,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from '../design-system/forms/Input';
@@ -34,6 +35,7 @@ import { Heading } from '../design-system/typography/Heading';
 import { Text } from '../design-system/typography/Text';
 import { BuyOrderModal } from './BuyOrderModal';
 import { CreateListingModal } from './CreateListingModal';
+import { useRouter } from '../../utils/router';
 
 interface SecondaryMarketDashboardProps {
   className?: string;
@@ -45,6 +47,7 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
   showStats = true
 }) => {
   const { user } = useAuth();
+  const { navigate } = useRouter();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -113,8 +116,17 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
   };
 
   const handleViewDetails = (listing: SecondaryMarketListing) => {
-    // Navigate to listing details
-    console.log('View listing details:', listing.id);
+    // Send the buyer to the underlying property's detail page — that's
+    // where the data room, valuation history, investor list, and other
+    // due-diligence material lives. A listing-level details view doesn't
+    // exist yet and the property page covers the same need.
+    const propertyId = (listing.property_listing as any)?.id;
+    if (propertyId) {
+      navigate('property-detail', { id: propertyId });
+    } else {
+      // Fall back to the all-properties browse page so the click never dies.
+      navigate('properties');
+    }
   };
 
   const handleFiltersChange = (newFilters: MarketplaceFilters) => {
@@ -594,14 +606,34 @@ const ListingCard: React.FC<ListingCardProps> = ({
     >
       {/* Property Image */}
       <div className={cn(
-        "relative",
+        "relative bg-gradient-to-br from-blue-100 via-emerald-50 to-amber-50 dark:from-blue-900/30 dark:via-emerald-900/20 dark:to-amber-900/20",
         viewMode === 'list' ? "w-48 flex-shrink-0" : "h-48"
       )}>
-        <img
-          src={listing.property_listing.images?.[0]?.image || listing.property_listing.image_url || '/placeholder-property.jpg'}
-          alt={listing.property_listing.title}
-          className="w-full h-full object-cover"
-        />
+        {(() => {
+          const imgUrl =
+            listing.property_listing.images?.[0]?.image ||
+            (listing.property_listing as any).image_url;
+          if (imgUrl) {
+            return (
+              <img
+                src={imgUrl}
+                alt={listing.property_listing.title}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // The src returned by the backend may 404 (e.g., demo data
+                  // with no real image file). Hide the broken-image icon and
+                  // let the gradient + emoji fallback show through.
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            );
+          }
+          return (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Building2 className="w-16 h-16 text-blue-300 dark:text-blue-700" />
+            </div>
+          );
+        })()}
         <div className="absolute top-3 left-3">
           <Badge
             className={cn("text-xs font-medium px-2 py-1", typeColors[listing.listing_type])}

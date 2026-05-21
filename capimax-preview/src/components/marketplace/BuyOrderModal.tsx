@@ -10,7 +10,8 @@ import {
   CheckCircle,
   Clock,
   MapPin,
-  Building2
+  Building2,
+  Zap,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../design-system/forms/Input';
@@ -96,11 +97,22 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
 
     setIsSubmitting(true);
     try {
+      const effectivePrice =
+        orderData.order_type === 'limit'
+          ? orderData.price_per_token
+          : listing.price_per_token;
+      // Backend serializer field-validates total_amount as required before
+      // running the cross-field validator that would otherwise auto-compute
+      // it for market orders. So send it ourselves on every request.
+      const computedTotal = (
+        orderData.tokens_requested * parseFloat(effectivePrice)
+      ).toFixed(2);
       const tradeOrderData: TradeOrderRequest = {
         listing: listing.id,
         order_type: orderData.order_type,
         tokens_requested: orderData.tokens_requested,
-        price_per_token: orderData.order_type === 'limit' ? orderData.price_per_token : listing.price_per_token
+        price_per_token: effectivePrice,
+        total_amount: computedTotal,
       };
 
       setStep('processing');
@@ -190,11 +202,28 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
             {/* Property Info */}
             <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
               <div className="flex gap-4">
-                <img
-                  src={listing.property_listing.images?.[0]?.image || listing.property_listing.image_url || '/placeholder-property.jpg'}
-                  alt={listing.property_listing.title}
-                  className="w-20 h-20 rounded-xl object-cover"
-                />
+                {(() => {
+                  const imgUrl =
+                    listing.property_listing.images?.[0]?.image ||
+                    (listing.property_listing as any).image_url;
+                  if (imgUrl) {
+                    return (
+                      <img
+                        src={imgUrl}
+                        alt={listing.property_listing.title}
+                        className="w-20 h-20 rounded-xl object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    );
+                  }
+                  return (
+                    <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-blue-100 to-emerald-50 dark:from-blue-900/30 dark:to-emerald-900/20 flex items-center justify-center">
+                      <Building2 className="w-8 h-8 text-blue-300 dark:text-blue-700" />
+                    </div>
+                  );
+                })()}
                 <div className="flex-1">
                   <div className="flex items-start justify-between mb-2">
                     <div>

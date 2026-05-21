@@ -19,6 +19,7 @@ import { LivenessVerification, type LivenessResult } from './LivenessVerificatio
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../contexts/AuthContext';
+import { COUNTRIES } from '../../utils/countries';
 
 interface KYCWizardProps {
   onComplete?: (data: KYCData) => void;
@@ -608,22 +609,9 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
             )}
           >
             <option value="">Select your nationality</option>
-            <option value="US">United States</option>
-            <option value="GB">United Kingdom</option>
-            <option value="CA">Canada</option>
-            <option value="AU">Australia</option>
-            <option value="DE">Germany</option>
-            <option value="FR">France</option>
-            <option value="AE">United Arab Emirates</option>
-            <option value="SA">Saudi Arabia</option>
-            <option value="EG">Egypt</option>
-            <option value="JO">Jordan</option>
-            <option value="LB">Lebanon</option>
-            <option value="KW">Kuwait</option>
-            <option value="QA">Qatar</option>
-            <option value="BH">Bahrain</option>
-            <option value="OM">Oman</option>
-            <option value="OTHER">Other</option>
+            {COUNTRIES.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
           </select>
           {personalInfoErrors.nationality && (
             <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
@@ -662,22 +650,9 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
             )}
           >
             <option value="">Select your country of residence</option>
-            <option value="US">United States</option>
-            <option value="GB">United Kingdom</option>
-            <option value="CA">Canada</option>
-            <option value="AU">Australia</option>
-            <option value="DE">Germany</option>
-            <option value="FR">France</option>
-            <option value="AE">United Arab Emirates</option>
-            <option value="SA">Saudi Arabia</option>
-            <option value="EG">Egypt</option>
-            <option value="JO">Jordan</option>
-            <option value="LB">Lebanon</option>
-            <option value="KW">Kuwait</option>
-            <option value="QA">Qatar</option>
-            <option value="BH">Bahrain</option>
-            <option value="OM">Oman</option>
-            <option value="OTHER">Other</option>
+            {COUNTRIES.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
           </select>
           {personalInfoErrors.residencyCountry && (
             <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">

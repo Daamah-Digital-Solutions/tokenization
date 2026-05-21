@@ -728,71 +728,157 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                 Access all property documentation, including ownership records, valuation reports, insurance policies, and SPV documents.
               </p>
 
-              {/* Document Categories */}
-              <div className="space-y-4">
-                {[
-                  { title: 'Ownership Documents', count: 3, icon: FileText, items: ['Title Deed', 'Property Registration', 'Ownership Certificate'] },
-                  { title: 'Valuation Reports', count: 2, icon: BarChart3, items: ['Independent Valuation', 'Market Analysis Report'] },
-                  { title: 'Insurance Documents', count: 2, icon: Shield, items: ['Property Insurance Policy', 'Coverage Summary'] },
-                  { title: 'SPV Documents', count: 4, icon: Briefcase, items: ['Operating Agreement', 'Articles of Association', 'Investment Agreement', 'Subscription Form'] },
-                  { title: 'Financial Reports', count: 3, icon: TrendingUp, items: ['Annual Financial Statement', 'Cash Flow Projections', 'Distribution History'] },
-                ].map((category) => {
-                  const Icon = category.icon;
-                  const isExpanded = expandedSection === category.title;
+              {/*
+                Replaced a hardcoded category list ("Title Deed", "Operating
+                Agreement", etc. — pure UI mock with no onClick) with a real
+                grouping over the `documents` prop. Documents are bucketed by
+                their backend `type` field and each one wires the Download
+                button to its actual file URL.
+              */}
+              {documents.length === 0 ? (
+                <div className="text-center py-12 px-6 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
+                  <FileText className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                  <p className="font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    No documents available yet
+                  </p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    The property owner has not uploaded supporting documentation for this listing.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {(() => {
+                    // Friendlier labels for the raw backend `type` strings.
+                    const typeLabels: Record<string, string> = {
+                      ownership: 'Ownership Documents',
+                      legal: 'Legal Documents',
+                      financial: 'Financial Reports',
+                      valuation: 'Valuation Reports',
+                      insurance: 'Insurance Documents',
+                      spv: 'SPV Documents',
+                      construction: 'Construction Documents',
+                      other: 'Other Documents',
+                    };
+                    const typeIcons: Record<string, any> = {
+                      ownership: FileText,
+                      legal: Shield,
+                      financial: TrendingUp,
+                      valuation: BarChart3,
+                      insurance: Shield,
+                      spv: Briefcase,
+                      construction: Folder,
+                      other: FileText,
+                    };
 
-                  return (
-                    <div key={category.title} className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
-                      <button
-                        onClick={() => toggleSection(category.title)}
-                        className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
-                            <Icon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                          </div>
-                          <div className="text-left">
-                            <div className="font-semibold text-gray-900 dark:text-white">{category.title}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">{category.count} documents</div>
-                          </div>
-                        </div>
-                        {isExpanded ? (
-                          <ChevronUp className="w-5 h-5 text-gray-400" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-gray-400" />
-                        )}
-                      </button>
+                    // Bucket documents by type.
+                    const grouped: Record<string, PropertyDocuments[]> = {};
+                    for (const doc of documents) {
+                      const key = (doc.type || 'other').toLowerCase();
+                      (grouped[key] = grouped[key] || []).push(doc);
+                    }
 
-                      <AnimatePresence>
-                        {isExpanded && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden"
+                    const handleDownload = (doc: PropertyDocuments) => {
+                      if (!doc.url) {
+                        alert('This document does not have a download URL configured.');
+                        return;
+                      }
+                      const a = document.createElement('a');
+                      a.href = doc.url;
+                      a.download = doc.name || 'document';
+                      a.target = '_blank';
+                      a.rel = 'noopener noreferrer';
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                    };
+
+                    return Object.entries(grouped).map(([type, docs]) => {
+                      const Icon = typeIcons[type] || FileText;
+                      const title = typeLabels[type] || type.replace(/_/g, ' ');
+                      const isExpanded = expandedSection === title;
+
+                      return (
+                        <div key={type} className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() => toggleSection(title)}
+                            className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                           >
-                            <div className="p-4 space-y-2">
-                              {category.items.map((item, index) => (
-                                <div
-                                  key={index}
-                                  className="flex items-center justify-between p-3 bg-white dark:bg-gray-900 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <FileText className="w-4 h-4 text-gray-400" />
-                                    <span className="text-gray-700 dark:text-gray-300">{item}</span>
-                                  </div>
-                                  <Button variant="ghost" size="sm">
-                                    <Download className="w-4 h-4" />
-                                  </Button>
-                                </div>
-                              ))}
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
+                                <Icon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                              </div>
+                              <div className="text-left">
+                                <div className="font-semibold text-gray-900 dark:text-white capitalize">{title}</div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">{docs.length} document{docs.length === 1 ? '' : 's'}</div>
+                              </div>
                             </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                })}
-              </div>
+                            {isExpanded ? (
+                              <ChevronUp className="w-5 h-5 text-gray-400" />
+                            ) : (
+                              <ChevronDown className="w-5 h-5 text-gray-400" />
+                            )}
+                          </button>
+
+                          <AnimatePresence>
+                            {isExpanded && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="p-4 space-y-2">
+                                  {docs.map((doc) => (
+                                    <div
+                                      key={doc.id}
+                                      className="flex items-center justify-between p-3 bg-white dark:bg-gray-900 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                    >
+                                      <div className="flex items-center gap-3 min-w-0">
+                                        <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                        <div className="min-w-0">
+                                          <div className="text-gray-700 dark:text-gray-300 truncate">{doc.name}</div>
+                                          {doc.description && (
+                                            <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                              {doc.description}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2 flex-shrink-0">
+                                        {doc.url && (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => window.open(doc.url, '_blank', 'noopener,noreferrer')}
+                                            title="View"
+                                            aria-label={`View ${doc.name}`}
+                                          >
+                                            <Eye className="w-4 h-4" />
+                                          </Button>
+                                        )}
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleDownload(doc)}
+                                          title="Download"
+                                          aria-label={`Download ${doc.name}`}
+                                        >
+                                          <Download className="w-4 h-4" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              )}
 
               <div className="mt-8 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl">
                 <div className="flex items-start gap-3">

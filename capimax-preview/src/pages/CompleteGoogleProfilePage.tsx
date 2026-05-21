@@ -18,6 +18,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from '../utils/router';
 import { AuthService, GoogleProfileCompletionData } from '../services/auth/AuthService';
 import { UserRole } from '../services/api/types';
+import { COUNTRIES } from '../utils/countries';
 
 interface GoogleUserData {
   email: string;
@@ -35,18 +36,7 @@ const USER_TYPES = [
   { value: UserRole.PROPERTY_OWNER, label: 'Property Owner - I want to tokenize my property' }
 ];
 
-const COUNTRIES = [
-  { value: 'us', label: 'United States' },
-  { value: 'ca', label: 'Canada' },
-  { value: 'gb', label: 'United Kingdom' },
-  { value: 'au', label: 'Australia' },
-  { value: 'de', label: 'Germany' },
-  { value: 'fr', label: 'France' },
-  { value: 'ae', label: 'United Arab Emirates' },
-  { value: 'sg', label: 'Singapore' },
-  { value: 'hk', label: 'Hong Kong' },
-  { value: 'jp', label: 'Japan' }
-];
+// Countries list now comes from `utils/countries.ts` (full ISO-3166 set).
 
 export const CompleteGoogleProfilePage: React.FC = () => {
   const { setUser } = useAuth();

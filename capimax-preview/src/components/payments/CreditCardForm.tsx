@@ -51,6 +51,7 @@ import { Button } from '../ui/Button';
 import { Input } from '../design-system/forms/Input';
 import { Select } from '../design-system/forms/Select';
 import { ConfirmationDialog } from '../ui/ConfirmationDialog';
+import { COUNTRIES } from '../../utils/countries';
 
 interface CreditCardFormProps {
   amount: number;
@@ -72,14 +73,7 @@ interface BillingAddress {
   country: string;
 }
 
-const COUNTRIES = [
-  { value: 'US', label: 'United States' },
-  { value: 'CA', label: 'Canada' },
-  { value: 'GB', label: 'United Kingdom' },
-  { value: 'DE', label: 'Germany' },
-  { value: 'FR', label: 'France' },
-  { value: 'AE', label: 'United Arab Emirates' },
-];
+// Countries list now comes from `utils/countries.ts` (full ISO-3166 set).
 
 const CARD_ELEMENT_OPTIONS: StripeCardElementOptions = {
   // Single combined input (number + expiry + CVC). For finer-grained UX use

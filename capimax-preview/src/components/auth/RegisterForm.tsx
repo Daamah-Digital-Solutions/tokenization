@@ -22,6 +22,7 @@ import { useNotifications } from '../../contexts/NotificationContext';
 import { useRouter } from '../../utils/router';
 import { AuthService } from '../../services/auth/AuthService';
 import { UserRole } from '../../services/api/types';
+import { COUNTRIES } from '../../utils/countries';
 
 interface RegisterFormProps {
   onSignIn?: () => void;
@@ -70,15 +71,7 @@ const USER_TYPES = [
   // Note: BROKER role has been moved to a separate partner program
 ];
 
-const COUNTRIES = [
-  { value: 'us', label: 'United States' },
-  { value: 'ca', label: 'Canada' },
-  { value: 'gb', label: 'United Kingdom' },
-  { value: 'au', label: 'Australia' },
-  { value: 'de', label: 'Germany' },
-  { value: 'fr', label: 'France' },
-  { value: 'ae', label: 'United Arab Emirates' }
-];
+// Countries list now comes from `utils/countries.ts` (full ISO-3166 set).
 
 export const RegisterForm: React.FC<RegisterFormProps> = ({
   onSignIn,

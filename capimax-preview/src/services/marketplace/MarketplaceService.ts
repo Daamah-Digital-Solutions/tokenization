@@ -67,6 +67,14 @@ export interface TradeOrderRequest {
   order_type?: 'market' | 'limit';
   tokens_requested: number;
   price_per_token: string;
+  /**
+   * Server enforces `total_amount = tokens_requested × price_per_token` and
+   * field-level `required=True` (DRF DecimalField). The frontend must compute
+   * and send it on every request — even for market orders, where the backend
+   * also overwrites it during validate() but still rejects the missing field
+   * at field-level validation that runs first.
+   */
+  total_amount: string;
 }
 
 export interface BidRequest {
