@@ -119,10 +119,13 @@ class Command(BaseCommand):
                 f"dropping {len(drop)} dup(s)"
             )
             if not dry:
+                drop_ids = [d.id for d in drop]
                 with transaction.atomic():
-                    Investment.objects.filter(
-                        id__in=[d.id for d in drop]
-                    ).delete()
+                    # Cascade-delete protected children first.
+                    # SubscriptionAgreement uses on_delete=PROTECT on
+                    # `investment`, so plain queryset.delete() refuses.
+                    self._cascade_delete_dependents(drop_ids)
+                    Investment.objects.filter(id__in=drop_ids).delete()
             total_deleted += len(drop)
 
         if total_deleted == 0:
@@ -132,3 +135,22 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(
                 f"  {verb} {total_deleted} duplicate investments."
             ))
+
+    def _cascade_delete_dependents(self, investment_ids):
+        """Delete child rows that block Investment deletion via PROTECT.
+
+        SubscriptionAgreement is the only currently-known protected child
+        of Investment (`investments/agreements.py`). Add more here if other
+        protected FKs get introduced.
+        """
+        try:
+            from legal.models import SubscriptionAgreement
+        except ImportError:
+            return
+        deleted, _ = SubscriptionAgreement.objects.filter(
+            investment_id__in=investment_ids
+        ).delete()
+        if deleted:
+            self.stdout.write(
+                f"    cascade: removed {deleted} SubscriptionAgreement row(s)"
+            )
