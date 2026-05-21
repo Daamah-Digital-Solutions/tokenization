@@ -534,18 +534,32 @@ function CreditCardFormInner({
     <div className={className}>
       <Card className="max-w-md mx-auto">
         <div className="p-6">
-          <motion.div
-            key={step}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            {step === 'details' && renderCardDetails()}
-            {step === 'billing' && renderBillingAddress()}
-            {step === 'processing' && renderProcessing()}
-            {step === 'complete' && renderComplete()}
-          </motion.div>
+          {/*
+            CRITICAL: <CardElement> MUST stay mounted across step changes.
+            stripe.elements().getElement(CardElement) returns null the moment
+            CardElement unmounts — so if we conditionally render the details
+            step, the eventual handlePayment() call from the billing step
+            sees a null element and throws "Card input is not ready" without
+            ever talking to Stripe. We keep the details panel mounted at all
+            times and toggle visibility via `hidden`. CardElement keeps its
+            own state regardless.
+          */}
+          <div hidden={step !== 'details'}>
+            {renderCardDetails()}
+          </div>
+          {step !== 'details' && (
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {step === 'billing' && renderBillingAddress()}
+              {step === 'processing' && renderProcessing()}
+              {step === 'complete' && renderComplete()}
+            </motion.div>
+          )}
         </div>
       </Card>
 

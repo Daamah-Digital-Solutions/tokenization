@@ -394,13 +394,29 @@ def _validate_buyer_compliance(user, listing):
 class TradeOrderCreateSerializer(TradeOrderSerializer):
     """
     Specialized serializer for creating trade orders.
+
+    Validates a narrow set of write-time inputs but renders the response
+    via the full TradeOrderSerializer. Without this, the POST response
+    omitted the `id` (plus status, tokens_filled, executed_at, etc.) and
+    the frontend marketplace modal failed with "Order submission did not
+    return a confirmation" even though the order had actually been
+    created and — for market orders — already executed.
     """
-    
+
     class Meta(TradeOrderSerializer.Meta):
+        # Write-side: only accept the fields the user supplies.
         fields = [
             'listing', 'order_type', 'tokens_requested', 'price_per_token',
             'total_amount'
         ]
+
+    def to_representation(self, instance):
+        # When `instance` is a model row (post-save), render the rich
+        # response so the client can act on it. When it's still a dict
+        # of validated data (pre-save), fall through to the parent.
+        if hasattr(instance, 'pk') and instance.pk is not None:
+            return TradeOrderSerializer(instance, context=self.context).data
+        return super().to_representation(instance)
 
 
 class TradeTransactionSerializer(serializers.ModelSerializer):
