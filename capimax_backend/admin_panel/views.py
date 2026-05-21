@@ -19,8 +19,8 @@ from datetime import datetime, timedelta
 from rest_framework import generics
 from properties.models import Property, PropertyApproval, PropertyDocument, PropertyValuation
 from properties.serializers import PropertyValuationSerializer
-from payments.models import NovaSukukPayment
-from payments.serializers import NovaSukukAdminSerializer
+from payments.models import NovaSukukPayment, BankTransfer
+from payments.serializers import NovaSukukAdminSerializer, BankTransferAdminSerializer
 from investments.services import InvestmentProcessingService
 from notifications.services import NotificationService
 from core.permissions import IsAdminUser
@@ -590,3 +590,143 @@ class NovaSukukReviewView(APIView):
                 data=NovaSukukAdminSerializer(sukuk, context={'request': request}).data,
                 message="Nova Sukuk payment rejected"
             ))
+
+
+# --- Bank Transfer admin review ------------------------------------------
+#
+# Mirror of NovaSukukListView / NovaSukukReviewView. The shape and
+# semantics are deliberately identical so the admin frontend can render
+# both with the same component (just swapping which endpoint it calls).
+
+
+class BankTransferListView(generics.ListAPIView):
+    """List bank-transfer investments for admin review.
+
+    GET /api/v1/admin/bank-transfers/?status=pending
+    """
+    serializer_class = BankTransferAdminSerializer
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        qs = BankTransfer.objects.select_related(
+            'payment', 'payment__investment',
+            'payment__investment__user',
+            'payment__investment__property_investment',
+            'reviewed_by',
+        ).order_by('-initiated_at')
+        status_filter = self.request.query_params.get('status')
+        if status_filter:
+            qs = qs.filter(transfer_status=status_filter)
+        return qs
+
+
+class BankTransferReviewView(APIView):
+    """Approve or reject a bank-transfer investment.
+
+    POST /api/v1/admin/bank-transfers/{id}/review/
+    Body: { "action": "approve" | "reject", "review_note": "..." }
+
+    Approval flips the BankTransfer + Payment to 'completed' and calls
+    InvestmentProcessingService.process_investment, which transitions
+    the linked Investment to PENDING_MINT — Celery then mints the
+    tokens on chain.
+    """
+
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, pk):
+        try:
+            transfer = BankTransfer.objects.select_related(
+                'payment', 'payment__investment',
+                'payment__investment__user',
+                'payment__investment__property_investment',
+            ).get(id=pk)
+        except BankTransfer.DoesNotExist:
+            return Response(create_error_response(
+                message="Bank transfer not found", status_code=404
+            ), status=status.HTTP_404_NOT_FOUND)
+
+        if transfer.transfer_status in ('completed', 'failed', 'cancelled'):
+            return Response(create_error_response(
+                message=f"Cannot review a transfer with status '{transfer.transfer_status}'",
+                status_code=400,
+            ), status=status.HTTP_400_BAD_REQUEST)
+
+        action_type = request.data.get('action')
+        review_note = request.data.get('review_note', '')
+
+        if action_type not in ('approve', 'reject'):
+            return Response(create_error_response(
+                message="Action must be 'approve' or 'reject'", status_code=400
+            ), status=status.HTTP_400_BAD_REQUEST)
+
+        payment = transfer.payment
+        investment = payment.investment if payment else None
+        transfer.reviewed_by = request.user
+        transfer.reviewed_at = timezone.now()
+        transfer.review_note = review_note
+
+        if action_type == 'approve':
+            transfer.transfer_status = 'completed'
+            transfer.completed_at = timezone.now()
+            transfer.save()
+
+            if payment:
+                payment.status = 'completed'
+                payment.completed_at = timezone.now()
+                payment.save(update_fields=['status', 'completed_at', 'updated_at'])
+
+            if investment:
+                InvestmentProcessingService.process_investment(investment, payment)
+
+            if investment:
+                NotificationService.create_notification(
+                    user=investment.user,
+                    title="Bank Transfer Approved",
+                    message=(
+                        f"Your bank transfer (Ref: {transfer.transfer_reference}) "
+                        f"for {investment.property_investment.title} has been "
+                        f"approved. Tokens have been allocated and will mint "
+                        f"on chain shortly."
+                    ),
+                    notification_type='payment',
+                    priority='high',
+                    send_email=True,
+                    send_real_time=True,
+                )
+
+            return Response(create_success_response(
+                data=BankTransferAdminSerializer(transfer, context={'request': request}).data,
+                message="Bank transfer approved and investment completed"
+            ))
+
+        # reject path
+        transfer.transfer_status = 'failed'
+        transfer.save()
+
+        if investment:
+            investment.status = 'failed'
+            investment.save(update_fields=['status', 'updated_at'])
+
+        if payment:
+            payment.status = 'failed'
+            payment.save(update_fields=['status', 'updated_at'])
+
+        if investment:
+            NotificationService.create_notification(
+                user=investment.user,
+                title="Bank Transfer Rejected",
+                message=(
+                    f"Your bank transfer (Ref: {transfer.transfer_reference}) "
+                    f"has been rejected. Reason: {review_note or 'No reason provided.'}"
+                ),
+                notification_type='payment',
+                priority='high',
+                send_email=True,
+                send_real_time=True,
+            )
+
+        return Response(create_success_response(
+            data=BankTransferAdminSerializer(transfer, context={'request': request}).data,
+            message="Bank transfer rejected"
+        ))

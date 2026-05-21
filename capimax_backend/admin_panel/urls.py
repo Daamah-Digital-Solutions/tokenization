@@ -45,4 +45,13 @@ urlpatterns = [
     path('nova-sukuk/<uuid:pk>/review/',
          views.NovaSukukReviewView.as_view(),
          name='nova-sukuk-review'),
+
+    # Bank Transfer admin review
+    path('bank-transfers/',
+         views.BankTransferListView.as_view(),
+         name='bank-transfer-list'),
+
+    path('bank-transfers/<uuid:pk>/review/',
+         views.BankTransferReviewView.as_view(),
+         name='bank-transfer-review'),
 ]

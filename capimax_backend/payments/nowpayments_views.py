@@ -366,9 +366,34 @@ def nowpayments_payment_status(request, payment_id):
 
             # Update internal payment status
             if nowpayments_tx.payment_status == 'finished':
+                was_completed_already = payment.status == PaymentStatus.COMPLETED
                 payment.status = PaymentStatus.COMPLETED
                 payment.completed_at = timezone.now()
                 payment.save()
+
+                # Process the linked investment if we just transitioned to
+                # completed. Previously this only happened in the IPN
+                # callback, which means environments where NOWPayments
+                # can't reach the IPN URL (e.g. staging behind a proxy that
+                # isn't whitelisted) would leave the investment stuck in
+                # PENDING even though the on-chain crypto already arrived.
+                # The polling endpoint is now an idempotent fallback that
+                # matches the IPN logic.
+                if not was_completed_already and payment.investment:
+                    try:
+                        from investments.services import InvestmentProcessingService
+                        InvestmentProcessingService.process_investment(
+                            payment.investment, payment
+                        )
+                        logger.info(
+                            "Investment %s completed via NOWPayments status poll",
+                            payment.investment.id,
+                        )
+                    except Exception as exc:
+                        logger.error(
+                            "process_investment failed during NOWPayments status poll: %s",
+                            exc,
+                        )
             elif nowpayments_tx.is_failed:
                 payment.status = PaymentStatus.FAILED
                 payment.save()

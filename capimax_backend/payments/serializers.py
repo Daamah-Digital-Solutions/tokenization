@@ -673,6 +673,74 @@ class NovaSukukAdminSerializer(serializers.ModelSerializer):
         return None
 
 
+# --- Bank Transfer Investment Serializers ---
+# Mirror of the Nova Sukuk pair: a multipart write serializer for the
+# investor-facing endpoint, and an admin read serializer that includes the
+# proof file URL + denormalised investor/property fields for the review UI.
+
+
+class BankTransferInvestCreateSerializer(serializers.Serializer):
+    """Serializer for creating a bank-transfer-backed investment.
+
+    The investor uploads a proof-of-transfer file (image or PDF) and we
+    create the Investment + Payment + BankTransfer rows in one shot.
+    Approval is manual via the admin review endpoint.
+    """
+    property_id = serializers.UUIDField()
+    token_amount = serializers.IntegerField(min_value=1)
+    investment_amount = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal('1.00'))
+    proof_of_transfer = serializers.FileField()
+    account_holder_name = serializers.CharField(max_length=255)
+    bank_name = serializers.CharField(max_length=255)
+    # account_number / routing_number are written verbatim; we accept short
+    # bank-specific values rather than enforcing IBAN or US ABA syntax.
+    account_number = serializers.CharField(max_length=50)
+    routing_number = serializers.CharField(max_length=50, required=False, allow_blank=True, default='')
+    swift_code = serializers.CharField(max_length=20, required=False, allow_blank=True, default='')
+    transfer_reference_note = serializers.CharField(max_length=500, required=False, allow_blank=True, default='')
+
+
+class BankTransferAdminSerializer(serializers.ModelSerializer):
+    """Admin read serializer — surfaces the proof URL + investor context."""
+
+    proof_url = serializers.SerializerMethodField()
+    investor_email = serializers.CharField(
+        source='payment.investment.user.email', read_only=True
+    )
+    property_title = serializers.CharField(
+        source='payment.investment.property_investment.title', read_only=True
+    )
+    investment_id = serializers.CharField(
+        source='payment.investment.id', read_only=True
+    )
+    investment_amount = serializers.DecimalField(
+        source='payment.investment.investment_amount', read_only=True,
+        max_digits=12, decimal_places=2
+    )
+    token_amount = serializers.IntegerField(
+        source='payment.investment.token_amount', read_only=True
+    )
+
+    class Meta:
+        model = BankTransfer
+        fields = [
+            'id', 'transfer_reference', 'transfer_status', 'account_holder_name',
+            'bank_name', 'account_number', 'routing_number', 'swift_code',
+            'proof_url', 'review_note', 'reviewed_by', 'reviewed_at',
+            'investor_email', 'property_title', 'investment_id',
+            'investment_amount', 'token_amount',
+            'initiated_at', 'completed_at',
+        ]
+        read_only_fields = fields
+
+    def get_proof_url(self, obj):
+        if obj.proof_of_transfer:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.proof_of_transfer.url)
+        return None
+
+
 # --- Pronova Serializers ---
 
 class PronovaCreateSerializer(serializers.Serializer):

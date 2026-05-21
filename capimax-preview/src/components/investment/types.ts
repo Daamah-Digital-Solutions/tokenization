@@ -33,7 +33,7 @@ export interface InvestmentProperty {
 export interface InvestmentData {
   amount: number;
   tokens: number;
-  paymentMethod: 'crypto' | 'fiat' | 'wallet' | 'nova_sukuk' | 'pronova' | string | null;
+  paymentMethod: 'crypto' | 'fiat' | 'bank' | 'wallet' | 'nova_sukuk' | 'pronova' | string | null;
   paymentId?: string;
   paymentStatus?: 'pending' | 'processing' | 'completed' | 'failed';
   walletAddress?: string;

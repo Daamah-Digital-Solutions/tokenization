@@ -1404,6 +1404,36 @@ class BankTransfer(models.Model):
         help_text="Document IDs for verification"
     )
 
+    # Investor-uploaded proof of the wire/ACH (screenshot, PDF receipt, etc.)
+    # Required before an admin can approve the transfer — without proof we
+    # have no record that the funds were actually sent.
+    proof_of_transfer = models.FileField(
+        upload_to='bank_transfer_proofs/%Y/%m/',
+        null=True,
+        blank=True,
+        help_text="Proof of transfer (image or PDF) uploaded by the investor."
+    )
+
+    # Admin-review trail. When an admin marks the transfer approved/rejected
+    # we capture WHO did it and WHY for audit + dispute resolution.
+    reviewed_by = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='bank_transfers_reviewed',
+        help_text="Admin user who approved / rejected this transfer."
+    )
+    reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the admin reviewed the transfer."
+    )
+    review_note = models.TextField(
+        blank=True,
+        help_text="Admin-visible note explaining the approval / rejection."
+    )
+
     processing_fee = models.DecimalField(
         max_digits=10,
         decimal_places=2,

@@ -1,607 +1,293 @@
-import React, { useState } from 'react';
+/**
+ * Bank-transfer investment form.
+ *
+ * Drives the manual-review path: the investor uploads proof of an
+ * outgoing wire (screenshot or PDF receipt) plus their sending-bank
+ * details, and we create an Investment + Payment + BankTransfer row in
+ * `pending` state. An admin then approves on receipt of funds, which
+ * marks the payment confirmed and triggers minting (see
+ * `admin_panel/views.py:BankTransferReviewView`).
+ *
+ * No payment provider integration on the SPA side — this is purely an
+ * intake form. The previous BankTransferForm in this directory collected
+ * routing/account numbers but did NOT collect proof of transfer, so an
+ * admin had no evidence to approve against.
+ */
+
+import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Building2, 
-  Copy, 
-  CheckCircle, 
-  Clock, 
+import {
+  Building2,
+  Upload,
+  CheckCircle,
   AlertCircle,
-  Download,
-  Mail,
-  Smartphone
+  Loader2,
+  FileText,
 } from 'lucide-react';
-import { usePayment } from '../../contexts/PaymentContext';
-import { useNotifications } from '../../contexts/NotificationContext';
-import { formatCurrency } from '../../utils/currencyConverter';
-import { apiClient } from '../../services/api/ApiClient';
+
+import { InvestmentService } from '../../services/investment/InvestmentService';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
+import { Input } from '../design-system/forms/Input';
+
+const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB
+const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
 
 interface BankTransferFormProps {
+  /** USD amount the investor is sending. */
   amount: number;
-  /**
-   * The property the investor is paying for. Required by the backend
-   * `BankTransferCreateSerializer`. If not provided the form will surface a
-   * clear error rather than synthesise one.
-   */
-  propertyId?: string;
-  onPaymentComplete?: (transferId: string) => void;
+  /** Property the investment is being created for. */
+  propertyId: string;
+  /** Tokens the investor is purchasing. */
+  tokenAmount: number;
+  /** Called with the investment_id once the row is created (status=pending). */
+  onSubmitted?: (investmentId: string, transferReference: string) => void;
   onCancel?: () => void;
   className?: string;
 }
 
-interface BankAccountDetails {
-  bankName: string;
-  accountNumber: string;
-  routingNumber: string;
-  accountHolder: string;
-  swiftCode: string;
-  iban?: string;
-}
+export function BankTransferForm({
+  amount,
+  propertyId,
+  tokenAmount,
+  onSubmitted,
+  onCancel,
+  className,
+}: BankTransferFormProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [step, setStep] = useState<'collect' | 'submitting' | 'done'>('collect');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-const COMPANY_BANK_DETAILS: BankAccountDetails = {
-  bankName: 'JPMorgan Chase Bank',
-  accountNumber: '1234567890',
-  routingNumber: '021000021',
-  accountHolder: 'Capimax Tokenization LLC',
-  swiftCode: 'CHASUS33',
-  iban: 'US12345678901234567890',
-};
-
-export function BankTransferForm({ amount, propertyId, onPaymentComplete, onCancel, className }: BankTransferFormProps) {
-  const { addTransaction } = usePayment();
-  const { error: showError } = useNotifications();
-  const [step, setStep] = useState<'instructions' | 'confirmation' | 'pending'>('instructions');
-  const [transferMethod, setTransferMethod] = useState<'wire' | 'ach'>('wire');
-  const [transferId, setTransferId] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [userEmail, setUserEmail] = useState('');
-  const [userPhone, setUserPhone] = useState('');
   const [accountHolderName, setAccountHolderName] = useState('');
-  const [senderAccountNumber, setSenderAccountNumber] = useState('');
-  const [senderRoutingNumber, setSenderRoutingNumber] = useState('');
-  const [senderBankName, setSenderBankName] = useState('');
+  const [bankName, setBankName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [routingNumber, setRoutingNumber] = useState('');
+  const [swiftCode, setSwiftCode] = useState('');
+  const [referenceNote, setReferenceNote] = useState('');
+  const [proof, setProof] = useState<File | null>(null);
+  const [transferReference, setTransferReference] = useState<string | null>(null);
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    // Could add toast notification here
+  const handleFile = (file: File | null) => {
+    if (!file) {
+      setProof(null);
+      return;
+    }
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      setErrorMessage('Upload a JPG/PNG/WEBP image or a PDF.');
+      return;
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      setErrorMessage('File too large (max 10MB).');
+      return;
+    }
+    setErrorMessage(null);
+    setProof(file);
   };
 
-  /**
-   * Confirm the bank transfer by registering it with the backend.
-   *
-   * Previously this generated a client-side fake reference (`bank_<ts>_<rand>`)
-   * and called `onPaymentComplete` immediately, creating the illusion of a
-   * paid investment with no backend record at all.
-   *
-   * Now: POST /payments/bank-transfer/create/ — the backend creates a real
-   * Payment row in PENDING status, returns the platform-issued reference,
-   * and the user uses that reference on their actual wire. We mark the
-   * transaction PENDING in the local context (it stays pending until the
-   * funds-received reconciliation flips it COMPLETED server-side).
-   */
-  const handleConfirmTransfer = async () => {
-    if (!propertyId) {
-      showError(
-        'Property required',
-        'Bank transfer must be tied to a specific property. Please re-open this payment flow from a property page.'
-      );
+  const validate = (): string | null => {
+    if (!accountHolderName.trim()) return 'Account holder name is required.';
+    if (!bankName.trim()) return 'Bank name is required.';
+    if (!accountNumber.trim()) return 'Account number is required.';
+    if (!proof) return 'Please upload proof of the transfer.';
+    return null;
+  };
+
+  const handleSubmit = async () => {
+    const err = validate();
+    if (err) {
+      setErrorMessage(err);
       return;
     }
-    if (!accountHolderName.trim() || !senderAccountNumber.trim() ||
-        !senderRoutingNumber.trim() || !senderBankName.trim()) {
-      showError(
-        'Sender bank details required',
-        'Please fill in account holder, account number, routing number, and bank name.'
-      );
-      return;
-    }
-
-    setIsSubmitting(true);
-
+    if (!proof) return;
+    setErrorMessage(null);
+    setStep('submitting');
     try {
-      const response = await apiClient.post<{
-        payment_id: string;
-        transfer_reference: string;
-        status: string;
-      }>('/payments/bank-transfer/create/', {
+      const result = await InvestmentService.bankTransferInvest({
         property_id: propertyId,
-        amount,
-        currency: 'USD',
-        account_holder_name: accountHolderName,
-        account_number: senderAccountNumber,
-        routing_number: senderRoutingNumber,
-        bank_name: senderBankName,
-        // Optional but useful for audit trail
-        transfer_instructions:
-          `Method: ${transferMethod.toUpperCase()}. ` +
-          (userEmail ? `Contact: ${userEmail}. ` : '') +
-          (userPhone ? `Phone: ${userPhone}.` : ''),
+        token_amount: tokenAmount,
+        investment_amount: amount,
+        proof_of_transfer: proof,
+        account_holder_name: accountHolderName.trim(),
+        bank_name: bankName.trim(),
+        account_number: accountNumber.trim(),
+        routing_number: routingNumber.trim() || undefined,
+        swift_code: swiftCode.trim() || undefined,
+        transfer_reference_note: referenceNote.trim() || undefined,
       });
-
-      const realTransferId = response.transfer_reference || response.payment_id;
-
-      addTransaction({
-        id: realTransferId,
-        type: 'investment' as const,
-        status: 'pending' as const,
-        amount,
-        currency: 'USD',
-        paymentMethod: {
-          type: 'bank' as const,
-          id: realTransferId,
-          bankName: senderBankName,
-          accountNumber: `****${senderAccountNumber.slice(-4)}`,
-        },
-        timestamp: new Date(),
-        description: `Investment payment of ${formatCurrency(amount, 'USD')} via ${transferMethod.toUpperCase()}`,
-        fee: transferMethod === 'wire' ? 25 : 0,
-      });
-
-      setTransferId(realTransferId);
-      setStep('pending');
-      onPaymentComplete?.(realTransferId);
-    } catch (err: any) {
-      console.error('Bank transfer registration failed:', err);
-      showError(
-        'Bank transfer failed',
-        err?.message || 'Could not register the transfer. Please try again or contact support.'
-      );
-    } finally {
-      setIsSubmitting(false);
+      const investmentId = result?.investment_id;
+      const ref = result?.transfer_reference;
+      if (!investmentId) {
+        throw new Error('Submission accepted but no investment was returned.');
+      }
+      setTransferReference(ref ?? null);
+      setStep('done');
+      onSubmitted?.(investmentId, ref ?? '');
+    } catch (caught: any) {
+      const apiMessage =
+        caught?.response?.data?.error?.message ||
+        caught?.message ||
+        'Failed to submit bank transfer.';
+      setErrorMessage(apiMessage);
+      setStep('collect');
     }
   };
 
-  const renderInstructions = () => (
-    <div className="space-y-6">
+  const renderCollect = () => (
+    <div className="space-y-5">
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Bank Transfer Payment
+        <Building2 className="mx-auto w-10 h-10 text-blue-500" />
+        <h3 className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
+          Bank transfer — submit proof
         </h3>
-        <p className="text-sm text-gray-600">
-          Transfer {formatCurrency(amount, 'USD')} to our bank account
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          Send <strong>${amount.toFixed(2)}</strong> from your bank and upload
+          a screenshot or PDF receipt. An admin will verify and release your
+          tokens once the funds arrive (typically 1–3 business days).
         </p>
       </div>
 
-      {/* Transfer Method Selection */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Select Transfer Method
-        </label>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <Card 
-            className={`p-4 cursor-pointer transition-all ${
-              transferMethod === 'wire'
-                ? 'border-emerald-500 bg-emerald-50'
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-            onClick={() => setTransferMethod('wire')}
-          >
-            <div className="text-center">
-              <Building2 className="h-8 w-8 mx-auto mb-2 text-emerald-600" />
-              <h4 className="font-medium text-gray-900">Wire Transfer</h4>
-              <p className="text-xs text-gray-600 mt-1">Same day processing</p>
-              <p className="text-xs text-red-600 mt-1">$25 fee</p>
-            </div>
-          </Card>
-
-          <Card 
-            className={`p-4 cursor-pointer transition-all ${
-              transferMethod === 'ach'
-                ? 'border-emerald-500 bg-emerald-50'
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-            onClick={() => setTransferMethod('ach')}
-          >
-            <div className="text-center">
-              <Clock className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-              <h4 className="font-medium text-gray-900">ACH Transfer</h4>
-              <p className="text-xs text-gray-600 mt-1">1-3 business days</p>
-              <p className="text-xs text-emerald-600 mt-1">No fee</p>
-            </div>
-          </Card>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <Input
+          label="Account holder name"
+          value={accountHolderName}
+          onChange={(e) => setAccountHolderName(e.target.value)}
+          placeholder="As it appears on the account"
+        />
+        <Input
+          label="Bank name"
+          value={bankName}
+          onChange={(e) => setBankName(e.target.value)}
+          placeholder="e.g. HSBC"
+        />
+        <Input
+          label="Account number / IBAN"
+          value={accountNumber}
+          onChange={(e) => setAccountNumber(e.target.value)}
+          placeholder="Sending account"
+        />
+        <Input
+          label="Routing / sort code"
+          value={routingNumber}
+          onChange={(e) => setRoutingNumber(e.target.value)}
+          placeholder="Optional"
+        />
+        <Input
+          label="SWIFT / BIC"
+          value={swiftCode}
+          onChange={(e) => setSwiftCode(e.target.value)}
+          placeholder="For international wires"
+        />
+        <Input
+          label="Reference / memo"
+          value={referenceNote}
+          onChange={(e) => setReferenceNote(e.target.value)}
+          placeholder="Optional note for the admin"
+        />
       </div>
 
-      {/* Bank Details */}
-      <Card className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-        <div className="flex items-center justify-between mb-4">
-          <h4 className="font-semibold text-blue-900">Transfer Details</h4>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              const details = `
-Bank: ${COMPANY_BANK_DETAILS.bankName}
-Account Holder: ${COMPANY_BANK_DETAILS.accountHolder}
-Account Number: ${COMPANY_BANK_DETAILS.accountNumber}
-Routing Number: ${COMPANY_BANK_DETAILS.routingNumber}
-${transferMethod === 'wire' ? `SWIFT Code: ${COMPANY_BANK_DETAILS.swiftCode}` : ''}
-Amount: ${formatCurrency(amount, 'USD')}
-Reference: INV-${Date.now()}
-              `.trim();
-              copyToClipboard(details);
-            }}
-            className="text-xs"
-          >
-            <Copy className="h-3 w-3 mr-1" />
-            Copy All
-          </Button>
-        </div>
-
-        <div className="space-y-3 text-sm">
-          <div className="flex justify-between items-center">
-            <span className="font-medium text-blue-900">Bank Name:</span>
-            <div className="flex items-center gap-2">
-              <span className="text-blue-800">{COMPANY_BANK_DETAILS.bankName}</span>
-              <button
-                onClick={() => copyToClipboard(COMPANY_BANK_DETAILS.bankName)}
-                className="p-1 hover:bg-blue-200 rounded"
-              >
-                <Copy className="h-3 w-3 text-blue-600" />
-              </button>
-            </div>
-          </div>
-
-          <div className="flex justify-between items-center">
-            <span className="font-medium text-blue-900">Account Holder:</span>
-            <div className="flex items-center gap-2">
-              <span className="text-blue-800">{COMPANY_BANK_DETAILS.accountHolder}</span>
-              <button
-                onClick={() => copyToClipboard(COMPANY_BANK_DETAILS.accountHolder)}
-                className="p-1 hover:bg-blue-200 rounded"
-              >
-                <Copy className="h-3 w-3 text-blue-600" />
-              </button>
-            </div>
-          </div>
-
-          <div className="flex justify-between items-center">
-            <span className="font-medium text-blue-900">Account Number:</span>
-            <div className="flex items-center gap-2">
-              <span className="text-blue-800 font-mono">{COMPANY_BANK_DETAILS.accountNumber}</span>
-              <button
-                onClick={() => copyToClipboard(COMPANY_BANK_DETAILS.accountNumber)}
-                className="p-1 hover:bg-blue-200 rounded"
-              >
-                <Copy className="h-3 w-3 text-blue-600" />
-              </button>
-            </div>
-          </div>
-
-          <div className="flex justify-between items-center">
-            <span className="font-medium text-blue-900">Routing Number:</span>
-            <div className="flex items-center gap-2">
-              <span className="text-blue-800 font-mono">{COMPANY_BANK_DETAILS.routingNumber}</span>
-              <button
-                onClick={() => copyToClipboard(COMPANY_BANK_DETAILS.routingNumber)}
-                className="p-1 hover:bg-blue-200 rounded"
-              >
-                <Copy className="h-3 w-3 text-blue-600" />
-              </button>
-            </div>
-          </div>
-
-          {transferMethod === 'wire' && (
-            <div className="flex justify-between items-center">
-              <span className="font-medium text-blue-900">SWIFT Code:</span>
-              <div className="flex items-center gap-2">
-                <span className="text-blue-800 font-mono">{COMPANY_BANK_DETAILS.swiftCode}</span>
-                <button
-                  onClick={() => copyToClipboard(COMPANY_BANK_DETAILS.swiftCode)}
-                  className="p-1 hover:bg-blue-200 rounded"
-                >
-                  <Copy className="h-3 w-3 text-blue-600" />
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div className="border-t border-blue-200 pt-3">
-            <div className="flex justify-between items-center">
-              <span className="font-semibold text-blue-900">Amount to Transfer:</span>
-              <span className="text-lg font-bold text-blue-800">
-                {formatCurrency(amount + (transferMethod === 'wire' ? 25 : 0), 'USD')}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Proof of transfer
+        </label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={ACCEPTED_TYPES.join(',')}
+          onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
+          className="hidden"
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 px-4 py-6 text-center hover:border-blue-400 transition-colors"
+        >
+          {proof ? (
+            <div className="flex items-center justify-center gap-2 text-sm text-gray-700 dark:text-gray-200">
+              <FileText className="w-4 h-4 text-blue-500" />
+              {proof.name}
+              <span className="text-xs text-gray-400">
+                ({(proof.size / 1024).toFixed(0)} KB)
               </span>
             </div>
-            {transferMethod === 'wire' && (
-              <div className="text-xs text-blue-700 mt-1">
-                Includes $25 wire transfer fee
-              </div>
-            )}
-          </div>
-
-          <div className="border-t border-blue-200 pt-3">
-            <div className="flex justify-between items-center">
-              <span className="font-medium text-blue-900">Reference:</span>
-              <div className="flex items-center gap-2">
-                <span className="text-blue-800 font-mono">INV-{Date.now()}</span>
-                <button
-                  onClick={() => copyToClipboard(`INV-${Date.now()}`)}
-                  className="p-1 hover:bg-blue-200 rounded"
-                >
-                  <Copy className="h-3 w-3 text-blue-600" />
-                </button>
-              </div>
+          ) : (
+            <div className="flex flex-col items-center gap-1 text-sm text-gray-600 dark:text-gray-300">
+              <Upload className="w-5 h-5 text-gray-400" />
+              Click to upload JPG, PNG or PDF
+              <span className="text-xs text-gray-400">Max 10MB</span>
             </div>
-            <div className="text-xs text-blue-700 mt-1">
-              Include this reference in your transfer description
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* Important Notes */}
-      <Card className="p-4 bg-yellow-50 border-yellow-200">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
-          <div className="text-sm text-yellow-800">
-            <div className="font-medium mb-2">Important Instructions:</div>
-            <ul className="space-y-1 list-disc list-inside">
-              <li>Include the reference number in your transfer description</li>
-              <li>Ensure the transfer amount matches exactly</li>
-              <li>Transfer from an account in your name for faster processing</li>
-              <li>{transferMethod === 'wire' ? 'Wire transfers are typically processed same day' : 'ACH transfers take 1-3 business days'}</li>
-              <li>You'll receive confirmation once we receive your transfer</li>
-            </ul>
-          </div>
-        </div>
-      </Card>
-
-      {/* Contact Information */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Email for Updates
-          </label>
-          <div className="relative">
-            <input
-              type="email"
-              value={userEmail}
-              onChange={(e) => setUserEmail(e.target.value)}
-              placeholder="your@email.com"
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            />
-            <Mail className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Phone Number
-          </label>
-          <div className="relative">
-            <input
-              type="tel"
-              value={userPhone}
-              onChange={(e) => setUserPhone(e.target.value)}
-              placeholder="+1 (555) 123-4567"
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            />
-            <Smartphone className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-          </div>
-        </div>
+          )}
+        </button>
       </div>
+
+      {errorMessage && (
+        <Card className="p-3 bg-red-50 border-red-200 text-red-800 text-sm">
+          <div className="flex gap-2 items-start">
+            <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <div>{errorMessage}</div>
+          </div>
+        </Card>
+      )}
 
       <div className="flex gap-3">
         <Button variant="outline" onClick={onCancel} className="flex-1">
           Cancel
         </Button>
         <Button
-          onClick={() => setStep('confirmation')}
+          onClick={handleSubmit}
           className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+          disabled={!proof}
         >
-          I've Made the Transfer
+          Submit for review
         </Button>
       </div>
     </div>
   );
 
-  const renderConfirmation = () => (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Confirm Your Transfer
-        </h3>
-        <p className="text-sm text-gray-600">
-          Tell us which bank you're sending from so we can reconcile your payment.
-        </p>
-      </div>
-
-      {/* Sender bank details — required by the backend serializer for audit / reconciliation. */}
-      <Card className="p-4 bg-white border-gray-200">
-        <div className="space-y-3">
-          <label className="block text-xs font-medium text-gray-700">
-            Account Holder Name
-            <input
-              type="text"
-              value={accountHolderName}
-              onChange={(e) => setAccountHolderName(e.target.value)}
-              placeholder="As shown on your bank account"
-              className="mt-1 block w-full rounded border-gray-300 text-sm"
-            />
-          </label>
-          <label className="block text-xs font-medium text-gray-700">
-            Sending Bank Name
-            <input
-              type="text"
-              value={senderBankName}
-              onChange={(e) => setSenderBankName(e.target.value)}
-              placeholder="e.g. Bank of America"
-              className="mt-1 block w-full rounded border-gray-300 text-sm"
-            />
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <label className="block text-xs font-medium text-gray-700">
-              Account Number
-              <input
-                type="text"
-                value={senderAccountNumber}
-                onChange={(e) => setSenderAccountNumber(e.target.value)}
-                placeholder="Last 8-12 digits"
-                className="mt-1 block w-full rounded border-gray-300 text-sm font-mono"
-              />
-            </label>
-            <label className="block text-xs font-medium text-gray-700">
-              Routing Number
-              <input
-                type="text"
-                value={senderRoutingNumber}
-                onChange={(e) => setSenderRoutingNumber(e.target.value)}
-                placeholder="9 digits"
-                className="mt-1 block w-full rounded border-gray-300 text-sm font-mono"
-              />
-            </label>
-          </div>
-        </div>
-      </Card>
-
-      <Card className="p-4 bg-emerald-50 border-emerald-200">
-        <div className="space-y-3 text-sm">
-          <div className="flex justify-between">
-            <span className="font-medium">Transfer Method:</span>
-            <span className="capitalize">{transferMethod} Transfer</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-medium">Amount:</span>
-            <span>{formatCurrency(amount, 'USD')}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-medium">Fee:</span>
-            <span>{transferMethod === 'wire' ? formatCurrency(25, 'USD') : 'No fee'}</span>
-          </div>
-          <div className="flex justify-between font-semibold border-t pt-2">
-            <span>Total Transferred:</span>
-            <span>{formatCurrency(amount + (transferMethod === 'wire' ? 25 : 0), 'USD')}</span>
-          </div>
-        </div>
-      </Card>
-
-      <Card className="p-4 bg-blue-50 border-blue-200">
-        <div className="flex items-start gap-3">
-          <Clock className="h-5 w-5 text-blue-600 mt-0.5" />
-          <div className="text-sm text-blue-800">
-            <div className="font-medium mb-1">What happens next?</div>
-            <ul className="space-y-1">
-              <li>• We'll monitor our account for your transfer</li>
-              <li>• You'll receive email confirmation once received</li>
-              <li>• {transferMethod === 'wire' ? 'Wire transfers typically clear same day' : 'ACH transfers take 1-3 business days'}</li>
-              <li>• Your investment will be processed immediately after confirmation</li>
-            </ul>
-          </div>
-        </div>
-      </Card>
-
-      <div className="flex gap-3">
-        <Button variant="outline" onClick={() => setStep('instructions')} className="flex-1">
-          Back
-        </Button>
-        <Button
-          onClick={handleConfirmTransfer}
-          disabled={isSubmitting}
-          className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-        >
-          {isSubmitting ? 'Registering…' : 'Confirm Transfer Made'}
-        </Button>
-      </div>
+  const renderSubmitting = () => (
+    <div className="text-center space-y-4 py-6">
+      <Loader2 className="w-10 h-10 mx-auto animate-spin text-blue-500" />
+      <p className="text-sm text-gray-600 dark:text-gray-300">
+        Uploading your proof of transfer…
+      </p>
     </div>
   );
 
-  const renderPending = () => (
-    <div className="text-center space-y-6">
-      <div className="w-16 h-16 mx-auto bg-yellow-100 rounded-full flex items-center justify-center">
-        <Clock className="h-8 w-8 text-yellow-600" />
+  const renderDone = () => (
+    <div className="text-center space-y-4">
+      <div className="w-16 h-16 mx-auto rounded-full bg-emerald-100 flex items-center justify-center">
+        <CheckCircle className="w-8 h-8 text-emerald-600" />
       </div>
-      
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Transfer Pending
-        </h3>
-        <p className="text-sm text-gray-600">
-          We're waiting to receive your bank transfer
-        </p>
-      </div>
-
-      {transferId && (
-        <Card className="p-4 bg-yellow-50 border-yellow-200 text-left">
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span>Transfer ID:</span>
-              <span className="font-mono text-xs">{transferId}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Method:</span>
-              <span className="capitalize">{transferMethod} Transfer</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Amount:</span>
-              <span>{formatCurrency(amount, 'USD')}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Expected Processing:</span>
-              <span>{transferMethod === 'wire' ? 'Same day' : '1-3 business days'}</span>
-            </div>
-          </div>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        Submitted for review
+      </h3>
+      <p className="text-sm text-gray-600 dark:text-gray-300">
+        Your tokens are reserved. An admin will release them once the funds
+        arrive on our end. You&apos;ll get a notification + email when that
+        happens.
+      </p>
+      {transferReference && (
+        <Card className="p-3 bg-gray-50 dark:bg-gray-800/40 text-sm">
+          Include this reference on your wire memo:&nbsp;
+          <span className="font-mono font-semibold">{transferReference}</span>
         </Card>
       )}
-
-      <div className="space-y-3">
-        <div className="text-sm text-gray-600">
-          You'll receive updates at: <span className="font-medium">{userEmail || 'your email'}</span>
-        </div>
-        
-        <div className="flex gap-2 justify-center">
-          <Button
-            size="sm"
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Download className="h-4 w-4" />
-            Download Instructions
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="flex items-center gap-2"
-          >
-            <Mail className="h-4 w-4" />
-            Email Instructions
-          </Button>
-        </div>
-      </div>
-
-      <Card className="p-3 bg-gray-50 border-gray-200">
-        <div className="text-xs text-gray-600">
-          <div className="font-medium mb-1">Need help?</div>
-          <div>Contact our support team if you have any questions about your transfer.</div>
-        </div>
-      </Card>
-
-      <Button
-        onClick={onCancel}
-        className="w-full bg-emerald-600 hover:bg-emerald-700"
-      >
-        Done
-      </Button>
     </div>
   );
 
   return (
     <div className={className}>
-      <Card className="max-w-lg mx-auto">
-        <div className="p-6">
-          <motion.div
-            key={step}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            {step === 'instructions' && renderInstructions()}
-            {step === 'confirmation' && renderConfirmation()}
-            {step === 'pending' && renderPending()}
-          </motion.div>
-        </div>
+      <Card className="max-w-xl mx-auto">
+        <motion.div
+          key={step}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.25 }}
+          className="p-6"
+        >
+          {step === 'collect' && renderCollect()}
+          {step === 'submitting' && renderSubmitting()}
+          {step === 'done' && renderDone()}
+        </motion.div>
       </Card>
     </div>
   );

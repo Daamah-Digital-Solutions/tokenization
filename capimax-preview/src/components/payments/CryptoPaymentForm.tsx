@@ -1,551 +1,471 @@
-import React, { useState, useEffect } from 'react';
+/**
+ * Cryptocurrency payment form backed by NOWPayments.
+ *
+ * The previous version of this file simulated Web3 wallet payments —
+ * fabricated tx hashes, mock gas estimates, and a hardcoded 3-second
+ * "transaction succeeded". It never spoke to a payment provider, never
+ * confirmed receipt of funds, and never marked the linked investment as
+ * paid. Users could click "pay with crypto" and the investment would
+ * silently sit in PENDING forever.
+ *
+ * This rewrite drives the real NOWPayments integration that already
+ * exists on the backend (see capimax_backend/payments/nowpayments_views.py):
+ *
+ *   1. POST /payments/nowpayments/create-payment/  with the chosen
+ *      pay_currency + the linked investment_id. The backend creates an
+ *      internal Payment row + a real NOWPayments invoice and returns
+ *      `pay_address`, `pay_amount`, and a hosted-checkout `payment_url`.
+ *   2. The user either:
+ *        - clicks "Open Checkout" → NOWPayments-hosted page, or
+ *        - sends `pay_amount` directly to `pay_address` from their own
+ *          exchange / wallet (the address + amount are shown verbatim).
+ *   3. We poll /payments/nowpayments/status/{payment_id}/ every 6s. When
+ *      the status reaches `finished`, the backend has already credited
+ *      the wallet, transitioned the investment to PENDING_MINT, and
+ *      kicked off Celery to mint the tokens. We then call
+ *      onPaymentComplete() and the parent flow shows the confirmation
+ *      screen.
+ *
+ * Notes:
+ *   - The actual NOWPayments API call lives entirely in the backend. We
+ *     never expose the merchant API key to the SPA.
+ *   - If NOWPayments creds aren't set up yet (staging often has
+ *     placeholders), the backend returns 503 and we surface a clear,
+ *     human-readable error so the user knows to use another method
+ *     instead of getting stuck.
+ */
+
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Wallet, 
-  TrendingUp, 
-  AlertTriangle, 
-  Clock, 
-  CheckCircle, 
+import {
+  Bitcoin,
+  Coins,
   Copy,
+  CheckCircle,
+  AlertCircle,
   ExternalLink,
-  Settings,
-  Zap,
-  Shield
+  Clock,
+  Loader2,
 } from 'lucide-react';
-import { usePayment } from '../../contexts/PaymentContext';
-import { formatCurrency, getCurrencyInfo, CRYPTO_CURRENCIES } from '../../utils/currencyConverter';
+
+import { apiClient } from '../../services/api/ApiClient';
+import { useNotifications } from '../../contexts/NotificationContext';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
-import { Input } from '../design-system/forms/Input';
-import { Select } from '../design-system/forms/Select';
+
+// ---------------------------------------------------------------------------
+// Public surface
+// ---------------------------------------------------------------------------
 
 interface CryptoPaymentFormProps {
   amount: number;
-  onPaymentComplete?: (txHash: string) => void;
+  /** Optional — when provided the backend links the NOWPayments payment to
+   * the investment so the IPN/poll flow can mark it paid + trigger mint. */
+  investmentId?: string;
+  onPaymentComplete?: (paymentId: string) => void;
   onCancel?: () => void;
   className?: string;
 }
 
-interface GasFeeEstimate {
-  slow: { price: number; time: string };
-  standard: { price: number; time: string };
-  fast: { price: number; time: string };
+interface CreatePaymentResponse {
+  payment_id: string;
+  nowpayments_payment_id: string;
+  pay_address: string;
+  pay_amount: string;
+  pay_currency: string;
+  payment_status: string;
+  payment_url?: string | null;
 }
 
-interface NetworkInfo {
-  chainId: string;
-  name: string;
-  symbol: string;
-  rpcUrl: string;
-  blockExplorer: string;
+interface PaymentStatusResponse {
+  payment_id: string;
+  nowpayments_payment_id: string;
+  payment_status: string;
+  pay_address: string;
+  pay_amount: string;
+  pay_currency: string;
+  actually_paid: string;
+  is_completed: boolean;
+  is_pending: boolean;
+  is_failed: boolean;
 }
 
-const SUPPORTED_NETWORKS: Record<string, NetworkInfo> = {
-  ethereum: {
-    chainId: '0x1',
-    name: 'Ethereum Mainnet',
-    symbol: 'ETH',
-    rpcUrl: 'https://mainnet.infura.io/v3/',
-    blockExplorer: 'https://etherscan.io'
-  },
-  polygon: {
-    chainId: '0x89',
-    name: 'Polygon',
-    symbol: 'MATIC',
-    rpcUrl: 'https://polygon-rpc.com/',
-    blockExplorer: 'https://polygonscan.com'
-  },
-  bsc: {
-    chainId: '0x38',
-    name: 'BSC',
-    symbol: 'BNB',
-    rpcUrl: 'https://bsc-dataseed.binance.org/',
-    blockExplorer: 'https://bscscan.com'
-  }
-};
+// Selection of the most-commonly-used pay currencies. The backend will
+// validate the choice against what NOWPayments supports for the merchant.
+const PAY_CURRENCIES: { code: string; label: string; network?: string }[] = [
+  { code: 'BTC', label: 'Bitcoin (BTC)' },
+  { code: 'ETH', label: 'Ethereum (ETH)' },
+  { code: 'USDTERC20', label: 'Tether (USDT) — Ethereum' },
+  { code: 'USDTTRC20', label: 'Tether (USDT) — TRON' },
+  { code: 'USDCERC20', label: 'USD Coin (USDC) — Ethereum' },
+  { code: 'BNBBSC', label: 'BNB (BSC)' },
+  { code: 'MATIC', label: 'Polygon (MATIC)' },
+];
 
-export function CryptoPaymentForm({ amount, onPaymentComplete, onCancel, className }: CryptoPaymentFormProps) {
-  const { state, convertCurrency, addTransaction, setError } = usePayment();
-  const [selectedCurrency, setSelectedCurrency] = useState('ETH');
-  const [selectedNetwork, setSelectedNetwork] = useState('ethereum');
-  const [cryptoAmount, setCryptoAmount] = useState<number>(0);
-  const [gasEstimates, setGasEstimates] = useState<GasFeeEstimate | null>(null);
-  const [selectedGasOption, setSelectedGasOption] = useState<'slow' | 'standard' | 'fast'>('standard');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [transactionHash, setTransactionHash] = useState<string | null>(null);
-  const [step, setStep] = useState<'setup' | 'confirm' | 'processing' | 'complete'>('setup');
-  const [walletBalance, setWalletBalance] = useState<number>(0);
+const POLL_INTERVAL_MS = 6000;
+const POLL_TIMEOUT_MS = 1000 * 60 * 30; // 30 minutes
 
-  // Update crypto amount when currency or USD amount changes
-  useEffect(() => {
-    const updateCryptoAmount = async () => {
-      try {
-        const converted = await convertCurrency(amount, 'USD', selectedCurrency);
-        setCryptoAmount(converted);
-      } catch (error) {
-        console.error('Failed to convert currency:', error);
-        setCryptoAmount(0);
-      }
-    };
 
-    updateCryptoAmount();
-  }, [amount, selectedCurrency, convertCurrency]);
+export function CryptoPaymentForm({
+  amount,
+  investmentId,
+  onPaymentComplete,
+  onCancel,
+  className,
+}: CryptoPaymentFormProps) {
+  const { error: showError } = useNotifications();
 
-  // Get wallet balance for selected currency
-  useEffect(() => {
-    const balance = state.balances.find(b => b.currency === selectedCurrency)?.balance || 0;
-    setWalletBalance(balance);
-  }, [selectedCurrency, state.balances]);
+  const [step, setStep] = useState<'select' | 'awaiting_payment' | 'complete'>('select');
+  const [payCurrency, setPayCurrency] = useState<string>('USDTERC20');
+  const [isCreating, setIsCreating] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Fetch gas estimates
-  useEffect(() => {
-    const fetchGasEstimates = async () => {
-      // Mock gas estimates - in production, fetch from actual network
-      const mockEstimates: GasFeeEstimate = {
-        slow: { price: 0.001, time: '5-10 min' },
-        standard: { price: 0.003, time: '2-5 min' },
-        fast: { price: 0.008, time: '< 2 min' }
-      };
-      setGasEstimates(mockEstimates);
-    };
+  // Populated after we POST /create-payment/.
+  const [payment, setPayment] = useState<CreatePaymentResponse | null>(null);
+  const [latestStatus, setLatestStatus] = useState<string | null>(null);
+  const [actuallyPaid, setActuallyPaid] = useState<string | null>(null);
+  const [copiedField, setCopiedField] = useState<'address' | 'amount' | null>(null);
 
-    fetchGasEstimates();
-  }, [selectedNetwork]);
+  // Refs so we can clean up timers and avoid setState-after-unmount.
+  const pollTimerRef = useRef<number | null>(null);
+  const pollDeadlineRef = useRef<number | null>(null);
+  const completedRef = useRef(false);
 
-  const handleCurrencyChange = (currency: string) => {
-    setSelectedCurrency(currency);
-    
-    // Auto-select appropriate network based on currency
-    const currencyInfo = getCurrencyInfo(currency);
-    if (currencyInfo.network) {
-      setSelectedNetwork(currencyInfo.network);
-    }
-  };
+  // -------------------------------------------------------------------
+  // Create the NOWPayments payment
+  // -------------------------------------------------------------------
 
-  const handleNetworkSwitch = async (network: string) => {
-    if (!window.ethereum) return;
-
+  const handleCreatePayment = async () => {
+    setErrorMessage(null);
+    setIsCreating(true);
     try {
-      await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: SUPPORTED_NETWORKS[network].chainId }],
-      });
-      setSelectedNetwork(network);
-    } catch (error: any) {
-      if (error.code === 4902) {
-        // Network not added to wallet, add it
-        try {
-          await window.ethereum.request({
-            method: 'wallet_addEthereumChain',
-            params: [{
-              chainId: SUPPORTED_NETWORKS[network].chainId,
-              chainName: SUPPORTED_NETWORKS[network].name,
-              rpcUrls: [SUPPORTED_NETWORKS[network].rpcUrl],
-              blockExplorerUrls: [SUPPORTED_NETWORKS[network].blockExplorer],
-            }],
-          });
-          setSelectedNetwork(network);
-        } catch (addError) {
-          setError('Failed to add network to wallet');
-        }
-      } else {
-        setError('Failed to switch network');
-      }
-    }
-  };
-
-  const handlePayment = async () => {
-    if (!window.ethereum) {
-      setError('Please connect your wallet first');
-      return;
-    }
-
-    if (cryptoAmount > walletBalance) {
-      setError(`Insufficient balance. You need ${formatCurrency(cryptoAmount, selectedCurrency)}`);
-      return;
-    }
-
-    setStep('confirm');
-  };
-
-  const confirmPayment = async () => {
-    setIsProcessing(true);
-    setStep('processing');
-
-    try {
-      // Get accounts
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      if (accounts.length === 0) {
-        throw new Error('No accounts found');
-      }
-
-      // Calculate gas fee
-      const gasFee = gasEstimates?.[selectedGasOption]?.price || 0;
-      const totalAmount = cryptoAmount + gasFee;
-
-      if (totalAmount > walletBalance) {
-        throw new Error(`Insufficient balance including gas fee. Need ${formatCurrency(totalAmount, selectedCurrency)}`);
-      }
-
-      // Mock transaction - in production, use actual Web3 transaction
-      const mockTxHash = '0x' + Math.random().toString(16).substr(2, 64);
-      
-      // Simulate transaction processing
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Create transaction record
-      const transaction = {
-        id: `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        type: 'investment' as const,
-        status: 'completed' as const,
-        amount: cryptoAmount,
-        currency: selectedCurrency,
-        paymentMethod: {
-          type: 'crypto' as const,
-          currency: selectedCurrency,
-          network: selectedNetwork,
-          address: accounts[0],
+      const response = await apiClient.post<CreatePaymentResponse>(
+        '/payments/nowpayments/create-payment/',
+        {
+          amount,
+          currency: 'USD',
+          pay_currency: payCurrency,
+          investment_id: investmentId,
+          order_description: investmentId
+            ? `Capimax investment ${investmentId}`
+            : 'Capimax investment',
         },
-        timestamp: new Date(),
-        description: `Investment payment of ${formatCurrency(cryptoAmount, selectedCurrency)}`,
-        fee: gasFee,
-        txHash: mockTxHash,
-      };
-
-      addTransaction(transaction);
-      setTransactionHash(mockTxHash);
-      setStep('complete');
-      
-      onPaymentComplete?.(mockTxHash);
-
-    } catch (error: any) {
-      console.error('Payment failed:', error);
-      setError(error.message || 'Payment failed');
-      setStep('setup');
+      );
+      setPayment(response);
+      setLatestStatus(response.payment_status);
+      setStep('awaiting_payment');
+      // Kick off polling immediately.
+      pollDeadlineRef.current = Date.now() + POLL_TIMEOUT_MS;
+      pollStatus(response.payment_id);
+    } catch (err: any) {
+      // Backend returns 503 when NOWPayments credentials are missing or
+      // the service is unreachable. Distinguish from validation errors so
+      // we tell the user the right next step.
+      const status = err?.statusCode;
+      let message = err?.message || 'Failed to create the crypto payment.';
+      if (status === 503) {
+        message =
+          'Crypto payments are not configured for this environment yet. ' +
+          'Please use a different payment method, or contact support.';
+      }
+      setErrorMessage(message);
+      showError('Crypto payment failed', message);
     } finally {
-      setIsProcessing(false);
+      setIsCreating(false);
     }
   };
 
-  const renderSetup = () => (
-    <div className="space-y-6">
+  // -------------------------------------------------------------------
+  // Poll status until the payment lands on chain
+  // -------------------------------------------------------------------
+
+  const pollStatus = async (paymentId: string) => {
+    if (completedRef.current) return;
+    if (
+      pollDeadlineRef.current !== null &&
+      Date.now() > pollDeadlineRef.current
+    ) {
+      setErrorMessage(
+        'Timed out waiting for the on-chain payment. If you have already sent ' +
+          'the funds, they will still credit — check Transactions in a few ' +
+          'minutes. Otherwise you can cancel and try again.',
+      );
+      return;
+    }
+
+    try {
+      const status = await apiClient.get<PaymentStatusResponse>(
+        `/payments/nowpayments/status/${paymentId}/`,
+      );
+      setLatestStatus(status.payment_status);
+      if (status.actually_paid) setActuallyPaid(status.actually_paid);
+
+      if (status.is_completed) {
+        completedRef.current = true;
+        setStep('complete');
+        onPaymentComplete?.(paymentId);
+        return;
+      }
+      if (status.is_failed) {
+        setErrorMessage(
+          'NOWPayments reported this payment as failed or expired. You can ' +
+            'cancel and try again with a fresh quote.',
+        );
+        return;
+      }
+    } catch (err: any) {
+      // Don't surface every poll failure to the user — transient network
+      // errors are expected. Just log and try again.
+      console.warn('NOWPayments status poll failed:', err?.message ?? err);
+    }
+
+    pollTimerRef.current = window.setTimeout(
+      () => pollStatus(paymentId),
+      POLL_INTERVAL_MS,
+    );
+  };
+
+  useEffect(() => {
+    return () => {
+      if (pollTimerRef.current !== null) {
+        clearTimeout(pollTimerRef.current);
+      }
+    };
+  }, []);
+
+  // -------------------------------------------------------------------
+  // UI helpers
+  // -------------------------------------------------------------------
+
+  const copyToClipboard = async (
+    value: string,
+    field: 'address' | 'amount',
+  ) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 1500);
+    } catch {
+      // ignore — UI is non-blocking
+    }
+  };
+
+  const renderSelect = () => (
+    <div className="space-y-5">
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Crypto Payment
+        <Bitcoin className="mx-auto w-10 h-10 text-amber-500" />
+        <h3 className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
+          Pay with cryptocurrency
         </h3>
-        <p className="text-sm text-gray-600">
-          Pay {formatCurrency(amount, 'USD')} with cryptocurrency
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          Pay <strong>${amount.toFixed(2)}</strong> using your crypto wallet or
+          exchange. We&apos;ll quote the exact amount in your chosen coin.
         </p>
       </div>
 
-      <div className="space-y-4">
-        {/* Currency Selection */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Select Currency
-          </label>
-          <div className="grid grid-cols-3 gap-2">
-            {CRYPTO_CURRENCIES.map(currency => {
-              const info = getCurrencyInfo(currency);
-              return (
-                <button
-                  key={currency}
-                  onClick={() => handleCurrencyChange(currency)}
-                  className={`p-3 border rounded-lg text-center transition-all ${
-                    selectedCurrency === currency
-                      ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="font-medium text-sm">{info.symbol}</div>
-                  <div className="text-xs text-gray-500">{info.name}</div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Network Selection */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Network
-          </label>
-          <Select
-            value={selectedNetwork}
-            onChange={setSelectedNetwork}
-            options={Object.entries(SUPPORTED_NETWORKS).map(([key, network]) => ({
-              value: key,
-              label: network.name
-            }))}
-          />
-        </div>
-
-        {/* Amount Display */}
-        <Card className="p-4 bg-gray-50">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Amount (USD):</span>
-              <span className="font-medium">{formatCurrency(amount, 'USD')}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Amount ({selectedCurrency}):</span>
-              <span className="font-semibold text-lg">
-                {formatCurrency(cryptoAmount, selectedCurrency)}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm text-gray-600">
-              <span>Wallet Balance:</span>
-              <span>{formatCurrency(walletBalance, selectedCurrency)}</span>
-            </div>
-          </div>
-        </Card>
-
-        {/* Gas Fee Selection */}
-        {gasEstimates && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Transaction Speed & Fee
-            </label>
-            <div className="space-y-2">
-              {Object.entries(gasEstimates).map(([key, option]) => (
-                <button
-                  key={key}
-                  onClick={() => setSelectedGasOption(key as any)}
-                  className={`w-full p-3 border rounded-lg text-left transition-all ${
-                    selectedGasOption === key
-                      ? 'border-emerald-500 bg-emerald-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <div className="font-medium capitalize">{key}</div>
-                      <div className="text-sm text-gray-600">{option.time}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-medium">{formatCurrency(option.price, selectedCurrency)}</div>
-                      <div className="text-sm text-gray-600">Gas Fee</div>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Warnings */}
-        {cryptoAmount > walletBalance && (
-          <Card className="p-3 bg-red-50 border-red-200">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-              <span className="text-sm text-red-800">
-                Insufficient balance. Need {formatCurrency(cryptoAmount - walletBalance, selectedCurrency)} more.
-              </span>
-            </div>
-          </Card>
-        )}
-
-        {selectedNetwork !== getCurrencyInfo(selectedCurrency).network && (
-          <Card className="p-3 bg-yellow-50 border-yellow-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                <span className="text-sm text-yellow-800">
-                  Network mismatch detected
-                </span>
-              </div>
-              <Button
-                size="sm"
-                onClick={() => handleNetworkSwitch(getCurrencyInfo(selectedCurrency).network || 'ethereum')}
-              >
-                Switch Network
-              </Button>
-            </div>
-          </Card>
-        )}
-      </div>
-
-      <div className="flex gap-3">
-        <Button variant="outline" onClick={onCancel} className="flex-1">
-          Cancel
-        </Button>
-        <Button
-          onClick={handlePayment}
-          disabled={cryptoAmount > walletBalance || cryptoAmount === 0}
-          className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-        >
-          Continue
-        </Button>
-      </div>
-    </div>
-  );
-
-  const renderConfirm = () => (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Confirm Payment
-        </h3>
-        <p className="text-sm text-gray-600">
-          Please review your transaction details
-        </p>
-      </div>
-
-      <Card className="p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200">
-        <div className="space-y-3">
-          <div className="flex justify-between">
-            <span>Payment Amount:</span>
-            <span className="font-semibold">{formatCurrency(cryptoAmount, selectedCurrency)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Gas Fee ({selectedGasOption}):</span>
-            <span>{formatCurrency(gasEstimates?.[selectedGasOption]?.price || 0, selectedCurrency)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Network:</span>
-            <span>{SUPPORTED_NETWORKS[selectedNetwork].name}</span>
-          </div>
-          <div className="border-t pt-2 flex justify-between font-semibold">
-            <span>Total:</span>
-            <span>{formatCurrency((cryptoAmount + (gasEstimates?.[selectedGasOption]?.price || 0)), selectedCurrency)}</span>
-          </div>
-        </div>
-      </Card>
-
-      <Card className="p-3 bg-blue-50 border-blue-200">
-        <div className="flex items-start gap-2">
-          <Shield className="h-4 w-4 text-blue-600 mt-0.5" />
-          <div className="text-sm text-blue-800">
-            <div className="font-medium mb-1">Secure Transaction</div>
-            <div>This transaction will be processed on the blockchain and cannot be reversed.</div>
-          </div>
-        </div>
-      </Card>
-
-      <div className="flex gap-3">
-        <Button variant="outline" onClick={() => setStep('setup')} className="flex-1">
-          Back
-        </Button>
-        <Button
-          onClick={confirmPayment}
-          disabled={isProcessing}
-          className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-        >
-          {isProcessing ? 'Processing...' : 'Confirm Payment'}
-        </Button>
-      </div>
-    </div>
-  );
-
-  const renderProcessing = () => (
-    <div className="text-center space-y-6">
-      <div className="w-16 h-16 mx-auto bg-emerald-100 rounded-full flex items-center justify-center">
-        <Clock className="h-8 w-8 text-emerald-600 animate-spin" />
-      </div>
-      
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Processing Payment
-        </h3>
-        <p className="text-sm text-gray-600">
-          Please wait while your transaction is being processed on the blockchain
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          Cryptocurrency
+        </label>
+        <select
+          value={payCurrency}
+          onChange={(e) => setPayCurrency(e.target.value)}
+          className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500"
+        >
+          {PAY_CURRENCIES.map((c) => (
+            <option key={c.code} value={c.code}>
+              {c.label}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          Don&apos;t see your coin? NOWPayments supports 200+ assets — pick the
+          closest, you can swap on the checkout page.
         </p>
       </div>
 
-      <Card className="p-4 bg-blue-50 border-blue-200 text-left">
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span>Amount:</span>
-            <span>{formatCurrency(cryptoAmount, selectedCurrency)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Network:</span>
-            <span>{SUPPORTED_NETWORKS[selectedNetwork].name}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>Estimated Time:</span>
-            <span>{gasEstimates?.[selectedGasOption]?.time}</span>
-          </div>
-        </div>
-      </Card>
-    </div>
-  );
-
-  const renderComplete = () => (
-    <div className="text-center space-y-6">
-      <div className="w-16 h-16 mx-auto bg-emerald-100 rounded-full flex items-center justify-center">
-        <CheckCircle className="h-8 w-8 text-emerald-600" />
-      </div>
-      
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Payment Complete
-        </h3>
-        <p className="text-sm text-gray-600">
-          Your payment has been successfully processed
-        </p>
-      </div>
-
-      {transactionHash && (
-        <Card className="p-4 bg-emerald-50 border-emerald-200 text-left">
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span>Transaction Hash:</span>
-              <div className="flex items-center gap-1">
-                <span className="font-mono text-xs">
-                  {transactionHash.slice(0, 10)}...{transactionHash.slice(-8)}
-                </span>
-                <button
-                  onClick={() => navigator.clipboard.writeText(transactionHash)}
-                  className="p-1 hover:bg-emerald-200 rounded"
-                >
-                  <Copy className="h-3 w-3 text-emerald-600" />
-                </button>
-              </div>
-            </div>
-            <div className="flex justify-between">
-              <span>Amount:</span>
-              <span>{formatCurrency(cryptoAmount, selectedCurrency)}</span>
-            </div>
-            <div className="pt-2 border-t">
-              <button
-                onClick={() => window.open(`${SUPPORTED_NETWORKS[selectedNetwork].blockExplorer}/tx/${transactionHash}`, '_blank')}
-                className="flex items-center gap-1 text-emerald-600 hover:text-emerald-800"
-              >
-                <ExternalLink className="h-3 w-3" />
-                <span>View on Explorer</span>
-              </button>
-            </div>
+      {errorMessage && (
+        <Card className="p-3 bg-red-50 border-red-200 text-red-800 text-sm">
+          <div className="flex gap-2 items-start">
+            <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <div>{errorMessage}</div>
           </div>
         </Card>
       )}
 
-      <Button
-        onClick={onCancel}
-        className="w-full bg-emerald-600 hover:bg-emerald-700"
-      >
-        Done
-      </Button>
+      <div className="flex gap-3">
+        <Button variant="outline" onClick={onCancel} className="flex-1" disabled={isCreating}>
+          Cancel
+        </Button>
+        <Button
+          onClick={handleCreatePayment}
+          disabled={isCreating}
+          className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+        >
+          {isCreating ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Creating…
+            </>
+          ) : (
+            'Get payment address'
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+
+  const renderAwaiting = () => {
+    if (!payment) return null;
+    const statusLabel = (latestStatus || 'waiting').replace(/_/g, ' ');
+    return (
+      <div className="space-y-5">
+        <div className="text-center">
+          <Coins className="mx-auto w-10 h-10 text-emerald-500" />
+          <h3 className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
+            Send the exact amount below
+          </h3>
+          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            We&apos;re watching the address — your investment is confirmed the
+            moment the payment is detected on chain.
+          </p>
+        </div>
+
+        <Card className="p-4 space-y-3">
+          <div>
+            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Amount
+            </div>
+            <div className="mt-1 flex items-center justify-between gap-2">
+              <span className="font-mono text-lg text-gray-900 dark:text-white">
+                {payment.pay_amount} {payment.pay_currency}
+              </span>
+              <button
+                onClick={() => copyToClipboard(payment.pay_amount, 'amount')}
+                className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                title="Copy amount"
+              >
+                {copiedField === 'amount' ? (
+                  <CheckCircle className="w-4 h-4 text-emerald-500" />
+                ) : (
+                  <Copy className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              Send to address
+            </div>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="font-mono text-xs text-gray-900 dark:text-white break-all flex-1">
+                {payment.pay_address}
+              </span>
+              <button
+                onClick={() => copyToClipboard(payment.pay_address, 'address')}
+                className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex-shrink-0"
+                title="Copy address"
+              >
+                {copiedField === 'address' ? (
+                  <CheckCircle className="w-4 h-4 text-emerald-500" />
+                ) : (
+                  <Copy className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {payment.payment_url && (
+            <a
+              href={payment.payment_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-700 hover:text-emerald-800"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Open hosted checkout
+            </a>
+          )}
+        </Card>
+
+        <Card className="p-3 bg-amber-50 border-amber-200 text-amber-900 text-sm">
+          <div className="flex gap-2 items-start">
+            <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <div>
+              Send <strong>exactly</strong> {payment.pay_amount}{' '}
+              {payment.pay_currency} from a wallet you control. Sending less
+              fails the order; sending more sends the excess back via
+              NOWPayments after a 15-minute review.
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-3 bg-blue-50 border-blue-200">
+          <div className="flex items-center gap-2 text-sm text-blue-800">
+            <Clock className="w-4 h-4 animate-pulse" />
+            Status:{' '}
+            <span className="font-semibold capitalize">{statusLabel}</span>
+            {actuallyPaid && Number(actuallyPaid) > 0 && (
+              <span className="ml-1 text-blue-600">
+                (received {actuallyPaid} {payment.pay_currency})
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-blue-700">
+            Refreshing every {POLL_INTERVAL_MS / 1000}s. Don&apos;t close this
+            window until the payment confirms — you can leave it running in the
+            background.
+          </p>
+        </Card>
+
+        {errorMessage && (
+          <Card className="p-3 bg-red-50 border-red-200 text-red-800 text-sm">
+            <div className="flex gap-2 items-start">
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <div>{errorMessage}</div>
+            </div>
+          </Card>
+        )}
+
+        <Button variant="outline" onClick={onCancel} className="w-full">
+          I&apos;ll pay later
+        </Button>
+      </div>
+    );
+  };
+
+  const renderComplete = () => (
+    <div className="space-y-5 text-center">
+      <div className="w-16 h-16 mx-auto rounded-full bg-emerald-100 flex items-center justify-center">
+        <CheckCircle className="w-8 h-8 text-emerald-600" />
+      </div>
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+          Payment received
+        </h3>
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          Your crypto payment is confirmed on chain. Tokens will appear in your
+          wallet shortly — minting runs in the background.
+        </p>
+      </div>
     </div>
   );
 
   return (
     <div className={className}>
       <Card className="max-w-md mx-auto">
-        <div className="p-6">
-          <motion.div
-            key={step}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            {step === 'setup' && renderSetup()}
-            {step === 'confirm' && renderConfirm()}
-            {step === 'processing' && renderProcessing()}
-            {step === 'complete' && renderComplete()}
-          </motion.div>
-        </div>
+        <motion.div
+          key={step}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.25 }}
+          className="p-6"
+        >
+          {step === 'select' && renderSelect()}
+          {step === 'awaiting_payment' && renderAwaiting()}
+          {step === 'complete' && renderComplete()}
+        </motion.div>
       </Card>
     </div>
   );

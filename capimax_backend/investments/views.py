@@ -40,10 +40,14 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from core.permissions import IsOwnerOrReadOnly, CanInvestWithKYC, IsNotSuspended
 from core.utils import create_success_response, create_error_response
 from core.exceptions import InvestmentError
-from payments.models import Payment, PaymentMethod, PaymentStatus, NovaSukukPayment, PronovaPayment
+from payments.models import (
+    Payment, PaymentMethod, PaymentStatus,
+    NovaSukukPayment, PronovaPayment, BankTransfer,
+)
 from payments.serializers import (
     NovaSukukCreateSerializer, NovaSukukDetailSerializer,
-    PronovaCreateSerializer, PronovaConfirmSerializer, PronovaDetailSerializer
+    PronovaCreateSerializer, PronovaConfirmSerializer, PronovaDetailSerializer,
+    BankTransferInvestCreateSerializer,
 )
 from properties.models import Property
 from notifications.services import NotificationService
@@ -569,6 +573,94 @@ class InvestmentViewSet(viewsets.ModelViewSet):
                 'message': 'Your Nova Sukuk payment has been submitted for admin review.'
             },
             message="Nova Sukuk investment submitted successfully"
+        ), status=status.HTTP_201_CREATED)
+
+    # --- Bank Transfer Investment ---
+
+    @action(detail=False, methods=['post'], parser_classes=[MultiPartParser, FormParser])
+    def bank_transfer_invest(self, request):
+        """Create an investment paid via bank transfer (admin-reviewed).
+
+        Mirrors `nova_sukuk_invest`: the investor uploads a proof file
+        (screenshot or PDF receipt) plus their sending-bank details. We
+        create the Investment + Payment + BankTransfer rows in one
+        atomic block and leave them in `pending`. An admin then reviews
+        the proof and either approves (triggers
+        `InvestmentProcessingService.process_investment` → PENDING_MINT →
+        Celery mint) or rejects.
+        """
+        serializer = BankTransferInvestCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        try:
+            property_obj = Property.objects.get(
+                id=data['property_id'], status__in=['active', 'tokenized']
+            )
+        except Property.DoesNotExist:
+            return Response(create_error_response(
+                message="Property not found or not available for investment",
+                status_code=404
+            ), status=status.HTTP_404_NOT_FOUND)
+
+        available = property_obj.total_tokens - property_obj.tokens_sold
+        if data['token_amount'] > available:
+            return Response(create_error_response(
+                message=f"Only {available} tokens available",
+                status_code=400
+            ), status=status.HTTP_400_BAD_REQUEST)
+
+        with transaction.atomic():
+            investment = Investment.objects.create(
+                user=request.user,
+                property_investment=property_obj,
+                token_amount=data['token_amount'],
+                investment_amount=data['investment_amount'],
+                status='pending',
+            )
+
+            payment = Payment.objects.create(
+                user=request.user,
+                investment=investment,
+                amount=data['investment_amount'],
+                net_amount=data['investment_amount'],
+                payment_method=PaymentMethod.BANK_TRANSFER,
+                status=PaymentStatus.PENDING,
+            )
+
+            # Generate a transfer reference once, before save, so we can
+            # echo it to the investor (they include it in the wire memo).
+            import secrets, string
+            ref = 'BT' + ''.join(
+                secrets.choice(string.ascii_uppercase + string.digits)
+                for _ in range(10)
+            )
+
+            transfer = BankTransfer.objects.create(
+                payment=payment,
+                account_holder_name=data['account_holder_name'],
+                account_number=data['account_number'],
+                routing_number=data.get('routing_number') or '',
+                bank_name=data['bank_name'],
+                swift_code=data.get('swift_code') or '',
+                transfer_reference=ref,
+                transfer_status='pending',
+                transfer_instructions=data.get('transfer_reference_note') or '',
+                proof_of_transfer=data['proof_of_transfer'],
+            )
+
+        return Response(create_success_response(
+            data={
+                'investment_id': str(investment.id),
+                'bank_transfer_id': str(transfer.id),
+                'transfer_reference': transfer.transfer_reference,
+                'status': 'pending',
+                'message': (
+                    'Your bank transfer has been submitted for admin review. '
+                    'Tokens will be minted once we confirm receipt of funds.'
+                ),
+            },
+            message="Bank transfer investment submitted successfully"
         ), status=status.HTTP_201_CREATED)
 
     # --- Pronova Crypto Investment ---

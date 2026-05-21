@@ -15,7 +15,8 @@ from datetime import timedelta
 from .models import (
     NOWPaymentsTransaction,
     Payment, UserPaymentMethod, WalletBalance, WalletTransaction,
-    CryptoPayment, Refund, RecurringPayment
+    CryptoPayment, Refund, RecurringPayment,
+    BankTransfer, NovaSukukPayment, PronovaPayment,
 )
 
 
@@ -485,4 +486,278 @@ class NOWPaymentsTransactionAdmin(admin.ModelAdmin):
     mark_as_failed.short_description = "Mark selected transactions as failed"
 
 
-# Update imports at the top of the file
+# ---------------------------------------------------------------------------
+# Manual-review payment types: BankTransfer + NovaSukukPayment
+#
+# Both use the same approve/reject workflow — admin verifies the uploaded
+# proof, hits "Approve selected", and the action calls into
+# InvestmentProcessingService.process_investment which transitions the
+# linked Investment to PENDING_MINT and lets the Celery mint task pick it
+# up. Rejection marks Payment + Investment failed and notifies the user.
+# ---------------------------------------------------------------------------
+
+
+def _approve_review_payment(modeladmin, request, queryset, kind):
+    """Shared body for the approve action on BankTransfer + NovaSukukPayment.
+
+    ``kind`` is 'bank_transfer' or 'nova_sukuk' — used only for the
+    summary message.
+    """
+    from django.utils import timezone
+    from investments.services import InvestmentProcessingService
+    from notifications.services import NotificationService
+
+    approved, skipped = 0, 0
+    for obj in queryset:
+        # Look up the linked investment + payment regardless of model.
+        payment = getattr(obj, 'payment', None)
+        investment = getattr(obj, 'investment', None) or (
+            payment.investment if payment else None
+        )
+        if not investment or not payment:
+            skipped += 1
+            continue
+
+        # Skip if already approved or terminal.
+        existing_status = getattr(obj, 'status', None) or getattr(obj, 'transfer_status', None)
+        if existing_status in ('approved', 'completed', 'failed', 'rejected'):
+            skipped += 1
+            continue
+
+        obj.reviewed_by = request.user
+        obj.reviewed_at = timezone.now()
+        if hasattr(obj, 'status'):
+            obj.status = 'approved'
+        if hasattr(obj, 'transfer_status'):
+            obj.transfer_status = 'completed'
+            obj.completed_at = timezone.now()
+        obj.save()
+
+        payment.status = 'completed'
+        payment.completed_at = timezone.now()
+        payment.save(update_fields=['status', 'completed_at', 'updated_at'])
+
+        try:
+            InvestmentProcessingService.process_investment(investment, payment)
+        except Exception as exc:
+            modeladmin.message_user(
+                request,
+                f"Approval saved but minting failed for investment "
+                f"{investment.id}: {exc}",
+                level='ERROR',
+            )
+
+        try:
+            NotificationService.create_notification(
+                user=investment.user,
+                title=f"{kind.replace('_', ' ').title()} Approved",
+                message=(
+                    f"Your {kind.replace('_', ' ')} for "
+                    f"{investment.property_investment.title} was approved. "
+                    f"Tokens will mint on chain shortly."
+                ),
+                notification_type='payment',
+                priority='high',
+                send_email=True,
+                send_real_time=True,
+            )
+        except Exception:
+            # Don't fail the admin action on a notification problem.
+            pass
+
+        approved += 1
+
+    modeladmin.message_user(
+        request,
+        f"Approved {approved} {kind} payment(s); skipped {skipped}.",
+    )
+
+
+def _reject_review_payment(modeladmin, request, queryset, kind):
+    """Shared body for the reject action."""
+    from django.utils import timezone
+    from notifications.services import NotificationService
+
+    rejected = 0
+    for obj in queryset:
+        payment = getattr(obj, 'payment', None)
+        investment = getattr(obj, 'investment', None) or (
+            payment.investment if payment else None
+        )
+
+        obj.reviewed_by = request.user
+        obj.reviewed_at = timezone.now()
+        if not obj.review_note:
+            obj.review_note = (
+                'Rejected by admin via Django admin bulk action. '
+                'Open the row to add a specific reason if needed.'
+            )
+        if hasattr(obj, 'status'):
+            obj.status = 'rejected'
+        if hasattr(obj, 'transfer_status'):
+            obj.transfer_status = 'failed'
+        obj.save()
+
+        if payment:
+            payment.status = 'failed'
+            payment.save(update_fields=['status', 'updated_at'])
+
+        if investment:
+            investment.status = 'failed'
+            investment.save(update_fields=['status', 'updated_at'])
+            try:
+                NotificationService.create_notification(
+                    user=investment.user,
+                    title=f"{kind.replace('_', ' ').title()} Rejected",
+                    message=(
+                        f"Your {kind.replace('_', ' ')} for "
+                        f"{investment.property_investment.title} was rejected. "
+                        f"Please contact support if you believe this is in error."
+                    ),
+                    notification_type='payment',
+                    priority='high',
+                    send_email=True,
+                    send_real_time=True,
+                )
+            except Exception:
+                pass
+
+        rejected += 1
+
+    modeladmin.message_user(
+        request,
+        f"Rejected {rejected} {kind} payment(s).",
+    )
+
+
+@admin.register(BankTransfer)
+class BankTransferAdmin(admin.ModelAdmin):
+    """Bank-transfer review interface.
+
+    Lists pending bank transfers with the proof image / PDF directly
+    linkable from the changelist. Admins click into a row, eyeball the
+    proof, then either run the Approve / Reject action.
+    """
+    list_display = (
+        'transfer_reference', 'status_badge', 'investor_email',
+        'amount_display', 'bank_name', 'proof_link',
+        'initiated_at', 'reviewed_by',
+    )
+    list_filter = ('transfer_status', 'initiated_at')
+    search_fields = (
+        'transfer_reference', 'bank_name', 'account_holder_name',
+        'payment__user__email',
+    )
+    readonly_fields = (
+        'id', 'payment', 'transfer_reference', 'initiated_at', 'completed_at',
+        'reviewed_by', 'reviewed_at',
+    )
+    raw_id_fields = ('payment',)
+    actions = ('approve_transfers', 'reject_transfers')
+    list_select_related = ('payment', 'payment__user', 'payment__investment')
+
+    def status_badge(self, obj):
+        colours = {
+            'completed': '#16a34a', 'pending': '#d97706',
+            'initiated': '#2563eb', 'processing': '#2563eb',
+            'failed': '#dc2626', 'cancelled': '#6b7280',
+        }
+        c = colours.get(obj.transfer_status, '#6b7280')
+        return format_html(
+            '<span style="display:inline-block;padding:2px 8px;border-radius:6px;'
+            'background:{};color:white;font-size:11px;">{}</span>',
+            c, obj.transfer_status.upper(),
+        )
+    status_badge.short_description = 'Status'
+
+    def investor_email(self, obj):
+        return obj.payment.user.email if obj.payment and obj.payment.user else '-'
+    investor_email.short_description = 'Investor'
+
+    def amount_display(self, obj):
+        if obj.payment:
+            return f"{obj.payment.amount} {obj.payment.currency}"
+        return '-'
+    amount_display.short_description = 'Amount'
+
+    def proof_link(self, obj):
+        if obj.proof_of_transfer:
+            return format_html(
+                '<a href="{}" target="_blank" rel="noopener">View proof</a>',
+                obj.proof_of_transfer.url,
+            )
+        return format_html('<span style="color:#dc2626;">no proof</span>')
+    proof_link.short_description = 'Proof'
+
+    def approve_transfers(self, request, queryset):
+        _approve_review_payment(self, request, queryset, 'bank_transfer')
+    approve_transfers.short_description = 'Approve — release tokens & mint'
+
+    def reject_transfers(self, request, queryset):
+        _reject_review_payment(self, request, queryset, 'bank_transfer')
+    reject_transfers.short_description = 'Reject — mark investment failed'
+
+
+@admin.register(NovaSukukPayment)
+class NovaSukukPaymentAdmin(admin.ModelAdmin):
+    """Nova Sukuk PDF review interface (same shape as BankTransferAdmin)."""
+
+    list_display = (
+        'sukuk_reference_number', 'status_badge', 'investor_email',
+        'amount_display', 'pdf_link', 'created_at', 'reviewed_by',
+    )
+    list_filter = ('status', 'created_at')
+    search_fields = (
+        'sukuk_reference_number', 'investment__user__email',
+    )
+    readonly_fields = (
+        'id', 'investment', 'payment', 'created_at', 'updated_at',
+        'reviewed_by', 'reviewed_at',
+    )
+    raw_id_fields = ('investment', 'payment')
+    actions = ('approve_sukuk', 'reject_sukuk')
+    list_select_related = (
+        'investment', 'investment__user', 'payment',
+    )
+
+    def status_badge(self, obj):
+        colours = {
+            'approved': '#16a34a', 'pending': '#d97706', 'rejected': '#dc2626',
+        }
+        c = colours.get(obj.status, '#6b7280')
+        return format_html(
+            '<span style="display:inline-block;padding:2px 8px;border-radius:6px;'
+            'background:{};color:white;font-size:11px;">{}</span>',
+            c, obj.status.upper(),
+        )
+    status_badge.short_description = 'Status'
+
+    def investor_email(self, obj):
+        if obj.investment and obj.investment.user:
+            return obj.investment.user.email
+        return '-'
+    investor_email.short_description = 'Investor'
+
+    def amount_display(self, obj):
+        if obj.investment:
+            return f"${obj.investment.investment_amount}"
+        return '-'
+    amount_display.short_description = 'Amount'
+
+    def pdf_link(self, obj):
+        if obj.sukuk_pdf:
+            return format_html(
+                '<a href="{}" target="_blank" rel="noopener">View PDF</a>',
+                obj.sukuk_pdf.url,
+            )
+        return format_html('<span style="color:#dc2626;">no document</span>')
+    pdf_link.short_description = 'Sukuk PDF'
+
+    def approve_sukuk(self, request, queryset):
+        _approve_review_payment(self, request, queryset, 'nova_sukuk')
+    approve_sukuk.short_description = 'Approve — release tokens & mint'
+
+    def reject_sukuk(self, request, queryset):
+        _reject_review_payment(self, request, queryset, 'nova_sukuk')
+    reject_sukuk.short_description = 'Reject — mark investment failed'
+

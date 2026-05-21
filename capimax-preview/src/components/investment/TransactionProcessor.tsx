@@ -17,8 +17,12 @@ import {
 import { Button } from '../ui/Button';
 import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
-import { WalletConnector } from './WalletConnector';
+// WalletConnector removed — crypto goes through NOWPayments now, no
+// Web3-wallet handshake required in the SPA.
 import { CreditCardForm } from '../payments/CreditCardForm';
+import { CryptoPaymentForm } from '../payments/CryptoPaymentForm';
+import { BankTransferForm } from '../payments/BankTransferForm';
+import { NovaSukukForm } from '../payments/NovaSukukForm';
 import { InvestmentService } from '../../services/investment/InvestmentService';
 import type { InvestmentProperty, InvestmentData } from './types';
 import { cn } from '../../utils/cn';
@@ -51,8 +55,6 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
   autoStart = false,
   onGoBack
 }) => {
-  const [walletConnected, setWalletConnected] = useState(false);
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [steps, setSteps] = useState<TransactionStep[]>([]);
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
@@ -70,6 +72,19 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
     | { investmentId: string; amount: number }
     | null
   >(null);
+  // Same idea as pendingCardPayment but for the NOWPayments crypto flow.
+  // Set when the investment row exists and we're ready to ask the user to
+  // pick a coin and send funds.
+  const [pendingCryptoPayment, setPendingCryptoPayment] = useState<
+    | { investmentId: string; amount: number }
+    | null
+  >(null);
+  // Bank-transfer and Nova-Sukuk both run the "show an inline form
+  // BEFORE the backend creates the investment" pattern, because the
+  // form itself owns the upload + InvestmentService call. The flag here
+  // gates the steps machine so we don't auto-progress past the form.
+  const [showBankTransferForm, setShowBankTransferForm] = useState(false);
+  const [showNovaSukukForm, setShowNovaSukukForm] = useState(false);
   // Compliance-gate errors come from the backend with stable phrases; we
   // map them to a CTA so the user has a clear next step instead of just
   // "Try Again" (which won't help when the gate is structural).
@@ -167,10 +182,14 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
   // Initialize transaction steps based on payment method
   useEffect(() => {
     if (investmentData.paymentMethod === 'crypto') {
+      // Crypto via NOWPayments: no Web3 wallet connection needed. The user
+      // sends funds from any external wallet/exchange to a hosted address
+      // we provide. So the step layout matches the fiat flow: validate,
+      // process (= create NOWPayments invoice + watch for receipt), then
+      // confirm tokens.
       setSteps([
-        { id: 'wallet', title: 'Connect Wallet', description: 'Connect your wallet to proceed', status: 'pending' },
         { id: 'validate', title: 'Validate Investment', description: 'Verifying availability and limits', status: 'pending', estimatedTime: '10s' },
-        { id: 'transaction', title: 'Process Payment', description: 'Execute investment transaction', status: 'pending', estimatedTime: '30s' },
+        { id: 'process', title: 'Process Payment', description: 'Get crypto payment address and await funds', status: 'pending', estimatedTime: '5-30 min' },
         { id: 'tokens', title: 'Confirm Tokens', description: 'Confirming your property tokens', status: 'pending', estimatedTime: '10s' }
       ]);
     } else if (investmentData.paymentMethod === 'nova_sukuk') {
@@ -194,13 +213,8 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
     }
   }, [investmentData.paymentMethod]);
 
-  const handleWalletConnect = (address: string, walletType: string) => {
-    setWalletAddress(address);
-    setWalletConnected(true);
-    setSteps(prev => prev.map(step =>
-      step.id === 'wallet' ? { ...step, status: 'completed' } : step
-    ));
-  };
+  // (handleWalletConnect removed — crypto now uses NOWPayments hosted
+  //  checkout, not a Web3 wallet inside the SPA.)
 
   // Helper to update a step's status
   const updateStepStatus = (stepIndex: number, newStatus: TransactionStep['status'], hash?: string) => {
@@ -211,33 +225,27 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
     ));
   };
 
-  // Auto-start transaction when ready (non-crypto) or after wallet connect (crypto)
+  // Auto-start transaction once steps are populated and we're idle.
+  // Crypto no longer requires a Web3 wallet connection — NOWPayments
+  // collects funds from any external source — so we treat it the same
+  // way as fiat / bank / etc. and skip the old wallet-gate.
   useEffect(() => {
     if (!autoStart || hasAutoStarted.current) return;
-
-    if (investmentData.paymentMethod === 'crypto') {
-      if (walletConnected && steps.length > 0 && !isProcessing && !error) {
-        hasAutoStarted.current = true;
-        startTransaction();
-      }
-    } else {
-      if (steps.length > 0 && !isProcessing && !error) {
-        hasAutoStarted.current = true;
-        const timer = setTimeout(() => startTransaction(), 800);
-        return () => clearTimeout(timer);
-      }
+    if (steps.length > 0 && !isProcessing && !error) {
+      hasAutoStarted.current = true;
+      const timer = setTimeout(() => startTransaction(), 800);
+      return () => clearTimeout(timer);
     }
-  }, [autoStart, walletConnected, steps.length, investmentData.paymentMethod]);
+  }, [autoStart, steps.length, investmentData.paymentMethod]);
 
   const startTransaction = async () => {
-    if (!walletConnected && investmentData.paymentMethod === 'crypto') {
-      setError('Please connect your wallet first');
-      return;
-    }
-
     setIsProcessing(true);
     setError(null);
-    const startIdx = investmentData.paymentMethod === 'crypto' ? 1 : 0;
+    // All payment methods now share the same step layout
+    // (validate, process, tokens). Crypto used to have a leading
+    // "Connect Wallet" step but we route through NOWPayments now and the
+    // user no longer connects a Web3 wallet to the SPA.
+    const startIdx = 0;
     setCurrentStep(startIdx);
 
     const propertyId = property.id.toString();
@@ -261,6 +269,21 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
       setCurrentStep(processIdx);
       updateStepStatus(processIdx, 'processing');
 
+      // For methods that need the user to upload a file inside the
+      // payment form itself (bank transfer, nova sukuk), we skip the
+      // pre-create call entirely. The respective form owns the
+      // multipart POST and creates the Investment + Payment rows in
+      // one go. Auto-progression resumes from the form's onSubmitted
+      // callback.
+      if (investmentData.paymentMethod === 'bank') {
+        setShowBankTransferForm(true);
+        return;
+      }
+      if (investmentData.paymentMethod === 'nova_sukuk') {
+        setShowNovaSukukForm(true);
+        return;
+      }
+
       let investmentResult: any;
 
       if (investmentData.paymentMethod === 'wallet') {
@@ -269,18 +292,6 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
           property_id: propertyId,
           token_amount: investmentData.tokens,
           investment_amount: investmentData.amount
-        });
-      } else if (investmentData.paymentMethod === 'nova_sukuk') {
-        // Nova Sukuk: upload PDF for admin review
-        if (!investmentData.sukukPdf || !investmentData.sukukReferenceNumber) {
-          throw new Error('Please upload the Sukuk PDF and enter the reference number.');
-        }
-        investmentResult = await InvestmentService.novaSukukInvest({
-          property_id: propertyId,
-          token_amount: investmentData.tokens,
-          investment_amount: investmentData.amount,
-          sukuk_pdf: investmentData.sukukPdf,
-          sukuk_reference_number: investmentData.sukukReferenceNumber
         });
       } else if (investmentData.paymentMethod === 'pronova') {
         // Pronova: create investment with 5% discount, get platform wallet
@@ -315,6 +326,19 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
         });
         // Keep processing flag on but stop here. The "Process Payment" step
         // stays in `processing` state until the card form resolves.
+        return;
+      }
+
+      // ─── Crypto branch: hand off to NOWPayments form ───
+      // Mirror of the fiat branch. The investment row exists (PENDING) and
+      // we now hand off to CryptoPaymentForm, which creates a real
+      // NOWPayments invoice and polls until the funds arrive on chain.
+      // The form's onPaymentComplete callback finishes the step machine.
+      if (investmentData.paymentMethod === 'crypto') {
+        setPendingCryptoPayment({
+          investmentId: resultId,
+          amount: investmentData.amount,
+        });
         return;
       }
 
@@ -387,9 +411,10 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
     setError(null);
     setComplianceCta(null);
     setPendingCardPayment(null);
+    setPendingCryptoPayment(null);
     hasAutoStarted.current = false;
     setCurrentStep(0);
-    setSteps(prev => prev.map(step => ({ ...step, status: step.id === 'wallet' && walletConnected ? 'completed' : 'pending' })));
+    setSteps(prev => prev.map(step => ({ ...step, status: 'pending' })));
     startTransaction();
   };
 
@@ -428,6 +453,72 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
       s.status === 'processing' ? { ...s, status: 'failed' } : s
     ));
     setError('Card payment was cancelled. You can try again or pick a different method.');
+    setIsProcessing(false);
+  };
+
+  // -------------------------------------------------------------------
+  // NOWPayments crypto-form callbacks (mirror of the card ones)
+  // -------------------------------------------------------------------
+
+  const handleCryptoPaymentComplete = async (paymentId: string) => {
+    const processIdx = 1;
+    const confirmIdx = 2;
+    updateStepStatus(processIdx, 'completed', paymentId);
+    setCurrentStep(confirmIdx);
+    updateStepStatus(confirmIdx, 'processing');
+    // Brief pause for UI polish. The actual mint happens server-side
+    // once the NOWPayments IPN (or our status-poll fallback) marks the
+    // payment finished and Celery picks up the PENDING_MINT investment.
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    updateStepStatus(confirmIdx, 'completed');
+    setTransactionHash(paymentId);
+    setPendingCryptoPayment(null);
+    setIsProcessing(false);
+    onComplete(true, paymentId);
+  };
+
+  const handleCryptoPaymentCancel = () => {
+    setPendingCryptoPayment(null);
+    setSteps(prev => prev.map(s =>
+      s.status === 'processing' ? { ...s, status: 'failed' } : s
+    ));
+    setError(
+      'Crypto payment was cancelled. You can retry or pick a different method — ' +
+      'if you already sent funds they will still credit, but you may need to refresh.'
+    );
+    setIsProcessing(false);
+  };
+
+  // -------------------------------------------------------------------
+  // Bank-transfer / Nova-Sukuk callbacks (both run the same pattern:
+  // form submits investment, parent advances to "pending review")
+  // -------------------------------------------------------------------
+
+  const handlePendingReviewSubmitted = async (investmentId: string) => {
+    const processIdx = 1;
+    const confirmIdx = 2;
+    updateStepStatus(processIdx, 'completed', investmentId);
+    setCurrentStep(confirmIdx);
+    updateStepStatus(confirmIdx, 'processing');
+    await new Promise(resolve => setTimeout(resolve, 800));
+    // "Confirm Tokens" stays as pending-review until the admin approves
+    // — but for the immediate UI we mark it completed and surface the
+    // "submitted for review" copy on the parent confirmation screen.
+    updateStepStatus(confirmIdx, 'completed');
+    setTransactionHash(investmentId);
+    setShowBankTransferForm(false);
+    setShowNovaSukukForm(false);
+    setIsProcessing(false);
+    onComplete(true, investmentId);
+  };
+
+  const handlePendingReviewCancel = () => {
+    setShowBankTransferForm(false);
+    setShowNovaSukukForm(false);
+    setSteps(prev => prev.map(s =>
+      s.status === 'processing' ? { ...s, status: 'failed' } : s
+    ));
+    setError('Submission cancelled. You can retry or pick a different payment method.');
     setIsProcessing(false);
   };
 
@@ -480,14 +571,6 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
         </div>
       </Card>
 
-      {/* Wallet Connection (crypto only) */}
-      {investmentData.paymentMethod === 'crypto' && !walletConnected && (
-        <WalletConnector
-          onConnect={handleWalletConnect}
-          isConnecting={isProcessing}
-        />
-      )}
-
       {/* Stripe card form — appears after the investment row is created.
           Collects card details inside Stripe's iframe (PCI-safe), confirms
           the PaymentIntent, and waits for the server-side Stripe webhook
@@ -501,9 +584,48 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
         />
       )}
 
+      {/* NOWPayments crypto form — appears after the investment row is
+          created. Mints a NOWPayments invoice, shows the user a pay
+          address + amount, and polls until the funds are detected. The
+          IPN webhook on the backend marks the linked Investment paid and
+          Celery picks it up to mint the property tokens. */}
+      {pendingCryptoPayment && (
+        <CryptoPaymentForm
+          amount={pendingCryptoPayment.amount}
+          investmentId={pendingCryptoPayment.investmentId}
+          onPaymentComplete={handleCryptoPaymentComplete}
+          onCancel={handleCryptoPaymentCancel}
+        />
+      )}
+
+      {/* Bank-transfer form — investor uploads proof of wire/ACH and
+          the backend creates Investment + Payment + BankTransfer rows
+          in `pending`. Admin approves later → mint. */}
+      {showBankTransferForm && (
+        <BankTransferForm
+          amount={investmentData.amount}
+          propertyId={property.id.toString()}
+          tokenAmount={investmentData.tokens}
+          onSubmitted={(investmentId) => handlePendingReviewSubmitted(investmentId)}
+          onCancel={handlePendingReviewCancel}
+        />
+      )}
+
+      {/* Nova Sukuk form — investor uploads signed Sukuk PDF + reference
+          number. Backend creates Investment + Payment + NovaSukukPayment
+          in `pending`. Admin approves later → mint. */}
+      {showNovaSukukForm && (
+        <NovaSukukForm
+          amount={investmentData.amount}
+          propertyId={property.id.toString()}
+          tokenAmount={investmentData.tokens}
+          onSubmitted={(investmentId) => handlePendingReviewSubmitted(investmentId)}
+          onCancel={handlePendingReviewCancel}
+        />
+      )}
+
       {/* Transaction Steps */}
-      {(investmentData.paymentMethod !== 'crypto' || walletConnected) && (
-        <Card className="p-6">
+      <Card className="p-6">
           <div className="flex items-center justify-between mb-6">
             <Text variant="h4" weight="semibold" className="flex items-center gap-2">
               <Zap className="w-5 h-5 text-yellow-500" />
@@ -634,7 +756,6 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
             </div>
           )}
         </Card>
-      )}
 
       {/* Security Notice */}
       <Card className="p-4 bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800">

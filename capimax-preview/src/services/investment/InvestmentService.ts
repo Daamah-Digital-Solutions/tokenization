@@ -148,6 +148,46 @@ export class InvestmentService {
   }
 
   /**
+   * Create Bank Transfer investment (proof upload + admin review)
+   *
+   * Mirrors `novaSukukInvest`. The investor uploads a screenshot or PDF
+   * receipt of the outgoing wire. An admin manually approves on receipt
+   * of funds, which triggers `mark_payment_confirmed` -> mint.
+   */
+  static async bankTransferInvest(data: {
+    property_id: string;
+    token_amount: number;
+    investment_amount: number;
+    proof_of_transfer: File;
+    account_holder_name: string;
+    bank_name: string;
+    account_number: string;
+    routing_number?: string;
+    swift_code?: string;
+    transfer_reference_note?: string;
+  }): Promise<any> {
+    try {
+      const formData = new FormData();
+      formData.append('property_id', data.property_id);
+      formData.append('token_amount', data.token_amount.toString());
+      formData.append('investment_amount', data.investment_amount.toString());
+      formData.append('proof_of_transfer', data.proof_of_transfer);
+      formData.append('account_holder_name', data.account_holder_name);
+      formData.append('bank_name', data.bank_name);
+      formData.append('account_number', data.account_number);
+      if (data.routing_number) formData.append('routing_number', data.routing_number);
+      if (data.swift_code) formData.append('swift_code', data.swift_code);
+      if (data.transfer_reference_note) {
+        formData.append('transfer_reference_note', data.transfer_reference_note);
+      }
+      return await apiClient.post<any>('/investments/bank_transfer_invest/', formData);
+    } catch (error) {
+      console.error('Failed to create bank transfer investment:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Create Pronova crypto investment (5% discount)
    */
   static async pronovaInvest(data: {

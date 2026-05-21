@@ -132,7 +132,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
 
     // Update the investment data with the selected payment method
     onUpdate({
-      paymentMethod: methodId as 'crypto' | 'fiat' | 'wallet' | 'nova_sukuk' | 'pronova',
+      paymentMethod: methodId as 'crypto' | 'fiat' | 'bank' | 'wallet' | 'nova_sukuk' | 'pronova',
     });
   };
 
@@ -154,7 +154,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
 
     // Update investment data with payment completion
     onUpdate({
-      paymentMethod: selectedMethod as 'crypto' | 'fiat' | 'wallet' | 'nova_sukuk' | 'pronova',
+      paymentMethod: selectedMethod as 'crypto' | 'fiat' | 'bank' | 'wallet' | 'nova_sukuk' | 'pronova',
       paymentId: paymentId,
       paymentStatus: 'pending'
     });
