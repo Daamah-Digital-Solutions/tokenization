@@ -165,7 +165,7 @@ class Command(BaseCommand):
             'chainId': 97,
         })
         signed = w3.eth.account.sign_transaction(deploy_tx, settings.BLOCKCHAIN_PRIVATE_KEY)
-        tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
+        tx_hash = w3.eth.send_raw_transaction(getattr(signed, 'raw_transaction', None) or signed.rawTransaction).hex()
         self.stdout.write(self.style.SUCCESS(f"deployProperty tx: {_bscscan(tx_hash)}"))
 
         receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
@@ -315,7 +315,7 @@ class Command(BaseCommand):
                 'chainId': 97,
             })
             signed_act = w3.eth.account.sign_transaction(act_tx, settings.BLOCKCHAIN_PRIVATE_KEY)
-            act_hash = w3.eth.send_raw_transaction(signed_act.raw_transaction).hex()
+            act_hash = w3.eth.send_raw_transaction(getattr(signed_act, 'raw_transaction', None) or signed_act.rawTransaction).hex()
             self.stdout.write(f"factory.activateProperty tx: {_bscscan(act_hash)}")
             act_receipt = w3.eth.wait_for_transaction_receipt(act_hash, timeout=180)
             if act_receipt.status != 1:
@@ -338,7 +338,7 @@ class Command(BaseCommand):
             'chainId': 97,
         })
         signed_mint = w3.eth.account.sign_transaction(mint_tx, settings.BLOCKCHAIN_PRIVATE_KEY)
-        mint_hash = w3.eth.send_raw_transaction(signed_mint.raw_transaction).hex()
+        mint_hash = w3.eth.send_raw_transaction(getattr(signed_mint, 'raw_transaction', None) or signed_mint.rawTransaction).hex()
         self.stdout.write(self.style.SUCCESS(
             f"mintTokens tx ({'installment' if is_installment else 'upfront'}): {_bscscan(mint_hash)}"
         ))
@@ -397,7 +397,7 @@ class Command(BaseCommand):
                 'chainId': 97,
             })
             signed = w3.eth.account.sign_transaction(tx, settings.BLOCKCHAIN_PRIVATE_KEY)
-            tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
+            tx_hash = w3.eth.send_raw_transaction(getattr(signed, 'raw_transaction', None) or signed.rawTransaction).hex()
             self.stdout.write(self.style.SUCCESS(
                 f"  Installment {i+1}/{installments} ({tokens_this_round} tokens): {_bscscan(tx_hash)}"
             ))
