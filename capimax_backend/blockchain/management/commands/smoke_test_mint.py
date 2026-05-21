@@ -25,6 +25,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 from accounts.models import User
+from accounts.custody import derive_custodial_wallet
 from blockchain.models import BlockchainNetwork, SmartContract
 from properties.models import Property
 from web3 import Web3
@@ -79,12 +80,19 @@ class Command(BaseCommand):
             abi=factory_sc.abi,
         )
 
-        # ----- 1. Use signer wallet as the investor wallet --------------------
-        # The seeded test wallets are placeholders. To do a real mint we need
-        # the platform signer to mint to an address it controls.
-        investor.wallet_address = signer.address
-        investor.save(update_fields=['wallet_address'])
-        self.stdout.write(f"Investor {investor.email} → wallet {signer.address}")
+        # ----- 1. Resolve the investor's custodial wallet ---------------------
+        # Mint to the investor's deterministic custodial wallet (derived from
+        # PLATFORM_CUSTODY_MASTER_SEED + user pk). The platform signer pays
+        # gas and submits the tx, but the recipient address is the investor's
+        # — exactly what the production mint flow does. We do NOT overwrite
+        # the investor's wallet with the signer's; that was a smoke-only
+        # shortcut that corrupted demo accounts.
+        derived = derive_custodial_wallet(investor.pk)
+        investor_wallet = derived.address
+        if (investor.wallet_address or '').lower() != investor_wallet.lower():
+            investor.wallet_address = investor_wallet
+            investor.save(update_fields=['wallet_address'])
+        self.stdout.write(f"Investor {investor.email} → wallet {investor_wallet}")
 
         # ----- 2. Reset property on-chain state if needed ---------------------
         # If a previous run wired a fake or stale address, clear it so we
@@ -131,7 +139,8 @@ class Command(BaseCommand):
             self.stdout.write(f"Reusing on-chain propertyId={property_id_on_chain}")
             # Jump straight to mint section.
             self._mint(w3, signer, prop, property_id_on_chain, opts['tokens'],
-                       None, None, installments=opts['installments'])
+                       None, None, investor_wallet=investor_wallet,
+                       installments=opts['installments'])
             return
 
         deployment_fee = factory.functions.deploymentFee().call()
@@ -254,6 +263,7 @@ class Command(BaseCommand):
         # ----- 5. Mint tokens directly on the per-property contract -----------
         mint_hash = self._mint(w3, signer, prop, property_id_on_chain, opts['tokens'],
                                token_contract_address, token_template.abi,
+                               investor_wallet=investor_wallet,
                                installments=opts['installments'])
 
         # ----- 6. Final summary ----------------------------------------------
@@ -262,12 +272,13 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("=" * 60))
         self.stdout.write(f"  Property: {prop.title} ({prop.id})")
         self.stdout.write(f"  Token contract: {token_contract_address}")
-        self.stdout.write(f"  Investor wallet: {signer.address}")
+        self.stdout.write(f"  Investor wallet: {investor_wallet}")
         self.stdout.write(f"  Deploy tx:  {_bscscan(tx_hash)}")
         self.stdout.write(f"  Mint tx:    {_bscscan(mint_hash)}")
 
     def _mint(self, w3, signer, prop, property_id_on_chain, tokens_to_mint,
-              token_contract_address=None, token_abi=None, installments=0):
+              token_contract_address=None, token_abi=None,
+              investor_wallet=None, installments=0):
         """Submit the on-chain mint and verify the resulting balance.
 
         ``property_id_on_chain`` is the FACTORY's propertyId, used only for
@@ -275,10 +286,17 @@ class Command(BaseCommand):
         always reference tokenId=0 since each clone holds exactly one
         property.
 
+        ``investor_wallet`` is the address the tokens are minted to. The
+        ``signer`` only pays gas and signs the transaction (as factory
+        admin); the recipient is always the investor's custodial wallet.
+
         If ``installments`` > 0, mints as an installment plan (tokens escrowed
         on the contract) and runs that many ``processInstallment`` calls to
         release tokens gradually to the investor.
         """
+        if not investor_wallet:
+            raise CommandError("investor_wallet must be provided to _mint")
+        recipient = Web3.to_checksum_address(investor_wallet)
         # If we got here from the idempotent path, resolve the contract from DB.
         if token_contract_address is None or token_abi is None:
             sc = SmartContract.objects.get(property_reference=prop, contract_type='real_estate_token')
@@ -330,7 +348,7 @@ class Command(BaseCommand):
         is_installment = installments > 0
         mint_tx = token.functions.mintTokens(
             CLONE_TOKEN_ID,
-            signer.address,
+            recipient,
             tokens_to_mint,
             is_installment,
             installments,
@@ -365,19 +383,22 @@ class Command(BaseCommand):
                 w3, signer, prop, CLONE_TOKEN_ID,
                 tokens_to_mint, installments,
                 token_contract_address, token_abi,
+                recipient=recipient,
             )
         else:
-            balance = token.functions.balanceOf(signer.address, CLONE_TOKEN_ID).call()
+            balance = token.functions.balanceOf(recipient, CLONE_TOKEN_ID).call()
             self.stdout.write(self.style.SUCCESS(
-                f"  on-chain balance of {signer.address} = {balance} tokens (expected >= {tokens_to_mint})"
+                f"  on-chain balance of {recipient} = {balance} tokens (expected >= {tokens_to_mint})"
             ))
         return mint_hash
 
     def _process_installments(self, w3, signer, prop, property_id_on_chain,
                               total_tokens, installments, token_contract_address,
-                              token_abi):
+                              token_abi, recipient=None):
         """Walk through ``installments`` processInstallment calls and verify
         each one moves tokens from the contract's escrow to the investor."""
+        if recipient is None:
+            raise CommandError("recipient must be provided to _process_installments")
         token = w3.eth.contract(
             address=Web3.to_checksum_address(token_contract_address),
             abi=token_abi,
@@ -391,7 +412,7 @@ class Command(BaseCommand):
                 else (total_tokens - per_installment * (installments - 1))
             tx = token.functions.processInstallment(
                 property_id_on_chain,
-                signer.address,
+                recipient,
                 tokens_this_round,
             ).build_transaction({
                 'from': signer.address,
@@ -412,7 +433,7 @@ class Command(BaseCommand):
 
         # Final assertions: investor balance == total_tokens, escrow == 0.
         investor_balance = token.functions.balanceOf(
-            signer.address, property_id_on_chain
+            recipient, property_id_on_chain
         ).call()
         escrow_balance = token.functions.balanceOf(
             Web3.to_checksum_address(token_contract_address), property_id_on_chain
