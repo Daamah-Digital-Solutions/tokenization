@@ -375,28 +375,24 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
         </motion.div>
       )}
 
-      {/* Crypto + no-external-wallet guidance — non-blocking, informational */}
+      {/* Crypto + no-external-wallet guidance — non-blocking, informational.
+          Note: we used to surface a "Link a wallet first" CTA pointing at
+          /wallet, but the platform doesn't actually require an external
+          wallet — every investor has a custodial wallet auto-derived from
+          PLATFORM_CUSTODY_MASTER_SEED. The CTA was misleading and the
+          target page was broken anyway. */}
       {showCryptoWalletGuidance && (
         <Card className="p-4 bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800">
           <div className="flex items-start gap-3">
             <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-amber-900 dark:text-amber-200 space-y-2">
               <div className="font-medium">
-                You haven't linked an external wallet yet
+                Tokens will land in your Capimax wallet
               </div>
               <div>
-                If you proceed with a crypto payment, your tokens will land in
-                your <strong>platform-managed Capimax wallet</strong> instead
-                of going directly to MetaMask. You can withdraw them to your
-                own wallet anytime after that.
-              </div>
-              <div className="pt-1">
-                <a
-                  href="/wallet"
-                  className="inline-flex items-center gap-1 rounded-md border border-amber-300 dark:border-amber-700 bg-white dark:bg-amber-950/40 px-3 py-1 text-xs font-medium text-amber-900 dark:text-amber-100 hover:bg-amber-100 dark:hover:bg-amber-900/50"
-                >
-                  Link a wallet first ↗
-                </a>
+                Your property tokens are minted into a Capimax-managed wallet
+                tied to your account. You can view the balance and on-chain
+                history from the Portfolio tab any time.
               </div>
             </div>
           </div>

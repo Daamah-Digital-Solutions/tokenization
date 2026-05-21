@@ -1771,3 +1771,87 @@ class PronovaPayment(models.Model):
 
     def __str__(self):
         return f"Pronova {self.pronova_amount} - {self.status}"
+
+
+class BankWithdrawalRequest(models.Model):
+    """
+    Bank withdrawal request from an investor's platform wallet to an
+    external bank account.
+
+    The platform debits the investor's wallet balance the moment the
+    request is created (status=pending), preventing double-spend.
+    Compliance / admin then reviews the request:
+
+      - approve  -> Capimax operator wires the funds out-of-band; the
+                    wallet balance has already been debited so the
+                    request moves to 'completed' once payment confirms.
+      - reject   -> wallet balance is refunded back to the user.
+
+    No third-party payment provider is integrated for outgoing wires —
+    the platform team executes the wire manually, then marks the request
+    completed in the admin. The user gets an email at each transition.
+    """
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('approved', 'Approved'),
+        ('processing', 'Wire In Progress'),
+        ('completed', 'Completed'),
+        ('rejected', 'Rejected'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    user = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.CASCADE,
+        related_name='bank_withdrawal_requests',
+    )
+    amount = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(Decimal('10.00'))],
+        help_text="Withdrawal amount (USD)."
+    )
+    currency = models.CharField(max_length=3, default='USD')
+
+    # Destination bank details. Captured verbatim from the investor; no
+    # validation beyond presence (banking formats vary by region).
+    account_holder_name = models.CharField(max_length=255)
+    bank_name = models.CharField(max_length=255)
+    account_number = models.CharField(max_length=64, help_text="IBAN / account number.")
+    routing_number = models.CharField(max_length=64, blank=True)
+    swift_code = models.CharField(max_length=20, blank=True)
+    bank_country = models.CharField(max_length=2, blank=True, help_text="ISO-3166 alpha-2.")
+    notes = models.TextField(blank=True, help_text="Free-form note from the investor.")
+
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default='pending',
+        db_index=True,
+    )
+
+    # Audit trail
+    reviewed_by = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='bank_withdrawal_reviews',
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    review_note = models.TextField(blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'payments_bank_withdrawal_request'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['status', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"BankWithdrawal {self.amount} {self.currency} to {self.bank_name} ({self.status})"

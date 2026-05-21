@@ -743,12 +743,103 @@ class WalletManagementView(APIView):
             return self._deposit_funds(request)
         elif action == 'withdraw':
             return self._withdraw_funds(request)
+        elif action == 'withdraw-request':
+            # New simplified flow: investor lodges a bank-transfer
+            # withdrawal request. Funds are locked immediately so the
+            # balance the user sees in the UI drops; an admin reviews
+            # the request (via Django admin) and either approves
+            # (manual wire executed out-of-band) or rejects (funds
+            # unlock back to the available balance).
+            return self._create_withdraw_request(request)
         elif action == 'transfer':
             return self._transfer_funds(request)
         else:
             return Response(
                 create_error_response("Invalid action"),
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def _create_withdraw_request(self, request):
+        """Create a bank-transfer withdrawal request (admin-reviewed)."""
+        from .serializers import BankWithdrawalRequestCreateSerializer, BankWithdrawalRequestSerializer
+        from .models import BankWithdrawalRequest
+
+        serializer = BankWithdrawalRequestCreateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                create_error_response("Invalid data", details=serializer.errors),
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        data = serializer.validated_data
+        amount = data['amount']
+        currency = data.get('currency') or 'USD'
+
+        try:
+            with transaction.atomic():
+                # Lock the funds atomically. Refuses if insufficient balance.
+                try:
+                    wallet_balance = WalletBalance.objects.select_for_update().get(
+                        user=request.user,
+                        currency=currency,
+                    )
+                except WalletBalance.DoesNotExist:
+                    return Response(create_error_response(
+                        f"No {currency} wallet exists for your account."
+                    ), status=status.HTTP_400_BAD_REQUEST)
+
+                if wallet_balance.available_balance < amount:
+                    return Response(create_error_response(
+                        f"Insufficient balance. Available: "
+                        f"{wallet_balance.available_balance} {currency}",
+                    ), status=status.HTTP_400_BAD_REQUEST)
+
+                wallet_balance.available_balance -= amount
+                wallet_balance.locked_balance += amount
+                wallet_balance.save(update_fields=[
+                    'available_balance', 'locked_balance', 'updated_at',
+                ])
+
+                withdrawal = BankWithdrawalRequest.objects.create(
+                    user=request.user,
+                    amount=amount,
+                    currency=currency,
+                    account_holder_name=data['account_holder_name'],
+                    bank_name=data['bank_name'],
+                    account_number=data['account_number'],
+                    routing_number=data.get('routing_number') or '',
+                    swift_code=data.get('swift_code') or '',
+                    bank_country=(data.get('bank_country') or '').upper(),
+                    notes=data.get('notes') or '',
+                )
+
+                WalletTransaction.objects.create(
+                    user=request.user,
+                    transaction_type='withdrawal',
+                    amount=-amount,
+                    currency=currency,
+                    balance_before=wallet_balance.available_balance + amount,
+                    balance_after=wallet_balance.available_balance,
+                    reference_id=withdrawal.id,
+                    description=(
+                        f"Bank withdrawal request {withdrawal.id} — "
+                        f"pending admin review"
+                    ),
+                )
+
+            return Response(create_success_response(
+                data=BankWithdrawalRequestSerializer(withdrawal).data,
+                message=(
+                    "Withdrawal request submitted. Compliance will review "
+                    "and process the wire — funds typically arrive within "
+                    "48 hours of approval."
+                ),
+            ), status=status.HTTP_201_CREATED)
+        except Exception as exc:
+            logger.error("Withdrawal request failed: %s", exc)
+            return Response(
+                create_error_response(f"Failed to submit withdrawal: {exc}"),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
     
     def _deposit_funds(self, request):

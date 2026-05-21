@@ -759,7 +759,6 @@ const WalletContent: React.FC<{
   walletLoading: boolean;
 }> = ({ portfolio, loading, walletBalance, walletLoading }) => {
   const queryClient = useQueryClient();
-  const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
 
   return (
@@ -774,11 +773,13 @@ const WalletContent: React.FC<{
           </Text>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={() => setWithdrawOpen(true)}>
+          {/* "Add Funds" was removed: investors never need to top up the
+              wallet directly. Money flows IN via successful investments
+              (rental dividends, secondary-market sales, refunds). The
+              wallet balance is OUTBOUND-only — Withdraw is the single
+              action on it. */}
+          <Button onClick={() => setWithdrawOpen(true)}>
             Withdraw
-          </Button>
-          <Button onClick={() => setDepositOpen(true)}>
-            Add Funds
           </Button>
         </div>
       </div>
@@ -835,17 +836,9 @@ const WalletContent: React.FC<{
         </div>
       </div>
 
-      {/* Deposit + Withdraw modals are mounted at the end so they layer on top. */}
-      {depositOpen && (
-        <DepositModal
-          onClose={() => setDepositOpen(false)}
-          onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ['wallet'] });
-            queryClient.invalidateQueries({ queryKey: ['transactions'] });
-            setDepositOpen(false);
-          }}
-        />
-      )}
+      {/* Withdraw modal — the only wallet action surfaced to investors.
+          (Deposit / Add Funds was removed; see comment above the action
+          row.) */}
       {withdrawOpen && (
         <WithdrawModal
           availableBalance={walletBalance}
@@ -861,172 +854,80 @@ const WalletContent: React.FC<{
   );
 };
 
-// Deposit modal — three deposit channels, one form. The actual money
-// movement happens in the chosen channel's flow (Stripe / NowPayments /
-// bank-transfer); the backend's /payments/wallet/deposit/ endpoint only
-// records a *pending* Payment row that gets reconciled by the provider's
-// webhook. For Card we kick off a Stripe Checkout in a popup (one less
-// piece of UI to wire than mounting Elements inline). For Crypto and
-// Bank we show the next-step instructions because both require more
-// state than a single modal can carry.
-const DepositModal: React.FC<{ onClose: () => void; onSuccess: () => void }> = ({ onClose, onSuccess }) => {
-  const [amount, setAmount] = useState<string>('');
-  const [method, setMethod] = useState<'card' | 'crypto' | 'bank'>('card');
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-
-  const amountValue = parseFloat(amount);
-  const isValid = !isNaN(amountValue) && amountValue >= 10 && amountValue <= 100000;
-
-  const handleSubmit = async () => {
-    if (!isValid) {
-      setError('Enter an amount between $10 and $100,000.');
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    try {
-      // Records a pending Payment server-side. The card / crypto / bank
-      // flow happens out-of-band and the provider webhook later credits
-      // the wallet — for the demo we surface the pending state to the
-      // user and refresh the balance card.
-      const result: any = await apiClient.post('/payments/wallet/deposit/', {
-        amount: amountValue,
-        currency: 'USD',
-        payment_method: method,
-      });
-      const txId = result?.transaction_id || result?.payment_id || result?.id;
-      setSuccess(
-        method === 'card'
-          ? `Card deposit initiated. Funds will appear within a few minutes once Stripe confirms the charge. Reference: ${txId || 'pending'}.`
-          : method === 'crypto'
-          ? `Crypto deposit pending. Send the matching coin amount to the address we'll email you. Reference: ${txId || 'pending'}.`
-          : `Bank-transfer deposit pending. Wire instructions and a reference code will be emailed to you. Reference: ${txId || 'pending'}.`
-      );
-      setTimeout(() => onSuccess(), 2500);
-    } catch (e: any) {
-      setError(e?.message || 'Failed to start the deposit. Please try again.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full p-6">
-        <Text variant="h3" weight="bold" className="mb-1">Add Funds</Text>
-        <Text variant="caption" color="muted" className="mb-5 block">
-          Top up your platform wallet to invest in property tokens.
-        </Text>
-
-        {success ? (
-          <>
-            <div className="p-4 mb-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm text-emerald-700 dark:text-emerald-300">
-              {success}
-            </div>
-            <Button onClick={onClose} className="w-full">Close</Button>
-          </>
-        ) : (
-          <>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Amount (USD)</label>
-            <input
-              type="number"
-              min={10}
-              max={100000}
-              step="0.01"
-              placeholder="500.00"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm mb-4"
-            />
-
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">Payment method</label>
-            <div className="space-y-2 mb-4">
-              {[
-                { id: 'card' as const, label: 'Credit / Debit Card', sub: 'Visa, Mastercard — instant (1-2 min)' },
-                { id: 'crypto' as const, label: 'Cryptocurrency', sub: 'USDT, USDC, BTC, ETH — after confirmations' },
-                { id: 'bank' as const, label: 'Bank Transfer', sub: 'SWIFT/wire — 1-2 business days, lowest fees' },
-              ].map((m) => (
-                <label
-                  key={m.id}
-                  className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                    method === m.id
-                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                      : 'border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="deposit-method"
-                    value={m.id}
-                    checked={method === m.id}
-                    onChange={() => setMethod(m.id)}
-                    className="mt-1"
-                  />
-                  <div>
-                    <div className="text-sm font-medium text-slate-900 dark:text-white">{m.label}</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">{m.sub}</div>
-                  </div>
-                </label>
-              ))}
-            </div>
-
-            {error && (
-              <div className="p-3 mb-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
-                {error}
-              </div>
-            )}
-
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={onClose} className="flex-1" disabled={submitting}>Cancel</Button>
-              <Button onClick={handleSubmit} className="flex-1" disabled={submitting || !isValid}>
-                {submitting ? 'Processing…' : `Deposit $${isValid ? amountValue.toFixed(2) : '0.00'}`}
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-};
-
+// Withdraw modal — collects bank details + amount and lodges a
+// BankWithdrawalRequest on the server. The endpoint immediately locks
+// the requested amount from available_balance (so the UI balance card
+// reflects the reservation) and parks the request in `pending`. A
+// compliance admin reviews via Django admin and either approves
+// (operator wires the funds within 48h) or rejects (funds unlock back
+// to the wallet).
+//
+// We removed the old multi-method withdrawal flow because it required
+// the user to maintain payment methods + crypto destination details,
+// and the contract with the backend was fundamentally mismatched
+// (frontend posted `destination`, serializer required `withdrawal_method`
+// + `destination_details`). The new bank-only flow matches the
+// platform's actual operational reality: wires are executed manually
+// by the ops team, so all we need from the investor is the IBAN.
 const WithdrawModal: React.FC<{
   availableBalance: number;
   onClose: () => void;
   onSuccess: () => void;
 }> = ({ availableBalance, onClose, onSuccess }) => {
   const [amount, setAmount] = useState<string>('');
-  const [destination, setDestination] = useState<'bank' | 'wallet'>('bank');
+  const [accountHolderName, setAccountHolderName] = useState('');
+  const [bankName, setBankName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [swiftCode, setSwiftCode] = useState('');
+  const [routingNumber, setRoutingNumber] = useState('');
+  const [bankCountry, setBankCountry] = useState('');
+  const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   const amountValue = parseFloat(amount);
-  const isValid =
+  const amountValid =
     !isNaN(amountValue) && amountValue >= 10 && amountValue <= availableBalance;
+  const detailsValid =
+    accountHolderName.trim() && bankName.trim() && accountNumber.trim();
+  const isValid = amountValid && detailsValid;
 
   const handleSubmit = async () => {
-    if (!isValid) {
-      if (amountValue > availableBalance) {
-        setError(`You only have $${availableBalance.toLocaleString()} available.`);
-      } else {
-        setError('Enter an amount of at least $10.');
-      }
+    if (!amountValid) {
+      setError(
+        amountValue > availableBalance
+          ? `Amount exceeds your available balance of $${availableBalance.toLocaleString()}.`
+          : 'Enter an amount of at least $10.',
+      );
+      return;
+    }
+    if (!detailsValid) {
+      setError('Account holder name, bank name, and account number are required.');
       return;
     }
     setSubmitting(true);
     setError(null);
     try {
-      const result: any = await apiClient.post('/payments/wallet/withdraw/', {
-        amount: amountValue,
-        currency: 'USD',
-        destination,
-      });
-      const refId =
-        result?.transaction_id || result?.withdrawal_id || result?.id;
+      const result: any = await apiClient.post(
+        '/payments/wallet/withdraw-request/',
+        {
+          amount: amountValue,
+          currency: 'USD',
+          account_holder_name: accountHolderName.trim(),
+          bank_name: bankName.trim(),
+          account_number: accountNumber.trim(),
+          routing_number: routingNumber.trim(),
+          swift_code: swiftCode.trim(),
+          bank_country: bankCountry.trim().toUpperCase(),
+          notes: notes.trim(),
+        },
+      );
+      const refId = result?.id;
       setSuccess(
-        `Withdrawal request submitted. Funds are locked while compliance reviews the request — typical processing time is 2 business days. Reference: ${refId || 'pending'}.`
+        `Withdrawal request submitted. Compliance will review and wire ` +
+          `$${amountValue.toFixed(2)} to ${bankName} within 48 hours. ` +
+          (refId ? `Reference: ${refId.slice(0, 8)}.` : ''),
       );
       setTimeout(() => onSuccess(), 2500);
     } catch (e: any) {
@@ -1047,7 +948,7 @@ const WithdrawModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full p-6">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
         <Text variant="h3" weight="bold" className="mb-1">Withdraw Funds</Text>
         <Text variant="caption" color="muted" className="mb-5 block">
           Available balance: <strong>${availableBalance.toLocaleString()}</strong>
@@ -1074,40 +975,82 @@ const WithdrawModal: React.FC<{
               className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm mb-4"
             />
 
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">Send to</label>
-            <div className="space-y-2 mb-4">
-              {[
-                { id: 'bank' as const, label: 'Bank account', sub: 'SWIFT/wire to the account on file — 2 business days' },
-                { id: 'wallet' as const, label: 'External crypto wallet', sub: 'On-chain transfer to your verified address' },
-              ].map((d) => (
-                <label
-                  key={d.id}
-                  className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                    destination === d.id
-                      ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
-                      : 'border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="withdraw-destination"
-                    value={d.id}
-                    checked={destination === d.id}
-                    onChange={() => setDestination(d.id)}
-                    className="mt-1"
-                  />
-                  <div>
-                    <div className="text-sm font-medium text-slate-900 dark:text-white">{d.label}</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">{d.sub}</div>
-                  </div>
-                </label>
-              ))}
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Account holder name *</label>
+                <input
+                  type="text"
+                  placeholder="As shown on the account"
+                  value={accountHolderName}
+                  onChange={(e) => setAccountHolderName(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Bank name *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. HSBC"
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Account number / IBAN *</label>
+                <input
+                  type="text"
+                  placeholder="Receiving account"
+                  value={accountNumber}
+                  onChange={(e) => setAccountNumber(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">SWIFT / BIC</label>
+                <input
+                  type="text"
+                  placeholder="For international wires"
+                  value={swiftCode}
+                  onChange={(e) => setSwiftCode(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Routing / sort code</label>
+                <input
+                  type="text"
+                  placeholder="Optional"
+                  value={routingNumber}
+                  onChange={(e) => setRoutingNumber(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Bank country (ISO-2)</label>
+                <input
+                  type="text"
+                  maxLength={2}
+                  placeholder="US, GB, AE…"
+                  value={bankCountry}
+                  onChange={(e) => setBankCountry(e.target.value.toUpperCase())}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm uppercase"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Note for compliance (optional)</label>
+                <textarea
+                  rows={2}
+                  placeholder="E.g. preferred wire reference, urgency, etc."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
+                />
+              </div>
             </div>
 
-            <div className="p-3 mb-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-800 dark:text-amber-300">
-              Withdrawal requests are reviewed by compliance. Funds are locked
-              from your available balance until the transfer settles. You'll
-              receive an email confirmation when the funds leave the platform.
+            <div className="p-3 mb-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-900 dark:text-amber-200">
+              Compliance reviews each request. Funds are locked from your available balance the moment the request is submitted, then wired to your bank account within 48 hours of approval. You&apos;ll receive an email at each step.
             </div>
 
             {error && (
@@ -1119,7 +1062,7 @@ const WithdrawModal: React.FC<{
             <div className="flex gap-3">
               <Button variant="outline" onClick={onClose} className="flex-1" disabled={submitting}>Cancel</Button>
               <Button onClick={handleSubmit} className="flex-1" disabled={submitting || !isValid}>
-                {submitting ? 'Processing…' : `Withdraw $${isValid ? amountValue.toFixed(2) : '0.00'}`}
+                {submitting ? 'Submitting…' : `Withdraw $${amountValid ? amountValue.toFixed(2) : '0.00'}`}
               </Button>
             </div>
           </>
@@ -1128,6 +1071,7 @@ const WithdrawModal: React.FC<{
     </div>
   );
 };
+
 
 // Notifications Content Component
 const NotificationsContent: React.FC = () => {

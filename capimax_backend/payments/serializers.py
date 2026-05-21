@@ -15,7 +15,8 @@ import re
 from .models import (
     Payment, UserPaymentMethod, WalletBalance, WalletTransaction,
     CryptoPayment, Refund, RecurringPayment, PaymentMethod, PaymentStatus,
-    BankTransfer, NovaSukukPayment, PronovaPayment
+    BankTransfer, NovaSukukPayment, PronovaPayment,
+    BankWithdrawalRequest,
 )
 from core.utils import validate_investment_amount, calculate_tokens_for_amount
 
@@ -769,3 +770,54 @@ class PronovaDetailSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = fields
+
+# --- Bank Withdrawal Request Serializers ---
+
+
+class BankWithdrawalRequestCreateSerializer(serializers.Serializer):
+    """Serializer the investor uses to lodge a withdrawal request."""
+    amount = serializers.DecimalField(
+        max_digits=12, decimal_places=2, min_value=Decimal('10.00')
+    )
+    currency = serializers.CharField(max_length=3, default='USD', required=False)
+    account_holder_name = serializers.CharField(max_length=255)
+    bank_name = serializers.CharField(max_length=255)
+    account_number = serializers.CharField(max_length=64)
+    routing_number = serializers.CharField(max_length=64, required=False, allow_blank=True, default='')
+    swift_code = serializers.CharField(max_length=20, required=False, allow_blank=True, default='')
+    bank_country = serializers.CharField(max_length=2, required=False, allow_blank=True, default='')
+    notes = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+class BankWithdrawalRequestSerializer(serializers.ModelSerializer):
+    """Investor-facing read serializer."""
+    class Meta:
+        model = BankWithdrawalRequest
+        fields = [
+            'id', 'amount', 'currency', 'account_holder_name', 'bank_name',
+            'account_number', 'routing_number', 'swift_code', 'bank_country',
+            'status', 'review_note', 'created_at', 'completed_at',
+        ]
+        read_only_fields = fields
+
+
+class BankWithdrawalRequestAdminSerializer(serializers.ModelSerializer):
+    """Admin-facing read serializer with the investor identity included."""
+    user_email = serializers.CharField(source='user.email', read_only=True)
+    user_full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BankWithdrawalRequest
+        fields = [
+            'id', 'user', 'user_email', 'user_full_name',
+            'amount', 'currency',
+            'account_holder_name', 'bank_name', 'account_number',
+            'routing_number', 'swift_code', 'bank_country',
+            'notes', 'status', 'review_note',
+            'reviewed_by', 'reviewed_at',
+            'created_at', 'updated_at', 'completed_at',
+        ]
+        read_only_fields = fields
+
+    def get_user_full_name(self, obj):
+        return obj.user.get_full_name() if obj.user else ''

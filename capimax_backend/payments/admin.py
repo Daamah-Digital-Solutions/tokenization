@@ -17,6 +17,7 @@ from .models import (
     Payment, UserPaymentMethod, WalletBalance, WalletTransaction,
     CryptoPayment, Refund, RecurringPayment,
     BankTransfer, NovaSukukPayment, PronovaPayment,
+    BankWithdrawalRequest,
 )
 
 
@@ -760,4 +761,10 @@ class NovaSukukPaymentAdmin(admin.ModelAdmin):
     def reject_sukuk(self, request, queryset):
         _reject_review_payment(self, request, queryset, 'nova_sukuk')
     reject_sukuk.short_description = 'Reject — mark investment failed'
+
+
+# Bank withdrawal admin lives in its own module — importing it runs the
+# @admin.register decorator. Keep it last so it doesn't pollute the top
+# of this file.
+from . import admin_withdrawals  # noqa: F401,E402
 
