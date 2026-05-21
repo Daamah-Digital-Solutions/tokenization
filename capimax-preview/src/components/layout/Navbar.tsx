@@ -41,7 +41,12 @@ export const Navbar: React.FC = () => {
     { name: 'Support', route: 'contact' as const }
   ];
 
-  // Authenticated navigation items — role-aware
+  // Authenticated navigation items — role-aware.
+  //
+  // Property owners get a primary "Submit Property" entry in the top bar so
+  // the tokenization flow is reachable from any page (the Overview Quick
+  // Action is the second entry point; this is the always-visible one).
+  // Multi-role users see it as soon as one of their assigned roles is owner.
   const getAuthNavItems = () => {
     const items: Array<{ name: string; route: string; params?: Record<string, string> }> = [
       { name: 'Home', route: 'home' },
@@ -51,6 +56,15 @@ export const Navbar: React.FC = () => {
     // Add "My Portfolio" for investors as a direct link
     if (user?.role === 'investor') {
       items.push({ name: 'My Portfolio', route: 'dashboard', params: { view: 'portfolio' } });
+    }
+
+    // Add "Submit Property" for property owners (and admins, for testing).
+    const ownerLike =
+      user?.role === 'property_owner' ||
+      user?.role === 'admin' ||
+      (user as any)?.available_roles?.includes?.('property_owner');
+    if (ownerLike) {
+      items.push({ name: 'Submit Property', route: 'submit-property' });
     }
 
     items.push(
