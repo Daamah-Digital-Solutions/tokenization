@@ -207,6 +207,10 @@ def process_single_mint(self, investment_id: str):
                             'tokens_minted': result['tokens_minted'],
                         }
                     )
+                    # Notify investor that their tokens are live on chain.
+                    # Send outside the atomic block so an email-service
+                    # blip doesn't roll back the mint state.
+                    _notify_mint_success(fresh, result)
                     return {
                         'success': True,
                         'investment_id': investment_id,
@@ -222,6 +226,7 @@ def process_single_mint(self, investment_id: str):
 
             if terminal:
                 _send_mint_failure_alert(fresh, error_message)
+                _notify_mint_failure(fresh)
                 # Schedule automatic refund of the captured payment.
                 auto_refund_failed_mint.delay(fresh_id)
 
@@ -492,6 +497,86 @@ def auto_refund_failed_mint(self, investment_id: str):
 # ---------------------------------------------------------------------------
 # Operational utilities
 # ---------------------------------------------------------------------------
+
+def _notify_mint_success(investment: Investment, result: dict) -> None:
+    """Email + in-app notification telling the investor the mint landed.
+
+    The previous version only logged "Mint succeeded" to stdout. The
+    investor never heard about their tokens being live on chain — the
+    last touchpoint they had was the "payment confirmed" email. Now we
+    surface the property name, token count, and the block-explorer URL
+    so they can verify on chain themselves.
+    """
+    try:
+        from notifications.services import NotificationService
+
+        tx_hash = result.get('transaction_hash', '')
+        tokens = result.get('tokens_minted', investment.token_amount)
+        property_obj = investment.property_investment
+        property_title = property_obj.title if property_obj else 'your investment'
+
+        # Best-effort explorer URL. Default to BscScan testnet because
+        # staging runs there; production swaps via DEFAULT_NETWORK_NAME.
+        from django.conf import settings as _settings
+        network = getattr(_settings, 'DEFAULT_NETWORK_NAME', 'bsc_testnet')
+        explorer_base = {
+            'bsc_testnet': 'https://testnet.bscscan.com/tx/',
+            'bsc': 'https://bscscan.com/tx/',
+            'bsc_mainnet': 'https://bscscan.com/tx/',
+            'ethereum': 'https://etherscan.io/tx/',
+            'ethereum_sepolia': 'https://sepolia.etherscan.io/tx/',
+            'polygon': 'https://polygonscan.com/tx/',
+            'polygon_mumbai': 'https://mumbai.polygonscan.com/tx/',
+        }.get(network, 'https://testnet.bscscan.com/tx/')
+        explorer_url = f"{explorer_base}{tx_hash}" if tx_hash else ''
+
+        message = (
+            f"Your {tokens} token{'s' if tokens != 1 else ''} for "
+            f"{property_title} are now live on chain. Transaction "
+            f"hash: {tx_hash}."
+        )
+        if explorer_url:
+            message += f"\n\nView on block explorer: {explorer_url}"
+
+        NotificationService.create_notification(
+            user=investment.user,
+            title="Tokens Minted Successfully",
+            message=message,
+            notification_type='investment',
+            priority='high',
+            send_email=True,
+            send_real_time=True,
+        )
+    except Exception as exc:
+        # Don't fail the mint over a notification problem.
+        logger.warning("Could not send mint-success notification: %s", exc)
+
+
+def _notify_mint_failure(investment: Investment) -> None:
+    """Notify the investor that mint failed and a refund is in flight."""
+    try:
+        from notifications.services import NotificationService
+        property_title = (
+            investment.property_investment.title
+            if investment.property_investment else 'your investment'
+        )
+        NotificationService.create_notification(
+            user=investment.user,
+            title="Investment Could Not Be Completed",
+            message=(
+                f"We could not finalize your investment in {property_title}. "
+                f"An automatic refund has been queued and will be returned to "
+                f"your original payment method. Our team will follow up by "
+                f"email — no further action is needed from you."
+            ),
+            notification_type='investment',
+            priority='high',
+            send_email=True,
+            send_real_time=True,
+        )
+    except Exception as exc:
+        logger.warning("Could not send mint-failure notification: %s", exc)
+
 
 def _send_mint_failure_alert(investment: Investment, error_message: str):
     """Email admins on terminal mint failure."""

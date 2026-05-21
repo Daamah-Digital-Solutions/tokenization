@@ -119,7 +119,12 @@ class BankWithdrawalRequestAdmin(admin.ModelAdmin):
     approve_withdrawals.short_description = 'Approve — funds clear in 48h'
 
     def mark_completed(self, request, queryset):
-        """Mark completed — debit locked_balance (the wire has executed)."""
+        """Mark completed — debit locked_balance (the wire has executed).
+
+        Also notifies the investor by email so they know the funds have
+        landed in their bank account.
+        """
+        from notifications.services import NotificationService
         n = 0
         for obj in queryset:
             if obj.status not in ('approved', 'processing'):
@@ -136,6 +141,26 @@ class BankWithdrawalRequestAdmin(admin.ModelAdmin):
             obj.status = 'completed'
             obj.completed_at = timezone.now()
             obj.save(update_fields=['status', 'completed_at', 'updated_at'])
+
+            try:
+                NotificationService.create_notification(
+                    user=obj.user,
+                    title="Withdrawal Completed",
+                    message=(
+                        f"Your withdrawal of {obj.amount} {obj.currency} to "
+                        f"{obj.bank_name} has been completed. The wire has "
+                        f"left our account and should now show in your bank "
+                        f"(allow up to 24 hours for international "
+                        f"correspondent banks to display it)."
+                    ),
+                    notification_type='payment',
+                    priority='high',
+                    send_email=True,
+                    send_real_time=True,
+                )
+            except Exception:
+                pass
+
             n += 1
         self.message_user(request, f"Marked {n} withdrawal(s) completed.")
     mark_completed.short_description = 'Mark completed — wire has landed'

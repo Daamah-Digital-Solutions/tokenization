@@ -814,27 +814,13 @@ const WalletContent: React.FC<{
         />
       </div>
 
-      {/* How deposits & withdrawals work — orient the user before they click. */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-5">
-          <h4 className="font-semibold text-emerald-900 dark:text-emerald-200 mb-2">How money enters your wallet</h4>
-          <ul className="text-sm text-emerald-800 dark:text-emerald-300 space-y-1.5">
-            <li>• <strong>Card:</strong> Visa/Mastercard via Stripe — funds available in 1-2 minutes.</li>
-            <li>• <strong>Crypto:</strong> USDT, USDC, BTC, ETH — credited after blockchain confirmations.</li>
-            <li>• <strong>Bank transfer:</strong> SWIFT/wire — 1-2 business days, lowest fees.</li>
-            <li>• <strong>Dividends:</strong> auto-distributed monthly from your investments.</li>
-          </ul>
-        </div>
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-5">
-          <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">How money leaves your wallet</h4>
-          <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1.5">
-            <li>• <strong>Invest:</strong> buy property tokens from the marketplace.</li>
-            <li>• <strong>Withdraw:</strong> send to your bank or external crypto wallet (2 business days).</li>
-            <li>• <strong>Fees:</strong> a 2.5% platform fee applies on secondary-market trades.</li>
-            <li>• Withdrawal requests are reviewed by compliance before being released.</li>
-          </ul>
-        </div>
-      </div>
+      {/* Withdrawal request history. The investor sees every request
+          they have lodged, what state it's in, and (for rejected
+          requests) the compliance note. Funds in `pending`, `approved`,
+          or `processing` are already deducted from the wallet's
+          available balance — the locked total adds up to what's shown
+          here. */}
+      <WithdrawalRequestsSection />
 
       {/* Withdraw modal — the only wallet action surfaced to investors.
           (Deposit / Add Funds was removed; see comment above the action
@@ -853,6 +839,108 @@ const WalletContent: React.FC<{
     </div>
   );
 };
+
+// Lists the user's bank withdrawal requests so they can track status.
+// Polls every 30s so admin approvals show up without a refresh.
+interface WithdrawalRequest {
+  id: string;
+  amount: string;
+  currency: string;
+  account_holder_name: string;
+  bank_name: string;
+  account_number: string;
+  status: 'pending' | 'approved' | 'processing' | 'completed' | 'rejected' | 'cancelled';
+  review_note: string;
+  created_at: string;
+  completed_at: string | null;
+}
+
+const WITHDRAWAL_STATUS_COPY: Record<WithdrawalRequest['status'], { label: string; tone: string; help: string }> = {
+  pending:    { label: 'Pending Review',  tone: 'bg-amber-50 text-amber-800 border-amber-200',   help: 'Compliance is reviewing your request.' },
+  approved:   { label: 'Approved',        tone: 'bg-blue-50 text-blue-800 border-blue-200',     help: 'Approved. Wire will be executed within 48h.' },
+  processing: { label: 'Wire In Progress', tone: 'bg-blue-50 text-blue-800 border-blue-200',    help: 'Wire has been initiated — funds in transit.' },
+  completed:  { label: 'Completed',       tone: 'bg-emerald-50 text-emerald-800 border-emerald-200', help: 'Funds have landed in your bank account.' },
+  rejected:   { label: 'Rejected',        tone: 'bg-red-50 text-red-800 border-red-200',         help: 'Funds returned to your wallet balance.' },
+  cancelled:  { label: 'Cancelled',       tone: 'bg-gray-100 text-gray-700 border-gray-200',     help: 'Cancelled before review.' },
+};
+
+const WithdrawalRequestsSection: React.FC = () => {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['wallet', 'withdraw-requests'],
+    queryFn: async () => {
+      // Backend route: GET /payments/wallet/withdraw-requests/
+      const res: any = await apiClient.get('/payments/wallet/withdraw-requests/');
+      const list: WithdrawalRequest[] = res?.requests ?? [];
+      return list;
+    },
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
+  });
+
+  const requests = data ?? [];
+
+  return (
+    <Card variant="outline" className="p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <Text variant="h4" weight="semibold" className="mb-0.5">Your withdrawal requests</Text>
+          <Text variant="caption" color="muted">
+            Each request lists the bank account it&apos;s being sent to and where it is in the review pipeline. Pending and approved requests have already been locked from your available balance.
+          </Text>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="text-sm text-slate-500 py-6 text-center">Loading withdrawal history…</div>
+      ) : error ? (
+        <div className="text-sm text-red-600 py-6 text-center">Could not load your withdrawal history.</div>
+      ) : requests.length === 0 ? (
+        <div className="text-sm text-slate-500 dark:text-slate-400 py-6 text-center">
+          You haven&apos;t requested any withdrawals yet. Hit <strong>Withdraw</strong> above to move funds to your bank.
+        </div>
+      ) : (
+        <div className="divide-y divide-slate-200 dark:divide-slate-700">
+          {requests.map((r) => {
+            const copy = WITHDRAWAL_STATUS_COPY[r.status] ?? WITHDRAWAL_STATUS_COPY.pending;
+            const last4 = r.account_number?.length > 4
+              ? `…${r.account_number.slice(-4)}`
+              : r.account_number;
+            return (
+              <div key={r.id} className="py-3 flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <span className="font-semibold text-slate-900 dark:text-white">
+                      ${parseFloat(r.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      → {r.bank_name} {last4}
+                    </span>
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Requested {new Date(r.created_at).toLocaleString()}
+                    {r.completed_at && ` · Completed ${new Date(r.completed_at).toLocaleString()}`}
+                  </div>
+                  <div className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                    {copy.help}
+                  </div>
+                  {r.status === 'rejected' && r.review_note && (
+                    <div className="text-xs text-red-700 dark:text-red-300 mt-1">
+                      <strong>Compliance note:</strong> {r.review_note}
+                    </div>
+                  )}
+                </div>
+                <span className={`shrink-0 inline-block text-xs font-semibold px-2 py-1 rounded-full border ${copy.tone}`}>
+                  {copy.label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Card>
+  );
+};
+
 
 // Withdraw modal — collects bank details + amount and lodges a
 // BankWithdrawalRequest on the server. The endpoint immediately locks

@@ -565,6 +565,31 @@ class InvestmentViewSet(viewsets.ModelViewSet):
                 sukuk_reference_number=data['sukuk_reference_number'],
             )
 
+        # Investor-facing confirmation email — same intent as the bank-
+        # transfer flow above: don't leave the user wondering whether
+        # their upload landed.
+        try:
+            NotificationService.create_notification(
+                user=request.user,
+                title="Nova Sukuk Document Submitted",
+                message=(
+                    f"We received your Nova Sukuk certificate for "
+                    f"{property_obj.title} (Ref: "
+                    f"{data['sukuk_reference_number']}). Compliance will "
+                    f"review and approve typically within 24 hours; "
+                    f"tokens will mint to your account once approved."
+                ),
+                notification_type='payment',
+                priority='medium',
+                send_email=True,
+                send_real_time=True,
+            )
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).warning(
+                "Could not send nova-sukuk confirmation email: %s", exc,
+            )
+
         return Response(create_success_response(
             data={
                 'investment_id': str(investment.id),
@@ -647,6 +672,31 @@ class InvestmentViewSet(viewsets.ModelViewSet):
                 transfer_status='pending',
                 transfer_instructions=data.get('transfer_reference_note') or '',
                 proof_of_transfer=data['proof_of_transfer'],
+            )
+
+        # Investor-facing confirmation email — no admin action required
+        # to send this; it acknowledges the submission so the user
+        # doesn't wonder whether the upload worked.
+        try:
+            NotificationService.create_notification(
+                user=request.user,
+                title="Bank Transfer Submitted",
+                message=(
+                    f"We received your bank-transfer proof for "
+                    f"{property_obj.title}. Reference: "
+                    f"{transfer.transfer_reference}. Compliance will "
+                    f"review within 24 hours and mint your tokens as "
+                    f"soon as the funds arrive."
+                ),
+                notification_type='payment',
+                priority='medium',
+                send_email=True,
+                send_real_time=True,
+            )
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).warning(
+                "Could not send bank-transfer confirmation email: %s", exc,
             )
 
         return Response(create_success_response(

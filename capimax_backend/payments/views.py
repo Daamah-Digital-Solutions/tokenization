@@ -715,9 +715,14 @@ class WalletManagementView(APIView):
     def get(self, request, action=None):
         """Get user's wallet balances. Auto-creates USD wallet if none exist.
 
-        Accepts (and ignores) the ``action`` URL kwarg so the ``wallet/<str:action>/``
-        route doesn't 500 on GET. The action is only meaningful for POST.
+        Accepts an ``action`` URL kwarg so the ``wallet/<str:action>/``
+        route doesn't 500 on GET. ``withdraw-requests`` returns this
+        user's bank-withdrawal history so the Wallet panel can show the
+        admin-review status. Any other value just returns the balances.
         """
+        if action == 'withdraw-requests':
+            return self._list_withdraw_requests(request)
+
         balances = WalletBalance.objects.filter(user=request.user)
         if not balances.exists():
             WalletBalance.objects.create(
@@ -758,6 +763,20 @@ class WalletManagementView(APIView):
                 create_error_response("Invalid action"),
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+    def _list_withdraw_requests(self, request):
+        """Return the current user's bank-withdrawal request history."""
+        from .serializers import BankWithdrawalRequestSerializer
+        from .models import BankWithdrawalRequest
+
+        qs = (
+            BankWithdrawalRequest.objects
+            .filter(user=request.user)
+            .order_by('-created_at')[:50]
+        )
+        return Response(create_success_response(data={
+            'requests': BankWithdrawalRequestSerializer(qs, many=True).data,
+        }))
 
     def _create_withdraw_request(self, request):
         """Create a bank-transfer withdrawal request (admin-reviewed)."""
@@ -825,6 +844,31 @@ class WalletManagementView(APIView):
                         f"Bank withdrawal request {withdrawal.id} — "
                         f"pending admin review"
                     ),
+                )
+
+            # Investor-facing confirmation email + in-app notification.
+            # Without this the user sees their available balance drop but
+            # gets no acknowledgement that the request is in the queue.
+            try:
+                from notifications.services import NotificationService
+                NotificationService.create_notification(
+                    user=request.user,
+                    title="Withdrawal Request Received",
+                    message=(
+                        f"Your request to withdraw ${amount} {currency} to "
+                        f"{data['bank_name']} has been received and is "
+                        f"under compliance review. Funds are locked from "
+                        f"your wallet until the wire settles, typically "
+                        f"within 48 hours of approval."
+                    ),
+                    notification_type='payment',
+                    priority='medium',
+                    send_email=True,
+                    send_real_time=True,
+                )
+            except Exception as exc:
+                logger.warning(
+                    "Could not send withdrawal confirmation email: %s", exc,
                 )
 
             return Response(create_success_response(

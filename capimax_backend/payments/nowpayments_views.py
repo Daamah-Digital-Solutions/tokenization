@@ -340,13 +340,42 @@ def nowpayments_create_invoice(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def nowpayments_payment_status(request, payment_id):
-    """Get NOWPayments payment status."""
+    """Get NOWPayments payment status.
+
+    Works for both flows:
+      - "create-payment" path  -> backed by a NOWPaymentsTransaction row
+        whose live status we re-fetch from the provider
+      - "create-invoice" path  -> no NOWPaymentsTransaction record;
+        Payment row is the source of truth. The IPN webhook flips it to
+        COMPLETED when the invoice settles. We surface the local status
+        directly so the SPA can poll either flow with the same client.
+    """
     try:
         # Get internal payment
         payment = Payment.objects.get(id=payment_id, user=request.user)
 
-        # Get NOWPayments transaction
-        nowpayments_tx = NOWPaymentsTransaction.objects.get(payment=payment)
+        # Get NOWPayments transaction — may not exist for invoice-flow
+        # payments. That's fine; fall back to Payment.status.
+        try:
+            nowpayments_tx = NOWPaymentsTransaction.objects.get(payment=payment)
+        except NOWPaymentsTransaction.DoesNotExist:
+            return Response(create_success_response(data={
+                'payment_id': str(payment.id),
+                'nowpayments_payment_id': payment.external_transaction_id or '',
+                'payment_status': (
+                    'finished' if payment.status == PaymentStatus.COMPLETED else
+                    'failed' if payment.status == PaymentStatus.FAILED else
+                    'pending'
+                ),
+                'pay_address': '',
+                'pay_amount': '0',
+                'pay_currency': '',
+                'actually_paid': '0',
+                'is_completed': payment.status == PaymentStatus.COMPLETED,
+                'is_pending': payment.status == PaymentStatus.PENDING,
+                'is_failed': payment.status == PaymentStatus.FAILED,
+                'invoice_url': (payment.metadata or {}).get('invoice_url') or '',
+            }))
 
         # Fetch latest status from NOWPayments
         service = NOWPaymentsService()
@@ -416,11 +445,6 @@ def nowpayments_payment_status(request, payment_id):
             create_error_response("Payment not found"),
             status=status.HTTP_404_NOT_FOUND
         )
-    except NOWPaymentsTransaction.DoesNotExist:
-        return Response(
-            create_error_response("NOWPayments transaction not found"),
-            status=status.HTTP_404_NOT_FOUND
-        )
     except Exception as e:
         logger.error(f"Error fetching payment status: {str(e)}")
         return Response(
@@ -466,29 +490,61 @@ def nowpayments_ipn_callback(request):
         order_id = ipn_data.get('order_id', '')
 
         # ---- Step 3: load and update the NOWPayments transaction ----
+        #
+        # Two creation paths feed the same IPN endpoint:
+        #
+        #   - "create-payment" path  -> creates a NOWPaymentsTransaction
+        #     row and we look it up by `nowpayments_payment_id`.
+        #   - "create-invoice" path  -> creates the Payment row only, no
+        #     NOWPaymentsTransaction. We look up the Payment by
+        #     `order_id` (which we set to str(Payment.id) at invoice
+        #     creation time).
+        nowpayments_tx = None
         try:
             nowpayments_tx = NOWPaymentsTransaction.objects.get(
                 nowpayments_payment_id=nowpayments_payment_id
             )
+            payment = nowpayments_tx.payment
         except NOWPaymentsTransaction.DoesNotExist:
-            logger.warning(f"NOWPayments transaction not found: {nowpayments_payment_id}")
-            return Response(create_success_response(message="Transaction not found"))
+            # Invoice-flow fallback — look up by order_id.
+            try:
+                payment = Payment.objects.get(id=order_id)
+            except (Payment.DoesNotExist, ValueError):
+                logger.warning(
+                    f"NOWPayments IPN — no transaction or payment found "
+                    f"(np_id={nowpayments_payment_id}, order_id={order_id})"
+                )
+                return Response(create_success_response(
+                    message="Transaction not found"
+                ))
 
-        nowpayments_tx.payment_status = payment_status
-        nowpayments_tx.actually_paid = Decimal(str(ipn_data.get('actually_paid', 0)))
-
-        if ipn_data.get('outcome_amount'):
-            nowpayments_tx.outcome_amount = Decimal(str(ipn_data['outcome_amount']))
-        if ipn_data.get('outcome_currency'):
-            nowpayments_tx.outcome_currency = ipn_data['outcome_currency']
-        if ipn_data.get('network_fee'):
-            nowpayments_tx.network_fee = Decimal(str(ipn_data['network_fee']))
-        if ipn_data.get('tx_hash'):
-            nowpayments_tx.transaction_hash = ipn_data['tx_hash']
-
-        nowpayments_tx.save()
-
-        payment = nowpayments_tx.payment
+        if nowpayments_tx is not None:
+            nowpayments_tx.payment_status = payment_status
+            nowpayments_tx.actually_paid = Decimal(str(ipn_data.get('actually_paid', 0)))
+            if ipn_data.get('outcome_amount'):
+                nowpayments_tx.outcome_amount = Decimal(str(ipn_data['outcome_amount']))
+            if ipn_data.get('outcome_currency'):
+                nowpayments_tx.outcome_currency = ipn_data['outcome_currency']
+            if ipn_data.get('network_fee'):
+                nowpayments_tx.network_fee = Decimal(str(ipn_data['network_fee']))
+            if ipn_data.get('tx_hash'):
+                nowpayments_tx.transaction_hash = ipn_data['tx_hash']
+            nowpayments_tx.save()
+        else:
+            # Mirror the same status data into payment.metadata so the
+            # admin and audit trail still have it (since there's no
+            # NOWPaymentsTransaction row to hold it).
+            meta = payment.metadata or {}
+            meta.update({
+                'payment_status': payment_status,
+                'actually_paid': str(ipn_data.get('actually_paid', 0)),
+                'tx_hash': ipn_data.get('tx_hash', ''),
+                'outcome_amount': str(ipn_data.get('outcome_amount', 0)),
+                'outcome_currency': ipn_data.get('outcome_currency', ''),
+                'nowpayments_payment_id': nowpayments_payment_id,
+            })
+            payment.metadata = meta
+            payment.save(update_fields=['metadata', 'updated_at'])
 
         # ---- Step 4: process based on terminal status ----
         if payment_status == 'finished':
@@ -533,6 +589,12 @@ def nowpayments_ipn_callback(request):
                 )
                 wallet_balance.save(update_fields=['available_balance'])
 
+                # Invoice flow doesn't keep a NOWPaymentsTransaction row,
+                # so pull the pay-currency from the IPN payload instead.
+                pay_currency_label = (
+                    nowpayments_tx.pay_currency if nowpayments_tx
+                    else (ipn_data.get('pay_currency') or 'unknown')
+                )
                 wallet_tx = WalletTransaction.objects.create(
                     user=locked_payment.user,
                     transaction_type='deposit',
@@ -542,7 +604,7 @@ def nowpayments_ipn_callback(request):
                     balance_after=wallet_balance.available_balance,
                     reference_id=locked_payment.id,
                     description=(
-                        f"Crypto payment (NOWPayments) - {nowpayments_tx.pay_currency}"
+                        f"Crypto payment (NOWPayments) - {pay_currency_label}"
                     ),
                 )
 
@@ -569,17 +631,21 @@ def nowpayments_ipn_callback(request):
 
                 # Send notification email
                 try:
+                    actually_paid_label = (
+                        str(nowpayments_tx.actually_paid) if nowpayments_tx
+                        else str(ipn_data.get('actually_paid', 0))
+                    )
                     transaction_details = {
                         'type': 'Crypto Deposit',
                         'amount': str(payment.net_amount),
                         'transaction_id': str(wallet_tx.id),
-                        'payment_method': f'Cryptocurrency ({nowpayments_tx.pay_currency})',
+                        'payment_method': f'Cryptocurrency ({pay_currency_label})',
                         'status': 'Confirmed',
                         'previous_balance': str(previous_balance),
                         'new_balance': str(wallet_balance.available_balance),
                         'id': wallet_tx.id,
-                        'crypto_amount': str(nowpayments_tx.actually_paid),
-                        'crypto_currency': nowpayments_tx.pay_currency
+                        'crypto_amount': actually_paid_label,
+                        'crypto_currency': pay_currency_label,
                     }
 
                     EmailService.send_funds_notification_email(

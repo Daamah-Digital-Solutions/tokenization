@@ -1,46 +1,38 @@
 /**
- * Cryptocurrency payment form backed by NOWPayments.
+ * Cryptocurrency payment form backed by the NOWPayments hosted invoice.
  *
- * The previous version of this file simulated Web3 wallet payments —
- * fabricated tx hashes, mock gas estimates, and a hardcoded 3-second
- * "transaction succeeded". It never spoke to a payment provider, never
- * confirmed receipt of funds, and never marked the linked investment as
- * paid. Users could click "pay with crypto" and the investment would
- * silently sit in PENDING forever.
+ * The previous iteration asked the user to pre-select a pay_currency
+ * in our UI (BTC / ETH / USDT / …) and then created a NOWPayments
+ * "payment" tied to that one coin. If the merchant didn't support the
+ * chosen coin (and NOWPayments returns confusing 5xx errors for these
+ * cases) the SPA surfaced an opaque "Failed to create NOWPayments
+ * transaction" with no recovery path. We also had a worse menu than
+ * NOWPayments itself, which supports 200+ assets.
  *
- * This rewrite drives the real NOWPayments integration that already
- * exists on the backend (see capimax_backend/payments/nowpayments_views.py):
+ * This version uses the INVOICE flow:
  *
- *   1. POST /payments/nowpayments/create-payment/  with the chosen
- *      pay_currency + the linked investment_id. The backend creates an
- *      internal Payment row + a real NOWPayments invoice and returns
- *      `pay_address`, `pay_amount`, and a hosted-checkout `payment_url`.
- *   2. The user either:
- *        - clicks "Open Checkout" → NOWPayments-hosted page, or
- *        - sends `pay_amount` directly to `pay_address` from their own
- *          exchange / wallet (the address + amount are shown verbatim).
- *   3. We poll /payments/nowpayments/status/{payment_id}/ every 6s. When
- *      the status reaches `finished`, the backend has already credited
- *      the wallet, transitioned the investment to PENDING_MINT, and
- *      kicked off Celery to mint the tokens. We then call
- *      onPaymentComplete() and the parent flow shows the confirmation
- *      screen.
+ *   1. POST /payments/nowpayments/create-invoice/ with just the amount +
+ *      investment_id. The backend creates an internal Payment row plus
+ *      a real NOWPayments hosted invoice and returns the invoice URL.
+ *   2. Open the hosted URL in a new tab. The user picks any of
+ *      NOWPayments' 200+ supported assets there, sees the live
+ *      conversion, and completes the payment on a domain they may
+ *      already recognise.
+ *   3. We poll /payments/nowpayments/status/{payment_id}/ every 6s.
+ *      The NOWPayments IPN webhook flips Payment.status to COMPLETED
+ *      when the invoice settles, which also triggers
+ *      `InvestmentProcessingService.process_investment` → PENDING_MINT
+ *      → Celery mints the property tokens.
  *
- * Notes:
- *   - The actual NOWPayments API call lives entirely in the backend. We
- *     never expose the merchant API key to the SPA.
- *   - If NOWPayments creds aren't set up yet (staging often has
- *     placeholders), the backend returns 503 and we surface a clear,
- *     human-readable error so the user knows to use another method
- *     instead of getting stuck.
+ * The merchant API key, the chosen coin, the address, the conversion —
+ * none of that touches our SPA. We just hold the user's hand from "I
+ * want to pay" to "your payment confirmed".
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Bitcoin,
-  Coins,
-  Copy,
   CheckCircle,
   AlertCircle,
   ExternalLink,
@@ -53,57 +45,34 @@ import { useNotifications } from '../../contexts/NotificationContext';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 
-// ---------------------------------------------------------------------------
-// Public surface
-// ---------------------------------------------------------------------------
-
 interface CryptoPaymentFormProps {
   amount: number;
-  /** Optional — when provided the backend links the NOWPayments payment to
-   * the investment so the IPN/poll flow can mark it paid + trigger mint. */
   investmentId?: string;
   onPaymentComplete?: (paymentId: string) => void;
   onCancel?: () => void;
   className?: string;
 }
 
-interface CreatePaymentResponse {
+interface CreateInvoiceResponse {
   payment_id: string;
-  nowpayments_payment_id: string;
-  pay_address: string;
-  pay_amount: string;
-  pay_currency: string;
-  payment_status: string;
-  payment_url?: string | null;
+  invoice_id: string;
+  invoice_url: string;
+  created_at?: string;
 }
 
 interface PaymentStatusResponse {
   payment_id: string;
-  nowpayments_payment_id: string;
   payment_status: string;
-  pay_address: string;
-  pay_amount: string;
-  pay_currency: string;
-  actually_paid: string;
   is_completed: boolean;
   is_pending: boolean;
   is_failed: boolean;
+  actually_paid?: string;
+  pay_currency?: string;
+  invoice_url?: string;
 }
 
-// Selection of the most-commonly-used pay currencies. The backend will
-// validate the choice against what NOWPayments supports for the merchant.
-const PAY_CURRENCIES: { code: string; label: string; network?: string }[] = [
-  { code: 'BTC', label: 'Bitcoin (BTC)' },
-  { code: 'ETH', label: 'Ethereum (ETH)' },
-  { code: 'USDTERC20', label: 'Tether (USDT) — Ethereum' },
-  { code: 'USDTTRC20', label: 'Tether (USDT) — TRON' },
-  { code: 'USDCERC20', label: 'USD Coin (USDC) — Ethereum' },
-  { code: 'BNBBSC', label: 'BNB (BSC)' },
-  { code: 'MATIC', label: 'Polygon (MATIC)' },
-];
-
 const POLL_INTERVAL_MS = 6000;
-const POLL_TIMEOUT_MS = 1000 * 60 * 30; // 30 minutes
+const POLL_TIMEOUT_MS = 1000 * 60 * 60; // 1 hour — invoices can sit unpaid
 
 
 export function CryptoPaymentForm({
@@ -115,58 +84,63 @@ export function CryptoPaymentForm({
 }: CryptoPaymentFormProps) {
   const { error: showError } = useNotifications();
 
-  const [step, setStep] = useState<'select' | 'awaiting_payment' | 'complete'>('select');
-  const [payCurrency, setPayCurrency] = useState<string>('USDTERC20');
+  const [step, setStep] = useState<'intro' | 'awaiting_payment' | 'complete'>('intro');
   const [isCreating, setIsCreating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Populated after we POST /create-payment/.
-  const [payment, setPayment] = useState<CreatePaymentResponse | null>(null);
+  const [invoice, setInvoice] = useState<CreateInvoiceResponse | null>(null);
   const [latestStatus, setLatestStatus] = useState<string | null>(null);
-  const [actuallyPaid, setActuallyPaid] = useState<string | null>(null);
-  const [copiedField, setCopiedField] = useState<'address' | 'amount' | null>(null);
 
-  // Refs so we can clean up timers and avoid setState-after-unmount.
   const pollTimerRef = useRef<number | null>(null);
   const pollDeadlineRef = useRef<number | null>(null);
   const completedRef = useRef(false);
 
   // -------------------------------------------------------------------
-  // Create the NOWPayments payment
+  // Open the hosted checkout
   // -------------------------------------------------------------------
 
-  const handleCreatePayment = async () => {
+  const handleCreateInvoice = async () => {
     setErrorMessage(null);
     setIsCreating(true);
     try {
-      const response = await apiClient.post<CreatePaymentResponse>(
-        '/payments/nowpayments/create-payment/',
+      const response = await apiClient.post<CreateInvoiceResponse>(
+        '/payments/nowpayments/create-invoice/',
         {
           amount,
           currency: 'USD',
-          pay_currency: payCurrency,
           investment_id: investmentId,
           order_description: investmentId
             ? `Capimax investment ${investmentId}`
             : 'Capimax investment',
+          // Send the user back here on success/cancel — vite-plugin-pwa
+          // serves the SPA so any deep link resolves client-side.
+          success_url: `${window.location.origin}/dashboard?crypto=success`,
+          cancel_url: `${window.location.origin}/dashboard?crypto=cancelled`,
         },
       );
-      setPayment(response);
-      setLatestStatus(response.payment_status);
+      setInvoice(response);
+
+      // Open NOWPayments checkout in a new tab so the user can pick a
+      // coin from the full list. Some browsers block popups on async
+      // calls; the visible "Open hosted checkout" button is a fallback.
+      if (response.invoice_url) {
+        window.open(response.invoice_url, '_blank', 'noopener,noreferrer');
+      }
+
       setStep('awaiting_payment');
-      // Kick off polling immediately.
       pollDeadlineRef.current = Date.now() + POLL_TIMEOUT_MS;
       pollStatus(response.payment_id);
     } catch (err: any) {
-      // Backend returns 503 when NOWPayments credentials are missing or
-      // the service is unreachable. Distinguish from validation errors so
-      // we tell the user the right next step.
       const status = err?.statusCode;
-      let message = err?.message || 'Failed to create the crypto payment.';
+      let message = err?.message || 'Failed to create the crypto invoice.';
       if (status === 503) {
         message =
           'Crypto payments are not configured for this environment yet. ' +
           'Please use a different payment method, or contact support.';
+      } else if (status === 500) {
+        message =
+          'The crypto payment provider could not generate a checkout. ' +
+          'Please try again in a moment or pick another payment method.';
       }
       setErrorMessage(message);
       showError('Crypto payment failed', message);
@@ -186,9 +160,9 @@ export function CryptoPaymentForm({
       Date.now() > pollDeadlineRef.current
     ) {
       setErrorMessage(
-        'Timed out waiting for the on-chain payment. If you have already sent ' +
-          'the funds, they will still credit — check Transactions in a few ' +
-          'minutes. Otherwise you can cancel and try again.',
+        'Timed out waiting for the on-chain payment. If you have already ' +
+          'sent the funds, they will still credit — check Transactions in a ' +
+          'few minutes. Otherwise you can cancel and try again.',
       );
       return;
     }
@@ -198,7 +172,6 @@ export function CryptoPaymentForm({
         `/payments/nowpayments/status/${paymentId}/`,
       );
       setLatestStatus(status.payment_status);
-      if (status.actually_paid) setActuallyPaid(status.actually_paid);
 
       if (status.is_completed) {
         completedRef.current = true;
@@ -208,14 +181,12 @@ export function CryptoPaymentForm({
       }
       if (status.is_failed) {
         setErrorMessage(
-          'NOWPayments reported this payment as failed or expired. You can ' +
+          'NOWPayments reported this invoice as failed or expired. You can ' +
             'cancel and try again with a fresh quote.',
         );
         return;
       }
     } catch (err: any) {
-      // Don't surface every poll failure to the user — transient network
-      // errors are expected. Just log and try again.
       console.warn('NOWPayments status poll failed:', err?.message ?? err);
     }
 
@@ -234,23 +205,10 @@ export function CryptoPaymentForm({
   }, []);
 
   // -------------------------------------------------------------------
-  // UI helpers
+  // UI
   // -------------------------------------------------------------------
 
-  const copyToClipboard = async (
-    value: string,
-    field: 'address' | 'amount',
-  ) => {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopiedField(field);
-      setTimeout(() => setCopiedField(null), 1500);
-    } catch {
-      // ignore — UI is non-blocking
-    }
-  };
-
-  const renderSelect = () => (
+  const renderIntro = () => (
     <div className="space-y-5">
       <div className="text-center">
         <Bitcoin className="mx-auto w-10 h-10 text-amber-500" />
@@ -258,31 +216,21 @@ export function CryptoPaymentForm({
           Pay with cryptocurrency
         </h3>
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-          Pay <strong>${amount.toFixed(2)}</strong> using your crypto wallet or
-          exchange. We&apos;ll quote the exact amount in your chosen coin.
+          Pay <strong>${amount.toFixed(2)}</strong>. You&apos;ll pick the
+          coin you want to use on the NOWPayments checkout — Bitcoin, USDT,
+          USDC, ETH, BNB, MATIC and 200+ more are supported there.
         </p>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Cryptocurrency
-        </label>
-        <select
-          value={payCurrency}
-          onChange={(e) => setPayCurrency(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500"
-        >
-          {PAY_CURRENCIES.map((c) => (
-            <option key={c.code} value={c.code}>
-              {c.label}
-            </option>
-          ))}
-        </select>
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Don&apos;t see your coin? NOWPayments supports 200+ assets — pick the
-          closest, you can swap on the checkout page.
-        </p>
-      </div>
+      <Card className="p-3 bg-blue-50 border-blue-200 text-blue-900 text-sm space-y-1">
+        <p className="font-medium">What happens next?</p>
+        <ol className="list-decimal pl-5 space-y-1">
+          <li>We open the NOWPayments checkout in a new tab.</li>
+          <li>You choose the coin you want to send and complete the payment there.</li>
+          <li>This window stays open and watches for the on-chain confirmation —
+              your investment finalises automatically when funds arrive.</li>
+        </ol>
+      </Card>
 
       {errorMessage && (
         <Card className="p-3 bg-red-50 border-red-200 text-red-800 text-sm">
@@ -298,17 +246,17 @@ export function CryptoPaymentForm({
           Cancel
         </Button>
         <Button
-          onClick={handleCreatePayment}
+          onClick={handleCreateInvoice}
           disabled={isCreating}
           className="flex-1 bg-emerald-600 hover:bg-emerald-700"
         >
           {isCreating ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Creating…
+              Opening checkout…
             </>
           ) : (
-            'Get payment address'
+            'Continue to NOWPayments'
           )}
         </Button>
       </div>
@@ -316,107 +264,49 @@ export function CryptoPaymentForm({
   );
 
   const renderAwaiting = () => {
-    if (!payment) return null;
+    if (!invoice) return null;
     const statusLabel = (latestStatus || 'waiting').replace(/_/g, ' ');
     return (
       <div className="space-y-5">
         <div className="text-center">
-          <Coins className="mx-auto w-10 h-10 text-emerald-500" />
-          <h3 className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
-            Send the exact amount below
+          <div className="mx-auto w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+            <Clock className="w-6 h-6 text-blue-600 animate-pulse" />
+          </div>
+          <h3 className="mt-3 text-lg font-semibold text-gray-900 dark:text-white">
+            Awaiting payment on NOWPayments
           </h3>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            We&apos;re watching the address — your investment is confirmed the
-            moment the payment is detected on chain.
+            Complete the payment in the new tab we just opened. Your
+            investment finalises as soon as the network confirms the
+            transfer.
           </p>
         </div>
 
-        <Card className="p-4 space-y-3">
-          <div>
-            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Amount
-            </div>
-            <div className="mt-1 flex items-center justify-between gap-2">
-              <span className="font-mono text-lg text-gray-900 dark:text-white">
-                {payment.pay_amount} {payment.pay_currency}
-              </span>
-              <button
-                onClick={() => copyToClipboard(payment.pay_amount, 'amount')}
-                className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-                title="Copy amount"
-              >
-                {copiedField === 'amount' ? (
-                  <CheckCircle className="w-4 h-4 text-emerald-500" />
-                ) : (
-                  <Copy className="w-4 h-4" />
-                )}
-              </button>
-            </div>
+        <Card className="p-3 bg-gray-50 dark:bg-gray-800/40 text-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600 dark:text-gray-300">Status</span>
+            <span className="font-semibold capitalize">{statusLabel}</span>
           </div>
-
-          <div>
-            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Send to address
-            </div>
-            <div className="mt-1 flex items-center gap-2">
-              <span className="font-mono text-xs text-gray-900 dark:text-white break-all flex-1">
-                {payment.pay_address}
-              </span>
-              <button
-                onClick={() => copyToClipboard(payment.pay_address, 'address')}
-                className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex-shrink-0"
-                title="Copy address"
-              >
-                {copiedField === 'address' ? (
-                  <CheckCircle className="w-4 h-4 text-emerald-500" />
-                ) : (
-                  <Copy className="w-4 h-4" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {payment.payment_url && (
-            <a
-              href={payment.payment_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-700 hover:text-emerald-800"
-            >
-              <ExternalLink className="w-4 h-4" />
-              Open hosted checkout
-            </a>
-          )}
+          <a
+            href={invoice.invoice_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-emerald-700 hover:text-emerald-800 font-medium"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Open hosted checkout again
+          </a>
         </Card>
 
         <Card className="p-3 bg-amber-50 border-amber-200 text-amber-900 text-sm">
           <div className="flex gap-2 items-start">
             <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <div>
-              Send <strong>exactly</strong> {payment.pay_amount}{' '}
-              {payment.pay_currency} from a wallet you control. Sending less
-              fails the order; sending more sends the excess back via
-              NOWPayments after a 15-minute review.
+              Don&apos;t close this window until the payment confirms —
+              we&apos;re polling for the update every {POLL_INTERVAL_MS / 1000}s.
+              You can leave it running in the background.
             </div>
           </div>
-        </Card>
-
-        <Card className="p-3 bg-blue-50 border-blue-200">
-          <div className="flex items-center gap-2 text-sm text-blue-800">
-            <Clock className="w-4 h-4 animate-pulse" />
-            Status:{' '}
-            <span className="font-semibold capitalize">{statusLabel}</span>
-            {actuallyPaid && Number(actuallyPaid) > 0 && (
-              <span className="ml-1 text-blue-600">
-                (received {actuallyPaid} {payment.pay_currency})
-              </span>
-            )}
-          </div>
-          <p className="mt-1 text-xs text-blue-700">
-            Refreshing every {POLL_INTERVAL_MS / 1000}s. Don&apos;t close this
-            window until the payment confirms — you can leave it running in the
-            background.
-          </p>
         </Card>
 
         {errorMessage && (
@@ -445,8 +335,8 @@ export function CryptoPaymentForm({
           Payment received
         </h3>
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-          Your crypto payment is confirmed on chain. Tokens will appear in your
-          wallet shortly — minting runs in the background.
+          Your crypto payment is confirmed on chain. Tokens will appear in
+          your wallet shortly — minting runs in the background.
         </p>
       </div>
     </div>
@@ -462,7 +352,7 @@ export function CryptoPaymentForm({
           transition={{ duration: 0.25 }}
           className="p-6"
         >
-          {step === 'select' && renderSelect()}
+          {step === 'intro' && renderIntro()}
           {step === 'awaiting_payment' && renderAwaiting()}
           {step === 'complete' && renderComplete()}
         </motion.div>
