@@ -153,6 +153,68 @@ services:
       echo 'Starting Daphne (ASGI — supports WebSockets) on :8000' &&
       daphne -b 0.0.0.0 -p 8000 --proxy-headers --access-log - capimax_backend.asgi:application"
 
+
+  # Celery worker — consumes high/medium/low/blockchain/celery queues, drives
+  # token minting and payment-state transitions. Without this, investments
+  # created via the UI never move past PENDING.
+  celery_worker:
+    image: python:3.11-slim
+    container_name: capimax_staging_celery_worker
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      ENVIRONMENT: staging
+      DJANGO_SETTINGS_MODULE: capimax_backend.settings
+    volumes:
+      - app_src:/app
+      - media_files:/app/capimax_backend/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    networks:
+      - staging_net
+    command: >
+      bash -c "set -e &&
+      apt-get update && apt-get install -y --no-install-recommends curl libpq-dev gcc python3-dev build-essential &&
+      cd /app/capimax_backend &&
+      pip install -q --no-cache-dir -r requirements.txt &&
+      echo 'Starting Celery worker on queues: high_priority,medium_priority,low_priority,blockchain,celery' &&
+      celery -A capimax_backend worker -Q high_priority,medium_priority,low_priority,blockchain,celery -l info --concurrency=2"
+
+  # Celery beat — emits the periodic schedule defined in
+  # capimax_backend/celery.py. Runs `process-pending-mints` every 2 minutes
+  # so any investment stuck in PENDING_MINT eventually transitions.
+  celery_beat:
+    image: python:3.11-slim
+    container_name: capimax_staging_celery_beat
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      ENVIRONMENT: staging
+      DJANGO_SETTINGS_MODULE: capimax_backend.settings
+    volumes:
+      - app_src:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    networks:
+      - staging_net
+    command: >
+      bash -c "set -e &&
+      apt-get update && apt-get install -y --no-install-recommends curl libpq-dev gcc python3-dev build-essential &&
+      cd /app/capimax_backend &&
+      pip install -q --no-cache-dir -r requirements.txt &&
+      echo 'Starting Celery beat scheduler' &&
+      celery -A capimax_backend beat -l info"
+
 networks:
   staging_net:
     name: capimax_staging_net
