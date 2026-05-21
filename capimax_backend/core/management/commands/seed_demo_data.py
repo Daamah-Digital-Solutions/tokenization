@@ -437,15 +437,38 @@ class Command(BaseCommand):
     # ------------------------------------------------------------------
 
     def _seed_investments(self, users, properties) -> dict:
+        """Seed a few demo investments so the portfolio screen has rows.
+
+        Idempotency note: the previous version used `update_or_create` keyed
+        on `(user, property_investment)`, but the model allows multiple
+        investments by the same user in the same property — and we have demo
+        accounts that DO accumulate extra rows from UI testing. That made
+        `update_or_create` raise `MultipleObjectsReturned` on the second run,
+        which (under the `@transaction.atomic` handle) rolled back everything
+        the seed had just done — including the cover-image uploads. The
+        helper below tolerates duplicates by picking the most recent matching
+        row and updating it, and creating a fresh row only when none exists.
+        """
         from investments.models import Investment, InvestmentStatus
 
         investments = {}
 
+        def upsert(user, property_obj, defaults):
+            qs = Investment.objects.filter(user=user, property_investment=property_obj)
+            existing = qs.order_by('-created_at').first() if qs.exists() else None
+            if existing is None:
+                return Investment.objects.create(
+                    user=user, property_investment=property_obj, **defaults
+                )
+            for field, value in defaults.items():
+                setattr(existing, field, value)
+            existing.save()
+            return existing
+
         # investor@test.com: one COMPLETED, one PENDING_MINT
-        inv1, _ = Investment.objects.update_or_create(
-            user=users['investor'],
-            property_investment=properties['marina'],
-            defaults={
+        investments['inv1_marina_completed'] = upsert(
+            users['investor'], properties['marina'],
+            {
                 'token_amount': 100,
                 'investment_amount': Decimal('1000.00'),
                 'status': InvestmentStatus.COMPLETED,
@@ -454,25 +477,21 @@ class Command(BaseCommand):
                 'lockup_end_date': timezone.now() - timedelta(days=1),  # past — sellable
             },
         )
-        investments['inv1_marina_completed'] = inv1
 
-        inv2, _ = Investment.objects.update_or_create(
-            user=users['investor'],
-            property_investment=properties['palm'],
-            defaults={
+        investments['inv2_palm_pending'] = upsert(
+            users['investor'], properties['palm'],
+            {
                 'token_amount': 50,
                 'investment_amount': Decimal('1250.00'),
                 'status': InvestmentStatus.PENDING_MINT,
                 'mint_scheduled_at': timezone.now() - timedelta(seconds=1),
             },
         )
-        investments['inv2_palm_pending'] = inv2
 
         # investor2: COMPLETED in DIFC (the accredited property)
-        inv3, _ = Investment.objects.update_or_create(
-            user=users['investor2'],
-            property_investment=properties['difc'],
-            defaults={
+        investments['inv3_difc_locked'] = upsert(
+            users['investor2'], properties['difc'],
+            {
                 'token_amount': 200,
                 'investment_amount': Decimal('10000.00'),
                 'status': InvestmentStatus.COMPLETED,
@@ -482,7 +501,6 @@ class Command(BaseCommand):
                 'accredited_at_investment_time': True,
             },
         )
-        investments['inv3_difc_locked'] = inv3
 
         self.stdout.write(f'  Investments: {len(investments)} ('
                           'investor: 1 completed + 1 pending_mint, '
