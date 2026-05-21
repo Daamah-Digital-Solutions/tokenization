@@ -34,6 +34,22 @@ app.conf.beat_schedule = {
         'kwargs': {},
     },
 
+    # Secondary marketplace: re-match PENDING limit orders against the
+    # current order book. Without this, limit orders that don't fill at
+    # creation time sit forever and never trade.
+    'match-pending-limit-orders': {
+        'task': 'marketplace.tasks.match_pending_limit_orders',
+        'schedule': 60.0,  # Every 1 minute
+        'kwargs': {},
+    },
+
+    # Marketplace: garbage-collect limit orders older than 30 days.
+    'expire-stale-limit-orders': {
+        'task': 'marketplace.tasks.expire_stale_limit_orders',
+        'schedule': 60.0 * 60.0 * 6.0,  # Every 6 hours
+        'kwargs': {},
+    },
+
     # Cancel abandoned payments after PAYMENT_TIMEOUT_HOURS
     'expire-pending-payments': {
         'task': 'payments.tasks.expire_pending_payments',
@@ -135,6 +151,10 @@ app.conf.task_routes = {
     
     # Blockchain tasks
     'blockchain.tasks.*': {'queue': 'blockchain'},
+
+    # Marketplace matching — runs hot, cheap, doesn't touch the chain.
+    'marketplace.tasks.match_pending_limit_orders': {'queue': 'high_priority'},
+    'marketplace.tasks.expire_stale_limit_orders': {'queue': 'low_priority'},
 }
 
 # Task retry configuration

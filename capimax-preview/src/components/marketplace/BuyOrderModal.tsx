@@ -267,31 +267,58 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                       Order Type
                     </label>
                     <div className="grid grid-cols-2 gap-3">
-                      <Button
-                        variant={orderData.order_type === 'market' ? 'default' : 'outline'}
+                      <button
+                        type="button"
                         onClick={() => setOrderData(prev => ({
                           ...prev,
                           order_type: 'market',
                           price_per_token: listing.price_per_token
                         }))}
-                        className="h-12 justify-start"
+                        className={`text-left rounded-xl border p-4 transition-colors ${
+                          orderData.order_type === 'market'
+                            ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 ring-2 ring-emerald-500/40'
+                            : 'border-gray-200 dark:border-gray-700 hover:border-emerald-300'
+                        }`}
                       >
-                        <Zap className="w-4 h-4 mr-2" />
-                        Market Order
-                      </Button>
-                      <Button
-                        variant={orderData.order_type === 'limit' ? 'default' : 'outline'}
+                        <div className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white">
+                          <Zap className="w-4 h-4 text-emerald-600" />
+                          Market Order
+                        </div>
+                        <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 leading-snug">
+                          Buy immediately at the current listed price (${parseFloat(listing.price_per_token).toFixed(2)}).
+                          Executes right away — no waiting.
+                        </p>
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => setOrderData(prev => ({
                           ...prev,
                           order_type: 'limit',
                           price_per_token: listing.price_per_token
                         }))}
-                        className="h-12 justify-start"
+                        className={`text-left rounded-xl border p-4 transition-colors ${
+                          orderData.order_type === 'limit'
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-500/40'
+                            : 'border-gray-200 dark:border-gray-700 hover:border-blue-300'
+                        }`}
                       >
-                        <TrendingUp className="w-4 h-4 mr-2" />
-                        Limit Order
-                      </Button>
+                        <div className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white">
+                          <TrendingUp className="w-4 h-4 text-blue-600" />
+                          Limit Order
+                        </div>
+                        <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 leading-snug">
+                          Set your maximum price. The order waits in the book
+                          and fills only when a seller meets your price.
+                        </p>
+                      </button>
                     </div>
+                    {orderData.order_type === 'limit' && (
+                      <p className="mt-3 text-xs text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-2.5">
+                        Limit orders may take time to fill — or never fill if the
+                        market price stays above your limit. You can cancel any
+                        time from your order history.
+                      </p>
+                    )}
                   </div>
 
                   {/* Token Amount */}
