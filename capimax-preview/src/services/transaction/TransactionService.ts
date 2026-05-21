@@ -138,19 +138,31 @@ export class TransactionService {
               network: transaction.metadata.network || 'Ethereum',
               transaction_hash: transaction.metadata.transaction_hash
             };
+          }
 
-            // Add blockchain details for investment transactions
-            if (transaction.type === TransactionType.INVESTMENT && transaction.metadata.transaction_hash) {
-              enhanced.blockchain_details = {
-                network: transaction.metadata.network || 'Ethereum',
-                confirmations: transaction.metadata.confirmation_blocks || 0,
-                required_confirmations: 12,
-                transaction_hash: transaction.metadata.transaction_hash,
-                block_number: transaction.metadata.block_number,
-                gas_used: transaction.metadata.gas_used,
-                gas_price: transaction.metadata.gas_price
-              };
-            }
+          // Build blockchain_details for any transaction that has a hash.
+          //
+          // The /transactions/ endpoint exposes `transaction_hash` at the top
+          // level (see InvestmentTransactionsView in the backend), not under
+          // `metadata.transaction_hash` as the earlier mapping assumed. So
+          // for every real investment the block existed, the hash existed,
+          // but `blockchain_details` was never populated and the explorer
+          // button never appeared. Read both shapes so we handle the
+          // pre-metadata-shaped legacy payload and the current flat one.
+          const hash =
+            (transaction as any).transaction_hash ||
+            (transaction.metadata && transaction.metadata.transaction_hash);
+          if (transaction.type === TransactionType.INVESTMENT && hash) {
+            const network = (transaction.metadata?.network) || (transaction as any).network || 'bsc';
+            enhanced.blockchain_details = {
+              network,
+              confirmations: transaction.metadata?.confirmation_blocks ?? 0,
+              required_confirmations: 12,
+              transaction_hash: hash,
+              block_number: transaction.metadata?.block_number,
+              gas_used: transaction.metadata?.gas_used,
+              gas_price: transaction.metadata?.gas_price,
+            };
           }
 
           return enhanced;

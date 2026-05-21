@@ -32,6 +32,11 @@ import {
   TransactionType,
   PaymentMethod
 } from '../../../services/api/types';
+import {
+  getExplorerTxUrl,
+  getExplorerName,
+  looksLikeRealHash,
+} from '../../../utils/blockchainExplorer';
 import type {
   Transaction,
   Investment
@@ -576,6 +581,37 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                   <ChevronDown className="w-4 h-4" />
                                 )}
                               </Button>
+                              {/*
+                                On-chain explorer link — shown as a top-level
+                                row action whenever the transaction has a real
+                                on-chain hash so the user can independently
+                                verify the mint/transfer happened. We use
+                                looksLikeRealHash() to suppress the button for
+                                placeholder hashes (e.g. 0x64656d6f...0000 from
+                                demo data) that would lead to a 404 on the
+                                explorer and confuse the user.
+                              */}
+                              {(() => {
+                                const txHash =
+                                  transaction.blockchain_details?.transaction_hash ||
+                                  (transaction as any).transaction_hash;
+                                if (!looksLikeRealHash(txHash)) return null;
+                                const network =
+                                  transaction.blockchain_details?.network ||
+                                  (transaction as any).network;
+                                const url = getExplorerTxUrl(txHash, network);
+                                if (!url) return null;
+                                return (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
+                                    title={`View on ${getExplorerName(network)}`}
+                                  >
+                                    <ExternalLink className="w-4 h-4" />
+                                  </Button>
+                                );
+                              })()}
                               {(transaction as any).property?.id && (
                                 <Button
                                   variant="outline"
@@ -734,25 +770,35 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                               <Text variant="caption" className="font-mono text-xs">
                                                 {transaction.blockchain_details.transaction_hash.slice(0, 10)}...
                                               </Text>
-                                              <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="p-1"
-                                                onClick={() => {
-                                                  // Use correct explorer based on network
-                                                  const network = transaction.blockchain_details?.network?.toLowerCase() || 'polygon';
-                                                  const explorers: Record<string, string> = {
-                                                    polygon: 'https://polygonscan.com/tx/',
-                                                    ethereum: 'https://etherscan.io/tx/',
-                                                    bsc: 'https://bscscan.com/tx/',
-                                                  };
-                                                  const baseUrl = explorers[network] || explorers.polygon;
-                                                  window.open(`${baseUrl}${transaction.blockchain_details?.transaction_hash}`, '_blank', 'noopener,noreferrer');
-                                                }}
-                                                title="View on PolygonScan"
-                                              >
-                                                <ExternalLink className="w-3 h-3" />
-                                              </Button>
+                                              {(() => {
+                                                // Use the shared explorer
+                                                // helper so this button and the
+                                                // top-level row action always
+                                                // route to the same place. The
+                                                // earlier inline explorer map
+                                                // hardcoded Polygon as the
+                                                // default — staging actually
+                                                // runs on BSC testnet, so the
+                                                // link 404'd. helper resolves
+                                                // the right network and falls
+                                                // back to bsc_testnet.
+                                                const url = getExplorerTxUrl(
+                                                  transaction.blockchain_details?.transaction_hash,
+                                                  transaction.blockchain_details?.network,
+                                                );
+                                                if (!url) return null;
+                                                return (
+                                                  <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="p-1"
+                                                    onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
+                                                    title={`View on ${getExplorerName(transaction.blockchain_details?.network)}`}
+                                                  >
+                                                    <ExternalLink className="w-3 h-3" />
+                                                  </Button>
+                                                );
+                                              })()}
                                             </div>
                                           </div>
                                         )}
