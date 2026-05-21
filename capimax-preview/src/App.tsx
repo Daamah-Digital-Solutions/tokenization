@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, ComponentType } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -14,6 +14,50 @@ import { UpdatePrompt } from './components/system/UpdatePrompt';
 import { MobileBottomNav } from './components/mobile/MobileBottomNav';
 import './App.css'
 
+// Lazy import with chunk-reload fallback.
+//
+// When a deploy ships, every JS chunk gets a new content-hash filename.
+// A user whose tab was open across the deploy still has the OLD index.html
+// (or service-worker cache) referencing the OLD chunk URLs — so the next
+// time they navigate to a route that hasn't been loaded yet, the dynamic
+// import 404s. The symptom is the "Failed to Load Page" fallback.
+//
+// We detect ChunkLoadError (or the equivalent "Failed to fetch dynamically
+// imported module") and hard-reload the page once so the browser pulls
+// the fresh index.html with the new chunk references. sessionStorage
+// guards against an infinite reload loop on a genuinely missing chunk.
+const isChunkLoadError = (err: unknown): boolean => {
+  if (!(err instanceof Error)) return false;
+  return (
+    err.name === 'ChunkLoadError' ||
+    /Loading chunk \d+ failed/i.test(err.message) ||
+    /Failed to fetch dynamically imported module/i.test(err.message) ||
+    /Importing a module script failed/i.test(err.message)
+  );
+};
+
+const lazyWithRetry = <T extends ComponentType<any>>(
+  loader: () => Promise<{ default: T }>,
+): React.LazyExoticComponent<T> =>
+  React.lazy(async () => {
+    try {
+      const mod = await loader();
+      // Successful load — clear any prior reload flag so a future stale
+      // chunk error can trigger another reload if needed.
+      sessionStorage.removeItem('chunk-reload-attempted');
+      return mod;
+    } catch (err) {
+      if (isChunkLoadError(err) && !sessionStorage.getItem('chunk-reload-attempted')) {
+        sessionStorage.setItem('chunk-reload-attempted', String(Date.now()));
+        window.location.reload();
+        // Never-resolving promise so React doesn't render the error fallback
+        // before the reload happens. The browser tears this down on reload.
+        return new Promise<{ default: T }>(() => {});
+      }
+      throw err;
+    }
+  });
+
 // Create a client instance
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,66 +71,66 @@ const queryClient = new QueryClient({
 });
 
 // Lazy load pages for code splitting
-const HomePage = React.lazy(() => import('./components/HomePage').then(m => ({ default: m.HomePage })));
-const LoginPage = React.lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
-const RegisterPage = React.lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
-const EmailVerificationPage = React.lazy(() => import('./pages/EmailVerificationPage').then(m => ({ default: m.EmailVerificationPage })));
-const CodeVerificationPage = React.lazy(() => import('./pages/CodeVerificationPage').then(m => ({ default: m.CodeVerificationPage })));
-const PasswordResetPage = React.lazy(() => import('./pages/PasswordResetPage').then(m => ({ default: m.PasswordResetPage })));
-const NewPasswordPage = React.lazy(() => import('./pages/NewPasswordPage').then(m => ({ default: m.NewPasswordPage })));
-const CompleteGoogleProfilePage = React.lazy(() => import('./pages/CompleteGoogleProfilePage').then(m => ({ default: m.CompleteGoogleProfilePage })));
-const SubmitPropertyPage = React.lazy(() => import('./pages/SubmitPropertyPage').then(m => ({ default: m.SubmitPropertyPage })));
-const KYCPage = React.lazy(() => import('./pages/KYCPage').then(m => ({ default: m.KYCPage })));
-const PropertiesPage = React.lazy(() => import('./pages/PropertiesPage').then(m => ({ default: m.PropertiesPage })));
-const PropertyDetailPage = React.lazy(() => import('./pages/PropertyDetailPage').then(m => ({ default: m.PropertyDetailPage })));
-const DashboardPage = React.lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
-const DemoPage = React.lazy(() => import('./pages/DemoPage').then(m => ({ default: m.DemoPage })));
-const IntegrationTestPage = React.lazy(() => import('./pages/IntegrationTestPage').then(m => ({ default: m.IntegrationTestPage })));
-const WalletManagementPage = React.lazy(() => import('./components/payments').then(m => ({ default: m.WalletManagementPage })));
-const RoleManagementPage = React.lazy(() => import('./pages/RoleManagementPage').then(m => ({ default: m.RoleManagementPage })));
-const MarketplacePage = React.lazy(() => import('./pages/MarketplacePage').then(m => ({ default: m.MarketplacePage })));
-const BrokerProgramPage = React.lazy(() => import('./pages/BrokerProgramPage').then(m => ({ default: m.BrokerProgramPage })));
-const BrokerApplicationPage = React.lazy(() => import('./pages/BrokerApplicationPage').then(m => ({ default: m.BrokerApplicationPage })));
-const AboutPage = React.lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
-const ContactPage = React.lazy(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
-const PartnersPage = React.lazy(() => import('./pages/PartnersPage').then(m => ({ default: m.PartnersPage })));
-const LiquidityProviderPage = React.lazy(() => import('./pages/LiquidityProviderPage').then(m => ({ default: m.LiquidityProviderPage })));
+const HomePage = lazyWithRetry(() => import('./components/HomePage').then(m => ({ default: m.HomePage })));
+const LoginPage = lazyWithRetry(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const RegisterPage = lazyWithRetry(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
+const EmailVerificationPage = lazyWithRetry(() => import('./pages/EmailVerificationPage').then(m => ({ default: m.EmailVerificationPage })));
+const CodeVerificationPage = lazyWithRetry(() => import('./pages/CodeVerificationPage').then(m => ({ default: m.CodeVerificationPage })));
+const PasswordResetPage = lazyWithRetry(() => import('./pages/PasswordResetPage').then(m => ({ default: m.PasswordResetPage })));
+const NewPasswordPage = lazyWithRetry(() => import('./pages/NewPasswordPage').then(m => ({ default: m.NewPasswordPage })));
+const CompleteGoogleProfilePage = lazyWithRetry(() => import('./pages/CompleteGoogleProfilePage').then(m => ({ default: m.CompleteGoogleProfilePage })));
+const SubmitPropertyPage = lazyWithRetry(() => import('./pages/SubmitPropertyPage').then(m => ({ default: m.SubmitPropertyPage })));
+const KYCPage = lazyWithRetry(() => import('./pages/KYCPage').then(m => ({ default: m.KYCPage })));
+const PropertiesPage = lazyWithRetry(() => import('./pages/PropertiesPage').then(m => ({ default: m.PropertiesPage })));
+const PropertyDetailPage = lazyWithRetry(() => import('./pages/PropertyDetailPage').then(m => ({ default: m.PropertyDetailPage })));
+const DashboardPage = lazyWithRetry(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const DemoPage = lazyWithRetry(() => import('./pages/DemoPage').then(m => ({ default: m.DemoPage })));
+const IntegrationTestPage = lazyWithRetry(() => import('./pages/IntegrationTestPage').then(m => ({ default: m.IntegrationTestPage })));
+const WalletManagementPage = lazyWithRetry(() => import('./components/payments').then(m => ({ default: m.WalletManagementPage })));
+const RoleManagementPage = lazyWithRetry(() => import('./pages/RoleManagementPage').then(m => ({ default: m.RoleManagementPage })));
+const MarketplacePage = lazyWithRetry(() => import('./pages/MarketplacePage').then(m => ({ default: m.MarketplacePage })));
+const BrokerProgramPage = lazyWithRetry(() => import('./pages/BrokerProgramPage').then(m => ({ default: m.BrokerProgramPage })));
+const BrokerApplicationPage = lazyWithRetry(() => import('./pages/BrokerApplicationPage').then(m => ({ default: m.BrokerApplicationPage })));
+const AboutPage = lazyWithRetry(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
+const ContactPage = lazyWithRetry(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
+const PartnersPage = lazyWithRetry(() => import('./pages/PartnersPage').then(m => ({ default: m.PartnersPage })));
+const LiquidityProviderPage = lazyWithRetry(() => import('./pages/LiquidityProviderPage').then(m => ({ default: m.LiquidityProviderPage })));
 
 // Legal Pages
-const DisclaimerPage = React.lazy(() => import('./pages/legal/DisclaimerPage').then(m => ({ default: m.DisclaimerPage })));
-const RiskDisclosurePage = React.lazy(() => import('./pages/legal/RiskDisclosurePage').then(m => ({ default: m.RiskDisclosurePage })));
-const CompliancePage = React.lazy(() => import('./pages/legal/CompliancePage').then(m => ({ default: m.CompliancePage })));
-const PrivacyPolicyPage = React.lazy(() => import('./pages/legal/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
-const TermsPage = React.lazy(() => import('./pages/legal/TermsPage').then(m => ({ default: m.TermsPage })));
-const CookiesPolicyPage = React.lazy(() => import('./pages/legal/CookiesPolicyPage').then(m => ({ default: m.CookiesPolicyPage })));
-const AMLKYCPage = React.lazy(() => import('./pages/legal/AMLKYCPage').then(m => ({ default: m.AMLKYCPage })));
-const ConflictsPage = React.lazy(() => import('./pages/legal/ConflictsPage').then(m => ({ default: m.ConflictsPage })));
-const ComplaintsPage = React.lazy(() => import('./pages/legal/ComplaintsPage').then(m => ({ default: m.ComplaintsPage })));
-const SecurityPolicyPage = React.lazy(() => import('./pages/legal/SecurityPolicyPage').then(m => ({ default: m.SecurityPolicyPage })));
+const DisclaimerPage = lazyWithRetry(() => import('./pages/legal/DisclaimerPage').then(m => ({ default: m.DisclaimerPage })));
+const RiskDisclosurePage = lazyWithRetry(() => import('./pages/legal/RiskDisclosurePage').then(m => ({ default: m.RiskDisclosurePage })));
+const CompliancePage = lazyWithRetry(() => import('./pages/legal/CompliancePage').then(m => ({ default: m.CompliancePage })));
+const PrivacyPolicyPage = lazyWithRetry(() => import('./pages/legal/PrivacyPolicyPage').then(m => ({ default: m.PrivacyPolicyPage })));
+const TermsPage = lazyWithRetry(() => import('./pages/legal/TermsPage').then(m => ({ default: m.TermsPage })));
+const CookiesPolicyPage = lazyWithRetry(() => import('./pages/legal/CookiesPolicyPage').then(m => ({ default: m.CookiesPolicyPage })));
+const AMLKYCPage = lazyWithRetry(() => import('./pages/legal/AMLKYCPage').then(m => ({ default: m.AMLKYCPage })));
+const ConflictsPage = lazyWithRetry(() => import('./pages/legal/ConflictsPage').then(m => ({ default: m.ConflictsPage })));
+const ComplaintsPage = lazyWithRetry(() => import('./pages/legal/ComplaintsPage').then(m => ({ default: m.ComplaintsPage })));
+const SecurityPolicyPage = lazyWithRetry(() => import('./pages/legal/SecurityPolicyPage').then(m => ({ default: m.SecurityPolicyPage })));
 
 // Info/Public Pages
-const HowItWorksPage = React.lazy(() => import('./pages/HowItWorksPage').then(m => ({ default: m.HowItWorksPage })));
-const TokenizationPage = React.lazy(() => import('./pages/TokenizationPage').then(m => ({ default: m.TokenizationPage })));
-const SPVPage = React.lazy(() => import('./pages/SPVPage').then(m => ({ default: m.SPVPage })));
-const DataRoomPage = React.lazy(() => import('./pages/DataRoomPage').then(m => ({ default: m.DataRoomPage })));
-const InvestorGuidePage = React.lazy(() => import('./pages/InvestorGuidePage').then(m => ({ default: m.InvestorGuidePage })));
-const SecondaryMarketPage = React.lazy(() => import('./pages/SecondaryMarketPage').then(m => ({ default: m.SecondaryMarketPage })));
-const RisksPage = React.lazy(() => import('./pages/RisksPage').then(m => ({ default: m.RisksPage })));
-const FAQPage = React.lazy(() => import('./pages/FAQPage').then(m => ({ default: m.FAQPage })));
-const PropertyOwnerLandingPage = React.lazy(() => import('./pages/PropertyOwnerLandingPage').then(m => ({ default: m.PropertyOwnerLandingPage })));
-const WhyCapimaxPage = React.lazy(() => import('./pages/WhyCapimaxPage').then(m => ({ default: m.WhyCapimaxPage })));
-const StructurePage = React.lazy(() => import('./pages/StructurePage').then(m => ({ default: m.StructurePage })));
-const DocumentCenterPage = React.lazy(() => import('./pages/DocumentCenterPage').then(m => ({ default: m.DocumentCenterPage })));
+const HowItWorksPage = lazyWithRetry(() => import('./pages/HowItWorksPage').then(m => ({ default: m.HowItWorksPage })));
+const TokenizationPage = lazyWithRetry(() => import('./pages/TokenizationPage').then(m => ({ default: m.TokenizationPage })));
+const SPVPage = lazyWithRetry(() => import('./pages/SPVPage').then(m => ({ default: m.SPVPage })));
+const DataRoomPage = lazyWithRetry(() => import('./pages/DataRoomPage').then(m => ({ default: m.DataRoomPage })));
+const InvestorGuidePage = lazyWithRetry(() => import('./pages/InvestorGuidePage').then(m => ({ default: m.InvestorGuidePage })));
+const SecondaryMarketPage = lazyWithRetry(() => import('./pages/SecondaryMarketPage').then(m => ({ default: m.SecondaryMarketPage })));
+const RisksPage = lazyWithRetry(() => import('./pages/RisksPage').then(m => ({ default: m.RisksPage })));
+const FAQPage = lazyWithRetry(() => import('./pages/FAQPage').then(m => ({ default: m.FAQPage })));
+const PropertyOwnerLandingPage = lazyWithRetry(() => import('./pages/PropertyOwnerLandingPage').then(m => ({ default: m.PropertyOwnerLandingPage })));
+const WhyCapimaxPage = lazyWithRetry(() => import('./pages/WhyCapimaxPage').then(m => ({ default: m.WhyCapimaxPage })));
+const StructurePage = lazyWithRetry(() => import('./pages/StructurePage').then(m => ({ default: m.StructurePage })));
+const DocumentCenterPage = lazyWithRetry(() => import('./pages/DocumentCenterPage').then(m => ({ default: m.DocumentCenterPage })));
 
 // Guide Pages
-const BrokerGuidePage = React.lazy(() => import('./pages/BrokerGuidePage').then(m => ({ default: m.BrokerGuidePage })));
-const CapimaxRTGuidePage = React.lazy(() => import('./pages/CapimaxRTGuidePage').then(m => ({ default: m.CapimaxRTGuidePage })));
-const DeveloperGuidePage = React.lazy(() => import('./pages/DeveloperGuidePage').then(m => ({ default: m.DeveloperGuidePage })));
-const InvestmentGuidePage = React.lazy(() => import('./pages/InvestmentGuidePage').then(m => ({ default: m.InvestmentGuidePage })));
-const InvestmentStrategiesPage = React.lazy(() => import('./pages/InvestmentStrategiesPage').then(m => ({ default: m.InvestmentStrategiesPage })));
-const LiquidityProviderGuidePage = React.lazy(() => import('./pages/LiquidityProviderGuidePage').then(m => ({ default: m.LiquidityProviderGuidePage })));
-const OwnersGuidePage = React.lazy(() => import('./pages/OwnersGuidePage').then(m => ({ default: m.OwnersGuidePage })));
-const TechnologyPage = React.lazy(() => import('./pages/TechnologyPage').then(m => ({ default: m.TechnologyPage })));
+const BrokerGuidePage = lazyWithRetry(() => import('./pages/BrokerGuidePage').then(m => ({ default: m.BrokerGuidePage })));
+const CapimaxRTGuidePage = lazyWithRetry(() => import('./pages/CapimaxRTGuidePage').then(m => ({ default: m.CapimaxRTGuidePage })));
+const DeveloperGuidePage = lazyWithRetry(() => import('./pages/DeveloperGuidePage').then(m => ({ default: m.DeveloperGuidePage })));
+const InvestmentGuidePage = lazyWithRetry(() => import('./pages/InvestmentGuidePage').then(m => ({ default: m.InvestmentGuidePage })));
+const InvestmentStrategiesPage = lazyWithRetry(() => import('./pages/InvestmentStrategiesPage').then(m => ({ default: m.InvestmentStrategiesPage })));
+const LiquidityProviderGuidePage = lazyWithRetry(() => import('./pages/LiquidityProviderGuidePage').then(m => ({ default: m.LiquidityProviderGuidePage })));
+const OwnersGuidePage = lazyWithRetry(() => import('./pages/OwnersGuidePage').then(m => ({ default: m.OwnersGuidePage })));
+const TechnologyPage = lazyWithRetry(() => import('./pages/TechnologyPage').then(m => ({ default: m.TechnologyPage })));
 
 // Loading fallback component
 const PageLoader: React.FC<{ message?: string }> = ({ message = 'Loading page...' }) => (
