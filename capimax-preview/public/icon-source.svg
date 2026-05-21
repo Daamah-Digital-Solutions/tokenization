@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Capimax RT app-icon source.
+  Brand mark: open-C + 3 diagonal slashes.
+
+  Designed at 512×512 with a 64px safe inset (maskable-friendly), centred on
+  a navy-to-emerald gradient. The mark is rendered exactly like the navbar's
+  "light" logo variant (emerald C + white slashes) so it reads correctly on
+  the dark icon background.
+-->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f766e"/>
+      <stop offset="50%" stop-color="#0b3b3a"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Full-bleed background, painted up to the edges so the OS mask can crop
+       freely without exposing transparency. -->
+  <rect width="512" height="512" fill="url(#bg)"/>
+
+  <!-- Mark group — translated + scaled from the source logo's viewBox
+       (128×108) onto our 512×512 canvas, leaving ≈12% safe padding on
+       every edge so circular/squircle masks don't clip the marks. -->
+  <g transform="translate(106, 130) scale(2.34)">
+
+    <!-- Emerald open-C (st0 = #2FAD6F in the original favicon). -->
+    <path fill="#2FAD6F" d="M58.599,45.359L55.28,54.04l-0.465,1.221H30.979c-10.951,0-19.861,9.287-19.861,20.687
+      c0,11.411,8.911,20.687,19.861,20.687h8.002l-3.319,8.682l-0.169,0.44l-0.296,0.781h-4.217c-16.193,0-29.374-13.721-29.374-30.59
+      s13.181-30.59,29.374-30.59H58.599z"/>
+
+    <!-- Three diagonal slashes — rendered white so they punch against the
+         navy background (in the "light" wordmark these are #FFFFFF). -->
+    <polygon fill="#FFFFFF" points="73.443,42.685 68.63,55.262 52.796,96.636 49.012,106.539 48.843,106.979 38.442,106.979
+      38.611,106.539 42.395,96.636 58.229,55.262 62.013,45.359 63.038,42.685 68.662,42.685"/>
+    <polygon fill="#FFFFFF" points="99.245,24.192 67.575,106.979 57.164,106.979 88.832,24.192"/>
+    <polygon fill="#FFFFFF" points="126.755,0.706 86.295,106.979 75.894,106.979 116.547,0.706"/>
+  </g>
+</svg>
