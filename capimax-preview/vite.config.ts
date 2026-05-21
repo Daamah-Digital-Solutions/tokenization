@@ -15,7 +15,12 @@ export default defineConfig({
       // fixed. With 'prompt' the banner forces (or auto-times-out) a
       // reload, which is the only way to swap in the new chunks.
       registerType: 'prompt',
-      includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
+      includeAssets: [
+        'favicon.svg',
+        'robots.txt',
+        'icons/*.png',
+        'splash/*.png',
+      ],
       manifest: false, // Use public/manifest.json
       workbox: {
         // skipWaiting + clientsClaim: when a fresh service worker is published,
@@ -27,7 +32,15 @@ export default defineConfig({
         // that and re-fetches via the router on next navigation.
         skipWaiting: true,
         clientsClaim: true,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,svg,woff,woff2,webmanifest}', 'icons/*.png'],
+        // Splash screens are referenced by `<link rel="apple-touch-startup-image">`
+        // and only ever fetched by iOS at install time, not by the running PWA —
+        // no reason to pay the precache cost for 2 MB of PNGs we don't use at
+        // runtime. They'll still be served by the network at install time.
+        globIgnores: ['splash/*'],
+        // Stay generous on the budget anyway in case future fonts or chunks
+        // push individual files past the default 2 MB limit.
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallbackDenylist: [/^\/admin/, /^\/api/, /^\/static/, /^\/media/],
         runtimeCaching: [
           {

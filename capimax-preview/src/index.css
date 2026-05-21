@@ -9,15 +9,56 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Paint the html background so the area under the notch / status bar
+       isn't a bright flash of white when the SW boots the standalone PWA. */
+    background-color: #0f172a;
   }
-  
+
   body {
     font-feature-settings: 'rlig' 1, 'calt' 1, 'cv02' 1, 'cv03' 1, 'cv04' 1;
     letter-spacing: -0.011em;
+    /* Disable rubber-band over-scroll on iOS standalone — it's the single
+       biggest "this is a website, not an app" tell. Pages still scroll;
+       the page-bounce just stops at the edges. */
+    overscroll-behavior-y: none;
+    /* Tap highlight color is a slate flash on iOS by default — replace with
+       a subtle emerald-tinted hint so taps feel native. */
+    -webkit-tap-highlight-color: rgba(16, 185, 129, 0.15);
+    /* Stop iOS letting the user accidentally trigger a system text-selection
+       gesture on UI chrome (icons, nav bar). Inputs/textareas/contenteditable
+       opt back in below. */
+    -webkit-touch-callout: none;
+  }
+
+  /* Inputs and content-bearing nodes opt back into text selection. */
+  input, textarea, select, [contenteditable="true"], p, span, h1, h2, h3, h4, h5, h6, li, td, th, code, pre {
+    -webkit-touch-callout: default;
+    -webkit-user-select: text;
+    user-select: text;
   }
 
   * {
     box-sizing: border-box;
+  }
+
+  /* PWA standalone-mode polish — these only kick in when the user has
+     "Add to Home Screen"-ed the app. The class is also applied by main.tsx
+     when the standalone media query matches, because some old iOS Safari
+     builds drop the media query inside @media print contexts. */
+  html.pwa-standalone body {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  @media all and (display-mode: standalone) {
+    body {
+      padding-top: env(safe-area-inset-top);
+    }
+  }
+
+  /* Stop iOS double-tap-to-zoom on buttons — common cause of "the button
+     fires twice and submits the form" reports. */
+  button, [role="button"] {
+    touch-action: manipulation;
   }
 
   /* Screen reader only utility */

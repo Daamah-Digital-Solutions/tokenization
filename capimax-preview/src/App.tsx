@@ -11,6 +11,7 @@ import { NetworkProvider } from './components/ui/OfflineIndicator';
 import { SkipToContent, KeyboardIndicator } from './components/ui/AccessibilityHelper';
 import { PWAInstallPrompt } from './components/pwa/PWAInstallPrompt';
 import { UpdatePrompt } from './components/system/UpdatePrompt';
+import { MobileBottomNav } from './components/mobile/MobileBottomNav';
 import './App.css'
 
 // Create a client instance
@@ -708,6 +709,7 @@ function App() {
                   <PaymentProvider>
                     <RouterProvider>
                       <AppRouter />
+                      <MobileBottomNav />
                       <PWAInstallPrompt />
                       <UpdatePrompt />
                     </RouterProvider>

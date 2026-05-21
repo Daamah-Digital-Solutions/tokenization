@@ -2,11 +2,16 @@
   "name": "Capimax RT - Real Estate Tokenization",
   "short_name": "Capimax RT",
   "description": "Global real estate tokenization platform for fractional investment through SPV-backed digital units",
-  "start_url": "/",
+  "id": "/?source=pwa",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#0f172a",
   "theme_color": "#10b981",
   "orientation": "portrait-primary",
+  "lang": "en",
+  "dir": "ltr",
   "categories": ["finance", "business", "investment"],
   "icons": [
     {
@@ -43,7 +48,7 @@
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icons/icon-384.png",
@@ -55,7 +60,49 @@
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "My Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your portfolio and investments",
+      "url": "/dashboard?source=pwa_shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Browse Properties",
+      "short_name": "Properties",
+      "description": "Discover tokenized properties",
+      "url": "/properties?source=pwa_shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Marketplace",
+      "short_name": "Trade",
+      "description": "Buy and sell property tokens",
+      "url": "/marketplace?source=pwa_shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My Wallet",
+      "short_name": "Wallet",
+      "description": "Manage your balance and withdrawals",
+      "url": "/wallet?source=pwa_shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ],
   "screenshots": [

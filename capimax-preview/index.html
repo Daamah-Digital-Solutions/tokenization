@@ -3,22 +3,66 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!--
+      viewport-fit=cover lets the app paint under the notch / dynamic island
+      so `env(safe-area-inset-*)` paddings work. Without it, iOS just letterboxes
+      the page with horrible black bars on notched devices.
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <title>Capimax RT - Real Estate Tokenization Platform</title>
     <meta name="description" content="Global real estate tokenization platform for fractional investment through SPV-backed digital units. Tokenized Real Estate Investment | SPV-Backed | Global Access" />
 
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#10b981" />
+    <!-- PWA / theming -->
+    <meta name="theme-color" content="#10b981" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
+    <meta name="color-scheme" content="dark light" />
+
+    <!-- iOS web-app behaviour -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Capimax RT" />
+    <meta name="application-name" content="Capimax RT" />
+
+    <!-- Disable phone-number / address auto-detection on iOS — the Webkit
+         heuristic mangles property addresses and prices into greyed-out tel:
+         links inside the dashboard. -->
+    <meta name="format-detection" content="telephone=no, address=no" />
 
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
 
-    <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" href="/icons/icon-152.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192.png" />
+    <!-- Apple Touch Icon (single 180x180 is the recommended canonical) -->
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png" />
+
+    <!--
+      iOS startup splash screens. Apple doesn't honour the manifest's
+      background_color for the launch flash so we serve one PNG per common
+      device class. iOS picks by exact (width, height, device-pixel-ratio,
+      orientation) match — there's no scaling fallback, so missing entries
+      mean a white flash.
+    -->
+    <link rel="apple-touch-startup-image" href="/splash/splash-2048x2732.png"
+          media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+    <link rel="apple-touch-startup-image" href="/splash/splash-1668x2388.png"
+          media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+    <link rel="apple-touch-startup-image" href="/splash/splash-1536x2048.png"
+          media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+    <link rel="apple-touch-startup-image" href="/splash/splash-1284x2778.png"
+          media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
+    <link rel="apple-touch-startup-image" href="/splash/splash-1170x2532.png"
+          media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
+    <link rel="apple-touch-startup-image" href="/splash/splash-1125x2436.png"
+          media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" />
+    <link rel="apple-touch-startup-image" href="/splash/splash-828x1792.png"
+          media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+    <link rel="apple-touch-startup-image" href="/splash/splash-750x1334.png"
+          media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
+    <link rel="apple-touch-startup-image" href="/splash/splash-640x1136.png"
+          media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
 
     <!-- Premium Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
