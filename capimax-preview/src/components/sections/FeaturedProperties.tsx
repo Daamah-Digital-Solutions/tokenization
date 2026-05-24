@@ -4,6 +4,7 @@ import { MapPin, Users, TrendingUp, ArrowRight, ArrowLeft, Clock, Shield, Star, 
 import { Button } from '../ui/Button';
 import { PropertyService } from '../../services/property/PropertyService';
 import type { Property as BackendProperty } from '../../services/api/types';
+import { useRouter } from '../../utils/router';
 
 // Real estate fallback images by property type
 const FALLBACK_IMAGES = {
@@ -36,6 +37,7 @@ const getPropertyFallbackImage = (propertyType: string, index: number): string =
 
 interface Property {
   id: number;
+  uuid: string; // Real backend UUID — used to route into property-detail
   image: string;
   title: string;
   location: string;
@@ -53,6 +55,7 @@ interface Property {
 }
 
 export const FeaturedProperties: React.FC = () => {
+  const { navigate } = useRouter();
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [properties, setProperties] = useState<Property[]>([]);
@@ -105,28 +108,46 @@ export const FeaturedProperties: React.FC = () => {
         throw new Error('Invalid properties data received from backend');
       }
 
-      // Convert backend properties to frontend format
+      // Convert backend properties to frontend format.
+      // Every numeric field is defensively coerced because the backend
+      // returns `null` for fields that haven't been populated yet
+      // (expected_return, investor_count, average_rating, year_built),
+      // and `${null}%` / arithmetic on null both produce "NaN%" / NaN
+      // in the rendered card.
       const frontendProperties: Property[] = backendProperties.map((prop, index) => {
-        const fundingPercentage = prop.total_tokens > 0 ? (prop.tokens_sold / prop.total_tokens) * 100 : 0;
-        const propertyType = prop.property_type || 'residential';
+        const totalValue = Number(prop.total_value) || 0;
+        const tokenPrice = Number(prop.token_price) || 0;
+        const totalTokens = Number(prop.total_tokens) || 0;
+        const soldTokens = Number(prop.tokens_sold) || 0;
+        const fundingPercentage = totalTokens > 0 ? (soldTokens / totalTokens) * 100 : 0;
+        const propertyType = (prop.property_type || 'residential') as string;
+        const expectedReturn = prop.expected_return;
+        const investorCount = (prop as any).investor_count;
+        const averageRating = (prop as any).average_rating;
+        const yearBuilt = (prop as any).year_built;
 
         return {
-          id: parseInt(prop.id.replace(/-/g, '').substring(0, 8), 16), // Convert UUID to number for compatibility
+          id: parseInt(prop.id.replace(/-/g, '').substring(0, 8), 16), // Stable number for keys
+          uuid: prop.id, // Real UUID — used by the "Own Now" CTA to deep-link into property-detail
           image: prop.images?.[0] || getPropertyFallbackImage(propertyType, index),
           title: prop.title,
           location: `${prop.city}${prop.state ? ', ' + prop.state : ''}, ${prop.country}`,
-          price: `$${(prop.total_value / 1000000).toFixed(2)}M`,
-          tokenPrice: `$${prop.token_price.toLocaleString()}`,
-          totalTokens: prop.total_tokens,
-          soldTokens: prop.tokens_sold,
-          expectedReturn: `${prop.expected_return}%`,
-          investors: 0, // This would come from analytics if available
-          type: prop.property_type === 'residential' ? 'Residential' :
-                prop.property_type === 'commercial' ? 'Commercial' : 'Hospitality',
-          rating: prop.average_rating || 4.5,
-          yearBuilt: prop.year_built || new Date().getFullYear(),
+          price: `$${(totalValue / 1000000).toFixed(2)}M`,
+          tokenPrice: `$${tokenPrice.toLocaleString()}`,
+          totalTokens,
+          soldTokens,
+          // Show "—" placeholder when expected_return hasn't been set on
+          // backend yet, instead of leaking "null%" / "NaN%" into the UI.
+          expectedReturn: expectedReturn != null && !isNaN(Number(expectedReturn))
+            ? `${Number(expectedReturn).toFixed(1)}%`
+            : '—',
+          investors: Number(investorCount) || 0,
+          type: propertyType === 'residential' ? 'Residential' :
+                propertyType === 'commercial' ? 'Commercial' : 'Hospitality',
+          rating: Number(averageRating) || 4.5,
+          yearBuilt: Number(yearBuilt) || new Date().getFullYear(),
           status: fundingPercentage >= 100 ? 'funded' : 'funding' as const,
-          featured: prop.featured || false
+          featured: (prop as any).featured || false,
         };
       });
 
@@ -500,11 +521,16 @@ export const FeaturedProperties: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Enhanced CTA Button */}
+                    {/* Enhanced CTA Button — opens this specific property's
+                        detail page so the user can review and start the
+                        purchase flow. Was incorrectly hard-coded to
+                        `/properties` (listing page), which dumped users
+                        on the catalogue and made it look like nothing
+                        happened. */}
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => window.location.href = '/properties'}
+                      onClick={() => navigate('property-detail', { id: property.uuid })}
                       className="w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 dark:shadow-emerald-500/20 group"
                     >
                       <span>Own Now</span>
