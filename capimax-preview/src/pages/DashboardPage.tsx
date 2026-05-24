@@ -52,14 +52,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
     switch (role) {
       case 'investor':
-        // ``properties`` = primary listings (browse + invest in newly tokenized
-        // properties). ``marketplace`` = secondary market (peer-to-peer token
-        // resale). Both stay inside the dashboard shell — the legacy bug
-        // where Properties navigated OUT to /properties is intentionally gone.
+        // ``my-properties`` = THIS investor's owned assets (token holdings,
+        //   purchase vs current value, sell on market). The primary
+        //   investor surface — the one a logged-in owner opens 90% of
+        //   the time.
+        // ``properties`` = primary listings (browse + buy newly tokenized
+        //   properties). Separate from the user's holdings.
+        // ``marketplace`` = secondary market (peer-to-peer token resale).
         return [
           ...baseItems,
+          { id: 'my-properties', label: 'My Properties', icon: '🏠' },
           { id: 'portfolio', label: 'My Portfolio', icon: '💼' },
-          { id: 'properties', label: 'Properties', icon: '🏠' },
+          { id: 'properties', label: 'Browse Properties', icon: '🏢' },
           { id: 'marketplace', label: 'Marketplace', icon: '🏪' },
           { id: 'transactions', label: 'Transactions', icon: '💳' },
           { id: 'wallet', label: 'Wallet', icon: '💰' },

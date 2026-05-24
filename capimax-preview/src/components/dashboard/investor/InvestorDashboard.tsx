@@ -5,6 +5,11 @@ import { InvestmentService } from '../../../services/investment/InvestmentServic
 import { useAuth } from '../../../contexts/AuthContext';
 import type { Investment, Property, Transaction } from '../../../services/api/types';
 import { apiClient } from '../../../services/api/ApiClient';
+import { MyProperties } from './MyProperties';
+// MyProperties is also exported from InvestorControlPanel — the
+// dashboard router actually uses InvestorControlPanel for investor
+// role, not this file. Keeping the import here means the case below
+// works if anything mounts InvestorDashboard directly (e.g. tests).
 
 // Portfolio data interfaces
 interface PortfolioData {
@@ -682,6 +687,15 @@ export const InvestorDashboard: React.FC<{ currentView: string }> = ({ currentVi
           <InvestorAnalytics portfolioData={portfolioData} />
         </div>
       );
+
+    // Dedicated "My Properties" surface — rich card grid showing every
+    // owned property with tokens, purchase value, current value, P/L,
+    // a deep-link to property-detail, and a one-tap "Sell on Market"
+    // CTA that opens the existing CreateListingModal. The component is
+    // self-contained (fetches its own investments + property details
+    // via React Query), so we just render it.
+    case 'my-properties':
+      return <MyProperties />;
 
     case 'transactions':
       return (

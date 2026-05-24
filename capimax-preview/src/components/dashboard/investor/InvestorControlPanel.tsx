@@ -40,6 +40,7 @@ import { PortfolioManager } from './PortfolioManager';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { TransactionManager } from './TransactionManager';
 import { CollaborativeInvestments } from './CollaborativeInvestments';
+import { MyProperties } from './MyProperties';
 import { SecondaryMarketDashboard } from '../../marketplace/SecondaryMarketDashboard';
 import { useUser, useAuth } from '../../../contexts/AuthContext';
 import { useRouter } from '../../../utils/router';
@@ -53,7 +54,7 @@ interface InvestorControlPanelProps {
   currentView?: string;
 }
 
-type TabType = 'overview' | 'properties' | 'marketplace' | 'transactions' | 'wallet' | 'notifications' | 'settings';
+type TabType = 'overview' | 'my-properties' | 'properties' | 'marketplace' | 'transactions' | 'wallet' | 'notifications' | 'settings';
 
 interface PriceAlert {
   id: string;
@@ -72,6 +73,8 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
   // Map dashboard sidebar views to internal tabs
   const mapViewToTab = (view: string): TabType => {
     switch (view) {
+      case 'my-properties':
+        return 'my-properties';
       case 'portfolio':
         return 'overview'; // Portfolio sidebar item maps to the overview/portfolio tab
       case 'properties':
@@ -213,6 +216,13 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
             setActiveTab={setActiveTab}
             walletBalance={walletBalance}
           />
+        )}
+
+        {/* My Properties — investor's owned holdings (tokens, purchase
+            vs current value, P/L, sell on marketplace). The primary
+            "what do I own?" surface for any logged-in investor. */}
+        {activeTab === 'my-properties' && (
+          <MyProperties />
         )}
 
         {activeTab === 'properties' && (
