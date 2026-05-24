@@ -1,7 +1,7 @@
 {
   "name": "Capimax RT - Real Estate Tokenization",
   "short_name": "Capimax RT",
-  "description": "Global real estate tokenization platform for fractional investment through SPV-backed digital units",
+  "description": "Global real estate tokenization platform for fractional property ownership through SPV-backed digital units",
   "id": "/?source=pwa",
   "start_url": "/?source=pwa",
   "scope": "/",
@@ -12,7 +12,7 @@
   "orientation": "portrait-primary",
   "lang": "en",
   "dir": "ltr",
-  "categories": ["finance", "business", "investment"],
+  "categories": ["finance", "business", "real-estate"],
   "icons": [
     {
       "src": "/icons/icon-72.png",
@@ -79,7 +79,7 @@
     {
       "name": "My Dashboard",
       "short_name": "Dashboard",
-      "description": "View your portfolio and investments",
+      "description": "View your portfolio and owned properties",
       "url": "/dashboard?source=pwa_shortcut",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },

@@ -75,7 +75,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           { id: 'my-properties', label: 'My Properties', icon: '🏢' },
           { id: 'tokenization', label: 'Tokenization', icon: '🪙' },
           { id: 'revenue', label: 'Revenue', icon: '💸' },
-          { id: 'investors', label: 'Investors', icon: '👥' },
+          { id: 'investors', label: 'Owners', icon: '👥' },
           { id: 'documents', label: 'Documents', icon: '📄' },
         ];
       case 'admin':

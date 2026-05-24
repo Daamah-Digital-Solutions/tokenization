@@ -7,7 +7,7 @@ export const WhyChooseUs: React.FC = () => {
     {
       icon: Shield,
       title: "Secure & Regulated",
-      description: "Bank-grade security with full regulatory compliance and investor protection."
+      description: "Bank-grade security with full regulatory compliance and owner protection."
     },
     {
       icon: Building2,
@@ -22,7 +22,7 @@ export const WhyChooseUs: React.FC = () => {
     {
       icon: Globe,
       title: "Global Access",
-      description: "Invest in premium properties across major markets worldwide."
+      description: "Own premium properties across major markets worldwide."
     },
     {
       icon: Users,
@@ -32,7 +32,7 @@ export const WhyChooseUs: React.FC = () => {
     {
       icon: Home,
       title: "Low Minimums",
-      description: "Start investing with lower capital requirements than traditional real estate."
+      description: "Start owning with lower capital requirements than traditional real estate."
     }
   ];
 
@@ -96,7 +96,7 @@ export const WhyChooseUs: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg text-navy-600 dark:text-navy-200 max-w-2xl mx-auto text-balance"
           >
-            Built for investors who demand security, transparency, and professional expertise
+            Built for owners who demand security, transparency, and professional expertise
           </motion.p>
         </motion.div>
 

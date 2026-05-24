@@ -215,7 +215,7 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
             {properties.length} Properties Found
           </h2>
           <div className="hidden md:flex text-gray-600 dark:text-gray-400 text-sm">
-            Showing premium investment opportunities
+            Showing premium ownership opportunities
           </div>
         </div>
         
@@ -397,7 +397,7 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
                       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
                         <div className="flex items-center gap-2 mb-1">
                           <Users className="w-4 h-4 text-gray-500" />
-                          <span className="text-xs text-gray-500">Investors</span>
+                          <span className="text-xs text-gray-500">Owners</span>
                         </div>
                         <div className="font-bold text-gray-900 dark:text-white">{property.investor_count}</div>
                       </div>

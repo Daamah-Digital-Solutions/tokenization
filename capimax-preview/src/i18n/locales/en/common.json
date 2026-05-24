@@ -1,7 +1,7 @@
 {
   "appName": "Capimax RT",
-  "tagline": "Tokenized Real Estate Investment | SPV-Backed | Global Access",
-  "taglineFull": "A global technology platform for tokenizing assets and offering fractional investment opportunities through the SPV model, with document transparency, operational governance, and liquidity options via secondary market and optional liquidity provider.",
+  "tagline": "Tokenized Real Estate Ownership | SPV-Backed | Global Access",
+  "taglineFull": "A global technology platform for tokenizing assets and offering fractional ownership of real estate through the SPV model, with document transparency, operational governance, and liquidity options via secondary market and optional liquidity provider.",
 
   "buttons": {
     "learnMore": "Learn More",
@@ -58,7 +58,7 @@
 
   "footer": {
     "copyright": "© {{year}} Capimax RT. All rights reserved.",
-    "disclaimer": "Capimax RT is a technology platform and does not provide investment advice.",
+    "disclaimer": "Capimax RT is a technology platform and does not provide financial advice.",
     "quickLinks": "Quick Links",
     "legal": "Legal",
     "support": "Support"

@@ -4,14 +4,14 @@ import { InfoPageLayout } from '../components/info/InfoPageLayout';
 export const InvestmentGuidePage: React.FC = () => {
   return (
     <InfoPageLayout
-      title="Investment Guide"
-      subtitle="Capi Max RT Platform – Tokenized Real Estate Investment"
+      title="Ownership Guide"
+      subtitle="Capi Max RT Platform – Tokenized Real Estate Ownership"
     >
       <section className="info-section">
         <h2>Phase 1: Registration &amp; Verification</h2>
 
         <h3>1) Account Creation</h3>
-        <p><strong>Investor Actions:</strong></p>
+        <p><strong>Owner Actions:</strong></p>
         <ul>
           <li>Create a user account on the platform</li>
           <li>
@@ -26,16 +26,16 @@ export const InvestmentGuidePage: React.FC = () => {
         </ul>
 
         <h3>2) Verification &amp; Compliance (KYC / AML)</h3>
-        <p>To ensure compliance and investor protection:</p>
+        <p>To ensure compliance and owner protection:</p>
         <ul>
           <li>Upload identity documents</li>
           <li>Proof of residence</li>
           <li>Verify source of funds</li>
-          <li>Specify investor type (Individual / Company)</li>
+          <li>Specify owner type (Individual / Company)</li>
         </ul>
         <p><strong>What happens after verification:</strong></p>
         <ul>
-          <li>Activate account for investment purposes</li>
+          <li>Activate account for ownership purposes</li>
           <li>Full access to the platform</li>
           <li>Link account to regulatory and legal framework</li>
         </ul>
@@ -49,39 +49,39 @@ export const InvestmentGuidePage: React.FC = () => {
         </ul>
         <h3>Technical Process:</h3>
         <ul>
-          <li>Register funds in the investor's account</li>
-          <li>Link funds to investment wallet</li>
+          <li>Register funds in the owner's account</li>
+          <li>Link funds to ownership wallet</li>
           <li>Prevent use of funds outside authorized frameworks</li>
         </ul>
 
-        <h2>Phase 3: Choosing an Investment Strategy</h2>
+        <h2>Phase 3: Choosing an Ownership Strategy</h2>
         <p>
-          The platform offers 3 clear investment strategies. The investor selects one according to
+          The platform offers 3 clear ownership strategies. The owner selects one according to
           their objective:
         </p>
-        <h3>1) Income-Generating Investment</h3>
+        <h3>1) Income-Generating Ownership</h3>
         <ul>
           <li>Ready-to-rent properties</li>
           <li>Regular periodic yields</li>
           <li>Lower risk</li>
           <li>Automatic yield distribution</li>
-          <li>Suitable for investors seeking stable income</li>
+          <li>Suitable for owners seeking stable income</li>
         </ul>
-        <h3>2) Development Investment</h3>
+        <h3>2) Development Ownership</h3>
         <ul>
           <li>Properties under development</li>
           <li>Higher returns in the medium term</li>
           <li>Dependent on project completion</li>
           <li>Profits from sale or operation</li>
-          <li>Suitable for investors accepting higher risk for higher returns</li>
+          <li>Suitable for owners accepting higher risk for higher returns</li>
         </ul>
-        <h3>3) Installment / Phased Investment</h3>
+        <h3>3) Installment / Phased Ownership</h3>
         <ul>
           <li>Enter with smaller amounts</li>
           <li>Payment in stages</li>
           <li>Gradual rights accumulation</li>
           <li>Flexible commitment</li>
-          <li>Suitable for long-term investors or those with limited liquidity</li>
+          <li>Suitable for long-term owners or those with limited liquidity</li>
         </ul>
 
         <h2>Phase 4: Token Purchase</h2>
@@ -94,7 +94,7 @@ export const InvestmentGuidePage: React.FC = () => {
             <ul>
               <li>Expected yield</li>
               <li>Rights represented</li>
-              <li>Investment duration</li>
+              <li>Ownership duration</li>
             </ul>
           </li>
           <li>Confirm purchase</li>
@@ -115,7 +115,7 @@ export const InvestmentGuidePage: React.FC = () => {
         <h3>Dashboard Shows:</h3>
         <ul>
           <li>Number of tokens owned</li>
-          <li>Investment value</li>
+          <li>Ownership value</li>
           <li>Accumulated yields</li>
           <li>Transaction history</li>
           <li>Linked legal documents</li>
@@ -127,17 +127,17 @@ export const InvestmentGuidePage: React.FC = () => {
         <ul>
           <li>Number of tokens</li>
           <li>Property performance</li>
-          <li>Type of investment</li>
+          <li>Type of ownership</li>
         </ul>
         <h3>Distribution Mechanism:</h3>
         <ul>
           <li>Automatic via smart contract</li>
-          <li>Directly to investor wallet</li>
+          <li>Directly to owner wallet</li>
           <li>Recorded on blockchain</li>
         </ul>
 
         <h2>Phase 7: Price Tracking</h2>
-        <p>Investor Can:</p>
+        <p>Owner Can:</p>
         <ul>
           <li>Track token price</li>
           <li>Monitor historical performance</li>
@@ -177,7 +177,7 @@ export const InvestmentGuidePage: React.FC = () => {
             </ul>
           </li>
           <li>
-            <strong>Transfer ownership to another investor</strong>
+            <strong>Transfer ownership to another owner</strong>
             <ul>
               <li>Via smart contract</li>
               <li>Automatic record update</li>
@@ -188,10 +188,10 @@ export const InvestmentGuidePage: React.FC = () => {
         <ul>
           <li>Complete settlement of rights</li>
           <li>Final transaction recorded</li>
-          <li>Closing report for the investor</li>
+          <li>Closing report for the owner</li>
         </ul>
 
-        <h2>Investment Guide Summary</h2>
+        <h2>Ownership Guide Summary</h2>
         <p>This system provides:</p>
         <ul>
           <li>Full transparency</li>

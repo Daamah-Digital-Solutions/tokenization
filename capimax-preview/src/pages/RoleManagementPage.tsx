@@ -43,15 +43,15 @@ interface RolePermissions {
 
 const ROLE_INFO = {
   [UserRole.INVESTOR]: {
-    label: 'Investor',
-    description: 'Invest in tokenized real estate properties and earn returns',
+    label: 'Co-Owner',
+    description: 'Own tokenized real estate properties and earn returns',
     icon: Briefcase,
     color: 'emerald',
     features: [
-      'Browse and invest in properties',
+      'Browse and buy properties',
       'Track portfolio performance',
       'Receive dividend payments',
-      'Access investment analytics',
+      'Access ownership analytics',
       'Participate in property voting'
     ]
   },
@@ -62,10 +62,10 @@ const ROLE_INFO = {
     color: 'blue',
     features: [
       'List properties for tokenization',
-      'Set investment terms',
-      'Track investor interest',
+      'Set ownership terms',
+      'Track buyer interest',
       'Manage property documents',
-      'Distribute dividends to investors'
+      'Distribute dividends to co-owners'
     ]
   },
   [UserRole.ADMIN]: {

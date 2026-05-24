@@ -576,7 +576,7 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
             </p>
           )}
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            You must be at least 18 years old to invest on this platform
+            You must be at least 18 years old to buy property on this platform
           </p>
         </div>
 

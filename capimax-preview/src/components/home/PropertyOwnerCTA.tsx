@@ -15,7 +15,7 @@ export const PropertyOwnerCTA: React.FC = () => {
   const benefits = [
     {
       icon: Users,
-      text: 'Open new funding sources through multiple investors',
+      text: 'Open new funding sources through multiple co-owners',
     },
     {
       icon: FileText,
@@ -27,7 +27,7 @@ export const PropertyOwnerCTA: React.FC = () => {
     },
     {
       icon: CheckCircle2,
-      text: 'Control over listing terms: minimum investment, lock-up period, distribution policy',
+      text: 'Control over listing terms: minimum purchase, lock-up period, distribution policy',
     },
     {
       icon: TrendingUp,
@@ -66,7 +66,7 @@ export const PropertyOwnerCTA: React.FC = () => {
             </h2>
 
             <p className="text-xl text-emerald-100 mb-8 leading-relaxed">
-              Transform your real estate assets into investment opportunities without selling
+              Transform your real estate assets into ownership opportunities without selling
               full ownership.
             </p>
 

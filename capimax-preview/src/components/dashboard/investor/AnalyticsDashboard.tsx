@@ -198,7 +198,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <Text variant="h3" weight="semibold" className="mb-2">
-            Investment Analytics
+            Portfolio Analytics
           </Text>
           <Text variant="body" color="muted">
             Comprehensive analysis of your portfolio performance and market trends
@@ -326,7 +326,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-blue-500 rounded-full" />
-                    <span>Invested Amount</span>
+                    <span>Owned Amount</span>
                   </div>
                 </div>
               </div>

@@ -10,7 +10,7 @@ export const TechnologyPage: React.FC = () => {
       <section className="info-section">
         <p className="info-intro">
           Capimax RT operates on a blockchain-native infrastructure designed to ensure legal
-          enforceability, technical security, asset transparency, and investor protection.
+          enforceability, technical security, asset transparency, and owner protection.
           Our technology framework integrates regulated legal structures with audited smart contracts to
           deliver institutional-grade real estate tokenization.
         </p>
@@ -92,7 +92,7 @@ export const TechnologyPage: React.FC = () => {
         <p>Capimax RT supports a hybrid custody structure.</p>
         <h3>Token Custody</h3>
         <ul>
-          <li>Investors may hold tokens in approved wallets</li>
+          <li>Owners may hold tokens in approved wallets</li>
           <li>Whitelisting ensures compliance alignment</li>
           <li>Optional third-party custody integrations (where applicable)</li>
         </ul>
@@ -106,7 +106,7 @@ export const TechnologyPage: React.FC = () => {
         <ul>
           <li>Platform operations</li>
           <li>Asset ownership</li>
-          <li>Investor token holdings</li>
+          <li>Owner token holdings</li>
         </ul>
 
         <h2>5. Audit &amp; Verification</h2>
@@ -143,7 +143,7 @@ export const TechnologyPage: React.FC = () => {
           <li>Valuation updates</li>
           <li>Asset reports</li>
         </ul>
-        <p>Investors maintain access to:</p>
+        <p>Owners maintain access to:</p>
         <ul>
           <li>Portfolio dashboard</li>
           <li>Distribution history</li>
@@ -158,7 +158,7 @@ export const TechnologyPage: React.FC = () => {
           <li>Jurisdictional legal structure</li>
           <li>KYC / AML enforcement</li>
           <li>Transfer restrictions</li>
-          <li>Investor eligibility criteria</li>
+          <li>Owner eligibility criteria</li>
         </ul>
         <p>This ensures that blockchain execution aligns with legal enforceability.</p>
 

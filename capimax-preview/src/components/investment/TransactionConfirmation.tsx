@@ -102,7 +102,7 @@ export const TransactionConfirmation: React.FC<TransactionConfirmationProps> = (
   const downloadReceiptDirectly = () => {
     const receiptData = `
 CAPIMAX TOKENIZATION PLATFORM
-Investment Receipt
+Purchase Receipt
 
 Transaction ID: ${transactionId}
 Date: ${new Date().toLocaleDateString()}
@@ -110,7 +110,7 @@ Time: ${new Date().toLocaleTimeString()}
 
 PROPERTY DETAILS:
 Property: ${property.title}
-Investment Amount: $${investmentData.amount.toLocaleString()}
+Purchase Amount: $${investmentData.amount.toLocaleString()}
 Tokens Purchased: ${investmentData.tokens}
 Token Price: $${property.tokenPrice.toLocaleString()}
 
@@ -128,7 +128,7 @@ Status: Confirmed
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `investment-receipt-${transactionId}.txt`;
+    link.download = `purchase-receipt-${transactionId}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -136,7 +136,7 @@ Status: Confirmed
   };
 
   const shareInvestment = (platform: string) => {
-    const shareText = `I just purchased ${investmentData.tokens} property tokens in ${property.title} through tokenized real estate! 🏢💎`;
+    const shareText = `I just bought ${investmentData.tokens} property tokens in ${property.title} through tokenized real estate! 🏢💎`;
     const shareUrl = window.location.href;
     
     const shareUrls = {
@@ -149,7 +149,7 @@ Status: Confirmed
   };
 
   const copyInvestmentDetails = async () => {
-    const details = `Investment Confirmation
+    const details = `Purchase Confirmation
 Property: ${property.title}
 Tokens Purchased: ${investmentData.tokens}
 Total Cost: $${investmentData.amount.toLocaleString()}
@@ -196,10 +196,10 @@ Transaction ID: ${transactionId}`;
           transition={{ delay: 0.3 }}
         >
           <Text variant="h2" weight="bold" className="text-gray-900 dark:text-white mb-2">
-            Investment Successful!
+            Purchase Successful!
           </Text>
           <Text variant="bodyLarge" color="muted">
-            Welcome to the future of real estate investment
+            Welcome to the future of real estate ownership
           </Text>
         </motion.div>
       </div>
@@ -209,7 +209,7 @@ Transaction ID: ${transactionId}`;
         <div className="flex items-center justify-between mb-6">
           <Text variant="h4" weight="semibold" className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-yellow-500" />
-            Your Investment
+            Your Ownership
           </Text>
           <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
@@ -366,7 +366,7 @@ Transaction ID: ${transactionId}`;
             </div>
             <div>
               <Text variant="bodyLarge" weight="semibold" className="mb-1">
-                Investment Certificate
+                Ownership Certificate
               </Text>
               <Text variant="body" color="muted">
                 A digital certificate of ownership will be sent to your email within 48 hours.
@@ -417,9 +417,9 @@ Transaction ID: ${transactionId}`;
               Email Confirmation
             </Text>
             <Text variant="body" color="muted">
-              {emailSent 
-                ? "Confirmation email sent successfully!" 
-                : "Send detailed investment confirmation to your email"
+              {emailSent
+                ? "Confirmation email sent successfully!"
+                : "Send detailed purchase confirmation to your email"
               }
             </Text>
           </div>
@@ -447,10 +447,10 @@ Transaction ID: ${transactionId}`;
         <div className="flex items-center justify-between mb-4">
           <div>
             <Text variant="bodyLarge" weight="semibold" className="mb-1">
-              Share Your Investment
+              Share Your Purchase
             </Text>
             <Text variant="body" color="muted">
-              Let others know about your smart investment choice
+              Let others know about your smart ownership choice
             </Text>
           </div>
         </div>
@@ -531,7 +531,7 @@ Transaction ID: ${transactionId}`;
           ))}
         </div>
         <Text variant="bodyLarge" className="text-emerald-600 dark:text-emerald-400 font-semibold">
-          🎉 Congratulations on your investment! 🎉
+          🎉 Congratulations on your purchase! 🎉
         </Text>
         <Text variant="body" color="muted">
           You're now part of the future of real estate ownership

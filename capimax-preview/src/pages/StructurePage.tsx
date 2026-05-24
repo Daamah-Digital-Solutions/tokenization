@@ -74,13 +74,13 @@ export const StructurePage: React.FC = () => {
               Comprehensive Regulatory Guide – CapiMax Real Estate Tokenization Platform
             </h3>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              CapiMax Real Estate Tokenization Platform represents an integrated technological infrastructure designed to redefine real estate investment through a digital framework built on blockchain technology and smart contracts, while utilizing the SPV (Special Purpose Vehicle) model as a structured legal framework to safeguard the rights of all stakeholders and enhance transparency and regulatory compliance.
+              CapiMax Real Estate Tokenization Platform represents an integrated technological infrastructure designed to redefine real estate ownership through a digital framework built on blockchain technology and smart contracts, while utilizing the SPV (Special Purpose Vehicle) model as a structured legal framework to safeguard the rights of all stakeholders and enhance transparency and regulatory compliance.
             </p>
           </div>
 
           <div>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              The platform operates as an advanced technology-driven ecosystem, providing a comprehensive operational and regulatory structure for tokenizing real estate assets and enabling fractional ownership for investors, while ensuring governance, process control, and risk management in accordance with clearly defined and auditable standards.
+              The platform operates as an advanced technology-driven ecosystem, providing a comprehensive operational and regulatory structure for tokenizing real estate assets and enabling fractional ownership for owners, while ensuring governance, process control, and risk management in accordance with clearly defined and auditable standards.
             </p>
           </div>
 
@@ -154,12 +154,12 @@ export const StructurePage: React.FC = () => {
 
               <div>
                 <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
-                  For Investors:
+                  For Owners:
                 </h5>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-3">
                     <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700 dark:text-gray-300">Monitoring tokenized investment portfolios</span>
+                    <span className="text-gray-700 dark:text-gray-300">Monitoring tokenized ownership portfolios</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
@@ -203,7 +203,7 @@ export const StructurePage: React.FC = () => {
               Internal Secondary Market
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              CapiMax provides a regulated internal secondary marketplace, enabling investors to exit or restructure their positions by trading tokenized real estate shares within a secure and controlled environment. This mechanism enhances liquidity and reduces traditional holding periods commonly associated with real estate investments.
+              CapiMax provides a regulated internal secondary marketplace, enabling owners to exit or restructure their positions by trading tokenized real estate shares within a secure and controlled environment. This mechanism enhances liquidity and reduces traditional holding periods commonly associated with real estate ownership.
             </p>
           </div>
 
@@ -218,7 +218,7 @@ export const StructurePage: React.FC = () => {
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Transform real estate assets into divisible, tradable digital investment instruments.
+                  Transform real estate assets into divisible, tradable digital ownership instruments.
                 </span>
               </li>
               <li className="flex items-start gap-3">
@@ -230,7 +230,7 @@ export const StructurePage: React.FC = () => {
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Expand the global investor base via a structured and transparent technological model.
+                  Expand the global owner base via a structured and transparent technological model.
                 </span>
               </li>
               <li className="flex items-start gap-3">
@@ -244,7 +244,7 @@ export const StructurePage: React.FC = () => {
 
           <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6">
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              This Regulatory Guide serves as the comprehensive reference for the legal, technical, and operational framework governing the CapiMax Platform. It defines the rules, standards, and procedures that regulate platform operations and all participating stakeholders, ensuring transparency, fairness, and protection of investment interests.
+              This Regulatory Guide serves as the comprehensive reference for the legal, technical, and operational framework governing the CapiMax Platform. It defines the rules, standards, and procedures that regulate platform operations and all participating stakeholders, ensuring transparency, fairness, and protection of ownership interests.
             </p>
           </div>
         </div>
@@ -302,7 +302,7 @@ export const StructurePage: React.FC = () => {
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Strong protection of investor rights
+                  Strong protection of owner rights
                 </span>
               </li>
               <li className="flex items-start gap-3">
@@ -349,7 +349,7 @@ export const StructurePage: React.FC = () => {
               <li className="flex items-start gap-3">
                 <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Represents investors legally
+                  Represents owners legally
                 </span>
               </li>
               <li className="flex items-start gap-3">
@@ -427,13 +427,13 @@ export const StructurePage: React.FC = () => {
               <li className="flex items-start gap-3">
                 <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  An investment agreement with the property owner or developer
+                  An ownership agreement with the property owner or developer
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  An investor representation agreement
+                  An owner representation agreement
                 </span>
               </li>
               <li className="flex items-start gap-3">
@@ -456,7 +456,7 @@ export const StructurePage: React.FC = () => {
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Investor protection</span>
+                <span className="text-gray-700 dark:text-gray-300">Owner protection</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
@@ -496,7 +496,7 @@ export const StructurePage: React.FC = () => {
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Protects investors from operational risks</span>
+                <span className="text-gray-700 dark:text-gray-300">Protects owners from operational risks</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
@@ -545,7 +545,7 @@ export const StructurePage: React.FC = () => {
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">A documented investment agreement</span>
+                <span className="text-gray-700 dark:text-gray-300">A documented ownership agreement</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
@@ -564,7 +564,7 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              4. Investor Rights
+              4. Owner Rights
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
@@ -605,7 +605,7 @@ export const StructurePage: React.FC = () => {
               </li>
               <li className="flex items-start gap-3">
                 <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">Wallets represent investors</span>
+                <span className="text-gray-700 dark:text-gray-300">Wallets represent owners</span>
               </li>
               <li className="flex items-start gap-3">
                 <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
@@ -640,7 +640,7 @@ export const StructurePage: React.FC = () => {
                   2. Legal Structure (U.S.-Based SPV)
                 </h6>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                  A Special Purpose Vehicle (SPV) is established in the United States to structure and manage the economic rights associated with the asset. Investor rights are governed under U.S. corporate law and formal shareholder agreements.
+                  A Special Purpose Vehicle (SPV) is established in the United States to structure and manage the economic rights associated with the asset. Owner rights are governed under U.S. corporate law and formal shareholder agreements.
                 </p>
               </div>
 
@@ -674,7 +674,7 @@ export const StructurePage: React.FC = () => {
 
             <div className="mt-6 pt-6 border-t border-blue-200 dark:border-blue-800">
               <h5 className="font-semibold text-gray-900 dark:text-white mb-3">
-                Are Investor Rights Protected?
+                Are Owner Rights Protected?
               </h5>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
                 Yes. Protection is structured across three clear layers:
@@ -689,7 +689,7 @@ export const StructurePage: React.FC = () => {
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                   <span className="text-gray-700 dark:text-gray-300">
-                    A U.S.-based SPV governing investor rights under corporate law
+                    A U.S.-based SPV governing owner rights under corporate law
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
@@ -705,7 +705,7 @@ export const StructurePage: React.FC = () => {
               </p>
 
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed mt-4">
-                Additionally, the platform currently operates exclusively within jurisdictions that maintain clear regulatory and legal frameworks for real estate ownership and investment activities.
+                Additionally, the platform currently operates exclusively within jurisdictions that maintain clear regulatory and legal frameworks for real estate ownership and purchase activities.
               </p>
             </div>
           </div>
@@ -793,7 +793,7 @@ export const StructurePage: React.FC = () => {
     },
     {
       id: 'wallets',
-      title: 'Connection to Investor Wallets',
+      title: 'Connection to Owner Wallets',
       icon: Wallet,
       content: (
         <div className="space-y-6">
@@ -816,7 +816,7 @@ export const StructurePage: React.FC = () => {
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Exiting investments</span>
+                <span className="text-gray-700 dark:text-gray-300">Exiting owned properties</span>
               </li>
             </ul>
           </div>
@@ -887,7 +887,7 @@ export const StructurePage: React.FC = () => {
     },
     {
       id: 'investment-agreement',
-      title: 'Investment Agreement with Owner and Developer',
+      title: 'Ownership Agreement with Seller and Developer',
       icon: FileText,
       content: (
         <div className="space-y-6">
@@ -906,7 +906,7 @@ export const StructurePage: React.FC = () => {
               </li>
               <li className="flex items-start gap-3">
                 <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">Investor protection</span>
+                <span className="text-gray-700 dark:text-gray-300">Owner protection</span>
               </li>
               <li className="flex items-start gap-3">
                 <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
@@ -950,7 +950,7 @@ export const StructurePage: React.FC = () => {
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Data reconciliation with the investment agreement</span>
+                <span className="text-gray-700 dark:text-gray-300">Data reconciliation with the ownership agreement</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
@@ -1006,7 +1006,7 @@ export const StructurePage: React.FC = () => {
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">Signing an investment agreement</span>
+                <span className="text-gray-700 dark:text-gray-300">Signing an ownership agreement</span>
               </li>
               <li className="flex items-start gap-3">
                 <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
@@ -1025,7 +1025,7 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Why Is the Investment Agreement Necessary?
+              Why Is the Ownership Agreement Necessary?
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
               Without it:
@@ -1041,7 +1041,7 @@ export const StructurePage: React.FC = () => {
               </li>
               <li className="flex items-start gap-3">
                 <X className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Investors are not protected</span>
+                <span className="text-gray-700 dark:text-gray-300">Owners are not protected</span>
               </li>
               <li className="flex items-start gap-3">
                 <X className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
@@ -1052,7 +1052,7 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Relationship Between the Investment Agreement and the SPV
+              Relationship Between the Ownership Agreement and the SPV
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
@@ -1072,10 +1072,10 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              How Can the Investor Verify All of This on the Platform?
+              How Can the Owner Verify All of This on the Platform?
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              On each property page, the investor can find:
+              On each property page, the owner can find:
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
@@ -1088,7 +1088,7 @@ export const StructurePage: React.FC = () => {
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">The investment agreement</span>
+                <span className="text-gray-700 dark:text-gray-300">The ownership agreement</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
@@ -1110,7 +1110,7 @@ export const StructurePage: React.FC = () => {
               Summary
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              This model is: <strong>Legal, Regulated, Transparent, Globally scalable</strong>. And it protects the investor, the asset, and the platform.
+              This model is: <strong>Legal, Regulated, Transparent, Globally scalable</strong>. And it protects the owner, the asset, and the platform.
             </p>
           </div>
         </div>
@@ -1118,16 +1118,16 @@ export const StructurePage: React.FC = () => {
     },
     {
       id: 'investment-agreement-deep',
-      title: 'Investment Agreement – Complete Framework',
+      title: 'Ownership Agreement – Complete Framework',
       icon: FileText,
       content: (
         <div className="space-y-8">
           <div>
             <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              What Is an Investment Agreement?
+              What Is an Ownership Agreement?
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              The Investment Agreement is the core legal document that:
+              The Ownership Agreement is the core legal document that:
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
@@ -1151,13 +1151,13 @@ export const StructurePage: React.FC = () => {
               <li className="flex items-start gap-3">
                 <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  For the benefit of investors represented by real estate tokens
+                  For the benefit of owners represented by real estate tokens
                 </span>
               </li>
             </ul>
             <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
               <p className="text-amber-900 dark:text-amber-200 font-medium">
-                A real estate token is not legal or valid without a valid and duly documented investment agreement.
+                A real estate token is not legal or valid without a valid and duly documented ownership agreement.
               </p>
             </div>
           </div>
@@ -1382,10 +1382,10 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              3. Investment Agreement
+              3. Ownership Agreement
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              A formal investment agreement is executed between:
+              A formal ownership agreement is executed between:
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
@@ -1398,7 +1398,7 @@ export const StructurePage: React.FC = () => {
               </li>
               <li className="flex items-start gap-3">
                 <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">The Wyoming SPV (investor representative)</span>
+                <span className="text-gray-700 dark:text-gray-300">The Wyoming SPV (owner representative)</span>
               </li>
             </ul>
           </div>
@@ -1423,7 +1423,7 @@ export const StructurePage: React.FC = () => {
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  References investment agreement ID
+                  References ownership agreement ID
                 </span>
               </li>
               <li className="flex items-start gap-3">
@@ -1437,7 +1437,7 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              5. Investor Rights
+              5. Owner Rights
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
               Token holders receive:
@@ -1478,7 +1478,7 @@ export const StructurePage: React.FC = () => {
               <li className="flex items-start gap-3">
                 <Shield className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Full KYC/AML verification for all investors
+                  Full KYC/AML verification for all owners
                 </span>
               </li>
               <li className="flex items-start gap-3">
@@ -1504,7 +1504,7 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              7. Documentation Available to Investors
+              7. Documentation Available to Owners
             </h4>
             <div className="grid md:grid-cols-2 gap-3">
               <div className="flex items-start gap-3">
@@ -1521,7 +1521,7 @@ export const StructurePage: React.FC = () => {
               </div>
               <div className="flex items-start gap-3">
                 <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Investment Agreement</span>
+                <span className="text-gray-700 dark:text-gray-300">Ownership Agreement</span>
               </div>
               <div className="flex items-start gap-3">
                 <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
@@ -1621,7 +1621,7 @@ export const StructurePage: React.FC = () => {
               11. Transparency and Reporting
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              Investors have access to:
+              Owners have access to:
             </p>
             <div className="grid md:grid-cols-2 gap-3">
               <div className="flex items-start gap-3">
@@ -1701,9 +1701,9 @@ export const StructurePage: React.FC = () => {
             },
             {
               phase: 'Phase 3',
-              title: 'Investment Agreement Execution',
+              title: 'Ownership Agreement Execution',
               items: [
-                'Draft comprehensive investment agreement',
+                'Draft comprehensive ownership agreement',
                 'Define rights transfer (ownership, usufruct, income)',
                 'Legal review and notarization',
                 'Execute agreement between all parties',
@@ -1727,7 +1727,7 @@ export const StructurePage: React.FC = () => {
               items: [
                 'Design smart contract architecture',
                 'Code smart contract with specific property parameters',
-                'Link smart contract to SPV and investment agreement',
+                'Link smart contract to SPV and ownership agreement',
                 'Conduct internal code review',
                 'Third-party security audit',
                 'Deploy to testnet for verification'
@@ -1739,7 +1739,7 @@ export const StructurePage: React.FC = () => {
               items: [
                 'Determine total token supply',
                 'Set token price based on property valuation',
-                'Define minimum and maximum investment amounts',
+                'Define minimum and maximum purchase amounts',
                 'Establish revenue distribution mechanism',
                 'Configure governance rights (if applicable)',
                 'Finalize tokenomics documentation'
@@ -1775,31 +1775,31 @@ export const StructurePage: React.FC = () => {
                 'Upload high-quality images and videos',
                 'Publish all legal documentation',
                 'Display SPV details and blockchain links',
-                'Set investment timeline and targets',
-                'Launch property to investors'
+                'Set ownership timeline and targets',
+                'Launch property to owners'
               ]
             },
             {
               phase: 'Phase 10',
-              title: 'Investment Period',
+              title: 'Ownership Period',
               items: [
-                'Investors review property details',
+                'Owners review property details',
                 'Complete KYC verification',
-                'Submit investment commitments',
+                'Submit purchase commitments',
                 'Process payments (fiat or crypto)',
                 'Track funding progress against target',
-                'Provide regular updates to potential investors'
+                'Provide regular updates to potential owners'
               ]
             },
             {
               phase: 'Phase 11',
               title: 'Token Minting and Distribution',
               items: [
-                'Verify all investment payments cleared',
+                'Verify all purchase payments cleared',
                 'Execute smart contract token minting function',
-                'Distribute tokens to investor wallets',
+                'Distribute tokens to owner wallets',
                 'Confirm all token allocations on blockchain',
-                'Send confirmation notifications to investors',
+                'Send confirmation notifications to owners',
                 'Update property status to "Active"'
               ]
             },
@@ -1814,7 +1814,7 @@ export const StructurePage: React.FC = () => {
                 'Facilitate secondary market trading',
                 'Property maintenance and value enhancement',
                 'Annual valuations and audits',
-                'Investor communications and governance',
+                'Owner communications and governance',
                 'Exit planning and execution when appropriate'
               ]
             }
@@ -1848,7 +1848,7 @@ export const StructurePage: React.FC = () => {
 
           <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6 mt-8">
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Value of This Model for Investors
+              Value of This Model for Owners
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
@@ -1882,16 +1882,16 @@ export const StructurePage: React.FC = () => {
     },
     {
       id: 'investor-journey',
-      title: 'Investor Journey Model',
+      title: 'Owner Journey Model',
       icon: Users,
       content: (
         <div className="space-y-6">
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-8">
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Your Journey as a CapiMax Investor
+              Your Journey as a CapiMax Owner
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              From registration to returns, this journey outlines the complete investor experience on the CapiMax platform, ensuring clarity and confidence at every step.
+              From registration to returns, this journey outlines the complete owner experience on the CapiMax platform, ensuring clarity and confidence at every step.
             </p>
           </div>
 
@@ -1935,7 +1935,7 @@ export const StructurePage: React.FC = () => {
               items: [
                 'Review SPV incorporation documents',
                 'Verify smart contract address on blockchain',
-                'Study investment agreement terms',
+                'Study ownership agreement terms',
                 'Examine property valuation reports',
                 'Understand tokenomics and distribution mechanisms',
                 'Assess exit options and liquidity'
@@ -1943,11 +1943,11 @@ export const StructurePage: React.FC = () => {
             },
             {
               phase: 'Phase 5',
-              title: 'Investment Decision',
+              title: 'Ownership Decision',
               items: [
-                'Select property for investment',
-                'Determine investment amount',
-                'Use investment calculator to project returns',
+                'Select property for purchase',
+                'Determine purchase amount',
+                'Use ownership calculator to project returns',
                 'Review terms and conditions specific to the property',
                 'Confirm understanding of risks'
               ]
@@ -1958,18 +1958,18 @@ export const StructurePage: React.FC = () => {
               items: [
                 'Connect compatible Web3 wallet (MetaMask, WalletConnect, etc.)',
                 'Verify wallet connection',
-                'Ensure sufficient funds for investment and gas fees',
+                'Ensure sufficient funds for purchase and gas fees',
                 'Link wallet to CapiMax account for future transactions'
               ]
             },
             {
               phase: 'Phase 7',
-              title: 'Investment Execution',
+              title: 'Purchase Execution',
               items: [
                 'Select payment method (bank transfer, card, crypto)',
-                'Enter investment amount',
+                'Enter purchase amount',
                 'Review transaction summary and fees',
-                'Confirm investment commitment',
+                'Confirm purchase commitment',
                 'Complete payment authorization'
               ]
             },
@@ -1979,7 +1979,7 @@ export const StructurePage: React.FC = () => {
               items: [
                 'Payment verification in progress',
                 'Transaction confirmation received',
-                'Investment recorded in user dashboard',
+                'Purchase recorded in user dashboard',
                 'Funds held in escrow until tokenization completes',
                 'Email confirmation sent with transaction details'
               ]
@@ -1990,7 +1990,7 @@ export const StructurePage: React.FC = () => {
               items: [
                 'Property funding target reached',
                 'Smart contract executes token minting',
-                'Tokens automatically allocated to investor wallet',
+                'Tokens automatically allocated to owner wallet',
                 'Blockchain transaction confirmation',
                 'Notification of successful token distribution'
               ]
@@ -2012,7 +2012,7 @@ export const StructurePage: React.FC = () => {
               items: [
                 'Property generates rental income or development returns',
                 'Smart contract automatically calculates distributions',
-                'Proportional revenue sent to investor wallet',
+                'Proportional revenue sent to owner wallet',
                 'Distribution notification with detailed breakdown',
                 'View distribution history and tax documentation'
               ]
@@ -2031,14 +2031,14 @@ export const StructurePage: React.FC = () => {
             },
             {
               phase: 'Phase 13',
-              title: 'Exit and Reinvestment',
+              title: 'Exit and Repurchase',
               items: [
                 'Participate in property sale governance vote (if applicable)',
                 'Receive proportional proceeds from property sale',
                 'Review final distribution and capital gains',
                 'Download tax documents and transaction history',
-                'Option to reinvest in new properties',
-                'Withdraw funds or maintain balance for future investments'
+                'Option to purchase new properties',
+                'Withdraw funds or maintain balance for future purchases'
               ]
             }
           ].map((phase, index) => (
@@ -2071,19 +2071,19 @@ export const StructurePage: React.FC = () => {
 
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mt-8">
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Value Added for the Investor
+              Value Added for the Owner
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  <strong>Accessibility:</strong> Invest in premium real estate with lower capital requirements
+                  <strong>Accessibility:</strong> Own premium real estate with lower capital requirements
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  <strong>Liquidity:</strong> Exit investments through secondary market trading
+                  <strong>Liquidity:</strong> Exit ownership through secondary market trading
                 </span>
               </li>
               <li className="flex items-start gap-3">
@@ -2107,7 +2107,7 @@ export const StructurePage: React.FC = () => {
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  <strong>Legal Protection:</strong> Robust regulatory framework protecting investor rights
+                  <strong>Legal Protection:</strong> Robust regulatory framework protecting owner rights
                 </span>
               </li>
             </ul>
@@ -2123,7 +2123,7 @@ export const StructurePage: React.FC = () => {
         <title>Regulatory Structure | CapiMax RT</title>
         <meta
           name="description"
-          content="Comprehensive regulatory guide for the CapiMax Real Estate Tokenization Platform. Learn about our SPV structure, legal framework, and investor protections."
+          content="Comprehensive regulatory guide for the CapiMax Real Estate Tokenization Platform. Learn about our SPV structure, legal framework, and owner protections."
         />
       </Helmet>
 
@@ -2378,7 +2378,7 @@ export const StructurePage: React.FC = () => {
               className="space-y-6"
             >
               <Heading level="h2" size="4xl" align="center" className="text-white">
-                Ready to Invest in Tokenized Real Estate?
+                Ready to Own Tokenized Real Estate?
               </Heading>
               <Text
                 variant="bodyLarge"

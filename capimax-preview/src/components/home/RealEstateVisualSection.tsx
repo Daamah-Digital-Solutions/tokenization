@@ -25,9 +25,9 @@ export const RealEstateVisualSection: React.FC<VisualSectionProps> = ({ variant 
 
   const content = {
     global: {
-      title: 'Invest in Global Real Estate',
+      title: 'Own Global Real Estate',
       subtitle: 'Access Premium Properties Worldwide',
-      description: 'Diversify your portfolio across international markets with institutional-grade real estate investments.',
+      description: 'Diversify your portfolio across international markets with institutional-grade real estate ownership.',
       icon: Globe,
       image: REAL_ESTATE_IMAGES.global,
       stats: [
@@ -39,8 +39,8 @@ export const RealEstateVisualSection: React.FC<VisualSectionProps> = ({ variant 
     },
     institutional: {
       title: 'Institutional-Grade Property Assets',
-      subtitle: 'Premium Real Estate Investment',
-      description: 'Access the same quality investments traditionally reserved for institutional investors.',
+      subtitle: 'Premium Real Estate Ownership',
+      description: 'Access the same quality ownership opportunities traditionally reserved for institutional buyers.',
       icon: Building2,
       image: REAL_ESTATE_IMAGES.institutional,
       stats: [

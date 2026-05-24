@@ -82,7 +82,7 @@ export const LiquidityProviderCTA: React.FC = () => {
 
             <p className="text-lg text-slate-300 mb-8 leading-relaxed">
               Support the platform ecosystem by providing liquidity to the secondary market.
-              Earn competitive returns while helping investors access exit opportunities.
+              Earn competitive returns while helping owners access exit opportunities.
             </p>
 
             <div className="grid grid-cols-2 gap-4 mb-8">
@@ -143,7 +143,7 @@ export const LiquidityProviderCTA: React.FC = () => {
 
               <div className="space-y-4">
                 {[
-                  'Priority access to investment opportunities',
+                  'Priority access to ownership opportunities',
                   'Reduced platform fees',
                   'Dedicated account management',
                   'Advanced reporting and analytics',

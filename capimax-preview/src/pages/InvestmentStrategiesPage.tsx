@@ -4,16 +4,16 @@ import { InfoPageLayout } from '../components/info/InfoPageLayout';
 export const InvestmentStrategiesPage: React.FC = () => {
   return (
     <InfoPageLayout
-      title="Investment Strategies"
-      subtitle="Capi Max RT Platform – Tokenized Real Estate Investment"
+      title="Ownership Strategies"
+      subtitle="Capi Max RT Platform – Tokenized Real Estate Ownership"
     >
       <section className="info-section">
-        <h2>1) Development Token Investment</h2>
+        <h2>1) Development Token Ownership</h2>
 
         <h3>Definition</h3>
         <p>
-          A development property investment is an investment in a real estate asset at its early stages. The
-          investor purchases tokens during the initial rounds at a lower price, without periodic yields, in
+          A development property purchase is buying a real estate asset at its early stages. The
+          owner purchases tokens during the initial rounds at a lower price, without periodic yields, in
           exchange for:
         </p>
         <ul>
@@ -76,7 +76,7 @@ export const InvestmentStrategiesPage: React.FC = () => {
           </table>
         </div>
 
-        <h3>How the Investor Knows Expected Returns</h3>
+        <h3>How the Owner Knows Expected Returns</h3>
         <ul>
           <li>Next round price announced in advance</li>
           <li>Launch date known</li>
@@ -84,7 +84,7 @@ export const InvestmentStrategiesPage: React.FC = () => {
           <li>Profitability calculable before purchase</li>
         </ul>
 
-        <h3>Investor Options</h3>
+        <h3>Owner Options</h3>
         <ul>
           <li>Exit at any subsequent round</li>
           <li>Sell on secondary market</li>
@@ -100,10 +100,10 @@ export const InvestmentStrategiesPage: React.FC = () => {
           <li>Changes only via official disclosure</li>
         </ul>
 
-        <h2>2) Installment-Based Development Investment</h2>
+        <h2>2) Installment-Based Development Ownership</h2>
 
         <h3>Definition</h3>
-        <p>A long-term investment that allows the investor to:</p>
+        <p>A long-term ownership plan that allows the owner to:</p>
         <ul>
           <li>Purchase tokens from the beginning</li>
           <li>Pay in installments</li>
@@ -139,7 +139,7 @@ export const InvestmentStrategiesPage: React.FC = () => {
           <li>Price growth ratio applied</li>
           <li>Token transfers to new buyer</li>
           <li>Remaining installments continue under same terms</li>
-          <li>New investor benefits from price appreciation</li>
+          <li>New owner benefits from price appreciation</li>
         </ul>
 
         <h3>Advantages</h3>
@@ -161,7 +161,7 @@ export const InvestmentStrategiesPage: React.FC = () => {
           <li>Shows gradual price appreciation</li>
         </ul>
 
-        <h3>Investor Benefits</h3>
+        <h3>Owner Benefits</h3>
         <ul>
           <li>Periodic rental yield</li>
           <li>Gradual token value growth</li>
@@ -184,9 +184,9 @@ export const InvestmentStrategiesPage: React.FC = () => {
 
         <h3>Suitable For</h3>
         <ul>
-          <li>Conservative investors</li>
+          <li>Conservative owners</li>
           <li>Those seeking stable income</li>
-          <li>Investors preferring higher stability</li>
+          <li>Owners preferring higher stability</li>
         </ul>
 
         <h2>Brief Comparison of Strategies</h2>

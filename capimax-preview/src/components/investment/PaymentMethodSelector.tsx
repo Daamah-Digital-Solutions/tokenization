@@ -48,7 +48,7 @@ const PAYMENT_METHODS: PaymentMethodOption[] = [
   {
     id: 'wallet',
     name: 'CapiMax Wallet',
-    description: 'Use your existing CapiMax wallet balance for instant investment',
+    description: 'Use your existing CapiMax wallet balance for instant purchase',
     icon: Wallet,
     fee: 'Free',
     processingTime: 'Instant',
@@ -187,10 +187,10 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
       <Card className="p-8 text-center">
         <Coins className="w-12 h-12 text-gray-400 mx-auto mb-4" />
         <Text variant="h4" className="text-gray-600 mb-2">
-          Investment Amount Required
+          Purchase Amount Required
         </Text>
         <Text variant="bodySmall" className="text-gray-500">
-          Please select an investment amount to proceed with payment options
+          Please select a purchase amount to proceed with payment options
         </Text>
       </Card>
     );
@@ -223,7 +223,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
           Choose Payment Method
         </Text>
         <Text variant="body" className="text-gray-600 mb-4">
-          Pay ${investmentData.amount.toLocaleString()} for your real estate investment
+          Pay ${investmentData.amount.toLocaleString()} for your real estate purchase
         </Text>
       </div>
 

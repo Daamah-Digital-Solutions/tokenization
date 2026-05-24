@@ -112,7 +112,7 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
     }
     if (m.includes('annual limit')) {
       return {
-        label: 'Reduce investment amount',
+        label: 'Reduce purchase amount',
         onClick: () => onGoBack?.(),
       };
     }
@@ -188,25 +188,25 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
       // process (= create NOWPayments invoice + watch for receipt), then
       // confirm tokens.
       setSteps([
-        { id: 'validate', title: 'Validate Investment', description: 'Verifying availability and limits', status: 'pending', estimatedTime: '10s' },
+        { id: 'validate', title: 'Validate Purchase', description: 'Verifying availability and limits', status: 'pending', estimatedTime: '10s' },
         { id: 'process', title: 'Process Payment', description: 'Get crypto payment address and await funds', status: 'pending', estimatedTime: '5-30 min' },
         { id: 'tokens', title: 'Confirm Tokens', description: 'Confirming your property tokens', status: 'pending', estimatedTime: '10s' }
       ]);
     } else if (investmentData.paymentMethod === 'nova_sukuk') {
       setSteps([
-        { id: 'validate', title: 'Validate Investment', description: 'Verifying availability and limits', status: 'pending', estimatedTime: '10s' },
+        { id: 'validate', title: 'Validate Purchase', description: 'Verifying availability and limits', status: 'pending', estimatedTime: '10s' },
         { id: 'process', title: 'Upload Sukuk Document', description: 'Submitting PDF for admin review', status: 'pending', estimatedTime: '15s' },
         { id: 'tokens', title: 'Pending Review', description: 'Admin will review and approve your payment', status: 'pending' }
       ]);
     } else if (investmentData.paymentMethod === 'pronova') {
       setSteps([
-        { id: 'validate', title: 'Validate Investment', description: 'Verifying availability and calculating 5% discount', status: 'pending', estimatedTime: '10s' },
+        { id: 'validate', title: 'Validate Purchase', description: 'Verifying availability and calculating 5% discount', status: 'pending', estimatedTime: '10s' },
         { id: 'process', title: 'Create Payment', description: 'Setting up Pronova payment with discount', status: 'pending', estimatedTime: '15s' },
         { id: 'tokens', title: 'Awaiting Payment', description: 'Send Pronova to platform wallet to complete', status: 'pending' }
       ]);
     } else {
       setSteps([
-        { id: 'validate', title: 'Validate Investment', description: 'Verifying availability and limits', status: 'pending', estimatedTime: '10s' },
+        { id: 'validate', title: 'Validate Purchase', description: 'Verifying availability and limits', status: 'pending', estimatedTime: '10s' },
         { id: 'process', title: 'Process Payment', description: `Processing ${getPaymentMethodLabel()} payment`, status: 'pending', estimatedTime: '30s' },
         { id: 'tokens', title: 'Confirm Tokens', description: 'Confirming your property tokens', status: 'pending', estimatedTime: '10s' }
       ]);
@@ -762,7 +762,7 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
         <div className="flex items-start gap-3">
           <Shield className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
           <Text variant="bodySmall" className="text-green-700 dark:text-green-300">
-            Your investment is processed through secure, audited smart contracts. All transactions are recorded on the blockchain.
+            Your purchase is processed through secure, audited smart contracts. All transactions are recorded on the blockchain.
           </Text>
         </div>
       </Card>

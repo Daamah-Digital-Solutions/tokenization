@@ -228,7 +228,7 @@ export function CryptoPaymentForm({
           <li>We open the NOWPayments checkout in a new tab.</li>
           <li>You choose the coin you want to send and complete the payment there.</li>
           <li>This window stays open and watches for the on-chain confirmation —
-              your investment finalises automatically when funds arrive.</li>
+              your purchase finalises automatically when funds arrive.</li>
         </ol>
       </Card>
 
@@ -277,7 +277,7 @@ export function CryptoPaymentForm({
           </h3>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
             Complete the payment in the new tab we just opened. Your
-            investment finalises as soon as the network confirms the
+            purchase finalises as soon as the network confirms the
             transfer.
           </p>
         </div>

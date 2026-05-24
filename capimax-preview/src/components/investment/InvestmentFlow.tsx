@@ -50,7 +50,7 @@ const baseSteps = [
   {
     id: 'confirmation',
     title: 'Confirmation',
-    description: 'Your investment is complete',
+    description: 'Your purchase is complete',
     icon: CheckCircle
   }
 ];
@@ -236,7 +236,7 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    Invest in {property.title}
+                    Buy shares of {property.title}
                   </h2>
                   <Text variant="body" color="muted" className="mt-1">
                     {currentStepData.description}
@@ -428,7 +428,7 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                       <AlertTriangle className="w-5 h-5 text-amber-600" />
                     </div>
                     <div>
-                      <Text variant="bodyLarge" weight="semibold">Cancel Investment?</Text>
+                      <Text variant="bodyLarge" weight="semibold">Cancel Purchase?</Text>
                       <Text variant="bodySmall" color="muted">Your progress will be lost</Text>
                     </div>
                   </div>
@@ -439,7 +439,7 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                       onClick={() => setShowCloseConfirm(false)}
                       className="flex-1"
                     >
-                      Continue Investing
+                      Continue Purchase
                     </Button>
                     <Button
                       variant="ghost"

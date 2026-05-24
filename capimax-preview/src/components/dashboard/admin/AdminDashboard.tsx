@@ -239,7 +239,7 @@ const UserManagement: React.FC<{
                 </div>
                 {user.totalInvestment && (
                   <div className="text-right">
-                    <p className="text-neutral-500 dark:text-slate-400">Investment</p>
+                    <p className="text-neutral-500 dark:text-slate-400">Total Purchased</p>
                     <p className="font-semibold text-green-600 dark:text-green-400">
                       ${user.totalInvestment.toLocaleString()}
                     </p>
@@ -1030,10 +1030,10 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
                   const brokers = users?.users?.filter(u => u.role === 'broker').length || 0;
                   
                   return [
-                    { 
-                      label: 'Investors', 
-                      percentage: Math.round((investors / totalUsers) * 100), 
-                      count: investors 
+                    {
+                      label: 'Owners',
+                      percentage: Math.round((investors / totalUsers) * 100),
+                      count: investors
                     },
                     { 
                       label: 'Property Owners', 

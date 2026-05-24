@@ -20,11 +20,11 @@ export const SecondaryMarketPage: React.FC = () => {
 
         <h2>Secondary Market</h2>
         <p>
-          The secondary market allows investors to:
+          The secondary market allows owners to:
         </p>
         <ul>
           <li>List their units for sale</li>
-          <li>Purchase units from other investors</li>
+          <li>Purchase units from other owners</li>
           <li>Trade based on supply and demand</li>
         </ul>
 
@@ -52,7 +52,7 @@ export const SecondaryMarketPage: React.FC = () => {
 
         <h2>Understanding the Difference</h2>
         <div className="info-highlight">
-          <p><strong>Secondary Market:</strong> Investor-to-investor trading based on supply and demand.</p>
+          <p><strong>Secondary Market:</strong> Owner-to-owner trading based on supply and demand.</p>
           <p><strong>Liquidity Provider:</strong> An optional third party offering conditional liquidity under predefined terms.</p>
         </div>
 
@@ -62,7 +62,7 @@ export const SecondaryMarketPage: React.FC = () => {
             Go to Marketplace
           </button>
           <button className="link-button" onClick={() => navigateToPage('/investor-guide')}>
-            Investor Guide
+            Co-Owner Guide
           </button>
           <button className="link-button-outline" onClick={() => navigateToPage('/risks')}>
             Risk Disclosures

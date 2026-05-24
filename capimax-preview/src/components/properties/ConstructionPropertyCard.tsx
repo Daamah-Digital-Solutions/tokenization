@@ -133,7 +133,7 @@ export const ConstructionPropertyCard: React.FC<ConstructionPropertyCardProps> =
             </p>
           </div>
           <div>
-            <p className="text-neutral-500 dark:text-slate-400">Min. Investment</p>
+            <p className="text-neutral-500 dark:text-slate-400">Min. Ownership</p>
             <p className="font-semibold text-neutral-900 dark:text-slate-100">
               ${property.minimumInvestment.toLocaleString()}
             </p>

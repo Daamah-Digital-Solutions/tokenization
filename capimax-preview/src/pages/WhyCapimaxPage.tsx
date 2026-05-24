@@ -55,14 +55,14 @@ const features = [
     number: 1,
     icon: Building2,
     title: 'Deep Real Estate Experience',
-    description: 'Our team has decades of combined experience as property owners, developers, and investors, allowing for precise understanding of asset valuation, market timing, and risk factors.',
+    description: 'Our team has decades of combined experience as property owners, developers, and buyers, allowing for precise understanding of asset valuation, market timing, and risk factors.',
     color: 'from-blue-500 to-cyan-500'
   },
   {
     number: 2,
     icon: TrendingUp,
-    title: 'Investment and Financial Expertise',
-    description: 'Expertise in structured finance, fund management, and capital allocation ensures proper modeling of returns, risk-adjusted investment strategies, and efficient allocation of investor capital.',
+    title: 'Ownership and Financial Expertise',
+    description: 'Expertise in structured finance, fund management, and capital allocation ensures proper modeling of returns, risk-adjusted ownership strategies, and efficient allocation of owner capital.',
     color: 'from-emerald-500 to-green-500'
   },
   {
@@ -76,28 +76,28 @@ const features = [
     number: 4,
     icon: Handshake,
     title: 'Broker and Market Understanding',
-    description: 'Understanding the intermediary role and market dynamics helps bridge gaps between developers, owners, and investors, ensuring smoother transactions.',
+    description: 'Understanding the intermediary role and market dynamics helps bridge gaps between developers, sellers, and buyers, ensuring smoother transactions.',
     color: 'from-orange-500 to-red-500'
   },
   {
     number: 5,
     icon: Lightbulb,
-    title: 'Insight into Investment Challenges',
-    description: 'We have firsthand knowledge of operational and exit challenges, including investor withdrawals, illiquidity, maintenance costs, and market volatility.',
+    title: 'Insight into Ownership Challenges',
+    description: 'We have firsthand knowledge of operational and exit challenges, including owner withdrawals, illiquidity, maintenance costs, and market volatility.',
     color: 'from-indigo-500 to-blue-500'
   },
   {
     number: 6,
     icon: Home,
     title: 'Familiarity with Property Types',
-    description: 'In-depth knowledge of income-generating, development, and installment-based properties enables diversified investment solutions for various risk appetites.',
+    description: 'In-depth knowledge of income-generating, development, and installment-based properties enables diversified ownership solutions for various risk appetites.',
     color: 'from-teal-500 to-cyan-500'
   },
   {
     number: 7,
     icon: Award,
-    title: 'Innovative Investment Models',
-    description: 'We created new investment models combining installment-based property acquisition and phased development rounds to mirror real-world property processes.',
+    title: 'Innovative Ownership Models',
+    description: 'We created new ownership models combining installment-based property acquisition and phased development rounds to mirror real-world property processes.',
     color: 'from-pink-500 to-rose-500'
   },
   {
@@ -111,21 +111,21 @@ const features = [
     number: 9,
     icon: BarChart3,
     title: 'Competitive Benchmarking',
-    description: 'Detailed competitor analysis identified gaps in transparency, liquidity, and investor control, which Capy Max RT addresses.',
+    description: 'Detailed competitor analysis identified gaps in transparency, liquidity, and owner control, which Capy Max RT addresses.',
     color: 'from-violet-500 to-purple-500'
   },
   {
     number: 10,
     icon: TrendingDown,
     title: 'Exit Strategy Optimization',
-    description: 'Designed flexible exit options for investors, including secondary markets, buybacks, or redistribution of ownership, ensuring liquidity and strategic exits.',
+    description: 'Designed flexible exit options for owners, including secondary markets, buybacks, or redistribution of ownership, ensuring liquidity and strategic exits.',
     color: 'from-red-500 to-orange-500'
   },
   {
     number: 11,
     icon: DollarSign,
     title: 'Transparent Revenue Streams',
-    description: 'Revenue for the platform derives from tokenization fees, listing fees, subscription fees, investor purchase fees, annual platform fees, exit fees, and profit sharing, including secondary market transactions and liquidity provider arrangements.',
+    description: 'Revenue for the platform derives from tokenization fees, listing fees, subscription fees, owner purchase fees, annual platform fees, exit fees, and profit sharing, including secondary market transactions and liquidity provider arrangements.',
     color: 'from-green-500 to-emerald-500'
   },
   {
@@ -139,20 +139,20 @@ const features = [
     number: 13,
     icon: Landmark,
     title: 'Global SPV Framework',
-    description: 'All investments are structured through Special Purpose Vehicles (SPVs), enabling global compliance, legal separation of assets, and expansion opportunities.',
+    description: 'All purchases are structured through Special Purpose Vehicles (SPVs), enabling global compliance, legal separation of assets, and expansion opportunities.',
     color: 'from-cyan-500 to-blue-500'
   },
   {
     number: 14,
     icon: Users,
     title: 'Multiple Stakeholder Integration',
-    description: 'The platform connects investors, property owners, developers, intermediaries, liquidity providers, and partners, allowing smooth coordination and accountability.',
+    description: 'The platform connects owners, property sellers, developers, intermediaries, liquidity providers, and partners, allowing smooth coordination and accountability.',
     color: 'from-purple-500 to-indigo-500'
   },
   {
     number: 15,
     icon: BarChart3,
-    title: 'Investor Dashboards',
+    title: 'Owner Dashboards',
     description: 'All stakeholders have access to dashboards that enable monitoring, management, transparency, and control of their assets and transactions.',
     color: 'from-emerald-500 to-teal-500'
   },
@@ -160,21 +160,21 @@ const features = [
     number: 16,
     icon: RefreshCcw,
     title: 'Reinvestment Mechanism',
-    description: 'Investors can automatically reinvest their yields into the platform, compounding returns and maximizing portfolio growth.',
+    description: 'Owners can automatically reinvest their yields into the platform, compounding returns and maximizing portfolio growth.',
     color: 'from-orange-500 to-yellow-500'
   },
   {
     number: 17,
     icon: ShoppingCart,
     title: 'Secondary Market Integration',
-    description: 'Secondary market functionality allows investors to trade their property tokens, providing liquidity and flexible exit strategies.',
+    description: 'Secondary market functionality allows owners to trade their property tokens, providing liquidity and flexible exit strategies.',
     color: 'from-pink-500 to-purple-500'
   },
   {
     number: 18,
     icon: Layers,
     title: 'Structured Development Rounds',
-    description: 'Phased development and installment models replicate real-life property investment cycles, offering clear growth and price appreciation patterns.',
+    description: 'Phased development and installment models replicate real-life property ownership cycles, offering clear growth and price appreciation patterns.',
     color: 'from-blue-500 to-cyan-500'
   },
   {
@@ -195,56 +195,56 @@ const features = [
     number: 21,
     icon: Wallet,
     title: 'Digital and Crypto Payments',
-    description: 'The platform supports traditional, digital, and crypto payment options, ensuring accessibility and convenience for global investors.',
+    description: 'The platform supports traditional, digital, and crypto payment options, ensuring accessibility and convenience for global owners.',
     color: 'from-indigo-500 to-purple-500'
   },
   {
     number: 22,
     icon: FileCheck,
     title: 'Transparency and Open Data',
-    description: 'Full disclosure of property performance, revenues, and investment documentation ensures informed decision-making.',
+    description: 'Full disclosure of property performance, revenues, and ownership documentation ensures informed decision-making.',
     color: 'from-cyan-500 to-blue-500'
   },
   {
     number: 23,
     icon: BookOpen,
     title: 'Educational and Guidance Tools',
-    description: 'The platform provides investors with explanations, guides, and analytics, reducing ambiguity and increasing confidence in decision-making.',
+    description: 'The platform provides owners with explanations, guides, and analytics, reducing ambiguity and increasing confidence in decision-making.',
     color: 'from-yellow-500 to-orange-500'
   },
   {
     number: 24,
     icon: Heart,
-    title: 'Family Investment Feature',
-    description: 'Investors can allocate yields to family members, link their bank accounts, and manage shared returns, increasing loyalty and engagement.',
+    title: 'Family Ownership Feature',
+    description: 'Owners can allocate yields to family members, link their bank accounts, and manage shared returns, increasing loyalty and engagement.',
     color: 'from-rose-500 to-pink-500'
   },
   {
     number: 25,
     icon: Globe,
     title: 'Global Access',
-    description: 'The platform is designed to operate internationally, providing investment opportunities beyond local markets and spreading risks.',
+    description: 'The platform is designed to operate internationally, providing ownership opportunities beyond local markets and spreading risks.',
     color: 'from-teal-500 to-cyan-500'
   },
   {
     number: 26,
     icon: CreditCard,
     title: 'Flexible Payment Plans',
-    description: 'Installment models allow smaller investors to enter the market and gradually acquire tokenized ownership.',
+    description: 'Installment models allow smaller buyers to enter the market and gradually acquire tokenized ownership.',
     color: 'from-violet-500 to-indigo-500'
   },
   {
     number: 27,
     icon: PieChart,
     title: 'Market-Based Development Rounds',
-    description: 'Investment rounds mirror real property development stages, with clearly defined pricing and release schedules for phased access.',
+    description: 'Ownership rounds mirror real property development stages, with clearly defined pricing and release schedules for phased access.',
     color: 'from-orange-500 to-red-500'
   },
   {
     number: 28,
     icon: Landmark,
     title: 'Actual Property Backing',
-    description: 'All tokenized investments are backed by real, legally documented properties, ensuring tangible asset value.',
+    description: 'All tokenized purchases are backed by real, legally documented properties, ensuring tangible asset value.',
     color: 'from-emerald-500 to-green-500'
   },
   {
@@ -257,8 +257,8 @@ const features = [
   {
     number: 30,
     icon: UserCheck,
-    title: 'Investor Protection',
-    description: 'Legal, contractual, and technological safeguards protect investors\' rights, including blockchain immutability and SPV structures.',
+    title: 'Owner Protection',
+    description: 'Legal, contractual, and technological safeguards protect owners\' rights, including blockchain immutability and SPV structures.',
     color: 'from-purple-500 to-pink-500'
   },
   {
@@ -279,7 +279,7 @@ const features = [
     number: 33,
     icon: Briefcase,
     title: 'Intermediary Support',
-    description: 'The platform integrates brokers and intermediaries to attract property owners and investors while facilitating transactions.',
+    description: 'The platform integrates brokers and intermediaries to attract property sellers and buyers while facilitating transactions.',
     color: 'from-orange-500 to-yellow-500'
   },
   {
@@ -293,7 +293,7 @@ const features = [
     number: 35,
     icon: Zap,
     title: 'Continuous Innovation',
-    description: 'The platform continuously evolves to add new property types, investment models, and services, maintaining leadership in tokenized real estate innovation.',
+    description: 'The platform continuously evolves to add new property types, ownership models, and services, maintaining leadership in tokenized real estate innovation.',
     color: 'from-indigo-500 to-violet-500'
   }
 ];
@@ -317,14 +317,14 @@ const additionalFeatures = [
     number: 38,
     icon: Sparkles,
     title: 'Annual Feature and Service Enhancements',
-    description: 'The platform retains additional services and features that are introduced each year, refreshing the platform\'s functionality, user experience, and investment offerings. This ensures that Capy Max RT evolves dynamically with market needs.',
+    description: 'The platform retains additional services and features that are introduced each year, refreshing the platform\'s functionality, user experience, and ownership offerings. This ensures that Capy Max RT evolves dynamically with market needs.',
     color: 'from-purple-500 to-pink-500'
   },
   {
     number: 39,
     icon: Globe,
     title: 'Global Expansion Roadmap',
-    description: 'Capy Max RT has a structured global expansion strategy, enabling the platform to scale operations and provide investment opportunities in international markets in subsequent phases.',
+    description: 'Capy Max RT has a structured global expansion strategy, enabling the platform to scale operations and provide ownership opportunities in international markets in subsequent phases.',
     color: 'from-orange-500 to-red-500'
   }
 ];
@@ -336,9 +336,9 @@ export const WhyCapimaxPage: React.FC = () => {
         <title>Why Capimax RT | Capimax - Real Estate Tokenization Platform</title>
         <meta
           name="description"
-          content="Discover why Capimax RT is the leading real estate tokenization platform. Learn about our 39 unique features, global expertise, and innovative investment models that set us apart."
+          content="Discover why Capimax RT is the leading real estate tokenization platform. Learn about our 39 unique features, global expertise, and innovative ownership models that set us apart."
         />
-        <meta name="keywords" content="why capimax, real estate tokenization advantages, property investment platform, blockchain real estate, tokenized real estate benefits" />
+        <meta name="keywords" content="why capimax, real estate tokenization advantages, real estate ownership platform, blockchain real estate, tokenized real estate benefits" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 dark:from-slate-900 dark:via-gray-900 dark:to-slate-800">
@@ -443,23 +443,23 @@ export const WhyCapimaxPage: React.FC = () => {
                 transition={{ duration: 0.8 }}
               >
                 <Text variant="bodyLarge" color="secondary" as="p" className="leading-relaxed mb-6">
-                  CapiMax RT represents the result of extensive cumulative expertise across the real estate, finance, investment, and development sectors. The founding team has operated as property owners, developers, and investors, gaining direct practical insight into the real-world challenges of property investment, including risk management, exit strategies, return optimization, asset valuation, and investor relations.
+                  CapiMax RT represents the result of extensive cumulative expertise across the real estate, finance, ownership, and development sectors. The founding team has operated as property owners, developers, and buyers, gaining direct practical insight into the real-world challenges of property ownership, including risk management, exit strategies, return optimization, asset valuation, and owner relations.
                 </Text>
 
                 <Text variant="bodyLarge" color="secondary" as="p" className="leading-relaxed mb-6">
-                  Capi Max RT is owned by Capimax Global Group, which holds 12 companies operating across multiple international jurisdictions, including the United States, the United Kingdom, and the United Arab Emirates. The group operates in more than 72 business activities spanning investment, real estate development, virtual assets, tokenization, investment funds, and financial and technology services.
+                  Capi Max RT is owned by Capimax Global Group, which holds 12 companies operating across multiple international jurisdictions, including the United States, the United Kingdom, and the United Arab Emirates. The group operates in more than 72 business activities spanning ownership, real estate development, virtual assets, tokenization, ownership funds, and financial and technology services.
                 </Text>
 
                 <Text variant="bodyLarge" color="secondary" as="p" className="leading-relaxed mb-6">
-                  This institutional scale and diversified operational footprint provide the platform with integrated expertise across technical, legal, financial, real estate, investment, and technological disciplines, enabling comprehensive management of the platform from all operational, regulatory, and strategic perspectives.
+                  This institutional scale and diversified operational footprint provide the platform with integrated expertise across technical, legal, financial, real estate, ownership, and technological disciplines, enabling comprehensive management of the platform from all operational, regulatory, and strategic perspectives.
                 </Text>
 
                 <Text variant="bodyLarge" color="secondary" as="p" className="leading-relaxed mb-6">
-                  In addition, the team conducted extensive studies of both local and global markets, analyzing the strengths, weaknesses, and opportunities within traditional and tokenized real estate investment models. Competitors were carefully examined to identify gaps and areas for improvement.
+                  In addition, the team conducted extensive studies of both local and global markets, analyzing the strengths, weaknesses, and opportunities within traditional and tokenized real estate ownership models. Competitors were carefully examined to identify gaps and areas for improvement.
                 </Text>
 
                 <Text variant="bodyLarge" color="secondary" as="p" className="leading-relaxed mb-6">
-                  This accumulated knowledge, combined with market research, investor behavior studies, and operational experience, enabled the team to design Capy Max RT as a comprehensive solution that addresses real challenges faced by investors, property owners, and developers. The platform emphasizes transparency, flexibility, governance, and strategic growth.
+                  This accumulated knowledge, combined with market research, owner behavior studies, and operational experience, enabled the team to design Capy Max RT as a comprehensive solution that addresses real challenges faced by owners, property sellers, and developers. The platform emphasizes transparency, flexibility, governance, and strategic growth.
                 </Text>
 
                 <Text variant="bodyLarge" color="secondary" as="p" className="leading-relaxed font-semibold">
@@ -614,7 +614,7 @@ export const WhyCapimaxPage: React.FC = () => {
                       The Capimax RT Advantage
                     </Heading>
                     <Text variant="bodyLarge" color="secondary" as="p" className="max-w-3xl mx-auto leading-relaxed">
-                      These 39 features represent our commitment to creating the most comprehensive, transparent, and investor-friendly real estate tokenization platform. Every feature is designed to address real challenges and deliver tangible value to all stakeholders.
+                      These 39 features represent our commitment to creating the most comprehensive, transparent, and owner-friendly real estate tokenization platform. Every feature is designed to address real challenges and deliver tangible value to all stakeholders.
                     </Text>
                   </div>
                 </Card>
@@ -639,7 +639,7 @@ export const WhyCapimaxPage: React.FC = () => {
                   className="max-w-2xl mx-auto text-white/90"
                   as="p"
                 >
-                  Join a platform built on decades of expertise, powered by innovation, and designed for your success. Start investing in tokenized real estate today.
+                  Join a platform built on decades of expertise, powered by innovation, and designed for your success. Start owning tokenized real estate today.
                 </Text>
               </motion.div>
 

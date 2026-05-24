@@ -123,7 +123,7 @@ const PAYMENT_METHODS: PaymentMethodInfo[] = [
     minAmount: 50,
     maxAmount: 1000000,
     features: ['Sharia Compliant', 'No Fees', 'High Limits'],
-    pros: ['No transaction fees', 'Sharia-compliant', 'High investment limits'],
+    pros: ['No transaction fees', 'Sharia-compliant', 'High purchase limits'],
     cons: ['Manual review required', 'Longer processing time']
   },
   {
@@ -139,7 +139,7 @@ const PAYMENT_METHODS: PaymentMethodInfo[] = [
     recommended: true,
     discount: '5% OFF',
     features: ['5% Discount', 'BNB Smart Chain', 'Fast Settlement'],
-    pros: ['5% discount on investment', 'Low fees', 'Fast confirmation', 'On-chain verification'],
+    pros: ['5% discount on purchase', 'Low fees', 'Fast confirmation', 'On-chain verification'],
     cons: ['Requires Pronova tokens', 'Requires crypto wallet']
   }
 ];
@@ -443,7 +443,7 @@ export function EnhancedPaymentMethodSelector({
 
         <div className="space-y-4">
           <div className="p-4 bg-indigo-50 rounded-lg text-sm text-indigo-800">
-            <strong>Investment Amount:</strong> ${amount.toLocaleString()} | <strong>Fee:</strong> Free
+            <strong>Purchase Amount:</strong> ${amount.toLocaleString()} | <strong>Fee:</strong> Free
           </div>
 
           {/* PDF Upload */}
@@ -736,7 +736,7 @@ export function EnhancedPaymentMethodSelector({
             Choose Payment Method
           </h2>
           <p className="text-gray-600 mb-4">
-            Pay {formatCurrency(amount, 'USD')} for your real estate investment
+            Pay {formatCurrency(amount, 'USD')} for your real estate purchase
           </p>
           
           <div className="flex items-center justify-center gap-4">

@@ -22,8 +22,8 @@ interface RoleSwitcherProps {
 
 const ROLE_INFO = {
   [UserRole.INVESTOR]: {
-    label: 'Investor',
-    description: 'Invest in tokenized properties',
+    label: 'Owner',
+    description: 'Buy tokenized properties',
     icon: Briefcase,
     color: 'emerald'
   },

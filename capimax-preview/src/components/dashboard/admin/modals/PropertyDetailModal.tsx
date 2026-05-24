@@ -53,7 +53,7 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
   const tabs = [
     { id: 'overview', label: 'Overview', icon: '🏢' },
     { id: 'documents', label: 'Documents', icon: '📄' },
-    { id: 'investors', label: 'Investors', icon: '👥' },
+    { id: 'investors', label: 'Owners', icon: '👥' },
     { id: 'financial', label: 'Financial', icon: '💰' },
     { id: 'history', label: 'History', icon: '📈' }
   ];
@@ -243,7 +243,7 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                         </p>
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">Minimum Investment</label>
+                        <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">Minimum Purchase</label>
                         <p className="text-neutral-900 dark:text-slate-100">
                           ${property.minInvestment.toLocaleString()}
                         </p>
@@ -397,14 +397,14 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100">
-                    Investors
+                    Owners
                   </h3>
                   <span className="px-3 py-1 bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-400 rounded-full text-sm font-medium">
                     {property.investors} Total
                   </span>
                 </div>
                 <div className="text-center text-neutral-500 dark:text-slate-400 py-8">
-                  <p>Detailed investor information will be displayed here</p>
+                  <p>Detailed owner information will be displayed here</p>
                   <p className="text-sm mt-1">Feature coming soon</p>
                 </div>
               </div>
@@ -421,7 +421,7 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                     { label: 'Target Amount', value: `$${property.targetAmount.toLocaleString()}`, color: 'text-blue-600 dark:text-blue-400' },
                     { label: 'Raised Amount', value: `$${property.raisedAmount.toLocaleString()}`, color: 'text-green-600 dark:text-green-400' },
                     { label: 'Tokens Issued', value: property.tokensIssued.toLocaleString(), color: 'text-purple-600 dark:text-purple-400' },
-                    { label: 'Investors', value: property.investors.toString(), color: 'text-orange-600 dark:text-orange-400' }
+                    { label: 'Owners', value: property.investors.toString(), color: 'text-orange-600 dark:text-orange-400' }
                   ].map((metric) => (
                     <div key={metric.label} className="bg-neutral-50 dark:bg-slate-700 rounded-lg p-4">
                       <p className="text-sm text-neutral-600 dark:text-slate-400 mb-1">{metric.label}</p>

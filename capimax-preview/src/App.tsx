@@ -595,7 +595,7 @@ const AppRouter: React.FC = () => {
       case 'investor-guide':
         return (
           <main {...mainProps}>
-            <Suspense fallback={<PageLoader message="Loading investor guide..." />}>
+            <Suspense fallback={<PageLoader message="Loading owner's guide..." />}>
               <InvestorGuidePage />
             </Suspense>
           </main>
@@ -684,7 +684,7 @@ const AppRouter: React.FC = () => {
       case 'investment-guide':
         return (
           <main {...mainProps}>
-            <Suspense fallback={<PageLoader message="Loading investment guide..." />}>
+            <Suspense fallback={<PageLoader message="Loading ownership guide..." />}>
               <InvestmentGuidePage />
             </Suspense>
           </main>
@@ -692,7 +692,7 @@ const AppRouter: React.FC = () => {
       case 'investment-strategies':
         return (
           <main {...mainProps}>
-            <Suspense fallback={<PageLoader message="Loading investment strategies..." />}>
+            <Suspense fallback={<PageLoader message="Loading ownership strategies..." />}>
               <InvestmentStrategiesPage />
             </Suspense>
           </main>

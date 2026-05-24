@@ -461,12 +461,12 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
 
               {/* Sidebar */}
               <div className="space-y-6">
-                {/* Investment Calculator */}
+                {/* Ownership Calculator */}
                 <Card className="sticky top-24">
                   <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                       <Calculator className="w-5 h-5 text-emerald-600" />
-                      Investment Calculator
+                      Ownership Calculator
                     </h3>
                   </div>
 
@@ -512,7 +512,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                     </div>
 
                     <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-4 rounded-xl">
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Your Investment</h4>
+                      <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Your Ownership</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-600 dark:text-gray-400">Tokens:</span>
@@ -590,9 +590,9 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Investment Metrics */}
+                {/* Ownership Metrics */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Investment Metrics</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Ownership Metrics</h3>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
                       <span className="text-gray-600 dark:text-gray-400">Token Price</span>
@@ -607,7 +607,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                       <span className="font-semibold text-emerald-600 dark:text-emerald-400">{(property.total_tokens - property.tokens_sold)?.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">Minimum Investment</span>
+                      <span className="text-gray-600 dark:text-gray-400">Minimum Ownership</span>
                       <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(property.token_price)}</span>
                     </div>
                     <div className="flex justify-between items-center py-3">
@@ -658,7 +658,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
 
               <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-6 mb-8">
                 <p className="text-emerald-800 dark:text-emerald-200">
-                  This property is held through a Special Purpose Vehicle (SPV) structure, providing legal separation and investor protection. The SPV owns the underlying asset and investors hold economic rights through their token holdings.
+                  This property is held through a Special Purpose Vehicle (SPV) structure, providing legal separation and co-owner protection. The SPV owns the underlying asset and co-owners hold economic rights through their token holdings.
                 </p>
               </div>
 
@@ -884,9 +884,9 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                 <div className="flex items-start gap-3">
                   <Lock className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <div className="font-semibold text-yellow-800 dark:text-yellow-200">Verified Investor Access</div>
+                    <div className="font-semibold text-yellow-800 dark:text-yellow-200">Verified Owner Access</div>
                     <div className="text-sm text-yellow-700 dark:text-yellow-300">
-                      Some documents require investor verification. Complete your KYC to access all documentation.
+                      Some documents require owner verification. Complete your KYC to access all documentation.
                     </div>
                   </div>
                 </div>

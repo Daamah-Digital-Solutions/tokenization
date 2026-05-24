@@ -210,7 +210,7 @@ export const DocumentCenterPage: React.FC = () => {
                 transition={{ duration: 0.6 }}
                 className="text-3xl lg:text-4xl font-bold text-white mb-4"
               >
-                Ready to Start Investing?
+                Ready to Start Owning?
               </motion.h2>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}

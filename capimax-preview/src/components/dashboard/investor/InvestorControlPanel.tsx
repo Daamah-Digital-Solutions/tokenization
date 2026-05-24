@@ -178,7 +178,7 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
             Failed to Load Portfolio
           </Text>
           <Text variant="body" color="muted" className="mb-4">
-            We're having trouble loading your investment data. Please try again.
+            We're having trouble loading your portfolio data. Please try again.
           </Text>
           <Button onClick={handleRefresh}>
             <RefreshCw className="w-4 h-4 mr-2" />
@@ -340,7 +340,7 @@ const OverviewContent: React.FC<{
           transition={{ delay: 0.3 }}
         >
           <StatsCard
-            title="Total Invested"
+            title="Total Owned"
             value={formatCurrency(portfolio?.total_invested || 0)}
             subtitle="Principal amount"
             icon={Wallet}
@@ -589,7 +589,7 @@ const MarketplaceContent: React.FC = () => {
           Properties
         </Text>
         <Text variant="body" color="muted">
-          Discover and invest in tokenized real estate properties
+          Discover and buy tokenized real estate properties
         </Text>
       </div>
       <div className="relative w-full lg:w-72">
@@ -622,7 +622,7 @@ const MarketplaceContent: React.FC = () => {
           <StatsCard
             title="Available Properties"
             value={String(properties.length)}
-            subtitle="Ready for investment"
+            subtitle="Ready for purchase"
             icon={Target}
             variant="default"
           />
@@ -729,7 +729,7 @@ const MarketplaceContent: React.FC = () => {
             </div>
 
             <Button className="w-full" onClick={() => navigate('property-detail', { id: property.id })}>
-              Invest Now
+              Buy Now
             </Button>
           </div>
         </Card>
@@ -769,7 +769,7 @@ const WalletContent: React.FC<{
             Wallet & Payments
           </Text>
           <Text variant="body" color="muted">
-            Your platform balance, total invested, and earnings to date.
+            Your platform balance, total owned, and earnings to date.
           </Text>
         </div>
         <div className="flex gap-3">
@@ -796,14 +796,14 @@ const WalletContent: React.FC<{
         <StatsCard
           title="Portfolio Value"
           value={loading ? '$0' : `$${(parseFloat(String(portfolio?.current_value || 0))).toLocaleString()}`}
-          subtitle="Current investment value"
+          subtitle="Current portfolio value"
           icon={DollarSign}
           variant="accent"
         />
         <StatsCard
-          title="Total Invested"
+          title="Total Owned"
           value={loading ? '$0' : `$${(parseFloat(String(portfolio?.total_invested || 0))).toLocaleString()}`}
-          subtitle="All-time investments"
+          subtitle="All-time purchases"
           icon={RefreshCw}
         />
         <StatsCard
@@ -1183,7 +1183,7 @@ const NotificationsContent: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <Text variant="h3" weight="semibold" className="mb-2">Notifications</Text>
-          <Text variant="body" color="muted">Stay updated on your investments and platform activity</Text>
+          <Text variant="body" color="muted">Stay updated on your properties and platform activity</Text>
         </div>
       </div>
 
@@ -1196,7 +1196,7 @@ const NotificationsContent: React.FC = () => {
           <Bell className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
           <Text variant="h4" weight="semibold" className="mb-2">No Notifications</Text>
           <Text variant="body" color="muted">
-            You're all caught up! New notifications will appear here when there's activity on your investments.
+            You're all caught up! New notifications will appear here when there's activity on your properties.
           </Text>
         </Card>
       ) : (
@@ -1312,8 +1312,8 @@ const SettingsContent: React.FC = () => {
 
   const ROLE_INFO = {
     [UserRole.INVESTOR]: {
-      label: 'Investor',
-      description: 'Invest in tokenized real estate properties',
+      label: 'Owner',
+      description: 'Buy tokenized real estate properties',
       icon: Briefcase,
       color: 'emerald'
     },
@@ -1625,7 +1625,7 @@ const SettingsContent: React.FC = () => {
                 </Button>
                 <Button variant="outline" className="w-full justify-start" onClick={() => setSettingsModal('reports')}>
                   <FileText className="w-4 h-4 mr-3" />
-                  Download Investment Reports
+                  Download Ownership Reports
                 </Button>
               </div>
             </Card>
@@ -1777,10 +1777,10 @@ const SettingsContent: React.FC = () => {
               {(settingsModal === 'export' || settingsModal === 'tax' || settingsModal === 'reports') && (
                 <>
                   <Text variant="h3" weight="bold" className="mb-3">
-                    {settingsModal === 'export' ? 'Export Data' : settingsModal === 'tax' ? 'Tax Documents' : 'Investment Reports'}
+                    {settingsModal === 'export' ? 'Export Data' : settingsModal === 'tax' ? 'Tax Documents' : 'Ownership Reports'}
                   </Text>
                   <Text variant="body" color="muted" className="mb-4">
-                    This feature is coming soon. Your {settingsModal === 'export' ? 'account data export' : settingsModal === 'tax' ? 'tax documents' : 'investment reports'} will be available for download once generated.
+                    This feature is coming soon. Your {settingsModal === 'export' ? 'account data export' : settingsModal === 'tax' ? 'tax documents' : 'ownership reports'} will be available for download once generated.
                   </Text>
                   <Button onClick={() => setSettingsModal(null)} className="w-full">Close</Button>
                 </>

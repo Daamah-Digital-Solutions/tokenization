@@ -292,7 +292,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({
           Connect Your Wallet
         </Text>
         <Text variant="body" color="muted">
-          Choose a wallet to connect and complete your investment
+          Choose a wallet to connect and complete your purchase
         </Text>
       </div>
 

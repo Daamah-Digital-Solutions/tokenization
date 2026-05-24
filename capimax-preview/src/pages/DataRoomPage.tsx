@@ -11,11 +11,11 @@ export const DataRoomPage: React.FC = () => {
   return (
     <InfoPageLayout
       title="Data Room & Documentation Hub"
-      subtitle="Demonstrating Capimax RT's commitment to transparency and investor protection"
+      subtitle="Demonstrating Capimax RT's commitment to transparency and owner protection"
     >
       <section className="info-section">
         <p className="info-intro">
-          Each listed asset includes a secure digital data room containing all relevant documentation to support informed investment decisions.
+          Each listed asset includes a secure digital data room containing all relevant documentation to support informed ownership decisions.
         </p>
 
         <h2>Contents of the Data Room</h2>
@@ -46,14 +46,14 @@ export const DataRoomPage: React.FC = () => {
           Transparency:
         </p>
         <ul>
-          <li>Enhances investor confidence</li>
+          <li>Enhances owner confidence</li>
           <li>Reduces information asymmetry</li>
           <li>Mitigates disputes</li>
           <li>Supports informed decision-making</li>
         </ul>
 
         <div className="info-highlight">
-          <strong>Access:</strong> Verified investors gain access to the Data Room for each property they are considering or have invested in. Documentation access is subject to platform rules and compliance requirements.
+          <strong>Access:</strong> Verified owners gain access to the Data Room for each property they are considering or have purchased. Documentation access is subject to platform rules and compliance requirements.
         </div>
 
         <h2>Related Pages</h2>
@@ -62,7 +62,7 @@ export const DataRoomPage: React.FC = () => {
             What is SPV
           </button>
           <button className="link-button" onClick={() => navigateToPage('/investor-guide')}>
-            Investor Guide
+            Co-Owner Guide
           </button>
           <button className="link-button-outline" onClick={() => navigateToPage('/properties')}>
             Browse Properties

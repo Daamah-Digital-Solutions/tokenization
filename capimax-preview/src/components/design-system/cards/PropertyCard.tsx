@@ -383,7 +383,7 @@ export const PropertyCard = React.forwardRef<HTMLDivElement, PropertyCardProps>(
                     {investor_count}
                   </Text>
                   <Text variant="caption" color="muted">
-                    Investors
+                    Owners
                   </Text>
                 </div>
               )}
@@ -397,7 +397,7 @@ export const PropertyCard = React.forwardRef<HTMLDivElement, PropertyCardProps>(
                   {investor_count}
                 </Text>
                 <Text variant="caption" color="muted">
-                  Investors
+                  Owners
                 </Text>
               </div>
               
@@ -457,7 +457,7 @@ export const PropertyCard = React.forwardRef<HTMLDivElement, PropertyCardProps>(
               className="w-full font-semibold shadow-lg shadow-emerald-500/25 dark:shadow-emerald-500/20 group"
             >
               <DollarSign className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
-              {is_under_construction && supports_installments ? 'Reserve with Installments' : 'Invest Now'}
+              {is_under_construction && supports_installments ? 'Reserve with Installments' : 'Own Now'}
             </Button>
             
             {/* Installment Notice for Construction Properties */}

@@ -22,12 +22,12 @@ export const SPVExplainer: React.FC = () => {
     {
       icon: Layers,
       title: 'Prevents Asset Mixing',
-      description: 'Your investment is separate from other projects',
+      description: 'Your ownership is separate from other projects',
     },
     {
       icon: Lock,
       title: 'Protects from Unrelated Debts',
-      description: 'Limited liability protects investors',
+      description: 'Limited liability protects owners',
     },
     {
       icon: FileText,
@@ -75,10 +75,10 @@ export const SPVExplainer: React.FC = () => {
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-800 mb-8">
               <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-3 flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5" />
-                What Investors Actually Own
+                What Owners Actually Own
               </h3>
               <p className="text-blue-800 dark:text-blue-400 text-sm leading-relaxed">
-                Investors hold economic or contractual rights in the SPV, documented by contract
+                Owners hold economic or contractual rights in the SPV, documented by contract
                 and transferable under platform rules.
               </p>
             </div>

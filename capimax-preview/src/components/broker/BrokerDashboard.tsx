@@ -107,7 +107,7 @@ export const BrokerDashboard: React.FC = () => {
         <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white">
           <p className="text-orange-100 text-sm mb-1">Conversion Rate</p>
           <p className="text-3xl font-bold">{((dashboardData?.conversion_rate || 0) * 100).toFixed(1)}%</p>
-          <p className="text-orange-100 text-xs mt-2">Referral to investment</p>
+          <p className="text-orange-100 text-xs mt-2">Referral to purchase</p>
         </div>
       </div>
 
@@ -174,10 +174,10 @@ export const BrokerDashboard: React.FC = () => {
               >
                 <div className="flex-1">
                   <p className="font-medium text-neutral-900 dark:text-slate-100">
-                    {commission.investment?.property?.title || 'Property Investment'}
+                    {commission.investment?.property?.title || 'Property Purchase'}
                   </p>
                   <p className="text-sm text-neutral-600 dark:text-slate-400">
-                    {commission.investment?.investor?.full_name || 'Investor'}
+                    {commission.investment?.investor?.full_name || 'Owner'}
                   </p>
                   <p className="text-xs text-neutral-500 dark:text-slate-500 mt-1">
                     {formatDate(commission.created_at)}

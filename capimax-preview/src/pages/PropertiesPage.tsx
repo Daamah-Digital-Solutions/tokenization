@@ -216,7 +216,7 @@ export const PropertiesPage: React.FC = () => {
               Property Marketplace
             </h1>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Discover premium real estate investment opportunities with verified returns and transparent tokenization
+              Discover premium real estate ownership opportunities with verified returns and transparent tokenization
             </p>
             
             {/* Stats */}
@@ -231,7 +231,7 @@ export const PropertiesPage: React.FC = () => {
               </div>
               <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
                 <div className="text-2xl font-bold text-white">25K+</div>
-                <div className="text-sm text-gray-300">Investors</div>
+                <div className="text-sm text-gray-300">Owners</div>
               </div>
               <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
                 <div className="text-2xl font-bold text-white">16.8%</div>
@@ -539,7 +539,7 @@ export const PropertiesPage: React.FC = () => {
                           <div className="font-bold text-emerald-600">{property.expected_return}%</div>
                         </div>
                         <div>
-                          <div className="text-sm text-gray-500">Investors</div>
+                          <div className="text-sm text-gray-500">Owners</div>
                           <div className="font-bold text-gray-900 dark:text-white">
                             {property.investor_count || Math.floor(property.tokens_sold / 10)}
                           </div>
@@ -562,7 +562,7 @@ export const PropertiesPage: React.FC = () => {
                             size="sm"
                             onClick={() => handleInvestClick(property)}
                           >
-                            Invest
+                            Own
                           </Button>
                         </div>
                       </div>

@@ -46,7 +46,7 @@ const benefits = [
   {
     icon: DollarSign,
     title: 'High Commission Rates',
-    description: 'Earn up to 5% commission on every investment you refer with industry-leading payout structures.',
+    description: 'Earn up to 5% commission on every purchase you refer with industry-leading payout structures.',
     highlight: 'Up to 5%',
     color: 'from-emerald-500 to-green-500'
   },
@@ -90,7 +90,7 @@ const benefits = [
 const requirements = [
   'Licensed real estate professional or financial advisor',
   'Minimum 2 years of sales experience in real estate or finance',
-  'Strong network of high-net-worth clients and investors',
+  'Strong network of high-net-worth clients and buyers',
   'Commitment to Capimax training and certification program',
   'Professional references and track record verification'
 ];
@@ -265,7 +265,7 @@ export const BrokerProgramPage: React.FC = () => {
                       className="text-xl lg:text-2xl leading-relaxed text-slate-600 dark:text-gray-300 max-w-4xl mx-auto font-light"
                     >
                       Join our exclusive network of elite real estate professionals and unlock unprecedented earning potential
-                      through institutional-grade tokenized real estate investments.
+                      through institutional-grade tokenized real estate ownership.
                     </motion.p>
                   </div>
 
@@ -392,7 +392,7 @@ export const BrokerProgramPage: React.FC = () => {
                   className="max-w-3xl mx-auto"
                   as="p"
                 >
-                  Experience the advantages of partnering with the most innovative real estate investment platform
+                  Experience the advantages of partnering with the most innovative real estate ownership platform
                 </Text>
               </motion.div>
             </div>
@@ -681,7 +681,7 @@ export const BrokerProgramPage: React.FC = () => {
                   className="max-w-2xl mx-auto text-white/90"
                   as="p"
                 >
-                  Join the most sophisticated real estate investment platform and unlock unprecedented growth opportunities for your practice.
+                  Join the most sophisticated real estate ownership platform and unlock unprecedented growth opportunities for your practice.
                 </Text>
               </motion.div>
 

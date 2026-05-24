@@ -119,7 +119,7 @@ export const LoginPage: React.FC = () => {
   return (
     <AuthLayout
       title="Welcome Back"
-      subtitle="Sign in to access your real estate investment portfolio and discover new opportunities"
+      subtitle="Sign in to access your real estate ownership portfolio and discover new opportunities"
     >
       {renderCurrentStep()}
     </AuthLayout>

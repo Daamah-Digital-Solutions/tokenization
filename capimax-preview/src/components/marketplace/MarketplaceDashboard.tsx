@@ -128,7 +128,7 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
               Property Marketplace
             </h1>
             <p className="text-gray-600">
-              Invest in tokenized real estate properties
+              Own tokenized real estate properties
             </p>
           </div>
           <Button
@@ -264,7 +264,7 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
                         status: e.target.value as any
                       })}
                     >
-                      <option value="approved">Available for Investment</option>
+                      <option value="approved">Available to Buy</option>
                       <option value="under_review">Under Review</option>
                       <option value="draft">Draft</option>
                     </select>
@@ -284,7 +284,7 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
                   <span className="font-medium">{totalCount}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 text-sm">Available for Investment</span>
+                  <span className="text-gray-600 text-sm">Available to Buy</span>
                   <span className="font-medium">{properties.filter(p => p.status === 'approved').length}</span>
                 </div>
               </div>

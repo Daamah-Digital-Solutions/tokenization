@@ -66,7 +66,7 @@ const STEPS = [
 ];
 
 const USER_TYPES = [
-  { value: UserRole.INVESTOR, label: 'Investor - I want to invest in real estate' },
+  { value: UserRole.INVESTOR, label: 'Owner - I want to buy real estate' },
   { value: UserRole.PROPERTY_OWNER, label: 'Property Owner - I want to tokenize my property' }
   // Note: BROKER role has been moved to a separate partner program
 ];
@@ -548,7 +548,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                   className="w-5 h-5 mt-0.5 text-emerald-500 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded focus:ring-emerald-500 focus:ring-2"
                 />
                 <label htmlFor="marketing" className="text-sm text-slate-600 dark:text-slate-400">
-                  I would like to receive marketing communications and investment opportunities (optional)
+                  I would like to receive marketing communications and ownership opportunities (optional)
                 </label>
               </div>
             </div>
@@ -576,7 +576,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           Create Your Account
         </h2>
         <p className="text-slate-600 dark:text-slate-400">
-          Join our platform and start your investment journey
+          Join our platform and start your ownership journey
         </p>
       </div>
 

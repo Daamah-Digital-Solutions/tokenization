@@ -426,7 +426,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
               className="px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
             >
               <option value="all">All Types</option>
-              <option value={TransactionType.INVESTMENT}>Investment</option>
+              <option value={TransactionType.INVESTMENT}>Purchase</option>
               <option value={TransactionType.DIVIDEND}>Dividend</option>
               <option value={TransactionType.WITHDRAWAL}>Withdrawal</option>
               <option value={TransactionType.DEPOSIT}>Deposit</option>

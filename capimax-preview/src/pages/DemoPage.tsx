@@ -61,19 +61,19 @@ const implementedPages = [
   {
     id: 'property-detail',
     name: 'Property Details',
-    description: 'Detailed property view with investment calculator and purchase flow',
+    description: 'Detailed property view with ownership calculator and purchase flow',
     route: 'property-detail' as const,
     status: 'completed',
-    features: ['Investment Calculator', 'Virtual Tours', 'Financial Metrics', 'Purchase Flow'],
-    preview: 'Comprehensive property details with investment analysis'
+    features: ['Ownership Calculator', 'Virtual Tours', 'Financial Metrics', 'Purchase Flow'],
+    preview: 'Comprehensive property details with ownership analysis'
   },
   {
     id: 'dashboard',
     name: 'Multi-Role Dashboards',
-    description: 'Specialized dashboards for investors, property owners, and administrators',
+    description: 'Specialized dashboards for owners, property sellers, and administrators',
     route: 'dashboard' as const,
     status: 'completed',
-    features: ['Investor Dashboard', 'Property Owner Dashboard', 'Admin Dashboard', 'Analytics'],
+    features: ['Owner Dashboard', 'Property Seller Dashboard', 'Admin Dashboard', 'Analytics'],
     preview: 'Role-specific dashboards with comprehensive data visualization'
   },
   {
@@ -569,17 +569,17 @@ export const DemoPage: React.FC = () => {
                   features: [
                     'Property catalog with filtering',
                     'Advanced search capabilities',
-                    'Investment calculator tools',
+                    'Ownership calculator tools',
                     'Virtual property tours',
                     'Performance analytics'
                   ]
                 },
                 {
-                  title: 'Investment & Payments',
+                  title: 'Ownership & Payments',
                   features: [
                     'Multi-wallet cryptocurrency support',
                     'Fiat payment integration',
-                    'Investment flow automation',
+                    'Ownership flow automation',
                     'Transaction tracking',
                     'Payment security features'
                   ]
@@ -589,7 +589,7 @@ export const DemoPage: React.FC = () => {
                   features: [
                     'Role-based dashboard views',
                     'Portfolio performance tracking',
-                    'Investment analytics',
+                    'Ownership analytics',
                     'Activity monitoring',
                     'Reporting capabilities'
                   ]

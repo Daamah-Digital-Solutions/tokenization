@@ -82,7 +82,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
     {
       icon: Users,
       title: 'New Funding Sources',
-      description: 'Open new funding sources through multiple investors instead of relying on a single financier.'
+      description: 'Open new funding sources through multiple co-owners instead of relying on a single financier.'
     },
     {
       icon: FileCheck,
@@ -97,7 +97,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
     {
       icon: Shield,
       title: 'Control Over Terms',
-      description: 'Control over listing terms: minimum investment, lock-up period, distribution policy, and investor criteria.'
+      description: 'Control over listing terms: minimum purchase, lock-up period, distribution policy, and owner criteria.'
     },
     {
       icon: Building2,
@@ -130,12 +130,12 @@ export const PropertyOwnerLandingPage: React.FC = () => {
     {
       number: 5,
       title: 'Offering Preparation',
-      description: 'Price setting, minimum investment, schedules, and distribution policy defined.'
+      description: 'Price setting, minimum purchase, schedules, and distribution policy defined.'
     },
     {
       number: 6,
-      title: 'Investment Opening',
-      description: 'Investor subscriptions opened after KYC/KYB verification.'
+      title: 'Ownership Opening',
+      description: 'Owner subscriptions opened after KYC/KYB verification.'
     }
   ];
 
@@ -160,7 +160,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
               transition={{ delay: 0.1 }}
               className="text-xl text-slate-300 mb-8"
             >
-              Transform your real estate assets into investment opportunities without selling full ownership. Structure assets within the SPV model and tokenize investment shares for qualified investors.
+              Transform your real estate assets into ownership opportunities without selling full ownership. Structure assets within the SPV model and tokenize ownership shares for qualified buyers.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -194,7 +194,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
               Benefits for Property Owners
             </h2>
             <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-              Discover how tokenization through Capimax RT can benefit your property investment strategy.
+              Discover how tokenization through Capimax RT can benefit your property ownership strategy.
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -277,7 +277,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                 {[
                   'Risk Isolation: Separating the asset/project from other activity risks.',
                   'Clearer Governance: Specific operating, management, and distribution agreements.',
-                  'Investability: Ownership documents, valuation, insurance, management, reports.',
+                  'Ownability: Ownership documents, valuation, insurance, management, reports.',
                   'Exit Capability: Through selling shares/rights in the secondary market according to rules.'
                 ].map((item, index) => (
                   <li key={index} className="flex items-start gap-3">
@@ -477,7 +477,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Minimum Investment
+                      Minimum Purchase
                     </label>
                     <input
                       type="number"

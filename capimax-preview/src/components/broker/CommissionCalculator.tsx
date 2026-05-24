@@ -174,12 +174,12 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
           {/* Input Section */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100">
-              Investment Details
+              Purchase Details
             </h3>
-            
+
             <div>
               <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-                Investment Amount
+                Purchase Amount
               </label>
               <Input
                 type="number"
@@ -243,7 +243,7 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
               
               <div className="space-y-3">
                 <div className="flex justify-between p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg">
-                  <span className="text-sm text-neutral-600 dark:text-slate-400">Investment Amount</span>
+                  <span className="text-sm text-neutral-600 dark:text-slate-400">Purchase Amount</span>
                   <span className="font-semibold text-neutral-900 dark:text-slate-100">
                     ${calculation.investmentAmount.toLocaleString()}
                   </span>
@@ -422,7 +422,7 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
               onClick={() => {
                 const calculationText = `
 Commission Calculation:
-Investment: $${calculation.investmentAmount.toLocaleString()}
+Purchase: $${calculation.investmentAmount.toLocaleString()}
 Property Type: ${calculation.propertyType}
 Total Rate: ${calculation.totalRate}%
 Total Commission: $${calculation.totalCommission.toLocaleString()}

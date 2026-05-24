@@ -10,12 +10,12 @@ export const RisksPage: React.FC = () => {
 
   return (
     <InfoPageLayout
-      title="Risks & Investor Disclosures"
-      subtitle="Understanding investment risks and platform commitments"
+      title="Ownership Risks & Owner Disclosures"
+      subtitle="Understanding ownership risks and platform commitments"
     >
       <section className="info-section">
         <p className="info-intro">
-          This section aims to raise awareness and protect both investors and the platform through clear disclosures.
+          This section aims to raise awareness and protect both owners and the platform through clear disclosures.
         </p>
 
         <h2>Key Risk Categories</h2>
@@ -27,7 +27,7 @@ export const RisksPage: React.FC = () => {
 
         <h3>Liquidity Risk</h3>
         <p>
-          Tokenized investment units may be illiquid. The secondary market does not guarantee active trading or buyers. Liquidity provider arrangements (if any) are optional, limited, and subject to conditions.
+          Tokenized ownership units may be illiquid. The secondary market does not guarantee active trading or buyers. Liquidity provider arrangements (if any) are optional, limited, and subject to conditions.
         </p>
 
         <h3>Operational and Management Risk</h3>
@@ -37,7 +37,7 @@ export const RisksPage: React.FC = () => {
 
         <h3>Regulatory and Legal Risk</h3>
         <p>
-          Changes in laws, regulations, or enforcement practices may restrict access to the platform, affect investor eligibility, or impact the legality or structure of tokenized offerings.
+          Changes in laws, regulations, or enforcement practices may restrict access to the platform, affect owner eligibility, or impact the legality or structure of tokenized offerings.
         </p>
 
         <h3>Counterparty Risk</h3>
@@ -51,7 +51,7 @@ export const RisksPage: React.FC = () => {
         </p>
 
         <div className="info-warning">
-          <strong>Investment Warning:</strong> All investments involve risk, including the potential loss of part or all of the invested capital. Prospective investors must carefully review and understand all risk factors before making any investment decision.
+          <strong>Ownership Warning:</strong> All real estate ownership involves risk, including the potential loss of part or all of the capital used to purchase. Prospective owners must carefully review and understand all risk factors before making any purchase decision.
         </div>
 
         <h2>Capimax RT Commitment</h2>
@@ -59,7 +59,7 @@ export const RisksPage: React.FC = () => {
           <li>Full disclosure of risks and material information</li>
           <li>No performance promises or guarantees</li>
           <li>No misleading marketing or advertising</li>
-          <li>Investor education and transparency</li>
+          <li>Owner education and transparency</li>
         </ul>
 
         <h2>Related Resources</h2>

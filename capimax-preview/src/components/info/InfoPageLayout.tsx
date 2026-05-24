@@ -36,7 +36,7 @@ const infoNavItems: InfoNavItem[] = [
   { id: 'tokenization', title: 'What is Tokenization', path: '/tokenization', icon: Layers },
   { id: 'spv', title: 'What is SPV', path: '/spv', icon: Shield },
   { id: 'data-room', title: 'Data Room', path: '/data-room', icon: FolderOpen },
-  { id: 'investor-guide', title: 'Investor Guide', path: '/investor-guide', icon: Users },
+  { id: 'investor-guide', title: 'Co-Owner Guide', path: '/investor-guide', icon: Users },
   { id: 'secondary-market', title: 'Secondary Market', path: '/secondary-market', icon: RefreshCcw },
   { id: 'risks', title: 'Risks & Disclosures', path: '/risks', icon: AlertTriangle },
   { id: 'faq', title: 'FAQ', path: '/faq', icon: HelpCircle },

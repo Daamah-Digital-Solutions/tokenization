@@ -164,7 +164,7 @@ export const PortfolioGrowthDisplay = ({
             </div>
             <div>
               <p className="text-xs text-gray-500 uppercase tracking-wide">
-                Invested Amount
+                Purchased Amount
               </p>
               <p className="text-lg font-semibold text-gray-900">
                 ${investedAmount.toLocaleString('en-US', {

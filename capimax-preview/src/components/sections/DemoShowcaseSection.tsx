@@ -78,9 +78,9 @@ export const DemoShowcaseSection: React.FC = () => {
             viewport={{ once: true }}
             className="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto"
           >
-            Dive into our comprehensive demo showcasing all pages, components, and features 
-            built for the real estate tokenization platform. Experience the full journey from 
-            registration to investment.
+            Dive into our comprehensive demo showcasing all pages, components, and features
+            built for the real estate tokenization platform. Experience the full journey from
+            registration to ownership.
           </motion.p>
         </div>
 

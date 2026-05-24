@@ -70,7 +70,7 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
     // Mock download functionality
     const receiptData = `
 CAPIMAX TOKENIZATION PLATFORM
-Investment Receipt
+Purchase Receipt
 
 Transaction ID: ${transactionId}
 Date: ${currentDate.toLocaleDateString()}
@@ -78,7 +78,7 @@ Time: ${currentDate.toLocaleTimeString()}
 
 PROPERTY DETAILS:
 Property: ${property.title}
-Investment Amount: $${investmentData.amount.toLocaleString()}
+Purchase Amount: $${investmentData.amount.toLocaleString()}
 Tokens Purchased: ${investmentData.tokens}
 Token Price: $${property.tokenPrice}
 Ownership Share: ${ownershipPercentage.toFixed(4)}%
@@ -97,7 +97,7 @@ Status: Confirmed
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `investment-receipt-${transactionId}.txt`;
+    link.download = `purchase-receipt-${transactionId}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -155,7 +155,7 @@ Status: Confirmed
             <div className="flex items-center justify-center gap-2 mb-2">
               <Receipt className="w-5 h-5 text-emerald-600" />
               <Text variant="h3" weight="semibold" className="text-emerald-600">
-                Investment Receipt
+                Purchase Receipt
               </Text>
             </div>
             
@@ -210,12 +210,12 @@ Status: Confirmed
             <div>
               <Text variant="h4" weight="semibold" className="mb-4 flex items-center gap-2">
                 <User className="w-5 h-5 text-gray-500" />
-                Investor Information
+                Owner Information
               </Text>
-              
+
               <div className="space-y-3">
                 <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-                  <Text variant="body" color="muted">Investor ID:</Text>
+                  <Text variant="body" color="muted">Owner ID:</Text>
                   <Text variant="body" weight="medium" className="font-mono">
                     USR-{Math.random().toString(36).substr(2, 8).toUpperCase()}
                   </Text>
@@ -250,7 +250,7 @@ Status: Confirmed
           <div>
             <Text variant="h4" weight="semibold" className="mb-4 flex items-center gap-2">
               <Building className="w-5 h-5 text-gray-500" />
-              Property Investment Details
+              Property Ownership Details
             </Text>
             
             <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-6 rounded-xl">
@@ -281,11 +281,11 @@ Status: Confirmed
                 
                 <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
                   <Text variant="bodyLarge" weight="semibold" className="mb-3">
-                    Your Investment Breakdown
+                    Your Purchase Breakdown
                   </Text>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <Text variant="body" color="muted">Investment Amount:</Text>
+                      <Text variant="body" color="muted">Purchase Amount:</Text>
                       <Text variant="body" weight="semibold" className="text-emerald-600">
                         ${investmentData.amount.toLocaleString()}
                       </Text>
@@ -355,8 +355,8 @@ Status: Confirmed
 
             <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
               <Text variant="bodySmall" className="text-amber-800 dark:text-amber-200">
-                <strong>Disclaimer:</strong> Projected returns are estimates based on current market conditions and historical performance. 
-                Actual returns may vary and are not guaranteed. All real estate investments carry risk including potential loss of principal.
+                <strong>Disclaimer:</strong> Projected returns are estimates based on current market conditions and historical performance.
+                Actual returns may vary and are not guaranteed. All real estate ownership carries risk including potential loss of principal.
               </Text>
             </div>
           </div>
@@ -371,7 +371,7 @@ Status: Confirmed
             </div>
             
             <Text variant="bodySmall" color="muted" className="mb-2">
-              This receipt serves as official confirmation of your real estate token investment.
+              This receipt serves as official confirmation of your real estate token purchase.
               For questions or support, contact us at invest@capimax.com
             </Text>
             

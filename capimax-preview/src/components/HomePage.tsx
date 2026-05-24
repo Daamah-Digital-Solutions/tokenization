@@ -40,13 +40,13 @@ export const HomePage: React.FC = () => {
         {/* 4. SPV Model Explanation - Legal structure benefits */}
         <SPVExplainer />
 
-        {/* 4.5. Real Estate Visual - Global Investment */}
+        {/* 4.5. Real Estate Visual - Global Ownership */}
         <RealEstateVisualSection variant="global" />
 
-        {/* 5. For Property Owners - CTA for asset owners */}
+        {/* 5. For Property Owners - CTA for asset owners (sellers/developers) */}
         <PropertyOwnerCTA />
 
-        {/* 6. For Investors - Benefits and CTA for investors */}
+        {/* 6. For Buyers - Benefits and CTA for property co-owners */}
         <InvestorCTA />
 
         {/* 7. Featured Properties - Property showcase */}

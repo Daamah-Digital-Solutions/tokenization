@@ -125,7 +125,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
   const tabs = [
     { id: 'profile', label: 'Profile', icon: '👤' },
     { id: 'activity', label: 'Activity', icon: '📝' },
-    { id: 'investments', label: 'Investments', icon: '💰' },
+    { id: 'investments', label: 'Properties', icon: '💰' },
     { id: 'transactions', label: 'Transactions', icon: '🔄' },
     { id: 'notes', label: 'Admin Notes', icon: '📋' }
   ];
@@ -201,7 +201,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 onChange={(e) => handleUpdateUser({ role: e.target.value as AdminUser['role'] })}
                 className="px-3 py-1 text-sm border border-neutral-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-neutral-900 dark:text-slate-100"
               >
-                <option value="investor">Investor</option>
+                <option value="investor">Owner</option>
                 <option value="property_owner">Property Owner</option>
                 <option value="broker">Broker</option>
                 <option value="admin">Admin</option>
@@ -367,10 +367,10 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 {activeTab === 'investments' && (
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100">
-                      Investment Portfolio
+                      Property Portfolio
                     </h3>
                     <div className="text-center text-neutral-500 dark:text-slate-400">
-                      <p>Investment data will be loaded here</p>
+                      <p>Property data will be loaded here</p>
                       <p className="text-sm mt-1">Feature coming soon</p>
                     </div>
                   </div>

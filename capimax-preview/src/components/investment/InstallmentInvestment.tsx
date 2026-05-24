@@ -74,11 +74,11 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (selectedTokens < property.minimumTokens) {
-      newErrors.tokens = `Minimum investment is ${property.minimumTokens} tokens`;
+      newErrors.tokens = `Minimum purchase is ${property.minimumTokens} tokens`;
     }
-    
+
     if (property.maximumTokens && selectedTokens > property.maximumTokens) {
-      newErrors.tokens = `Maximum investment is ${property.maximumTokens} tokens`;
+      newErrors.tokens = `Maximum purchase is ${property.maximumTokens} tokens`;
     }
 
     if (selectedTokens > property.availableTokens) {
@@ -97,11 +97,11 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
     }
 
     if (selectedPlan?.minimumInvestment && totalInvestment < selectedPlan.minimumInvestment) {
-      newErrors.plan = `This plan requires minimum investment of $${selectedPlan.minimumInvestment.toLocaleString()}`;
+      newErrors.plan = `This plan requires minimum purchase of $${selectedPlan.minimumInvestment.toLocaleString()}`;
     }
 
     if (selectedPlan?.maximumInvestment && totalInvestment > selectedPlan.maximumInvestment) {
-      newErrors.plan = `This plan has maximum investment limit of $${selectedPlan.maximumInvestment.toLocaleString()}`;
+      newErrors.plan = `This plan has maximum purchase limit of $${selectedPlan.maximumInvestment.toLocaleString()}`;
     }
 
     setErrors(newErrors);
@@ -193,7 +193,7 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100">
-              Installment Investment
+              Installment Purchase
             </h2>
             <p className="text-sm text-neutral-600 dark:text-slate-400 mt-1">
               {property.propertyName}
@@ -229,7 +229,7 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100 mb-4">
-                Choose Investment Amount
+                Choose Purchase Amount
               </h3>
               
               <div className="space-y-4">
@@ -252,7 +252,7 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
                         {formatCurrency(totalInvestment)}
                       </div>
                       <div className="text-sm text-neutral-500 dark:text-slate-400">
-                        Total Investment
+                        Total Purchase
                       </div>
                     </div>
                   </div>
@@ -449,13 +449,13 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100 mb-4">
-                Review Your Investment
+                Review Your Purchase
               </h3>
               
               <div className="space-y-4">
                 <div className="p-4 bg-neutral-50 dark:bg-slate-700 rounded-lg">
                   <h4 className="font-medium text-neutral-900 dark:text-slate-100 mb-3">
-                    Investment Summary
+                    Purchase Summary
                   </h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
@@ -471,7 +471,7 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
                       </div>
                     </div>
                     <div>
-                      <span className="text-neutral-500 dark:text-slate-400">Total Investment</span>
+                      <span className="text-neutral-500 dark:text-slate-400">Total Purchase</span>
                       <div className="font-medium text-neutral-900 dark:text-slate-100">
                         {formatCurrency(totalInvestment)}
                       </div>
@@ -515,7 +515,7 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
 
                 <div className="text-xs text-neutral-500 dark:text-slate-400">
                   <p className="mb-2">
-                    By proceeding, you agree to the terms and conditions of the installment investment plan.
+                    By proceeding, you agree to the terms and conditions of the installment purchase plan.
                     Tokens will be reserved upon down payment and released according to the selected plan's schedule.
                   </p>
                   <p>
@@ -562,7 +562,7 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
                 <span>Processing...</span>
               </div>
             ) : currentStep === 'review' ? (
-              'Complete Investment'
+              'Complete Purchase'
             ) : (
               'Next'
             )}

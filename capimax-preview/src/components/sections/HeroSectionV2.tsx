@@ -33,7 +33,7 @@ export const HeroSectionV2: React.FC = () => {
           <motion.img
             key={bgIndex}
             src={HERO_BACKGROUNDS[bgIndex]}
-            alt="Real Estate Investment"
+            alt="Real Estate Ownership"
             className="absolute inset-0 w-full h-full object-cover"
             initial={{ opacity: 0, scale: 1.1 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -83,7 +83,7 @@ export const HeroSectionV2: React.FC = () => {
               className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20"
             >
               <Building2 className="w-5 h-5 text-emerald-400" />
-              <span className="text-sm font-medium text-white/90">Tokenized Real Estate Investment | SPV-Backed | Global Access</span>
+              <span className="text-sm font-medium text-white/90">Tokenized Real Estate Ownership | SPV-Backed | Global Access</span>
             </motion.div>
 
             {/* Headlines */}
@@ -99,7 +99,7 @@ export const HeroSectionV2: React.FC = () => {
                 </span>
                 <br />
                 <span className="text-white mt-2 block">
-                  Invest in Real Estate, Not Just Dreams
+                  Own Real Estate, Not Just Dreams
                 </span>
               </motion.h1>
 
@@ -110,7 +110,7 @@ export const HeroSectionV2: React.FC = () => {
                 className="text-xl lg:text-2xl leading-relaxed text-gray-200 max-w-3xl mx-auto font-light"
               >
                 A global technology platform for tokenizing assets and offering fractional
-                investment opportunities through the SPV model, with document transparency,
+                ownership of real estate through the SPV model, with document transparency,
                 operational governance, and liquidity options via secondary market.
               </motion.p>
             </div>
@@ -128,7 +128,7 @@ export const HeroSectionV2: React.FC = () => {
                 className="px-8 py-4 text-base font-semibold rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all"
                 onClick={() => window.location.href = '/register'}
               >
-                Start Investing
+                Start Owning
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
 
@@ -152,7 +152,7 @@ export const HeroSectionV2: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
                 {[
                   { number: "$4.2B+", label: "Global Assets", icon: Globe },
-                  { number: "50K+", label: "Investors", icon: Star },
+                  { number: "50K+", label: "Owners", icon: Star },
                   { number: "1,200+", label: "Properties", icon: MapPin },
                   { number: "22.4%", label: "Avg. Returns", icon: TrendingUp }
                 ].map((stat, index) => (

@@ -162,7 +162,7 @@ export const KYCPage: React.FC = () => {
                     ? [
                         'Your identity verification is complete',
                         'You now have full access to all platform features',
-                        'You can start investing in tokenized real estate'
+                        'You can start owning tokenized real estate'
                       ]
                     : []
                 }

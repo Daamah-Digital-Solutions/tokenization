@@ -274,7 +274,7 @@ function CreditCardFormInner({
           brand: (paymentIntent.payment_method as any)?.card?.brand ?? undefined,
         },
         timestamp: new Date(),
-        description: `Investment payment of ${formatCurrency(amount, 'USD')}`,
+        description: `Purchase payment of ${formatCurrency(amount, 'USD')}`,
         fee: amount * 0.029,
       });
 

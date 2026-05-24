@@ -83,7 +83,7 @@ export const Testimonials: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg text-navy-600 dark:text-navy-200 max-w-2xl mx-auto text-balance"
           >
-            See what investment professionals say about our platform
+            See what real estate professionals say about our platform
           </motion.p>
         </motion.div>
 

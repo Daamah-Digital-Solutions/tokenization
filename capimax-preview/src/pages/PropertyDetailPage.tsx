@@ -349,7 +349,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
 
       {/* Investment Flow Modal with KYC Gate */}
       {showInvestmentFlow && (
-        <KYCGate action="make investments">
+        <KYCGate action="own property">
           <InvestmentFlow
             property={investmentProperty}
             isOpen={showInvestmentFlow}

@@ -12,12 +12,12 @@ export const DeveloperGuidePage: React.FC = () => {
         <ul>
           <li>Convert properties into digital units (Tokens) representing fractional shares of the property.</li>
           <li>Allows the developer to sell full or partial ownership of properties while retaining certain units for continued income.</li>
-          <li>Smart contracts guarantee the execution of all terms for both the developer and investors.</li>
+          <li>Smart contracts guarantee the execution of all terms for both the developer and co-owners.</li>
         </ul>
 
         <h2>2. Fractional Ownership</h2>
         <ul>
-          <li>Investors can acquire fractional shares in properties, reducing entry barriers and distributing risk.</li>
+          <li>Co-owners can acquire fractional shares in properties, reducing entry barriers and distributing risk.</li>
           <li>Enables developers to raise capital efficiently for ongoing or new projects.</li>
           <li>Developers can retain part of the ownership to generate ongoing income or profit from property appreciation.</li>
         </ul>
@@ -33,13 +33,13 @@ export const DeveloperGuidePage: React.FC = () => {
         <ol>
           <li>Tokenize properties and convert them into digital units.</li>
           <li>Smart contracts enforce all subscription and sale conditions.</li>
-          <li>List properties on the platform for investor subscription.</li>
+          <li>List properties on the platform for co-owner subscription.</li>
           <li>Marketing tools to promote projects globally.</li>
-          <li>Automated fund collection from investors.</li>
+          <li>Automated fund collection from buyers.</li>
           <li>Integrated dashboard to manage subscription, track progress, and generate detailed reports.</li>
           <li>Support from evaluation, insurance, and management companies to facilitate smooth project execution.</li>
           <li>Digital wallet to withdraw funds globally via cryptocurrencies or traditional banking.</li>
-          <li>Periodic reports on project performance and investor participation.</li>
+          <li>Periodic reports on project performance and co-owner participation.</li>
           <li>
             <strong>Developer-Specific Flexibility &amp; Advantages:</strong>
             <ul>
@@ -48,14 +48,14 @@ export const DeveloperGuidePage: React.FC = () => {
               <li>Ability to tokenize under-construction properties with installment plans.</li>
               <li>Retain part of the project to maintain ongoing income.</li>
               <li>Option to retain project management via an external company, ensuring liquidity and control.</li>
-              <li>Transparent oversight of all units, investors, and financial flows via platform dashboards.</li>
+              <li>Transparent oversight of all units, co-owners, and financial flows via platform dashboards.</li>
             </ul>
           </li>
         </ol>
 
-        <h2>5. Investment Agreement Between Developer and Platform</h2>
+        <h2>5. Ownership Agreement Between Developer and Platform</h2>
         <p>
-          The Investment Agreement defines all legal, financial, and documentation details of the
+          The Ownership Agreement defines all legal, financial, and documentation details of the
           property and project, including:
         </p>
         <ul>
@@ -86,7 +86,7 @@ export const DeveloperGuidePage: React.FC = () => {
         <ol>
           <li><strong>Tokenization Fee:</strong> To convert property/project into digital units.</li>
           <li><strong>Administration Fee:</strong> Platform operation and subscription management.</li>
-          <li><strong>Listing &amp; Subscription Fees:</strong> For platform listing and investor subscription.</li>
+          <li><strong>Listing &amp; Subscription Fees:</strong> For platform listing and co-owner subscription.</li>
           <li><strong>SPV Fee:</strong> Establishment and management of SPV for each property/project.</li>
           <li><strong>Evaluation Fee:</strong> Accredited evaluation companies' fees for project/property assessment.</li>
         </ol>
@@ -99,12 +99,12 @@ export const DeveloperGuidePage: React.FC = () => {
           <li>Insurance certificates, if applicable.</li>
           <li>Legal identification documents for the developer or company.</li>
           <li>Financial documents relating to debts or obligations on the property/project.</li>
-          <li>Any existing agreements with current investors, tenants, or partners.</li>
+          <li>Any existing agreements with current co-owners, tenants, or partners.</li>
         </ol>
 
         <h2>9. Property/Project Listing Stages Until Subscription</h2>
 
-        <h3>Stage 0: Signing the Investment Agreement</h3>
+        <h3>Stage 0: Signing the Ownership Agreement</h3>
         <ul>
           <li>Must be signed before any other stage.</li>
           <li>Defines all legal, financial, and documentation details.</li>
@@ -131,28 +131,28 @@ export const DeveloperGuidePage: React.FC = () => {
           <li>Dashboard for developer to manage subscription, track requests, and control timeline.</li>
         </ul>
 
-        <h3>Stage 4: Marketing &amp; Investor Attraction</h3>
+        <h3>Stage 4: Marketing &amp; Buyer Attraction</h3>
         <ul>
           <li>Digital promotion tools for global reach.</li>
-          <li>Clear reports on returns and risks for each investor.</li>
+          <li>Clear reports on returns and risks for each co-owner.</li>
         </ul>
 
         <h3>Stage 5: Fund Collection &amp; Subscription Completion</h3>
         <ul>
           <li>Receive funds via digital wallet or banking channels.</li>
-          <li>Tokens automatically distributed to investors via smart contracts.</li>
+          <li>Tokens automatically distributed to co-owners via smart contracts.</li>
         </ul>
 
         <h3>Stage 6: Post-Subscription Management</h3>
         <p>After final subscription:</p>
         <ul>
           <li>Developer receives funds.</li>
-          <li>Full execution of Investment Agreement.</li>
+          <li>Full execution of Ownership Agreement.</li>
           <li>Ownership transferred to SPV.</li>
         </ul>
-        <p>Manage developer and investor shares, exit via annual market or liquidity provider.</p>
+        <p>Manage developer and co-owner shares, exit via annual market or liquidity provider.</p>
         <p>
-          <strong>In Case Subscription Is Not Completed:</strong> Investment Agreement clauses define procedures to
+          <strong>In Case Subscription Is Not Completed:</strong> Ownership Agreement clauses define procedures to
           either terminate or renew the agreement until subscription completion.
         </p>
 
@@ -163,7 +163,7 @@ export const DeveloperGuidePage: React.FC = () => {
           <li>Comply with all legal and regulatory requirements.</li>
           <li>Monitor financial reports and ensure compliance with smart contracts.</li>
           <li>Cooperate with evaluation, insurance, and management companies.</li>
-          <li>Adhere to terms and fees specified in Investment Agreement.</li>
+          <li>Adhere to terms and fees specified in Ownership Agreement.</li>
         </ul>
         <h3>Platform Responsibilities:</h3>
         <ul>
@@ -172,7 +172,7 @@ export const DeveloperGuidePage: React.FC = () => {
           <li>Manage fund collection and transfer payments to developer after subscription completion.</li>
           <li>Provide dashboards, reports, and analytics.</li>
           <li>Provide marketing and promotion tools.</li>
-          <li>Adhere to terms of signed Investment Agreement.</li>
+          <li>Adhere to terms of signed Ownership Agreement.</li>
         </ul>
       </section>
     </InfoPageLayout>

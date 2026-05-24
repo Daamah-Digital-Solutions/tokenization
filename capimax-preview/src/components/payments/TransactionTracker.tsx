@@ -451,7 +451,7 @@ export function TransactionTracker({ className, transactionId, compact = false }
             onChange={(value) => setFilter(prev => ({ ...prev, type: value }))}
             options={[
               { value: 'all', label: 'All Types' },
-              { value: 'investment', label: 'Investment' },
+              { value: 'investment', label: 'Purchase' },
               { value: 'deposit', label: 'Deposit' },
               { value: 'withdrawal', label: 'Withdrawal' },
               { value: 'dividend', label: 'Dividend' },

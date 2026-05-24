@@ -1,7 +1,7 @@
 {
   "list": {
-    "title": "Investment Properties",
-    "subtitle": "Explore tokenized real estate opportunities",
+    "title": "Properties for Ownership",
+    "subtitle": "Explore tokenized real estate ownership opportunities",
     "filters": "Filters",
     "sortBy": "Sort By",
     "noResults": "No properties found matching your criteria",
@@ -11,7 +11,7 @@
   "detail": {
     "overview": "Overview",
     "location": "Location",
-    "investment": "Investment Details",
+    "investment": "Ownership Details",
     "documents": "Documents",
     "spvInfo": "SPV Information",
     "updates": "Updates",
@@ -23,10 +23,10 @@
     "totalTokens": "Total Tokens",
     "availableTokens": "Available Tokens",
     "soldTokens": "Sold Tokens",
-    "minInvestment": "Minimum Investment",
+    "minInvestment": "Minimum Ownership",
     "expectedYield": "Expected Yield",
     "fundingProgress": "Funding Progress",
-    "investNow": "Invest Now",
+    "investNow": "Own Now",
     "addToWatchlist": "Add to Watchlist"
   },
 

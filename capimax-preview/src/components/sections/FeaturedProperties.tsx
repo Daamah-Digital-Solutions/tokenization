@@ -161,7 +161,7 @@ export const FeaturedProperties: React.FC = () => {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border border-emerald-200/50 dark:border-emerald-500/20 mb-6"
             >
               <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Premium Investment Opportunities</span>
+              <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Premium Ownership Opportunities</span>
             </motion.div>
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">
               Featured Properties
@@ -240,7 +240,7 @@ export const FeaturedProperties: React.FC = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border border-emerald-200/50 dark:border-emerald-500/20 mb-6"
           >
             <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Premium Investment Opportunities</span>
+            <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Premium Ownership Opportunities</span>
           </motion.div>
 
           <motion.h2
@@ -260,8 +260,8 @@ export const FeaturedProperties: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg text-slate-600 dark:text-gray-400 max-w-2xl mx-auto text-balance"
           >
-            Carefully vetted premium real estate opportunities with verified returns, 
-            transparent investment terms, and institutional-grade due diligence
+            Carefully vetted premium real estate opportunities with verified returns,
+            transparent purchase terms, and institutional-grade due diligence
           </motion.p>
         </motion.div>
 
@@ -402,7 +402,7 @@ export const FeaturedProperties: React.FC = () => {
                       <div className="text-center p-2 bg-slate-50 dark:bg-gray-800 rounded-lg">
                         <Users className="w-4 h-4 mx-auto mb-1 text-slate-600 dark:text-gray-400" />
                         <div className="text-sm font-bold text-slate-900 dark:text-white">{property.investors}</div>
-                        <div className="text-xs text-slate-500 dark:text-gray-500">Investors</div>
+                        <div className="text-xs text-slate-500 dark:text-gray-500">Owners</div>
                       </div>
                       <div className="text-center p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
                         <TrendingUp className="w-4 h-4 mx-auto mb-1 text-emerald-600 dark:text-emerald-400" />
@@ -423,7 +423,7 @@ export const FeaturedProperties: React.FC = () => {
                       onClick={() => window.location.href = '/properties'}
                       className="w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 dark:shadow-emerald-500/20 group"
                     >
-                      <span>Invest Now</span>
+                      <span>Own Now</span>
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </motion.button>
 
@@ -482,7 +482,7 @@ export const FeaturedProperties: React.FC = () => {
               </div>
 
               <h3 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-                Discover More Investment Opportunities
+                Discover More Ownership Opportunities
               </h3>
               <p className="text-slate-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
                 Access our complete portfolio of 500+ premium properties across 
@@ -506,7 +506,7 @@ export const FeaturedProperties: React.FC = () => {
                   onClick={() => window.location.href = '/properties'}
                 >
                   <DollarSign className="mr-2 w-5 h-5" />
-                  <span>Investment Calculator</span>
+                  <span>Purchase Calculator</span>
                 </Button>
               </div>
             </motion.div>

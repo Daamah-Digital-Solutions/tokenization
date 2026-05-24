@@ -32,7 +32,7 @@ export const LegalDisclaimer: React.FC = () => {
                 <p className="mt-2 text-slate-600 dark:text-slate-400 leading-relaxed">
                   Capimax RT - Capimax Real Estate Tokenization is a global technology platform
                   designed to provide a digital infrastructure for structuring, presenting, and
-                  administering fractional, tokenized real estate investment opportunities through
+                  administering fractional, tokenized real estate ownership opportunities through
                   independent legal entities such as Special Purpose Vehicles (SPVs).
                 </p>
               </div>
@@ -119,7 +119,7 @@ export const LegalDisclaimer: React.FC = () => {
               {/* Risk Warning */}
               <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
                 <h4 className="font-semibold text-amber-800 dark:text-amber-300 mb-2">
-                  Investment Risk Warning
+                  Ownership Risk Warning
                 </h4>
                 <p className="text-sm text-amber-700 dark:text-amber-400 leading-relaxed mb-3">
                   Investing through the platform involves material risks, including the potential

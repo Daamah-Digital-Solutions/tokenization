@@ -31,13 +31,13 @@ const coreValues = [
   {
     icon: Shield,
     title: 'Security First',
-    description: 'Bank-grade security with multi-layer encryption, secure wallets, and rigorous compliance protocols protect your investments.',
+    description: 'Bank-grade security with multi-layer encryption, secure wallets, and rigorous compliance protocols protect your owned properties.',
     color: 'from-blue-500 to-cyan-500'
   },
   {
     icon: Users,
     title: 'Accessibility',
-    description: 'We democratize real estate investment, making premium properties accessible to everyone regardless of capital size.',
+    description: 'We democratize real estate ownership, making premium properties accessible to everyone regardless of capital size.',
     color: 'from-emerald-500 to-green-500'
   },
   {
@@ -70,8 +70,8 @@ const howItWorks = [
   {
     step: '03',
     icon: Wallet,
-    title: 'Investment',
-    description: 'Investors can purchase tokens starting from minimal amounts, receiving proportional ownership and returns.'
+    title: 'Ownership',
+    description: 'Owners can purchase tokens starting from minimal amounts, receiving proportional ownership and returns.'
   },
   {
     step: '04',
@@ -83,7 +83,7 @@ const howItWorks = [
 
 const teamStats = [
   { number: '$4.2B+', label: 'Assets Tokenized', icon: Building2 },
-  { number: '50K+', label: 'Global Investors', icon: Users },
+  { number: '50K+', label: 'Global Owners', icon: Users },
   { number: '1,200+', label: 'Properties Listed', icon: Landmark },
   { number: '15+', label: 'Countries Served', icon: Globe }
 ];
@@ -95,9 +95,9 @@ export const AboutPage: React.FC = () => {
         <title>About Us | Capimax - Real Estate Tokenization Platform</title>
         <meta
           name="description"
-          content="Learn about Capimax, the leading real estate tokenization platform. We make property investment accessible through blockchain technology, enabling fractional ownership of premium real estate worldwide."
+          content="Learn about Capimax, the leading real estate tokenization platform. We make property ownership accessible through blockchain technology, enabling fractional ownership of premium real estate worldwide."
         />
-        <meta name="keywords" content="about capimax, real estate tokenization, fractional ownership, blockchain real estate, property investment platform" />
+        <meta name="keywords" content="about capimax, real estate tokenization, fractional ownership, blockchain real estate, real estate ownership platform" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 dark:from-slate-900 dark:via-gray-900 dark:to-slate-800">
@@ -165,7 +165,7 @@ export const AboutPage: React.FC = () => {
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-emerald-200/50 dark:border-emerald-500/30 shadow-xl"
                   >
                     <Award className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
-                    <span className="text-sm font-semibold text-slate-700 dark:text-gray-200">Trusted by 50,000+ Investors Worldwide</span>
+                    <span className="text-sm font-semibold text-slate-700 dark:text-gray-200">Trusted by 50,000+ Owners Worldwide</span>
                   </motion.div>
 
                   <motion.h1
@@ -186,7 +186,7 @@ export const AboutPage: React.FC = () => {
                     transition={{ duration: 0.8, delay: 0.4 }}
                     className="text-xl lg:text-2xl leading-relaxed text-slate-600 dark:text-gray-300 max-w-3xl mx-auto font-light"
                   >
-                    We are transforming real estate investment through blockchain technology,
+                    We are transforming real estate ownership through blockchain technology,
                     making premium property ownership accessible to everyone.
                   </motion.p>
                 </div>
@@ -241,18 +241,18 @@ export const AboutPage: React.FC = () => {
                   Our Mission
                 </Heading>
                 <Text variant="bodyLarge" color="secondary" as="p" className="leading-relaxed">
-                  Capimax was founded with a clear vision: to democratize real estate investment
+                  Capimax was founded with a clear vision: to democratize real estate ownership
                   and break down the barriers that have traditionally limited access to premium
                   property markets.
                 </Text>
                 <Text variant="body" color="secondary" as="p" className="leading-relaxed">
-                  Through blockchain technology and tokenization, we enable investors of all
+                  Through blockchain technology and tokenization, we enable owners of all
                   sizes to own fractional shares of carefully vetted properties worldwide.
                   Our platform combines the stability of real estate with the flexibility
                   and transparency of digital assets.
                 </Text>
                 <Text variant="body" color="secondary" as="p" className="leading-relaxed">
-                  Whether you're investing your first $100 or diversifying a multi-million
+                  Whether you're buying your first $100 share or diversifying a multi-million
                   dollar portfolio, Capimax provides the tools, security, and opportunities
                   to build wealth through real estate.
                 </Text>
@@ -278,7 +278,7 @@ export const AboutPage: React.FC = () => {
                     </Heading>
                     <ul className="space-y-4">
                       {[
-                        'High capital requirements that exclude most investors',
+                        'High capital requirements that exclude most buyers',
                         'Lack of liquidity in traditional real estate',
                         'Geographic limitations on property access',
                         'Complex legal processes and paperwork',
@@ -315,7 +315,7 @@ export const AboutPage: React.FC = () => {
                   className="max-w-3xl mx-auto"
                   as="p"
                 >
-                  Our streamlined process makes property investment simple, secure, and accessible
+                  Our streamlined process makes property ownership simple, secure, and accessible
                 </Text>
               </motion.div>
             </div>
@@ -474,7 +474,7 @@ export const AboutPage: React.FC = () => {
                 <Text variant="bodyLarge" color="secondary" as="p" className="leading-relaxed">
                   At Capimax, security isn't an afterthought—it's the foundation of everything
                   we build. Our platform combines cutting-edge blockchain technology with
-                  rigorous compliance standards to protect your investments.
+                  rigorous compliance standards to protect your owned properties.
                 </Text>
                 <Text variant="body" color="secondary" as="p" className="leading-relaxed">
                   Every property listed on our platform undergoes comprehensive due diligence,
@@ -499,7 +499,7 @@ export const AboutPage: React.FC = () => {
                 className="space-y-6"
               >
                 <Heading level="h2" size="4xl" align="center" className="text-white">
-                  Ready to Start Investing?
+                  Ready to Start Owning?
                 </Heading>
                 <Text
                   variant="bodyLarge"
@@ -507,7 +507,7 @@ export const AboutPage: React.FC = () => {
                   className="max-w-2xl mx-auto text-white/90"
                   as="p"
                 >
-                  Join thousands of investors who are building wealth through tokenized real estate.
+                  Join thousands of owners who are building wealth through tokenized real estate.
                   Start your journey today with as little as $100.
                 </Text>
               </motion.div>

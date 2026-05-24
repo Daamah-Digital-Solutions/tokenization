@@ -5,8 +5,8 @@
   },
 
   "riskDisclosure": {
-    "title": "Investment Risk Disclosure",
-    "intro": "Investing through Capimax RT involves significant risks, including the potential loss of part or all of the invested capital."
+    "title": "Ownership Risk Disclosure",
+    "intro": "Owning tokenized real estate through Capimax RT involves significant risks, including the potential loss of part or all of the value of the owned assets."
   },
 
   "compliance": {
@@ -44,7 +44,7 @@
 
   "security": {
     "title": "Security Policy",
-    "intro": "We implement robust security measures to protect your data and investments."
+    "intro": "We implement robust security measures to protect your data and assets."
   },
 
   "common": {

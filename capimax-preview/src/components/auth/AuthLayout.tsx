@@ -41,7 +41,7 @@ const FEATURES = [
 export const AuthLayout: React.FC<AuthLayoutProps> = ({
   children,
   title = 'Real Estate Tokenization Platform',
-  subtitle = 'Democratizing premium real estate investment through blockchain technology',
+  subtitle = 'Democratizing premium real estate ownership through blockchain technology',
   showFeatures = true,
   backgroundVariant = 'gradient',
   className
@@ -130,7 +130,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
                 </div>
                 <div>
                   <div className="text-2xl font-bold">15,000+</div>
-                  <div className="text-emerald-200 text-sm">Active Investors</div>
+                  <div className="text-emerald-200 text-sm">Active Owners</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold">14.2%</div>

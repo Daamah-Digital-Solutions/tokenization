@@ -229,7 +229,7 @@ const PropertyOverview: React.FC = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-neutral-500 dark:text-slate-400">Investors</p>
+                  <p className="text-neutral-500 dark:text-slate-400">Owners</p>
                   <p className="font-semibold text-neutral-900 dark:text-slate-100">
                     {/* This would need to be calculated or provided by the API */}
                     {property.tokens_sold > 0 ? Math.ceil(property.tokens_sold / 100) : 0}
@@ -364,7 +364,7 @@ const InvestorManagement: React.FC = () => {
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            Top Investors
+            Top Owners
           </h3>
         </div>
         <div className="p-6 space-y-3">
@@ -393,12 +393,12 @@ const InvestorManagement: React.FC = () => {
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            Top Investors
+            Top Owners
           </h3>
         </div>
         <div className="p-6">
           <ErrorState
-            message="Failed to load investor data"
+            message="Failed to load owner data"
             onRetry={() => refetch()}
           />
         </div>
@@ -411,14 +411,14 @@ const InvestorManagement: React.FC = () => {
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            Top Investors
+            Top Owners
           </h3>
         </div>
         <div className="p-6">
           <div className="text-center py-8">
             <span className="text-4xl mb-4 block">👥</span>
             <p className="text-neutral-500 dark:text-slate-400">
-              No investors yet. Start promoting your properties to attract investors.
+              No owners yet. Start promoting your properties to attract co-owners.
             </p>
           </div>
         </div>
@@ -431,7 +431,7 @@ const InvestorManagement: React.FC = () => {
       <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            Top Investors
+            Top Owners
           </h3>
           <button
             type="button"
@@ -467,7 +467,7 @@ const InvestorManagement: React.FC = () => {
 
               <div className="flex items-center space-x-6 text-sm">
                 <div className="text-right">
-                  <p className="text-neutral-500 dark:text-slate-400">Investment</p>
+                  <p className="text-neutral-500 dark:text-slate-400">Purchase</p>
                   <p className="font-semibold text-neutral-900 dark:text-slate-100">
                     {formatCurrency(investor.total_investment)}
                   </p>
@@ -712,7 +712,7 @@ const PropertyOwnerOverview: React.FC = () => {
       },
       {
         id: 'active-investors',
-        label: 'Active Investors',
+        label: 'Active Owners',
         value: stats.active_investors?.toString() || '0',
         change: stats.active_investors_change || '+0',
         changeType: formatChangeType(stats.active_investors_change || '+0'),
@@ -761,9 +761,9 @@ const PropertyOwnerOverview: React.FC = () => {
     },
     {
       id: 'manage-investors',
-      label: 'Manage Investors',
+      label: 'Manage Owners',
       icon: '👥',
-      description: 'View investor details',
+      description: 'View owner details',
       onClick: () => switchDashboardView('investors')
     },
     {
@@ -1012,7 +1012,7 @@ const InvestorsView: React.FC = () => {
       <div className="space-y-6">
         <InvestorManagement />
         <ErrorState
-          message="Failed to load investor analytics"
+          message="Failed to load owner analytics"
           onRetry={() => {
             refetchAnalytics();
             refetchMetrics();
@@ -1024,7 +1024,7 @@ const InvestorsView: React.FC = () => {
 
   const distributionSegments = investorAnalytics ? [
     {
-      label: 'Retail Investors',
+      label: 'Retail Owners',
       percentage: investorAnalytics.retail_investors?.percentage || 0,
       count: investorAnalytics.retail_investors?.count || 0
     },
@@ -1041,10 +1041,10 @@ const InvestorsView: React.FC = () => {
   ] : [];
 
   const metrics = investmentMetrics ? [
-    { label: 'Average Investment', value: formatCurrency(investmentMetrics.average_investment || 0) },
+    { label: 'Average Purchase', value: formatCurrency(investmentMetrics.average_investment || 0) },
     { label: 'Total Capital Raised', value: formatCurrency(investmentMetrics.total_capital_raised || 0) },
-    { label: 'Investor Retention', value: `${investmentMetrics.investor_retention_rate || 0}%` },
-    { label: 'New Investors (30d)', value: (investmentMetrics.new_investors_30d || 0).toString() }
+    { label: 'Owner Retention', value: `${investmentMetrics.investor_retention_rate || 0}%` },
+    { label: 'New Owners (30d)', value: (investmentMetrics.new_investors_30d || 0).toString() }
   ] : [];
 
   return (
@@ -1053,7 +1053,7 @@ const InvestorsView: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">
-            Investor Distribution
+            Owner Distribution
           </h3>
           {distributionSegments.length > 0 ? (
             <div className="space-y-3">
@@ -1064,7 +1064,7 @@ const InvestorsView: React.FC = () => {
                       {segment.label}
                     </span>
                     <span className="text-sm text-neutral-500 dark:text-slate-400">
-                      {segment.count} investors
+                      {segment.count} owners
                     </span>
                   </div>
                   <div className="w-full bg-neutral-200 dark:bg-slate-600 rounded-full h-2">
@@ -1079,7 +1079,7 @@ const InvestorsView: React.FC = () => {
           ) : (
             <div className="text-center py-4">
               <p className="text-neutral-500 dark:text-slate-400">
-                No investor distribution data available
+                No owner distribution data available
               </p>
             </div>
           )}
@@ -1087,7 +1087,7 @@ const InvestorsView: React.FC = () => {
 
         <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">
-            Investment Metrics
+            Purchase Metrics
           </h3>
           {metrics.length > 0 ? (
             <div className="space-y-4">
@@ -1105,7 +1105,7 @@ const InvestorsView: React.FC = () => {
           ) : (
             <div className="text-center py-4">
               <p className="text-neutral-500 dark:text-slate-400">
-                No investment metrics available
+                No purchase metrics available
               </p>
             </div>
           )}
@@ -1310,7 +1310,7 @@ const PropertyOwnerNotifications: React.FC = () => {
           Notifications
         </h2>
         <p className="text-sm text-neutral-500 dark:text-slate-400">
-          Updates about your properties, investors, and revenue distributions.
+          Updates about your properties, owners, and revenue distributions.
         </p>
       </div>
 
@@ -1323,7 +1323,7 @@ const PropertyOwnerNotifications: React.FC = () => {
           <span className="text-4xl mb-4 block">🔔</span>
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-2">No Notifications</h3>
           <p className="text-sm text-neutral-500 dark:text-slate-400">
-            You're all caught up. New notifications about your properties and investors will appear here.
+            You're all caught up. New notifications about your properties and owners will appear here.
           </p>
         </div>
       ) : (

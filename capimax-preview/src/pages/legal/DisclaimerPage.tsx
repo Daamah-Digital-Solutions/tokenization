@@ -9,13 +9,13 @@ export const DisclaimerPage: React.FC = () => {
     >
       <section className="legal-section">
         <p className="legal-intro">
-          Capimax RT is a technology-based platform designed to facilitate the structuring, presentation, and administration of tokenized real estate investment opportunities through Special Purpose Vehicles (SPVs).
+          Capimax RT is a technology-based platform designed to facilitate the structuring, presentation, and administration of tokenized real estate ownership opportunities through Special Purpose Vehicles (SPVs).
         </p>
 
         <h2>Capimax RT does not:</h2>
         <ul>
-          <li>Act as a bank, broker-dealer, investment adviser, fiduciary, or custodian;</li>
-          <li>Provide investment, legal, tax, or financial advice;</li>
+          <li>Act as a bank, broker-dealer, financial adviser, fiduciary, or custodian;</li>
+          <li>Provide financial, legal, tax, or investment advice;</li>
           <li>Guarantee returns, liquidity, or capital preservation.</li>
         </ul>
 
@@ -23,7 +23,7 @@ export const DisclaimerPage: React.FC = () => {
           All information made available on the platform is provided for informational purposes only and is based on data supplied by asset owners, developers, SPVs, and third-party service providers. While reasonable efforts are made to ensure accuracy, completeness, and timeliness, Capimax RT makes no representations or warranties of any kind, express or implied, regarding the reliability or accuracy of such information.
         </p>
 
-        <h2>Investors are solely responsible for:</h2>
+        <h2>Owners are solely responsible for:</h2>
         <ul>
           <li>Conducting their own independent due diligence;</li>
           <li>Consulting licensed professional advisers;</li>

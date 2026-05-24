@@ -357,7 +357,7 @@ export const BrokerApplicationForm: React.FC = () => {
         <textarea
           value={formData.motivation}
           onChange={(e) => updateField('motivation', e.target.value)}
-          placeholder="Tell us about your motivation, experience, and how you can help clients invest in tokenized real estate..."
+          placeholder="Tell us about your motivation, experience, and how you can help clients buy tokenized real estate..."
           rows={8}
           className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-700 dark:text-slate-100 ${errors.motivation ? 'border-red-500' : 'border-neutral-300 dark:border-slate-600'
             }`}
@@ -383,7 +383,7 @@ export const BrokerApplicationForm: React.FC = () => {
           type="text"
           value={formData.target_market}
           onChange={(e) => updateField('target_market', e.target.value)}
-          placeholder="e.g., High-net-worth individuals, International investors"
+          placeholder="e.g., High-net-worth individuals, International buyers"
           className="w-full px-4 py-2 border border-neutral-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-700 dark:text-slate-100"
         />
         <p className="text-xs text-neutral-500 dark:text-slate-400 mt-1">

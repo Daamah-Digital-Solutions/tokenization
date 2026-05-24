@@ -209,7 +209,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
         <div className="flex items-center justify-between mb-4">
           <Text variant="h3" weight="semibold" className="flex items-center gap-2">
             <Calculator className="w-5 h-5 text-emerald-600" />
-            Investment Summary
+            Purchase Summary
           </Text>
           <Button
             variant="ghost"
@@ -357,10 +357,10 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
           <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
             <Text variant="bodySmall" weight="semibold" className="text-amber-800 dark:text-amber-200 mb-1">
-              Investment Risk Disclosure
+              Ownership Risk Disclosure
             </Text>
             <Text variant="bodySmall" className="text-amber-700 dark:text-amber-300 leading-relaxed">
-              Real estate investments involve risk including potential loss of principal. Past performance does not guarantee future results.
+              Real estate ownership involves risk including potential loss of principal. Past performance does not guarantee future results.
               Returns are projections based on current market conditions and are not guaranteed.
             </Text>
           </div>

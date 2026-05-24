@@ -20,7 +20,7 @@ export const RegisterPage: React.FC = () => {
   return (
     <AuthLayout
       title="Join Capimax"
-      subtitle="Create your account and start investing in tokenized real estate with as little as $100"
+      subtitle="Create your account and start owning tokenized real estate with as little as $100"
     >
       <RegisterForm
         onSignIn={handleGoToLogin}

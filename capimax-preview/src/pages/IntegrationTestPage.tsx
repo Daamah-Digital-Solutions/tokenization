@@ -142,7 +142,7 @@ export const IntegrationTestPage: React.FC = () => {
                 variant="secondary"
                 disabled={isLoading}
               >
-                Test Investment
+                Test Purchase
               </Button>
               <Button
                 onClick={() => runTest('Portfolio Data', testPortfolioData)}

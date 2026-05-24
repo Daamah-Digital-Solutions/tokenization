@@ -10,7 +10,7 @@ export const TermsPage: React.FC = () => {
       <section className="legal-section">
         <h2>5.1 Scope of Service</h2>
         <p>
-          Capimax RT provides digital tools to facilitate tokenized investment administration.
+          Capimax RT provides digital tools to facilitate tokenized ownership administration.
         </p>
 
         <h2>5.2 User Obligations</h2>
@@ -21,10 +21,10 @@ export const TermsPage: React.FC = () => {
           <li>Refrain from misuse or unauthorized activities.</li>
         </ul>
 
-        <h2>5.3 Investment Acknowledgment</h2>
+        <h2>5.3 Ownership Acknowledgment</h2>
         <p>Users acknowledge that:</p>
         <ul>
-          <li>Investments are speculative;</li>
+          <li>Tokenized real estate ownership is speculative;</li>
           <li>No returns or liquidity are guaranteed;</li>
           <li>Platform information does not constitute advice.</li>
         </ul>

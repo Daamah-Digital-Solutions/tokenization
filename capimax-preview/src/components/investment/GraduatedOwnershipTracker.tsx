@@ -145,7 +145,7 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
               {formatCurrency(totalInvested)}
             </div>
             <div className="text-sm text-neutral-500 dark:text-slate-400">
-              Total Invested
+              Total Purchased
             </div>
           </div>
           <div className="text-center p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg">
@@ -176,7 +176,7 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
               No Ownership Positions
             </h3>
             <p className="text-neutral-600 dark:text-slate-400">
-              Start your graduated ownership journey by making your first investment
+              Start your graduated ownership journey by making your first purchase
             </p>
           </div>
         ) : (

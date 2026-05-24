@@ -31,7 +31,7 @@ export const Footer: React.FC = () => {
     learn: [
       { name: 'What is Tokenization', href: '/tokenization' },
       { name: 'What is SPV', href: '/spv' },
-      { name: 'Investor Guide', href: '/investor-guide' },
+      { name: 'Owner\'s Guide', href: '/investor-guide' },
       { name: 'Data Room', href: '/data-room' },
       { name: 'Risks & Disclosures', href: '/risks' },
       { name: 'FAQ', href: '/faq' },
@@ -39,9 +39,9 @@ export const Footer: React.FC = () => {
     ],
     guides: [
       { name: 'Capimax RT Guide', href: '/capimax-rt-guide' },
-      { name: 'Investment Guide', href: '/investment-guide' },
-      { name: 'Investment Strategies', href: '/investment-strategies' },
-      { name: 'Investor Guide', href: '/investor-guide' },
+      { name: 'Ownership Guide', href: '/investment-guide' },
+      { name: 'Ownership Strategies', href: '/investment-strategies' },
+      { name: 'Co-Owner Guide', href: '/investor-guide' },
       { name: 'Owner\'s Guide', href: '/owners-guide' },
       { name: 'Developer Guide', href: '/developer-guide' },
       { name: 'Broker Guide', href: '/broker-guide' },
@@ -87,7 +87,7 @@ export const Footer: React.FC = () => {
             </div>
             
             <p className="text-navy-600 dark:text-navy-300 leading-relaxed text-sm">
-              Professional real estate tokenization platform for secure, transparent investment opportunities.
+              Professional real estate tokenization platform for secure, transparent property ownership.
             </p>
           </motion.div>
 

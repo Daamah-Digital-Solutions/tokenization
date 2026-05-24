@@ -91,7 +91,7 @@ const ReferralTracker: React.FC<ReferralTrackerProps> = ({ referrals }) => {
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
-              <option value="invested">Invested</option>
+              <option value="invested">Purchased</option>
               <option value="pending">Pending</option>
               <option value="inactive">Inactive</option>
             </select>
@@ -133,7 +133,7 @@ const ReferralTracker: React.FC<ReferralTrackerProps> = ({ referrals }) => {
                 </div>
                 <div className="flex items-center space-x-6 text-sm">
                   <div className="text-center">
-                    <p className="text-neutral-500 dark:text-slate-400">Investment</p>
+                    <p className="text-neutral-500 dark:text-slate-400">Purchased</p>
                     <p className="font-semibold text-neutral-900 dark:text-slate-100">
                       {formatMoney(referral.total_investment)}
                     </p>

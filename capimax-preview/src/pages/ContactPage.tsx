@@ -47,7 +47,7 @@ const contactReasons = [
   {
     icon: Building2,
     title: 'Property Listings',
-    description: 'Information about listing your property or investment opportunities.',
+    description: 'Information about listing your property or ownership opportunities.',
     color: 'from-emerald-500 to-green-500'
   },
   {
@@ -139,9 +139,9 @@ export const ContactPage: React.FC = () => {
         <title>Contact Us | Capimax - Get in Touch</title>
         <meta
           name="description"
-          content="Contact the Capimax team for questions about real estate tokenization, investment opportunities, partnership inquiries, or technical support. We're here to help."
+          content="Contact the Capimax team for questions about real estate tokenization, ownership opportunities, partnership inquiries, or technical support. We're here to help."
         />
-        <meta name="keywords" content="contact capimax, real estate investment support, tokenization help, customer service" />
+        <meta name="keywords" content="contact capimax, real estate ownership support, tokenization help, customer service" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 dark:from-slate-900 dark:via-gray-900 dark:to-slate-800">
@@ -393,7 +393,7 @@ export const ContactPage: React.FC = () => {
                         >
                           <option value="">Select a subject</option>
                           <option value="general">General Inquiry</option>
-                          <option value="investment">Investment Questions</option>
+                          <option value="investment">Ownership Questions</option>
                           <option value="property">Property Listing</option>
                           <option value="partnership">Partnership Opportunity</option>
                           <option value="support">Account Support</option>

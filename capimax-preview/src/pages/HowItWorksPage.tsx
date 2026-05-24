@@ -15,20 +15,20 @@ export const HowItWorksPage: React.FC = () => {
     >
       <section className="info-section">
         <p className="info-intro">
-          This section explains, in a clear and structured manner, how Capimax RT operates as a technology platform, covering the full lifecycle of a tokenized real estate asset for Investors, Property Owners / Developers, and Strategic and Operational Partners.
+          This section explains, in a clear and structured manner, how Capimax RT operates as a technology platform, covering the full lifecycle of a tokenized real estate asset for Owners, Property Sellers / Developers, and Strategic and Operational Partners.
         </p>
 
         <h2>Platform Overview</h2>
         <p>
-          Capimax RT operates as a digital infrastructure that connects real estate assets, SPVs, investors, and service providers within a structured, compliant, and transparent operational framework.
+          Capimax RT operates as a digital infrastructure that connects real estate assets, SPVs, owners, and service providers within a structured, compliant, and transparent operational framework.
         </p>
         <p>
-          The platform does not sell real estate, manage investments, or provide financial services. Instead, it:
+          The platform does not sell real estate, manage owned properties, or provide financial services. Instead, it:
         </p>
         <ul>
           <li>Enables asset structuring through SPVs</li>
           <li>Facilitates documentation, disclosures, and reporting</li>
-          <li>Organizes investor access and participation</li>
+          <li>Organizes owner access and participation</li>
           <li>Supports structured exit mechanisms</li>
         </ul>
 
@@ -36,8 +36,8 @@ export const HowItWorksPage: React.FC = () => {
 
         <ol>
           <li>
-            <span className="step-title">Asset Submission (Owner / Developer)</span>
-            Submission of a listing request through the platform. Entry of asset details, ownership information, and investment objectives. Upload of preliminary ownership and project documentation.
+            <span className="step-title">Asset Submission (Seller / Developer)</span>
+            Submission of a listing request through the platform. Entry of asset details, ownership information, and ownership objectives. Upload of preliminary ownership and project documentation.
           </li>
           <li>
             <span className="step-title">Initial Review & Screening</span>
@@ -45,18 +45,18 @@ export const HowItWorksPage: React.FC = () => {
           </li>
           <li>
             <span className="step-title">SPV Formation & Structuring</span>
-            Establishment of a dedicated SPV for the asset. Legal linkage between the SPV and the underlying asset. Preparation of operating, management, and investment agreements.
+            Establishment of a dedicated SPV for the asset. Legal linkage between the SPV and the underlying asset. Preparation of operating, management, and ownership agreements.
           </li>
           <li>
             <span className="step-title">Valuation & Insurance</span>
             Independent valuation by qualified third-party firms. Arrangement of insurance coverage where applicable. Upload of reports and policies into the Data Room.
           </li>
           <li>
-            <span className="step-title">Investment Offering</span>
-            Definition of unit price, minimum investment, and offering size. Publication of the asset offering page. Opening of subscriptions to verified and eligible investors.
+            <span className="step-title">Ownership Offering</span>
+            Definition of unit price, minimum purchase, and offering size. Publication of the asset offering page. Opening of subscriptions to verified and eligible owners.
           </li>
           <li>
-            <span className="step-title">Post-Investment Operations</span>
+            <span className="step-title">Post-Purchase Operations</span>
             Ongoing asset and SPV administration. Periodic operational and financial reporting. Distribution of income (if any) in accordance with stated policies.
           </li>
           <li>
@@ -80,7 +80,7 @@ export const HowItWorksPage: React.FC = () => {
             Secondary Market
           </button>
           <button className="link-button-outline" onClick={() => navigateToPage('/investor-guide')}>
-            Investor Guide
+            Co-Owner Guide
           </button>
         </div>
       </section>

@@ -490,7 +490,7 @@ export const CreatePropertyForm: React.FC = () => {
 
         <div>
           <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-            Minimum Investment ($)
+            Minimum Purchase ($)
           </label>
           <input
             type="number"
@@ -591,7 +591,7 @@ export const CreatePropertyForm: React.FC = () => {
               className="w-5 h-5"
             />
             <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">
-              Support installment payments for investors
+              Support installment payments for buyers
             </label>
           </div>
 

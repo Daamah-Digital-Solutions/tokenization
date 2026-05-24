@@ -165,7 +165,7 @@ export function WalletHistory({ className, compact = false, limit }: WalletHisto
               { value: 'all', label: 'All Types' },
               { value: 'deposit', label: 'Deposits' },
               { value: 'withdrawal', label: 'Withdrawals' },
-              { value: 'investment', label: 'Investments' },
+              { value: 'investment', label: 'Purchases' },
               { value: 'dividend', label: 'Dividends' },
               { value: 'fee', label: 'Fees' },
             ]}

@@ -233,7 +233,7 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
           <div className="flex flex-col gap-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-4">
             <p className="text-sm text-slate-600 dark:text-slate-300">
               Link a self-custody wallet (MetaMask, hardware wallet, etc.) if
-              you want crypto-paid investments to land directly in it, or to
+              you want crypto-paid purchases to land directly in it, or to
               later withdraw your tokens from Capimax custody.
             </p>
             <button

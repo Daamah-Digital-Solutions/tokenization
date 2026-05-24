@@ -43,7 +43,7 @@ const howItWorksSteps = [
   {
     step: 5,
     title: 'Receive Requests',
-    description: 'Receive exit requests from investors wishing to sell their units',
+    description: 'Receive exit requests from owners wishing to sell their units',
     icon: Users
   },
   {
@@ -58,7 +58,7 @@ const profitSources = [
   {
     icon: TrendingUp,
     title: 'Price Difference',
-    description: 'Buy at discount (spread) from investors seeking early exit'
+    description: 'Buy at discount (spread) from owners seeking early exit'
   },
   {
     icon: DollarSign,
@@ -92,7 +92,7 @@ const operationalBenefits = [
 
 const financialBenefits = [
   'Opportunity to buy units at a discount',
-  'Investment portfolio diversification',
+  'Ownership portfolio diversification',
   'Profit from price differences',
   'Complete flexibility in reselling'
 ];
@@ -113,9 +113,9 @@ export const LiquidityProviderPage: React.FC = () => {
         <title>Liquidity Provider Program | Capimax RT</title>
         <meta
           name="description"
-          content="Join the Capimax RT Liquidity Provider program. Provide optional liquidity for investors, set your own terms, and profit from price differences."
+          content="Join the Capimax RT Liquidity Provider program. Provide optional liquidity for owners, set your own terms, and profit from price differences."
         />
-        <meta name="keywords" content="liquidity provider, real estate investment, exit liquidity, tokenized assets, Capimax RT" />
+        <meta name="keywords" content="liquidity provider, real estate ownership, exit liquidity, tokenized assets, Capimax RT" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/20 dark:from-slate-900 dark:via-gray-900 dark:to-slate-800">
@@ -169,7 +169,7 @@ export const LiquidityProviderPage: React.FC = () => {
                   className="text-lg lg:text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto mb-8"
                 >
                   The Liquidity Provider program allows qualified third parties to provide optional and organized
-                  liquidity for investors wishing to exit their tokenized real estate investments, according to
+                  liquidity for owners wishing to exit their tokenized real estate ownership, according to
                   terms, pricing, and limits set by the liquidity provider itself.
                 </motion.p>
 

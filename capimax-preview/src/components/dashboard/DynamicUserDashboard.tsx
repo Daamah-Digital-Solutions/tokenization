@@ -95,21 +95,21 @@ const roleBasedContent: Record<UserRole, (data: any) => DashboardContent> = {
     quickActions: [
       {
         title: 'Browse Properties',
-        description: 'Discover new investment opportunities',
+        description: 'Discover new ownership opportunities',
         icon: Building,
         action: () => window.location.href = '/properties',
         variant: 'primary' as const,
       },
       {
         title: 'View Portfolio',
-        description: 'Manage your investments',
+        description: 'Manage your properties',
         icon: PieChart,
         action: () => window.location.href = '/dashboard/investor',
         variant: 'secondary' as const,
       },
       {
         title: 'Transaction History',
-        description: 'Track your investment activity',
+        description: 'Track your ownership activity',
         icon: Activity,
         action: () => window.location.href = '/transactions',
         variant: 'outline' as const,
@@ -138,7 +138,7 @@ const roleBasedContent: Record<UserRole, (data: any) => DashboardContent> = {
         variant: 'accent' as const,
       },
       {
-        title: 'Investors',
+        title: 'Owners',
         value: data.stats?.totalInvestments || 0,
         subtitle: 'Across all properties',
         icon: Users,
@@ -386,21 +386,21 @@ export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
     content.quickActions = [
       {
         title: 'Browse Properties',
-        description: 'Discover new investment opportunities',
+        description: 'Discover new ownership opportunities',
         icon: Building,
         action: () => navigate('properties'),
         variant: 'primary' as const,
       },
       {
         title: 'View Portfolio',
-        description: 'See your investments & returns',
+        description: 'See your properties & returns',
         icon: PieChart,
         action: () => onViewChange('portfolio'),
         variant: 'secondary' as const,
       },
       {
         title: 'Transaction History',
-        description: 'Track your investment activity',
+        description: 'Track your ownership activity',
         icon: Activity,
         action: () => onViewChange('transactions'),
         variant: 'outline' as const,
@@ -425,8 +425,8 @@ export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
         variant: 'secondary' as const,
       },
       {
-        title: 'View Investors',
-        description: 'See who invested in your properties',
+        title: 'View Owners',
+        description: 'See who bought into your properties',
         icon: Users,
         action: () => onViewChange('investors'),
         variant: 'outline' as const,
@@ -591,9 +591,9 @@ export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
 function getRoleGreeting(role: UserRole): string {
   switch (role) {
     case UserRole.INVESTOR:
-      return "Track your investments and discover new opportunities";
+      return "Track your owned properties and discover new opportunities";
     case UserRole.PROPERTY_OWNER:
-      return "Manage your properties and connect with investors";
+      return "Manage your properties and connect with owners";
     case UserRole.BROKER:
       return "Track commissions and expand your network";
     case UserRole.ADMIN:
@@ -692,7 +692,7 @@ const PropertyPerformance: React.FC<{ data: any; loading: boolean }> = ({ loadin
 );
 
 const InvestorActivity: React.FC<{ data: any; loading: boolean }> = ({ loading }) => (
-  <div>{loading ? 'Loading...' : 'Investor activity content'}</div>
+  <div>{loading ? 'Loading...' : 'Owner activity content'}</div>
 );
 
 const PendingApprovals: React.FC<{ data: any; loading: boolean }> = ({ loading }) => (

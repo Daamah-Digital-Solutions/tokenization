@@ -268,7 +268,7 @@ export const SubmitPropertyPage: React.FC = () => {
               </li>
               <li className="flex gap-3">
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xs font-semibold">4</span>
-                <span><strong>Listing</strong> — once approved, the property goes live on the marketplace and investors can start buying tokens.</span>
+                <span><strong>Listing</strong> — once approved, the property goes live on the marketplace and owners can start buying tokens.</span>
               </li>
             </ol>
           </div>
@@ -339,7 +339,7 @@ export const SubmitPropertyPage: React.FC = () => {
                     rows={4}
                     required
                     className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
-                    placeholder="Describe the property, its location and what makes it a good investment."
+                    placeholder="Describe the property, its location and what makes it a good purchase."
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

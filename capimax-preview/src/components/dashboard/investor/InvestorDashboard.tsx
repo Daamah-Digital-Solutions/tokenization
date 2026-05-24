@@ -122,8 +122,8 @@ const PropertyHoldings: React.FC<{ portfolioData: PortfolioData }> = ({ portfoli
       <div className="p-6">
         {portfolioData.holdings.length === 0 ? (
           <div className="text-center py-8 text-neutral-500 dark:text-slate-400">
-            <p>No property investments yet</p>
-            <p className="text-sm mt-2">Start investing to see your holdings here</p>
+            <p>No owned properties yet</p>
+            <p className="text-sm mt-2">Buy your first property to see your holdings here</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -153,7 +153,7 @@ const PropertyHoldings: React.FC<{ portfolioData: PortfolioData }> = ({ portfoli
                 
                 <div className="flex items-center space-x-8 text-sm">
                   <div className="text-center">
-                    <p className="text-neutral-500 dark:text-slate-400">Investment</p>
+                    <p className="text-neutral-500 dark:text-slate-400">Purchase</p>
                     <p className="font-semibold text-neutral-900 dark:text-slate-100">
                       ${property.investment.toLocaleString()}
                     </p>
@@ -266,8 +266,8 @@ const InvestorAnalytics: React.FC<{ portfolioData: PortfolioData }> = ({ portfol
         <div className="space-y-3">
           {allocationWithPercentages.length === 0 ? (
             <div className="text-center py-4 text-neutral-500 dark:text-slate-400">
-              <p>No investments yet</p>
-              <p className="text-sm mt-1">Start investing to see allocation</p>
+              <p>No properties yet</p>
+              <p className="text-sm mt-1">Buy a property to see allocation</p>
             </div>
           ) : (
             allocationWithPercentages.map((item) => (
@@ -396,12 +396,12 @@ export const InvestorDashboard: React.FC<{ currentView: string }> = ({ currentVi
       const stats: StatItem[] = [
         {
           id: 'total-investment',
-          label: 'Total Investment',
+          label: 'Total Owned',
           value: `$${portfolioSummary.total_invested.toLocaleString()}`,
           change: `${portfolioSummary.return_percentage >= 0 ? '+' : ''}${portfolioSummary.return_percentage.toFixed(1)}%`,
           changeType: portfolioSummary.return_percentage >= 0 ? 'positive' : 'negative',
           icon: '💰',
-          description: 'Total amount invested'
+          description: 'Total amount owned'
         },
         {
           id: 'portfolio-value',
@@ -419,7 +419,7 @@ export const InvestorDashboard: React.FC<{ currentView: string }> = ({ currentVi
           change: portfolioSummary.active_investments > 0 ? `+${portfolioSummary.active_investments}` : '0',
           changeType: 'neutral',
           icon: '🏢',
-          description: 'Active investments'
+          description: 'Active holdings'
         },
         {
           id: 'monthly-income',
@@ -560,9 +560,9 @@ export const InvestorDashboard: React.FC<{ currentView: string }> = ({ currentVi
   const quickActions: QuickAction[] = [
     {
       id: 'invest-more',
-      label: 'Invest More',
+      label: 'Buy More',
       icon: '💰',
-      description: 'Add funds to portfolio',
+      description: 'Add to your portfolio',
       variant: 'primary',
       onClick: () => window.location.href = '/properties'
     },
@@ -647,7 +647,7 @@ export const InvestorDashboard: React.FC<{ currentView: string }> = ({ currentVi
               </button>
             </div>
             <p className="text-neutral-600 dark:text-slate-400 mb-6">
-              Track your real estate investments and performance metrics
+              Track your owned properties and performance metrics
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {portfolioData.loading ? (

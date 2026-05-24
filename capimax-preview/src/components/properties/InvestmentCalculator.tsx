@@ -142,7 +142,7 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
           </div>
           <div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Investment Calculator
+              Ownership Calculator
             </h3>
             <Text variant="caption" color="muted">
               Calculate your potential returns for {propertyTitle}
@@ -197,11 +197,11 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
           </div>
         </div>
 
-        {/* Investment Term */}
+        {/* Ownership Term */}
         <div className="space-y-3">
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
             <Calendar className="w-4 h-4 text-emerald-600" />
-            Investment Term
+            Ownership Term
           </label>
           
           <div className="flex gap-2">
@@ -224,7 +224,7 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
 
         {/* Key Results */}
         <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-xl p-4 space-y-4">
-          <h4 className="font-semibold text-gray-900 dark:text-white">Your Investment</h4>
+          <h4 className="font-semibold text-gray-900 dark:text-white">Your Ownership</h4>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -302,7 +302,7 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
             </div>
 
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Investment Metrics</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Ownership Metrics</h4>
               
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
@@ -347,7 +347,7 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
                   {riskLevel === 'medium' && <Info className="w-4 h-4" />}
                   {riskLevel === 'high' && <AlertTriangle className="w-4 h-4" />}
                   <span className="text-sm font-medium">
-                    {riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1)} Risk Investment
+                    {riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1)} Risk Ownership
                   </span>
                 </div>
 
@@ -367,9 +367,9 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
                 </div>
 
                 <div className="text-xs text-gray-500 dark:text-gray-400 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <strong>Disclaimer:</strong> Past performance does not guarantee future results. 
-                  Real estate investments involve risk and may result in loss of principal. 
-                  Please consider your financial situation before investing.
+                  <strong>Disclaimer:</strong> Past performance does not guarantee future results.
+                  Real estate ownership involves risk and may result in loss of principal.
+                  Please consider your financial situation before buying.
                 </div>
               </div>
             </div>

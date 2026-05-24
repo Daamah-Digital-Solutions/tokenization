@@ -166,7 +166,7 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
             <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
               ${metrics.averageInvestmentSize.toLocaleString()}
             </div>
-            <div className="text-sm text-orange-800 dark:text-orange-300">Avg Investment</div>
+            <div className="text-sm text-orange-800 dark:text-orange-300">Avg Purchase</div>
           </div>
         </div>
 
@@ -182,10 +182,10 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
             <option value="registered">Registered</option>
             <option value="kyc_pending">KYC Pending</option>
             <option value="active">Active</option>
-            <option value="invested">Invested</option>
+            <option value="invested">Owners</option>
             <option value="inactive">Inactive</option>
           </select>
-          
+
           <select
             value={filterTier}
             onChange={(e) => setFilterTier(e.target.value)}
@@ -204,7 +204,7 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
             className="text-sm border border-neutral-200 dark:border-slate-600 rounded-lg px-3 py-1 bg-white dark:bg-slate-700 text-neutral-900 dark:text-slate-100"
           >
             <option value="joinDate">Sort by Join Date</option>
-            <option value="investment">Sort by Investment</option>
+            <option value="investment">Sort by Purchase Amount</option>
             <option value="commission">Sort by Commission</option>
             <option value="activity">Sort by Activity</option>
           </select>
@@ -275,7 +275,7 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
                       
                       <div className="flex items-center space-x-6">
                         <div className="text-right">
-                          <div className="text-sm text-neutral-500 dark:text-slate-400">Investment</div>
+                          <div className="text-sm text-neutral-500 dark:text-slate-400">Purchase</div>
                           <div className="font-semibold text-neutral-900 dark:text-slate-100">
                             ${client.totalInvestment.toLocaleString()}
                           </div>
@@ -337,7 +337,7 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
                           </div>
                         </div>
                         <div>
-                          <span className="text-neutral-500 dark:text-slate-400">Investment Count</span>
+                          <span className="text-neutral-500 dark:text-slate-400">Purchase Count</span>
                           <div className="font-medium text-neutral-900 dark:text-slate-100">
                             {client.investmentCount}
                           </div>
@@ -403,7 +403,7 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
                           <option value="registered">Registered</option>
                           <option value="kyc_pending">KYC Pending</option>
                           <option value="active">Active</option>
-                          <option value="invested">Invested</option>
+                          <option value="invested">Owner</option>
                           <option value="inactive">Inactive</option>
                         </select>
                         <Button

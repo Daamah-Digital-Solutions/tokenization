@@ -247,7 +247,7 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
         />
         <StatCard
           icon={Users}
-          title="Total Investors"
+          title="Total Owners"
           value={data.totalInvestors.toLocaleString()}
           change="+567 this month"
           changeType="increase"
@@ -346,7 +346,7 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
                           {property.name}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {property.funded}% funded • {property.investors} investors
+                          {property.funded}% funded • {property.investors} owners
                         </div>
                       </div>
                       <div className="text-right">
@@ -408,7 +408,7 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
                   <div className="flex items-center gap-3">
                     <BarChart3 className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                     <div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">Total Investment</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">Total Ownership</div>
                       <div className="font-bold text-blue-600 dark:text-blue-400">$1.16B</div>
                     </div>
                   </div>

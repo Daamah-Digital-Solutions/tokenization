@@ -16,12 +16,12 @@ export const SecondaryMarketPreview: React.FC = () => {
     {
       icon: Tag,
       title: 'List Your Units',
-      description: 'Put your investment units up for sale at your desired price',
+      description: 'Put your ownership units up for sale at your desired price',
     },
     {
       icon: ShoppingCart,
       title: 'Purchase Units',
-      description: 'Buy units from other investors on the marketplace',
+      description: 'Buy units from other owners on the marketplace',
     },
     {
       icon: TrendingUp,
@@ -61,7 +61,7 @@ export const SecondaryMarketPreview: React.FC = () => {
             </h2>
 
             <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-              Trade your investment units with other verified investors through our organized
+              Trade your ownership units with other verified owners through our organized
               secondary marketplace.
             </p>
 

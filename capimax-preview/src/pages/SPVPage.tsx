@@ -10,7 +10,7 @@ export const SPVPage: React.FC = () => {
 
   return (
     <InfoPageLayout
-      title="What Is an SPV and How Does It Protect Investors?"
+      title="What Is an SPV and How Does It Protect Owners?"
       subtitle="Understanding the SPV structure as a legal and risk-mitigation mechanism"
     >
       <section className="info-section">
@@ -27,30 +27,30 @@ export const SPVPage: React.FC = () => {
         <ul>
           <li>To isolate risks</li>
           <li>To prevent asset commingling</li>
-          <li>To protect investors from unrelated liabilities</li>
+          <li>To protect owners from unrelated liabilities</li>
           <li>To enable clear reporting and governance</li>
         </ul>
 
-        <h2>How SPVs Protect Investors</h2>
+        <h2>How SPVs Protect Owners</h2>
         <ul className="check-list">
           <li>Assets are legally held by the SPV</li>
           <li>Financial accounts are ring-fenced</li>
           <li>Obligations are limited to the specific project</li>
-          <li>Investor interests are defined contractually</li>
+          <li>Owner interests are defined contractually</li>
         </ul>
 
-        <h2>What Investors Actually Own</h2>
+        <h2>What Owners Actually Own</h2>
         <p>
-          Investors hold:
+          Owners hold:
         </p>
         <ul>
           <li>Economic or contractual rights in the SPV</li>
-          <li>Defined by investment agreements</li>
+          <li>Defined by ownership agreements</li>
           <li>Transferable under platform rules</li>
         </ul>
 
         <div className="info-highlight">
-          <strong>Important:</strong> Investors do not directly own the physical property. They hold economic or contractual rights in an SPV, not direct land registry ownership, unless explicitly stated in the offering documentation.
+          <strong>Important:</strong> Owners do not directly hold the physical property's land registry title. They hold economic or contractual rights in an SPV, not direct land registry ownership, unless explicitly stated in the offering documentation.
         </div>
 
         <h2>Learn More</h2>

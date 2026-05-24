@@ -17,9 +17,9 @@ import { Button } from '../ui/Button';
 
 export const TokenizationExplainer: React.FC = () => {
   const enablesItems = [
-    { icon: LayoutGrid, text: 'Dividing investment into small units' },
+    { icon: LayoutGrid, text: 'Dividing ownership into small units' },
     { icon: Home, text: 'Lowering the minimum entry threshold' },
-    { icon: Users, text: 'Expanding the investor base' },
+    { icon: Users, text: 'Expanding the owner base' },
     { icon: FileCheck, text: 'Improving transparency' },
     { icon: Building2, text: 'Facilitating organized trading' },
   ];
@@ -28,7 +28,7 @@ export const TokenizationExplainer: React.FC = () => {
     'Does not guarantee profits',
     'Does not mean instant liquidity',
     'Does not mean direct ownership in the land registry',
-    'Does not eliminate investment risks',
+    'Does not eliminate ownership risks',
   ];
 
   return (
@@ -57,7 +57,7 @@ export const TokenizationExplainer: React.FC = () => {
           </h2>
           <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
             Tokenization is a modern method of converting economic rights associated with
-            real estate into digital investment units, enabling multiple investors to
+            real estate into digital ownership units, enabling multiple co-owners to
             participate in a single asset instead of owning it entirely.
           </p>
         </motion.div>

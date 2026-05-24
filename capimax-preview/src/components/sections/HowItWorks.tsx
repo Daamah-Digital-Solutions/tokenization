@@ -12,8 +12,8 @@ export const HowItWorks: React.FC = () => {
     },
     {
       icon: Wallet,
-      title: "Invest Securely",
-      description: "Connect your wallet and invest through our regulated, secure platform infrastructure.",
+      title: "Buy Securely",
+      description: "Connect your wallet and purchase through our regulated, secure platform infrastructure.",
       step: "02"
     },
     {
@@ -83,7 +83,7 @@ export const HowItWorks: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg text-navy-600 dark:text-navy-200 max-w-2xl mx-auto text-balance"
           >
-            Four simple steps to start investing in premium real estate through our secure platform
+            Four simple steps to start owning premium real estate through our secure platform
           </motion.p>
         </motion.div>
 
@@ -164,14 +164,14 @@ export const HowItWorks: React.FC = () => {
                 Ready to Get Started?
               </h3>
               <p className="text-navy-600 dark:text-navy-200 max-w-lg mx-auto">
-                Join thousands of investors building wealth through tokenized real estate.
+                Join thousands of owners building wealth through tokenized real estate.
               </p>
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 transition-colors duration-200 text-white font-medium px-6 py-3 rounded-xl"
               >
-                Start Investing
+                Start Owning
                 <ArrowRight className="w-4 h-4" />
               </motion.button>
             </motion.div>

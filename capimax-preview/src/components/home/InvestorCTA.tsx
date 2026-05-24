@@ -16,13 +16,13 @@ export const InvestorCTA: React.FC = () => {
   const benefits = [
     {
       icon: Wallet,
-      title: 'Fractional Investment',
+      title: 'Fractional Ownership',
       description: 'Start with lower capital and diversify across multiple properties',
     },
     {
       icon: Shield,
       title: 'SPV Protection',
-      description: 'Your investment is protected through independent legal structures',
+      description: 'Your ownership is protected through independent legal structures',
     },
     {
       icon: FileText,
@@ -37,12 +37,12 @@ export const InvestorCTA: React.FC = () => {
     {
       icon: Globe,
       title: 'Global Access',
-      description: 'Invest in properties worldwide from anywhere',
+      description: 'Own properties worldwide from anywhere',
     },
     {
       icon: TrendingUp,
       title: 'Secondary Market',
-      description: 'Option to trade your investment units with other investors',
+      description: 'Option to trade your ownership units with other owners',
     },
   ];
 
@@ -60,17 +60,17 @@ export const InvestorCTA: React.FC = () => {
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-full border border-blue-200 dark:border-blue-800 mb-6">
             <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
-              For Investors
+              For Owners
             </span>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6">
-            Invest in{' '}
+            Own{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500">
               Premium Real Estate
             </span>
           </h2>
           <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
-            Access institutional-grade real estate investments with lower capital requirements
+            Access institutional-grade real estate ownership with lower capital requirements
             and full transparency through our tokenized platform.
           </p>
         </motion.div>

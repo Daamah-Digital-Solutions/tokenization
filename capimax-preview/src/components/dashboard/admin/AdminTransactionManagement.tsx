@@ -546,7 +546,7 @@ export const AdminTransactionManagement: React.FC = () => {
               className="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-neutral-300 dark:border-slate-600 rounded-lg text-neutral-900 dark:text-slate-100"
             >
               <option value="">All Types</option>
-              <option value="investment">Investment</option>
+              <option value="investment">Purchase</option>
               <option value="withdrawal">Withdrawal</option>
               <option value="deposit">Deposit</option>
               <option value="dividend">Dividend</option>

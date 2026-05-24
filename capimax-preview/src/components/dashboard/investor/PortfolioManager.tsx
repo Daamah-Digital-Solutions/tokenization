@@ -315,7 +315,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
   };
 
   const handleExportCSV = () => {
-    const headers = ['Property', 'Investment Amount', 'Current Value', 'ROI %', 'Monthly Income', 'Status', 'Date'];
+    const headers = ['Property', 'Purchase Amount', 'Current Value', 'ROI %', 'Monthly Income', 'Status', 'Date'];
     const rows = filteredInvestments.map(inv => [
       inv.property?.title || '',
       inv.investment_amount.toString(),
@@ -410,7 +410,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
               <DollarSign className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <Text variant="caption" color="muted">Total Invested</Text>
+              <Text variant="caption" color="muted">Total Owned</Text>
               <Text variant="bodyLarge" weight="bold">{formatCurrency(portfolioSummary.totalInvested)}</Text>
             </div>
           </div>
@@ -470,7 +470,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
       {/* Section Tabs */}
       <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-slate-700 pb-4">
         {[
-          { id: 'investments' as const, label: 'Investments', icon: Building, count: investments.length },
+          { id: 'investments' as const, label: 'Properties', icon: Building, count: investments.length },
           { id: 'distributions' as const, label: 'Distributions', icon: Receipt, count: distributions.length },
           { id: 'certificates' as const, label: 'Certificates', icon: Award, count: certificates.length },
           { id: 'transactions' as const, label: 'Transaction History', icon: History, count: transactions.length },
@@ -510,10 +510,10 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div>
                 <Text variant="h3" weight="semibold" className="mb-2">
-                  My Investments
+                  My Properties
                 </Text>
                 <Text variant="body" color="muted">
-                  {filteredInvestments.length} of {investments.length} investments
+                  {filteredInvestments.length} of {investments.length} properties
                 </Text>
               </div>
 
@@ -605,12 +605,12 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
               ))}
             </div>
 
-            {/* Investment Grid/List */}
+            {/* Property Grid/List */}
             {filteredInvestments.length === 0 ? (
               <div className="text-center py-12">
                 <Building className="w-16 h-16 text-slate-300 mx-auto mb-4" />
                 <Text variant="h3" weight="semibold" className="mb-2">
-                  No investments found
+                  No properties found
                 </Text>
                 <Text variant="body" color="muted" className="mb-4">
                   {searchTerm || typeFilter !== 'all' || statusFilter !== 'all'
@@ -727,10 +727,10 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
           >
             <div>
               <Text variant="h3" weight="semibold" className="mb-2">
-                Investment Certificates
+                Ownership Certificates
               </Text>
               <Text variant="body" color="muted">
-                Download your digital investment certificates for each property.
+                Download your digital ownership certificates for each property.
               </Text>
             </div>
 
@@ -926,7 +926,7 @@ const InvestmentCard: React.FC<{
             </div>
             <div className="flex items-center text-slate-500 dark:text-slate-400 text-sm mt-1">
               <Calendar className="w-4 h-4 mr-1" />
-              Invested {new Date(investment.created_at).toLocaleDateString()}
+              Purchased {new Date(investment.created_at).toLocaleDateString()}
             </div>
           </div>
 

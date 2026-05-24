@@ -1,7 +1,7 @@
 {
   "list": {
-    "title": "عقارات استثمارية",
-    "subtitle": "استكشف فرص الاستثمار العقاري المرمّز",
+    "title": "عقارات للتملّك",
+    "subtitle": "استكشف فرص تملّك العقارات المرمّزة",
     "filters": "الفلاتر",
     "sortBy": "ترتيب حسب",
     "noResults": "لم يتم العثور على عقارات تطابق معاييرك",
@@ -11,7 +11,7 @@
   "detail": {
     "overview": "نظرة عامة",
     "location": "الموقع",
-    "investment": "تفاصيل الاستثمار",
+    "investment": "تفاصيل التملّك",
     "documents": "المستندات",
     "spvInfo": "معلومات SPV",
     "updates": "التحديثات",
@@ -23,10 +23,10 @@
     "totalTokens": "إجمالي الوحدات",
     "availableTokens": "الوحدات المتاحة",
     "soldTokens": "الوحدات المباعة",
-    "minInvestment": "الحد الأدنى للاستثمار",
+    "minInvestment": "الحد الأدنى للتملّك",
     "expectedYield": "العائد المتوقع",
     "fundingProgress": "تقدم التمويل",
-    "investNow": "استثمر الآن",
+    "investNow": "تملّك الآن",
     "addToWatchlist": "إضافة للمفضلة"
   },
 

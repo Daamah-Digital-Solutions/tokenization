@@ -20,14 +20,14 @@ export const TokenizationPage: React.FC = () => {
 
         <h2>Definition</h2>
         <p>
-          Real estate tokenization is a method of digitally representing economic participation rights in a real estate asset through structured investment units, allowing multiple investors to participate in a single asset without direct ownership of the physical property.
+          Real estate tokenization is a method of digitally representing economic participation rights in a real estate asset through structured ownership units, allowing multiple owners to participate in a single asset without direct ownership of the physical property.
         </p>
 
         <h2>What Tokenization Enables</h2>
         <ul className="check-list">
-          <li>Fractional investment access</li>
+          <li>Fractional ownership access</li>
           <li>Lower capital entry thresholds</li>
-          <li>Broader investor participation</li>
+          <li>Broader owner participation</li>
           <li>Improved transparency and record-keeping</li>
           <li>Organized secondary market trading</li>
         </ul>
@@ -35,7 +35,7 @@ export const TokenizationPage: React.FC = () => {
         <h2>What Tokenization Does NOT Mean</h2>
         <ul className="cross-list">
           <li>It does not guarantee profits or income</li>
-          <li>It does not eliminate investment risk</li>
+          <li>It does not eliminate ownership risk</li>
           <li>It does not automatically confer land registry ownership</li>
           <li>It does not ensure immediate liquidity</li>
         </ul>
@@ -52,7 +52,7 @@ export const TokenizationPage: React.FC = () => {
         </ul>
 
         <div className="info-warning">
-          Tokenization does not eliminate investment risks. All investments involve risk, including the potential loss of principal. Please review our Risk Disclosures before investing.
+          Tokenization does not eliminate ownership risks. All real estate ownership involves risk, including the potential loss of principal. Please review our Risk Disclosures before buying.
         </div>
 
         <h2>Learn More</h2>

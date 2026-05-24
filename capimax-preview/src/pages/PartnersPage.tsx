@@ -55,7 +55,7 @@ const partners: PartnerCardProps[] = [
   {
     name: 'Capimax Development',
     category: 'developer',
-    description: 'In-house development arm specializing in tokenization-ready properties designed for fractional investment opportunities.',
+    description: 'In-house development arm specializing in tokenization-ready properties designed for fractional ownership opportunities.',
     role: 'In-House Development Partner',
     website: undefined
   },
@@ -64,7 +64,7 @@ const partners: PartnerCardProps[] = [
   {
     name: 'Capimax Financial',
     category: 'financial',
-    description: 'Dedicated financial management entity providing comprehensive investment management, dividend distribution, and financial reporting services.',
+    description: 'Dedicated financial management entity providing comprehensive ownership management, dividend distribution, and financial reporting services.',
     role: 'Financial Management & SPV Administration',
     website: undefined
   },
@@ -80,14 +80,14 @@ const partners: PartnerCardProps[] = [
   {
     name: 'Assurax',
     category: 'insurance',
-    description: 'Comprehensive insurance solutions provider offering property coverage, liability protection, and investment safeguards.',
+    description: 'Comprehensive insurance solutions provider offering property coverage, liability protection, and ownership safeguards.',
     role: 'Property & Liability Insurance',
     website: undefined
   },
   {
     name: 'HCC',
     category: 'insurance',
-    description: 'Specialized insurance partner providing tailored coverage solutions for real estate investments and tokenized assets.',
+    description: 'Specialized insurance partner providing tailored coverage solutions for real estate ownership and tokenized assets.',
     role: 'Specialty Insurance Coverage',
     website: undefined
   },
@@ -124,7 +124,7 @@ export const PartnersPage: React.FC = () => {
         <title>Our Partners | Capimax RT - Trusted Ecosystem Partners</title>
         <meta
           name="description"
-          content="Meet our trusted network of partners including property developers, financial advisors, insurance providers, and property management companies working together to deliver exceptional real estate investment opportunities."
+          content="Meet our trusted network of partners including property developers, financial advisors, insurance providers, and property management companies working together to deliver exceptional real estate ownership opportunities."
         />
         <meta name="keywords" content="real estate partners, property developers, financial management, insurance, property management, Capimax RT" />
       </Helmet>
@@ -179,7 +179,7 @@ export const PartnersPage: React.FC = () => {
                   transition={{ duration: 0.6, delay: 0.2 }}
                   className="text-lg lg:text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto"
                 >
-                  We work with industry-leading partners to deliver exceptional real estate investment
+                  We work with industry-leading partners to deliver exceptional real estate ownership
                   opportunities. Our trusted ecosystem ensures quality, transparency, and professional
                   management at every stage.
                 </motion.p>
@@ -264,7 +264,7 @@ export const PartnersPage: React.FC = () => {
                 Partner Categories
               </Heading>
               <Text variant="bodyLarge" color="secondary" align="center" className="max-w-2xl mx-auto" as="p">
-                Each partner plays a crucial role in our ecosystem, ensuring quality and professionalism at every stage of your investment journey.
+                Each partner plays a crucial role in our ecosystem, ensuring quality and professionalism at every stage of your ownership journey.
               </Text>
             </div>
 

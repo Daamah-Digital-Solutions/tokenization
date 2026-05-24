@@ -4,12 +4,12 @@ import { LegalPageLayout } from '../../components/legal/LegalPageLayout';
 export const RiskDisclosurePage: React.FC = () => {
   return (
     <LegalPageLayout
-      title="Investment Risk Disclosure"
+      title="Ownership Risk Disclosure"
       lastUpdated="January 2026"
     >
       <section className="legal-section">
         <p className="legal-intro">
-          Investing through Capimax RT involves significant risks, including the potential loss of part or all of the invested capital. Prospective investors must carefully review and understand the following non-exhaustive risk factors.
+          Owning tokenized real estate through Capimax RT involves significant risks, including the potential loss of part or all of the capital used to purchase. Prospective owners must carefully review and understand the following non-exhaustive risk factors.
         </p>
 
         <h2>2.1 Market Risk</h2>
@@ -19,21 +19,21 @@ export const RiskDisclosurePage: React.FC = () => {
 
         <h2>2.2 Liquidity Risk</h2>
         <ul>
-          <li>Tokenized investment units may be illiquid.</li>
+          <li>Tokenized ownership units may be illiquid.</li>
           <li>The secondary market does not guarantee active trading or buyers.</li>
           <li>Liquidity provider arrangements (if any) are optional, limited, and subject to conditions.</li>
         </ul>
 
         <h2>2.3 No Guaranteed Exit</h2>
         <p>
-          There is no assurance that investors will be able to exit their investments at a desired time or price.
+          There is no assurance that owners will be able to exit their owned properties at a desired time or price.
         </p>
 
         <h2>2.4 Regulatory & Legal Risk</h2>
         <p>Changes in laws, regulations, or enforcement practices may:</p>
         <ul>
           <li>Restrict access to the platform;</li>
-          <li>Affect investor eligibility;</li>
+          <li>Affect owner eligibility;</li>
           <li>Impact the legality or structure of tokenized offerings.</li>
         </ul>
 
@@ -60,7 +60,7 @@ export const RiskDisclosurePage: React.FC = () => {
         </p>
 
         <p className="legal-emphasis">
-          By proceeding, investors acknowledge full understanding and acceptance of these risks.
+          By proceeding, owners acknowledge full understanding and acceptance of these risks.
         </p>
       </section>
     </LegalPageLayout>

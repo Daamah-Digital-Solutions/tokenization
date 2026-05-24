@@ -121,17 +121,23 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onClose, onUpdate
         {/* Tabs */}
         <div className="px-6 border-b border-neutral-200 dark:border-slate-700">
           <div className="flex space-x-4">
-            {['overview', 'activity', 'notes', 'investments', 'transactions'].map((tab) => (
+            {[
+              { id: 'overview', label: 'Overview' },
+              { id: 'activity', label: 'Activity' },
+              { id: 'notes', label: 'Notes' },
+              { id: 'investments', label: 'Properties' },
+              { id: 'transactions', label: 'Transactions' },
+            ].map((tab) => (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab as any)}
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
                 className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab
+                  activeTab === tab.id
                     ? 'border-primary-600 text-primary-600 dark:text-primary-400'
                     : 'border-transparent text-neutral-500 dark:text-slate-400 hover:text-neutral-700 dark:hover:text-slate-300'
                 }`}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {tab.label}
               </button>
             ))}
           </div>
@@ -166,7 +172,7 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onClose, onUpdate
                   </span>
                 </div>
                 <div className="p-4 bg-neutral-50 dark:bg-slate-700 rounded-lg">
-                  <p className="text-sm text-neutral-500 dark:text-slate-400 mb-1">Total Investments</p>
+                  <p className="text-sm text-neutral-500 dark:text-slate-400 mb-1">Total Owned</p>
                   <p className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
                     ${user.totalInvestments?.toLocaleString() || '0'}
                   </p>
@@ -385,7 +391,7 @@ const UserDetailView: React.FC<UserDetailViewProps> = ({ user, onClose, onUpdate
 
           {(activeTab === 'investments' || activeTab === 'transactions') && (
             <div className="text-center py-8 text-neutral-500 dark:text-slate-400">
-              {activeTab === 'investments' ? 'Investment' : 'Transaction'} history will be loaded here
+              {activeTab === 'investments' ? 'Property' : 'Transaction'} history will be loaded here
             </div>
           )}
         </div>
@@ -508,7 +514,7 @@ export const AdminUserManagement: React.FC = () => {
               className="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-neutral-300 dark:border-slate-600 rounded-lg text-neutral-900 dark:text-slate-100"
             >
               <option value="">All Roles</option>
-              <option value="investor">Investor</option>
+              <option value="investor">Owner</option>
               <option value="property_owner">Property Owner</option>
               <option value="broker">Broker</option>
               <option value="admin">Admin</option>
@@ -585,7 +591,7 @@ export const AdminUserManagement: React.FC = () => {
                       KYC Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-slate-400 uppercase tracking-wider">
-                      Investments
+                      Total Owned
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-slate-400 uppercase tracking-wider">
                       Joined

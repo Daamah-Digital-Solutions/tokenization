@@ -178,10 +178,10 @@ export const CollaborativeInvestments: React.FC<CollaborativeInvestmentsProps> =
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <Text variant="h3" weight="semibold" className="mb-2">
-            Collaborative Investments
+            Co-Ownership Pools
           </Text>
           <Text variant="body" color="muted">
-            Join forces with other investors to access premium properties
+            Join forces with other owners to access premium properties
           </Text>
         </div>
 
@@ -202,7 +202,7 @@ export const CollaborativeInvestments: React.FC<CollaborativeInvestmentsProps> =
         <StatsCard
           title="Available Opportunities"
           value={extendedInvestments.filter(inv => inv.status === 'open').length}
-          subtitle="Open for investment"
+          subtitle="Open for purchase"
           icon={Target}
           variant="gradient"
           animated={true}
@@ -218,7 +218,7 @@ export const CollaborativeInvestments: React.FC<CollaborativeInvestmentsProps> =
         <StatsCard
           title="Average Group Size"
           value={Math.floor(extendedInvestments.reduce((acc, inv) => acc + inv.investors.length, 0) / Math.max(extendedInvestments.length, 1))}
-          subtitle="Investors per group"
+          subtitle="Owners per group"
           icon={Activity}
           animated={true}
         />
@@ -288,12 +288,12 @@ export const CollaborativeInvestments: React.FC<CollaborativeInvestmentsProps> =
           >
             <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
             <Text variant="h3" weight="semibold" className="mb-2">
-              No collaborative investments found
+              No co-ownership pools found
             </Text>
             <Text variant="body" color="muted" className="mb-4">
               {searchTerm
                 ? 'Try adjusting your search terms'
-                : 'New group investment opportunities will appear here'}
+                : 'New group ownership opportunities will appear here'}
             </Text>
             <Button variant="primary">
               <Plus className="w-4 h-4 mr-2" />
@@ -392,7 +392,7 @@ const CollaborativeInvestmentCard: React.FC<{
                 </div>
                 <div className="flex items-center text-slate-500">
                   <Users className="w-4 h-4 mr-1" />
-                  {investment.investors.length} investors
+                  {investment.investors.length} owners
                 </div>
               </div>
             </div>
@@ -456,7 +456,7 @@ const CollaborativeInvestmentCard: React.FC<{
                 ${investment.minimumContribution.toLocaleString()}
               </Text>
               <Text variant="caption" color="muted">
-                Min. Investment
+                Min. Purchase
               </Text>
             </div>
             <div className="text-center p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
@@ -464,7 +464,7 @@ const CollaborativeInvestmentCard: React.FC<{
                 ${investment.metrics.averageInvestment.toLocaleString()}
               </Text>
               <Text variant="caption" color="muted">
-                Avg. Investment
+                Avg. Purchase
               </Text>
             </div>
           </div>
@@ -508,7 +508,7 @@ const CollaborativeInvestmentCard: React.FC<{
               <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
                 <div>
                   <Text variant="body" weight="semibold" className="text-emerald-600">
-                    Investment Complete
+                    Purchase Complete
                   </Text>
                   <Text variant="caption" color="muted">
                     Property fully funded
@@ -555,13 +555,13 @@ const CollaborativeInvestmentCard: React.FC<{
                 onClick={(e) => e.stopPropagation()}
               >
                 <Text variant="h3" weight="semibold" className="mb-4">
-                  Join Investment Group
+                  Join Co-Ownership Group
                 </Text>
-                
+
                 <div className="space-y-4">
                   <div>
                     <Text variant="body" weight="medium" className="mb-2">
-                      Investment Amount
+                      Purchase Amount
                     </Text>
                     <input
                       type="number"
