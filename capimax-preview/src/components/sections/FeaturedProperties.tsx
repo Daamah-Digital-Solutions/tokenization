@@ -56,7 +56,6 @@ interface Property {
 
 export const FeaturedProperties: React.FC = () => {
   const { navigate } = useRouter();
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -404,11 +403,8 @@ export const FeaturedProperties: React.FC = () => {
               <motion.div
                 key={property.id}
                 variants={cardVariants}
-                whileHover={{ y: -8, transition: { duration: 0.3 } }}
-                onHoverStart={() => setHoveredId(property.id)}
-                onHoverEnd={() => setHoveredId(null)}
                 className="
-                  group relative snap-start flex-shrink-0
+                  relative snap-start flex-shrink-0
                   w-[85%] sm:w-[60%] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]
                 "
               >
@@ -424,15 +420,17 @@ export const FeaturedProperties: React.FC = () => {
                   </motion.div>
                 )}
 
-                {/* Enhanced Property Card */}
-                <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl overflow-hidden group-hover:border-emerald-400 dark:group-hover:border-emerald-500 transition-all duration-300 shadow-xl dark:shadow-[0_4px_20px_rgba(16,185,129,0.1)] group-hover:shadow-2xl dark:group-hover:shadow-emerald-500/10">
-                  
-                  {/* Enhanced Image Section */}
+                {/* Property Card — static. Hover lift / image zoom / border
+                    & shadow transitions were removed because they were
+                    triggering a perceived lag on touch + low-end devices. */}
+                <div className="bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-xl dark:shadow-[0_4px_20px_rgba(16,185,129,0.1)]">
+
+                  {/* Image Section */}
                   <div className="relative h-56 overflow-hidden">
                     <img
                       src={property.image}
                       alt={property.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-slate-800/20 to-transparent" />
                     
@@ -527,37 +525,30 @@ export const FeaturedProperties: React.FC = () => {
                         `/properties` (listing page), which dumped users
                         on the catalogue and made it look like nothing
                         happened. */}
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                    <button
+                      type="button"
                       onClick={() => navigate('property-detail', { id: property.uuid })}
-                      className="w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 text-white font-semibold py-3.5 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 dark:shadow-emerald-500/20 group"
+                      className="w-full bg-gradient-to-r from-emerald-500 to-green-500 active:from-emerald-600 active:to-green-600 text-white font-semibold py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 dark:shadow-emerald-500/20"
                     >
                       <span>Own Now</span>
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </motion.button>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
 
-                    {/* Hover Effect Details */}
-                    <AnimatePresence>
-                      {hoveredId === property.id && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.3 }}
-                          className="mt-4 pt-4 border-t border-slate-200 dark:border-gray-700"
-                        >
-                          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-gray-400">
-                            <Shield className="w-4 h-4 text-green-500" />
-                            <span>Verified & Insured Property</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-gray-400 mt-2">
-                            <Clock className="w-4 h-4 text-emerald-500" />
-                            <span>Quarterly Dividend Payments</span>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    {/* Static trust line — was an expandable hover footer
+                        ("Verified & Insured" / "Quarterly Dividends") that
+                        animated open every time the card was hovered. Made
+                        the card feel laggy on slower devices. Now always
+                        visible, no animation. */}
+                    <div className="mt-4 pt-4 border-t border-slate-200 dark:border-gray-700 space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-gray-400">
+                        <Shield className="w-4 h-4 text-green-500" />
+                        <span>Verified &amp; Insured Property</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-gray-400">
+                        <Clock className="w-4 h-4 text-emerald-500" />
+                        <span>Quarterly Dividend Payments</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </motion.div>
