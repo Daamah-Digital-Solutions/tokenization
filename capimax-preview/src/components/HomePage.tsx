@@ -31,26 +31,29 @@ export const HomePage: React.FC = () => {
         {/* 1. Hero - Full screen introduction with new tagline */}
         <HeroSectionV2 />
 
-        {/* 2. Legal Disclaimer Banner - CRITICAL (must be directly below hero) */}
+        {/* 2. Featured Properties - Show real product right after hero
+            so visitors see what they can actually buy before they read
+            company background. */}
+        <FeaturedProperties />
+
+        {/* 3. About Capimax RT (rendered by LegalDisclaimer — header is
+            "About Capimax RT" + expandable disclaimer body). */}
         <LegalDisclaimer />
 
-        {/* 3. What is Tokenization - Educational section */}
+        {/* 4. What is Tokenization - Educational section */}
         <TokenizationExplainer />
 
-        {/* 4. SPV Model Explanation - Legal structure benefits */}
+        {/* 5. SPV Model Explanation - Legal structure benefits */}
         <SPVExplainer />
 
-        {/* 4.5. Real Estate Visual - Global Ownership */}
+        {/* 5.5. Real Estate Visual - Global Ownership */}
         <RealEstateVisualSection variant="global" />
 
-        {/* 5. For Property Owners - CTA for asset owners (sellers/developers) */}
+        {/* 6. For Property Owners - CTA for asset owners (sellers/developers) */}
         <PropertyOwnerCTA />
 
-        {/* 6. For Buyers - Benefits and CTA for property co-owners */}
+        {/* 7. For Buyers - Benefits and CTA for property co-owners */}
         <InvestorCTA />
-
-        {/* 7. Featured Properties - Property showcase */}
-        <FeaturedProperties />
 
         {/* 7.5. Real Estate Visual - Institutional Assets */}
         <RealEstateVisualSection variant="institutional" />

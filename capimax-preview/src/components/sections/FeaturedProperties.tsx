@@ -69,12 +69,17 @@ export const FeaturedProperties: React.FC = () => {
       setIsLoading(true);
       setError(null);
 
-      // Get approved properties (featured ones first if available)
+      // Fetch live properties (no status filter — backend already
+      // restricts the public listings endpoint to properties that have
+      // been approved AND tokenized, which is the "buyable" state).
+      // Filtering by `status: 'approved'` here was wrong: properties
+      // move from approved → tokenized once the SPV mints the tokens,
+      // and `approved` is a transient state we never want to show on
+      // the homepage. Result was an empty grid in production.
       const result = await PropertyService.getProperties({
-        status: 'approved',
         limit: 6,
         sort: 'created_at',
-        order: 'desc'
+        order: 'desc',
       });
 
       const backendProperties: BackendProperty[] = result.properties || [];
@@ -288,7 +293,37 @@ export const FeaturedProperties: React.FC = () => {
           ))}
         </motion.div>
 
-        {/* Enhanced Properties Grid */}
+        {/* Empty state — keeps the section from collapsing into nothing
+            when the backend hasn't tokenized any properties yet, or when
+            the category filter excludes everything. */}
+        {filteredProperties.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="mx-auto max-w-2xl text-center py-16 mb-16 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-white/50 dark:bg-slate-900/40"
+          >
+            <Building className="w-12 h-12 mx-auto text-emerald-500/70 mb-4" />
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+              {selectedCategory === 'all'
+                ? 'New properties coming soon'
+                : `No ${selectedCategory.toLowerCase()} properties yet`}
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400 mb-6">
+              {selectedCategory === 'all'
+                ? 'Our team is finalising the next batch of tokenized properties. Check back shortly or browse the full catalogue.'
+                : 'Try a different category, or browse the full catalogue for all live listings.'}
+            </p>
+            <Button
+              variant="primary"
+              onClick={() => (window.location.href = '/properties')}
+            >
+              Browse all properties
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+          </motion.div>
+        ) : (
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -454,6 +489,7 @@ export const FeaturedProperties: React.FC = () => {
             ))}
           </AnimatePresence>
         </motion.div>
+        )}
 
         {/* Enhanced CTA Section */}
         <motion.div
