@@ -98,8 +98,8 @@ export const HeroSectionV2: React.FC = () => {
                   Capimax Tokenization
                 </span>
                 <br />
-                <span className="text-white mt-2 block">
-                  Own Real Estate, Not Just Dreams
+                <span className="text-white mt-2 block" dir="rtl">
+                  بوابتك لامتلاك الأصول العقارية العالمية المرمزة عبر تقنية البلوكتشين
                 </span>
               </motion.h1>
 
@@ -108,10 +108,9 @@ export const HeroSectionV2: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
                 className="text-xl lg:text-2xl leading-relaxed text-gray-200 max-w-3xl mx-auto font-light"
+                dir="rtl"
               >
-                A global technology platform for tokenizing assets and offering fractional
-                ownership of real estate through the SPV model, with document transparency,
-                operational governance, and liquidity options via secondary market.
+                أول منصة عالمية تجمع بين المطوّر والمالك والمستثمرين والوسطاء.
               </motion.p>
             </div>
 
