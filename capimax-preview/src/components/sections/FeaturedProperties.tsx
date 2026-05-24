@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Users, TrendingUp, ArrowRight, Clock, Shield, Star, Building, DollarSign, Award, Sparkles, Loader } from 'lucide-react';
+import { MapPin, Users, TrendingUp, ArrowRight, ArrowLeft, Clock, Shield, Star, Building, DollarSign, Award, Sparkles, Loader } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { PropertyService } from '../../services/property/PropertyService';
 import type { Property as BackendProperty } from '../../services/api/types';
@@ -58,6 +58,21 @@ export const FeaturedProperties: React.FC = () => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Slider — horizontal scroll-snap container. Native swipe on mobile,
+  // arrow buttons on desktop. Keeping it as a flex row (rather than a
+  // 3-col grid) prevents the "one card stacked under another" look the
+  // grid produces when there are only 3-6 listings to show.
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const scrollByCard = (direction: 1 | -1) => {
+    const el = sliderRef.current;
+    if (!el) return;
+    // Scroll by ~85% of the viewport — one card-width on mobile, roughly
+    // one card on desktop too because the cards are sized as a fraction
+    // of the scroller width.
+    const cardWidth = el.clientWidth * 0.85;
+    el.scrollBy({ left: direction * cardWidth, behavior: 'smooth' });
+  };
 
   // Load featured properties from backend
   useEffect(() => {
@@ -324,23 +339,57 @@ export const FeaturedProperties: React.FC = () => {
             </Button>
           </motion.div>
         ) : (
+        <div className="relative mb-16">
+          {/* Prev / Next arrows — hidden on touch viewports where native
+              swipe is the primary gesture. Only shown when there's more
+              than one card to scroll through. */}
+          {filteredProperties.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={() => scrollByCard(-1)}
+                aria-label="Previous properties"
+                className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-20 w-12 h-12 items-center justify-center rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-slate-700 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollByCard(1)}
+                aria-label="Next properties"
+                className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-20 w-12 h-12 items-center justify-center rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-slate-700 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+              >
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </>
+          )}
+
         <motion.div
+          ref={sliderRef}
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16"
+          className="
+            flex overflow-x-auto snap-x snap-mandatory
+            gap-6 pb-6 -mx-6 px-6
+            scroll-smooth
+            [scrollbar-width:none] [-ms-overflow-style:none]
+            [&::-webkit-scrollbar]:hidden
+          "
         >
           <AnimatePresence mode="wait">
             {filteredProperties.map((property, index) => (
               <motion.div
                 key={property.id}
-                layout
                 variants={cardVariants}
                 whileHover={{ y: -8, transition: { duration: 0.3 } }}
                 onHoverStart={() => setHoveredId(property.id)}
                 onHoverEnd={() => setHoveredId(null)}
-                className="group relative"
+                className="
+                  group relative snap-start flex-shrink-0
+                  w-[85%] sm:w-[60%] md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)]
+                "
               >
                 {/* Featured Badge */}
                 {property.featured && (
@@ -489,6 +538,7 @@ export const FeaturedProperties: React.FC = () => {
             ))}
           </AnimatePresence>
         </motion.div>
+        </div>
         )}
 
         {/* Enhanced CTA Section */}

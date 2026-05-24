@@ -98,8 +98,8 @@ export const HeroSectionV2: React.FC = () => {
                   Capimax Tokenization
                 </span>
                 <br />
-                <span className="text-white mt-2 block" dir="rtl">
-                  بوابتك لامتلاك الأصول العقارية العالمية المرمزة عبر تقنية البلوكتشين
+                <span className="text-white mt-2 block">
+                  Your Gateway to Owning Global Tokenized Real Estate
                 </span>
               </motion.h1>
 
@@ -108,9 +108,10 @@ export const HeroSectionV2: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
                 className="text-xl lg:text-2xl leading-relaxed text-gray-200 max-w-3xl mx-auto font-light"
-                dir="rtl"
               >
-                أول منصة عالمية تجمع بين المطوّر والمالك والمستثمرين والوسطاء.
+                The first global platform on blockchain that brings together
+                developers, owners, investors, and brokers — under one
+                SPV-backed framework.
               </motion.p>
             </div>
 
