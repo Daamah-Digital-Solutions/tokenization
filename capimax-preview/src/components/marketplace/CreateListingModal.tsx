@@ -24,7 +24,7 @@ import { cn } from '../../utils/cn';
 import { marketplaceService, type CreateListingRequest } from '../../services/marketplace/MarketplaceService';
 import { PropertyService } from '../../services/property/PropertyService';
 import { InvestmentService } from '../../services/investment/InvestmentService';
-import { useAuth } from '../../contexts/AuthContext';
+import { useUser } from '../../contexts/AuthContext';
 import { PROPERTY_PLACEHOLDER, handleImageFallback } from '../../utils/imageFallback';
 
 interface CreateListingModalProps {
@@ -38,7 +38,14 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
   onClose,
   onSuccess
 }) => {
-  const { user } = useAuth();
+  // AuthContext exposes the full reducer-shaped value (`{ state, login,
+  // logout, ... }`), so `const { user } = useAuth()` was always
+  // resolving to `undefined`. That made `enabled: isOpen && !!user`
+  // evaluate to false, so the user-investments query never ran and
+  // every investor saw "No Properties Found" even when they owned
+  // tokens. Use the `useUser()` helper instead — it pulls
+  // `state.user` for us.
+  const user = useUser();
   const [step, setStep] = useState<'select' | 'details' | 'confirm' | 'processing' | 'success'>('select');
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [listingData, setListingData] = useState<Partial<CreateListingRequest>>({
