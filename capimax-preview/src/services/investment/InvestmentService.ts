@@ -246,6 +246,139 @@ export class InvestmentService {
   }
 
   /**
+   * Get the current user's holdings, shaped for the CreateListingModal.
+   *
+   * The marketplace listing flow needs a flat list of "properties this
+   * user owns tokens in", with each entry exposing the property
+   * metadata (title, city, image_url, current_token_price) inline and
+   * a `tokens_owned` total — NOT the raw Investment shape from
+   * `getInvestments()`. Multiple completed buys in the same property
+   * collapse into one entry with summed tokens.
+   *
+   * This was previously called from CreateListingModal.tsx as
+   * `InvestmentService.getUserInvestments()` but the method didn't
+   * exist — the React Query just resolved to `undefined` and the
+   * modal silently rendered the "No Properties Found" empty state
+   * for everyone, even investors who clearly owned tokens.
+   */
+  static async getUserInvestments(): Promise<
+    Array<{
+      id: string;
+      property_id: string;
+      tokens_owned: number;
+      investment_amount: number;
+      property: {
+        id: string;
+        title: string;
+        city: string;
+        country?: string;
+        image_url?: string;
+        total_tokens?: number;
+        current_token_price?: string;
+        token_price?: number;
+      };
+    }>
+  > {
+    try {
+      // Pull everything in one page — investors with >100 distinct
+      // properties is not a realistic scale yet, and listing the modal
+      // is a one-shot action.
+      const { investments } = await this.getInvestments(1, 100);
+      const completed = (investments || []).filter(
+        inv => inv.status === 'completed',
+      );
+
+      // De-duplicate property IDs for the per-property detail fetch.
+      const propertyIds = Array.from(
+        new Set(completed.map(i => i.property_id)),
+      );
+
+      // Best-effort per-property fetch — a single 404 shouldn't blank
+      // the whole list. Anything that fails just gets a stub property
+      // object so the entry still appears with whatever we know.
+      const propertyEntries = await Promise.all(
+        propertyIds.map(async id => {
+          try {
+            const data = await apiClient.get(`/properties/${id}/`);
+            return [id, data] as const;
+          } catch {
+            return [id, null] as const;
+          }
+        }),
+      );
+      const propertyMap = new Map<string, any>(propertyEntries);
+
+      const extractImageUrl = (images: unknown): string | undefined => {
+        if (!Array.isArray(images) || images.length === 0) return undefined;
+        const first = images[0];
+        if (typeof first === 'string') return first;
+        if (first && typeof first === 'object') {
+          return (
+            (first as any).image_url ||
+            (first as any).image ||
+            (first as any).url ||
+            undefined
+          );
+        }
+        return undefined;
+      };
+
+      // Aggregate by property — sum tokens + investment amount across
+      // multiple buys.
+      const byProperty = new Map<
+        string,
+        {
+          id: string;
+          property_id: string;
+          tokens_owned: number;
+          investment_amount: number;
+          property: any;
+        }
+      >();
+
+      for (const inv of completed) {
+        const tokens = Number(inv.token_amount) || 0;
+        const amount = Number(inv.investment_amount) || 0;
+        const property = propertyMap.get(inv.property_id);
+        const existing = byProperty.get(inv.property_id);
+
+        if (existing) {
+          existing.tokens_owned += tokens;
+          existing.investment_amount += amount;
+        } else {
+          byProperty.set(inv.property_id, {
+            // The modal uses this as a React key + as the "investment ID"
+            // for selection state; the property_id is stable and unique
+            // across one user's holdings, so it works as both.
+            id: inv.property_id,
+            property_id: inv.property_id,
+            tokens_owned: tokens,
+            investment_amount: amount,
+            property: {
+              id: inv.property_id,
+              title: property?.title || 'Owned Property',
+              city: property?.city || '',
+              country: property?.country || '',
+              image_url: extractImageUrl(property?.images),
+              total_tokens: Number(property?.total_tokens) || 0,
+              token_price: Number(property?.token_price) || 0,
+              current_token_price:
+                property?.token_price != null
+                  ? String(property.token_price)
+                  : '100.00',
+            },
+          });
+        }
+      }
+
+      return Array.from(byProperty.values());
+    } catch (error) {
+      console.error('Failed to get user investments:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get specific investment
    */
   static async getInvestment(investmentId: string): Promise<Investment & { property: Property }> {
