@@ -156,16 +156,22 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
       };
 
       setStep('processing');
-      const result = await marketplaceService.createListing(createData);
-
-      if (result.id) {
-        setStep('success');
-        if (onSuccess) {
-          setTimeout(() => {
-            onSuccess();
-            onClose();
-          }, 2000);
-        }
+      // The backend's `MarketListingCreateSerializer` echoes the request
+      // payload back on 201 Created — without serializing the model's
+      // `id` field. So the previous `if (result.id) { setStep('success') }`
+      // check left the modal frozen on "Creating Your Listing…"
+      // indefinitely even though the listing had been written.
+      //
+      // The promise resolving without throwing IS the success signal —
+      // axios already throws on any non-2xx, so by definition the
+      // listing was created. Advance to success unconditionally.
+      await marketplaceService.createListing(createData);
+      setStep('success');
+      if (onSuccess) {
+        setTimeout(() => {
+          onSuccess();
+          onClose();
+        }, 2000);
       }
     } catch (error: any) {
       console.error('Listing creation failed:', error);
