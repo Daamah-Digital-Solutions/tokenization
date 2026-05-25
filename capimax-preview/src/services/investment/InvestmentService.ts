@@ -246,26 +246,38 @@ export class InvestmentService {
   }
 
   /**
-   * Get the current user's holdings, shaped for the CreateListingModal.
+   * Get the current user's holdings — with proper reservation accounting.
    *
-   * The marketplace listing flow needs a flat list of "properties this
-   * user owns tokens in", with each entry exposing the property
-   * metadata (title, city, image_url, current_token_price) inline and
-   * a `tokens_owned` total — NOT the raw Investment shape from
-   * `getInvestments()`. Multiple completed buys in the same property
-   * collapse into one entry with summed tokens.
+   * "How many tokens of property X does this investor actually own,
+   * and how many can they list right now?" is a 3-source question:
    *
-   * This was previously called from CreateListingModal.tsx as
-   * `InvestmentService.getUserInvestments()` but the method didn't
-   * exist — the React Query just resolved to `undefined` and the
-   * modal silently rendered the "No Properties Found" empty state
-   * for everyone, even investors who clearly owned tokens.
+   *   gross_owned = Σ completed primary investments
+   *               + Σ secondary trades I bought
+   *               − Σ secondary trades I sold (completed OR in_escrow)
+   *   reserved    = Σ active sell listings.tokens_remaining
+   *   available   = gross_owned − reserved
+   *
+   * Without this, an investor could create a sell listing for 15
+   * tokens, then immediately create another for the same 15 tokens —
+   * the backend doesn't enforce the reservation at the listing layer
+   * (we verified: `POST /marketplace/listings/` returns 201 without
+   * any holdings check), so they'd be "selling" 30 tokens out of 15.
+   * Frontend has to be the one drawing the line here.
+   *
+   * The returned `tokens_owned` represents AVAILABLE tokens (so the
+   * CreateListingModal's `tokens_offered > tokens_owned` validation
+   * does the right thing). `tokens_reserved` and `tokens_total_owned`
+   * are exposed separately so the UI can surface the breakdown
+   * ("15 owned, 5 listed, 10 available").
    */
   static async getUserInvestments(): Promise<
     Array<{
       id: string;
       property_id: string;
-      tokens_owned: number;
+      tokens_owned: number; // AVAILABLE (gross - reserved). Used by Sell modal validation.
+      tokens_total_owned: number; // Gross, ignoring reservations.
+      tokens_reserved: number; // Locked in active sell listings.
+      tokens_sold: number; // Already moved out via secondary trades.
       investment_amount: number;
       property: {
         id: string;
@@ -280,22 +292,66 @@ export class InvestmentService {
     }>
   > {
     try {
-      // Pull everything in one page — investors with >100 distinct
-      // properties is not a realistic scale yet, and listing the modal
-      // is a one-shot action.
-      const { investments } = await this.getInvestments(1, 100);
-      const completed = (investments || []).filter(
+      // Get the current user ID so we can split transactions into
+      // "I'm the seller" vs "I'm the buyer".
+      const me: any = await apiClient.get('/auth/profile/').catch(() => null);
+      const myUserId: string | undefined = me?.id;
+
+      // Three reads in parallel — investments, my active sell
+      // listings, my trade history.
+      const [
+        investmentsResp,
+        listingsResp,
+        transactionsResp,
+      ] = await Promise.all([
+        this.getInvestments(1, 100).catch(() => ({ investments: [] as any[] })),
+        apiClient
+          .get('/marketplace/listings/', {
+            seller: myUserId,
+            status: 'active',
+            listing_type: 'sell',
+            limit: 200,
+          })
+          .catch(() => ({ results: [] as any[] })),
+        apiClient
+          .get('/marketplace/transactions/', { limit: 200 })
+          .catch(() => ({ results: [] as any[] })),
+      ]);
+
+      const completed = (investmentsResp.investments || []).filter(
         inv => inv.status === 'completed',
       );
 
-      // De-duplicate property IDs for the per-property detail fetch.
+      const activeListings: any[] =
+        (listingsResp as any).results ||
+        (listingsResp as any).data?.results ||
+        [];
+
+      const allTransactions: any[] =
+        (transactionsResp as any).results ||
+        (transactionsResp as any).data?.results ||
+        [];
+
+      // Property-id de-dup across all three sources — every property
+      // that ever touched this user's holdings, even if they're sold
+      // out now.
       const propertyIds = Array.from(
-        new Set(completed.map(i => i.property_id)),
+        new Set([
+          ...completed.map(i => i.property_id),
+          ...activeListings.map(l => {
+            const pl = (l as any).property_listing;
+            return typeof pl === 'string' ? pl : pl?.id;
+          }),
+          ...allTransactions
+            .map(t =>
+              typeof (t as any).property === 'string'
+                ? (t as any).property
+                : (t as any).property?.id || (t as any).property_id,
+            )
+            .filter(Boolean),
+        ].filter(Boolean) as string[]),
       );
 
-      // Best-effort per-property fetch — a single 404 shouldn't blank
-      // the whole list. Anything that fails just gets a stub property
-      // object so the entry still appears with whatever we know.
       const propertyEntries = await Promise.all(
         propertyIds.map(async id => {
           try {
@@ -323,55 +379,133 @@ export class InvestmentService {
         return undefined;
       };
 
-      // Aggregate by property — sum tokens + investment amount across
-      // multiple buys.
-      const byProperty = new Map<
-        string,
-        {
-          id: string;
-          property_id: string;
-          tokens_owned: number;
-          investment_amount: number;
-          property: any;
-        }
-      >();
+      const getPropertyId = (val: any): string | undefined => {
+        if (!val) return undefined;
+        if (typeof val === 'string') return val;
+        if (typeof val === 'object') return val.id;
+        return undefined;
+      };
 
+      // Build per-property accumulator. Initialize zero for every
+      // property in the union — we'll add positive + negative
+      // contributions in three passes.
+      type Accum = {
+        purchased: number; // primary completed investments (tokens)
+        purchased_amount: number;
+        bought_secondary: number; // trades where I'm buyer (completed)
+        sold_secondary: number; // trades where I'm seller (completed + in_escrow)
+        reserved: number; // tokens_remaining on my active sell listings
+      };
+      const acc = new Map<string, Accum>();
+      const ensure = (id: string): Accum => {
+        let a = acc.get(id);
+        if (!a) {
+          a = {
+            purchased: 0,
+            purchased_amount: 0,
+            bought_secondary: 0,
+            sold_secondary: 0,
+            reserved: 0,
+          };
+          acc.set(id, a);
+        }
+        return a;
+      };
+
+      // Pass 1: completed primary investments add to purchased.
       for (const inv of completed) {
-        const tokens = Number(inv.token_amount) || 0;
-        const amount = Number(inv.investment_amount) || 0;
-        const property = propertyMap.get(inv.property_id);
-        const existing = byProperty.get(inv.property_id);
-
-        if (existing) {
-          existing.tokens_owned += tokens;
-          existing.investment_amount += amount;
-        } else {
-          byProperty.set(inv.property_id, {
-            // The modal uses this as a React key + as the "investment ID"
-            // for selection state; the property_id is stable and unique
-            // across one user's holdings, so it works as both.
-            id: inv.property_id,
-            property_id: inv.property_id,
-            tokens_owned: tokens,
-            investment_amount: amount,
-            property: {
-              id: inv.property_id,
-              title: property?.title || 'Owned Property',
-              city: property?.city || '',
-              country: property?.country || '',
-              image_url: extractImageUrl(property?.images),
-              total_tokens: Number(property?.total_tokens) || 0,
-              token_price: Number(property?.token_price) || 0,
-              current_token_price:
-                property?.token_price != null
-                  ? String(property.token_price)
-                  : '100.00',
-            },
-          });
-        }
+        const a = ensure(inv.property_id);
+        a.purchased += Number(inv.token_amount) || 0;
+        a.purchased_amount += Number(inv.investment_amount) || 0;
       }
 
-      return Array.from(byProperty.values());
+      // Pass 2: active sell listings reserve tokens. Use
+      // `tokens_remaining` if the API exposed it (= unsold portion of
+      // the listing), otherwise fall back to `tokens_offered`.
+      for (const l of activeListings) {
+        const propId = getPropertyId((l as any).property_listing);
+        if (!propId) continue;
+        const remaining =
+          (l as any).tokens_remaining != null
+            ? Number((l as any).tokens_remaining)
+            : (l as any).tokens_offered != null
+              ? Number((l as any).tokens_offered) -
+                (Number((l as any).tokens_filled) || 0)
+              : 0;
+        ensure(propId).reserved += Number(remaining) || 0;
+      }
+
+      // Pass 3: trade history — distinguish seller vs buyer by user
+      // id, and treat `in_escrow` as already committed (the tokens
+      // are locked on-chain even if the cash hasn't settled). Only
+      // completed/in_escrow count; pending/cancelled don't.
+      for (const t of allTransactions) {
+        const propId = getPropertyId((t as any).property) || (t as any).property_id;
+        if (!propId) continue;
+        const status = (t as any).status;
+        if (status !== 'completed' && status !== 'in_escrow') continue;
+        const tokens = Number((t as any).tokens_traded) || 0;
+        const sellerId =
+          typeof (t as any).seller === 'string'
+            ? (t as any).seller
+            : (t as any).seller?.id;
+        const buyerId =
+          typeof (t as any).buyer === 'string'
+            ? (t as any).buyer
+            : (t as any).buyer?.id;
+        // Fallback to name-matching when IDs aren't exposed by the
+        // serializer (the transactions list endpoint returns
+        // `seller_name` / `buyer_name` strings rather than nested
+        // user objects).
+        const myName = me?.full_name;
+        const isSeller =
+          (myUserId && sellerId === myUserId) ||
+          (!sellerId && myName && (t as any).seller_name === myName);
+        const isBuyer =
+          (myUserId && buyerId === myUserId) ||
+          (!buyerId && myName && (t as any).buyer_name === myName);
+
+        if (isSeller) ensure(propId).sold_secondary += tokens;
+        if (isBuyer) ensure(propId).bought_secondary += tokens;
+      }
+
+      const result = [];
+      for (const [propertyId, a] of acc.entries()) {
+        const property = propertyMap.get(propertyId);
+        const grossOwned =
+          a.purchased + a.bought_secondary - a.sold_secondary;
+        const available = Math.max(0, grossOwned - a.reserved);
+
+        // Skip properties the user is entirely out of (sold all,
+        // nothing reserved, nothing currently owned) — they'd just
+        // confuse the "what do I own?" surface.
+        if (grossOwned <= 0 && a.reserved <= 0) continue;
+
+        result.push({
+          id: propertyId,
+          property_id: propertyId,
+          tokens_owned: available, // available — what the Sell modal can offer
+          tokens_total_owned: grossOwned,
+          tokens_reserved: a.reserved,
+          tokens_sold: a.sold_secondary,
+          investment_amount: a.purchased_amount,
+          property: {
+            id: propertyId,
+            title: property?.title || 'Owned Property',
+            city: property?.city || '',
+            country: property?.country || '',
+            image_url: extractImageUrl(property?.images),
+            total_tokens: Number(property?.total_tokens) || 0,
+            token_price: Number(property?.token_price) || 0,
+            current_token_price:
+              property?.token_price != null
+                ? String(property.token_price)
+                : '100.00',
+          },
+        });
+      }
+
+      return result;
     } catch (error) {
       console.error('Failed to get user investments:', error);
       throw error;

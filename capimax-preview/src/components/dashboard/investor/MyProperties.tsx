@@ -22,7 +22,7 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Building2,
   MapPin,
@@ -48,8 +48,10 @@ interface PropertyHolding {
   location: string;
   purchaseValue: number;
   currentValue: number;
-  tokens: number;
-  totalTokens: number;
+  tokens: number; // tokens currently owned (gross - sold) — "what I have"
+  tokensReserved: number; // locked in my active sell listings
+  tokensAvailable: number; // tokens - tokensReserved — what I can list right now
+  totalTokens: number; // total tokens of the property
   yield: number;
   change: number;
   image?: string;
@@ -141,6 +143,27 @@ const HoldingCard: React.FC<{
           )}
         </div>
 
+        {/* Reservation breakdown — only show when the user actually has
+            tokens locked in active sell listings. Keeps "available to
+            sell" honest so they don't accidentally try to list more
+            than they have free. */}
+        {holding.tokensReserved > 0 && (
+          <div className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-900/10 rounded-xl border border-amber-200/60 dark:border-amber-800/40">
+            <div className="flex items-center gap-2">
+              <Tag className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <div>
+                <div className="text-xs text-amber-700 dark:text-amber-300 font-medium">
+                  Locked in active listings
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">
+                  {holding.tokensReserved.toLocaleString()} listed ·{' '}
+                  {holding.tokensAvailable.toLocaleString()} available to sell
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
             <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Purchase Value</div>
@@ -184,13 +207,25 @@ const HoldingCard: React.FC<{
             <Eye className="w-4 h-4" />
             View Details
           </button>
+          {/* Sell button disables when every owned token is already
+              reserved on the marketplace — listing more would either
+              be silently accepted by the backend (it doesn't enforce
+              this today) and double-sell the user's stake, or be
+              flatly rejected at the trade level. Better to gate the
+              entry point. */}
           <button
             type="button"
             onClick={() => onSell(holding)}
-            className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors"
+            disabled={holding.tokensAvailable <= 0}
+            className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-slate-700 dark:disabled:text-slate-500 disabled:cursor-not-allowed"
+            title={
+              holding.tokensAvailable <= 0
+                ? 'All of your tokens are already listed for sale'
+                : 'Create a sell listing on the secondary market'
+            }
           >
             <Tag className="w-4 h-4" />
-            Sell on Market
+            {holding.tokensAvailable <= 0 ? 'Fully Listed' : 'Sell on Market'}
           </button>
         </div>
       </div>
@@ -201,37 +236,39 @@ const HoldingCard: React.FC<{
 export const MyProperties: React.FC = () => {
   const { navigate } = useRouter();
   const { state: authState } = useAuth();
+  const queryClient = useQueryClient();
   const [filter, setFilter] = useState<FilterMode>('all');
   const [query, setQuery] = useState('');
   const [listingOpen, setListingOpen] = useState(false);
 
-  // Step 1: investments for this investor.
-  const investmentsQuery = useQuery({
-    queryKey: ['my-properties-investments'],
-    queryFn: () => InvestmentService.getInvestments(1, 100),
+  // Single source of truth: InvestmentService.getUserInvestments now
+  // does the full reservation accounting (purchased - sold via trades
+  // - reserved in active sell listings) and returns per-property
+  // tokens_owned, tokens_reserved, tokens_total_owned. We share that
+  // exact computation with the Sell modal so both views agree on what
+  // "owned" and "available" mean — there's no way for one to disagree
+  // with the other.
+  const userInvestmentsQuery = useQuery({
+    queryKey: ['my-properties-bookkeeping'],
+    queryFn: () => InvestmentService.getUserInvestments(),
     enabled: !!authState.user,
   });
 
-  // Step 2: derive the unique completed-investment property IDs.
-  const completedInvestments = useMemo(() => {
-    const list = investmentsQuery.data?.investments ?? [];
-    return list.filter(inv => inv.status === 'completed');
-  }, [investmentsQuery.data]);
-
-  // Step 3: fetch each property's detail page in parallel. Cached by id
-  // through the queryKey so reopening the tab doesn't re-fetch what's
-  // already in memory.
+  // Property valuations (for current-value display). The
+  // getUserInvestments call already pulled property metadata for
+  // title/city/image, but strips the valuation fields; refetching the
+  // detail endpoint here gives us appreciation + rental_yield. React
+  // Query dedupes parallel requests so this is cheap.
+  const userInvestments = userInvestmentsQuery.data ?? [];
   const propertyIds = useMemo(
-    () => Array.from(new Set(completedInvestments.map(i => i.property_id))),
-    [completedInvestments],
+    () => userInvestments.map(u => u.property_id),
+    [userInvestments],
   );
 
   const propertiesQuery = useQuery({
-    queryKey: ['my-properties-detail-batch', propertyIds.sort().join(',')],
+    queryKey: ['my-properties-valuations', propertyIds.sort().join(',')],
     queryFn: async () => {
-      // Best-effort per-property fetch — if one property 404s, we still
-      // show every other holding rather than blanking the whole tab.
-      const results = await Promise.all(
+      const entries = await Promise.all(
         propertyIds.map(async id => {
           try {
             const data = await apiClient.get(`/properties/${id}/`);
@@ -241,109 +278,71 @@ export const MyProperties: React.FC = () => {
           }
         }),
       );
-      return new Map(results);
+      return new Map(entries);
     },
     enabled: propertyIds.length > 0,
   });
 
-  // Step 4: collapse investments → one holding per property, summing
-  // tokens and purchase amount across multiple buys.
-  //
-  // Every numeric coming back from the API is coerced through
-  // Number() because:
-  //   - `investment_amount` is serialized as a DRF DecimalField, i.e.
-  //     the string `"125.00"`. JS `+= "125.00"` is string-concat, which
-  //     was producing `"125.00250.00"` → NaN after Math.round.
-  //   - `token_amount` *usually* comes back as an int, but we coerce
-  //     anyway for safety.
-  //   - `total_value` / `total_tokens` / `current_valuation` /
-  //     `rental_yield` are sometimes null on freshly-seeded data.
-  //
-  // Image extraction handles both shapes the API returns:
-  //   - List endpoint (`/properties/`) → `images: null`
-  //   - Detail endpoint (`/properties/{id}/`) → `images: [{ image_url:
-  //     "https://...", caption, is_primary, ... }]`
-  // The detail endpoint is what we're using here, so we read
-  // `image_url` (or `image` as a fallback). Earlier version was
-  // assigning the whole image object to `<img src>`, which broke
-  // every image on every card.
+  // Compose final holdings. Token bookkeeping (gross, reserved,
+  // available) comes from the reservation-aware service; valuations
+  // and location strings come from the property-detail responses.
   const holdings: PropertyHolding[] = useMemo(() => {
-    if (!propertiesQuery.data && completedInvestments.length > 0) return [];
-    const byProperty = new Map<string, PropertyHolding>();
-
-    const extractImageUrl = (images: unknown): string | undefined => {
-      if (!images) return undefined;
-      if (!Array.isArray(images) || images.length === 0) return undefined;
-      const first = images[0];
-      if (typeof first === 'string') return first;
-      if (first && typeof first === 'object') {
-        return (
-          (first as any).image_url ||
-          (first as any).image ||
-          (first as any).url ||
-          undefined
-        );
-      }
-      return undefined;
-    };
-
-    for (const inv of completedInvestments) {
-      const property = propertiesQuery.data?.get(inv.property_id) ?? null;
-      const name = property?.title || 'Untitled property';
-      const location = property
-        ? `${property.city || ''}${property.state ? ', ' + property.state : ''}${
-            property.country ? ', ' + property.country : ''
-          }`.replace(/^, /, '')
-        : '—';
-      const image = extractImageUrl((property as any)?.images);
-      const totalTokens = Number(property?.total_tokens) || 0;
-      const originalValue = Number(property?.total_value) || 0;
-
-      const invAmount = Number(inv.investment_amount) || 0;
-      const invTokens = Number(inv.token_amount) || 0;
-
-      // Per-investment current value: scale the property's latest
-      // valuation by this investor's ownership share. Falls back to
-      // the purchase amount when the backend hasn't supplied a fresh
-      // valuation yet — that way we never invent a profit/loss number.
+    return userInvestments.map(h => {
+      const property = propertiesQuery.data?.get(h.property_id) ?? null;
+      const totalTokens = h.property.total_tokens || 0;
+      const originalValue = Number((property as any)?.total_value) || 0;
       const currentValuation = Number(
         (property as any)?.current_valuation ??
           (property as any)?.analytics?.current_valuation ??
           0,
       );
-      const share = originalValue > 0 ? invAmount / originalValue : 0;
-      const currentValuePer =
-        currentValuation > 0 ? currentValuation * share : invAmount;
+      // Per-share current value scaled by my ownership of the
+      // property; falls back to the purchase amount so a fresh
+      // property doesn't fabricate appreciation.
+      const share =
+        originalValue > 0 ? h.investment_amount / originalValue : 0;
+      const currentValue =
+        currentValuation > 0
+          ? currentValuation * share
+          : h.investment_amount;
 
-      const existing = byProperty.get(inv.property_id);
-      if (existing) {
-        existing.tokens += invTokens;
-        existing.purchaseValue += invAmount;
-        existing.currentValue += currentValuePer;
-      } else {
-        byProperty.set(inv.property_id, {
-          id: inv.property_id,
-          name,
-          location,
-          purchaseValue: invAmount,
-          currentValue: currentValuePer,
-          tokens: invTokens,
-          totalTokens,
-          yield: Number((property as any)?.rental_yield) || 0,
-          change: 0, // computed below once we have final sums
-          image,
-        });
-      }
-    }
+      const location = property
+        ? `${(property as any).city || ''}${(property as any).state ? ', ' + (property as any).state : ''}${
+            (property as any).country ? ', ' + (property as any).country : ''
+          }`.replace(/^, /, '')
+        : `${h.property.city || ''}${h.property.country ? ', ' + h.property.country : ''}`.replace(/^, /, '') || '—';
 
-    return Array.from(byProperty.values()).map(h => ({
-      ...h,
-      change:
-        h.purchaseValue > 0
-          ? ((h.currentValue - h.purchaseValue) / h.purchaseValue) * 100
-          : 0,
-    }));
-  }, [completedInvestments, propertiesQuery.data]);
+      const change =
+        h.investment_amount > 0
+          ? ((currentValue - h.investment_amount) / h.investment_amount) * 100
+          : 0;
+
+      // Media URLs from the backend may be relative (`/media/…`) when
+      // the property image was uploaded via Django storage. Prefix
+      // with the API host so the <img src> works from the SPA.
+      const rawImage = h.property.image_url;
+      const image = rawImage
+        ? rawImage.startsWith('http')
+          ? rawImage
+          : `https://capimaxrt.tech${rawImage}`
+        : undefined;
+
+      return {
+        id: h.property_id,
+        name: h.property.title,
+        location,
+        purchaseValue: h.investment_amount,
+        currentValue,
+        tokens: h.tokens_total_owned, // gross — "what I have"
+        tokensReserved: h.tokens_reserved,
+        tokensAvailable: h.tokens_owned, // gross − reserved
+        totalTokens,
+        yield: Number((property as any)?.rental_yield) || 0,
+        change,
+        image,
+      };
+    });
+  }, [userInvestments, propertiesQuery.data]);
 
   const filtered = useMemo(() => {
     let list = holdings;
@@ -376,10 +375,10 @@ export const MyProperties: React.FC = () => {
   };
 
   const loading =
-    investmentsQuery.isLoading ||
+    userInvestmentsQuery.isLoading ||
     (propertyIds.length > 0 && propertiesQuery.isLoading);
   const error =
-    (investmentsQuery.error as Error | undefined)?.message ||
+    (userInvestmentsQuery.error as Error | undefined)?.message ||
     (propertiesQuery.error as Error | undefined)?.message ||
     null;
 
@@ -567,7 +566,18 @@ export const MyProperties: React.FC = () => {
       <CreateListingModal
         isOpen={listingOpen}
         onClose={() => setListingOpen(false)}
-        onSuccess={() => setListingOpen(false)}
+        onSuccess={() => {
+          setListingOpen(false);
+          // Force a refetch of both the bookkeeping (which now has
+          // one more reservation) and the modal's own user-investments
+          // cache, so the next card render shows the updated
+          // "available" count and the "Listed in active listings"
+          // banner appears immediately. Without this the user would
+          // think the listing failed because My Properties still
+          // shows the pre-listing numbers until they refresh.
+          queryClient.invalidateQueries({ queryKey: ['my-properties-bookkeeping'] });
+          queryClient.invalidateQueries({ queryKey: ['user-investments'] });
+        }}
       />
     </div>
   );
