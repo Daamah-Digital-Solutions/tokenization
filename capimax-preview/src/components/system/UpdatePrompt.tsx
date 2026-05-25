@@ -31,6 +31,22 @@ export function UpdatePrompt() {
     onRegisterError(err: any) {
       console.warn('SW registration error:', err);
     },
+    // Aggressive update-polling: hit the SW's registration every 60s
+    // to ask "is there a newer build?". Without this, a tab left open
+    // for hours after a deploy keeps running the old precached chunks
+    // — exactly the symptom users hit when a fix landed but their
+    // browser silently kept serving the broken bundle.
+    onRegisteredSW(swUrl: string, registration: ServiceWorkerRegistration | undefined) {
+      if (!registration) return;
+      // First check immediately (catches the "tab was open across the
+      // deploy" case as soon as the user comes back to it).
+      registration.update().catch(() => {});
+      // Then every 60 seconds while the tab lives. Cheap — the browser
+      // returns 304 if there's nothing new.
+      setInterval(() => {
+        registration.update().catch(() => {});
+      }, 60_000);
+    },
   });
 
   const [secondsLeft, setSecondsLeft] = useState(10);
