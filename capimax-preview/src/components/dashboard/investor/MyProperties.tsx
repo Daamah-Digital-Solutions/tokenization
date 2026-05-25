@@ -65,6 +65,11 @@ const HoldingCard: React.FC<{
   onView: (h: PropertyHolding) => void;
   onSell: (h: PropertyHolding) => void;
 }> = ({ holding, onView, onSell }) => {
+  // Track image-load failures so a 404 or wrong-type src falls back to
+  // the Building2 placeholder instead of leaving the alt text exposed
+  // over the banner gradient.
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = Boolean(holding.image) && !imageFailed;
   const isProfit = holding.change >= 0;
   const Trend = isProfit ? TrendingUp : TrendingDown;
   const trendClass = isProfit
@@ -81,15 +86,16 @@ const HoldingCard: React.FC<{
 
   return (
     <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden flex flex-col">
-      <div className="relative h-44 overflow-hidden bg-slate-100 dark:bg-slate-900">
-        {holding.image ? (
+      <div className="relative h-44 overflow-hidden bg-gradient-to-br from-emerald-700/30 to-slate-900/40 dark:from-emerald-900/30 dark:to-slate-900/60">
+        {showImage ? (
           <img
             src={holding.image}
-            alt={holding.name}
+            alt=""
+            onError={() => setImageFailed(true)}
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-600">
+          <div className="w-full h-full flex items-center justify-center text-white/40 dark:text-white/30">
             <Building2 className="w-16 h-16" />
           </div>
         )}
@@ -242,9 +248,44 @@ export const MyProperties: React.FC = () => {
 
   // Step 4: collapse investments → one holding per property, summing
   // tokens and purchase amount across multiple buys.
+  //
+  // Every numeric coming back from the API is coerced through
+  // Number() because:
+  //   - `investment_amount` is serialized as a DRF DecimalField, i.e.
+  //     the string `"125.00"`. JS `+= "125.00"` is string-concat, which
+  //     was producing `"125.00250.00"` → NaN after Math.round.
+  //   - `token_amount` *usually* comes back as an int, but we coerce
+  //     anyway for safety.
+  //   - `total_value` / `total_tokens` / `current_valuation` /
+  //     `rental_yield` are sometimes null on freshly-seeded data.
+  //
+  // Image extraction handles both shapes the API returns:
+  //   - List endpoint (`/properties/`) → `images: null`
+  //   - Detail endpoint (`/properties/{id}/`) → `images: [{ image_url:
+  //     "https://...", caption, is_primary, ... }]`
+  // The detail endpoint is what we're using here, so we read
+  // `image_url` (or `image` as a fallback). Earlier version was
+  // assigning the whole image object to `<img src>`, which broke
+  // every image on every card.
   const holdings: PropertyHolding[] = useMemo(() => {
     if (!propertiesQuery.data && completedInvestments.length > 0) return [];
     const byProperty = new Map<string, PropertyHolding>();
+
+    const extractImageUrl = (images: unknown): string | undefined => {
+      if (!images) return undefined;
+      if (!Array.isArray(images) || images.length === 0) return undefined;
+      const first = images[0];
+      if (typeof first === 'string') return first;
+      if (first && typeof first === 'object') {
+        return (
+          (first as any).image_url ||
+          (first as any).image ||
+          (first as any).url ||
+          undefined
+        );
+      }
+      return undefined;
+    };
 
     for (const inv of completedInvestments) {
       const property = propertiesQuery.data?.get(inv.property_id) ?? null;
@@ -254,9 +295,12 @@ export const MyProperties: React.FC = () => {
             property.country ? ', ' + property.country : ''
           }`.replace(/^, /, '')
         : '—';
-      const image = property?.images?.[0];
+      const image = extractImageUrl((property as any)?.images);
       const totalTokens = Number(property?.total_tokens) || 0;
       const originalValue = Number(property?.total_value) || 0;
+
+      const invAmount = Number(inv.investment_amount) || 0;
+      const invTokens = Number(inv.token_amount) || 0;
 
       // Per-investment current value: scale the property's latest
       // valuation by this investor's ownership share. Falls back to
@@ -267,24 +311,23 @@ export const MyProperties: React.FC = () => {
           (property as any)?.analytics?.current_valuation ??
           0,
       );
-      const share =
-        originalValue > 0 ? inv.investment_amount / originalValue : 0;
+      const share = originalValue > 0 ? invAmount / originalValue : 0;
       const currentValuePer =
-        currentValuation > 0 ? currentValuation * share : inv.investment_amount;
+        currentValuation > 0 ? currentValuation * share : invAmount;
 
       const existing = byProperty.get(inv.property_id);
       if (existing) {
-        existing.tokens += inv.token_amount;
-        existing.purchaseValue += inv.investment_amount;
+        existing.tokens += invTokens;
+        existing.purchaseValue += invAmount;
         existing.currentValue += currentValuePer;
       } else {
         byProperty.set(inv.property_id, {
           id: inv.property_id,
           name,
           location,
-          purchaseValue: inv.investment_amount,
+          purchaseValue: invAmount,
           currentValue: currentValuePer,
-          tokens: inv.token_amount,
+          tokens: invTokens,
           totalTokens,
           yield: Number((property as any)?.rental_yield) || 0,
           change: 0, // computed below once we have final sums
