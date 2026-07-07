@@ -240,6 +240,9 @@ export const MyProperties: React.FC = () => {
   const [filter, setFilter] = useState<FilterMode>('all');
   const [query, setQuery] = useState('');
   const [listingOpen, setListingOpen] = useState(false);
+  // Which property the investor clicked "Sell" on, so the listing modal opens
+  // pre-scoped to it instead of an empty property picker (client edit #2).
+  const [sellPropertyId, setSellPropertyId] = useState<string | null>(null);
 
   // Single source of truth: InvestmentService.getUserInvestments now
   // does the full reservation accounting (purchased - sold via trades
@@ -296,15 +299,29 @@ export const MyProperties: React.FC = () => {
           (property as any)?.analytics?.current_valuation ??
           0,
       );
-      // Per-share current value scaled by my ownership of the
-      // property; falls back to the purchase amount so a fresh
-      // property doesn't fabricate appreciation.
       const share =
         originalValue > 0 ? h.investment_amount / originalValue : 0;
+      // Current market value of my holding = current token price × tokens I
+      // hold. This is the honest "what it's worth now" and moves whenever the
+      // platform updates the property's token price. Previously the code only
+      // read `current_valuation`, which the property-detail serializer never
+      // returns, so it was always 0 and Current Value silently collapsed to
+      // the purchase amount (Current == Old on every card) — client edit #2.
+      const currentTokenPrice =
+        Number((property as any)?.token_price) ||
+        Number((property as any)?.current_token_price) ||
+        Number((h.property as any)?.token_price) ||
+        0;
+      const marketValue =
+        currentTokenPrice > 0
+          ? currentTokenPrice * (h.tokens_total_owned || 0)
+          : 0;
       const currentValue =
         currentValuation > 0
           ? currentValuation * share
-          : h.investment_amount;
+          : marketValue > 0
+            ? marketValue
+            : h.investment_amount;
 
       const location = property
         ? `${(property as any).city || ''}${(property as any).state ? ', ' + (property as any).state : ''}${
@@ -370,7 +387,10 @@ export const MyProperties: React.FC = () => {
     navigate('property-detail' as any, { id: h.id });
   };
 
-  const handleSell = (_h: PropertyHolding) => {
+  const handleSell = (h: PropertyHolding) => {
+    // Pre-scope the Sell modal to the property the investor actually clicked
+    // so they don't have to re-pick it from a list (client edit #2).
+    setSellPropertyId(h.id);
     setListingOpen(true);
   };
 
@@ -565,9 +585,14 @@ export const MyProperties: React.FC = () => {
 
       <CreateListingModal
         isOpen={listingOpen}
-        onClose={() => setListingOpen(false)}
+        preselectPropertyId={sellPropertyId ?? undefined}
+        onClose={() => {
+          setListingOpen(false);
+          setSellPropertyId(null);
+        }}
         onSuccess={() => {
           setListingOpen(false);
+          setSellPropertyId(null);
           // Force a refetch of both the bookkeeping (which now has
           // one more reservation) and the modal's own user-investments
           // cache, so the next card render shows the updated

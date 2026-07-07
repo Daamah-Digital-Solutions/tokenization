@@ -23,9 +23,6 @@ router.register(r'compliance', ComplianceCheckViewSet, basename='kyc-compliance'
 router.register(r'notes', KYCNoteViewSet, basename='kyc-note')
 
 urlpatterns = [
-    # Main router URLs
-    path('', include(router.urls)),
-    
     # Personal Information Update (DOB collection moved from registration)
     path('personal-info/',
          KYCPersonalInfoView.as_view(),
@@ -103,9 +100,17 @@ urlpatterns = [
          name='kyc-requirements'),
     
     # Audit Trail
-    path('<int:pk>/audit/', 
-         KYCProfileViewSet.as_view({'get': 'audit_log'}), 
+    path('<int:pk>/audit/',
+         KYCProfileViewSet.as_view({'get': 'audit_log'}),
          name='kyc-audit-log'),
+
+    # Main router URLs — MUST be registered LAST. The router generates generic
+    # `<resource>/<pk>/` detail routes (pk = `[^/.]+`) that otherwise shadow the
+    # specific POST action paths above — e.g. `documents/upload/` was being
+    # matched as `documents/<pk=upload>/` (a detail route with no POST) and
+    # returned 405, so KYC uploads never reached `create`. Same for
+    # `biometric/start|complete/` and `compliance/run/`.
+    path('', include(router.urls)),
 ]
 
 # Add app name for namespacing

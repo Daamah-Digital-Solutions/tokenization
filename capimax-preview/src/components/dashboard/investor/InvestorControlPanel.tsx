@@ -41,6 +41,7 @@ import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { TransactionManager } from './TransactionManager';
 import { CollaborativeInvestments } from './CollaborativeInvestments';
 import { MyProperties } from './MyProperties';
+import { InvestorReports } from './InvestorReports';
 import { SecondaryMarketDashboard } from '../../marketplace/SecondaryMarketDashboard';
 import { useUser, useAuth } from '../../../contexts/AuthContext';
 import { useRouter } from '../../../utils/router';
@@ -54,7 +55,7 @@ interface InvestorControlPanelProps {
   currentView?: string;
 }
 
-type TabType = 'overview' | 'my-properties' | 'properties' | 'marketplace' | 'transactions' | 'wallet' | 'notifications' | 'settings';
+type TabType = 'overview' | 'my-properties' | 'properties' | 'marketplace' | 'transactions' | 'reports' | 'wallet' | 'notifications' | 'settings';
 
 interface PriceAlert {
   id: string;
@@ -83,6 +84,8 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
         return 'marketplace';
       case 'transactions':
         return 'transactions';
+      case 'reports':
+        return 'reports';
       case 'wallet':
         return 'wallet';
       case 'notifications':
@@ -235,6 +238,10 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
 
         {activeTab === 'transactions' && (
           <TransactionManager />
+        )}
+
+        {activeTab === 'reports' && (
+          <InvestorReports />
         )}
 
         {activeTab === 'wallet' && (

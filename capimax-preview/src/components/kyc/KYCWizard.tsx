@@ -238,14 +238,17 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
       }));
     } catch (apiError: any) {
       console.error('KYC document upload failed:', apiError);
-      // Surface the failure so the user knows the upload didn't go through.
+      // Surface the failure as a transport 'error' (amber, retry) — NOT a
+      // compliance 'rejected' (red). The old code showed every failed upload
+      // as "Rejected", which made users think their document was refused even
+      // though nothing had been reviewed (client edit #9b).
       setKYCData(prev => ({
         ...prev,
         documents: {
           ...prev.documents,
           [documentType]: {
             ...optimisticFile,
-            status: 'rejected',
+            status: 'error',
             rejectionReason:
               apiError?.message || 'Upload failed. Please try again.',
           },
@@ -362,6 +365,13 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
    * The mutating validator runs inside handleNext when the user clicks.
    */
   const canProceedToNext = (): boolean => {
+    // A document only counts toward completion if it actually uploaded — a
+    // failed transport ('error') or a compliance 'rejected' must NOT unlock
+    // Next (client edit #9b: previously any file object, even a failed one,
+    // let the user advance).
+    const docUsable = (doc?: UploadedFile): boolean =>
+      !!doc && doc.status !== 'error' && doc.status !== 'rejected';
+
     switch (STEPS[currentStep].id) {
       case 'intro':
         return true;
@@ -370,9 +380,9 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
         return !!(info?.dateOfBirth && info?.nationality?.trim() && info?.residencyCountry?.trim());
       }
       case 'identity-docs':
-        return !!(kycData.documents?.passport || kycData.documents?.nationalId);
+        return docUsable(kycData.documents?.passport) || docUsable(kycData.documents?.nationalId);
       case 'address-docs':
-        return !!(kycData.documents?.utilityBill || kycData.documents?.bankStatement);
+        return docUsable(kycData.documents?.utilityBill) || docUsable(kycData.documents?.bankStatement);
       case 'liveness':
         return !!kycData.liveness;
       case 'review':
@@ -802,6 +812,7 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
     >
       <LivenessVerification
         onComplete={handleLivenessComplete}
+        onContinue={handleNext}
         loading={loading}
         error={errors.liveness}
       />

@@ -19,6 +19,13 @@ import { cn } from '../../utils/cn';
 interface LivenessVerificationProps {
   onCapture?: (imageData: string) => void;
   onComplete?: (result: LivenessResult) => void;
+  /**
+   * Called when the user taps "Continue" on the success screen. The wizard
+   * hides its own Back/Next footer on the liveness step, so without this the
+   * user was stranded after a successful capture (the button was a
+   * console.log stub — client edit #9c).
+   */
+  onContinue?: () => void;
   loading?: boolean;
   error?: string;
   className?: string;
@@ -87,6 +94,7 @@ const INSTRUCTIONS = {
 export const LivenessVerification: React.FC<LivenessVerificationProps> = ({
   onCapture,
   onComplete,
+  onContinue,
   loading = false,
   error,
   className
@@ -337,7 +345,9 @@ export const LivenessVerification: React.FC<LivenessVerificationProps> = ({
           autoPlay
           muted
           playsInline
-          className="w-full h-80 object-cover"
+          // Mirror the live preview so it feels like a natural selfie. The
+          // captured still (canvas/img) is left un-mirrored = the true image.
+          className="w-full h-80 object-cover -scale-x-100"
         />
         
         {/* Face Detection Overlay */}
@@ -446,10 +456,29 @@ export const LivenessVerification: React.FC<LivenessVerificationProps> = ({
       animate={{ opacity: 1, y: 0 }}
       className="text-center space-y-6"
     >
-      <div className="w-20 h-20 mx-auto bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-      
+      {/* Show the just-captured selfie (with a spinner overlay) so the user
+          can SEE their photo was taken. Previously they went straight from the
+          live video to a bare spinner and couldn't tell it had worked —
+          client edit #9c. */}
+      {capturedImage ? (
+        <div className="flex justify-center">
+          <div className="relative w-40 h-40 rounded-xl overflow-hidden border-2 border-blue-200 dark:border-blue-800">
+            <img
+              src={capturedImage}
+              alt="Your captured selfie"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+              <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="w-20 h-20 mx-auto bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
+
       <div>
         <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
           Processing Verification
@@ -502,7 +531,7 @@ export const LivenessVerification: React.FC<LivenessVerificationProps> = ({
           Retake
         </Button>
         <Button
-          onClick={() => console.log('Continue to next step')}
+          onClick={() => onContinue?.()}
           variant="primary"
           className="flex-1"
         >

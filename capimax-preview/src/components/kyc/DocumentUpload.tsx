@@ -37,7 +37,11 @@ export interface UploadedFile {
   type: string;
   url?: string;
   uploadDate: Date;
-  status: 'pending' | 'processing' | 'approved' | 'rejected';
+  // 'rejected' = a compliance verdict from a reviewer (red).
+  // 'error'    = the upload itself failed to reach the server (amber, retry) —
+  //              kept distinct so a network/validation failure is never shown
+  //              as a scary compliance "Rejected" (client edit #9b).
+  status: 'pending' | 'processing' | 'approved' | 'rejected' | 'error';
   rejectionReason?: string;
 }
 
@@ -160,6 +164,10 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
         return 'text-emerald-500 bg-emerald-100 dark:bg-emerald-900/20';
       case 'rejected':
         return 'text-red-500 bg-red-100 dark:bg-red-900/20';
+      case 'error':
+        // Transport/network failure — a soft amber "try again", NOT a red
+        // compliance rejection (client edit #9b).
+        return 'text-amber-600 bg-amber-100 dark:bg-amber-900/20';
       default:
         return 'text-slate-500 bg-slate-100 dark:bg-slate-800';
     }
@@ -175,8 +183,27 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
         return <Check className="w-4 h-4" />;
       case 'rejected':
         return <X className="w-4 h-4" />;
+      case 'error':
+        return <AlertCircle className="w-4 h-4" />;
       default:
         return <Upload className="w-4 h-4" />;
+    }
+  };
+
+  const getStatusText = (status: UploadedFile['status']) => {
+    switch (status) {
+      case 'pending':
+        return 'Pending review';
+      case 'processing':
+        return 'Processing';
+      case 'approved':
+        return 'Approved';
+      case 'rejected':
+        return 'Rejected';
+      case 'error':
+        return 'Upload failed — retry';
+      default:
+        return status;
     }
   };
 
@@ -279,15 +306,25 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
                     getStatusColor(uploadedFile.status)
                   )}>
                     {getStatusIcon(uploadedFile.status)}
-                    {uploadedFile.status.charAt(0).toUpperCase() + uploadedFile.status.slice(1)}
+                    {getStatusText(uploadedFile.status)}
                   </div>
                 </div>
 
-                {/* Rejection Reason */}
+                {/* Rejection Reason — a compliance verdict from a reviewer */}
                 {uploadedFile.status === 'rejected' && uploadedFile.rejectionReason && (
                   <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
                     <p className="text-sm text-red-600 dark:text-red-400">
                       <strong>Rejection Reason:</strong> {uploadedFile.rejectionReason}
+                    </p>
+                  </div>
+                )}
+
+                {/* Upload error — the file never reached the server; not a verdict */}
+                {uploadedFile.status === 'error' && (
+                  <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                    <p className="text-sm text-amber-700 dark:text-amber-400">
+                      <strong>Couldn't upload this file.</strong>{' '}
+                      {uploadedFile.rejectionReason || 'Please check your connection and try again.'}
                     </p>
                   </div>
                 )}
@@ -306,7 +343,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
                     </Button>
                   )}
                   
-                  {uploadedFile.status === 'rejected' && (
+                  {(uploadedFile.status === 'rejected' || uploadedFile.status === 'error') && (
                     <Button
                       variant="ghost"
                       size="sm"

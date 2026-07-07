@@ -19,6 +19,7 @@ import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
 import type { InvestmentProperty, InvestmentData } from './types';
 import { cn } from '../../utils/cn';
+import { downloadReceiptPdf } from '../../utils/receiptPdf';
 
 interface InvestmentReceiptProps {
   property: InvestmentProperty;
@@ -64,44 +65,35 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
   const ownershipPercentage = (investmentData.tokens / property.totalTokens) * 100;
 
   const downloadReceipt = () => {
-    // In a real app, this would generate and download a PDF
     onDownload();
-    
-    // Mock download functionality
-    const receiptData = `
-CAPIMAX TOKENIZATION PLATFORM
-Purchase Receipt
-
-Transaction ID: ${transactionId}
-Date: ${currentDate.toLocaleDateString()}
-Time: ${currentDate.toLocaleTimeString()}
-
-PROPERTY DETAILS:
-Property: ${property.title}
-Purchase Amount: $${investmentData.amount.toLocaleString()}
-Tokens Purchased: ${investmentData.tokens}
-Token Price: $${property.tokenPrice}
-Ownership Share: ${ownershipPercentage.toFixed(4)}%
-
-EXPECTED RETURNS:
-Annual Return: $${returns.netAnnualReturn.toLocaleString()}
-Quarterly Dividend: $${returns.quarterlyDividend.toLocaleString()}
-Management Fee: $${returns.managementFeeAmount.toLocaleString()}
-Next Dividend: ${nextDividendDate.toLocaleDateString()}
-
-Payment Method: ${investmentData.paymentMethod}
-Status: Confirmed
-    `;
-    
-    const blob = new Blob([receiptData], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `purchase-receipt-${transactionId}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    // Generate a styled PDF that mirrors this on-screen receipt, instead of the
+    // old plain-text .txt the client flagged as looking bad (edit #12).
+    void downloadReceiptPdf({
+      transactionId,
+      date: currentDate,
+      status: 'Confirmed',
+      property: {
+        title: property.title,
+        location: property.location || undefined,
+        propertyType: property.propertyType || undefined,
+        tokenPrice: property.tokenPrice,
+        totalValue: property.totalValue || undefined,
+      },
+      purchase: {
+        amount: investmentData.amount,
+        tokens: investmentData.tokens,
+        ownershipPercentage,
+        paymentMethod: investmentData.paymentMethod,
+      },
+      returns: {
+        netAnnualReturn: returns.netAnnualReturn,
+        quarterlyDividend: returns.quarterlyDividend,
+        totalROI: returns.totalROI,
+        nextDividendDate,
+      },
+      blockchainHash,
+      supportEmail: 'support@capimax.com',
+    });
   };
 
   return (
@@ -217,7 +209,7 @@ Status: Confirmed
                 <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800">
                   <Text variant="body" color="muted">Owner ID:</Text>
                   <Text variant="body" weight="medium" className="font-mono">
-                    USR-{Math.random().toString(36).substr(2, 8).toUpperCase()}
+                    USR-{transactionId.replace(/[^a-zA-Z0-9]/g, '').slice(-8).toUpperCase() || 'PENDING'}
                   </Text>
                 </div>
                 
@@ -234,13 +226,6 @@ Status: Confirmed
                       Verified
                     </Text>
                   </div>
-                </div>
-                
-                <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-                  <Text variant="body" color="muted">Registration Date:</Text>
-                  <Text variant="body" weight="medium">
-                    {new Date(2024, 0, 15).toLocaleDateString()}
-                  </Text>
                 </div>
               </div>
             </div>
@@ -372,7 +357,7 @@ Status: Confirmed
             
             <Text variant="bodySmall" color="muted" className="mb-2">
               This receipt serves as official confirmation of your real estate token purchase.
-              For questions or support, contact us at invest@capimax.com
+              For questions or support, contact us at support@capimax.com
             </Text>
             
             {/* Blockchain Verification Section */}

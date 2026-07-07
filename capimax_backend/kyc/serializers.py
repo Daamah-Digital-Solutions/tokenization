@@ -166,65 +166,83 @@ class KYCDocumentSerializer(serializers.ModelSerializer):
 
 
 class KYCDocumentUploadSerializer(serializers.ModelSerializer):
-    """Serializer for uploading KYC documents with validation."""
-    
+    """
+    Serializer for uploading KYC documents.
+
+    Accepts EITHER a real multipart file in the ``document`` field (what the
+    web/mobile client sends via apiClient.uploadFile) OR a base64-encoded
+    ``file_data`` string (legacy/admin/test path). The multipart file is
+    preferred when both are present.
+
+    Previously only base64 ``file_data`` was accepted, so every multipart
+    upload from the frontend 400'd with "file_data: This field is required"
+    and the UI rendered that error as a red "Rejected" badge, while no
+    document was ever persisted (client edit #9b).
+    """
+
+    # Preferred transport: real multipart file (matches the frontend + the
+    # way property images and every other upload in the app are sent).
+    document = serializers.FileField(write_only=True, required=False)
+    # Legacy transport: base64-encoded bytes (kept so existing callers/tests
+    # keep working). Now optional instead of required.
     file_data = serializers.CharField(
         write_only=True,
-        help_text="Base64 encoded file data"
+        required=False,
+        help_text="Base64 encoded file data (legacy — prefer the multipart `document` field)"
     )
-    
+
+    ALLOWED_MIME_TYPES = [
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
+        'application/pdf', 'image/webp'
+    ]
+    MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
     class Meta:
         model = KYCDocument
         fields = [
-            'document_type', 'file_name', 'expiry_date', 
-            'document_number', 'country_of_issue', 'file_data'
+            'document_type', 'file_name', 'expiry_date',
+            'document_number', 'country_of_issue', 'file_data', 'document'
         ]
+        extra_kwargs = {
+            # Derived from the uploaded file's name when not supplied explicitly.
+            'file_name': {'required': False},
+        }
     
-    def validate_file_data(self, value):
-        """Validate base64 file data."""
-        try:
-            # Decode base64
-            file_data = base64.b64decode(value)
-            
-            # Check file size (max 10MB)
-            if len(file_data) > 10 * 1024 * 1024:
-                raise serializers.ValidationError("File size too large. Maximum 10MB allowed.")
-            
-            # Check file type using mimetypes (simple detection based on filename)
-            file_name = self.initial_data.get('file_name', '')
-            mime_type, _ = mimetypes.guess_type(file_name)
-            
-            allowed_types = [
-                'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
-                'application/pdf', 'image/webp'
-            ]
-            
-            # If we can't detect from filename, check first few bytes for common file signatures
-            if not mime_type or mime_type not in allowed_types:
-                # Simple file signature detection
-                if file_data.startswith(b'\xFF\xD8\xFF'):
-                    mime_type = 'image/jpeg'
-                elif file_data.startswith(b'\x89PNG\r\n\x1A\n'):
-                    mime_type = 'image/png'
-                elif file_data.startswith(b'%PDF'):
-                    mime_type = 'application/pdf'
-                elif file_data.startswith(b'GIF8'):
-                    mime_type = 'image/gif'
-                else:
-                    raise serializers.ValidationError(
-                        "Invalid file type. Allowed types: JPEG, PNG, GIF, PDF, WebP"
-                    )
-            
-            if mime_type not in allowed_types:
+    def _validate_file_bytes(self, file_bytes, file_name):
+        """
+        Shared size + type validation for both transports.
+
+        Raises ValidationError on failure. Ordering and error strings mirror
+        the original base64-only checks so existing tests keep passing.
+        """
+        # Size first (matches original ordering — the oversized-file test
+        # expects this to fire before type detection).
+        if len(file_bytes) > self.MAX_FILE_SIZE:
+            raise serializers.ValidationError("File size too large. Maximum 10MB allowed.")
+
+        # Detect from the filename first, then fall back to signature sniffing.
+        mime_type, _ = mimetypes.guess_type(file_name or '')
+        if not mime_type or mime_type not in self.ALLOWED_MIME_TYPES:
+            if file_bytes.startswith(b'\xFF\xD8\xFF'):
+                mime_type = 'image/jpeg'
+            elif file_bytes.startswith(b'\x89PNG\r\n\x1A\n'):
+                mime_type = 'image/png'
+            elif file_bytes.startswith(b'%PDF'):
+                mime_type = 'application/pdf'
+            elif file_bytes.startswith(b'GIF8'):
+                mime_type = 'image/gif'
+            elif file_bytes[:4] == b'RIFF' and file_bytes[8:12] == b'WEBP':
+                mime_type = 'image/webp'
+            else:
                 raise serializers.ValidationError(
-                    f"Invalid file type: {mime_type}. "
-                    "Allowed types: JPEG, PNG, GIF, PDF, WebP"
+                    "Invalid file type. Allowed types: JPEG, PNG, GIF, PDF, WebP"
                 )
-            
-            return file_data
-            
-        except Exception as e:
-            raise serializers.ValidationError(f"Invalid file data: {str(e)}")
+
+        if mime_type not in self.ALLOWED_MIME_TYPES:
+            raise serializers.ValidationError(
+                f"Invalid file type: {mime_type}. "
+                "Allowed types: JPEG, PNG, GIF, PDF, WebP"
+            )
     
     def validate_document_type(self, value):
         """Validate document type."""
@@ -254,23 +272,59 @@ class KYCDocumentUploadSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Document has already expired.")
         return value
     
+    def validate(self, attrs):
+        """
+        Resolve the uploaded file from whichever transport was used
+        (multipart ``document`` or base64 ``file_data``), validate it, and
+        stash the raw bytes + resolved filename for create().
+        """
+        uploaded = attrs.pop('document', None)
+        file_data = attrs.pop('file_data', None)
+
+        if uploaded is not None:
+            file_bytes = uploaded.read()
+            file_name = attrs.get('file_name') or getattr(uploaded, 'name', None)
+        elif file_data:
+            try:
+                file_bytes = base64.b64decode(file_data)
+            except Exception as exc:
+                raise serializers.ValidationError(
+                    {'file_data': f"Invalid base64 data: {exc}"}
+                )
+            file_name = attrs.get('file_name')
+        else:
+            raise serializers.ValidationError(
+                "Provide a document file (`document`) or base64 `file_data`."
+            )
+
+        # Always give the model a filename (the frontend sends the File's name;
+        # base64 callers send file_name explicitly — fall back just in case).
+        if not file_name:
+            file_name = str(attrs.get('document_type', 'kyc_document'))
+
+        self._validate_file_bytes(file_bytes, file_name)
+
+        attrs['file_name'] = file_name
+        attrs['_file_bytes'] = file_bytes
+        return attrs
+
     def create(self, validated_data):
         """Create KYC document with file processing."""
         request = self.context.get('request')
         user = request.user
         kyc_profile = user.kyc_profile
-        
-        file_data = validated_data.pop('file_data')
+
+        file_bytes = validated_data.pop('_file_bytes')
         file_name = validated_data.get('file_name')
-        
-        # Create file from base64 data
-        file_content = ContentFile(file_data, name=file_name)
-        
+
+        # Create the stored file from the resolved bytes.
+        file_content = ContentFile(file_bytes, name=file_name)
+
         # Create document instance
         document = KYCDocument.objects.create(
             kyc_profile=kyc_profile,
             file_path=file_content,
-            file_size=len(file_data),
+            file_size=len(file_bytes),
             **validated_data
         )
         

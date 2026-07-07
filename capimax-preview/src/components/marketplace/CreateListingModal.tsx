@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -31,12 +31,19 @@ interface CreateListingModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  /**
+   * When set, the modal skips the property-picker and opens straight on the
+   * details step for this property (client edit #2 — "Sell" on a My Properties
+   * card should already know which property you mean).
+   */
+  preselectPropertyId?: string;
 }
 
 export const CreateListingModal: React.FC<CreateListingModalProps> = ({
   isOpen,
   onClose,
-  onSuccess
+  onSuccess,
+  preselectPropertyId
 }) => {
   // AuthContext exposes the full reducer-shaped value (`{ state, login,
   // logout, ... }`), so `const { user } = useAuth()` was always
@@ -59,6 +66,9 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Guards the auto-preselect so it fires once per open (and not again if the
+  // user manually navigates back to the picker).
+  const preselectDoneRef = useRef(false);
 
   // Fetch user's investments (properties they own tokens in)
   const { data: investments, isLoading: investmentsLoading } = useQuery({
@@ -72,6 +82,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
     if (isOpen) {
       setStep('select');
       setSelectedProperty(null);
+      preselectDoneRef.current = false;
       setListingData({
         listing_type: 'sell',
         tokens_offered: 1,
@@ -127,6 +138,20 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
     }));
     setStep('details');
   };
+
+  // When opened pre-scoped to a property (e.g. "Sell" on a My Properties card),
+  // auto-select it once the investor's holdings load and jump past the picker.
+  useEffect(() => {
+    if (!isOpen || !preselectPropertyId || preselectDoneRef.current) return;
+    if (!investments || investments.length === 0) return;
+    const match = investments.find(
+      (inv: any) => String(inv?.property?.id) === String(preselectPropertyId),
+    );
+    if (match) {
+      preselectDoneRef.current = true;
+      handlePropertySelect(match);
+    }
+  }, [isOpen, preselectPropertyId, investments]);
 
   const handleContinue = () => {
     if (validateListing()) {

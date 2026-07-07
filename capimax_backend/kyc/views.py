@@ -107,15 +107,26 @@ class KYCProfileViewSet(ModelViewSet):
         
         return Response(data)
     
-    @action(detail=True, methods=['post'])
-    def submit(self, request, pk=None):
-        """Submit KYC for review."""
-        kyc_profile = self.get_object()
-        
-        # Check permissions
-        if kyc_profile.user != request.user and not request.user.is_staff:
-            raise PermissionDenied("You can only submit your own KYC.")
-        
+    @action(detail=False, methods=['post'])
+    def submit(self, request):
+        """
+        Submit the CURRENT user's KYC for review.
+
+        Self-service action: resolves the profile from ``request.user`` rather
+        than a URL pk. Previously this was ``detail=True`` and called
+        ``self.get_object()``, but the URL conf wires it at ``/kyc/submit/``
+        with no pk, so every submit 500'd with
+        "Expected view … to be called with a URL keyword argument named pk" —
+        i.e. KYC could never actually be submitted for review.
+        """
+        try:
+            kyc_profile = request.user.kyc_profile
+        except KYCProfile.DoesNotExist:
+            return Response(
+                {'error': 'No KYC profile found. Complete your KYC details first.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         # Check if already submitted or approved
         if kyc_profile.status in [KYCStatus.IN_REVIEW, KYCStatus.APPROVED]:
             return Response(

@@ -25,6 +25,7 @@ import { Button } from '../ui/Button';
 import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
 import { InvestmentReceipt } from './InvestmentReceipt';
+import { downloadReceiptPdf } from '../../utils/receiptPdf';
 import type { InvestmentProperty, InvestmentData } from './types';
 import { WalletService } from '../../services/wallet/WalletService';
 import type { WalletInfo } from '../../services/api/types';
@@ -100,39 +101,31 @@ export const TransactionConfirmation: React.FC<TransactionConfirmationProps> = (
   };
 
   const downloadReceiptDirectly = () => {
-    const receiptData = `
-CAPIMAX TOKENIZATION PLATFORM
-Purchase Receipt
-
-Transaction ID: ${transactionId}
-Date: ${new Date().toLocaleDateString()}
-Time: ${new Date().toLocaleTimeString()}
-
-PROPERTY DETAILS:
-Property: ${property.title}
-Purchase Amount: $${investmentData.amount.toLocaleString()}
-Tokens Purchased: ${investmentData.tokens}
-Token Price: $${property.tokenPrice.toLocaleString()}
-
-EXPECTED RETURNS:
-Annual Return: $${returns.annualReturn.toLocaleString()}
-Quarterly Dividend: $${returns.quarterlyDividend.toLocaleString()}
-ROI: ${returns.totalROI.toFixed(1)}%
-Next Dividend: ${nextDividendDate.toLocaleDateString()}
-
-Payment Method: ${investmentData.paymentMethod}
-Status: Confirmed
-    `.trim();
-
-    const blob = new Blob([receiptData], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `purchase-receipt-${transactionId}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    // Styled PDF instead of the old plain-text .txt (client edit #12).
+    void downloadReceiptPdf({
+      transactionId,
+      date: new Date(),
+      status: 'Confirmed',
+      property: {
+        title: property.title,
+        location: property.location || undefined,
+        propertyType: property.propertyType || undefined,
+        tokenPrice: property.tokenPrice,
+        totalValue: property.totalValue || undefined,
+      },
+      purchase: {
+        amount: investmentData.amount,
+        tokens: investmentData.tokens,
+        paymentMethod: investmentData.paymentMethod,
+      },
+      returns: {
+        netAnnualReturn: returns.annualReturn,
+        quarterlyDividend: returns.quarterlyDividend,
+        totalROI: returns.totalROI,
+        nextDividendDate,
+      },
+      supportEmail: 'support@capimax.com',
+    });
   };
 
   const shareInvestment = (platform: string) => {
