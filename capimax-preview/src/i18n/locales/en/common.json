@@ -18,6 +18,22 @@
     }
   },
 
+  "acceptedPayments": {
+    "title": "Flexible Ways to Pay",
+    "subtitle": "Beyond cards and bank transfers, we accept these partner payment options.",
+    "nova": {
+      "title": "We accept Nova Finance",
+      "desc": "Pay with Nova Sukuk certificates. Apply through Nova Finance to get started.",
+      "cta": "Apply with Nova Finance"
+    },
+    "pronova": {
+      "title": "We accept Pronova",
+      "desc": "Pay with Pronova crypto on BNB Smart Chain — Pronova holders get a 5% discount.",
+      "cta": "Visit Pronova",
+      "discount": "5% OFF"
+    }
+  },
+
   "buttons": {
     "learnMore": "Learn More",
     "getStarted": "Get Started",

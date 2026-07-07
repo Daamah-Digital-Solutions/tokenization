@@ -19,6 +19,7 @@ import {
   LiquidityProviderCTA,
   RealEstateVisualSection,
 } from './home';
+import { AcceptedPaymentsNotice } from './home/AcceptedPaymentsNotice';
 
 export const HomePage: React.FC = () => {
   return (
@@ -35,6 +36,10 @@ export const HomePage: React.FC = () => {
             so visitors see what they can actually buy before they read
             company background. */}
         <FeaturedProperties />
+
+        {/* 2.5. Accepted-payments notice — "we accept Nova Finance / Pronova"
+            (client edit #17). Sits directly under the properties section. */}
+        <AcceptedPaymentsNotice />
 
         {/* 3. About Capimax RT (rendered by LegalDisclaimer — header is
             "About Capimax RT" + expandable disclaimer body). */}

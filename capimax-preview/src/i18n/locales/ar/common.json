@@ -18,6 +18,22 @@
     }
   },
 
+  "acceptedPayments": {
+    "title": "طرق دفع مرنة",
+    "subtitle": "بالإضافة إلى البطاقات والتحويل البنكي، نقبل خيارات الدفع من شركائنا.",
+    "nova": {
+      "title": "نقبل Nova Finance",
+      "desc": "ادفع بصكوك Nova Sukuk. قدّم عبر Nova Finance للبدء.",
+      "cta": "قدّم عبر Nova Finance"
+    },
+    "pronova": {
+      "title": "نقبل Pronova",
+      "desc": "ادفع بعملة Pronova على شبكة BNB Smart Chain — حاملو Pronova يحصلون على خصم 5%.",
+      "cta": "زيارة موقع Pronova",
+      "discount": "خصم 5%"
+    }
+  },
+
   "buttons": {
     "learnMore": "معرفة المزيد",
     "getStarted": "ابدأ الآن",
