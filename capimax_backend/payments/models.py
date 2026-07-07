@@ -429,7 +429,37 @@ class WalletBalance(models.Model):
             amount >= self.minimum_withdrawal and
             self.available_balance >= amount
         )
-    
+
+    @classmethod
+    def credit(cls, user, amount, *, currency='USD',
+               transaction_type='deposit', description='', reference_id=None):
+        """
+        Credit a user's wallet and record an audited WalletTransaction.
+
+        Shared entry point for money landing in a wallet — broker-commission
+        payouts and admin manual owner credits both go through here, so every
+        credit produces a matching ledger row.
+        """
+        amount = Decimal(str(amount))
+        wb, _ = cls.objects.get_or_create(
+            user=user, currency=currency,
+            defaults={'available_balance': Decimal('0.00')},
+        )
+        before = wb.available_balance
+        wb.available_balance = before + amount
+        wb.save(update_fields=['available_balance', 'updated_at'])
+        WalletTransaction.objects.create(
+            user=user,
+            transaction_type=transaction_type,
+            amount=amount,
+            currency=currency,
+            balance_before=before,
+            balance_after=wb.available_balance,
+            reference_id=reference_id,
+            description=description,
+        )
+        return wb
+
     def get_withdrawal_total(self, amount):
         """Calculate total amount including withdrawal fees."""
         return amount + self.withdrawal_fee

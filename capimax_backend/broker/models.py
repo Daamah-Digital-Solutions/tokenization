@@ -554,8 +554,24 @@ class BrokerCommission(models.Model):
             self.save(update_fields=['status', 'approved_at'])
     
     def mark_paid(self, payment_reference=None):
-        """Mark commission as paid."""
-        if self.status == CommissionStatus.APPROVED:
+        """
+        Mark commission as paid AND credit it to the broker's wallet so it
+        becomes withdrawable via the normal bank/crypto withdrawal flow.
+
+        Atomic: if the wallet credit fails, the status is not changed.
+        """
+        if self.status != CommissionStatus.APPROVED:
+            return
+        from django.db import transaction as db_transaction
+        from payments.models import WalletBalance
+        with db_transaction.atomic():
+            WalletBalance.credit(
+                self.broker.user,
+                self.commission_amount,
+                transaction_type='deposit',
+                description=f"Broker commission payout {self.id}",
+                reference_id=self.id,
+            )
             self.status = CommissionStatus.PAID
             self.paid_at = timezone.now()
             if payment_reference:

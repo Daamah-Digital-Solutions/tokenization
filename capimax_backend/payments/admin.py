@@ -169,6 +169,31 @@ class WalletBalanceAdmin(admin.ModelAdmin):
         """Optimize queryset."""
         return super().get_queryset(request).select_related('user')
 
+    def save_model(self, request, obj, form, change):
+        """
+        Record an audited WalletTransaction whenever an admin manually changes
+        the available balance — this is the sanctioned way to credit a
+        developer/owner payout into their wallet (client edit #5).
+        """
+        delta = None
+        if change and obj.pk:
+            try:
+                old = WalletBalance.objects.get(pk=obj.pk)
+                delta = obj.available_balance - old.available_balance
+            except WalletBalance.DoesNotExist:
+                delta = None
+        super().save_model(request, obj, form, change)
+        if delta and delta != 0:
+            WalletTransaction.objects.create(
+                user=obj.user,
+                transaction_type='deposit' if delta > 0 else 'withdrawal',
+                amount=delta,
+                currency=obj.currency,
+                balance_before=obj.available_balance - delta,
+                balance_after=obj.available_balance,
+                description=f"Manual admin adjustment by {getattr(request.user, 'email', 'admin')}",
+            )
+
 
 @admin.register(WalletTransaction)
 class WalletTransactionAdmin(admin.ModelAdmin):
