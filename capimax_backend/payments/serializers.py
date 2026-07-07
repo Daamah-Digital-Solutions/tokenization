@@ -775,18 +775,43 @@ class PronovaDetailSerializer(serializers.ModelSerializer):
 
 
 class BankWithdrawalRequestCreateSerializer(serializers.Serializer):
-    """Serializer the investor uses to lodge a withdrawal request."""
+    """Serializer the investor uses to lodge a withdrawal request (bank or crypto)."""
     amount = serializers.DecimalField(
         max_digits=12, decimal_places=2, min_value=Decimal('10.00')
     )
     currency = serializers.CharField(max_length=3, default='USD', required=False)
-    account_holder_name = serializers.CharField(max_length=255)
-    bank_name = serializers.CharField(max_length=255)
-    account_number = serializers.CharField(max_length=64)
+    withdrawal_method = serializers.ChoiceField(
+        choices=['bank', 'crypto'], default='bank', required=False
+    )
+    # Bank fields — required when withdrawal_method == 'bank'.
+    account_holder_name = serializers.CharField(max_length=255, required=False, allow_blank=True, default='')
+    bank_name = serializers.CharField(max_length=255, required=False, allow_blank=True, default='')
+    account_number = serializers.CharField(max_length=64, required=False, allow_blank=True, default='')
     routing_number = serializers.CharField(max_length=64, required=False, allow_blank=True, default='')
     swift_code = serializers.CharField(max_length=20, required=False, allow_blank=True, default='')
     bank_country = serializers.CharField(max_length=2, required=False, allow_blank=True, default='')
+    # Crypto fields — required when withdrawal_method == 'crypto'.
+    crypto_asset = serializers.CharField(max_length=20, required=False, allow_blank=True, default='')
+    crypto_network = serializers.CharField(max_length=30, required=False, allow_blank=True, default='')
+    crypto_address = serializers.CharField(max_length=255, required=False, allow_blank=True, default='')
+    crypto_memo = serializers.CharField(max_length=120, required=False, allow_blank=True, default='')
     notes = serializers.CharField(required=False, allow_blank=True, default='')
+
+    def validate(self, attrs):
+        method = attrs.get('withdrawal_method') or 'bank'
+        if method == 'bank':
+            required = ('account_holder_name', 'bank_name', 'account_number')
+            label = 'a bank withdrawal'
+        else:
+            required = ('crypto_asset', 'crypto_network', 'crypto_address')
+            label = 'a crypto withdrawal'
+        missing = {
+            f: f"This field is required for {label}."
+            for f in required if not (attrs.get(f) or '').strip()
+        }
+        if missing:
+            raise serializers.ValidationError(missing)
+        return attrs
 
 
 class BankWithdrawalRequestSerializer(serializers.ModelSerializer):
@@ -794,8 +819,10 @@ class BankWithdrawalRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = BankWithdrawalRequest
         fields = [
-            'id', 'amount', 'currency', 'account_holder_name', 'bank_name',
+            'id', 'amount', 'currency', 'withdrawal_method',
+            'account_holder_name', 'bank_name',
             'account_number', 'routing_number', 'swift_code', 'bank_country',
+            'crypto_asset', 'crypto_network', 'crypto_address', 'crypto_memo',
             'status', 'review_note', 'created_at', 'completed_at',
         ]
         read_only_fields = fields
@@ -810,9 +837,10 @@ class BankWithdrawalRequestAdminSerializer(serializers.ModelSerializer):
         model = BankWithdrawalRequest
         fields = [
             'id', 'user', 'user_email', 'user_full_name',
-            'amount', 'currency',
+            'amount', 'currency', 'withdrawal_method',
             'account_holder_name', 'bank_name', 'account_number',
             'routing_number', 'swift_code', 'bank_country',
+            'crypto_asset', 'crypto_network', 'crypto_address', 'crypto_memo',
             'notes', 'status', 'review_note',
             'reviewed_by', 'reviewed_at',
             'created_at', 'updated_at', 'completed_at',

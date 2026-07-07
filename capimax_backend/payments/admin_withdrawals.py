@@ -32,17 +32,19 @@ class BankWithdrawalRequestAdmin(admin.ModelAdmin):
 
     list_display = (
         'id_short', 'status_badge', 'investor_email', 'amount_display',
-        'bank_name', 'account_number_last4', 'created_at', 'reviewed_by',
+        'withdrawal_method', 'destination', 'created_at', 'reviewed_by',
     )
-    list_filter = ('status', 'currency', 'bank_country', 'created_at')
+    list_filter = ('status', 'withdrawal_method', 'currency', 'bank_country', 'created_at')
     search_fields = (
         'id', 'user__email', 'account_holder_name', 'bank_name',
         'account_number', 'routing_number', 'swift_code',
+        'crypto_asset', 'crypto_network', 'crypto_address',
     )
     readonly_fields = (
-        'id', 'user', 'amount', 'currency',
+        'id', 'user', 'amount', 'currency', 'withdrawal_method',
         'account_holder_name', 'bank_name', 'account_number',
         'routing_number', 'swift_code', 'bank_country',
+        'crypto_asset', 'crypto_network', 'crypto_address', 'crypto_memo',
         'notes', 'reviewed_by', 'reviewed_at', 'completed_at',
         'created_at', 'updated_at',
     )
@@ -78,6 +80,13 @@ class BankWithdrawalRequestAdmin(admin.ModelAdmin):
     def amount_display(self, obj):
         return f"{obj.amount} {obj.currency}"
     amount_display.short_description = 'Amount'
+
+    def destination(self, obj):
+        """Where the operator sends the funds — bank name or crypto address."""
+        if obj.withdrawal_method == 'crypto':
+            return f"{obj.crypto_asset} · {obj.crypto_network} · {obj.crypto_address}"
+        return obj.bank_name or '-'
+    destination.short_description = 'Destination'
 
     def account_number_last4(self, obj):
         if not obj.account_number:

@@ -1815,14 +1815,46 @@ class BankWithdrawalRequest(models.Model):
     )
     currency = models.CharField(max_length=3, default='USD')
 
-    # Destination bank details. Captured verbatim from the investor; no
-    # validation beyond presence (banking formats vary by region).
-    account_holder_name = models.CharField(max_length=255)
-    bank_name = models.CharField(max_length=255)
-    account_number = models.CharField(max_length=64, help_text="IBAN / account number.")
+    # How the payout is delivered. Both methods use the SAME admin-reviewed,
+    # manually-executed lifecycle — the crypto address is just data the
+    # operator sends the funds to (no automated payout provider).
+    WITHDRAWAL_METHOD_CHOICES = [
+        ('bank', 'Bank Transfer'),
+        ('crypto', 'Cryptocurrency'),
+    ]
+    withdrawal_method = models.CharField(
+        max_length=10, choices=WITHDRAWAL_METHOD_CHOICES, default='bank', db_index=True,
+        help_text="Destination type: bank wire or crypto payout.",
+    )
+
+    # Destination bank details (method='bank'). Captured verbatim from the
+    # investor; no validation beyond presence (banking formats vary by region).
+    # Blank for crypto withdrawals.
+    account_holder_name = models.CharField(max_length=255, blank=True)
+    bank_name = models.CharField(max_length=255, blank=True)
+    account_number = models.CharField(max_length=64, blank=True, help_text="IBAN / account number.")
     routing_number = models.CharField(max_length=64, blank=True)
     swift_code = models.CharField(max_length=20, blank=True)
     bank_country = models.CharField(max_length=2, blank=True, help_text="ISO-3166 alpha-2.")
+
+    # Destination crypto details (method='crypto'). Blank for bank withdrawals.
+    crypto_asset = models.CharField(
+        max_length=20, blank=True,
+        help_text="Payout asset, e.g. USDT, BTC, ETH.",
+    )
+    crypto_network = models.CharField(
+        max_length=30, blank=True,
+        help_text="Network/chain, e.g. BEP20, TRC20, ERC20, BTC, ETH.",
+    )
+    crypto_address = models.CharField(
+        max_length=255, blank=True,
+        help_text="Destination wallet address.",
+    )
+    crypto_memo = models.CharField(
+        max_length=120, blank=True,
+        help_text="Optional destination tag/memo for chains that require it.",
+    )
+
     notes = models.TextField(blank=True, help_text="Free-form note from the investor.")
 
     status = models.CharField(
@@ -1854,4 +1886,8 @@ class BankWithdrawalRequest(models.Model):
         ]
 
     def __str__(self):
-        return f"BankWithdrawal {self.amount} {self.currency} to {self.bank_name} ({self.status})"
+        dest = (
+            self.bank_name if self.withdrawal_method == 'bank'
+            else f"{self.crypto_asset} ({self.crypto_network})"
+        )
+        return f"Withdrawal {self.amount} {self.currency} to {dest} ({self.status})"

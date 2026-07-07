@@ -863,9 +863,13 @@ interface WithdrawalRequest {
   id: string;
   amount: string;
   currency: string;
+  withdrawal_method?: 'bank' | 'crypto';
   account_holder_name: string;
   bank_name: string;
   account_number: string;
+  crypto_asset?: string;
+  crypto_network?: string;
+  crypto_address?: string;
   status: 'pending' | 'approved' | 'processing' | 'completed' | 'rejected' | 'cancelled';
   review_note: string;
   created_at: string;
@@ -919,9 +923,16 @@ const WithdrawalRequestsSection: React.FC = () => {
         <div className="divide-y divide-slate-200 dark:divide-slate-700">
           {requests.map((r) => {
             const copy = WITHDRAWAL_STATUS_COPY[r.status] ?? WITHDRAWAL_STATUS_COPY.pending;
-            const last4 = r.account_number?.length > 4
+            const isCrypto = r.withdrawal_method === 'crypto';
+            const last4 = r.account_number && r.account_number.length > 4
               ? `…${r.account_number.slice(-4)}`
-              : r.account_number;
+              : r.account_number || '';
+            const addrShort = r.crypto_address && r.crypto_address.length > 12
+              ? `${r.crypto_address.slice(0, 6)}…${r.crypto_address.slice(-4)}`
+              : (r.crypto_address || '');
+            const dest = isCrypto
+              ? `${r.crypto_asset} · ${r.crypto_network} · ${addrShort}`
+              : `${r.bank_name} ${last4}`;
             return (
               <div key={r.id} className="py-3 flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
@@ -929,8 +940,8 @@ const WithdrawalRequestsSection: React.FC = () => {
                     <span className="font-semibold text-slate-900 dark:text-white">
                       ${parseFloat(r.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
-                      → {r.bank_name} {last4}
+                    <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                      → {dest}
                     </span>
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -979,6 +990,7 @@ const WithdrawModal: React.FC<{
   onClose: () => void;
   onSuccess: () => void;
 }> = ({ availableBalance, onClose, onSuccess }) => {
+  const [method, setMethod] = useState<'bank' | 'crypto'>('bank');
   const [amount, setAmount] = useState<string>('');
   const [accountHolderName, setAccountHolderName] = useState('');
   const [bankName, setBankName] = useState('');
@@ -986,6 +998,10 @@ const WithdrawModal: React.FC<{
   const [swiftCode, setSwiftCode] = useState('');
   const [routingNumber, setRoutingNumber] = useState('');
   const [bankCountry, setBankCountry] = useState('');
+  const [cryptoAsset, setCryptoAsset] = useState('USDT');
+  const [cryptoNetwork, setCryptoNetwork] = useState('TRC20');
+  const [cryptoAddress, setCryptoAddress] = useState('');
+  const [cryptoMemo, setCryptoMemo] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -995,7 +1011,9 @@ const WithdrawModal: React.FC<{
   const amountValid =
     !isNaN(amountValue) && amountValue >= 10 && amountValue <= availableBalance;
   const detailsValid =
-    accountHolderName.trim() && bankName.trim() && accountNumber.trim();
+    method === 'bank'
+      ? !!(accountHolderName.trim() && bankName.trim() && accountNumber.trim())
+      : !!(cryptoAsset.trim() && cryptoNetwork.trim() && cryptoAddress.trim());
   const isValid = amountValid && detailsValid;
 
   const handleSubmit = async () => {
@@ -1008,30 +1026,50 @@ const WithdrawModal: React.FC<{
       return;
     }
     if (!detailsValid) {
-      setError('Account holder name, bank name, and account number are required.');
+      setError(
+        method === 'bank'
+          ? 'Account holder name, bank name, and account number are required.'
+          : 'Asset, network, and wallet address are required.',
+      );
       return;
     }
     setSubmitting(true);
     setError(null);
     try {
+      const payload =
+        method === 'bank'
+          ? {
+              amount: amountValue,
+              currency: 'USD',
+              withdrawal_method: 'bank',
+              account_holder_name: accountHolderName.trim(),
+              bank_name: bankName.trim(),
+              account_number: accountNumber.trim(),
+              routing_number: routingNumber.trim(),
+              swift_code: swiftCode.trim(),
+              bank_country: bankCountry.trim().toUpperCase(),
+              notes: notes.trim(),
+            }
+          : {
+              amount: amountValue,
+              currency: 'USD',
+              withdrawal_method: 'crypto',
+              crypto_asset: cryptoAsset.trim(),
+              crypto_network: cryptoNetwork.trim(),
+              crypto_address: cryptoAddress.trim(),
+              crypto_memo: cryptoMemo.trim(),
+              notes: notes.trim(),
+            };
       const result: any = await apiClient.post(
         '/payments/wallet/withdraw-request/',
-        {
-          amount: amountValue,
-          currency: 'USD',
-          account_holder_name: accountHolderName.trim(),
-          bank_name: bankName.trim(),
-          account_number: accountNumber.trim(),
-          routing_number: routingNumber.trim(),
-          swift_code: swiftCode.trim(),
-          bank_country: bankCountry.trim().toUpperCase(),
-          notes: notes.trim(),
-        },
+        payload,
       );
       const refId = result?.id;
+      const dest = method === 'bank' ? bankName : `${cryptoAsset} (${cryptoNetwork})`;
+      const verb = method === 'bank' ? 'wire' : 'send';
       setSuccess(
-        `Withdrawal request submitted. Compliance will review and wire ` +
-          `$${amountValue.toFixed(2)} to ${bankName} within 48 hours. ` +
+        `Withdrawal request submitted. Compliance will review and ${verb} ` +
+          `$${amountValue.toFixed(2)} to ${dest} within 48 hours. ` +
           (refId ? `Reference: ${refId.slice(0, 8)}.` : ''),
       );
       setTimeout(() => onSuccess(), 2500);
@@ -1080,6 +1118,26 @@ const WithdrawModal: React.FC<{
               className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm mb-4"
             />
 
+            {/* Bank | Crypto method toggle */}
+            <div className="flex gap-2 mb-4 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
+              {(['bank', 'crypto'] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => { setMethod(m); setError(null); }}
+                  className={cn(
+                    'flex-1 py-2 rounded-md text-sm font-medium transition-colors',
+                    method === m
+                      ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                      : 'text-slate-500 dark:text-slate-400',
+                  )}
+                >
+                  {m === 'bank' ? 'Bank transfer' : 'Crypto'}
+                </button>
+              ))}
+            </div>
+
+            {method === 'bank' && (
             <div className="grid grid-cols-2 gap-3 mb-3">
               <div>
                 <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Account holder name *</label>
@@ -1142,20 +1200,73 @@ const WithdrawModal: React.FC<{
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm uppercase"
                 />
               </div>
+            </div>
+            )}
+
+            {method === 'crypto' && (
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Asset *</label>
+                <select
+                  value={cryptoAsset}
+                  onChange={(e) => setCryptoAsset(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
+                >
+                  <option value="USDT">USDT</option>
+                  <option value="BTC">BTC</option>
+                  <option value="ETH">ETH</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Network *</label>
+                <select
+                  value={cryptoNetwork}
+                  onChange={(e) => setCryptoNetwork(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
+                >
+                  <option value="TRC20">TRC20 (Tron)</option>
+                  <option value="BEP20">BEP20 (BNB Smart Chain)</option>
+                  <option value="ERC20">ERC20 (Ethereum)</option>
+                  <option value="BTC">BTC (Bitcoin)</option>
+                  <option value="ETH">ETH (Ethereum)</option>
+                </select>
+              </div>
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Note for compliance (optional)</label>
-                <textarea
-                  rows={2}
-                  placeholder="E.g. preferred wire reference, urgency, etc."
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Wallet address *</label>
+                <input
+                  type="text"
+                  placeholder="Destination wallet address"
+                  value={cryptoAddress}
+                  onChange={(e) => setCryptoAddress(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm font-mono"
+                />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Memo / tag (optional)</label>
+                <input
+                  type="text"
+                  placeholder="Only if your exchange/chain requires it"
+                  value={cryptoMemo}
+                  onChange={(e) => setCryptoMemo(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
                 />
               </div>
             </div>
+            )}
+
+            <div className="mb-3">
+              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Note for compliance (optional)</label>
+              <textarea
+                rows={2}
+                placeholder="E.g. urgency, preferred reference, etc."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
+              />
+            </div>
 
             <div className="p-3 mb-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-900 dark:text-amber-200">
-              Compliance reviews each request. Funds are locked from your available balance the moment the request is submitted, then wired to your bank account within 48 hours of approval. You&apos;ll receive an email at each step.
+              Compliance reviews each request. Funds are locked from your available balance the moment the request is submitted, then {method === 'bank' ? 'wired to your bank account' : 'sent to your wallet address'} within 48 hours of approval. You&apos;ll receive an email at each step.
             </div>
 
             {error && (

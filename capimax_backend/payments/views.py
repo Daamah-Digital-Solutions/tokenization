@@ -823,12 +823,17 @@ class WalletManagementView(APIView):
                     user=request.user,
                     amount=amount,
                     currency=currency,
-                    account_holder_name=data['account_holder_name'],
-                    bank_name=data['bank_name'],
-                    account_number=data['account_number'],
+                    withdrawal_method=data.get('withdrawal_method') or 'bank',
+                    account_holder_name=data.get('account_holder_name') or '',
+                    bank_name=data.get('bank_name') or '',
+                    account_number=data.get('account_number') or '',
                     routing_number=data.get('routing_number') or '',
                     swift_code=data.get('swift_code') or '',
                     bank_country=(data.get('bank_country') or '').upper(),
+                    crypto_asset=data.get('crypto_asset') or '',
+                    crypto_network=data.get('crypto_network') or '',
+                    crypto_address=data.get('crypto_address') or '',
+                    crypto_memo=data.get('crypto_memo') or '',
                     notes=data.get('notes') or '',
                 )
 
@@ -841,8 +846,8 @@ class WalletManagementView(APIView):
                     balance_after=wallet_balance.available_balance,
                     reference_id=withdrawal.id,
                     description=(
-                        f"Bank withdrawal request {withdrawal.id} — "
-                        f"pending admin review"
+                        f"{withdrawal.get_withdrawal_method_display()} withdrawal "
+                        f"request {withdrawal.id} — pending admin review"
                     ),
                 )
 
