@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Twitter, Linkedin, Github } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import CapiMaxLightLogo from '../../assets/tokenization_capi max  tokenization light  uk  copy.svg';
@@ -7,6 +8,7 @@ import CapiMaxDarkLogo from '../../assets/tokenization_capi max tokenization uk 
 
 export const Footer: React.FC = () => {
   const { theme } = useTheme();
+  const { t } = useTranslation();
 
   const handleNavigation = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     // Allow anchor links and external links to work normally
@@ -119,6 +121,25 @@ export const Footer: React.FC = () => {
             </motion.div>
           ))}
         </div>
+
+        {/* Legal & regulatory status (client edit #15) */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="py-6 border-t border-navy-200 dark:border-navy-800"
+        >
+          <h3 className="text-xs font-semibold mb-2 text-navy-900 dark:text-white uppercase tracking-wide">
+            {t('footer.regulatoryTitle')}
+          </h3>
+          <p className="text-navy-500 dark:text-navy-400 text-xs leading-relaxed max-w-4xl">
+            {t('footer.regulatoryBody1')}
+          </p>
+          <p className="text-navy-500 dark:text-navy-400 text-xs leading-relaxed max-w-4xl mt-2">
+            {t('footer.regulatoryBody2')}
+          </p>
+        </motion.div>
 
         {/* Bottom Section */}
         <motion.div
