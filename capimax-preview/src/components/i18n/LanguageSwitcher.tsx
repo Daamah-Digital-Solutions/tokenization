@@ -68,9 +68,9 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
       <button
         onClick={() => handleLanguageChange(nextLanguage.code)}
         className={`flex items-center gap-2 px-3 py-2 text-sm font-medium
-                   text-slate-300 hover:text-white bg-slate-800/50
-                   hover:bg-slate-700/50 rounded-lg transition-all
-                   border border-slate-700/50 hover:border-slate-600 ${className}`}
+                   text-navy-700 dark:text-navy-200 hover:bg-navy-100
+                   dark:hover:bg-navy-800 rounded-lg transition-all
+                   border border-navy-200 dark:border-navy-700 ${className}`}
         aria-label={`Switch to ${nextLanguage.name}`}
       >
         <Globe className="w-4 h-4" />
@@ -102,9 +102,9 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-2 text-sm font-medium
-                   text-slate-300 hover:text-white bg-slate-800/50
-                   hover:bg-slate-700/50 rounded-lg transition-all
-                   border border-slate-700/50 hover:border-slate-600"
+                   text-navy-700 dark:text-navy-200 hover:bg-navy-100
+                   dark:hover:bg-navy-800 rounded-lg transition-all
+                   border border-navy-200 dark:border-navy-700"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
       >
@@ -124,8 +124,8 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
             className="absolute top-full mt-2 right-0 w-48
-                       bg-slate-800 border border-slate-700 rounded-xl
-                       shadow-xl overflow-hidden z-50"
+                       bg-white dark:bg-navy-800 border border-navy-200
+                       dark:border-navy-700 rounded-xl shadow-xl overflow-hidden z-50"
             role="listbox"
           >
             {languages.map((language) => (
@@ -135,8 +135,8 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
                 className={`w-full flex items-center gap-3 px-4 py-3 text-left
                            transition-colors ${
                              language.code === i18n.language
-                               ? 'bg-emerald-600/20 text-emerald-400'
-                               : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
+                               ? 'bg-emerald-600/10 text-emerald-600 dark:text-emerald-400'
+                               : 'text-navy-700 dark:text-navy-200 hover:bg-navy-100 dark:hover:bg-navy-700'
                            }`}
                 role="option"
                 aria-selected={language.code === i18n.language}

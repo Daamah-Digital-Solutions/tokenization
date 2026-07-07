@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Star, MapPin, Globe, TrendingUp, Building2 } from 'lucide-react';
 import { Button } from '../ui/Button';
@@ -13,6 +14,7 @@ const HERO_BACKGROUNDS = [
 ];
 
 export const HeroSectionV2: React.FC = () => {
+  const { t } = useTranslation();
   const [bgIndex, setBgIndex] = useState(0);
 
   // Auto-rotate background images
@@ -83,7 +85,7 @@ export const HeroSectionV2: React.FC = () => {
               className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20"
             >
               <Building2 className="w-5 h-5 text-emerald-400" />
-              <span className="text-sm font-medium text-white/90">Tokenized Real Estate Ownership | SPV-Backed | Global Access</span>
+              <span className="text-sm font-medium text-white/90">{t('hero.badge')}</span>
             </motion.div>
 
             {/* Headlines */}
@@ -95,11 +97,11 @@ export const HeroSectionV2: React.FC = () => {
                 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight text-white"
               >
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">
-                  Capimax Tokenization
+                  {t('hero.brand')}
                 </span>
                 <br />
                 <span className="text-white mt-2 block">
-                  Your Gateway to Owning Global Tokenized Real Estate
+                  {t('hero.headline')}
                 </span>
               </motion.h1>
 
@@ -109,9 +111,7 @@ export const HeroSectionV2: React.FC = () => {
                 transition={{ duration: 0.8, delay: 0.4 }}
                 className="text-xl lg:text-2xl leading-relaxed text-gray-200 max-w-3xl mx-auto font-light"
               >
-                The first global platform on blockchain that brings together
-                developers, owners, investors, and brokers — under one
-                SPV-backed framework.
+                {t('hero.body')}
               </motion.p>
             </div>
 
@@ -128,7 +128,7 @@ export const HeroSectionV2: React.FC = () => {
                 className="px-8 py-4 text-base font-semibold rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all"
                 onClick={() => window.location.href = '/register'}
               >
-                Start Owning
+                {t('hero.ctaPrimary')}
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
 
@@ -138,7 +138,7 @@ export const HeroSectionV2: React.FC = () => {
                 className="px-8 py-4 text-base font-semibold rounded-xl text-white border-white/30 hover:bg-white/10"
                 onClick={() => window.location.href = '/properties'}
               >
-                Explore Properties
+                {t('hero.ctaSecondary')}
               </Button>
             </motion.div>
 
@@ -151,10 +151,10 @@ export const HeroSectionV2: React.FC = () => {
             >
               <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
                 {[
-                  { number: "$4.2B+", label: "Global Assets", icon: Globe },
-                  { number: "50K+", label: "Owners", icon: Star },
-                  { number: "1,200+", label: "Properties", icon: MapPin },
-                  { number: "22.4%", label: "Avg. Returns", icon: TrendingUp }
+                  { number: "$4.2B+", label: t('hero.stats.assets'), icon: Globe },
+                  { number: "50K+", label: t('hero.stats.owners'), icon: Star },
+                  { number: "1,200+", label: t('hero.stats.properties'), icon: MapPin },
+                  { number: "22.4%", label: t('hero.stats.returns'), icon: TrendingUp }
                 ].map((stat, index) => (
                   <div key={index} className="space-y-2">
                     <div className="text-2xl md:text-3xl font-bold text-white">

@@ -3,6 +3,21 @@
   "tagline": "Tokenized Real Estate Ownership | SPV-Backed | Global Access",
   "taglineFull": "A global technology platform for tokenizing assets and offering fractional ownership of real estate through the SPV model, with document transparency, operational governance, and liquidity options via secondary market and optional liquidity provider.",
 
+  "hero": {
+    "badge": "Tokenized Real Estate Ownership | SPV-Backed | Global Access",
+    "brand": "Capimax Tokenization",
+    "headline": "Your Gateway to Owning Global Tokenized Real Estate",
+    "body": "The first global platform that brings together developers, owners, investors and brokers — under one SPV-backed framework.",
+    "ctaPrimary": "Start Owning",
+    "ctaSecondary": "Explore Properties",
+    "stats": {
+      "assets": "Global Assets",
+      "owners": "Owners",
+      "properties": "Properties",
+      "returns": "Avg. Returns"
+    }
+  },
+
   "buttons": {
     "learnMore": "Learn More",
     "getStarted": "Get Started",
