@@ -1,5 +1,5 @@
 """
-Email Service for CapiMax Investment Platform
+Email Service for Capimax RT Platform
 
 This service handles all email notifications using HTML templates
 and the configured SMTP settings.
@@ -54,7 +54,7 @@ class EmailService:
         try:
             # Use default from email if not specified
             if not from_email:
-                from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@capimaxinvestment.com')
+                from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@capimaxrt.com')
 
             # Render HTML template
             html_content = render_to_string(f'emails/{template_name}.html', context)
@@ -91,6 +91,45 @@ class EmailService:
             return False
 
     @staticmethod
+    def send_email(
+        to_email: str,
+        subject: str,
+        message: str,
+        from_email: Optional[str] = None,
+        html_message: Optional[str] = None,
+    ) -> bool:
+        """
+        Send a simple (non-templated) email.
+
+        For callers that compose the body inline (e.g. broker application
+        confirmation/approval/rejection notifications) instead of via an HTML
+        template. These callers referenced ``EmailService.send_email()`` which
+        did not exist, so — wrapped in try/except — the emails silently never
+        sent. This adds the missing method.
+        """
+        try:
+            if not from_email:
+                from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@capimaxrt.com')
+
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=message,
+                from_email=from_email,
+                to=[to_email],
+            )
+            email.encoding = 'utf-8'
+            if html_message:
+                email.attach_alternative(html_message, "text/html")
+
+            email.send()
+            logger.info(f"Email sent successfully to {to_email}: {subject}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Failed to send email to {to_email}: {str(e)}")
+            return False
+
+    @staticmethod
     def send_welcome_verification_email(user, verification_url: str, verification_code: Optional[str] = None) -> bool:
         """
         Send welcome and email verification email to new users.
@@ -112,7 +151,7 @@ class EmailService:
 
         return EmailService._send_templated_email(
             to_email=user.email,
-            subject="Welcome to CapiMax - Verify Your Email",
+            subject="Welcome to Capimax RT - Verify Your Email",
             template_name='welcome_verification',
             context=context
         )
@@ -141,7 +180,7 @@ class EmailService:
 
         return EmailService._send_templated_email(
             to_email=user.email,
-            subject="Reset Your CapiMax Password",
+            subject="Reset Your Capimax RT Password",
             template_name='password_reset',
             context=context
         )
@@ -171,7 +210,7 @@ class EmailService:
 
         return EmailService._send_templated_email(
             to_email=user.email,
-            subject="CapiMax Password Changed Successfully",
+            subject="Capimax RT Password Changed Successfully",
             template_name='password_changed',
             context=context
         )
@@ -202,7 +241,7 @@ class EmailService:
 
         return EmailService._send_templated_email(
             to_email=user.email,
-            subject=f"CapiMax Security Alert - {alert_info.get('alert_type', 'Account Activity')}",
+            subject=f"Capimax RT Security Alert - {alert_info.get('alert_type', 'Account Activity')}",
             template_name='security_alert',
             context=context
         )
@@ -228,7 +267,7 @@ class EmailService:
 
         return EmailService._send_templated_email(
             to_email=user.email,
-            subject=f"Investment Confirmation - {investment_details.get('property_name', 'Property Investment')}",
+            subject=f"Ownership Confirmation - {investment_details.get('property_name', 'Property Purchase')}",
             template_name='investment_confirmation',
             context=context
         )
@@ -253,7 +292,7 @@ class EmailService:
         }
 
         transaction_type = transaction_details.get('type', 'Transaction')
-        subject = f"CapiMax {transaction_type} Confirmation - ${transaction_details.get('amount', '0')}"
+        subject = f"Capimax RT {transaction_type} Confirmation - ${transaction_details.get('amount', '0')}"
 
         return EmailService._send_templated_email(
             to_email=user.email,
@@ -396,7 +435,7 @@ class EmailService:
 
         # Set subject based on status
         subject_map = {
-            'approved': 'Identity Verification Approved - Welcome to CapiMax!',
+            'approved': 'Identity Verification Approved - Welcome to Capimax RT!',
             'rejected': 'Identity Verification Requires Additional Information',
             'pending_review': 'Identity Verification Under Review',
             'not_verified': 'Identity Verification Required'

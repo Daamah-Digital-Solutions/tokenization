@@ -110,10 +110,10 @@ EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.hostinger.com')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '465'))
 EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'True') == 'True'
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'False') == 'True'
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'tech@capimaxinvestment.com')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'no-reply@capimaxrt.com')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'CapiMax Investment <tech@capimaxinvestment.com>')
-SERVER_EMAIL = os.environ.get('SERVER_EMAIL', 'tech@capimaxinvestment.com')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Capimax RT <no-reply@capimaxrt.com>')
+SERVER_EMAIL = os.environ.get('SERVER_EMAIL', 'no-reply@capimaxrt.com')
 
 # Development Logging Configuration
 LOGGING = {

@@ -521,7 +521,7 @@
             <div class="message">
                 Hello {{ user.first_name }},<br><br>
                 {% if status_update.status == "approved" %}
-                Excellent news! Your property submission has been approved and will be onboarded to the CapiMax Investment Platform.
+                Excellent news! Your property submission has been approved and will be onboarded to the Capimax RT Platform.
                 {% elif status_update.status == "rejected" %}
                 Thank you for your interest in CapiMax. After careful review, we have decided not to move forward with your property at this time.
                 {% elif status_update.status == "under_review" %}
@@ -545,7 +545,7 @@
                 </div>
                 <div class="status-description">
                     {% if status_update.status == "approved" %}
-                    Your property meets our investment criteria and will proceed to the tokenization phase.
+                    Your property meets our purchase criteria and will proceed to the tokenization phase.
                     {% elif status_update.status == "rejected" %}
                     While your property didn't meet our current criteria, we encourage you to submit other properties in the future.
                     {% elif status_update.status == "under_review" %}
@@ -624,9 +624,9 @@
                     {% if status_update.status == "approved" %}
                     <li>Legal documentation and contracts will be prepared</li>
                     <li>Property tokenization parameters will be finalized</li>
-                    <li>Marketing materials will be created for investors</li>
-                    <li>Your property will be listed on our investment platform</li>
-                    <li>You'll receive updates on investment progress</li>
+                    <li>Marketing materials will be created for owners</li>
+                    <li>Your property will be listed on our purchase platform</li>
+                    <li>You'll receive updates on purchase progress</li>
                     {% elif status_update.status == "rejected" %}
                     <li>Review the feedback provided for future submissions</li>
                     <li>Consider addressing any specific concerns mentioned</li>
@@ -661,7 +661,7 @@
             <div class="contact-info">
                 <div class="contact-text">
                     <strong>Questions?</strong> Our property specialists are here to help.
-                    Contact us at properties@capimaxinvestment.com or through your property dashboard.
+                    Contact us at support@capimaxrt.com or through your property dashboard.
                 </div>
             </div>
         </div>
@@ -669,11 +669,11 @@
         <!-- Footer -->
         <div class="footer">
             <div class="footer-text">
-                <strong>CapiMax Investment</strong><br>
+                <strong>Capimax RT</strong><br>
                 Your Partner in Real Estate Innovation
             </div>
             <div class="footer-contact">
-                Property Team: properties@capimaxinvestment.com | Support: support@capimaxinvestment.com<br>
+                Property Team: support@capimaxrt.com | Support: support@capimaxrt.com<br>
                 This status update was sent to {{ user.email }}.
             </div>
         </div>
