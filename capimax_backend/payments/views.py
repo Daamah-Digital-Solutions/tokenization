@@ -384,11 +384,19 @@ class StripePaymentView(APIView):
             amount_cents = int(serializer.validated_data['amount'] * 100)
             currency = serializer.validated_data['currency'].lower()
             
-            # Create payment intent with Stripe
+            # Create payment intent with Stripe.
+            #
+            # Constrain to card explicitly (client #7 "Visa doesn't work"). The
+            # frontend pays with <CardElement> + stripe.confirmCardPayment(),
+            # which only handles card. `automatic_payment_methods` could surface
+            # redirect / dashboard-configured methods that confirmCardPayment
+            # can't complete, so an intent that offers them would fail for the
+            # card-only UI. `payment_method_types=['card']` matches the frontend
+            # (and the setup-intent flow above) and removes that failure class.
             payment_intent = stripe.PaymentIntent.create(
                 amount=amount_cents,
                 currency=currency,
-                automatic_payment_methods={'enabled': True},
+                payment_method_types=['card'],
                 metadata={
                     'user_id': str(request.user.id),
                     'investment_id': str(serializer.validated_data.get('investment_id', '')),
