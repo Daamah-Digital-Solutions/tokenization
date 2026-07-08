@@ -39,6 +39,7 @@ import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
 import type { Property, PropertyDocuments } from '../../services/api/types';
 import { PROPERTY_PLACEHOLDER, handleImageFallback } from '../../utils/imageFallback';
+import { InstallmentStatement } from './InstallmentStatement';
 
 interface PropertyDetailEnhancedProps {
   property: Property;
@@ -423,6 +424,11 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                     </div>
                   </div>
                 </Card>
+
+                {/* Installment Plan — under-construction properties that support instalments (#3a) */}
+                {isUnderConstruction && property.supports_installments && (
+                  <InstallmentStatement property={property} />
+                )}
 
                 {/* Distribution Schedule */}
                 <Card className="p-8">
