@@ -753,29 +753,19 @@ class ConstructionInstallmentCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         """Create installment payment plan with calculated fields."""
         from django.utils import timezone
-        from dateutil.relativedelta import relativedelta
-        
+
         # Set investor to current user
         validated_data['investor'] = self.context['request'].user
-        
-        # Calculate next payment date (1 month from now by default)
-        frequency = validated_data.get('frequency', 'monthly')
-        if frequency == 'monthly':
-            next_payment = timezone.now().date() + relativedelta(months=1)
-        elif frequency == 'quarterly':
-            next_payment = timezone.now().date() + relativedelta(months=3)
-        elif frequency == 'semi_annual':
-            next_payment = timezone.now().date() + relativedelta(months=6)
-        elif frequency == 'annual':
-            next_payment = timezone.now().date() + relativedelta(months=12)
-        else:
-            next_payment = timezone.now().date() + relativedelta(months=1)
-        
-        validated_data['next_payment_date'] = next_payment
-        
+
+        # The first installment is due immediately: at checkout the investor
+        # commits to the plan and pays installment #1 from their dashboard right
+        # away (funded by the wallet). After each payment the model advances the
+        # next due date by the plan's frequency.
+        validated_data['next_payment_date'] = timezone.now().date()
+
         # Set initial status
         validated_data['status'] = 'pending'
-        
+
         return super().create(validated_data)
 
 

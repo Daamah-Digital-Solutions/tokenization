@@ -197,6 +197,25 @@ Transaction ID: ${transactionId}`;
         </motion.div>
       </div>
 
+      {/* Installment plan notice — pay the schedule from the dashboard (#3b) */}
+      {investmentData.is_installment_purchase && (
+        <Card className="p-4 bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800">
+          <div className="flex items-start gap-3">
+            <Calendar className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <Text variant="body" weight="semibold" className="text-blue-800 dark:text-blue-200">
+                Installment plan created{investmentData.total_installments ? ` — ${investmentData.total_installments} monthly payments` : ''}
+              </Text>
+              <Text variant="bodySmall" className="text-blue-700 dark:text-blue-300">
+                Your tokens are reserved and released to you as you pay. Your first installment is
+                due now — pay it from the <strong>Installments</strong> section of your dashboard,
+                funded by your wallet.
+              </Text>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Investment Summary */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-6">

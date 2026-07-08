@@ -24,6 +24,7 @@ import { CryptoPaymentForm } from '../payments/CryptoPaymentForm';
 import { BankTransferForm } from '../payments/BankTransferForm';
 import { NovaSukukForm } from '../payments/NovaSukukForm';
 import { InvestmentService } from '../../services/investment/InvestmentService';
+import { InstallmentService } from '../../services/installments/InstallmentService';
 import type { InvestmentProperty, InvestmentData } from './types';
 import { cn } from '../../utils/cn';
 
@@ -268,6 +269,33 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
       const processIdx = startIdx + 1;
       setCurrentStep(processIdx);
       updateStepStatus(processIdx, 'processing');
+
+      // ─── Installment purchase: create a real ConstructionInstallment plan ───
+      // The investor commits to paying in instalments; creating the plan reserves
+      // their token allocation and sets the schedule. No charge happens at
+      // checkout — each instalment (including the first, due now) is paid from
+      // the wallet in the dashboard's Installments panel.
+      if (investmentData.is_installment_purchase && investmentData.total_installments) {
+        const plan = await InstallmentService.createPlan({
+          property_investment: propertyId,
+          token_allocation: investmentData.tokens,
+          total_installments: investmentData.total_installments,
+          frequency: 'monthly',
+          graduated_release: true,
+        });
+
+        updateStepStatus(processIdx, 'completed');
+        const installmentConfirmIdx = processIdx + 1;
+        setCurrentStep(installmentConfirmIdx);
+        updateStepStatus(installmentConfirmIdx, 'processing');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        updateStepStatus(installmentConfirmIdx, 'completed');
+
+        const planId = plan?.id || `PLAN-${Date.now()}`;
+        setTransactionHash(planId);
+        onComplete(true, planId);
+        return;
+      }
 
       // For methods that need the user to upload a file inside the
       // payment form itself (bank transfer, nova sukuk), we skip the

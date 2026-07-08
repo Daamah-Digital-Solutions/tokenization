@@ -44,7 +44,10 @@ export const PaymentScheduleStep: React.FC<PaymentScheduleStepProps> = ({
   };
 
   const handleInstallment = (n: number) => {
-    onUpdate({ is_installment_purchase: true, total_installments: n });
+    // Installments are funded from the wallet, so default the payment method to
+    // the wallet when this option is chosen (each instalment is paid from the
+    // dashboard's Installments panel).
+    onUpdate({ is_installment_purchase: true, total_installments: n, paymentMethod: 'wallet' });
   };
 
   return (
@@ -148,6 +151,15 @@ export const PaymentScheduleStep: React.FC<PaymentScheduleStepProps> = ({
                     </div>
                   </div>
                 </div>
+
+                {perInstallment < 100 && (
+                  <div className="flex items-start gap-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3">
+                    <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>
+                      Each installment must be at least $100. Choose fewer months or buy more tokens.
+                    </span>
+                  </div>
+                )}
 
                 {property.expected_completion_date && (
                   <div className="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">

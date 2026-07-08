@@ -121,22 +121,24 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
     const newErrors: Record<string, string> = {};
     const availableTokens = property.totalTokens - property.soldTokens;
 
-    switch (stepIndex) {
-      case 0: // Token validation
-        if (investmentData.tokens < 1) {
-          newErrors.tokens = 'You must purchase at least 1 token';
-        }
-        if (investmentData.tokens > availableTokens) {
-          newErrors.tokens = `Only ${availableTokens.toLocaleString()} tokens available`;
-        }
-        break;
+    // Validate by step ID, not raw index — the optional "schedule" step shifts
+    // the indices for installment-eligible properties, so an index-based switch
+    // would run the payment-method check on the schedule step.
+    const id = steps[stepIndex]?.id;
 
-      case 1: // Payment method validation
-        if (!investmentData.paymentMethod) {
-          newErrors.paymentMethod = 'Please select a payment method';
-        }
-        break;
+    if (id === 'amount') {
+      if (investmentData.tokens < 1) {
+        newErrors.tokens = 'You must purchase at least 1 token';
+      }
+      if (investmentData.tokens > availableTokens) {
+        newErrors.tokens = `Only ${availableTokens.toLocaleString()} tokens available`;
+      }
+    } else if (id === 'payment') {
+      if (!investmentData.paymentMethod) {
+        newErrors.paymentMethod = 'Please select a payment method';
+      }
     }
+    // 'schedule' has no blocking validation — "Pay upfront" is the default.
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
