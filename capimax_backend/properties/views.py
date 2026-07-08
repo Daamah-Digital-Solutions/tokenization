@@ -1475,49 +1475,42 @@ class ConstructionInstallmentViewSet(ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        amount = request.data.get('amount')
-        payment_method = request.data.get('payment_method')
-        transaction_id = request.data.get('transaction_id')
-        
-        if not amount or not payment_method:
-            return Response(
-                {'detail': 'Amount and payment method are required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
+        # Charge the next installment to the investor's WALLET. The amount is
+        # fixed by the plan (installment_amount); any client-supplied amount is
+        # deliberately ignored so a payment can never be under- or over-charged.
+        from properties.services import InstallmentProcessingService
+
+        service = InstallmentProcessingService()
         try:
-            amount = Decimal(str(amount))
-        except (ValueError, TypeError):
+            result = service.pay_installment_from_wallet(installment)
+        except Exception as exc:  # defensive: never leak a 500 on a money path
+            logger.error(f"Installment payment failed for {installment.id}: {exc}")
             return Response(
-                {'detail': 'Invalid amount format'},
-                status=status.HTTP_400_BAD_REQUEST
+                {'success': False, 'message': 'Payment could not be completed. Please try again.'},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        
-        # Process the payment
-        success, message, tokens_released = installment.process_payment(amount)
-        
-        if success:
-            # Log the payment processing
-            logger.info(
-                f"Payment processed for installment {installment.id}: "
-                f"${amount} by user {request.user.id}, "
-                f"tokens released: {tokens_released}"
+
+        if not result['success']:
+            return Response(
+                {'success': False, 'message': result['error']},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-            
-            return Response({
-                'success': True,
-                'message': message,
-                'tokens_released': float(tokens_released),
-                'payment_number': installment.payments_made,
-                'remaining_payments': installment.remaining_payments,
-                'completion_percentage': float(installment.completion_percentage),
-                'transaction_id': transaction_id
-            })
-        else:
-            return Response({
-                'success': False,
-                'message': message
-            }, status=status.HTTP_400_BAD_REQUEST)
+
+        installment.refresh_from_db()
+        logger.info(
+            f"Installment {installment.id}: wallet payment of "
+            f"${result['amount_paid']} by user {request.user.id}, "
+            f"tokens released: {result['tokens_released']}"
+        )
+        return Response({
+            'success': True,
+            'message': 'Installment paid successfully',
+            'amount_paid': float(result['amount_paid']),
+            'tokens_released': float(result['tokens_released']),
+            'payment_number': installment.payments_made,
+            'remaining_payments': installment.remaining_payments,
+            'completion_percentage': float(installment.completion_percentage),
+        })
     
     @swagger_auto_schema(
         operation_description="Calculate payment schedule for an installment plan"

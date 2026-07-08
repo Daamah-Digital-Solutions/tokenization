@@ -19,7 +19,7 @@ from accounts.models import User
 from properties.models import Property, ConstructionInstallment, PropertyStatus
 from properties.services import InstallmentProcessingService
 from properties.tasks import process_due_installments, send_payment_reminders
-from payments.models import WalletBalance, Payment, UserPaymentMethod
+from payments.models import WalletBalance, WalletTransaction, Payment, UserPaymentMethod
 from notifications.models import Notification
 
 
@@ -350,23 +350,51 @@ class InstallmentAPITests(APITestCase):
         self.assertEqual(installment.property_investment, property2)
     
     def test_process_payment_api(self):
-        """Test processing an installment payment via API."""
-        url = reverse('properties:installment-payment-process-payment', 
-                     kwargs={'pk': self.installment.id})
-        
-        data = {
-            'amount': '500.00',
-            'payment_method': 'wallet'
-        }
-        
-        with patch.object(ConstructionInstallment, 'process_payment') as mock_process:
-            mock_process.return_value = (True, 'Payment processed successfully', Decimal('5'))
-            
-            response = self.client.post(url, data, format='json')
-            
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertTrue(response.data['success'])
-            self.assertEqual(float(response.data['tokens_released']), 5.0)
+        """Paying an installment via the API debits the investor's wallet."""
+        WalletBalance.objects.create(
+            user=self.user, currency='USD', available_balance=Decimal('10000.00')
+        )
+        url = reverse('properties:installment-payment-process-payment',
+                      kwargs={'pk': self.installment.id})
+
+        # Amount is fixed by the plan; the endpoint ignores any posted amount.
+        response = self.client.post(url, {}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['success'])
+        self.assertEqual(response.data['payment_number'], 1)
+
+        # Wallet was charged exactly one installment ($500) with a ledger row.
+        wallet = WalletBalance.objects.get(user=self.user, currency='USD')
+        self.assertEqual(wallet.available_balance, Decimal('9500.00'))
+        self.assertTrue(
+            WalletTransaction.objects.filter(
+                user=self.user, transaction_type='investment'
+            ).exists()
+        )
+
+        # Plan advanced by one payment.
+        self.installment.refresh_from_db()
+        self.assertEqual(self.installment.payments_made, 1)
+
+    def test_process_payment_insufficient_wallet(self):
+        """A short wallet is rejected with 400 and nothing is charged."""
+        WalletBalance.objects.create(
+            user=self.user, currency='USD', available_balance=Decimal('100.00')
+        )
+        url = reverse('properties:installment-payment-process-payment',
+                      kwargs={'pk': self.installment.id})
+
+        response = self.client.post(url, {}, format='json')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(response.data['success'])
+
+        # No money moved, plan not advanced.
+        wallet = WalletBalance.objects.get(user=self.user, currency='USD')
+        self.assertEqual(wallet.available_balance, Decimal('100.00'))
+        self.installment.refresh_from_db()
+        self.assertEqual(self.installment.payments_made, 0)
     
     def test_payment_schedule_api(self):
         """Test getting payment schedule via API."""

@@ -460,6 +460,42 @@ class WalletBalance(models.Model):
         )
         return wb
 
+    @classmethod
+    def debit(cls, user, amount, *, currency='USD',
+              transaction_type='investment', description='', reference_id=None):
+        """
+        Debit a user's wallet and record an audited WalletTransaction.
+
+        Mirror of :meth:`credit` for money leaving a wallet (e.g. installment
+        payments). Raises ``ValueError`` when the available balance is
+        insufficient so callers can surface a clean "insufficient funds"
+        message instead of driving the balance negative (which the
+        ``available_balance >= 0`` check constraint would reject anyway). The
+        ledger row stores a negative ``amount`` per WalletTransaction's
+        positive-credit / negative-debit convention.
+        """
+        amount = Decimal(str(amount))
+        wb, _ = cls.objects.get_or_create(
+            user=user, currency=currency,
+            defaults={'available_balance': Decimal('0.00')},
+        )
+        before = wb.available_balance
+        if before < amount:
+            raise ValueError('Insufficient wallet balance')
+        wb.available_balance = before - amount
+        wb.save(update_fields=['available_balance', 'updated_at'])
+        WalletTransaction.objects.create(
+            user=user,
+            transaction_type=transaction_type,
+            amount=-amount,
+            currency=currency,
+            balance_before=before,
+            balance_after=wb.available_balance,
+            reference_id=reference_id,
+            description=description,
+        )
+        return wb
+
     def get_withdrawal_total(self, amount):
         """Calculate total amount including withdrawal fees."""
         return amount + self.withdrawal_fee
