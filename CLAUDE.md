@@ -73,7 +73,11 @@ Located in `capimax_backend/`, organized into modular Django apps:
 - **marketplace**: Secondary market for property tokens
 - **liquidity_provider**: Liquidity pool management
 - **admin_panel**: Admin interface
+- **documents**: Document generation & storage (routed at `/api/v1/documents/`)
+- **legal**: SPV legal entities, subscription agreements, cap table — model/service layer only, **no REST routes** (used internally via `legal/services.py`)
 - **core**: Shared utilities, standardized responses, pagination, permissions
+
+**Wallet & withdrawals live in `payments`, not a dedicated `wallet` app.** Models are in `payments/models.py`: `WalletBalance`, `WalletTransaction`, `WalletDeposit`, `WalletWithdrawal`, `BankTransfer`, `BankWithdrawalRequest`. Endpoints are under `/api/v1/payments/wallet/…` and `/api/v1/payments/bank-transfer/…`. Frontend service: `src/services/wallet/`.
 
 Settings: `capimax_backend/capimax_backend/settings/` — selected by `ENVIRONMENT` env var (default: development). Options: development, production, staging, testing. Test settings: `capimax_backend/capimax_backend/settings_test.py` (in-memory SQLite, disabled migrations).
 
@@ -172,8 +176,9 @@ Key endpoint prefixes:
 - `/kyc/` → kyc, `/marketplace/` → marketplace, `/blockchain/` → blockchain
 - `/dashboard/` → dashboard, `/broker/` → broker, `/analytics/` → analytics
 - `/admin/` → admin_panel, `/notifications/` → notifications
-- `/liquidity-provider/` → liquidity_provider
-- `/` (no prefix under v1) → investments
+- `/liquidity-provider/` → liquidity_provider, `/documents/` → documents
+- `/construction/` → construction
+- `/` (no prefix under v1) → investments and `core` (both mounted at bare `/api/v1/`)
 
 API docs: `/api/docs/` (Swagger), `/api/redoc/` (ReDoc)
 
@@ -186,6 +191,8 @@ WebSocket endpoints: `ws://localhost:8500/ws/notifications/`, `ws/admin/`, `ws/p
 - **web3 pytest plugin disabled**: Blocked in `conftest.py` due to compatibility issues
 - **PWA caching in production**: Service worker caches API responses (NetworkFirst) and images (CacheFirst) — can cause stale data issues
 - **admin_panel/views.py**: All views must wrap response helpers in `Response()` — the most common source of 500 errors in that module
+- **Wallet URL ordering**: in `payments/urls.py`, `wallet/transactions/` MUST be declared before `wallet/<str:action>/`, otherwise the catch-all `<action>` route swallows `transactions/`
+- **Withdrawals are admin-reviewed**: user withdrawals create a `BankWithdrawalRequest` for manual admin approval (not an automatic on-chain/bank payout) — see recent `feat(wallet)` commits
 
 ## Environment Configuration
 
