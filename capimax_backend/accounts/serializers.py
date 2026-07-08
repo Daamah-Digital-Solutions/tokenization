@@ -42,13 +42,19 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         required=False,
         help_text="List of roles to assign to the user. If not provided, defaults to primary role."
     )
-    
+    referral_code = serializers.CharField(
+        write_only=True,
+        required=False,
+        allow_blank=True,
+        help_text="Broker referral code (from a ?ref=CODE invite link)."
+    )
+
     class Meta:
         model = User
         fields = (
             'email', 'password', 'confirm_password', 'first_name',
             'last_name', 'role', 'roles', 'phone', 'country', 'city',
-            'state', 'address', 'date_of_birth'
+            'state', 'address', 'date_of_birth', 'referral_code'
         )
         extra_kwargs = {
             'email': {'required': True},
@@ -151,11 +157,19 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         """Create user with multi-role assignments and email verification token."""
-        # Extract roles before creating user
+        # Extract roles + broker referral code before creating user
         roles = validated_data.pop('roles', [])
+        referral_code = validated_data.pop('referral_code', None)
 
         # Create user with primary role
         user = User.objects.create_user(**validated_data)
+
+        # Link a broker referral if the user signed up via a ?ref=CODE invite
+        # (client #6a). Wrapped in broker.services so a referral problem can
+        # never fail the registration itself.
+        if referral_code:
+            from broker.services import attach_referral
+            attach_referral(user, referral_code)
 
         # Create role assignments for all specified roles
         if roles:
