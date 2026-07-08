@@ -80,6 +80,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           { id: 'my-properties', label: 'My Properties', icon: '🏢' },
           { id: 'tokenization', label: 'Tokenization', icon: '🪙' },
           { id: 'revenue', label: 'Revenue', icon: '💸' },
+          { id: 'wallet', label: 'Wallet', icon: '💰' },
           { id: 'investors', label: 'Owners', icon: '👥' },
           { id: 'documents', label: 'Documents', icon: '📄' },
         ];
@@ -97,6 +98,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           ...baseItems,
           { id: 'referrals', label: 'Referrals', icon: '🤝' },
           { id: 'commissions', label: 'Commissions', icon: '💰' },
+          { id: 'wallet', label: 'Wallet', icon: '💸' },
           { id: 'performance', label: 'Performance', icon: '📊' },
           { id: 'marketing-materials', label: 'Marketing Materials', icon: '📄' },
         ];

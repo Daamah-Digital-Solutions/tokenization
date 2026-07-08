@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { DashboardStats, ActivityFeed, PerformanceChart, QuickActions } from '../';
 import type { StatItem, ActivityItem, ChartDataPoint, QuickAction } from '../';
+import { PayoutsPanel } from '../../wallet/PayoutsPanel';
 import {
   BrokerService,
   type BrokerDashboard as BrokerDashboardData,
@@ -337,7 +338,12 @@ export const BrokerDashboard: React.FC<{ currentView: string }> = ({ currentView
       label: 'Withdraw Commission',
       icon: '💸',
       description: 'Request payout',
-      onClick: () => {},
+      // Switch the dashboard to the Wallet view. DashboardPage patches
+      // pushState to emit `dashboardpushstate`, which re-reads ?view=… — so
+      // this navigates to the wallet surface without a prop callback.
+      onClick: () => {
+        window.history.pushState({}, '', '?view=wallet');
+      },
     },
     {
       id: 'marketing-materials',
@@ -445,6 +451,16 @@ export const BrokerDashboard: React.FC<{ currentView: string }> = ({ currentView
             />
           </div>
         </div>
+      );
+
+    case 'wallet':
+      return (
+        <PayoutsPanel
+          title="Commission Wallet"
+          subtitle="Withdraw your paid commissions to a bank account or crypto wallet."
+          balanceLabel="Available commission"
+          balanceHint="Approved commissions are paid into your wallet and can be withdrawn here (admin-reviewed)."
+        />
       );
 
     case 'performance':

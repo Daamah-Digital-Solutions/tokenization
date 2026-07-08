@@ -4,6 +4,7 @@ import { DashboardStats, ActivityFeed, PerformanceChart, QuickActions } from '..
 import type { StatItem, ActivityItem, ChartDataPoint, QuickAction } from '../';
 import PropertyOwnerService from '../../../services/property-owner/PropertyOwnerService';
 import type { Property } from '../../../services/api/types';
+import { PayoutsPanel } from '../../wallet/PayoutsPanel';
 import { useRouter } from '../../../utils/router';
 import { useAuth } from '../../../contexts/AuthContext';
 import { apiClient } from '../../../services/api/ApiClient';
@@ -1407,6 +1408,16 @@ export const PropertyOwnerDashboard: React.FC<{ currentView: string }> = ({ curr
 
     case 'revenue':
       return <RevenueView />;
+
+    case 'wallet':
+      return (
+        <PayoutsPanel
+          title="Wallet & Payouts"
+          subtitle="Your available balance and withdrawal history."
+          balanceLabel="Available for payout"
+          balanceHint="Revenue is credited to your wallet by the Capimax team; withdraw it to a bank account or crypto wallet."
+        />
+      );
 
     case 'investors':
       return <InvestorsView />;
