@@ -5,14 +5,22 @@ This module defines URL patterns for property management endpoints.
 """
 
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import DefaultRouter, SimpleRouter
 from . import views
 
-# Create a router for the PropertyViewSet, ConstructionInstallmentViewSet, and RentalIncomeDistributionViewSet
+# Prefixed viewsets that MUST resolve BEFORE the empty-prefix PropertyViewSet.
+# PropertyViewSet is registered at r'' which produces a greedy detail route
+# ``^(?P<pk>[^/.]+)/$``. If ``installments``/``rental-distributions`` were in the
+# same router (registered after it), ``/properties/installments/`` would be
+# swallowed as a property lookup with pk='installments' and 404. Keeping them in
+# their own router that is include()'d first lets the specific prefixes win.
+prefixed_router = SimpleRouter()
+prefixed_router.register(r'installments', views.ConstructionInstallmentViewSet, basename='installment-payment')
+prefixed_router.register(r'rental-distributions', views.RentalIncomeDistributionViewSet, basename='rental-distribution')
+
+# Router for the PropertyViewSet (empty prefix — CRUD at /properties/)
 router = DefaultRouter()
 router.register(r'', views.PropertyViewSet, basename='property')
-router.register(r'installments', views.ConstructionInstallmentViewSet, basename='installment-payment')
-router.register(r'rental-distributions', views.RentalIncomeDistributionViewSet, basename='rental-distribution')
 
 app_name = 'properties'
 
@@ -50,6 +58,11 @@ urlpatterns = [
     path('owner/documents/',
          views.PropertyOwnerDocumentsView.as_view(),
          name='property-owner-documents'),
+
+    # Installments + rental-distributions — MUST come before the empty-prefix
+    # PropertyViewSet router below, otherwise its ``<pk>/`` detail route swallows
+    # ``installments/`` and ``rental-distributions/`` as property lookups.
+    path('', include(prefixed_router.urls)),
 
     # Property ViewSet routes (CRUD + custom actions)
     path('', include(router.urls)),

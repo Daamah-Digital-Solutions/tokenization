@@ -1418,7 +1418,7 @@ class ConstructionInstallmentViewSet(ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        installments = self.get_queryset().filter(property=property_obj)
+        installments = self.get_queryset().filter(property_investment=property_obj)
         page = self.paginate_queryset(installments)
         
         if page is not None:
@@ -1628,7 +1628,7 @@ class ConstructionInstallmentViewSet(ModelViewSet):
             'total_tokens_owned_via_installments': total_tokens_owned,
             'average_completion_percentage': float(avg_completion_percentage),
             'cancelled_plans': installments.filter(status='cancelled').count(),
-            'properties_with_installments': installments.values('property').distinct().count()
+            'properties_with_installments': installments.values('property_investment').distinct().count()
         })
 
 

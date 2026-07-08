@@ -9,6 +9,7 @@ This module contains asynchronous tasks for:
 """
 
 import logging
+from decimal import Decimal
 from typing import Dict, Any, Optional
 from celery import shared_task
 from django.utils import timezone
@@ -20,6 +21,24 @@ from .models import ConstructionInstallment, Property
 from notifications.models import SystemAlert
 
 logger = logging.getLogger(__name__)
+
+
+def _json_safe(value):
+    """Recursively coerce values (notably ``Decimal``) into JSON-serialisable
+    types so they can be stored in a ``JSONField`` (e.g. ``SystemAlert.metadata``).
+
+    The installment results dicts carry ``Decimal`` totals which the default
+    JSON encoder cannot serialise; without this the daily processing task
+    raises ``TypeError: Object of type Decimal is not JSON serializable`` and
+    the surrounding transaction is rolled back.
+    """
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, dict):
+        return {k: _json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(v) for v in value]
+    return value
 
 
 @shared_task(bind=True, max_retries=3, retry_backoff=True)
@@ -52,7 +71,7 @@ def process_due_installments(self, max_payments: int = 100) -> Dict[str, Any]:
                 target_user_types=['admin'],
                 metadata={
                     'task_id': str(self.request.id),
-                    'results': results,
+                    'results': _json_safe(results),
                     'timestamp': timezone.now().isoformat()
                 }
             )
@@ -67,7 +86,7 @@ def process_due_installments(self, max_payments: int = 100) -> Dict[str, Any]:
                 target_user_types=['admin'],
                 metadata={
                     'task_id': str(self.request.id),
-                    'results': results,
+                    'results': _json_safe(results),
                     'timestamp': timezone.now().isoformat()
                 }
             )
@@ -129,7 +148,7 @@ def send_payment_reminders(self, days_before_due: int = 3) -> Dict[str, Any]:
                 target_user_types=['admin'],
                 metadata={
                     'task_id': str(self.request.id),
-                    'results': results,
+                    'results': _json_safe(results),
                     'timestamp': timezone.now().isoformat()
                 }
             )
@@ -170,7 +189,7 @@ def process_late_payments(self, grace_period_days: Optional[int] = None) -> Dict
                 target_user_types=['admin'],
                 metadata={
                     'task_id': str(self.request.id),
-                    'results': results,
+                    'results': _json_safe(results),
                     'timestamp': timezone.now().isoformat()
                 }
             )

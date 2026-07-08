@@ -33,7 +33,7 @@ class InstallmentProcessingServiceTests(TestCase):
             password='testpass123',
             first_name='Test',
             last_name='Investor',
-            user_type='investor'
+            role='investor'
         )
         
         self.property = Property.objects.create(
@@ -182,7 +182,7 @@ class InstallmentTaskTests(TestCase):
         self.user = User.objects.create_user(
             email='investor@test.com',
             password='testpass123',
-            user_type='investor'
+            role='investor'
         )
         
         self.property = Property.objects.create(
@@ -268,7 +268,7 @@ class InstallmentAPITests(APITestCase):
         self.user = User.objects.create_user(
             email='investor@test.com',
             password='testpass123',
-            user_type='investor'
+            role='investor'
         )
         
         self.property = Property.objects.create(
@@ -323,6 +323,7 @@ class InstallmentAPITests(APITestCase):
             token_price=Decimal('200.00'),
             total_tokens=1000,
             supports_installments=True,
+            property_category='under_construction',
             address='456 Test Ave',
             city='Test City',
             country='Test Country',
