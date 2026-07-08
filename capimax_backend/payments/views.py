@@ -452,13 +452,18 @@ class StripePaymentView(APIView):
             
             # Update payment status based on Stripe status
             if payment_intent.status == 'succeeded':
-                payment.status = PaymentStatus.COMPLETED
-                payment.completed_at = timezone.now()
-                payment.external_transaction_id = payment_intent.id
-                
-                # Process successful payment
-                self._process_successful_payment(payment)
-                
+                # Idempotency guard: credit the wallet only ONCE. A repeat
+                # confirm-payment call (or an overlapping webhook) must not
+                # double-credit — this flow now also powers wallet top-ups,
+                # where a double credit is real money created out of thin air.
+                if payment.status != PaymentStatus.COMPLETED:
+                    payment.status = PaymentStatus.COMPLETED
+                    payment.completed_at = timezone.now()
+                    payment.external_transaction_id = payment_intent.id
+
+                    # Process successful payment
+                    self._process_successful_payment(payment)
+
             elif payment_intent.status in ['processing', 'requires_action']:
                 payment.status = PaymentStatus.PROCESSING
             else:

@@ -44,6 +44,7 @@ import { MyProperties } from './MyProperties';
 import { InvestorReports } from './InvestorReports';
 import { WithdrawModal } from '../../wallet/WithdrawModal';
 import { WithdrawalRequestsSection } from '../../wallet/WithdrawalRequestsSection';
+import { AddFundsModal } from '../../wallet/AddFundsModal';
 import { SecondaryMarketDashboard } from '../../marketplace/SecondaryMarketDashboard';
 import { useUser, useAuth } from '../../../contexts/AuthContext';
 import { useRouter } from '../../../utils/router';
@@ -779,6 +780,7 @@ const WalletContent: React.FC<{
 }> = ({ portfolio, loading, walletBalance, walletLoading }) => {
   const queryClient = useQueryClient();
   const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [addFundsOpen, setAddFundsOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -792,12 +794,13 @@ const WalletContent: React.FC<{
           </Text>
         </div>
         <div className="flex gap-3">
-          {/* "Add Funds" was removed: investors never need to top up the
-              wallet directly. Money flows IN via successful investments
-              (rental dividends, secondary-market sales, refunds). The
-              wallet balance is OUTBOUND-only — Withdraw is the single
-              action on it. */}
-          <Button onClick={() => setWithdrawOpen(true)}>
+          {/* Add Funds tops the wallet up (card via Stripe, crypto via
+              NOWPayments); Withdraw sends funds out (bank/crypto,
+              admin-reviewed). */}
+          <Button onClick={() => setAddFundsOpen(true)}>
+            Add Funds
+          </Button>
+          <Button variant="outline" onClick={() => setWithdrawOpen(true)}>
             Withdraw
           </Button>
         </div>
@@ -852,6 +855,18 @@ const WalletContent: React.FC<{
             queryClient.invalidateQueries({ queryKey: ['wallet'] });
             queryClient.invalidateQueries({ queryKey: ['transactions'] });
             setWithdrawOpen(false);
+          }}
+        />
+      )}
+
+      {addFundsOpen && (
+        <AddFundsModal
+          onClose={() => setAddFundsOpen(false)}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['wallet'] });
+            queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
+            queryClient.invalidateQueries({ queryKey: ['transactions'] });
+            setAddFundsOpen(false);
           }}
         />
       )}
