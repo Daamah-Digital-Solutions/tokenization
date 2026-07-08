@@ -34,10 +34,15 @@ class KYCService:
         requirements = {
             VerificationLevel.BASIC: {
                 'required_documents': [
-                    DocumentType.PASSPORT,
-                    DocumentType.PROOF_OF_ADDRESS
+                    DocumentType.PASSPORT
                 ],
-                'optional_documents': [DocumentType.SELFIE],
+                # Proof of address is OPTIONAL for basic verification (client #9a:
+                # "the required KYC documents are too many — make some optional,
+                # e.g. the bank statement"). Identity + AML still gate basic level.
+                'optional_documents': [
+                    DocumentType.PROOF_OF_ADDRESS,
+                    DocumentType.SELFIE,
+                ],
                 'biometric_required': False,
                 'compliance_checks': ['aml'],
                 'investment_limit': Decimal('10000.00'),

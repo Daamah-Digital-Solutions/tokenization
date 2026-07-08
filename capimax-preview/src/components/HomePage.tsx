@@ -41,10 +41,6 @@ export const HomePage: React.FC = () => {
             (client edit #17). Sits directly under the properties section. */}
         <AcceptedPaymentsNotice />
 
-        {/* 3. About Capimax RT (rendered by LegalDisclaimer — header is
-            "About Capimax RT" + expandable disclaimer body). */}
-        <LegalDisclaimer />
-
         {/* 4. What is Tokenization - Educational section */}
         <TokenizationExplainer />
 
@@ -80,6 +76,11 @@ export const HomePage: React.FC = () => {
 
         {/* 13. Testimonials - Success stories */}
         <Testimonials />
+
+        {/* 14. About Capimax RT — moved to the bottom per client #1 (was near
+            the top). Rendered by LegalDisclaimer: "About Capimax RT" header +
+            expandable disclaimer/regulatory body. */}
+        <LegalDisclaimer />
       </main>
 
       {/* Premium Footer */}

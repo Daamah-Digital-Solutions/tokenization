@@ -610,10 +610,12 @@ def get_document_requirements(verification_level):
     requirements = {
         VerificationLevel.BASIC: {
             'required_documents': [
-                DocumentType.PASSPORT,
-                DocumentType.PROOF_OF_ADDRESS
+                DocumentType.PASSPORT
             ],
+            # Proof of address is OPTIONAL for basic verification (client #9a).
+            # Keep this in sync with KYCService.get_verification_requirements.
             'optional_documents': [
+                DocumentType.PROOF_OF_ADDRESS,
                 DocumentType.SELFIE
             ],
             'biometric_required': False,

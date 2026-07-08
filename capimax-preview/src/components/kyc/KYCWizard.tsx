@@ -83,9 +83,9 @@ const STEPS: StepConfig[] = [
   {
     id: 'address-docs',
     title: 'Address Verification',
-    description: 'Proof of residence',
+    description: 'Proof of residence (optional)',
     icon: MapPin,
-    required: true
+    required: false
   },
   {
     id: 'liveness',
@@ -382,7 +382,9 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
       case 'identity-docs':
         return docUsable(kycData.documents?.passport) || docUsable(kycData.documents?.nationalId);
       case 'address-docs':
-        return docUsable(kycData.documents?.utilityBill) || docUsable(kycData.documents?.bankStatement);
+        // Optional step (client #9a) — never blocks progress. Any proof of
+        // address the user does upload is still saved and used.
+        return true;
       case 'liveness':
         return !!kycData.liveness;
       case 'review':
@@ -751,10 +753,11 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({
     >
       <div className="text-center">
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-          Verify Your Address
+          Verify Your Address <span className="text-slate-400 font-normal text-base">(optional)</span>
         </h2>
         <p className="text-slate-600 dark:text-slate-400 mt-2">
-          Upload a document that shows your current residential address
+          Optionally upload a document showing your current residential address.
+          You can skip this step and continue — add it later if needed.
         </p>
       </div>
 
