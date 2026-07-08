@@ -225,6 +225,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     roles?: UserRole[];  // Multi-role support
     phone?: string;
     country: string;
+    referral_code?: string;  // Broker referral code from a ?ref invite (#6a)
   }): Promise<void> => {
     try {
       dispatch({ type: 'AUTH_LOADING' });
@@ -238,6 +239,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         roles: userData.roles,  // Pass roles array if provided
         phone: userData.phone,
         country: userData.country,
+        referral_code: userData.referral_code,  // #6a broker referral
       });
 
       // Registration successful but user is NOT authenticated until email is verified

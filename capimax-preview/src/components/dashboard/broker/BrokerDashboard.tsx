@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { DashboardStats, ActivityFeed, PerformanceChart, QuickActions } from '../';
+import { ReferClientPanel } from './ReferClientPanel';
 import type { StatItem, ActivityItem, ChartDataPoint, QuickAction } from '../';
 import { PayoutsPanel } from '../../wallet/PayoutsPanel';
 import {
@@ -324,9 +325,10 @@ export const BrokerDashboard: React.FC<{ currentView: string }> = ({ currentView
       variant: 'primary',
       onClick: async () => {
         try {
-          const link = await BrokerService.generateReferralLink();
+          const link: any = await BrokerService.generateReferralLink();
           if (typeof navigator !== 'undefined' && navigator.clipboard) {
-            await navigator.clipboard.writeText(link.url || (link as any).referral_link || '');
+            // Backend returns `referral_url`; keep older keys as fallbacks.
+            await navigator.clipboard.writeText(link.referral_url || link.referral_link || link.url || '');
           }
         } catch {
           // surfaced by error boundary / toast
@@ -433,6 +435,7 @@ export const BrokerDashboard: React.FC<{ currentView: string }> = ({ currentView
               ))}
             </div>
           </div>
+          <ReferClientPanel />
           <ReferralTracker referrals={data?.recent_referrals || []} />
         </div>
       );

@@ -277,6 +277,22 @@ export class BrokerService {
   }
 
   /**
+   * Refer a specific client by email. Creates a tracked BrokerReferral the
+   * client can be invited to sign up against; returns it (incl. referral_code).
+   */
+  static async createReferral(referredEmail: string, notes?: string): Promise<any> {
+    try {
+      return await apiClient.post('/broker/referrals/', {
+        referred_email: referredEmail,
+        ...(notes ? { notes } : {}),
+      });
+    } catch (error) {
+      console.error('Failed to create referral:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get marketing materials
    */
   static async getMarketingMaterials(

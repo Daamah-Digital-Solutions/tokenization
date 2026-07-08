@@ -80,7 +80,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 }) => {
   const { state, register, clearError, setUser } = useAuth();
   const { error: showError } = useNotifications();
-  const { navigate } = useRouter();
+  const { navigate, getQueryParam } = useRouter();
+  // Broker referral code from a ?ref=CODE invite link (client #6a).
+  const referralCode = (getQueryParam('ref') || '').trim();
   const [currentStep, setCurrentStep] = useState(0);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleError, setGoogleError] = useState<string | null>(null);
@@ -278,6 +280,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         roles: formData.userRoles,     // Multi-role support
         phone: formData.phoneNumber,
         country: formData.country,
+        referral_code: referralCode || undefined,  // #6a broker referral
       });
 
       // Call success callback if provided, pass email for redirect

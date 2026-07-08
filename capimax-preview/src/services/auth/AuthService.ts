@@ -74,7 +74,7 @@ export class AuthService {
   /**
    * Register a new user
    */
-  static async register(userData: UserRegistrationData & { confirm_password?: string; roles?: string[] }): Promise<RegisterResponse> {
+  static async register(userData: UserRegistrationData & { confirm_password?: string; roles?: string[]; referral_code?: string }): Promise<RegisterResponse> {
     try {
       // Add confirm_password which Django backend requires
       const registrationData = {
