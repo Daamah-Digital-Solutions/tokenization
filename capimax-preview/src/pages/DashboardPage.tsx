@@ -68,6 +68,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           { id: 'transactions', label: 'Transactions', icon: '💳' },
           { id: 'reports', label: 'Reports', icon: '📊' },
           { id: 'wallet', label: 'Wallet', icon: '💰' },
+          { id: 'installments', label: 'Installments', icon: '📅' },
           { id: 'notifications', label: 'Notifications', icon: '🔔' },
           { id: 'settings', label: 'Settings', icon: '⚙️' },
         ];

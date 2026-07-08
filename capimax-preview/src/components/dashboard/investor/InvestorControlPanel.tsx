@@ -42,6 +42,7 @@ import { TransactionManager } from './TransactionManager';
 import { CollaborativeInvestments } from './CollaborativeInvestments';
 import { MyProperties } from './MyProperties';
 import { InvestorReports } from './InvestorReports';
+import { InstallmentsPanel } from './InstallmentsPanel';
 import { WithdrawModal } from '../../wallet/WithdrawModal';
 import { WithdrawalRequestsSection } from '../../wallet/WithdrawalRequestsSection';
 import { AddFundsModal } from '../../wallet/AddFundsModal';
@@ -58,7 +59,7 @@ interface InvestorControlPanelProps {
   currentView?: string;
 }
 
-type TabType = 'overview' | 'my-properties' | 'properties' | 'marketplace' | 'transactions' | 'reports' | 'wallet' | 'notifications' | 'settings';
+type TabType = 'overview' | 'my-properties' | 'properties' | 'marketplace' | 'transactions' | 'installments' | 'reports' | 'wallet' | 'notifications' | 'settings';
 
 interface PriceAlert {
   id: string;
@@ -91,6 +92,8 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
         return 'reports';
       case 'wallet':
         return 'wallet';
+      case 'installments':
+        return 'installments';
       case 'notifications':
         return 'notifications';
       case 'settings':
@@ -158,6 +161,7 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
     { id: 'marketplace', label: 'Marketplace', icon: Search },
     { id: 'transactions', label: 'Transactions', icon: Activity },
     { id: 'wallet', label: 'Wallet', icon: Wallet },
+    { id: 'installments', label: 'Installments', icon: Calendar },
     { id: 'settings', label: 'Settings', icon: Settings },
   ] as const;
 
@@ -245,6 +249,10 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
 
         {activeTab === 'reports' && (
           <InvestorReports />
+        )}
+
+        {activeTab === 'installments' && (
+          <InstallmentsPanel />
         )}
 
         {activeTab === 'wallet' && (
