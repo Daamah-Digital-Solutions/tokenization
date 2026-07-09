@@ -13,7 +13,7 @@ import { motion } from 'framer-motion';
 import { FileText, Coins, ArrowUpRight } from 'lucide-react';
 
 const NOVA_URL = 'https://novadf.com/';
-const PRONOVA_URL = 'https://pronovacrypto.tech/';
+const PRONOVA_URL = 'https://pronovacrypto.com/';
 
 export const AcceptedPaymentsNotice: React.FC = () => {
   const { t } = useTranslation();
