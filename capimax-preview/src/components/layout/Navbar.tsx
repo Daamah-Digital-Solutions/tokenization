@@ -132,13 +132,13 @@ export const Navbar: React.FC = () => {
       transition={{ duration: 0.3 }}
       className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-navy-900/95 backdrop-blur-md border-b border-navy-200 dark:border-navy-700"
     >
-      <div className="max-w-6xl mx-auto px-6">
-        <div className="flex justify-between items-center h-16">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="flex justify-between items-center gap-x-6 h-16">
           {/* Logo - click to go home */}
           <motion.button
             whileHover={{ scale: 1.02 }}
             onClick={() => handleNavClick('home')}
-            className="flex items-center space-x-3 cursor-pointer"
+            className="flex items-center space-x-3 cursor-pointer shrink-0"
             aria-label="Go to home page"
           >
             <img
@@ -149,7 +149,7 @@ export const Navbar: React.FC = () => {
           </motion.button>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden md:flex items-center gap-x-5 whitespace-nowrap">
             {navItems.map((item) => (
               <motion.button
                 key={item.name}
@@ -165,7 +165,7 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-4 shrink-0">
             {/* Language Switcher */}
             <LanguageSwitcher />
 
