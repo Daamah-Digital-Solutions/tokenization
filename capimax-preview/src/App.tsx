@@ -12,6 +12,7 @@ import { SkipToContent, KeyboardIndicator } from './components/ui/AccessibilityH
 import { PWAInstallPrompt } from './components/pwa/PWAInstallPrompt';
 import { UpdatePrompt } from './components/system/UpdatePrompt';
 import { MobileBottomNav } from './components/mobile/MobileBottomNav';
+import { ChatWidget } from './components/chat/ChatWidget';
 import './App.css'
 
 // Lazy import with chunk-reload fallback.
@@ -754,6 +755,7 @@ function App() {
                     <RouterProvider>
                       <AppRouter />
                       <MobileBottomNav />
+                      <ChatWidget />
                       <PWAInstallPrompt />
                       <UpdatePrompt />
                     </RouterProvider>
