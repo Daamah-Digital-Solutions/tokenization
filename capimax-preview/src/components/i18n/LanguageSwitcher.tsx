@@ -37,6 +37,11 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
   variant = 'dropdown',
   className = '',
 }) => {
+  // TEMPORARILY HIDDEN (client request 2026-07-09): hide the language switcher
+  // from the live site until the Arabic/i18n translations are finalized.
+  // To restore, delete the next line.
+  return null;
+
   const { i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
