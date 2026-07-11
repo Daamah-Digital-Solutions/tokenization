@@ -10,7 +10,14 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     /* Paint the html background so the area under the notch / status bar
-       isn't a bright flash of white when the SW boots the standalone PWA. */
+       isn't a bright flash when the SW boots the standalone PWA.
+       Theme-aware: light by default (page hero gradients are semi-transparent,
+       so a dark html used to bleed through the hero in light mode); dark only
+       when .dark is set, which index.html applies pre-paint for dark users. */
+    background-color: #f8fafc;
+  }
+
+  html.dark {
     background-color: #0f172a;
   }
 
