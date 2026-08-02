@@ -14,6 +14,7 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from decimal import Decimal
 from datetime import timedelta
 import logging
@@ -722,8 +723,10 @@ class CryptoPaymentView(APIView):
 
 class WalletManagementView(APIView):
     """Handle wallet management operations."""
-    
+
     permission_classes = [IsAuthenticated]
+    # Accept multipart (bank-deposit proof upload) as well as JSON.
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get(self, request, action=None):
         """Get user's wallet balances. Auto-creates USD wallet if none exist.
@@ -735,6 +738,10 @@ class WalletManagementView(APIView):
         """
         if action == 'withdraw-requests':
             return self._list_withdraw_requests(request)
+        if action == 'bank-accounts':
+            return self._list_bank_accounts(request)
+        if action == 'bank-deposits':
+            return self._list_bank_deposits(request)
 
         balances = WalletBalance.objects.filter(user=request.user)
         if not balances.exists():
@@ -769,6 +776,12 @@ class WalletManagementView(APIView):
             # (manual wire executed out-of-band) or rejects (funds
             # unlock back to the available balance).
             return self._create_withdraw_request(request)
+        elif action == 'bank-deposit':
+            # Investor lodges a manual bank-transfer wallet top-up: they've
+            # wired funds to a platform account and upload proof. Nothing is
+            # credited yet — an admin reviews and approves (which credits the
+            # wallet) or rejects. Mirrors the withdraw-request review flow.
+            return self._create_bank_deposit(request)
         elif action == 'transfer':
             return self._transfer_funds(request)
         else:
@@ -790,6 +803,97 @@ class WalletManagementView(APIView):
         return Response(create_success_response(data={
             'requests': BankWithdrawalRequestSerializer(qs, many=True).data,
         }))
+
+    def _list_bank_accounts(self, request):
+        """Return the active platform bank accounts the investor can wire to."""
+        from .serializers import PlatformBankAccountSerializer
+        from .models import PlatformBankAccount
+
+        qs = PlatformBankAccount.objects.filter(is_active=True)
+        return Response(create_success_response(data={
+            'accounts': PlatformBankAccountSerializer(qs, many=True).data,
+        }))
+
+    def _list_bank_deposits(self, request):
+        """Return the current user's bank-deposit (top-up) request history."""
+        from .serializers import BankDepositRequestSerializer
+        from .models import BankDepositRequest
+
+        qs = (
+            BankDepositRequest.objects
+            .filter(user=request.user)
+            .select_related('platform_bank_account')
+            .order_by('-created_at')[:50]
+        )
+        return Response(create_success_response(data={
+            'requests': BankDepositRequestSerializer(qs, many=True).data,
+        }))
+
+    def _create_bank_deposit(self, request):
+        """Create a manual bank-transfer wallet top-up request (admin-reviewed).
+
+        The wallet is NOT credited here — an admin reviews the proof and
+        approves (crediting the wallet via WalletBalance.credit) or rejects.
+        """
+        from .serializers import BankDepositRequestCreateSerializer, BankDepositRequestSerializer
+        from .models import BankDepositRequest
+
+        serializer = BankDepositRequestCreateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                create_error_response("Invalid data", details=serializer.errors),
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        data = serializer.validated_data
+        amount = data['amount']
+        currency = data.get('currency') or 'USD'
+
+        try:
+            deposit = BankDepositRequest.objects.create(
+                user=request.user,
+                amount=amount,
+                currency=currency,
+                platform_bank_account=data.get('platform_bank_account'),
+                reference=data.get('reference') or '',
+                proof_of_transfer=data.get('proof_of_transfer'),
+                notes=data.get('notes') or '',
+            )
+
+            # Acknowledge receipt — the investor should know it's queued for
+            # review and that funds only appear after approval.
+            try:
+                from notifications.services import NotificationService
+                NotificationService.create_notification(
+                    user=request.user,
+                    title="Bank Deposit Received",
+                    message=(
+                        f"We've received your bank-transfer top-up request for "
+                        f"${amount} {currency}. Our team will confirm the "
+                        f"transfer and credit your wallet, usually within 1–2 "
+                        f"business days."
+                    ),
+                    notification_type='payment',
+                    priority='medium',
+                    send_email=True,
+                    send_real_time=True,
+                )
+            except Exception as exc:
+                logger.warning("Could not send bank-deposit confirmation: %s", exc)
+
+            return Response(create_success_response(
+                data=BankDepositRequestSerializer(deposit).data,
+                message=(
+                    "Bank deposit request submitted. Your wallet will be "
+                    "credited once our team confirms the transfer."
+                ),
+            ), status=status.HTTP_201_CREATED)
+        except Exception as exc:
+            logger.error("Bank deposit request failed: %s", exc)
+            return Response(
+                create_error_response(f"Failed to submit deposit: {exc}"),
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     def _create_withdraw_request(self, request):
         """Create a bank-transfer withdrawal request (admin-reviewed)."""

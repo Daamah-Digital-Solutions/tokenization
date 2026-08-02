@@ -793,3 +793,6 @@ class NovaSukukPaymentAdmin(admin.ModelAdmin):
 # of this file.
 from . import admin_withdrawals  # noqa: F401,E402
 
+# Bank deposit + platform bank account admin (same import-side-effect pattern).
+from . import admin_deposits  # noqa: F401,E402
+

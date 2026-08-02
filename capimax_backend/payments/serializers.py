@@ -17,6 +17,7 @@ from .models import (
     CryptoPayment, Refund, RecurringPayment, PaymentMethod, PaymentStatus,
     BankTransfer, NovaSukukPayment, PronovaPayment,
     BankWithdrawalRequest,
+    PlatformBankAccount, BankDepositRequest,
 )
 from core.utils import validate_investment_amount, calculate_tokens_for_amount
 
@@ -849,3 +850,49 @@ class BankWithdrawalRequestAdminSerializer(serializers.ModelSerializer):
 
     def get_user_full_name(self, obj):
         return obj.user.get_full_name() if obj.user else ''
+
+
+# --- Bank Deposit (wallet top-up via manual wire) Serializers ---
+
+
+class PlatformBankAccountSerializer(serializers.ModelSerializer):
+    """Investor-facing read serializer — the account they wire funds to."""
+    class Meta:
+        model = PlatformBankAccount
+        fields = [
+            'id', 'label', 'account_holder_name', 'bank_name',
+            'account_number', 'routing_number', 'swift_code',
+            'bank_address', 'bank_country', 'currency', 'instructions',
+        ]
+        read_only_fields = fields
+
+
+class BankDepositRequestCreateSerializer(serializers.Serializer):
+    """Serializer the investor uses to lodge a bank-transfer wallet top-up.
+
+    Accepts multipart (for the optional ``proof_of_transfer`` upload) or JSON.
+    """
+    amount = serializers.DecimalField(
+        max_digits=12, decimal_places=2, min_value=Decimal('1.00')
+    )
+    currency = serializers.CharField(max_length=3, default='USD', required=False)
+    platform_bank_account = serializers.PrimaryKeyRelatedField(
+        queryset=PlatformBankAccount.objects.filter(is_active=True),
+        required=False, allow_null=True,
+    )
+    reference = serializers.CharField(max_length=140, required=False, allow_blank=True, default='')
+    proof_of_transfer = serializers.FileField(required=False, allow_null=True)
+    notes = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+class BankDepositRequestSerializer(serializers.ModelSerializer):
+    """Investor-facing read serializer."""
+    bank_name = serializers.CharField(source='platform_bank_account.bank_name', read_only=True, default='')
+
+    class Meta:
+        model = BankDepositRequest
+        fields = [
+            'id', 'amount', 'currency', 'platform_bank_account', 'bank_name',
+            'reference', 'status', 'review_note', 'created_at', 'completed_at',
+        ]
+        read_only_fields = fields

@@ -1957,3 +1957,138 @@ class BankWithdrawalRequest(models.Model):
             else f"{self.crypto_asset} ({self.crypto_network})"
         )
         return f"Withdrawal {self.amount} {self.currency} to {dest} ({self.status})"
+
+
+class PlatformBankAccount(models.Model):
+    """
+    A receiving bank account the platform owns, shown to investors who pick
+    "Bank transfer" as a wallet top-up method.
+
+    Admin-managed (Django admin). Only ``is_active`` accounts are exposed to
+    investors. The investor wires funds to one of these accounts, uploads
+    proof, and lodges a :class:`BankDepositRequest` which an admin reviews
+    and credits. There is no automated bank integration — this is purely the
+    set of destinations the platform advertises for manual wires.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    label = models.CharField(
+        max_length=100, blank=True,
+        help_text="Internal nickname, e.g. 'Primary USD account'.",
+    )
+    account_holder_name = models.CharField(max_length=255)
+    bank_name = models.CharField(max_length=255)
+    account_number = models.CharField(max_length=64, help_text="IBAN / account number.")
+    routing_number = models.CharField(max_length=64, blank=True, help_text="Routing / sort code.")
+    swift_code = models.CharField(max_length=20, blank=True, help_text="SWIFT / BIC.")
+    bank_address = models.CharField(max_length=255, blank=True)
+    bank_country = models.CharField(max_length=2, blank=True, help_text="ISO-3166 alpha-2.")
+    currency = models.CharField(max_length=3, default='USD')
+    instructions = models.TextField(
+        blank=True,
+        help_text=(
+            "Shown to the investor, e.g. 'Use your account email as the "
+            "transfer reference so we can match your deposit.'"
+        ),
+    )
+    is_active = models.BooleanField(default=True, db_index=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'payments_platform_bank_account'
+        ordering = ['-is_active', 'bank_name']
+
+    def __str__(self):
+        tag = self.label or self.bank_name
+        return f"{tag} ({self.currency})" + ('' if self.is_active else ' [inactive]')
+
+
+class BankDepositRequest(models.Model):
+    """
+    Investor-initiated wallet top-up via a manual bank transfer.
+
+    The investor wires funds to one of the platform's
+    :class:`PlatformBankAccount` records, uploads proof, and lodges this
+    request. An admin then reviews it:
+
+      - approve -> the investor's wallet is credited with ``amount`` through
+                   :meth:`WalletBalance.credit` (so a ledger row is written),
+                   and the request moves to 'approved'.
+      - reject  -> nothing is credited; the request moves to 'rejected'.
+
+    Unlike the card (Stripe) and crypto (NOWPayments) rails, which credit the
+    wallet automatically, bank deposits only land after admin approval.
+    """
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending Review'),
+        ('approved', 'Approved & Credited'),
+        ('rejected', 'Rejected'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    user = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.CASCADE,
+        related_name='bank_deposit_requests',
+    )
+    amount = models.DecimalField(
+        max_digits=12, decimal_places=2,
+        validators=[MinValueValidator(Decimal('1.00'))],
+        help_text="Amount the investor says they transferred (USD).",
+    )
+    currency = models.CharField(max_length=3, default='USD')
+
+    # Which platform account the investor sent to. Nullable so deactivating or
+    # deleting an account later doesn't cascade-delete historical requests.
+    platform_bank_account = models.ForeignKey(
+        'PlatformBankAccount',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='deposit_requests',
+    )
+
+    reference = models.CharField(
+        max_length=140, blank=True,
+        help_text="Transfer reference the investor used.",
+    )
+    proof_of_transfer = models.FileField(
+        upload_to='wallet_deposits/proofs/%Y/%m/',
+        null=True, blank=True,
+        help_text="Screenshot / PDF of the bank transfer receipt.",
+    )
+    notes = models.TextField(blank=True, help_text="Free-form note from the investor.")
+
+    status = models.CharField(
+        max_length=20, choices=STATUS_CHOICES, default='pending', db_index=True,
+    )
+
+    # Audit trail
+    reviewed_by = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='bank_deposit_reviews',
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    review_note = models.TextField(blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'payments_bank_deposit_request'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'status'], name='pay_bdr_user_status_idx'),
+            models.Index(fields=['status', 'created_at'], name='pay_bdr_status_created_idx'),
+        ]
+
+    def __str__(self):
+        return f"Bank deposit {self.amount} {self.currency} ({self.status})"
