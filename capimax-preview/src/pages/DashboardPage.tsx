@@ -240,7 +240,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <button
                 className="p-2 text-neutral-600 hover:text-neutral-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-700"
                 title="Notifications"
-                onClick={() => setCurrentView('notifications')}
+                onClick={() => onViewChange('notifications')}
               >
                 <Bell className="w-5 h-5" />
               </button>

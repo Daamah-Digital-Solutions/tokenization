@@ -2,7 +2,12 @@
  * Mobile bottom navigation bar.
  *
  * Native-app-style tab bar shown only on `< md` (mobile) viewports. Five
- * primary destinations: Home, Properties, Marketplace, Wallet, Account.
+ * primary destinations: Home, Properties, Marketplace, Dashboard, Account.
+ *
+ * NOTE: the standalone `/wallet` route (WalletManagementPage) does not lay out
+ * well on narrow viewports, so the wallet is surfaced here via the Dashboard —
+ * the dashboard has its own fully-responsive wallet surface (balance, deposit,
+ * withdraw, transactions). The Dashboard tab replaced a former Wallet tab.
  *
  * Hidden on auth/onboarding routes (login, register, email-verification...)
  * because a bottom tab bar competing with the auth form's CTA is the kind
@@ -16,7 +21,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Home, Building2, ArrowLeftRight, Wallet, User } from 'lucide-react';
+import { Home, Building2, ArrowLeftRight, LayoutDashboard, User } from 'lucide-react';
 import { useRouter } from '../../utils/router';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -34,7 +39,7 @@ const HIDDEN_ROUTES = new Set([
   'not-found',
 ]);
 
-type TabKey = 'home' | 'properties' | 'marketplace' | 'wallet' | 'account';
+type TabKey = 'home' | 'properties' | 'marketplace' | 'dashboard' | 'account';
 
 interface TabConfig {
   key: TabKey;
@@ -72,20 +77,23 @@ const TABS: TabConfig[] = [
     navigate: (navigate) => navigate('marketplace'),
   },
   {
-    key: 'wallet',
-    label: 'Wallet',
-    icon: Wallet,
-    matchRoutes: ['wallet'],
+    key: 'dashboard',
+    label: 'Dashboard',
+    icon: LayoutDashboard,
+    // The dashboard hub — also where the responsive wallet surface lives.
+    matchRoutes: ['dashboard', 'wallet'],
     navigate: (navigate, isAuthenticated) =>
-      navigate(isAuthenticated ? 'wallet' : 'login'),
+      navigate(isAuthenticated ? 'dashboard' : 'login'),
   },
   {
     key: 'account',
     label: 'Account',
     icon: User,
-    matchRoutes: ['dashboard', 'role-management'],
+    // Distinct destination from Dashboard so the two don't collapse onto the
+    // same route: the account/roles settings page.
+    matchRoutes: ['role-management'],
     navigate: (navigate, isAuthenticated) =>
-      navigate(isAuthenticated ? 'dashboard' : 'login'),
+      navigate(isAuthenticated ? 'role-management' : 'login'),
   },
 ];
 

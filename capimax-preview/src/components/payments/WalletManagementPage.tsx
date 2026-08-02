@@ -223,7 +223,7 @@ export function WalletManagementPage({ className }: WalletManagementPageProps) {
   );
 
   return (
-    <div className={`min-h-screen bg-gray-50 ${className}`}>
+    <div className={`min-h-screen bg-gray-50 dark:bg-slate-900 ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -238,16 +238,17 @@ export function WalletManagementPage({ className }: WalletManagementPageProps) {
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex mb-8 border-b border-gray-200 bg-white rounded-t-lg">
+        {/* Tab Navigation — horizontally scrollable so the four tabs never
+            overflow / clip on narrow (mobile) viewports. */}
+        <div className="flex mb-8 border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-t-lg overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as any)}
-              className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex items-center gap-2 shrink-0 whitespace-nowrap px-4 sm:px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.key
-                  ? 'border-emerald-500 text-emerald-600 bg-emerald-50'
-                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? 'border-emerald-500 text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 dark:text-emerald-400'
+                  : 'border-transparent text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-100 hover:bg-gray-50 dark:hover:bg-slate-700/50'
               }`}
             >
               <tab.icon className="h-4 w-4" />
@@ -262,7 +263,7 @@ export function WalletManagementPage({ className }: WalletManagementPageProps) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-white rounded-b-lg min-h-[600px]"
+          className="bg-white dark:bg-slate-800 rounded-b-lg min-h-[600px]"
         >
           <div className="p-6">
             {activeTab === 'overview' && renderOverview()}
