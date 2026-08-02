@@ -43,6 +43,7 @@ import { CollaborativeInvestments } from './CollaborativeInvestments';
 import { MyProperties } from './MyProperties';
 import { InvestorReports } from './InvestorReports';
 import { InstallmentsPanel } from './InstallmentsPanel';
+import { InvestorDocumentsPanel } from './InvestorDocumentsPanel';
 import { WithdrawModal } from '../../wallet/WithdrawModal';
 import { WithdrawalRequestsSection } from '../../wallet/WithdrawalRequestsSection';
 import { AddFundsModal } from '../../wallet/AddFundsModal';
@@ -59,7 +60,7 @@ interface InvestorControlPanelProps {
   currentView?: string;
 }
 
-type TabType = 'overview' | 'my-properties' | 'properties' | 'marketplace' | 'transactions' | 'installments' | 'reports' | 'wallet' | 'notifications' | 'settings';
+type TabType = 'overview' | 'my-properties' | 'properties' | 'marketplace' | 'transactions' | 'installments' | 'reports' | 'wallet' | 'documents' | 'notifications' | 'settings';
 
 interface PriceAlert {
   id: string;
@@ -94,6 +95,8 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
         return 'wallet';
       case 'installments':
         return 'installments';
+      case 'documents':
+        return 'documents';
       case 'notifications':
         return 'notifications';
       case 'settings':
@@ -257,6 +260,10 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
 
         {activeTab === 'wallet' && (
           <WalletContent portfolio={portfolio} loading={portfolioLoading} walletBalance={walletBalance} walletLoading={walletLoading} />
+        )}
+
+        {activeTab === 'documents' && (
+          <InvestorDocumentsPanel />
         )}
 
         {activeTab === 'notifications' && (

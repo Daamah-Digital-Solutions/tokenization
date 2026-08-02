@@ -3044,6 +3044,172 @@ class PropertyOwnerDocumentsView(APIView):
         })
 
 
+class InvestorDocumentsView(APIView):
+    """All of an investor's documents, grouped per property they hold.
+
+    For each property the user has an Investment in, returns:
+      - the property + the user's aggregated holdings (tokens, ownership %),
+      - a descriptor for the client-side-generated Share Ownership Certificate,
+      - any subscription-agreement PDF for the user's investments there
+        (best-effort — only surfaced when a PDF actually exists),
+      - the property's investor-accessible Data Room documents
+        (valuation / insurance / ownership / SPV / ...).
+
+    The certificate PDF itself is rendered client-side from the holdings data
+    returned here, so there is no server-side PDF generation.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    # Statuses that represent a real (or in-flight) holding worth showing
+    # documents for. Excludes cancelled / failed / refunded.
+    HOLDING_STATUSES = [
+        'pending', 'processing', 'payment_confirmed',
+        'pending_mint', 'minting', 'completed',
+    ]
+
+    def get(self, request):
+        from collections import OrderedDict
+
+        user = request.user
+        investments = (
+            Investment.objects
+            .filter(user=user, status__in=self.HOLDING_STATUSES)
+            .select_related('property_investment')
+            .order_by('-created_at')
+        )
+
+        # Group the user's investments by property.
+        by_property = OrderedDict()
+        for inv in investments:
+            prop = inv.property_investment
+            if prop is None:
+                continue
+            by_property.setdefault(str(prop.id), {'property': prop, 'investments': []})
+            by_property[str(prop.id)]['investments'].append(inv)
+
+        # Best-effort: pull any subscription agreements for these investments.
+        sub_by_investment = {}
+        try:
+            from legal.models import SubscriptionAgreement
+            inv_ids = [inv.id for inv in investments]
+            if inv_ids:
+                for sa in SubscriptionAgreement.objects.filter(investment_id__in=inv_ids):
+                    sub_by_investment[str(sa.investment_id)] = sa
+        except Exception as exc:
+            logger.warning("Could not load subscription agreements: %s", exc)
+
+        properties_out = []
+        for group in by_property.values():
+            prop = group['property']
+            invs = group['investments']
+
+            total_tokens = sum(int(i.token_amount or 0) for i in invs)
+            total_invested = sum((i.investment_amount or Decimal('0')) for i in invs)
+            prop_total_tokens = int(getattr(prop, 'total_tokens', 0) or 0)
+            ownership_pct = (
+                (Decimal(total_tokens) / Decimal(prop_total_tokens) * 100).quantize(Decimal('0.0001'))
+                if prop_total_tokens else Decimal('0')
+            )
+            dates = [i.created_at for i in invs if getattr(i, 'created_at', None)]
+            first_date = min(dates) if dates else None
+
+            # Primary image (best-effort — related_name / field may vary).
+            image_url = ''
+            try:
+                img = prop.images.filter(is_primary=True).first() or prop.images.first()
+                if img and getattr(img, 'image', None):
+                    image_url = request.build_absolute_uri(img.image.url)
+            except Exception:
+                image_url = ''
+
+            documents = []
+
+            # 1. Share Ownership Certificate — rendered client-side from the
+            #    holdings below. Exposed as a descriptor so the UI can offer a
+            #    "Download certificate" action.
+            documents.append({
+                'id': f'share-cert-{prop.id}',
+                'kind': 'share_certificate',
+                'name': 'Share Ownership Certificate',
+                'document_type': 'ownership',
+                'description': 'Your certified token ownership in this property.',
+                'download_url': None,
+                'generated': True,
+                'uploaded_at': first_date.isoformat() if first_date else None,
+            })
+
+            # 2. Subscription agreement PDF(s), if any actually exist.
+            for inv in invs:
+                sa = sub_by_investment.get(str(inv.id))
+                pdf = getattr(sa, 'pdf_document', None) if sa else None
+                if not pdf:
+                    continue
+                try:
+                    url = request.build_absolute_uri(pdf.url)
+                except Exception:
+                    url = None
+                if url:
+                    documents.append({
+                        'id': f'sub-agreement-{sa.id}',
+                        'kind': 'subscription_agreement',
+                        'name': 'Subscription Agreement',
+                        'document_type': 'legal',
+                        'description': 'Signed subscription agreement for your investment.',
+                        'download_url': url,
+                        'generated': False,
+                        'uploaded_at': (
+                            sa.created_at.isoformat()
+                            if getattr(sa, 'created_at', None) else None
+                        ),
+                    })
+
+            # 3. Property Data Room documents the investor may access.
+            doc_qs = PropertyDocument.objects.filter(
+                property=prop, is_latest=True, investor_access=True,
+            ).order_by('document_type', '-uploaded_at')
+            for doc in doc_qs:
+                try:
+                    url = request.build_absolute_uri(doc.document.url)
+                except Exception:
+                    url = None
+                documents.append({
+                    'id': str(doc.id),
+                    'kind': 'property_document',
+                    'name': doc.name,
+                    'document_type': doc.document_type,
+                    'description': doc.description,
+                    'download_url': url,
+                    'generated': False,
+                    'uploaded_at': doc.uploaded_at.isoformat() if doc.uploaded_at else None,
+                })
+
+            properties_out.append({
+                'property': {
+                    'id': str(prop.id),
+                    'title': prop.title,
+                    'location': f"{prop.city}, {prop.country}",
+                    'image_url': image_url,
+                    'total_tokens': prop_total_tokens,
+                },
+                'holdings': {
+                    'token_amount': total_tokens,
+                    'ownership_percentage': str(ownership_pct),
+                    'total_invested': str(total_invested),
+                    'first_investment_date': first_date.isoformat() if first_date else None,
+                },
+                'documents': documents,
+            })
+
+        return Response(create_success_response(data={
+            'properties': properties_out,
+            'summary': {
+                'property_count': len(properties_out),
+                'document_count': sum(len(p['documents']) for p in properties_out),
+            },
+        }))
+
+
 # =============================================================================
 # DATA ROOM VIEWS
 # =============================================================================

@@ -58,6 +58,9 @@ urlpatterns = [
     path('owner/documents/',
          views.PropertyOwnerDocumentsView.as_view(),
          name='property-owner-documents'),
+    path('investor/documents/',
+         views.InvestorDocumentsView.as_view(),
+         name='investor-documents'),
 
     # Installments + rental-distributions — MUST come before the empty-prefix
     # PropertyViewSet router below, otherwise its ``<pk>/`` detail route swallows
