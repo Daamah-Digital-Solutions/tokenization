@@ -12,7 +12,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   FileText, Download, ShieldCheck, Building2, ScrollText, FileCheck2,
-  RefreshCw, FolderOpen,
+  RefreshCw, FolderOpen, ReceiptText,
 } from 'lucide-react';
 import {
   DocumentService,
@@ -21,6 +21,7 @@ import {
 } from '../../../services/documents/DocumentService';
 import { useUser } from '../../../contexts/AuthContext';
 import { downloadOwnershipCertificatePdf } from '../../../utils/ownershipCertificatePdf';
+import { downloadReceiptPdf } from '../../../utils/receiptPdf';
 
 const DOC_TYPE_LABEL: Record<string, string> = {
   ownership: 'Ownership & Title',
@@ -36,6 +37,7 @@ const DOC_TYPE_LABEL: Record<string, string> = {
 
 function iconFor(doc: InvestorDocument) {
   if (doc.kind === 'share_certificate') return ShieldCheck;
+  if (doc.kind === 'purchase_receipt') return ReceiptText;
   if (doc.kind === 'subscription_agreement') return ScrollText;
   if (doc.document_type === 'valuation' || doc.document_type === 'financial') return FileCheck2;
   return FileText;
@@ -52,7 +54,7 @@ export const InvestorDocumentsPanel: React.FC = () => {
   const [groups, setGroups] = useState<InvestorPropertyDocuments[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [busyCert, setBusyCert] = useState<string | null>(null);
+  const [busyDoc, setBusyDoc] = useState<string | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -74,9 +76,9 @@ export const InvestorDocumentsPanel: React.FC = () => {
     user?.email ||
     'Investor';
 
-  const downloadCertificate = async (g: InvestorPropertyDocuments) => {
+  const downloadCertificate = async (g: InvestorPropertyDocuments, docId: string) => {
     const certNo = certificateNumber(g.property.id, user?.id);
-    setBusyCert(g.property.id);
+    setBusyDoc(docId);
     try {
       const ownershipPct = parseFloat(g.holdings.ownership_percentage || '0') || 0;
       const invested = parseFloat(g.holdings.total_invested || '0') || 0;
@@ -105,8 +107,46 @@ export const InvestorDocumentsPanel: React.FC = () => {
     } catch (_) {
       setError('Could not generate the certificate. Please try again.');
     } finally {
-      setBusyCert(null);
+      setBusyDoc(null);
     }
+  };
+
+  const downloadReceipt = async (g: InvestorPropertyDocuments, docId: string) => {
+    setBusyDoc(docId);
+    try {
+      const tokens = g.holdings.token_amount || 0;
+      const invested = parseFloat(g.holdings.total_invested || '0') || 0;
+      const ownershipPct = parseFloat(g.holdings.ownership_percentage || '0') || 0;
+      const tokenPrice = tokens > 0 ? invested / tokens : 0;
+      await downloadReceiptPdf({
+        transactionId: `${g.property.id.slice(0, 8).toUpperCase()}`,
+        date: g.holdings.first_investment_date
+          ? new Date(g.holdings.first_investment_date)
+          : new Date(),
+        status: 'Confirmed',
+        property: {
+          title: g.property.title,
+          location: g.property.location,
+          tokenPrice,
+          totalValue: undefined,
+        },
+        purchase: {
+          amount: invested,
+          tokens,
+          ownershipPercentage: ownershipPct,
+        },
+        owner: { name: investorName },
+      });
+    } catch (_) {
+      setError('Could not generate the receipt. Please try again.');
+    } finally {
+      setBusyDoc(null);
+    }
+  };
+
+  const generateDoc = (g: InvestorPropertyDocuments, doc: InvestorDocument) => {
+    if (doc.kind === 'purchase_receipt') return downloadReceipt(g, doc.id);
+    return downloadCertificate(g, doc.id);
   };
 
   if (loading) {
@@ -193,11 +233,12 @@ export const InvestorDocumentsPanel: React.FC = () => {
               <ul className="divide-y divide-slate-100 dark:divide-slate-700">
                 {g.documents.map((doc) => {
                   const Icon = iconFor(doc);
-                  const isCert = doc.kind === 'share_certificate';
+                  const isGenerated = doc.generated;
+                  const highlight = doc.kind === 'share_certificate';
                   return (
                     <li key={doc.id} className="flex items-center gap-3 p-4">
                       <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                        isCert
+                        highlight
                           ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400'
                           : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300'
                       }`}>
@@ -211,14 +252,18 @@ export const InvestorDocumentsPanel: React.FC = () => {
                           {doc.description || DOC_TYPE_LABEL[doc.document_type] || 'Document'}
                         </p>
                       </div>
-                      {isCert ? (
+                      {isGenerated ? (
                         <button
-                          onClick={() => downloadCertificate(g)}
-                          disabled={busyCert === g.property.id}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-medium px-3 py-1.5 transition-colors shrink-0"
+                          onClick={() => generateDoc(g, doc)}
+                          disabled={busyDoc === doc.id}
+                          className={`inline-flex items-center gap-1.5 rounded-lg disabled:opacity-50 text-sm font-medium px-3 py-1.5 transition-colors shrink-0 ${
+                            highlight
+                              ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                              : 'border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700'
+                          }`}
                         >
                           <Download className="w-4 h-4" />
-                          {busyCert === g.property.id ? 'Generating…' : 'Download PDF'}
+                          {busyDoc === doc.id ? 'Generating…' : 'Download PDF'}
                         </button>
                       ) : doc.download_url ? (
                         <a

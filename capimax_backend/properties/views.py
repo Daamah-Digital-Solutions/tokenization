@@ -3139,6 +3139,19 @@ class InvestorDocumentsView(APIView):
                 'uploaded_at': first_date.isoformat() if first_date else None,
             })
 
+            # Purchase receipt — auto-available here, rendered client-side from
+            # the holdings (client edit #7: receipts saved in Document Center).
+            documents.append({
+                'id': f'receipt-{prop.id}',
+                'kind': 'purchase_receipt',
+                'name': 'Purchase Receipt',
+                'document_type': 'financial',
+                'description': 'Official receipt for your purchase in this property.',
+                'download_url': None,
+                'generated': True,
+                'uploaded_at': first_date.isoformat() if first_date else None,
+            })
+
             # 2. Subscription agreement PDF(s), if any actually exist.
             for inv in invs:
                 sa = sub_by_investment.get(str(inv.id))

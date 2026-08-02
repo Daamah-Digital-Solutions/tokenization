@@ -9,7 +9,7 @@ export interface Document {
 
 export interface InvestorDocument {
   id: string;
-  kind: 'share_certificate' | 'subscription_agreement' | 'property_document';
+  kind: 'share_certificate' | 'purchase_receipt' | 'subscription_agreement' | 'property_document';
   name: string;
   document_type: string;
   description?: string;

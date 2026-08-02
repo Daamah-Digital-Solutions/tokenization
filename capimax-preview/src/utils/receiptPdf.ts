@@ -37,6 +37,26 @@ export interface ReceiptPdfData {
   owner?: { name?: string; id?: string };
   blockchainHash?: string | null;
   supportEmail?: string;
+  /** Human receipt reference. Derived from date + tx when not supplied. */
+  receiptNumber?: string;
+  website?: string;
+}
+
+// Real company data (see i18n common.json regulatoryBody1/2).
+const COMPANY = {
+  operator: 'Capimax Real Estate Technologies',
+  assetHolder: 'Capimax Asset Structure',
+  jurisdiction: 'State of Wyoming, United States',
+  website: 'capimaxrt.tech',
+  support: 'support@capimaxrt.com',
+};
+
+function defaultReceiptNumber(txId: string, when: Date): string {
+  const y = when.getFullYear();
+  const m = String(when.getMonth() + 1).padStart(2, '0');
+  const d = String(when.getDate()).padStart(2, '0');
+  const tail = (txId || '').replace(/-/g, '').slice(-6).toUpperCase() || 'RECEIPT';
+  return `RCP-${y}${m}${d}-${tail}`;
 }
 
 const money = (n?: number): string =>
@@ -58,6 +78,21 @@ export async function downloadReceiptPdf(data: ReceiptPdfData): Promise<void> {
   const contentWidth = pageWidth - margin * 2;
   const right = margin + contentWidth;
   const when = data.date ?? new Date();
+  const receiptNo = data.receiptNumber || defaultReceiptNumber(data.transactionId, when);
+
+  // Build a QR encoding the key receipt facts so it can be visually verified.
+  let qrDataUrl: string | null = null;
+  try {
+    const QRCode = await import('qrcode');
+    qrDataUrl = await QRCode.toDataURL(
+      `Capimax RT Receipt | No: ${receiptNo} | TX: ${data.transactionId} | ` +
+        `Property: ${data.property.title} | Amount: ${money(data.purchase.amount)} | ` +
+        `Tokens: ${data.purchase.tokens} | ${when.toISOString().slice(0, 10)}`,
+      { margin: 1, width: 240, errorCorrectionLevel: 'M' },
+    );
+  } catch (_) {
+    qrDataUrl = null;
+  }
 
   let y = 0;
 
@@ -109,10 +144,20 @@ export async function downloadReceiptPdf(data: ReceiptPdfData): Promise<void> {
   doc.text('Real Estate Tokenization Platform', margin, 64);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
-  doc.text('Purchase Receipt', right, 46, { align: 'right' });
+  doc.text('Purchase Receipt', right, 40, { align: 'right' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  doc.text(`TX: ${data.transactionId}`, right, 64, { align: 'right' });
+  doc.text(`Receipt No: ${receiptNo}`, right, 56, { align: 'right' });
+  doc.text(`TX: ${data.transactionId}`, right, 70, { align: 'right' });
+
+  // QR badge on the header band.
+  if (qrDataUrl) {
+    try {
+      doc.addImage(qrDataUrl, 'PNG', pageWidth / 2 - 26, 14, 52, 52);
+    } catch (_) {
+      /* non-fatal */
+    }
+  }
 
   y = 122;
 
@@ -191,9 +236,29 @@ export async function downloadReceiptPdf(data: ReceiptPdfData): Promise<void> {
   doc.setLineWidth(0.5);
   doc.line(margin, y, right, y);
   y += 16;
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
+  doc.setTextColor(...DARK);
+  doc.text(COMPANY.operator, pageWidth / 2, y, { align: 'center' });
+  y += 12;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
   doc.setTextColor(...MUTED);
+  doc.text(
+    `Registered in the ${COMPANY.jurisdiction}. Assets held under ${COMPANY.assetHolder}.`,
+    pageWidth / 2,
+    y,
+    { align: 'center' },
+  );
+  y += 11;
+  doc.text(
+    `${COMPANY.website}  ·  ${data.supportEmail || COMPANY.support}`,
+    pageWidth / 2,
+    y,
+    { align: 'center' },
+  );
+  y += 14;
+  doc.setFontSize(9);
   doc.text(
     'This receipt is official confirmation of your real estate token purchase.',
     pageWidth / 2,
@@ -201,10 +266,6 @@ export async function downloadReceiptPdf(data: ReceiptPdfData): Promise<void> {
     { align: 'center' }
   );
   y += 12;
-  if (data.supportEmail) {
-    doc.text(`For support, contact ${data.supportEmail}`, pageWidth / 2, y, { align: 'center' });
-    y += 12;
-  }
   if (data.blockchainHash) {
     doc.setTextColor(...DARK);
     doc.text(`Blockchain TX: ${data.blockchainHash}`, pageWidth / 2, y, { align: 'center' });
@@ -213,5 +274,5 @@ export async function downloadReceiptPdf(data: ReceiptPdfData): Promise<void> {
   doc.setTextColor(...MUTED);
   doc.text(`Generated ${when.toLocaleString()}`, pageWidth / 2, y, { align: 'center' });
 
-  doc.save(`purchase-receipt-${data.transactionId}.pdf`);
+  doc.save(`${receiptNo}.pdf`);
 }
