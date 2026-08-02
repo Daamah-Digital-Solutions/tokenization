@@ -271,6 +271,11 @@ export interface Property {
   // Installment Fields
   supports_installments?: boolean;
   installment_period_months?: number;
+  // SPV / legal entity (client edit #5)
+  spv_company_name?: string;
+  spv_registration_number?: string;
+  spv_establishment_date?: string;
+  spv_bank_name?: string;
   
   // Token and Financial Fields
   total_value: number;

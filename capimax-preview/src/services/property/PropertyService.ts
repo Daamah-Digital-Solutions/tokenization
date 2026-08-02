@@ -202,7 +202,12 @@ export class PropertyService {
         average_rating: property.average_rating,
         total_reviews: property.total_reviews,
         investor_count: property.investor_count,
-        total_investment: property.total_investment
+        total_investment: property.total_investment,
+        // SPV / legal entity details (client edit #5 — surfaced on the SPV tab)
+        spv_company_name: property.spv_company_name,
+        spv_registration_number: property.spv_registration_number,
+        spv_establishment_date: property.spv_establishment_date,
+        spv_bank_name: property.spv_bank_name,
       };
     } catch (error) {
       console.error('Failed to get property:', error);

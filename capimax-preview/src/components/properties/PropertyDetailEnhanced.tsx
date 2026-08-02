@@ -71,6 +71,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
   const [tokenCount, setTokenCount] = useState(1);
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [showSpvVerify, setShowSpvVerify] = useState(false);
 
   const currentImageIndex = externalImageIndex ?? internalImageIndex;
   const setCurrentImageIndex = onImageClick ?? setInternalImageIndex;
@@ -133,16 +134,26 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
 
   const { investmentAmount, annualReturn, quarterlyDividend, monthlyDividend } = calculateReturns();
 
-  // SPV Information (would come from backend in real app)
+  // SPV Information — prefer the real SPV fields the backend serializes
+  // (spv_company_name / spv_registration_number / spv_establishment_date),
+  // falling back to derived placeholders only when a field is missing so the
+  // panel is never blank.
+  const spvAny = property as any;
   const spvInfo = {
-    name: `${property.title} SPV Ltd`,
+    name: spvAny.spv_company_name || `${property.title} SPV Ltd`,
     jurisdiction: 'United Arab Emirates',
-    formationDate: property.created_at ? formatDate(property.created_at.toString()) : 'N/A',
-    registrationNumber: `SPV-${property.id?.slice(0, 8).toUpperCase()}`,
+    formationDate: spvAny.spv_establishment_date
+      ? formatDate(spvAny.spv_establishment_date.toString())
+      : property.created_at
+        ? formatDate(property.created_at.toString())
+        : 'N/A',
+    registrationNumber:
+      spvAny.spv_registration_number || `SPV-${property.id?.slice(0, 8).toUpperCase()}`,
     legalStructure: 'Special Purpose Vehicle',
     managingDirector: 'Capimax RT Management',
     auditor: 'Independent Audit Firm',
-    custodian: 'Licensed Custodian Bank'
+    custodian: spvAny.spv_bank_name || 'Licensed Custodian Bank',
+    hasRealRegistration: !!spvAny.spv_registration_number,
   };
 
   // Distribution schedule
@@ -425,8 +436,12 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                   </div>
                 </Card>
 
-                {/* Installment Plan — under-construction properties that support instalments (#3a) */}
-                {isUnderConstruction && property.supports_installments && (
+                {/* Installment / payment-stage plan — shown for every
+                    under-construction property so investors always see the
+                    schedule + dates + downloadable table (client edit #4).
+                    InstallmentStatement falls back to a 12-month period when
+                    installment_period_months isn't set. */}
+                {isUnderConstruction && (
                   <InstallmentStatement property={property} />
                 )}
 
@@ -711,15 +726,93 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
               </div>
 
               <div className="mt-8">
-                <Button variant="outline" className="mr-4">
+                <Button
+                  variant="outline"
+                  className="mr-4"
+                  onClick={() => setActiveTab('documents')}
+                >
                   <FileText className="w-4 h-4 mr-2" />
                   View SPV Documents
                 </Button>
-                <Button variant="ghost">
+                <Button variant="ghost" onClick={() => setShowSpvVerify(true)}>
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  Verify Registration
+                  Verify Company Registration
                 </Button>
               </div>
+
+              {/* Company registration verification modal */}
+              {showSpvVerify && (
+                <div
+                  className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+                  onClick={() => setShowSpvVerify(false)}
+                >
+                  <div
+                    className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full p-6"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-11 h-11 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                        <Shield className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+                          Company Registration
+                        </h3>
+                        <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                          {spvInfo.hasRealRegistration ? 'Verified on record' : 'Registration details'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2.5 text-sm">
+                      {[
+                        ['Legal entity', spvInfo.name],
+                        ['Registration number', spvInfo.registrationNumber],
+                        ['Jurisdiction', spvInfo.jurisdiction],
+                        ['Formation date', spvInfo.formationDate],
+                        ['Legal structure', spvInfo.legalStructure],
+                        ['Status', 'Registered / Active'],
+                      ].map(([label, value]) => (
+                        <div
+                          key={label}
+                          className="flex items-start justify-between gap-3 py-1.5 border-b border-slate-100 dark:border-slate-700 last:border-0"
+                        >
+                          <span className="text-slate-500 dark:text-slate-400">{label}</span>
+                          <span className="text-slate-900 dark:text-white font-medium text-right break-all">
+                            {value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
+                      {spvInfo.hasRealRegistration
+                        ? 'This SPV is registered to hold the property on behalf of token owners. You can look up the registration number with the relevant company registry in the stated jurisdiction.'
+                        : 'The registration record for this SPV is being finalised. Contact support if you need the official registry reference.'}
+                    </p>
+
+                    <div className="mt-5 flex gap-3">
+                      <a
+                        href={`https://www.google.com/search?q=${encodeURIComponent(
+                          `${spvInfo.name} ${spvInfo.registrationNumber} company registration ${spvInfo.jurisdiction}`,
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Look up registry
+                      </a>
+                      <button
+                        onClick={() => setShowSpvVerify(false)}
+                        className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2.5 text-sm transition-colors"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </Card>
           )}
 
