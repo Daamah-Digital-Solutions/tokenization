@@ -10,6 +10,8 @@
  * deterministic and always renders cleanly regardless of theme, fonts, or CSP.
  */
 
+import { getBrandLogoLight } from './brandLogo';
+
 export interface ReceiptPdfData {
   transactionId: string;
   date?: Date;
@@ -136,12 +138,22 @@ export async function downloadReceiptPdf(data: ReceiptPdfData): Promise<void> {
   doc.setFillColor(...EMERALD);
   doc.rect(0, 0, pageWidth, 92, 'F');
   doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(24);
-  doc.text('CAPIMAX', margin, 46);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.text('Real Estate Tokenization Platform', margin, 64);
+  const hdrLogo = await getBrandLogoLight();
+  if (hdrLogo) {
+    const lw = 118;
+    const lh = lw / (hdrLogo.aspect || 3.8);
+    doc.addImage(hdrLogo.dataUrl, 'PNG', margin, 24, lw, lh);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.text('Real Estate Tokenization Platform', margin, 24 + lh + 13);
+  } else {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(24);
+    doc.text('CAPIMAX', margin, 46);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text('Real Estate Tokenization Platform', margin, 64);
+  }
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
   doc.text('Purchase Receipt', right, 40, { align: 'right' });

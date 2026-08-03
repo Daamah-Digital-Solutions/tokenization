@@ -8,6 +8,8 @@
  * weigh down the initial bundle.
  */
 
+import { getBrandLogoDark } from './brandLogo';
+
 export interface OwnershipCertificateData {
   certificateNumber: string;
   investorName: string;
@@ -59,15 +61,22 @@ export async function downloadOwnershipCertificatePdf(
 
   const cx = pageWidth / 2;
 
-  // ---- Header -------------------------------------------------------------
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(22);
-  doc.setTextColor(...EMERALD);
-  doc.text('CAPIMAX', cx, 84, { align: 'center' });
+  // ---- Header — real logo, with a wordmark fallback -----------------------
+  const logo = await getBrandLogoDark();
+  if (logo) {
+    const lw = 140;
+    const lh = lw / (logo.aspect || 3.8);
+    doc.addImage(logo.dataUrl, 'PNG', cx - lw / 2, 58, lw, lh);
+  } else {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.setTextColor(...EMERALD);
+    doc.text('CAPIMAX', cx, 84, { align: 'center' });
+  }
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9.5);
   doc.setTextColor(...MUTED);
-  doc.text('Real Estate Tokenization Platform', cx, 100, { align: 'center' });
+  doc.text('Real Estate Tokenization Platform', cx, 104, { align: 'center' });
 
   doc.setDrawColor(...EMERALD_LIGHT);
   doc.setLineWidth(0.8);
