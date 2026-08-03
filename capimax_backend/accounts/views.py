@@ -458,6 +458,29 @@ class EmailVerificationView(APIView):
             result = serializer.save()
             user = result['user']
 
+            # Account-activation confirmation email (client edit #6).
+            try:
+                from notifications.services import NotificationService
+                NotificationService.create_notification(
+                    user=user,
+                    title="Your account is now active",
+                    message=(
+                        "Welcome to Capimax RT! Your email has been verified and "
+                        "your account is active. You can now complete identity "
+                        "verification (KYC) and start co-owning tokenized real estate."
+                    ),
+                    notification_type='success',
+                    priority='medium',
+                    action_url='/dashboard',
+                    action_label='Go to Dashboard',
+                    send_email=True,
+                    send_real_time=True,
+                )
+            except Exception:
+                logging.getLogger(__name__).warning(
+                    "Activation confirmation email failed", exc_info=True,
+                )
+
             response = Response(
                 create_success_response(
                     data={

@@ -687,7 +687,8 @@ class InstallmentProcessingService:
         if installment.graduated_release and installment.tokens_per_payment:
             tokens_message = f" {installment.tokens_per_payment} tokens have been released to your wallet."
         
-        Notification.objects.create(
+        from notifications.services import NotificationService
+        NotificationService.create_notification(
             user=installment.investor,
             title="Payment Processed Successfully",
             message=f"Your installment payment of ${amount_paid} for {installment.property_investment.title} has been processed successfully.{tokens_message}",
@@ -695,12 +696,14 @@ class InstallmentProcessingService:
             priority=NotificationPriority.MEDIUM,
             content_object=installment,
             action_url=f"/dashboard/investments/{installment.property_investment.id}/installments",
-            action_label="View Installment Details"
+            action_label="View Installment Details",
+            send_email=True,
         )
-    
+
     def _send_payment_failure_notification(self, installment: ConstructionInstallment, error_message: str):
         """Send payment failure notification to investor."""
-        Notification.objects.create(
+        from notifications.services import NotificationService
+        NotificationService.create_notification(
             user=installment.investor,
             title="Payment Processing Failed",
             message=f"Your installment payment of ${installment.installment_amount} for {installment.property_investment.title} could not be processed. Reason: {error_message}",
@@ -708,12 +711,14 @@ class InstallmentProcessingService:
             priority=NotificationPriority.HIGH,
             content_object=installment,
             action_url=f"/dashboard/investments/{installment.property_investment.id}/installments",
-            action_label="Update Payment Method"
+            action_label="Update Payment Method",
+            send_email=True,
         )
-    
+
     def _send_late_payment_notification(self, installment: ConstructionInstallment):
         """Send late payment notification to investor."""
-        Notification.objects.create(
+        from notifications.services import NotificationService
+        NotificationService.create_notification(
             user=installment.investor,
             title="Late Payment Notice",
             message=f"Your installment payment of ${installment.installment_amount} for {installment.property_investment.title} is overdue. Please make your payment as soon as possible to avoid additional fees.",
@@ -721,7 +726,8 @@ class InstallmentProcessingService:
             priority=NotificationPriority.HIGH,
             content_object=installment,
             action_url=f"/dashboard/investments/{installment.property_investment.id}/installments",
-            action_label="Make Payment Now"
+            action_label="Make Payment Now",
+            send_email=True,
         )
 
 

@@ -193,7 +193,13 @@ class KYCProfile(models.Model):
         # Set expiration to 2 years from now
         self.expires_at = timezone.now() + timedelta(days=730)
         self.save()
-        
+        # Email the user (every path — admin + API — goes through here).
+        self._notify_status_email(
+            'approved',
+            'Your identity verification has been approved! You now have '
+            'full access to all platform features.',
+        )
+
     def reject(self, reviewed_by_user, reason):
         """Reject KYC verification with reason."""
         self.status = KYCStatus.REJECTED
@@ -201,6 +207,30 @@ class KYCProfile(models.Model):
         self.reviewed_at = timezone.now()
         self.rejection_reason = reason
         self.save()
+        self._notify_status_email(
+            'rejected',
+            f'Your identity verification was not approved. Reason: {reason}',
+        )
+
+    def _notify_status_email(self, status, message):
+        """Send the KYC status-change email. Never let a mail failure break
+        the approve/reject transaction."""
+        try:
+            from core.services.email_service import EmailService
+            from django.conf import settings
+            base = (getattr(settings, 'FRONTEND_URL', '') or '').rstrip('/')
+            EmailService.send_kyc_status_update_email(
+                user=self.user,
+                status=status,
+                message=message,
+                dashboard_url=f'{base}/dashboard' if base else '/dashboard',
+            )
+        except Exception:
+            import logging
+            logging.getLogger(__name__).warning(
+                'KYC %s email failed for user %s', status, getattr(self, 'user_id', None),
+                exc_info=True,
+            )
 
 
 def kyc_document_upload_path(instance, filename):

@@ -586,7 +586,8 @@ class RentalIncomeService:
         token_count: int
     ):
         """Send successful distribution notification to investor."""
-        Notification.objects.create(
+        from notifications.services import NotificationService
+        NotificationService.create_notification(
             user=investor,
             title="Rental Income Received",
             message=f"You received ${amount} in rental income from {property_obj.title} for {period}. Based on your {token_count} tokens, the amount has been credited to your wallet.",
@@ -594,7 +595,8 @@ class RentalIncomeService:
             priority=NotificationPriority.MEDIUM,
             content_object=property_obj,
             action_url=f"/dashboard/investments/{property_obj.id}",
-            action_label="View Investment Details"
+            action_label="View Investment Details",
+            send_email=True,
         )
     
     def _send_distribution_failure_notification(

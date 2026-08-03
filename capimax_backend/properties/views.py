@@ -3297,10 +3297,40 @@ class DataRoomDocumentUploadView(generics.CreateAPIView):
                 from rest_framework.exceptions import PermissionDenied
                 raise PermissionDenied("You don't have permission to upload documents to this property.")
 
-        serializer.save(
+        doc = serializer.save(
             property=property_obj,
             uploaded_by=user
         )
+
+        # Notify the property's investors that a new document is available in
+        # their Document Center (client edit #6 — document-creation email).
+        # Fully guarded so a notification hiccup never fails the upload.
+        try:
+            if getattr(doc, 'investor_access', False):
+                from notifications.services import NotificationService
+                from accounts.models import User as _User
+                investor_ids = list(
+                    Investment.objects
+                    .filter(property_investment=property_obj)
+                    .values_list('user_id', flat=True).distinct()
+                )
+                for u in _User.objects.filter(id__in=investor_ids):
+                    NotificationService.create_notification(
+                        user=u,
+                        title="New document available",
+                        message=(
+                            f"A new document ('{doc.name}') is now available for "
+                            f"{property_obj.title} in your Document Center."
+                        ),
+                        notification_type='info',
+                        priority='medium',
+                        action_url='/dashboard?view=documents',
+                        action_label='Open Document Center',
+                        send_email=True,
+                        send_real_time=True,
+                    )
+        except Exception:
+            logger.warning("Document-upload investor notification failed", exc_info=True)
 
 
 class DataRoomDocumentDetailView(generics.RetrieveUpdateDestroyAPIView):

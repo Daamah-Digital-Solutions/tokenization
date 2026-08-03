@@ -94,17 +94,8 @@ class KYCProfileAdmin(admin.ModelAdmin):
         """Bulk action to approve selected KYC profiles."""
         count = 0
         for kyc_profile in queryset.filter(status__in=['pending', 'in_review']):
-            kyc_profile.approve(request.user)
+            kyc_profile.approve(request.user)  # sends the approval email itself
             count += 1
-
-            # Send approval notification email
-            from core.services.email_service import EmailService
-            EmailService.send_kyc_status_update_email(
-                user=kyc_profile.user,
-                status='approved',
-                message='Your identity verification has been approved! You now have full access to all platform features.',
-                dashboard_url=request.build_absolute_uri('/dashboard')
-            )
 
         self.message_user(
             request,
@@ -121,17 +112,8 @@ class KYCProfileAdmin(admin.ModelAdmin):
         default_reason = "Documents require additional verification. Please resubmit with clearer images."
 
         for kyc_profile in queryset.filter(status__in=['pending', 'in_review']):
-            kyc_profile.reject(request.user, default_reason)
+            kyc_profile.reject(request.user, default_reason)  # sends the rejection email itself
             count += 1
-
-            # Send rejection notification email
-            from core.services.email_service import EmailService
-            EmailService.send_kyc_status_update_email(
-                user=kyc_profile.user,
-                status='rejected',
-                message=f'Your identity verification was not approved. Reason: {default_reason}',
-                dashboard_url=request.build_absolute_uri('/dashboard')
-            )
 
         self.message_user(
             request,
