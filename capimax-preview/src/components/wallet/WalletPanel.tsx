@@ -30,6 +30,38 @@ import { useAuth } from '../../contexts/AuthContext';
 
 type Status = 'idle' | 'loading' | 'linking' | 'unlinking' | 'error';
 
+// Block explorer base URL per chain, for on-chain verification links (#10/#11).
+const EXPLORERS: Record<number, string> = {
+  1: 'https://etherscan.io',
+  56: 'https://bscscan.com',
+  97: 'https://testnet.bscscan.com',
+  137: 'https://polygonscan.com',
+  80001: 'https://mumbai.polygonscan.com',
+};
+
+function explorerBase(chainId?: number | null, network?: string | null): string {
+  if (chainId && EXPLORERS[chainId]) return EXPLORERS[chainId];
+  const n = (network || '').toLowerCase();
+  if (n.includes('polygon') || n.includes('matic')) return 'https://polygonscan.com';
+  if (n.includes('ethereum') || n === 'eth') return 'https://etherscan.io';
+  if (n.includes('bsc') || n.includes('bnb') || n.includes('binance')) return 'https://bscscan.com';
+  return 'https://testnet.bscscan.com';
+}
+
+function shortAddr(a?: string | null): string {
+  if (!a) return '—';
+  return a.length > 14 ? `${a.slice(0, 8)}…${a.slice(-6)}` : a;
+}
+
+function networkLabel(network?: string | null, chainId?: number | null): string {
+  if (network) return network;
+  const map: Record<number, string> = {
+    1: 'Ethereum', 56: 'BNB Smart Chain', 97: 'BNB Testnet',
+    137: 'Polygon', 80001: 'Polygon Mumbai',
+  };
+  return (chainId && map[chainId]) || 'Blockchain';
+}
+
 interface WalletPanelProps {
   /** Optional class to override outer wrapper styles. */
   className?: string;
@@ -38,7 +70,8 @@ interface WalletPanelProps {
 }
 
 const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false }) => {
-  const { refreshUser } = useAuth();
+  const { refreshUser, state: authState } = useAuth();
+  const authUser = authState?.user as any;
   const [info, setInfo] = useState<WalletInfo | null>(null);
   const [balances, setBalances] = useState<CustodialBalance[]>([]);
   const [status, setStatus] = useState<Status>('loading');
@@ -153,6 +186,41 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
     [refresh],
   );
 
+  const totalTokens = balances.reduce(
+    (s, r) => s + (parseInt(r.custodial_balance, 10) || 0) + (parseInt(r.external_balance, 10) || 0),
+    0,
+  );
+  const primaryNetwork = balances[0]
+    ? networkLabel(balances[0].network, balances[0].chain_id)
+    : 'BNB Testnet';
+  const isVerified = !!(
+    authUser?.is_verified ||
+    authUser?.kyc_status === 'kyc_approved' ||
+    authUser?.kyc_status === 'approved'
+  );
+  const walletActive = !!info?.primary_wallet;
+
+  const StatusTile: React.FC<{ label: string; value: string; tone?: 'ok' | 'muted' }> = ({
+    label,
+    value,
+    tone = 'muted',
+  }) => (
+    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 px-3 py-2.5">
+      <p className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {label}
+      </p>
+      <p
+        className={`text-sm font-semibold mt-0.5 ${
+          tone === 'ok'
+            ? 'text-emerald-600 dark:text-emerald-400'
+            : 'text-slate-800 dark:text-slate-100'
+        }`}
+      >
+        {value}
+      </p>
+    </div>
+  );
+
   const body = (
     <div className="space-y-5">
       <header className="space-y-1">
@@ -160,9 +228,25 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
           Your Capimax Wallet
         </h2>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Where your property tokens are minted.
+          Your digital wallet & tokenized property ownership.
         </p>
       </header>
+
+      {/* Status summary (#10) */}
+      <section className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <StatusTile
+          label="Wallet Status"
+          value={walletActive ? 'Active' : 'Pending'}
+          tone={walletActive ? 'ok' : 'muted'}
+        />
+        <StatusTile label="Network" value={primaryNetwork} />
+        <StatusTile
+          label="Verification"
+          value={isVerified ? 'Verified' : 'Unverified'}
+          tone={isVerified ? 'ok' : 'muted'}
+        />
+        <StatusTile label="Token Balance" value={totalTokens.toLocaleString()} />
+      </section>
 
       {/* Primary wallet (custodial in the common case) */}
       <section className="space-y-2">
@@ -252,77 +336,101 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
         )}
       </section>
 
-      {/* Custodial holdings — per-property balances + withdraw to external */}
-      {info?.has_external && balances.length > 0 && (
+      {/* Tokenized properties held in the wallet (#10) — always shown, with
+          on-chain details (network, token contract, explorer) per property. */}
+      {balances.length > 0 && (
         <section className="space-y-2">
           <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Custodial holdings
+            Tokenized properties in your wallet
           </span>
-          <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500 dark:bg-slate-900/50 dark:text-slate-400">
-                <tr>
-                  <th className="px-4 py-2 text-left">Property</th>
-                  <th className="px-4 py-2 text-right">In custody</th>
-                  <th className="px-4 py-2 text-right">In your wallet</th>
-                  <th className="px-4 py-2"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {balances.map((row) => {
-                  const inCustody = parseInt(row.custodial_balance, 10) || 0;
-                  const external = parseInt(row.external_balance, 10) || 0;
-                  const busy = withdrawingProperty === row.property_id;
-                  return (
-                    <tr
-                      key={row.property_id}
-                      className="border-t border-slate-200 dark:border-slate-800"
-                    >
-                      <td className="px-4 py-2 text-slate-700 dark:text-slate-200">
+          <div className="space-y-2">
+            {balances.map((row) => {
+              const inCustody = parseInt(row.custodial_balance, 10) || 0;
+              const external = parseInt(row.external_balance, 10) || 0;
+              const total = inCustody + external;
+              const busy = withdrawingProperty === row.property_id;
+              const exp = explorerBase(row.chain_id, row.network);
+              return (
+                <div
+                  key={row.property_id}
+                  className="rounded-xl border border-slate-200 dark:border-slate-800 p-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-800 dark:text-slate-100 truncate">
                         {row.property_title}
-                      </td>
-                      <td className="px-4 py-2 text-right font-mono tabular-nums text-slate-700 dark:text-slate-200">
-                        {inCustody}
-                      </td>
-                      <td className="px-4 py-2 text-right font-mono tabular-nums text-slate-500 dark:text-slate-400">
-                        {external}
-                      </td>
-                      <td className="px-4 py-2 text-right">
-                        <button
-                          type="button"
-                          onClick={() => handleWithdraw(row)}
-                          disabled={busy || inCustody <= 0}
-                          className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-slate-700 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-                        >
-                          {busy ? 'Withdrawing…' : 'Withdraw'}
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                      </p>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                        <span className="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5">
+                          {networkLabel(row.network, row.chain_id)}
+                        </span>
+                        <span>
+                          <strong className="text-slate-700 dark:text-slate-200 tabular-nums">{total}</strong> tokens
+                        </span>
+                        {external > 0 && (
+                          <span>({inCustody} in custody · {external} in your wallet)</span>
+                        )}
+                      </div>
+                    </div>
+                    {info?.has_external && (
+                      <button
+                        type="button"
+                        onClick={() => handleWithdraw(row)}
+                        disabled={busy || inCustody <= 0}
+                        className="shrink-0 rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-slate-700 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+                      >
+                        {busy ? 'Withdrawing…' : 'Withdraw'}
+                      </button>
+                    )}
+                  </div>
+                  {row.contract_address && (
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                      <span className="text-slate-400 dark:text-slate-500">Token contract:</span>
+                      <code className="font-mono text-slate-600 dark:text-slate-300">
+                        {shortAddr(row.contract_address)}
+                      </code>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(row.contract_address)}
+                        className="rounded px-1.5 py-0.5 font-medium text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                      >
+                        {copied === row.contract_address ? 'Copied' : 'Copy'}
+                      </button>
+                      <a
+                        href={`${exp}/token/${row.contract_address}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
+                      >
+                        View on explorer ↗
+                      </a>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {lastWithdrawTx && (
             <p className="text-xs text-emerald-700 dark:text-emerald-300">
               Withdrawal broadcast.{' '}
               <a
-                href={`https://testnet.bscscan.com/tx/${lastWithdrawTx.hash}`}
+                href={`${explorerBase(balances[0]?.chain_id, balances[0]?.network)}/tx/${lastWithdrawTx.hash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium underline"
               >
-                View on BscScan ↗
+                View transaction ↗
               </a>
             </p>
           )}
 
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Tokens currently held in the platform-managed custodial wallet
-            can be moved to your linked external wallet anytime. Gas is
-            paid by the platform.
-          </p>
+          {info?.has_external && (
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Tokens held in the platform-managed custodial wallet can be moved
+              to your linked external wallet anytime. Gas is paid by the platform.
+            </p>
+          )}
         </section>
       )}
 
