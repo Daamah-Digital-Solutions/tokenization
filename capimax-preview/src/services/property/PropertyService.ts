@@ -208,6 +208,8 @@ export class PropertyService {
         spv_registration_number: property.spv_registration_number,
         spv_establishment_date: property.spv_establishment_date,
         spv_bank_name: property.spv_bank_name,
+        // Real on-chain contract data (client edits #9/#11 — Blockchain tab)
+        blockchain: property.blockchain,
       };
     } catch (error) {
       console.error('Failed to get property:', error);

@@ -299,9 +299,25 @@ export interface Property {
   images: string[];
   documents: string[];
   smart_contract_address?: string;
+  blockchain?: PropertyBlockchain | null;
   owner_id: string;
   created_at: Date;
   updated_at: Date;
+}
+
+// Real on-chain data for a property's token contract (client edits #9/#11).
+export interface PropertyBlockchain {
+  contract_address: string;
+  network: string | null;
+  network_type: string | null;
+  chain_id: number | null;
+  is_testnet: boolean | null;
+  explorer_url: string | null;
+  token_id: number | null;
+  deployment_transaction: string | null;
+  deployment_block: number | null;
+  is_verified: boolean;
+  status: string | null;
 }
 
 export interface PropertyCreateData {

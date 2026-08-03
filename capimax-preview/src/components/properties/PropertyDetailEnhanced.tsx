@@ -22,6 +22,7 @@ import {
   CreditCard,
   CalendarDays,
   Briefcase,
+  Boxes,
   Scale,
   Globe,
   ExternalLink,
@@ -53,7 +54,7 @@ interface PropertyDetailEnhancedProps {
   currentImageIndex?: number;
 }
 
-type TabId = 'overview' | 'financials' | 'spv' | 'documents' | 'location';
+type TabId = 'overview' | 'financials' | 'spv' | 'blockchain' | 'documents' | 'location';
 
 
 export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
@@ -72,6 +73,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [showSpvVerify, setShowSpvVerify] = useState(false);
+  const [copiedContract, setCopiedContract] = useState(false);
 
   const currentImageIndex = externalImageIndex ?? internalImageIndex;
   const setCurrentImageIndex = onImageClick ?? setInternalImageIndex;
@@ -105,6 +107,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
     { id: 'overview' as const, label: 'Overview', icon: Eye },
     { id: 'financials' as const, label: 'Financials', icon: BarChart3 },
     { id: 'spv' as const, label: 'SPV Info', icon: Briefcase },
+    { id: 'blockchain' as const, label: 'Blockchain', icon: Boxes },
     { id: 'documents' as const, label: 'Data Room', icon: Folder },
     { id: 'location' as const, label: 'Location', icon: MapPin },
   ];
@@ -815,6 +818,120 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
               )}
             </Card>
           )}
+
+          {activeTab === 'blockchain' && (() => {
+            const bc: any = (property as any).blockchain;
+            const base = bc?.explorer_url ? String(bc.explorer_url).replace(/\/$/, '') : null;
+            const addrUrl = base && bc?.contract_address ? `${base}/address/${bc.contract_address}` : null;
+            const txReal = bc?.deployment_transaction && !/^0x0+$/i.test(bc.deployment_transaction);
+            const txUrl = base && txReal ? `${base}/tx/${bc.deployment_transaction}` : null;
+            return (
+              <Card className="p-8">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                  <Boxes className="w-6 h-6 text-emerald-600" />
+                  Blockchain & Smart Contract
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  This property is tokenized on a public blockchain. Verify the token
+                  contract and your digital ownership on-chain at any time.
+                </p>
+
+                {bc && bc.contract_address ? (
+                  <>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                      {[
+                        ['Network', bc.network || 'Blockchain'],
+                        ['Chain ID', bc.chain_id != null ? String(bc.chain_id) : '—'],
+                        ['Contract Status', bc.status ? String(bc.status).replace(/^\w/, (c: string) => c.toUpperCase()) : 'Active'],
+                        ['Verification', bc.is_verified ? 'Verified' : 'On-chain'],
+                      ].map(([label, value]) => (
+                        <div key={label as string} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-3 py-2.5">
+                          <p className="text-[10px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{label}</p>
+                          <p className="text-sm font-semibold mt-0.5 text-gray-900 dark:text-white">{value}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="rounded-xl border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
+                      <div className="flex items-start justify-between gap-3 px-4 py-3">
+                        <span className="text-sm text-gray-500 dark:text-gray-400 shrink-0">Token Contract</span>
+                        <span className="flex items-center gap-2 min-w-0">
+                          <code className="font-mono text-sm text-gray-800 dark:text-gray-100 break-all">{bc.contract_address}</code>
+                          <button
+                            type="button"
+                            onClick={() => { try { navigator.clipboard?.writeText(bc.contract_address); setCopiedContract(true); setTimeout(() => setCopiedContract(false), 1500); } catch (_) {} }}
+                            className="shrink-0 text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
+                          >
+                            {copiedContract ? 'Copied' : 'Copy'}
+                          </button>
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-3 px-4 py-3">
+                        <span className="text-sm text-gray-500 dark:text-gray-400">Token ID</span>
+                        <code className="font-mono text-sm text-gray-800 dark:text-gray-100">{bc.token_id != null ? bc.token_id : '—'}</code>
+                      </div>
+                      <div className="flex items-center justify-between gap-3 px-4 py-3">
+                        <span className="text-sm text-gray-500 dark:text-gray-400">Token Standard</span>
+                        <code className="font-mono text-sm text-gray-800 dark:text-gray-100">ERC-1155</code>
+                      </div>
+                      <div className="flex items-start justify-between gap-3 px-4 py-3">
+                        <span className="text-sm text-gray-500 dark:text-gray-400 shrink-0">Deployment Tx</span>
+                        {txUrl ? (
+                          <a href={txUrl} target="_blank" rel="noopener noreferrer" className="font-mono text-sm text-emerald-600 dark:text-emerald-400 hover:underline break-all text-right">
+                            {bc.deployment_transaction}
+                          </a>
+                        ) : (
+                          <span className="text-sm text-gray-400 dark:text-gray-500">Not recorded</span>
+                        )}
+                      </div>
+                      {bc.deployment_block != null && (
+                        <div className="flex items-center justify-between gap-3 px-4 py-3">
+                          <span className="text-sm text-gray-500 dark:text-gray-400">Deployment Block</span>
+                          <code className="font-mono text-sm text-gray-800 dark:text-gray-100">{bc.deployment_block}</code>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      <a
+                        href={addrUrl || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2.5 transition-colors ${addrUrl ? '' : 'pointer-events-none opacity-50'}`}
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        View Contract on Explorer
+                      </a>
+                      {addrUrl && (
+                        <a
+                          href={`${addrUrl}#code`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        >
+                          <Shield className="w-4 h-4" />
+                          Verify Contract
+                        </a>
+                      )}
+                    </div>
+                    {bc.is_testnet && (
+                      <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">
+                        Note: this contract is currently deployed on a test network.
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-12 px-6 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
+                    <Boxes className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                    <p className="font-medium text-slate-700 dark:text-slate-300 mb-1">Not yet tokenized on-chain</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      The smart contract for this property will appear here once it is deployed.
+                    </p>
+                  </div>
+                )}
+              </Card>
+            );
+          })()}
 
           {activeTab === 'documents' && (
             <Card className="p-8">

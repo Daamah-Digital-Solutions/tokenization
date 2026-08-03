@@ -347,6 +347,7 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
     total_investment = serializers.SerializerMethodField()
     investor_count = serializers.SerializerMethodField()
     construction_progress = serializers.SerializerMethodField()
+    blockchain = serializers.SerializerMethodField()
 
     # Same decimal-as-string fix as PropertyListSerializer (see comment there).
     # construction_progress stays a SerializerMethodField so we don't list it here.
@@ -377,7 +378,7 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
             'spv_bank_account_number', 'spv_bank_name', 'spv_establishment_date',
             'images', 'documents', 'updates', 'reviews', 'valuations',
             'construction_milestones', 'rental_distributions', 'average_rating', 'total_reviews',
-            'total_investment', 'investor_count', 'created_at', 'updated_at'
+            'total_investment', 'investor_count', 'blockchain', 'created_at', 'updated_at'
         ]
         read_only_fields = [
             'id', 'tokens_available', 'funding_percentage', 'is_fully_funded',
@@ -427,6 +428,62 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
             milestone.progress_percentage for milestone in milestones
         )
         return round(total_progress / milestones.count(), 2)
+
+    def get_blockchain(self, obj):
+        """Real on-chain data for this property's token contract (client edits
+        #9/#11). Returns None when the property isn't tokenized on-chain yet.
+        Fully guarded so a blockchain-app issue never breaks the property API."""
+        try:
+            contract = (
+                obj.blockchain_contracts
+                .filter(contract_type='real_estate_token')
+                .select_related('network')
+                .order_by('-created_at')
+                .first()
+            )
+        except Exception:
+            contract = None
+
+        # Fallback: a raw contract address on the property but no registry row.
+        if not contract:
+            addr = getattr(obj, 'smart_contract_address', None)
+            if addr:
+                return {
+                    'contract_address': addr,
+                    'network': None, 'network_type': None, 'chain_id': None,
+                    'is_testnet': None, 'explorer_url': None, 'token_id': None,
+                    'deployment_transaction': None, 'deployment_block': None,
+                    'is_verified': False, 'status': None,
+                }
+            return None
+
+        net = contract.network
+        token_id = None
+        try:
+            from blockchain.models import TokenTransaction
+            ttx = (
+                TokenTransaction.objects
+                .filter(contract=contract, token_id__isnull=False)
+                .first()
+            )
+            if ttx is not None:
+                token_id = ttx.token_id
+        except Exception:
+            token_id = None
+
+        return {
+            'contract_address': contract.contract_address,
+            'network': getattr(net, 'name', None),
+            'network_type': getattr(net, 'network_type', None),
+            'chain_id': getattr(net, 'chain_id', None),
+            'is_testnet': (getattr(net, 'environment', '') == 'testnet'),
+            'explorer_url': getattr(net, 'explorer_url', None),
+            'token_id': token_id,
+            'deployment_transaction': contract.deployment_transaction,
+            'deployment_block': contract.deployment_block,
+            'is_verified': bool(contract.is_verified),
+            'status': contract.status,
+        }
 
 
 class PropertyCreateUpdateSerializer(serializers.ModelSerializer):
