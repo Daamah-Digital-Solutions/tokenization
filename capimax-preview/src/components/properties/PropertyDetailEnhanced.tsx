@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip as RTooltip, ResponsiveContainer,
+} from 'recharts';
+import {
   MapPin,
   Star,
   Users,
@@ -23,6 +27,7 @@ import {
   CalendarDays,
   Briefcase,
   Boxes,
+  Activity,
   Scale,
   Globe,
   ExternalLink,
@@ -54,7 +59,7 @@ interface PropertyDetailEnhancedProps {
   currentImageIndex?: number;
 }
 
-type TabId = 'overview' | 'financials' | 'spv' | 'blockchain' | 'documents' | 'location';
+type TabId = 'overview' | 'financials' | 'analytics' | 'spv' | 'blockchain' | 'documents' | 'location';
 
 
 export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
@@ -106,6 +111,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
   const tabs = [
     { id: 'overview' as const, label: 'Overview', icon: Eye },
     { id: 'financials' as const, label: 'Financials', icon: BarChart3 },
+    { id: 'analytics' as const, label: 'Analytics', icon: Activity },
     { id: 'spv' as const, label: 'SPV Info', icon: Briefcase },
     { id: 'blockchain' as const, label: 'Blockchain', icon: Boxes },
     { id: 'documents' as const, label: 'Data Room', icon: Folder },
@@ -672,6 +678,104 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
               </div>
             </Card>
           )}
+
+          {activeTab === 'analytics' && (() => {
+            const a: any = analytics || {};
+            const pm: any = a.performance_metrics || {};
+            const annual = Number(property.expected_return) || 0;
+            const monthly = annual / 12;
+            const occupancy = Number(property.occupancy_rate);
+            const rentalYield = Number(property.rental_yield) || 0;
+            const roiProj =
+              Number(a.roi_projection) ||
+              (annual && rentalYield ? (annual + rentalYield) / 2 : annual || rentalYield);
+            const origVal = Number(pm.original_value) || Number(property.total_value) || 0;
+            const curVal = Number(pm.current_valuation) || origVal;
+            const capitalGrowth = origVal ? ((curVal - origVal) / origVal) * 100 : 0;
+            const rawMonthly = Array.isArray(a.monthly_investment_data) ? a.monthly_investment_data : [];
+            let cum = 0;
+            const timeline = rawMonthly.map((d: any) => {
+              cum += Number(d.investment_amount) || 0;
+              return { month: String(d.month || '').slice(2), invested: Math.round(cum) };
+            });
+            const money = (n: number) => `$${Math.round(n || 0).toLocaleString()}`;
+            const pct = (n: number) => `${(n || 0).toFixed(2)}%`;
+            const tiles: [string, string][] = [
+              ['Annual Return', pct(annual)],
+              ['Monthly Return', pct(monthly)],
+              ['Occupancy', isNaN(occupancy) ? '—' : pct(occupancy)],
+              ['ROI (projected)', pct(roiProj)],
+              ['Capital Growth', pct(capitalGrowth)],
+              ['Rental Yield', pct(rentalYield)],
+            ];
+            return (
+              <Card className="p-8">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                  <Activity className="w-6 h-6 text-emerald-600" />
+                  Performance & Analytics
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  Property performance, returns, and investment growth over time.
+                </p>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+                  {tiles.map(([label, value]) => (
+                    <div key={label} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-3 py-2.5">
+                      <p className="text-[10px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{label}</p>
+                      <p className="text-base font-bold mt-0.5 text-gray-900 dark:text-white">{value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Property value growth */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+                  <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Initial Value</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">{money(origVal)}</p>
+                  </div>
+                  <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Current Valuation</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">{money(curVal)}</p>
+                  </div>
+                  <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 p-4">
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300">Capital Growth</p>
+                    <p className={`text-lg font-bold ${capitalGrowth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                      {capitalGrowth >= 0 ? '+' : ''}{pct(capitalGrowth)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Investment timeline chart */}
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Investment Timeline</h3>
+                {timeline.length > 0 && cum > 0 ? (
+                  <div className="w-full h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={timeline} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="invGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
+                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.4} />
+                        <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                        <YAxis tick={{ fontSize: 11 }} stroke="#9ca3af" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+                        <RTooltip formatter={(v: any) => [money(Number(v)), 'Cumulative invested']} />
+                        <Area type="monotone" dataKey="invested" stroke="#10b981" strokeWidth={2} fill="url(#invGrad)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <div className="text-center py-10 px-6 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
+                    <BarChart3 className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      No investment activity yet — the timeline chart will populate as investors join.
+                    </p>
+                  </div>
+                )}
+              </Card>
+            );
+          })()}
 
           {activeTab === 'spv' && (
             <Card className="p-8">

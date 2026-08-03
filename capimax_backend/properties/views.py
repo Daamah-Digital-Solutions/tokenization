@@ -327,16 +327,14 @@ class PropertyViewSet(ModelViewSet):
     
     @action(detail=True, methods=['get'])
     def analytics(self, request, pk=None):
-        """Get property analytics and performance data."""
+        """Get property analytics and performance data.
+
+        Property-level performance (ROI, appreciation, yield, distribution
+        history) is shown on the property detail page to any viewer — it is
+        marketing/performance data, not per-investor-sensitive — so this is no
+        longer gated to owner/staff (client edit #12).
+        """
         property_obj = self.get_object()
-        
-        # Check permissions
-        if not (request.user == property_obj.owner or request.user.is_staff):
-            return Response(
-                {'detail': 'You do not have permission to view analytics for this property.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
         analytics_data = self._generate_property_analytics(property_obj)
         serializer = PropertyAnalyticsSerializer(analytics_data)
         return Response(serializer.data)

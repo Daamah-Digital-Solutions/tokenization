@@ -60,7 +60,7 @@ interface InvestorControlPanelProps {
   currentView?: string;
 }
 
-type TabType = 'overview' | 'my-properties' | 'properties' | 'marketplace' | 'transactions' | 'installments' | 'reports' | 'wallet' | 'documents' | 'notifications' | 'settings';
+type TabType = 'overview' | 'my-properties' | 'properties' | 'marketplace' | 'transactions' | 'installments' | 'reports' | 'analytics' | 'wallet' | 'documents' | 'notifications' | 'settings';
 
 interface PriceAlert {
   id: string;
@@ -91,6 +91,8 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
         return 'transactions';
       case 'reports':
         return 'reports';
+      case 'analytics':
+        return 'analytics';
       case 'wallet':
         return 'wallet';
       case 'installments':
@@ -252,6 +254,14 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
 
         {activeTab === 'reports' && (
           <InvestorReports />
+        )}
+
+        {activeTab === 'analytics' && (
+          <AnalyticsDashboard
+            analyticsData={undefined}
+            portfolio={portfolio}
+            loading={portfolioLoading}
+          />
         )}
 
         {activeTab === 'installments' && (

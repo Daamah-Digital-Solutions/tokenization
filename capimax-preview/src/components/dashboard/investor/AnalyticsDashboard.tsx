@@ -244,17 +244,16 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           title="Total Return"
-          value={formatPercentage(portfolio?.return_percentage || 15.8)}
-          change="+2.4% this month"
-          changeType="positive"
+          value={formatPercentage(portfolio?.return_percentage ?? 0)}
+          changeType={(portfolio?.return_percentage ?? 0) >= 0 ? 'positive' : 'negative'}
           icon={TrendingUp}
           variant="gradient"
           animated={true}
         />
         <StatsCard
           title="Monthly Income"
-          value={formatCurrency(portfolio?.monthly_dividends || 2850)}
-          subtitle="Dividend yield: 8.2%"
+          value={formatCurrency(portfolio?.monthly_dividends ?? 0)}
+          subtitle="Dividend income"
           icon={DollarSign}
           variant="accent"
           animated={true}
