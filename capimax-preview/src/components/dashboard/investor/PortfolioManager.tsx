@@ -38,6 +38,8 @@ import { Text } from '../../design-system/typography/Text';
 import { Button } from '../../ui/Button';
 import { BlockchainLink } from '../../ui/BlockchainLink';
 import { cn } from '../../../utils/cn';
+import { useUser } from '../../../contexts/AuthContext';
+import { downloadOwnershipCertificatePdf } from '../../../utils/ownershipCertificatePdf';
 
 interface PortfolioManagerProps {
   portfolio: Portfolio | undefined;
@@ -94,6 +96,10 @@ interface Certificate {
   issueDate: Date;
   unitsHeld: number;
   downloadUrl: string;
+  ownershipPct: number;
+  investmentValue: number;
+  totalTokens: number;
+  location: string;
 }
 
 interface Transaction {
@@ -121,6 +127,43 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [activeSection, setActiveSection] = useState<ActiveSection>('investments');
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [downloadingCert, setDownloadingCert] = useState<string | null>(null);
+
+  const authUser = useUser() as any;
+  const investorName =
+    authUser?.name ||
+    [authUser?.first_name, authUser?.last_name].filter(Boolean).join(' ') ||
+    authUser?.email ||
+    'Investor';
+
+  const handleDownloadCertificate = async (cert: Certificate) => {
+    setDownloadingCert(cert.id);
+    try {
+      await downloadOwnershipCertificatePdf({
+        certificateNumber: cert.certificateNumber,
+        investorName,
+        property: {
+          title: cert.propertyName,
+          reference: cert.certificateNumber.replace('CMX-', ''),
+          location: cert.location,
+        },
+        tokens: cert.unitsHeld,
+        totalTokens: cert.totalTokens,
+        ownershipPercentage: cert.ownershipPct || 0,
+        investmentValue: cert.investmentValue || 0,
+        amountPaid: cert.investmentValue || 0,
+        issueDate: new Date(cert.issueDate),
+        qrPayload:
+          `Capimax RT - Certificate of Ownership | Cert: ${cert.certificateNumber} | ` +
+          `Property: ${cert.propertyName} | Holder: ${investorName} | ` +
+          `Tokens: ${cert.unitsHeld} | Ownership: ${(cert.ownershipPct || 0).toFixed(4)}%`,
+      });
+    } catch (_) {
+      /* PDF generation failed — non-fatal */
+    } finally {
+      setDownloadingCert(null);
+    }
+  };
 
   // Transform portfolio investments with property data
   const investments: PropertyInvestment[] = useMemo(() => {
@@ -193,15 +236,27 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
     if (!portfolio?.certificates) {
       return investments
         .filter(inv => inv.status === InvestmentStatus.COMPLETED)
-        .map((inv, idx) => ({
-          id: `cert-${idx}`,
-          propertyId: inv.property?.id || '',
-          propertyName: inv.property?.title || 'Property',
-          certificateNumber: `CERT-${Date.now()}-${idx}`,
-          issueDate: new Date(inv.created_at),
-          unitsHeld: inv.token_amount,
-          downloadUrl: '#'
-        }));
+        .map((inv, idx) => {
+          const propId = inv.property?.id || '';
+          const totalTokens = Number(inv.property?.total_tokens) || 0;
+          const ownershipPct = totalTokens ? (Number(inv.token_amount) / totalTokens) * 100 : 0;
+          const city = (inv as any).property_city || inv.property?.city || '';
+          const country = (inv as any).property_country || '';
+          return {
+            id: `cert-${idx}`,
+            propertyId: propId,
+            propertyName: inv.property?.title || 'Property',
+            // Stable certificate number (same scheme as the Document Center).
+            certificateNumber: `CMX-${propId.replace(/-/g, '').slice(0, 8).toUpperCase()}`,
+            issueDate: new Date(inv.created_at),
+            unitsHeld: inv.token_amount,
+            downloadUrl: '#',
+            ownershipPct,
+            investmentValue: Number(inv.investment_amount) || 0,
+            totalTokens,
+            location: [city, country].filter(Boolean).join(', '),
+          };
+        });
     }
     return portfolio.certificates as Certificate[];
   }, [portfolio?.certificates, investments]);
@@ -753,16 +808,36 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
                     Issued: {new Date(cert.issueDate).toLocaleDateString()}
                   </Text>
 
-                  <div className="flex justify-between items-center py-3 border-t border-slate-200 dark:border-slate-700">
-                    <span className="text-sm text-slate-600 dark:text-slate-400">Units Held</span>
-                    <span className="font-semibold text-slate-900 dark:text-white">
-                      {cert.unitsHeld.toLocaleString()}
-                    </span>
+                  <div className="border-t border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700/60">
+                    <div className="flex justify-between items-center py-2.5">
+                      <span className="text-sm text-slate-600 dark:text-slate-400">Shares Held</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">
+                        {cert.unitsHeld.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-2.5">
+                      <span className="text-sm text-slate-600 dark:text-slate-400">Ownership</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">
+                        {(cert.ownershipPct || 0).toFixed(4)}%
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-2.5">
+                      <span className="text-sm text-slate-600 dark:text-slate-400">Investment Value</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">
+                        ${(cert.investmentValue || 0).toLocaleString()}
+                      </span>
+                    </div>
                   </div>
 
-                  <Button variant="outline" size="sm" className="w-full mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-4"
+                    onClick={() => handleDownloadCertificate(cert)}
+                    disabled={downloadingCert === cert.id}
+                  >
                     <Download className="w-4 h-4 mr-2" />
-                    Download Certificate
+                    {downloadingCert === cert.id ? 'Generating…' : 'Download PDF'}
                   </Button>
                 </Card>
               ))}
