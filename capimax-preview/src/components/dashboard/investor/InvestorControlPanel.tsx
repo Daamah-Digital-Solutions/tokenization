@@ -47,6 +47,7 @@ import { InvestorDocumentsPanel } from './InvestorDocumentsPanel';
 import { WithdrawModal } from '../../wallet/WithdrawModal';
 import { WithdrawalRequestsSection } from '../../wallet/WithdrawalRequestsSection';
 import { AddFundsModal } from '../../wallet/AddFundsModal';
+import WalletPanel from '../../wallet/WalletPanel';
 import { SecondaryMarketDashboard } from '../../marketplace/SecondaryMarketDashboard';
 import { useUser, useAuth } from '../../../contexts/AuthContext';
 import { useRouter } from '../../../utils/router';
@@ -860,6 +861,12 @@ const WalletContent: React.FC<{
           icon={TrendingUp}
         />
       </div>
+
+      {/* Custodial / on-chain wallet — the digital wallet the platform issues
+          after KYC (address, network, verification, token balance, and the
+          tokenized properties held in it). Previously only on the standalone
+          /wallet route, so dashboard users never saw where their wallet was. */}
+      <WalletPanel />
 
       {/* Withdrawal request history. The investor sees every request
           they have lodged, what state it's in, and (for rejected

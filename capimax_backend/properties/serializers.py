@@ -766,7 +766,15 @@ class ConstructionInstallmentCreateSerializer(serializers.ModelSerializer):
             'total_installments', 'frequency', 'graduated_release',
             'notes'
         ]
-    
+        # `total_investment_amount` is derived authoritatively in validate()
+        # (token_price × token_allocation), so the client need not send it.
+        # Without this, DRF's field-level "required" check rejects the create
+        # POST with 400 BEFORE validate() runs — which is why installment plans
+        # were never created and never appeared on the investor's page.
+        extra_kwargs = {
+            'total_investment_amount': {'required': False},
+        }
+
     def validate(self, attrs):
         """Validate installment payment creation data."""
         property_obj = attrs.get('property_investment')
