@@ -18,9 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { ShieldCheck, ExternalLink, BadgeCheck } from 'lucide-react';
 import { Navbar } from '../components/layout/Navbar';
 import { Footer } from '../components/layout/Footer';
-import { useTheme } from '../contexts/ThemeContext';
-import CapiMaxLightLogo from '../assets/tokenization_capi max  tokenization light  uk  copy.svg';
-import CapiMaxDarkLogo from '../assets/tokenization_capi max tokenization uk dark   copy.svg';
+import CapimaxTrustLogo from '../assets/capimax-trust-logo.png';
 
 const TRUST_URL = 'https://www.capimax.pro';
 
@@ -63,10 +61,8 @@ const COPY = {
 
 export const VerificationCenterPage: React.FC = () => {
   const { i18n } = useTranslation();
-  const { theme } = useTheme();
   const isAr = (i18n.language || 'en').toLowerCase().startsWith('ar');
   const t = isAr ? COPY.ar : COPY.en;
-  const logo = theme === 'dark' ? CapiMaxLightLogo : CapiMaxDarkLogo;
 
   return (
     <div
@@ -78,15 +74,19 @@ export const VerificationCenterPage: React.FC = () => {
       <main className="relative pt-16">
         <section className="relative overflow-hidden">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
-            {/* Big brand logo */}
-            <motion.img
+            {/* Big Capimax Trust logo (on a white plate so it reads on any theme) */}
+            <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              src={logo}
-              alt="Capimax"
-              className="h-16 sm:h-20 w-auto mx-auto mb-8"
-            />
+              className="inline-block rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 px-6 py-4 mb-8"
+            >
+              <img
+                src={CapimaxTrustLogo}
+                alt="Capimax Trust"
+                className="h-24 sm:h-32 w-auto mx-auto"
+              />
+            </motion.div>
 
             {/* Verified badge + title */}
             <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-4 py-1.5 mb-5">
@@ -123,9 +123,9 @@ export const VerificationCenterPage: React.FC = () => {
             {/* Capimax Trust brand + CTA */}
             <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-white dark:bg-slate-800/60 p-6 sm:p-8">
               <div className="flex items-center justify-center gap-2 mb-1.5">
-                <ShieldCheck className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-                <span className="text-xl font-bold text-slate-900 dark:text-white">
-                  Capimax <span className="text-emerald-600 dark:text-emerald-400">Trust</span>
+                <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                  {isAr ? 'بوابة التحقق المركزية' : 'Central Verification Gateway'}
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
