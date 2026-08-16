@@ -13,7 +13,6 @@
  */
 
 import React from 'react';
-import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { ShieldCheck, ExternalLink, BadgeCheck } from 'lucide-react';
 import { Navbar } from '../components/layout/Navbar';
@@ -74,19 +73,18 @@ export const VerificationCenterPage: React.FC = () => {
       <main className="relative pt-16">
         <section className="relative overflow-hidden">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
-            {/* Big Capimax Trust logo (on a white plate so it reads on any theme) */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="inline-block rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 px-6 py-4 mb-8"
-            >
-              <img
-                src={CapimaxTrustLogo}
-                alt="Capimax Trust"
-                className="h-24 sm:h-32 w-auto mx-auto"
-              />
-            </motion.div>
+            {/* Big Capimax Trust logo — flex-centered (a plain inline-block +
+               text-center was rendering off-centre) on a white plate so it
+               reads on any theme. */}
+            <div className="flex justify-center mb-8">
+              <div className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 px-6 py-4">
+                <img
+                  src={CapimaxTrustLogo}
+                  alt="Capimax Trust"
+                  className="h-24 sm:h-32 w-auto"
+                />
+              </div>
+            </div>
 
             {/* Verified badge + title */}
             <div className="inline-flex items-center gap-2 rounded-full bg-emerald-100 dark:bg-emerald-900/30 px-4 py-1.5 mb-5">
