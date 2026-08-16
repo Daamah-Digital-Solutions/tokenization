@@ -122,6 +122,7 @@ const PropertyOwnerLandingPage = lazyWithRetry(() => import('./pages/PropertyOwn
 const WhyCapimaxPage = lazyWithRetry(() => import('./pages/WhyCapimaxPage').then(m => ({ default: m.WhyCapimaxPage })));
 const StructurePage = lazyWithRetry(() => import('./pages/StructurePage').then(m => ({ default: m.StructurePage })));
 const DocumentCenterPage = lazyWithRetry(() => import('./pages/DocumentCenterPage').then(m => ({ default: m.DocumentCenterPage })));
+const VerificationCenterPage = lazyWithRetry(() => import('./pages/VerificationCenterPage').then(m => ({ default: m.VerificationCenterPage })));
 
 // Guide Pages
 const BrokerGuidePage = lazyWithRetry(() => import('./pages/BrokerGuidePage').then(m => ({ default: m.BrokerGuidePage })));
@@ -654,6 +655,14 @@ const AppRouter: React.FC = () => {
           <main {...mainProps}>
             <Suspense fallback={<PageLoader message="Loading document center..." />}>
               <DocumentCenterPage />
+            </Suspense>
+          </main>
+        );
+      case 'verification-center':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading verification center..." />}>
+              <VerificationCenterPage />
             </Suspense>
           </main>
         );

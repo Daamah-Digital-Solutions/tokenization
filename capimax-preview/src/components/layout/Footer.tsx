@@ -49,7 +49,8 @@ export const Footer: React.FC = () => {
       { name: 'Broker Guide', href: '/broker-guide' },
       { name: 'LP Guide', href: '/lp-guide' },
       { name: 'Technology', href: '/technology' },
-      { name: 'Document Center', href: '/document-center' }
+      { name: 'Document Center', href: '/document-center' },
+      { name: 'Verification Center', href: '/verification-center' }
     ],
     legal: [
       { name: 'Privacy Policy', href: '/legal/privacy' },
