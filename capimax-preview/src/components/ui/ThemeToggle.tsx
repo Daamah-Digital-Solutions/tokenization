@@ -1,10 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Sun, Moon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
 
 export const ThemeToggle: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
+  const { t } = useTranslation('shared');
 
   return (
     <motion.button
@@ -12,7 +14,7 @@ export const ThemeToggle: React.FC = () => {
       whileTap={{ scale: 0.95 }}
       onClick={toggleTheme}
       className="relative p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors duration-200"
-      aria-label="Toggle theme"
+      aria-label={t('theme.toggle')}
     >
       <motion.div
         initial={false}

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { SlidersHorizontal, X, DollarSign, Calendar, TrendingUp, MapPin, Building, Users } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
+import { useTranslation } from 'react-i18next';
 
 export interface FilterState {
   priceRange: [number, number];
@@ -43,6 +44,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
   onToggle,
   className
 }) => {
+  const { t } = useTranslation('propui');
   const [tempFilters, setTempFilters] = useState<FilterState>(filters);
 
   const handleApplyFilters = () => {
@@ -57,9 +59,9 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
 
   const formatPrice = (price: number) => {
     if (price >= 1000000) {
-      return `$${(price / 1000000).toFixed(1)}M`;
+      return t('units.million', { v: (price / 1000000).toFixed(1) });
     }
-    return `$${(price / 1000).toFixed(0)}K`;
+    return t('units.thousand', { v: (price / 1000).toFixed(0) });
   };
 
   const updateFilter = <K extends keyof FilterState>(
@@ -83,8 +85,8 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
         )}
       >
         <SlidersHorizontal className="w-4 h-4" />
-        Advanced Filters
-        {isOpen && <X className="w-4 h-4 ml-1" />}
+        {t('filters.advanced')}
+        {isOpen && <X className="w-4 h-4 ms-1" />}
       </Button>
 
       {/* Filters Panel */}
@@ -99,7 +101,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
               <SlidersHorizontal className="w-5 h-5 text-emerald-600" />
-              Advanced Filters
+              {t('filters.advanced')}
             </h3>
             <div className="flex gap-2">
               <Button
@@ -108,12 +110,13 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                 onClick={handleResetFilters}
                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               >
-                Reset All
+                {t('filters.resetAll')}
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onToggle}
+                aria-label={t('filters.close')}
                 className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               >
                 <X className="w-4 h-4" />
@@ -126,7 +129,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
             <div className="space-y-3">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                 <DollarSign className="w-4 h-4 text-emerald-600" />
-                Price Range
+                {t('filters.priceRange')}
               </label>
               <div className="space-y-3">
                 <div className="relative">
@@ -168,7 +171,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
             <div className="space-y-3">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                 <TrendingUp className="w-4 h-4 text-emerald-600" />
-                Expected Returns
+                {t('filters.expectedReturns')}
               </label>
               <div className="space-y-3">
                 <div className="relative">
@@ -204,7 +207,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
             <div className="space-y-3">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                 <Calendar className="w-4 h-4 text-emerald-600" />
-                Year Built
+                {t('filters.yearBuilt')}
               </label>
               <div className="space-y-3">
                 <select
@@ -228,7 +231,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                   <option value="2021">2021</option>
                   <option value="2022">2022</option>
                   <option value="2023">2023</option>
-                  <option value={new Date().getFullYear()}>Current Year</option>
+                  <option value={new Date().getFullYear()}>{t('filters.currentYear')}</option>
                 </select>
               </div>
             </div>
@@ -237,7 +240,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
             <div className="space-y-3">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                 <Building className="w-4 h-4 text-emerald-600" />
-                Minimum Rating
+                {t('filters.minRating')}
               </label>
               <div className="grid grid-cols-5 gap-2">
                 {[1, 2, 3, 4, 5].map(rating => (
@@ -261,22 +264,22 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
             <div className="space-y-3">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                 <MapPin className="w-4 h-4 text-emerald-600" />
-                Location
+                {t('filters.location')}
               </label>
               <select
                 value={tempFilters.location}
                 onChange={(e) => updateFilter('location', e.target.value)}
                 className="w-full px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
               >
-                <option value="">All Locations</option>
-                <option value="New York">New York</option>
-                <option value="California">California</option>
-                <option value="Florida">Florida</option>
-                <option value="Texas">Texas</option>
-                <option value="Illinois">Illinois</option>
-                <option value="Washington">Washington</option>
-                <option value="Nevada">Nevada</option>
-                <option value="Massachusetts">Massachusetts</option>
+                <option value="">{t('filters.allLocations')}</option>
+                <option value="New York">{t('filters.locations.newYork')}</option>
+                <option value="California">{t('filters.locations.california')}</option>
+                <option value="Florida">{t('filters.locations.florida')}</option>
+                <option value="Texas">{t('filters.locations.texas')}</option>
+                <option value="Illinois">{t('filters.locations.illinois')}</option>
+                <option value="Washington">{t('filters.locations.washington')}</option>
+                <option value="Nevada">{t('filters.locations.nevada')}</option>
+                <option value="Massachusetts">{t('filters.locations.massachusetts')}</option>
               </select>
             </div>
 
@@ -284,11 +287,11 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
             <div className="space-y-3">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                 <Users className="w-4 h-4 text-emerald-600" />
-                Funding Status
+                {t('filters.fundingStatus')}
               </label>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { value: 'all', label: 'All' },
+                  { value: 'all', label: t('filters.all') },
                   { value: 'low', label: '0-50%' },
                   { value: 'medium', label: '50-80%' },
                   { value: 'high', label: '80%+' }
@@ -313,15 +316,15 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
             <div className="space-y-3">
               <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                 <Building className="w-4 h-4 text-emerald-600" />
-                Property Status
+                {t('filters.propertyStatus')}
               </label>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { value: 'all', label: 'All' },
-                  { value: 'funding', label: 'Funding' },
-                  { value: 'funded', label: 'Funded' },
-                  { value: 'construction', label: 'Under Construction' },
-                  { value: 'upcoming', label: 'Upcoming' }
+                  { value: 'all', label: t('filters.all') },
+                  { value: 'funding', label: t('filters.status.funding') },
+                  { value: 'funded', label: t('filters.status.funded') },
+                  { value: 'construction', label: t('filters.status.construction') },
+                  { value: 'upcoming', label: t('filters.status.upcoming') }
                 ].map(status => (
                   <button
                     key={status.value}
@@ -348,7 +351,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
               onClick={handleResetFilters}
               className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
             >
-              Reset Filters
+              {t('filters.reset')}
             </Button>
             <div className="flex gap-3">
               <Button
@@ -357,7 +360,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                 onClick={onToggle}
                 className="px-6"
               >
-                Cancel
+                {t('filters.cancel')}
               </Button>
               <Button
                 variant="primary"
@@ -365,7 +368,7 @@ export const PropertyFilters: React.FC<PropertyFiltersProps> = ({
                 onClick={handleApplyFilters}
                 className="px-8"
               >
-                Apply Filters
+                {t('filters.apply')}
               </Button>
             </div>
           </div>

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import type { MarketplaceStats as StatsType } from '../../services/marketplace/MarketplaceService';
+import { useTranslation } from 'react-i18next';
 
 interface MarketplaceStatsProps {
   stats: StatsType;
@@ -40,6 +41,7 @@ const StatCard: React.FC<StatCardProps> = ({
   color = 'blue',
   className
 }) => {
+  const { t } = useTranslation('market');
   const colorClasses = {
     blue: 'from-blue-500 to-blue-600',
     green: 'from-green-500 to-green-600',
@@ -86,7 +88,7 @@ const StatCard: React.FC<StatCardProps> = ({
         {trend && (
           <div className="flex items-center">
             <TrendingUp className={cn(
-              "w-4 h-4 mr-1",
+              "w-4 h-4 me-1",
               trend.direction === 'up' ? "text-green-200" : "text-red-200"
             )} />
             <span className={cn(
@@ -95,7 +97,7 @@ const StatCard: React.FC<StatCardProps> = ({
             )}>
               {trend.value}
             </span>
-            <span className="text-white/70 text-sm ml-1">vs last 24h</span>
+            <span className="text-white/70 text-sm ms-1">{t('stats.vsLast24h')}</span>
           </div>
         )}
       </div>
@@ -107,6 +109,7 @@ export const MarketplaceStats: React.FC<MarketplaceStatsProps> = ({
   stats,
   className
 }) => {
+  const { t } = useTranslation('market');
   const formatCurrency = (amount: number) => {
     if (amount >= 1000000) {
       return `$${(amount / 1000000).toFixed(1)}M`;
@@ -128,17 +131,17 @@ export const MarketplaceStats: React.FC<MarketplaceStatsProps> = ({
   return (
     <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6", className)}>
       <StatCard
-        title="Total Listings"
+        title={t('stats.totalListings')}
         value={formatNumber(stats.total_listings)}
-        subtitle="Active marketplace listings"
+        subtitle={t('stats.totalListingsSub')}
         icon={ShoppingCart}
         color="blue"
       />
 
       <StatCard
-        title="24h Volume"
+        title={t('stats.volume24h')}
         value={formatCurrency(stats.total_volume_24h)}
-        subtitle="Trading volume today"
+        subtitle={t('stats.volume24hSub')}
         icon={Activity}
         color="green"
         trend={{
@@ -148,17 +151,17 @@ export const MarketplaceStats: React.FC<MarketplaceStatsProps> = ({
       />
 
       <StatCard
-        title="Total Volume"
+        title={t('stats.totalVolume')}
         value={formatCurrency(stats.total_volume_all_time)}
-        subtitle="All-time trading volume"
+        subtitle={t('stats.totalVolumeSub')}
         icon={BarChart3}
         color="purple"
       />
 
       <StatCard
-        title="Avg. Token Price"
+        title={t('stats.avgPrice')}
         value={formatCurrency(stats.average_price_per_token)}
-        subtitle="Average price per token"
+        subtitle={t('stats.avgPriceSub')}
         icon={DollarSign}
         color="orange"
         trend={{
@@ -169,26 +172,26 @@ export const MarketplaceStats: React.FC<MarketplaceStatsProps> = ({
 
       {/* Additional row for more detailed stats */}
       <StatCard
-        title="Total Transactions"
+        title={t('stats.totalTx')}
         value={formatNumber(stats.total_transactions)}
-        subtitle="Completed trades"
+        subtitle={t('stats.totalTxSub')}
         icon={Zap}
         color="green"
       />
 
       <StatCard
-        title="Active Auctions"
+        title={t('stats.activeAuctions')}
         value={formatNumber(stats.active_auctions)}
-        subtitle="Ongoing auction listings"
+        subtitle={t('stats.activeAuctionsSub')}
         icon={Clock}
         color="red"
       />
 
       {/* Market Health Indicators */}
       <StatCard
-        title="Market Activity"
-        value="High"
-        subtitle="Based on recent trading"
+        title={t('stats.marketActivity')}
+        value={t('stats.high')}
+        subtitle={t('stats.marketActivitySub')}
         icon={TrendingUp}
         color="green"
         trend={{
@@ -198,14 +201,14 @@ export const MarketplaceStats: React.FC<MarketplaceStatsProps> = ({
       />
 
       <StatCard
-        title="Avg. Listing Time"
-        value="2.3 days"
-        subtitle="Time to sale completion"
+        title={t('stats.avgListingTime')}
+        value={t('stats.days', { value: '2.3' })}
+        subtitle={t('stats.avgListingTimeSub')}
         icon={Users}
         color="blue"
         trend={{
           direction: 'down',
-          value: '-0.5 days'
+          value: t('stats.days', { value: '-0.5' })
         }}
       />
     </div>

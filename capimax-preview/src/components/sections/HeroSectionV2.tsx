@@ -15,6 +15,7 @@ const HERO_BACKGROUNDS = [
 
 export const HeroSectionV2: React.FC = () => {
   const { t } = useTranslation();
+  const { t: tu } = useTranslation('ui');
   const [bgIndex, setBgIndex] = useState(0);
 
   // Auto-rotate background images
@@ -35,7 +36,7 @@ export const HeroSectionV2: React.FC = () => {
           <motion.img
             key={bgIndex}
             src={HERO_BACKGROUNDS[bgIndex]}
-            alt="Real Estate Ownership"
+            alt={tu('hero.bgAlt')}
             className="absolute inset-0 w-full h-full object-cover"
             initial={{ opacity: 0, scale: 1.1 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -59,15 +60,15 @@ export const HeroSectionV2: React.FC = () => {
                 ? 'bg-emerald-400 w-6'
                 : 'bg-white/40 hover:bg-white/60'
             }`}
-            aria-label={`View background ${index + 1}`}
+            aria-label={tu('hero.viewBackground', { n: index + 1 })}
           />
         ))}
       </div>
 
       {/* Subtle gradient overlays */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-to-bl from-emerald-500/10 to-transparent blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-1/2 h-1/2 bg-gradient-to-tr from-emerald-500/5 to-transparent blur-3xl" />
+        <div className="absolute top-0 end-0 w-1/2 h-1/2 bg-gradient-to-bl from-emerald-500/10 to-transparent blur-3xl" />
+        <div className="absolute bottom-0 start-0 w-1/2 h-1/2 bg-gradient-to-tr from-emerald-500/5 to-transparent blur-3xl" />
       </div>
 
       {/* Main Content - pt-24 accounts for navbar height */}
@@ -129,7 +130,7 @@ export const HeroSectionV2: React.FC = () => {
                 onClick={() => window.location.href = '/register'}
               >
                 {t('hero.ctaPrimary')}
-                <ArrowRight className="ml-2 w-5 h-5" />
+                <ArrowRight className="ms-2 w-5 h-5 rtl:rotate-180" />
               </Button>
 
               <Button
@@ -183,7 +184,7 @@ export const HeroSectionV2: React.FC = () => {
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           className="flex flex-col items-center gap-3"
         >
-          <span className="text-xs text-gray-400 font-medium">Discover More</span>
+          <span className="text-xs text-gray-400 font-medium">{tu('hero.discoverMore')}</span>
           <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center relative overflow-hidden shadow-[0_2px_10px_rgba(16,185,129,0.2)]">
             <motion.div
               animate={{ y: [0, 16, 0] }}

@@ -6,12 +6,14 @@ import { AuthLayout } from '../components/auth/AuthLayout';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../contexts/AuthContext';
 import { AuthService } from '../services/auth/AuthService';
+import { useTranslation } from 'react-i18next';
 
 type VerificationState = 'pending' | 'success' | 'error' | 'resending';
 
 export const EmailVerificationPage: React.FC = () => {
   const { navigate } = useRouter();
   const { login } = useAuth();
+  const { t } = useTranslation('ui');
   const [verificationState, setVerificationState] = useState<VerificationState>('pending');
   const [message, setMessage] = useState('');
   const [isResending, setIsResending] = useState(false);
@@ -19,7 +21,7 @@ export const EmailVerificationPage: React.FC = () => {
   // Get token and email from URL search params
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
-  const email = urlParams.get('email') || 'your email';
+  const email = urlParams.get('email') || t('emailVerify.yourEmail');
 
   useEffect(() => {
     if (token) {
@@ -31,7 +33,7 @@ export const EmailVerificationPage: React.FC = () => {
     try {
       setVerificationState('pending');
       const response = await AuthService.verifyEmail(verificationToken);
-      setMessage(response.message || 'Email verified successfully!');
+      setMessage(response.message || t('emailVerify.verifiedShort'));
       setVerificationState('success');
 
       // Auto-redirect to login after 3 seconds
@@ -40,7 +42,7 @@ export const EmailVerificationPage: React.FC = () => {
       }, 3000);
     } catch (error: any) {
       console.error('Email verification failed:', error);
-      setMessage(error.message || 'Email verification failed. Please try again.');
+      setMessage(error.message || t('emailVerify.failedMsg'));
       setVerificationState('error');
     }
   };
@@ -52,11 +54,11 @@ export const EmailVerificationPage: React.FC = () => {
       const response = await AuthService.resendEmailVerification(
         new URLSearchParams(window.location.search).get('email') || undefined
       );
-      setMessage(response.message || 'Verification email sent successfully!');
+      setMessage(response.message || t('emailVerify.resent'));
       setVerificationState('pending');
     } catch (error: any) {
       console.error('Failed to resend verification email:', error);
-      setMessage(error.message || 'Failed to resend verification email. Please try again.');
+      setMessage(error.message || t('emailVerify.resendFailed'));
       setVerificationState('error');
     } finally {
       setIsResending(false);
@@ -81,12 +83,12 @@ export const EmailVerificationPage: React.FC = () => {
             </div>
             <div>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                {token ? 'Verifying Your Email...' : 'Check Your Email'}
+                {token ? t('emailVerify.verifying') : t('recovery.checkEmail')}
               </h2>
               <p className="text-slate-600 dark:text-slate-400">
                 {token
-                  ? 'Please wait while we verify your email address.'
-                  : `We've sent a verification link to ${email}. Please check your inbox and click the link to verify your account.`
+                  ? t('emailVerify.pleaseWait')
+                  : t('emailVerify.sentLink', { email })
                 }
               </p>
             </div>
@@ -98,9 +100,9 @@ export const EmailVerificationPage: React.FC = () => {
             {!token && (
               <div className="space-y-4">
                 <div className="text-sm text-slate-500 dark:text-slate-400 space-y-1">
-                  <p>• Check your spam/junk folder if you don't see the email</p>
-                  <p>• The verification link will expire in 24 hours</p>
-                  <p>• You must verify your email before you can sign in</p>
+                  <p>• {t('emailVerify.tipSpam')}</p>
+                  <p>• {t('emailVerify.tipExpire')}</p>
+                  <p>• {t('emailVerify.tipMust')}</p>
                 </div>
                 <div className="space-y-3">
                   <Button
@@ -111,8 +113,8 @@ export const EmailVerificationPage: React.FC = () => {
                     disabled={isResending}
                     className="w-full"
                   >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Resend Verification Email
+                    <RefreshCw className="w-4 h-4 me-2" />
+                    {t('emailVerify.resend')}
                   </Button>
                   <Button
                     variant="ghost"
@@ -120,8 +122,8 @@ export const EmailVerificationPage: React.FC = () => {
                     onClick={handleGoToLogin}
                     className="w-full"
                   >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Login
+                    <ArrowLeft className="w-4 h-4 me-2 rtl:rotate-180" />
+                    {t('emailVerify.backToLogin')}
                   </Button>
                 </div>
               </div>
@@ -141,15 +143,15 @@ export const EmailVerificationPage: React.FC = () => {
             </div>
             <div>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                Email Verified Successfully!
+                {t('emailVerify.successTitle')}
               </h2>
               <p className="text-slate-600 dark:text-slate-400">
-                {message || 'Your email has been verified. You can now sign in to your account.'}
+                {message || t('emailVerify.successMsg')}
               </p>
             </div>
             <div className="space-y-3">
               <div className="text-sm text-slate-500 dark:text-slate-400">
-                Redirecting to login page...
+                {t('emailVerify.redirecting')}
               </div>
               <Button
                 variant="primary"
@@ -157,7 +159,7 @@ export const EmailVerificationPage: React.FC = () => {
                 onClick={handleGoToLogin}
                 className="w-full"
               >
-                Continue to Login
+                {t('emailVerify.continueLogin')}
               </Button>
             </div>
           </motion.div>
@@ -175,17 +177,17 @@ export const EmailVerificationPage: React.FC = () => {
             </div>
             <div>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                Verification Failed
+                {t('emailVerify.failedTitle')}
               </h2>
               <p className="text-slate-600 dark:text-slate-400">
-                {message || 'The verification link is invalid or has expired.'}
+                {message || t('emailVerify.invalidLink')}
               </p>
             </div>
             <div className="space-y-3">
               <div className="text-sm text-slate-500 dark:text-slate-400 space-y-1">
-                <p>• Verification links expire after 24 hours</p>
-                <p>• Make sure you clicked the complete link from your email</p>
-                <p>• You can request a new verification email below</p>
+                <p>• {t('emailVerify.tipExpireAfter')}</p>
+                <p>• {t('emailVerify.tipComplete')}</p>
+                <p>• {t('emailVerify.tipRequest')}</p>
               </div>
               <div className="space-y-3">
                 <Button
@@ -196,8 +198,8 @@ export const EmailVerificationPage: React.FC = () => {
                   disabled={isResending}
                   className="w-full"
                 >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Send New Verification Email
+                  <RefreshCw className="w-4 h-4 me-2" />
+                  {t('emailVerify.sendNew')}
                 </Button>
                 <Button
                   variant="outline"
@@ -205,8 +207,8 @@ export const EmailVerificationPage: React.FC = () => {
                   onClick={handleGoToLogin}
                   className="w-full"
                 >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Login
+                  <ArrowLeft className="w-4 h-4 me-2 rtl:rotate-180" />
+                  {t('emailVerify.backToLogin')}
                 </Button>
               </div>
             </div>
@@ -220,8 +222,8 @@ export const EmailVerificationPage: React.FC = () => {
 
   return (
     <AuthLayout
-      title="Email Verification"
-      subtitle="Verify your email address to complete your account setup"
+      title={t('emailVerify.layoutTitle')}
+      subtitle={t('emailVerify.layoutSubtitle')}
     >
       {renderContent()}
     </AuthLayout>

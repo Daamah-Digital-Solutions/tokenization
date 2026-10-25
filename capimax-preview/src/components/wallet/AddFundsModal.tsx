@@ -12,6 +12,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 import { CreditCardForm } from '../payments/CreditCardForm';
 import { PaymentService } from '../../services/payment/PaymentService';
 import { apiClient } from '../../services/api/ApiClient';
@@ -43,6 +44,7 @@ interface PlatformBankAccount {
 const MIN_AMOUNT = 10;
 
 export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess }) => {
+  const { t } = useTranslation('payments');
   const [method, setMethod] = useState<'card' | 'crypto' | 'bank'>('card');
   const [amount, setAmount] = useState('');
   const [step, setStep] = useState<Step>('amount');
@@ -93,7 +95,7 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
         setBankAccounts(accounts);
         if (accounts.length) setSelectedAccountId(accounts[0].id);
       })
-      .catch(() => setError('Could not load bank details. Please try again.'))
+      .catch(() => setError(t('addFunds.errors.loadBank')))
       .finally(() => setLoadingAccounts(false));
   }, [step, bankAccounts.length, loadingAccounts]);
 
@@ -110,7 +112,7 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
 
   const handleContinue = async () => {
     if (!amountValid) {
-      setError(`Enter an amount of at least $${MIN_AMOUNT}.`);
+      setError(t('addFunds.errors.minAmount', { min: `$${MIN_AMOUNT}` }));
       return;
     }
     setError(null);
@@ -139,10 +141,10 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
         window.open(res.invoice_url, '_blank', 'noopener,noreferrer');
         setStep('crypto-pending');
       } else {
-        setError('Could not start the crypto checkout. Please try again.');
+        setError(t('addFunds.errors.cryptoStartRetry'));
       }
     } catch (e: any) {
-      setError(e?.message || 'Could not start the crypto checkout.');
+      setError(e?.message || t('addFunds.errors.cryptoStart'));
     } finally {
       setSubmitting(false);
     }
@@ -161,7 +163,7 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
       await apiClient.post('/payments/wallet/bank-deposit/', fd);
       setStep('bank-submitted');
     } catch (e: any) {
-      setError(e?.message || 'Could not submit your bank deposit. Please try again.');
+      setError(e?.message || t('addFunds.errors.bankSubmit'));
     } finally {
       setSubmitting(false);
     }
@@ -175,15 +177,15 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
     value ? (
       <div className="flex items-start justify-between gap-3 py-1.5 border-b border-slate-100 dark:border-slate-700/60 last:border-0">
         <span className="text-xs text-slate-500 dark:text-slate-400 shrink-0">{label}</span>
-        <span className="text-sm text-slate-800 dark:text-slate-100 text-right break-all font-medium">
+        <span className="text-sm text-slate-800 dark:text-slate-100 text-end break-all font-medium">
           {value}
           {field && (
             <button
               type="button"
               onClick={() => copy(field, value)}
-              className="ml-2 text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
+              className="ms-2 text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
             >
-              {copiedField === field ? 'Copied' : 'Copy'}
+              {copiedField === field ? t('addFunds.copied') : t('addFunds.copy')}
             </button>
           )}
         </span>
@@ -193,50 +195,50 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Add Funds</h3>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">{t('addFunds.title')}</h3>
         <p className="text-sm text-slate-500 dark:text-slate-400 mb-5">
-          Top up your wallet balance to purchase property tokens.
+          {t('addFunds.subtitle')}
         </p>
 
         {step === 'success' ? (
           <>
             <div className="p-4 mb-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm text-emerald-700 dark:text-emerald-300">
-              Payment confirmed — your wallet balance has been topped up.
+              {t('addFunds.successCard')}
             </div>
             <button
               onClick={onSuccess}
               className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2.5 transition-colors"
             >
-              Done
+              {t('addFunds.done')}
             </button>
           </>
         ) : step === 'crypto-pending' ? (
           <>
             <div className="p-4 mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-700 dark:text-blue-300">
-              Complete your crypto payment in the newly-opened checkout tab. Your
-              wallet balance updates automatically once the payment is confirmed
-              on-chain (this can take a few minutes).
+              {t('addFunds.cryptoPending')}
             </div>
             <button
               onClick={onSuccess}
               className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2.5 transition-colors"
             >
-              Done
+              {t('addFunds.done')}
             </button>
           </>
         ) : step === 'bank-submitted' ? (
           <>
             <div className="p-4 mb-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm text-emerald-700 dark:text-emerald-300">
-              Bank deposit request submitted. Once our team confirms your transfer,
-              <strong> ${amountValue.toFixed(2)}</strong> will be credited to your
-              wallet — usually within 1–2 business days. You'll get a notification
-              when it's done.
+              <Trans
+                t={t}
+                i18nKey="addFunds.bankSubmitted"
+                values={{ amount: `$${amountValue.toFixed(2)}` }}
+                components={{ b: <strong /> }}
+              />
             </div>
             <button
               onClick={onSuccess}
               className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2.5 transition-colors"
             >
-              Done
+              {t('addFunds.done')}
             </button>
           </>
         ) : step === 'card' ? (
@@ -245,10 +247,15 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
               onClick={() => setStep('amount')}
               className="text-sm text-slate-500 dark:text-slate-400 mb-3 hover:text-slate-700"
             >
-              ← Back
+              <span className="inline-block rtl:rotate-180">←</span> {t('addFunds.back')}
             </button>
             <div className="text-sm text-slate-600 dark:text-slate-300 mb-3">
-              Adding <strong>${amountValue.toFixed(2)}</strong> to your wallet.
+              <Trans
+                t={t}
+                i18nKey="addFunds.addingToWallet"
+                values={{ amount: `$${amountValue.toFixed(2)}` }}
+                components={{ b: <strong /> }}
+              />
             </div>
             <CreditCardForm
               amount={amountValue}
@@ -262,29 +269,31 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
               onClick={() => { setStep('amount'); setError(null); }}
               className="text-sm text-slate-500 dark:text-slate-400 mb-3 hover:text-slate-700"
             >
-              ← Back
+              <span className="inline-block rtl:rotate-180">←</span> {t('addFunds.back')}
             </button>
             <div className="text-sm text-slate-600 dark:text-slate-300 mb-3">
-              Transfer <strong>${amountValue.toFixed(2)}</strong> to the account
-              below, then submit this form. We'll credit your wallet once the
-              transfer is confirmed.
+              <Trans
+                t={t}
+                i18nKey="addFunds.bankIntro"
+                values={{ amount: `$${amountValue.toFixed(2)}` }}
+                components={{ b: <strong /> }}
+              />
             </div>
 
             {loadingAccounts ? (
               <div className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-                Loading bank details…
+                {t('addFunds.loadingBank')}
               </div>
             ) : bankAccounts.length === 0 ? (
               <div className="p-4 mb-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-sm text-amber-700 dark:text-amber-300">
-                Bank transfer isn't available right now — no receiving account is
-                configured. Please use card or crypto, or try again later.
+                {t('addFunds.bankUnavailable')}
               </div>
             ) : (
               <>
                 {bankAccounts.length > 1 && (
                   <>
                     <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-                      Transfer to
+                      {t('addFunds.transferTo')}
                     </label>
                     <select
                       value={selectedAccountId}
@@ -302,14 +311,14 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
 
                 {selectedAccount && (
                   <div className="mb-4 p-3 rounded-lg bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700">
-                    <DetailRow label="Account holder" value={selectedAccount.account_holder_name} />
-                    <DetailRow label="Bank" value={selectedAccount.bank_name} />
-                    <DetailRow label="Account / IBAN" value={selectedAccount.account_number} field="account_number" />
-                    <DetailRow label="SWIFT / BIC" value={selectedAccount.swift_code} field="swift_code" />
-                    <DetailRow label="Routing / sort code" value={selectedAccount.routing_number} field="routing_number" />
-                    <DetailRow label="Bank address" value={selectedAccount.bank_address} />
-                    <DetailRow label="Country" value={selectedAccount.bank_country} />
-                    <DetailRow label="Currency" value={selectedAccount.currency} />
+                    <DetailRow label={t('addFunds.details.accountHolder')} value={selectedAccount.account_holder_name} />
+                    <DetailRow label={t('addFunds.details.bank')} value={selectedAccount.bank_name} />
+                    <DetailRow label={t('addFunds.details.account')} value={selectedAccount.account_number} field="account_number" />
+                    <DetailRow label={t('addFunds.details.swift')} value={selectedAccount.swift_code} field="swift_code" />
+                    <DetailRow label={t('addFunds.details.routing')} value={selectedAccount.routing_number} field="routing_number" />
+                    <DetailRow label={t('addFunds.details.bankAddress')} value={selectedAccount.bank_address} />
+                    <DetailRow label={t('addFunds.details.country')} value={selectedAccount.bank_country} />
+                    <DetailRow label={t('addFunds.details.currency')} value={selectedAccount.currency} />
                     {selectedAccount.instructions && (
                       <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
                         {selectedAccount.instructions}
@@ -321,30 +330,30 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
                       disabled={instructionsBusy}
                       className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 hover:text-emerald-700 disabled:opacity-50"
                     >
-                      {instructionsBusy ? 'Preparing…' : 'Download transfer instructions (PDF)'}
+                      {instructionsBusy ? t('addFunds.preparing') : t('addFunds.downloadInstructions')}
                     </button>
                   </div>
                 )}
 
                 <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-                  Transfer reference (optional)
+                  {t('addFunds.referenceLabel')}
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. your account email"
+                  placeholder={t('addFunds.referencePlaceholder')}
                   value={reference}
                   onChange={(e) => setReference(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm mb-3"
                 />
 
                 <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-                  Proof of transfer (optional — speeds up review)
+                  {t('addFunds.proofLabel')}
                 </label>
                 <input
                   type="file"
                   accept="image/*,application/pdf"
                   onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-                  className="w-full text-sm text-slate-600 dark:text-slate-300 mb-4 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:bg-slate-100 dark:file:bg-slate-700 file:text-slate-700 dark:file:text-slate-200"
+                  className="w-full text-sm text-slate-600 dark:text-slate-300 mb-4 file:me-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-sm file:bg-slate-100 dark:file:bg-slate-700 file:text-slate-700 dark:file:text-slate-200"
                 />
 
                 {error && (
@@ -358,7 +367,7 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
                   disabled={submitting}
                   className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-medium px-4 py-2.5 transition-colors"
                 >
-                  {submitting ? 'Submitting…' : "I've made the transfer"}
+                  {submitting ? t('addFunds.submitting') : t('addFunds.madeTransfer')}
                 </button>
               </>
             )}
@@ -366,7 +375,7 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
         ) : (
           <>
             <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-              Amount (USD)
+              {t('addFunds.amountLabel')}
             </label>
             <input
               type="number"
@@ -392,7 +401,7 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
                       : 'text-slate-500 dark:text-slate-400',
                   )}
                 >
-                  {m === 'card' ? 'Card' : m === 'crypto' ? 'Crypto' : 'Bank'}
+                  {m === 'card' ? t('addFunds.methods.card') : m === 'crypto' ? t('addFunds.methods.crypto') : t('addFunds.methods.bank')}
                 </button>
               ))}
             </div>
@@ -408,7 +417,7 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
                 onClick={onClose}
                 className="flex-1 rounded-xl border border-slate-300 dark:border-slate-600 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200"
               >
-                Cancel
+                {t('addFunds.cancel')}
               </button>
               <button
                 onClick={handleContinue}
@@ -416,12 +425,12 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
                 className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-medium px-4 py-2.5 transition-colors"
               >
                 {method === 'card'
-                  ? 'Continue to card'
+                  ? t('addFunds.continueCard')
                   : method === 'bank'
-                    ? 'Continue to bank transfer'
+                    ? t('addFunds.continueBank')
                     : submitting
-                      ? 'Starting…'
-                      : 'Pay with crypto'}
+                      ? t('addFunds.starting')
+                      : t('addFunds.payCrypto')}
               </button>
             </div>
           </>

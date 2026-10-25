@@ -13,6 +13,7 @@ import {
   ExternalLink,
   MessageSquare
 } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
 
@@ -100,6 +101,7 @@ export const KYCStatusTracker: React.FC<KYCStatusTrackerProps> = ({
   onContact,
   className
 }) => {
+  const { t, i18n } = useTranslation('shared');
   const config = STATUS_CONFIG[status];
   const StatusIcon = config.icon;
 
@@ -130,7 +132,7 @@ export const KYCStatusTracker: React.FC<KYCStatusTrackerProps> = ({
   };
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat(i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -149,11 +151,11 @@ export const KYCStatusTracker: React.FC<KYCStatusTrackerProps> = ({
     if (status === 'processing') {
       const remainingHours = Math.max(0, 48 - hoursElapsed);
       if (remainingHours > 24) {
-        return `Estimated completion: ${Math.ceil(remainingHours / 24)} days`;
+        return t('kycTracker.estDays', { count: Math.ceil(remainingHours / 24) });
       } else if (remainingHours > 1) {
-        return `Estimated completion: ${Math.ceil(remainingHours)} hours`;
+        return t('kycTracker.estHours', { count: Math.ceil(remainingHours) });
       } else {
-        return 'Expected to complete soon';
+        return t('kycTracker.soon');
       }
     }
     
@@ -180,10 +182,10 @@ export const KYCStatusTracker: React.FC<KYCStatusTrackerProps> = ({
           <div className="flex items-start justify-between gap-4">
             <div>
               <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
-                {config.title}
+                {t(`kycTracker.status.${status}.title`)}
               </h3>
               <p className="text-slate-600 dark:text-slate-400 mt-1">
-                {config.description}
+                {t(`kycTracker.status.${status}.description`)}
               </p>
             </div>
             
@@ -192,7 +194,7 @@ export const KYCStatusTracker: React.FC<KYCStatusTrackerProps> = ({
               config.color,
               config.bgColor
             )}>
-              {status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
+              {t(`kycTracker.status.${status}.badge`)}
             </div>
           </div>
 
@@ -201,13 +203,13 @@ export const KYCStatusTracker: React.FC<KYCStatusTrackerProps> = ({
             {submittedAt && (
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                Submitted: {formatDate(submittedAt)}
+                {t('kycTracker.submitted', { date: formatDate(submittedAt) })}
               </div>
             )}
             {reviewedAt && (
               <div className="flex items-center gap-1">
                 <Check className="w-4 h-4" />
-                Reviewed: {formatDate(reviewedAt)}
+                {t('kycTracker.reviewed', { date: formatDate(reviewedAt) })}
               </div>
             )}
           </div>
@@ -225,7 +227,7 @@ export const KYCStatusTracker: React.FC<KYCStatusTrackerProps> = ({
       {documents.length > 0 && (
         <div className="mb-6">
           <h4 className="font-semibold text-slate-900 dark:text-white mb-4">
-            Document Status
+            {t('kycTracker.documentStatus')}
           </h4>
           
           <div className="grid gap-3">
@@ -249,13 +251,13 @@ export const KYCStatusTracker: React.FC<KYCStatusTrackerProps> = ({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium text-slate-900 dark:text-white">
-                        {docConfig.name}
+                        {t(`kycTracker.docs.${doc.type}`, { defaultValue: docConfig.name })}
                       </span>
                       {getDocumentStatusIcon(doc.status)}
                     </div>
                     
                     <div className="text-sm text-slate-500 dark:text-slate-400">
-                      Uploaded: {formatDate(doc.uploadedAt)}
+                      {t('kycTracker.uploaded', { date: formatDate(doc.uploadedAt) })}
                     </div>
                     
                     {doc.rejectionReason && (
@@ -278,7 +280,7 @@ export const KYCStatusTracker: React.FC<KYCStatusTrackerProps> = ({
             <AlertTriangle className="w-5 h-5 text-red-500 dark:text-red-400 mt-0.5" />
             <div>
               <h4 className="font-semibold text-red-800 dark:text-red-200">
-                Rejection Reason
+                {t('kycTracker.rejectionReason')}
               </h4>
               <p className="text-sm text-red-700 dark:text-red-300 mt-1">
                 {rejectionReason}
@@ -292,7 +294,7 @@ export const KYCStatusTracker: React.FC<KYCStatusTrackerProps> = ({
       {nextSteps.length > 0 && (
         <div className="mb-6">
           <h4 className="font-semibold text-slate-900 dark:text-white mb-3">
-            Next Steps
+            {t('kycTracker.nextSteps')}
           </h4>
           <ul className="space-y-2">
             {nextSteps.map((step, index) => (
@@ -309,16 +311,16 @@ export const KYCStatusTracker: React.FC<KYCStatusTrackerProps> = ({
       {status === 'processing' && (
         <div className="mb-6">
           <div className="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400 mb-2">
-            <span>Verification Progress</span>
-            <span>Step 2 of 3</span>
+            <span>{t('kycTracker.progress')}</span>
+            <span>{t('kycTracker.stepOf', { current: 2, total: 3 })}</span>
           </div>
           <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
             <div className="bg-emerald-500 h-2 rounded-full w-2/3 transition-all duration-500" />
           </div>
           <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-2">
-            <span>Document Review</span>
-            <span>Identity Verification</span>
-            <span>Final Approval</span>
+            <span>{t('kycTracker.docReview')}</span>
+            <span>{t('kycTracker.identity')}</span>
+            <span>{t('kycTracker.finalApproval')}</span>
           </div>
         </div>
       )}
@@ -327,7 +329,7 @@ export const KYCStatusTracker: React.FC<KYCStatusTrackerProps> = ({
       <div className="flex flex-wrap gap-3">
         {status === 'not_started' && (
           <Button variant="primary" size="lg" className="flex-1 min-w-0">
-            Start Verification
+            {t('kycTracker.start')}
           </Button>
         )}
         
@@ -338,15 +340,15 @@ export const KYCStatusTracker: React.FC<KYCStatusTrackerProps> = ({
             onClick={onRetry}
             className="flex-1 min-w-0"
           >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Retry Verification
+            <RefreshCw className="w-4 h-4 me-2" />
+            {t('kycTracker.retry')}
           </Button>
         )}
         
         {status === 'approved' && (
           <Button variant="ghost" size="lg" className="flex-1 min-w-0">
-            <ExternalLink className="w-4 h-4 mr-2" />
-            View Certificate
+            <ExternalLink className="w-4 h-4 me-2" />
+            {t('kycTracker.certificate')}
           </Button>
         )}
         
@@ -359,8 +361,8 @@ export const KYCStatusTracker: React.FC<KYCStatusTrackerProps> = ({
               status === 'approved' ? 'flex-1 min-w-0' : 'min-w-fit'
             )}
           >
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Contact Support
+            <MessageSquare className="w-4 h-4 me-2" />
+            {t('kycTracker.contact')}
           </Button>
         )}
       </div>
@@ -369,8 +371,7 @@ export const KYCStatusTracker: React.FC<KYCStatusTrackerProps> = ({
       {(status === 'pending' || status === 'processing') && (
         <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            💡 <strong>Tip:</strong> Most verifications are completed within 24-48 hours. 
-            You'll receive email notifications when your status changes.
+            💡 <Trans t={t} i18nKey="kycTracker.tip" components={{ b: <strong /> }} />
           </p>
         </div>
       )}

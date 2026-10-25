@@ -1,8 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Shield } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const TrustedPartners: React.FC = () => {
+  const { t } = useTranslation('ui');
   const partners = [
     "Goldman Sachs", "JP Morgan", "BlackRock", "Coinbase", 
     "Deloitte", "PwC", "KPMG", "Chainlink"
@@ -23,7 +25,7 @@ export const TrustedPartners: React.FC = () => {
           <div className="flex items-center justify-center gap-2 mb-4">
             <Shield className="w-5 h-5 text-emerald-500" />
             <span className="text-sm font-medium text-navy-600 dark:text-navy-300 uppercase tracking-wide">
-              Trusted Partners
+              {t('trustedPartners.title')}
             </span>
           </div>
         </motion.div>

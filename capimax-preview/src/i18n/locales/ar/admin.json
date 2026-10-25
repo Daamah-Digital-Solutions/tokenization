@@ -1,0 +1,490 @@
+{
+  "shared": {
+    "retry": "إعادة المحاولة",
+    "viewAll": "عرض الكل",
+    "tbd": "لم يُحدَّد بعد",
+    "approve": "اعتماد",
+    "reject": "رفض",
+    "dismiss": "إغلاق",
+    "cancel": "إلغاء",
+    "close": "إغلاق",
+    "save": "حفظ",
+    "edit": "تعديل",
+    "loading": "جارٍ التحميل...",
+    "status": {
+      "pending": "قيد الانتظار",
+      "verified": "موثّق",
+      "approved": "معتمد",
+      "rejected": "مرفوض",
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "pending_approval": "بانتظار الاعتماد",
+      "under_review": "قيد المراجعة",
+      "requires_changes": "مطلوب تعديلات",
+      "completed": "مكتمل",
+      "failed": "فشل",
+      "processing": "قيد المعالجة",
+      "cancelled": "ملغي",
+      "suspended": "موقوف",
+      "draft": "مسودة",
+      "funded": "مكتمل التمويل",
+      "sold_out": "نفدت الحصص",
+      "delisted": "أُزيل من العرض",
+      "not_started": "لم يبدأ",
+      "refunded": "مُسترد",
+      "not_submitted": "لم يُقدَّم",
+      "expired": "منتهي الصلاحية"
+    },
+    "roles": {
+      "investor": "مالك",
+      "property_owner": "مالك العقار",
+      "broker": "الوسيط",
+      "admin": "مسؤول",
+      "liquidity_provider": "مزوّد السيولة",
+      "developer": "المطوّر"
+    },
+    "txTypes": {
+      "investment": "شراء",
+      "withdrawal": "سحب",
+      "deposit": "إيداع",
+      "dividend": "توزيعات الأرباح",
+      "commission": "العمولة",
+      "refund": "استرداد",
+      "fee": "رسوم",
+      "transfer": "تحويل",
+      "payment": "دفعة"
+    },
+    "severity": {
+      "CRITICAL": "حرج",
+      "HIGH": "مرتفع",
+      "MEDIUM": "متوسط",
+      "LOW": "منخفض"
+    },
+    "refresh": "تحديث",
+    "actions": "إجراءات",
+    "viewDetails": "عرض التفاصيل",
+    "previous": "السابق",
+    "next": "التالي",
+    "pageOf": "صفحة {{page}} من {{pages}}",
+    "propertyTypes": {
+      "residential": "سكني",
+      "commercial": "تجاري",
+      "industrial": "صناعي",
+      "mixed_use": "متعدد الاستخدامات",
+      "land": "أرض",
+      "retail": "تجزئة",
+      "office": "مكتبي",
+      "hospitality": "ضيافة"
+    }
+  },
+  "ws": {
+    "criticalAlert": "تنبيه نظام حرج: {{title}}",
+    "systemErrorTitle": "تم رصد خطأ في النظام",
+    "systemErrorMessage": "حدث خطأ في النظام"
+  },
+  "dashboard": {
+    "stats": {
+      "totalUsers": "إجمالي المستخدمين",
+      "totalUsersDesc": "المستخدمون المسجّلون",
+      "platformVolume": "حجم التداول على المنصة",
+      "platformVolumeDesc": "إجمالي حجم المعاملات",
+      "activeProperties": "العقارات النشطة",
+      "activePropertiesDesc": "العقارات على المنصة",
+      "platformRevenue": "إيرادات المنصة",
+      "platformRevenueDesc": "رسوم المنصة الشهرية"
+    },
+    "charts": {
+      "transactionVolume": "حجم معاملات المنصة",
+      "userGrowth": "نمو المستخدمين"
+    },
+    "users": {
+      "title": "إدارة المستخدمين",
+      "pendingKyc": "بانتظار التحقق من الهوية: {{count}}",
+      "suspended": "(موقوف)",
+      "joined": "تاريخ الانضمام",
+      "totalPurchased": "إجمالي المشتريات",
+      "properties": "العقارات",
+      "review": "مراجعة",
+      "verify": "توثيق",
+      "unsuspend": "إلغاء الإيقاف",
+      "actions": "إجراءات",
+      "suspendPrompt": "يرجى ذكر سبب الإيقاف:"
+    },
+    "approval": {
+      "title": "قائمة انتظار اعتماد العقارات",
+      "pendingReview": "بانتظار المراجعة: {{count}}",
+      "byOwner": "بواسطة {{name}}",
+      "targetAmount": "المبلغ المستهدف",
+      "submitted": "تاريخ التقديم",
+      "shares": "الحصص",
+      "funding": "التمويل",
+      "rejectPrompt": "يرجى ذكر سبب الرفض:",
+      "reviewDetails": "مراجعة التفاصيل"
+    },
+    "transactions": {
+      "title": "أحدث المعاملات"
+    },
+    "health": {
+      "title": "حالة النظام",
+      "apiResponseTime": "زمن استجابة الواجهة البرمجية",
+      "uptime": "مدة تشغيل النظام",
+      "days": "{{value}} يوم",
+      "databaseResponse": "استجابة قاعدة البيانات",
+      "activeConnections": "الاتصالات النشطة",
+      "errorRate": "معدل الأخطاء",
+      "memoryUsage": "استخدام الذاكرة",
+      "target": "المستهدف: {{value}}",
+      "levels": {
+        "excellent": "ممتاز",
+        "good": "جيد",
+        "warning": "تحذير",
+        "error": "خطأ"
+      }
+    },
+    "quick": {
+      "reviewKyc": "مراجعة التحقق من الهوية",
+      "pendingApprovals": "طلبات بانتظار الاعتماد: {{count}}",
+      "reviewProperties": "مراجعة العقارات",
+      "pendingReviews": "بانتظار المراجعة: {{count}}",
+      "systemAlerts": "تنبيهات النظام",
+      "criticalAlerts": "تنبيهات حرجة: {{count}}",
+      "allNormal": "جميع الأنظمة تعمل بشكل طبيعي",
+      "refreshData": "تحديث البيانات",
+      "updateDashboard": "تحديث لوحة التحكم"
+    },
+    "userStats": {
+      "title": "إحصاءات المستخدمين",
+      "totalUsers": "إجمالي المستخدمين",
+      "verifiedUsers": "المستخدمون الموثّقون",
+      "pendingKyc": "بانتظار التحقق من الهوية",
+      "suspendedUsers": "المستخدمون الموقوفون"
+    },
+    "userTypes": {
+      "title": "أنواع المستخدمين",
+      "owners": "الملّاك",
+      "propertyOwners": "ملّاك العقارات",
+      "brokers": "الوسطاء"
+    },
+    "geo": {
+      "title": "التوزيع الجغرافي",
+      "northAmerica": "أمريكا الشمالية",
+      "europe": "أوروبا",
+      "asia": "آسيا",
+      "others": "أخرى"
+    },
+    "platform": {
+      "dailyActiveUsers": "المستخدمون النشطون يوميًا",
+      "transactionVolume": "حجم المعاملات",
+      "platformRevenue": "إيرادات المنصة",
+      "successRate": "معدل النجاح"
+    },
+    "alerts": {
+      "title": "تنبيهات النظام النشطة",
+      "acknowledge": "تأكيد الاطلاع",
+      "resolve": "حل",
+      "resolvePrompt": "يرجى ذكر تفاصيل الحل:"
+    },
+    "financial": {
+      "title": "الإدارة المالية",
+      "totalRevenue": "إجمالي الإيرادات",
+      "monthlyRevenue": "الإيرادات الشهرية",
+      "thisMonth": "هذا الشهر",
+      "pendingWithdrawals": "طلبات السحب المعلّقة",
+      "requests": "عدد الطلبات: {{count}}",
+      "totalCommissions": "إجمالي العمولات",
+      "pendingCount": "قيد الانتظار: {{count}}",
+      "loadFailed": "تعذّر تحميل البيانات المالية"
+    },
+    "underDevelopment": {
+      "title": "لوحة تحكم {{name}}",
+      "body": "هذا القسم قيد التطوير"
+    },
+    "views": {
+      "overview": "نظرة عامة",
+      "users": "المستخدمين",
+      "properties-admin": "العقارات",
+      "transactions-admin": "المعاملات",
+      "platform": "المنصة",
+      "system": "النظام",
+      "financial": "المالية",
+      "settings": "الإعدادات",
+      "reports": "التقارير"
+    }
+  },
+  "transactions": {
+    "title": "إدارة المعاملات",
+    "subtitle": "راقب المعاملات وأدِر طلبات السحب واطّلع على المؤشرات المالية",
+    "exportCsv": "تصدير CSV",
+    "loadFailed": "تعذّر تحميل المعاملات",
+    "listTitle": "قائمة المعاملات (الإجمالي: {{count}})",
+    "empty": "لا توجد معاملات",
+    "stats": {
+      "count": "عدد المعاملات",
+      "average": "المتوسط: {{amount}}"
+    },
+    "filters": {
+      "type": "نوع المعاملة",
+      "allTypes": "جميع الأنواع",
+      "allStatuses": "جميع الحالات",
+      "startDate": "تاريخ البداية",
+      "endDate": "تاريخ النهاية",
+      "perPage": "النتائج في كل صفحة"
+    },
+    "fields": {
+      "date": "التاريخ",
+      "type": "النوع",
+      "user": "المستخدم",
+      "amount": "المبلغ",
+      "fee": "الرسوم",
+      "status": "الحالة",
+      "paymentMethod": "طريقة الدفع"
+    },
+    "pagination": {
+      "showing": "عرض {{from}} إلى {{to}} من أصل {{total}} معاملة"
+    },
+    "detail": {
+      "title": "تفاصيل المعاملة",
+      "id": "المعرّف: {{id}}...",
+      "userInfo": "بيانات المستخدم",
+      "userName": "اسم المستخدم",
+      "userEmail": "البريد الإلكتروني للمستخدم",
+      "userId": "معرّف المستخدم",
+      "propertyInfo": "بيانات العقار",
+      "propertyTitle": "اسم العقار",
+      "propertyId": "معرّف العقار",
+      "paymentDetails": "تفاصيل الدفع",
+      "paymentReference": "مرجع الدفع",
+      "createdAt": "تاريخ الإنشاء",
+      "processedAt": "تاريخ المعالجة",
+      "blockchainInfo": "بيانات البلوك تشين",
+      "txHash": "رمز تجزئة المعاملة (Hash)",
+      "blockNumber": "رقم الكتلة",
+      "gasFee": "رسوم الغاز",
+      "failureReason": "سبب الفشل",
+      "metadata": "بيانات إضافية"
+    },
+    "withdrawals": {
+      "title": "طلبات السحب",
+      "titleCount": "طلبات السحب ({{count}})",
+      "approvePrompt": "أضف ملاحظات الاعتماد (اختياري):",
+      "rejectPrompt": "يرجى ذكر سبب الرفض:",
+      "netAmount": "صافي المبلغ",
+      "requested": "تاريخ الطلب",
+      "bankDetails": "البيانات البنكية",
+      "bankName": "اسم البنك",
+      "accountHolder": "صاحب الحساب",
+      "accountNumber": "رقم الحساب",
+      "routingNumber": "رقم التوجيه البنكي",
+      "empty": "لا توجد طلبات سحب معلّقة"
+    }
+  },
+  "users": {
+    "subtitle": "أدِر المستخدمين، ووثّق هوياتهم، وراقب نشاطهم",
+    "loadFailed": "تعذّر تحميل المستخدمين",
+    "listTitle": "قائمة المستخدمين (الإجمالي: {{count}})",
+    "pagination": {
+      "showing": "عرض {{from}} إلى {{to}} من أصل {{total}} مستخدم"
+    },
+    "tabs": {
+      "overview": "نظرة عامة",
+      "profile": "الملف الشخصي",
+      "activity": "النشاط",
+      "notes": "الملاحظات",
+      "properties": "العقارات",
+      "transactions": "المعاملات"
+    },
+    "fields": {
+      "accountStatus": "حالة الحساب",
+      "kycStatus": "حالة التحقق من الهوية",
+      "totalOwned": "إجمالي الملكية",
+      "propertiesOwned": "العقارات المملوكة",
+      "userDetails": "بيانات المستخدم",
+      "email": "البريد الإلكتروني",
+      "phone": "الهاتف",
+      "accountCreated": "تاريخ إنشاء الحساب",
+      "lastLogin": "آخر تسجيل دخول",
+      "address": "العنوان",
+      "role": "الدور"
+    },
+    "suspension": {
+      "title": "الحساب موقوف",
+      "reason": "السبب: {{reason}}",
+      "until": "موقوف حتى: {{date}}"
+    },
+    "actions": {
+      "verifyKyc": "توثيق الهوية",
+      "unsuspend": "إلغاء إيقاف المستخدم",
+      "suspend": "إيقاف المستخدم",
+      "suspendShort": "إيقاف"
+    },
+    "activityCategories": {
+      "AUTH": "تسجيل الدخول",
+      "INVESTMENT": "شراء",
+      "PAYMENT": "الدفع",
+      "KYC": "التحقق من الهوية",
+      "PROFILE": "الملف الشخصي",
+      "SECURITY": "الأمان",
+      "SYSTEM": "النظام"
+    },
+    "empty": {
+      "activity": "لا يوجد نشاط",
+      "notes": "لا توجد ملاحظات",
+      "users": "لا يوجد مستخدمون",
+      "propertyHistory": "سيظهر سجل العقارات هنا",
+      "transactionHistory": "سيظهر سجل المعاملات هنا"
+    },
+    "notes": {
+      "title": "ملاحظات الإدارة",
+      "add": "إضافة ملاحظة",
+      "addNew": "إضافة ملاحظة جديدة",
+      "save": "حفظ الملاحظة",
+      "placeholder": "اكتب نص الملاحظة...",
+      "titlePlaceholder": "عنوان الملاحظة (اختياري)",
+      "by": "بواسطة: {{name}}",
+      "confidentialLabel": "ملاحظة سرّية",
+      "confidential": "سرّي",
+      "addedBy": "أضافها {{name}} بتاريخ {{date}}",
+      "updated": "عُدّلت بتاريخ {{date}}",
+      "none": "لم تُضَف أي ملاحظات بعد"
+    },
+    "noteTypes": {
+      "GENERAL": "عامة",
+      "COMPLIANCE": "الامتثال",
+      "RISK_ASSESSMENT": "تقييم المخاطر",
+      "SUPPORT": "الدعم",
+      "INVESTIGATION": "تحقيق",
+      "WARNING": "تحذير"
+    },
+    "priority": {
+      "LOW": "منخفضة",
+      "MEDIUM": "متوسطة",
+      "HIGH": "مرتفعة",
+      "URGENT": "عاجلة"
+    },
+    "filters": {
+      "search": "بحث",
+      "searchPlaceholder": "ابحث بالاسم أو البريد الإلكتروني...",
+      "allRoles": "جميع الأدوار",
+      "sortBy": "ترتيب حسب",
+      "sort": {
+        "createdAt": "تاريخ الإنشاء",
+        "firstName": "الاسم الأول",
+        "lastName": "اسم العائلة",
+        "email": "البريد الإلكتروني"
+      }
+    },
+    "modal": {
+      "loadFailed": "تعذّر تحميل بيانات المستخدم",
+      "updateFailed": "تعذّر تحديث بيانات المستخدم",
+      "durationPrompt": "المدة بالأيام (اختياري):",
+      "notesPrompt": "ملاحظات (اختياري):",
+      "verifyPrompt": "ملاحظات التوثيق (اختياري):",
+      "personalInfo": "البيانات الشخصية",
+      "notProvided": "غير متوفر",
+      "memberSince": "عضو منذ",
+      "never": "لم يسجّل الدخول بعد",
+      "recentActivity": "النشاط الأخير",
+      "noActivity": "لا يوجد نشاط مسجّل",
+      "propertyPortfolio": "المحفظة العقارية",
+      "propertyDataSoon": "ستظهر بيانات العقارات هنا",
+      "transactionHistory": "سجل المعاملات",
+      "transactionDataSoon": "ستظهر بيانات المعاملات هنا",
+      "comingSoon": "الميزة قادمة قريبًا"
+    }
+  },
+  "propertyModal": {
+    "approveConfirm": "هل أنت متأكد من اعتماد هذا العقار؟",
+    "reasonRequired": "يرجى ذكر سبب الرفض",
+    "approve": "اعتماد العقار",
+    "reject": "رفض العقار",
+    "rejectionReason": "سبب الرفض",
+    "rejectionPlaceholder": "يرجى ذكر سبب الرفض بالتفصيل...",
+    "confirmRejection": "تأكيد الرفض",
+    "tabs": {
+      "overview": "نظرة عامة",
+      "documents": "المستندات",
+      "owners": "الملّاك",
+      "financial": "المالية",
+      "history": "السجل"
+    },
+    "propertyDetails": "تفاصيل العقار",
+    "financialInfo": "البيانات المالية",
+    "ownerInfo": "بيانات المالك",
+    "timeline": "الجدول الزمني",
+    "fields": {
+      "title": "العنوان",
+      "description": "الوصف",
+      "location": "الموقع",
+      "propertyType": "نوع العقار",
+      "raisedAmount": "المبلغ المُجمَّع",
+      "minPurchase": "الحد الأدنى للشراء",
+      "expectedReturn": "العائد المتوقع",
+      "annually": "{{value}}% سنويًا",
+      "fundingProgress": "تقدّم التمويل",
+      "name": "الاسم",
+      "ownerId": "معرّف المالك",
+      "approvedAt": "تاريخ الاعتماد",
+      "fundingDeadline": "الموعد النهائي للتمويل",
+      "sharesIssued": "الحصص المُصدَرة"
+    },
+    "documents": "مستندات العقار",
+    "documentN": "المستند {{n}}",
+    "viewDocument": "عرض المستند",
+    "noDocuments": "لم تُرفع أي مستندات",
+    "images": "صور العقار",
+    "imageAlt": "صورة العقار {{n}}",
+    "noImages": "لم تُرفع أي صور",
+    "ownersTotal": "الإجمالي: {{count}}",
+    "ownersSoon": "ستظهر بيانات الملّاك التفصيلية هنا",
+    "financialOverview": "نظرة مالية عامة",
+    "financialSoon": "ستظهر التحليلات المالية والرسوم البيانية التفصيلية هنا",
+    "history": "سجل العقار",
+    "historySoon": "سيظهر سجل معاملات العقار ونشاطه هنا"
+  },
+  "approval": {
+    "title": "لوحة اعتماد العقارات",
+    "subtitle": "راجِع طلبات العقارات المقدَّمة للترميز وأدِرها",
+    "searchPlaceholder": "ابحث باسم العقار أو المالك...",
+    "empty": "لا توجد عقارات مطابقة لمعايير البحث",
+    "reviewer": "المراجِع: {{name}}",
+    "reviewNotesLabel": "ملاحظات المراجعة:",
+    "requiredChangesLabel": "التعديلات المطلوبة:",
+    "filters": {
+      "pending": "قيد الانتظار",
+      "under_review": "قيد المراجعة",
+      "approved": "معتمد",
+      "rejected": "مرفوض",
+      "requires_changes": "بحاجة إلى تعديلات",
+      "all": "الكل"
+    },
+    "stats": {
+      "pendingReview": "بانتظار المراجعة",
+      "overdue": "متأخرة: {{count}}",
+      "underReview": "قيد المراجعة",
+      "underReviewSub": "تجري مراجعتها حاليًا",
+      "approvedThisMonth": "المعتمدة هذا الشهر",
+      "approvedSub": "جاهزة للترميز",
+      "avgReviewTime": "متوسط مدة المراجعة",
+      "daysShort": "{{value}} يوم",
+      "avgSub": "أيام حتى الإنجاز"
+    },
+    "modal": {
+      "title": "مراجعة اعتماد العقار",
+      "totalValue": "القيمة الإجمالية",
+      "sharePrice": "سعر الحصة",
+      "perShare": "{{price}} للحصة الواحدة",
+      "totalShares": "إجمالي الحصص",
+      "sharesCount": "{{value}} حصة",
+      "dateAtTime": "{{date}} الساعة {{time}}",
+      "documents": "المستندات المقدَّمة",
+      "download": "تنزيل",
+      "reviewDecision": "المراجعة والقرار",
+      "reviewNotes": "ملاحظات المراجعة",
+      "reviewNotesPlaceholder": "أضف تعليقات المراجعة...",
+      "requiredChanges": "التعديلات المطلوبة",
+      "rejectPlaceholder": "وضّح سبب رفض هذا العقار...",
+      "changesPlaceholder": "حدّد التعديلات المطلوبة...",
+      "requestChanges": "طلب تعديلات"
+    }
+  }
+}

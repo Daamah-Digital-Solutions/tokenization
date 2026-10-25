@@ -4,6 +4,7 @@ import { Mail, ArrowLeft, AlertCircle } from 'lucide-react';
 import { Input } from '../design-system/forms/Input';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
+import { useTranslation } from 'react-i18next';
 
 interface PasswordRecoveryFormProps {
   onSubmit?: (data: { email: string }) => void;
@@ -26,6 +27,7 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
   emailSent = false,
   className
 }) => {
+  const { t } = useTranslation('ui');
   const [currentStep, setCurrentStep] = useState<Step>('request');
   const [email, setEmail] = useState('');
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
@@ -41,9 +43,9 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
     const errors: Record<string, string> = {};
 
     if (!email.trim()) {
-      errors.email = 'Email is required';
+      errors.email = t('validation.emailRequired');
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      errors.email = 'Please enter a valid email address';
+      errors.email = t('validation.emailInvalid');
     }
 
     setValidationErrors(errors);
@@ -78,17 +80,17 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
                 <Mail className="w-8 h-8 text-emerald-500 dark:text-emerald-400" />
               </div>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                Forgot Your Password?
+                {t('recovery.title')}
               </h2>
               <p className="text-slate-600 dark:text-slate-400">
-                No worries! Enter your email and we'll send you a reset code.
+                {t('recovery.subtitle')}
               </p>
             </div>
 
             <Input
               type="email"
-              label="Email Address"
-              placeholder="Enter your email address"
+              label={t('fields.email')}
+              placeholder={t('fields.emailAddressPlaceholder')}
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
@@ -113,7 +115,7 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
               isLoading={loading}
               disabled={loading}
             >
-              {loading ? 'Sending Reset Link...' : 'Send Reset Link'}
+              {loading ? t('recovery.sending') : t('recovery.send')}
             </Button>
           </motion.form>
         );
@@ -131,14 +133,14 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
                 <Mail className="w-8 h-8 text-emerald-500 dark:text-emerald-400" />
               </div>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                Check Your Email
+                {t('recovery.checkEmail')}
               </h2>
               <div className="space-y-3">
                 <p className="text-slate-600 dark:text-slate-400">
-                  We've sent a password reset link to <strong>{email}</strong>
+                  {t('recovery.sentTo')} <strong>{email}</strong>
                 </p>
                 <p className="text-slate-600 dark:text-slate-400 text-sm">
-                  Click the secure link in your email to create a new password. The link will expire in 24 hours.
+                  {t('recovery.clickLink')}
                 </p>
               </div>
             </div>
@@ -149,7 +151,7 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
                   <div className="w-2 h-2 bg-emerald-500 dark:bg-emerald-400 rounded-full"></div>
                 </div>
                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Check your spam folder if you don't see the email in your inbox
+                  {t('recovery.tipSpam')}
                 </p>
               </div>
               <div className="flex items-start gap-3">
@@ -157,7 +159,7 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
                   <div className="w-2 h-2 bg-emerald-500 dark:bg-emerald-400 rounded-full"></div>
                 </div>
                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                  The link can only be used once for security purposes
+                  {t('recovery.tipOnce')}
                 </p>
               </div>
             </div>
@@ -170,7 +172,7 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
                   className="text-sm text-emerald-500 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium transition-colors"
                   disabled={loading}
                 >
-                  {loading ? 'Sending...' : 'Didn\'t receive the email? Send again'}
+                  {loading ? t('recovery.sendingShort') : t('recovery.sendAgain')}
                 </button>
               </div>
 
@@ -186,7 +188,7 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
                   }}
                   className="text-sm text-slate-500 hover:text-slate-600 dark:text-slate-400 dark:hover:text-slate-300 font-medium transition-colors"
                 >
-                  Use a different email address
+                  {t('recovery.differentEmail')}
                 </button>
               </div>
             </div>
@@ -236,8 +238,8 @@ export const PasswordRecoveryForm: React.FC<PasswordRecoveryFormProps> = ({
             onClick={onBackToLogin}
             className="inline-flex items-center gap-2 text-sm text-emerald-500 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Sign In
+            <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
+            {t('recovery.backToSignIn')}
           </button>
         </div>
       )}

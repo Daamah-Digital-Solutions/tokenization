@@ -1,0 +1,557 @@
+{
+  "common": {
+    "cancel": "إلغاء",
+    "back": "رجوع",
+    "continue": "متابعة",
+    "close": "إغلاق",
+    "retry": "حاول مرة أخرى",
+    "shareCount_zero": "{{count}} حصة",
+    "shareCount_one": "حصة واحدة",
+    "shareCount_two": "حصتان",
+    "shareCount_few": "{{count}} حصص",
+    "shareCount_many": "{{count}} حصة",
+    "shareCount_other": "{{count}} حصة",
+    "shares": "الحصص",
+    "pricePerShare": "سعر الحصة",
+    "totalAmount": "المبلغ الإجمالي",
+    "processingFee": "رسوم المعالجة",
+    "platformFee": "رسوم المنصة",
+    "networkFee": "رسوم الشبكة",
+    "total": "الإجمالي",
+    "free": "مجاناً",
+    "copy": "نسخ",
+    "copied": "تم النسخ!",
+    "frequency": {
+      "Monthly": "شهرية",
+      "Quarterly": "ربع سنوية",
+      "Semi-annually": "نصف سنوية",
+      "Annually": "سنوية",
+      "Annual": "سنوية",
+      "monthly": "شهرية",
+      "quarterly": "ربع سنوية",
+      "semi_annual": "نصف سنوية",
+      "annually": "سنوية",
+      "annual": "سنوية"
+    }
+  },
+  "flow": {
+    "title": "شراء حصص في {{title}}",
+    "steps": {
+      "amount": {
+        "title": "اختيار الحصص",
+        "description": "اختر عدد الحصص التي تريد شراءها"
+      },
+      "payment": {
+        "title": "طريقة الدفع",
+        "description": "اختر طريقة الدفع المناسبة لك"
+      },
+      "process": {
+        "title": "المعالجة",
+        "description": "معاملتك قيد المعالجة"
+      },
+      "confirmation": {
+        "title": "التأكيد",
+        "description": "اكتملت عملية الشراء"
+      },
+      "schedule": {
+        "title": "جدول الدفع",
+        "description": "دفع كامل أو أقساط"
+      }
+    },
+    "errors": {
+      "minTokens": "يجب شراء حصة واحدة على الأقل",
+      "maxTokens": "المتاح {{available}} حصة فقط",
+      "paymentMethod": "يرجى اختيار طريقة الدفع",
+      "installmentsOnly": "يُباع هذا العقار بالأقساط فقط.",
+      "minInstallment": "يجب ألا يقل القسط الواحد عن {{amount}}. اختر حصصاً أكثر أو أقساطاً أقل."
+    },
+    "buttons": {
+      "confirmPay": "تأكيد ودفع",
+      "confirmPlan": "تأكيد خطة الأقساط",
+      "chooseSchedule": "اختيار جدول الدفع",
+      "choosePayment": "اختيار طريقة الدفع"
+    },
+    "cancelDialog": {
+      "title": "إلغاء عملية الشراء؟",
+      "body": "سيتم فقدان ما أدخلته",
+      "continue": "متابعة الشراء",
+      "confirm": "نعم، إلغاء"
+    }
+  },
+  "amount": {
+    "title": "اختر عدد الحصص",
+    "perShare": "{{price}} للحصة",
+    "numberOfShares": "عدد الحصص",
+    "placeholder": "أدخل عدد الحصص",
+    "available": "المتاح: {{available}} حصة",
+    "totalCost": "التكلفة الإجمالية",
+    "quickSelect": "اختيار سريع",
+    "summary": "ملخص الشراء",
+    "showAdvanced": "عرض التفاصيل المتقدمة",
+    "hideAdvanced": "إخفاء التفاصيل المتقدمة",
+    "annualReturn": "العائد السنوي",
+    "roi": "عائد على الاستثمار {{value}}%",
+    "dividend": "توزيعات الأرباح ({{frequency}})",
+    "paymentsPerYear": "{{value}} دفعات في السنة",
+    "ownershipShare": "نسبة الملكية",
+    "ofTotalProperty": "من إجمالي العقار",
+    "returnBreakdown": "تفاصيل العائد",
+    "grossAnnualReturn": "إجمالي العائد السنوي:",
+    "managementFee": "رسوم الإدارة:",
+    "netAnnualReturn": "صافي العائد السنوي:",
+    "shareDetails": "تفاصيل الحصص",
+    "sharesSelected": "الحصص المختارة:",
+    "expectedReturnRate": "معدل العائد المتوقع:",
+    "fundingProgress": "تقدّم تمويل العقار",
+    "percentComplete": "مكتمل {{value}}%",
+    "sold": "{{value}} مباعة",
+    "yourPurchase": "+{{value}} مشترياتك",
+    "totalShares": "{{value}} إجمالاً",
+    "riskTitle": "إفصاح عن مخاطر التملّك",
+    "riskBody": "ينطوي تملّك العقارات على مخاطر، منها احتمال خسارة رأس المال. الأداء السابق لا يضمن النتائج المستقبلية. العوائد تقديرات مبنية على ظروف السوق الحالية وليست مضمونة."
+  },
+  "paymentMethod": {
+    "amountRequired": "يلزم تحديد مبلغ الشراء",
+    "amountRequiredHint": "يرجى تحديد مبلغ الشراء للمتابعة إلى خيارات الدفع",
+    "title": "اختر طريقة الدفع",
+    "subtitle": "ادفع {{amount}} مقابل شراء حصصك العقارية",
+    "recommended": "موصى به",
+    "popular": "الأكثر استخداماً",
+    "discount": "خصم",
+    "fee": "الرسوم",
+    "processing": "مدة المعالجة",
+    "selected": "تم اختيار {{name}}",
+    "selectedHint": "اضغط \"تأكيد ودفع\" بالأسفل للمتابعة",
+    "cryptoGuidanceTitle": "ستُضاف الحصص إلى محفظتك في كابي مكس RT",
+    "cryptoGuidanceBody": "تُصدر حصصك العقارية كرموز رقمية في محفظة تديرها كابي مكس RT ومرتبطة بحسابك. يمكنك الاطلاع على الرصيد وسجل المعاملات على البلوكتشين من تبويب المحفظة الاستثمارية في أي وقت.",
+    "mintedTo": "ستُصدر الحصص إلى",
+    "yourWallet": "محفظتك",
+    "platformManaged": "تديرها المنصة",
+    "securityTitle": "معالجة آمنة للمدفوعات",
+    "securityBody": "تتم معالجة جميع المدفوعات عبر قنوات مشفرة وفق معايير الأمان المعتمدة في القطاع، ولا نخزّن بياناتك المالية على خوادمنا مطلقاً.",
+    "methods": {
+      "wallet": {
+        "name": "محفظة كابي مكس RT",
+        "description": "استخدم رصيد محفظتك في كابي مكس RT لشراء فوري",
+        "fee": "مجاناً",
+        "time": "فوري"
+      },
+      "crypto": {
+        "name": "العملات الرقمية",
+        "description": "ادفع بالبيتكوين أو الإيثيريوم أو عملات رقمية أخرى",
+        "fee": "0.5%",
+        "time": "10-30 دقيقة"
+      },
+      "fiat": {
+        "name": "بطاقة ائتمان/خصم",
+        "description": "ادفع فوراً ببطاقة Visa أو Mastercard أو American Express",
+        "fee": "2.9% + $0.30",
+        "time": "فوري"
+      },
+      "bank": {
+        "name": "تحويل بنكي",
+        "description": "تحويل مباشر من حسابك البنكي (ACH/Wire)",
+        "fee": "مجاناً (ACH)",
+        "time": "1-3 أيام عمل"
+      },
+      "nova_sukuk": {
+        "name": "نوفا صكوك",
+        "description": "ادفع بشهادة نوفا صكوك - ارفع ملف PDF لمراجعة الإدارة",
+        "fee": "مجاناً",
+        "time": "1-2 يوم عمل"
+      },
+      "pronova": {
+        "name": "Pronova",
+        "description": "ادفع بعملة Pronova على شبكة BNB Smart Chain واحصل على خصم 5%!",
+        "fee": "مجاناً",
+        "time": "5-15 دقيقة",
+        "discount": "خصم 5%"
+      }
+    }
+  },
+  "schedule": {
+    "title": "اختر جدول الدفع المناسب لك",
+    "purchaseAmount": "مبلغ الشراء: {{amount}}",
+    "sort": {
+      "popular": "ترتيب حسب الأكثر طلباً",
+      "totalCost": "ترتيب حسب التكلفة الإجمالية",
+      "downPayment": "ترتيب حسب الدفعة المقدمة",
+      "apr": "ترتيب حسب معدل الفائدة"
+    },
+    "cards": "بطاقات",
+    "compare": "مقارنة",
+    "badges": {
+      "mostPopular": "الأكثر طلباً",
+      "lowestInterest": "أقل فائدة",
+      "lowestDown": "أقل دفعة مقدمة"
+    },
+    "downPayment": "الدفعة المقدمة",
+    "periodicPayment": "القسط ({{frequency}})",
+    "totalPayments": "إجمالي الدفعات",
+    "totalCost": "التكلفة الإجمالية",
+    "apr": "معدل الفائدة السنوي",
+    "tokenRelease": "تحرير الحصص",
+    "release": {
+      "immediate": "فوري",
+      "partial": "تدريجي",
+      "completion": "عند الاكتمال"
+    },
+    "releaseHint": {
+      "immediate": "تُحرَّر جميع الحصص فوراً",
+      "partial": "تُحرَّر الحصص مع كل دفعة",
+      "completion": "تُحرَّر جميع الحصص عند اكتمال السداد"
+    },
+    "bestFor": "مناسب لـ:",
+    "benefits": "المزايا:",
+    "moreBenefits": "+{{value}} مزايا أخرى",
+    "table": {
+      "plan": "الخطة",
+      "payments": "الدفعات",
+      "select": "اختيار"
+    },
+    "plusInterest": "+{{amount}} فائدة",
+    "customPrompt": "لم تجد خطة تناسب احتياجاتك؟",
+    "customButton": "طلب خطة دفع مخصصة",
+    "selected": "الخطة المختارة: {{name}}",
+    "dueNow": "المستحق الآن",
+    "then": "ثم",
+    "paymentsOf": "{{value}} دفعات بقيمة {{amount}}",
+    "interest": "الفائدة",
+    "noInterest": "بدون فائدة"
+  },
+  "processor": {
+    "payment": "الدفع",
+    "cta": {
+      "kyc": "إكمال التحقق من الهوية",
+      "support": "التواصل مع الدعم",
+      "reduce": "تخفيض مبلغ الشراء",
+      "accredited": "التقديم على صفة المستثمر المعتمد",
+      "browse": "تصفح العقارات المتاحة لك"
+    },
+    "steps": {
+      "validate": {
+        "title": "التحقق من الشراء",
+        "description": "جارٍ التحقق من التوفر والحدود",
+        "pronovaDescription": "جارٍ التحقق من التوفر واحتساب خصم 5%"
+      },
+      "process": {
+        "title": "معالجة الدفع",
+        "description": "جارٍ معالجة الدفع عبر {{method}}",
+        "cryptoDescription": "الحصول على عنوان الدفع بالعملات الرقمية وانتظار وصول المبلغ"
+      },
+      "tokens": {
+        "title": "تأكيد الحصص",
+        "description": "جارٍ تأكيد حصصك العقارية"
+      },
+      "sukukUpload": {
+        "title": "رفع مستند الصكوك",
+        "description": "جارٍ إرسال ملف PDF لمراجعة الإدارة"
+      },
+      "sukukReview": {
+        "title": "قيد المراجعة",
+        "description": "ستراجع الإدارة دفعتك وتعتمدها"
+      },
+      "pronovaCreate": {
+        "title": "إنشاء الدفعة",
+        "description": "جارٍ إعداد دفعة Pronova مع الخصم"
+      },
+      "pronovaAwait": {
+        "title": "بانتظار الدفع",
+        "description": "أرسل Pronova إلى محفظة المنصة لإتمام العملية"
+      }
+    },
+    "eta": {
+      "s10": "10 ثوانٍ",
+      "s15": "15 ثانية",
+      "s30": "30 ثانية",
+      "m5_30": "5-30 دقيقة"
+    },
+    "errors": {
+      "failed": "فشلت المعاملة. يرجى المحاولة مرة أخرى أو استخدام طريقة دفع أخرى.",
+      "cardCancelled": "تم إلغاء الدفع بالبطاقة. يمكنك المحاولة مرة أخرى أو اختيار طريقة أخرى.",
+      "cryptoCancelled": "تم إلغاء الدفع بالعملات الرقمية. يمكنك إعادة المحاولة أو اختيار طريقة أخرى — إذا كنت قد أرسلت المبلغ فسيُضاف إلى حسابك، وقد تحتاج إلى تحديث الصفحة.",
+      "submissionCancelled": "تم إلغاء الإرسال. يمكنك إعادة المحاولة أو اختيار طريقة دفع أخرى."
+    },
+    "summary": "ملخص المعاملة",
+    "propertyShares": "حصص العقار:",
+    "each": "{{price}} للحصة",
+    "subtotal": "المجموع الفرعي:",
+    "methodFee": "رسوم {{method}}:",
+    "progress": "تقدّم المعاملة",
+    "changeMethod": "تغيير طريقة الدفع",
+    "dontClose": "يرجى عدم إغلاق هذه النافذة، فمعاملتك قيد المعالجة بشكل آمن.",
+    "security": "تتم معالجة عملية الشراء عبر عقود ذكية آمنة ومدقَّقة، وتُسجَّل جميع المعاملات على البلوكتشين."
+  },
+  "confirmation": {
+    "shareText": "اشتريت للتو {{value}} حصة عقارية في {{title}} عبر ترميز العقارات! 🏢💎",
+    "copy": {
+      "heading": "تأكيد الشراء",
+      "property": "العقار",
+      "shares": "الحصص المشتراة",
+      "totalCost": "التكلفة الإجمالية",
+      "annualReturn": "العائد السنوي المتوقع",
+      "transactionId": "رقم المعاملة"
+    },
+    "success": "تمت عملية الشراء بنجاح!",
+    "welcome": "مرحباً بك في مستقبل تملّك العقارات",
+    "planCreated": "تم إنشاء خطة الأقساط",
+    "planCreatedCount": "تم إنشاء خطة الأقساط — {{value}} دفعة شهرية",
+    "planBody": "حصصك محجوزة وتُحرَّر لك مع كل دفعة. القسط الأول مستحق الآن — ادفعه من قسم <strong>الأقساط</strong> في لوحة التحكم باستخدام رصيد محفظتك.",
+    "yourOwnership": "ملكيتك",
+    "active": "نشط",
+    "purchased": "تم شراؤها",
+    "expectedRoi": "العائد السنوي المتوقع",
+    "nextDividend": "توزيعات الأرباح القادمة:",
+    "deliveredTo": "أُضيفت الحصص إلى",
+    "whatsNext": "ما الخطوة التالية؟",
+    "next": {
+      "portfolioTitle": "عرض محفظتك الاستثمارية",
+      "portfolioBody": "حصصك جاهزة. تابع الأداء وأدر ممتلكاتك واطّلع على توزيعات الأرباح في محفظتك الاستثمارية.",
+      "dividendTitle": "أول توزيع للأرباح",
+      "dividendBody": "من المتوقع صرف أول توزيع ربع سنوي للأرباح بقيمة {{amount}} بتاريخ {{date}}.",
+      "certificateTitle": "شهادة الملكية",
+      "certificateBody": "ستُرسل إليك شهادة ملكية رقمية عبر البريد الإلكتروني خلال 48 ساعة."
+    },
+    "viewReceipt": "عرض الإيصال",
+    "downloadReceipt": "تنزيل الإيصال",
+    "copyDetails": "نسخ التفاصيل",
+    "email": {
+      "title": "تأكيد عبر البريد الإلكتروني",
+      "sent": "تم إرسال رسالة التأكيد بنجاح!",
+      "hint": "أرسل تأكيد الشراء المفصّل إلى بريدك الإلكتروني",
+      "sending": "جارٍ الإرسال...",
+      "sentShort": "تم الإرسال!",
+      "send": "إرسال البريد"
+    },
+    "share": {
+      "title": "شارك عملية الشراء",
+      "hint": "أخبر الآخرين باختيارك الذكي في التملّك"
+    },
+    "goToPortfolio": "الانتقال إلى محفظتي الاستثمارية",
+    "returnToProperty": "العودة إلى العقار",
+    "congrats": "تهانينا على عملية الشراء!",
+    "congratsBody": "أصبحت الآن جزءاً من مستقبل تملّك العقارات"
+  },
+  "receipt": {
+    "brand": "كابي مكس RT",
+    "tagline": "منصة ترميز العقارات",
+    "title": "إيصال الشراء",
+    "confirmed": "تم تأكيد المعاملة",
+    "transactionInfo": "بيانات المعاملة",
+    "dateTime": "التاريخ والوقت:",
+    "dateAt": "{{date}} الساعة {{time}}",
+    "paymentMethod": "طريقة الدفع:",
+    "fiat": "عملة نقدية",
+    "status": "الحالة:",
+    "statusConfirmed": "مؤكدة",
+    "ownerInfo": "بيانات المالك",
+    "ownerId": "رقم المالك:",
+    "accountType": "نوع الحساب:",
+    "individual": "فردي",
+    "kycStatus": "التحقق من الهوية:",
+    "verified": "تم التحقق",
+    "propertyDetails": "تفاصيل ملكية العقار",
+    "noLocation": "الموقع غير متوفر",
+    "propertyType": "نوع العقار:",
+    "propertyTypes": {
+      "residential": "سكني",
+      "commercial": "تجاري",
+      "industrial": "صناعي",
+      "mixed_use": "متعدد الاستخدامات",
+      "land": "أرض"
+    },
+    "totalValue": "إجمالي قيمة العقار:",
+    "breakdown": "تفاصيل عملية الشراء",
+    "purchaseAmount": "مبلغ الشراء:",
+    "projections": "العوائد المتوقعة",
+    "estPerYear": "تقديرياً {{amount}} سنوياً",
+    "quarterlyDividend": "توزيعات الأرباح ربع السنوية",
+    "every3Months": "كل 3 أشهر",
+    "nextDividend": "توزيعات الأرباح القادمة",
+    "expectedDate": "التاريخ المتوقع",
+    "disclaimer": "<strong>إخلاء مسؤولية:</strong> العوائد المتوقعة تقديرات مبنية على ظروف السوق الحالية والأداء التاريخي. قد تختلف العوائد الفعلية وهي غير مضمونة. ينطوي أي تملّك عقاري على مخاطر، منها احتمال خسارة رأس المال.",
+    "badges": "متوافق مع لوائح SEC • مؤمَّن بالبلوكتشين • مدقَّق بالكامل",
+    "footer": "يُعدّ هذا الإيصال تأكيداً رسمياً لشراء حصصك العقارية. للاستفسارات أو الدعم، تواصل معنا عبر {{email}}",
+    "mintedTitle": "تم إصدار الحصص على شبكة Polygon",
+    "mintedBody": "تم إصدار حصصك العقارية كرموز رقمية بأمان وتسجيلها على البلوكتشين.",
+    "addToCalendar": "إضافة إلى التقويم",
+    "generatedOn": "أُنشئ في {{date}}"
+  },
+  "installment": {
+    "errors": {
+      "min": "الحد الأدنى للشراء {{value}} حصة",
+      "max": "الحد الأقصى للشراء {{value}} حصة",
+      "plan": "يرجى اختيار خطة أقساط",
+      "planMin": "تتطلب هذه الخطة حداً أدنى للشراء قدره {{amount}}",
+      "planMax": "الحد الأقصى للشراء في هذه الخطة {{amount}}"
+    },
+    "title": "الشراء بالأقساط",
+    "steps": {
+      "amount": "المبلغ",
+      "plan": "الخطة",
+      "payment": "الدفع",
+      "review": "المراجعة"
+    },
+    "chooseAmount": "اختر مبلغ الشراء",
+    "totalPurchase": "إجمالي الشراء",
+    "minShares": "الحد الأدنى: {{value}} حصة",
+    "riskLevel": "مستوى المخاطر",
+    "risk": {
+      "low": "منخفض",
+      "medium": "متوسط",
+      "high": "مرتفع"
+    },
+    "estYield": "العائد التقديري",
+    "status": "الحالة",
+    "completion": "موعد الاكتمال",
+    "selectPlan": "اختر خطة الأقساط",
+    "installments": "الأقساط",
+    "downPaymentMethod": "طريقة سداد الدفعة المقدمة",
+    "methods": {
+      "credit_card": {
+        "name": "بطاقة ائتمان",
+        "description": "معالجة فورية"
+      },
+      "bank_transfer": {
+        "name": "تحويل بنكي",
+        "description": "1-3 أيام عمل"
+      },
+      "crypto": {
+        "name": "العملات الرقمية",
+        "description": "نقبل USDC وETH وBTC"
+      },
+      "wire": {
+        "name": "حوالة مصرفية",
+        "description": "للمبالغ الكبيرة"
+      }
+    },
+    "review": "راجع عملية الشراء",
+    "sharesValue": "{{value}} حصة",
+    "breakdown": "تفاصيل الدفع",
+    "downDueNow": "الدفعة المقدمة (مستحقة الآن)",
+    "installmentsOf": "{{value}} أقساط بقيمة",
+    "totalWithInterest": "الإجمالي مع الفائدة",
+    "terms": "بالمتابعة، فإنك توافق على شروط وأحكام خطة الشراء بالأقساط. ستُحجز الحصص عند سداد الدفعة المقدمة وتُحرَّر وفق جدول الخطة المختارة.",
+    "firstDue": "يستحق القسط الأول بعد 30 يوماً من معالجة الدفعة المقدمة.",
+    "previous": "السابق",
+    "processing": "جارٍ المعالجة...",
+    "complete": "إتمام الشراء",
+    "next": "التالي"
+  },
+  "reserved": {
+    "title": "إدارة حجوزات الحصص",
+    "expiringSoon": "{{value}} تنتهي قريباً",
+    "activeReservations": "الحجوزات النشطة",
+    "reservedValue": "القيمة المحجوزة",
+    "activatedValue": "القيمة المفعّلة",
+    "readyToActivate": "جاهزة للتفعيل",
+    "emptyTitle": "لا توجد حجوزات حصص",
+    "emptyBody": "ليس لديك أي حجوزات حصص حتى الآن",
+    "sharesAt": "{{value}} حصة بسعر {{price}}",
+    "status": {
+      "active": "نشط",
+      "expired": "منتهي",
+      "activated": "مفعّل",
+      "cancelled": "ملغي"
+    },
+    "daysLeft": "متبقٍ {{value}} يوم",
+    "paymentProgress": "تقدّم السداد",
+    "paymentsCount": "{{paid}}/{{total}} دفعات",
+    "percentComplete": "مكتمل {{value}}%",
+    "sharesActivated": "تم تفعيل {{value}} حصة",
+    "reserved": "محجوزة",
+    "activated": "مفعّلة",
+    "available": "متاحة",
+    "remainingBalance": "الرصيد المتبقي",
+    "autoActivation": "التفعيل التلقائي",
+    "autoActivationHint": "تفعيل الحصص تلقائياً عند سداد {{value}}% من الدفعات",
+    "expiresIn": "ينتهي الحجز خلال {{value}} يوم",
+    "nextPaymentDue": "الدفعة القادمة مستحقة في: {{date}}",
+    "activateN": "تفعيل {{value}} حصة",
+    "makePayment": "سداد دفعة",
+    "extend": "تمديد الحجز",
+    "modify": "تعديل",
+    "modal": {
+      "activate": "تفعيل الحصص",
+      "modify": "تعديل الحجز",
+      "toActivate": "عدد الحصص المراد تفعيلها",
+      "maxAvailable": "الحد الأقصى المتاح: {{value}}",
+      "extensionDays": "مدة التمديد (بالأيام)",
+      "extensionFee": "قد تُطبَّق رسوم تمديد",
+      "newAmount": "العدد الجديد للحصص",
+      "additionalPayment": "قد تلزم دفعة إضافية عند زيادة العدد",
+      "confirm": "تأكيد"
+    }
+  },
+  "graduated": {
+    "title": "متابعة التملّك التدريجي",
+    "subtitle": "تابع تقدّم ملكيتك ومزايا كل مستوى",
+    "detailedView": "عرض تفصيلي",
+    "overview": "نظرة عامة",
+    "activePositions": "المراكز النشطة",
+    "totalPurchased": "إجمالي المشتريات",
+    "currentValue": "القيمة الحالية",
+    "totalDividends": "إجمالي توزيعات الأرباح",
+    "emptyTitle": "لا توجد مراكز ملكية",
+    "emptyBody": "ابدأ رحلة التملّك التدريجي بإتمام أول عملية شراء",
+    "status": {
+      "active": "نشط",
+      "paused": "متوقف مؤقتاً",
+      "completed": "مكتمل",
+      "defaulted": "متعثر"
+    },
+    "ownedOf": "{{owned}} من {{total}} حصة",
+    "perShare": "({{value}}% ملكية لكل حصة)",
+    "upgradeAvailable": "الترقية متاحة",
+    "paymentProgress": "تقدّم السداد: {{value}}%",
+    "nextTier": "التالي: {{name}} عند {{value}}%",
+    "paid": "المدفوع",
+    "remaining": "المتبقي",
+    "dividendRate": "معدل التوزيع",
+    "dividendsEarned": "الأرباح المحققة",
+    "nextMilestone": "المرحلة التالية: {{name}}",
+    "sharesAt": "{{value}} حصة عند {{percent}}%",
+    "tierBenefits": "مزايا المستوى الحالي",
+    "benefits": "المزايا",
+    "rights": "الحقوق والخيارات",
+    "voting": "حق التصويت",
+    "yes": "نعم",
+    "no": "لا",
+    "transfer": "حق النقل",
+    "transferRights": {
+      "none": "لا يوجد",
+      "limited": "محدود",
+      "full": "كامل"
+    },
+    "liquidity": "خيارات السيولة",
+    "milestoneProgress": "تقدّم المراحل",
+    "atPayment": "عند سداد {{value}}%",
+    "upgradeTo": "الترقية إلى {{name}}",
+    "viewProjections": "عرض التوقعات",
+    "availableTiers": "مستويات الملكية المتاحة",
+    "tierLine": "{{min}}%-{{max}}% • ملكية {{ownership}}% • توزيع {{dividend}}%"
+  },
+  "wallet": {
+    "connectFailed": "تعذّر ربط المحفظة. يرجى المحاولة مرة أخرى.",
+    "connectedTitle": "تم ربط المحفظة",
+    "connected": "متصلة",
+    "disconnect": "قطع الاتصال",
+    "address": "العنوان",
+    "showAddress": "إظهار العنوان كاملاً",
+    "hideAddress": "إخفاء العنوان كاملاً",
+    "balance": "الرصيد",
+    "connectedTo": "متصلة بشبكة {{network}}",
+    "title": "اربط محفظتك",
+    "subtitle": "اختر محفظة لربطها وإتمام عملية الشراء",
+    "notInstalled": "غير مثبّتة",
+    "noWallet": "ليس لديك محفظة؟",
+    "learn": "تعرّف على كيفية إعداد محفظة عملات رقمية",
+    "security": "لا نخزّن مفاتيحك الخاصة أو عبارة الاسترداد مطلقاً، وتبقى محفظتك تحت سيطرتك الكاملة.",
+    "options": {
+      "metamask": "محفظة إيثيريوم الأكثر استخداماً",
+      "walletconnect": "اتصل باستخدام محافظ الهاتف المحمول",
+      "coinbase": "محفظة ذاتية الحفظ من Coinbase",
+      "phantom": "محفظة سولانا وإيثيريوم"
+    }
+  }
+}

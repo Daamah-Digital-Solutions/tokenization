@@ -22,7 +22,8 @@ import { useNotifications } from '../../contexts/NotificationContext';
 import { useRouter } from '../../utils/router';
 import { AuthService } from '../../services/auth/AuthService';
 import { UserRole } from '../../services/api/types';
-import { COUNTRIES } from '../../utils/countries';
+import { getLocalizedCountries } from '../../utils/countries';
+import { useTranslation } from 'react-i18next';
 
 interface RegisterFormProps {
   onSignIn?: () => void;
@@ -59,15 +60,15 @@ interface ValidationErrors {
 }
 
 const STEPS = [
-  { id: 'personal', title: 'Personal Info', icon: User },
-  { id: 'location', title: 'Location', icon: Globe },
-  { id: 'account', title: 'Account', icon: Shield },
-  { id: 'agreements', title: 'Agreements', icon: Building }
+  { id: 'personal', title: 'register.steps.personal', icon: User },
+  { id: 'location', title: 'register.steps.location', icon: Globe },
+  { id: 'account', title: 'register.steps.account', icon: Shield },
+  { id: 'agreements', title: 'register.steps.agreements', icon: Building }
 ];
 
 const USER_TYPES = [
-  { value: UserRole.INVESTOR, label: 'Owner - I want to buy real estate' },
-  { value: UserRole.PROPERTY_OWNER, label: 'Property Owner - I want to tokenize my property' }
+  { value: UserRole.INVESTOR, label: 'register.roles.owner.title', desc: 'register.roles.owner.desc' },
+  { value: UserRole.PROPERTY_OWNER, label: 'register.roles.propertyOwner.title', desc: 'register.roles.propertyOwner.desc' }
   // Note: BROKER role has been moved to a separate partner program
 ];
 
@@ -79,6 +80,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   className
 }) => {
   const { state, register, clearError, setUser } = useAuth();
+  const { t, i18n } = useTranslation('ui');
   const { error: showError } = useNotifications();
   const { navigate, getQueryParam } = useRouter();
   // Broker referral code from a ?ref=CODE invite link (client #6a).
@@ -110,7 +112,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   // Handle Google Sign-Up response
   const handleGoogleResponse = useCallback(async (response: any) => {
     if (!response.credential) {
-      setGoogleError('Google authentication failed. Please try again.');
+      setGoogleError(t('login.googleFailed'));
       return;
     }
 
@@ -132,14 +134,14 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     } catch (error: any) {
       console.error('Google auth error:', error);
       if (error.status === 409) {
-        setGoogleError('An account with this email already exists. Please sign in with your email and password.');
+        setGoogleError(t('login.googleExists'));
       } else {
-        setGoogleError(error.message || 'Google authentication failed. Please try again.');
+        setGoogleError(error.message || t('login.googleFailed'));
       }
     } finally {
       setGoogleLoading(false);
     }
-  }, [clearError, navigate, onSuccess, setUser]);
+  }, [clearError, navigate, onSuccess, setUser, t]);
 
   // Load and initialize Google Sign-In
   useEffect(() => {
@@ -191,56 +193,56 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             text: 'signup_with',
             shape: 'rectangular',
             width: 400,
-            locale: 'en'
+            locale: i18n.language?.startsWith('ar') ? 'ar' : 'en'
           });
         }
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [googleInitialized]);
+  }, [googleInitialized, i18n.language]);
 
   const validateStep = (stepIndex: number): boolean => {
     const errors: ValidationErrors = {};
 
     switch (stepIndex) {
       case 0: // Personal Info
-        if (!formData.firstName.trim()) errors.firstName = 'First name is required';
-        if (!formData.lastName.trim()) errors.lastName = 'Last name is required';
+        if (!formData.firstName.trim()) errors.firstName = t('validation.firstNameRequired');
+        if (!formData.lastName.trim()) errors.lastName = t('validation.lastNameRequired');
         if (!formData.email.trim()) {
-          errors.email = 'Email is required';
+          errors.email = t('validation.emailRequired');
         } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-          errors.email = 'Please enter a valid email address';
+          errors.email = t('validation.emailInvalid');
         }
-        if (!formData.phoneNumber.trim()) errors.phoneNumber = 'Phone number is required';
+        if (!formData.phoneNumber.trim()) errors.phoneNumber = t('validation.phoneRequired');
         // Note: dateOfBirth validation moved to KYC process
         break;
 
       case 1: // Location
-        if (!formData.country) errors.country = 'Country is required';
-        if (!formData.city.trim()) errors.city = 'City is required';
+        if (!formData.country) errors.country = t('validation.countryRequired');
+        if (!formData.city.trim()) errors.city = t('validation.cityRequired');
         break;
 
       case 2: // Account
         if (!formData.password) {
-          errors.password = 'Password is required';
+          errors.password = t('validation.passwordRequired');
         } else if (formData.password.length < 8) {
-          errors.password = 'Password must be at least 8 characters';
+          errors.password = t('validation.passwordMin8');
         } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-          errors.password = 'Password must contain uppercase, lowercase, and number';
+          errors.password = t('validation.passwordComplexity');
         }
 
         if (!formData.confirmPassword) {
-          errors.confirmPassword = 'Please confirm your password';
+          errors.confirmPassword = t('validation.confirmRequired');
         } else if (formData.password !== formData.confirmPassword) {
-          errors.confirmPassword = 'Passwords do not match';
+          errors.confirmPassword = t('validation.passwordMismatch');
         }
 
-        if (formData.userRoles.length === 0) errors.userRoles = 'Please select at least one role';
+        if (formData.userRoles.length === 0) errors.userRoles = t('validation.roleRequired');
         break;
 
       case 3: // Agreements
-        if (!formData.agreeToTerms) errors.agreeToTerms = 'You must agree to the terms and conditions';
-        if (!formData.agreeToPrivacy) errors.agreeToPrivacy = 'You must agree to the privacy policy';
+        if (!formData.agreeToTerms) errors.agreeToTerms = t('validation.termsRequired');
+        if (!formData.agreeToPrivacy) errors.agreeToPrivacy = t('validation.privacyRequired');
         break;
     }
 
@@ -287,7 +289,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       onSuccess?.(formData.email);
     } catch (error: any) {
       // Show notification for registration error
-      showError('Registration Failed', error.message || 'Unable to create account. Please try again.');
+      showError(t('register.failedTitle'), error.message || t('register.failedMsg'));
     }
   };
 
@@ -318,8 +320,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           >
             <div className="grid grid-cols-2 gap-4">
               <Input
-                label="First Name"
-                placeholder="Enter your first name"
+                label={t('fields.firstName')}
+                placeholder={t('fields.firstNamePlaceholder')}
                 value={formData.firstName}
                 onChange={handleInputChange('firstName')}
                 errorMessage={validationErrors.firstName}
@@ -327,8 +329,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                 required
               />
               <Input
-                label="Last Name"
-                placeholder="Enter your last name"
+                label={t('fields.lastName')}
+                placeholder={t('fields.lastNamePlaceholder')}
                 value={formData.lastName}
                 onChange={handleInputChange('lastName')}
                 errorMessage={validationErrors.lastName}
@@ -339,8 +341,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
             <Input
               type="email"
-              label="Email Address"
-              placeholder="Enter your email"
+              label={t('fields.email')}
+              placeholder={t('fields.emailPlaceholder')}
               value={formData.email}
               onChange={handleInputChange('email')}
               leftIcon={<Mail className="w-5 h-5" />}
@@ -351,8 +353,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
             <Input
               type="tel"
-              label="Phone Number"
-              placeholder="Enter your phone number"
+              label={t('fields.phone')}
+              placeholder={t('fields.phonePlaceholder')}
               value={formData.phoneNumber}
               onChange={handleInputChange('phoneNumber')}
               leftIcon={<Phone className="w-5 h-5" />}
@@ -372,9 +374,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             className="space-y-5"
           >
             <Select
-              label="Country"
-              placeholder="Select your country"
-              options={COUNTRIES}
+              label={t('fields.country')}
+              placeholder={t('fields.countryPlaceholder')}
+              options={getLocalizedCountries(i18n.language)}
               value={formData.country}
               onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
               errorMessage={validationErrors.country}
@@ -382,8 +384,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             />
 
             <Input
-              label="City"
-              placeholder="Enter your city"
+              label={t('fields.city')}
+              placeholder={t('fields.cityPlaceholder')}
               value={formData.city}
               onChange={handleInputChange('city')}
               errorMessage={validationErrors.city}
@@ -404,7 +406,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             {/* Multi-role selection */}
             <div className="space-y-3">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Select your role(s) <span className="text-red-500">*</span>
+                {t('register.selectRoles')} <span className="text-red-500">*</span>
               </label>
               <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg space-y-3">
                 {USER_TYPES.map(roleType => (
@@ -433,10 +435,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                     />
                     <div className="flex-1">
                       <div className="font-medium text-slate-700 dark:text-slate-200">
-                        {roleType.label.split(' - ')[0]}
+                        {t(roleType.label)}
                       </div>
                       <div className="text-sm text-slate-500 dark:text-slate-400">
-                        {roleType.label.split(' - ')[1]}
+                        {t(roleType.desc)}
                       </div>
                     </div>
                   </label>
@@ -446,7 +448,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                 <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
                   <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   <span className="text-sm text-emerald-700 dark:text-emerald-300">
-                    You can switch between roles anytime from your dashboard
+                    {t('register.switchRoles')}
                   </span>
                 </div>
               )}
@@ -460,22 +462,22 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
             <Input
               type="password"
-              label="Password"
-              placeholder="Create a strong password"
+              label={t('fields.password')}
+              placeholder={t('fields.createPasswordPlaceholder')}
               value={formData.password}
               onChange={handleInputChange('password')}
               leftIcon={<Lock className="w-5 h-5" />}
               showPasswordToggle
               errorMessage={validationErrors.password}
-              helperText="Must be 8+ characters with uppercase, lowercase, and number"
+              helperText={t('register.passwordHelper')}
               size="lg"
               required
             />
 
             <Input
               type="password"
-              label="Confirm Password"
-              placeholder="Confirm your password"
+              label={t('fields.confirmPassword')}
+              placeholder={t('fields.confirmPasswordPlaceholder')}
               value={formData.confirmPassword}
               onChange={handleInputChange('confirmPassword')}
               leftIcon={<Lock className="w-5 h-5" />}
@@ -505,11 +507,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                   className="w-5 h-5 mt-0.5 text-emerald-500 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded focus:ring-emerald-500 focus:ring-2"
                 />
                 <label htmlFor="terms" className="text-sm text-slate-600 dark:text-slate-400">
-                  I agree to the{' '}
+                  {t('register.agreePrefix')}{' '}
                   <a href="/terms" className="text-emerald-500 hover:text-emerald-600 dark:text-emerald-400">
-                    Terms and Conditions
+                    {t('register.terms')}
                   </a>{' '}
-                  and understand the risks involved in real estate tokenization
+                  {t('register.termsSuffix')}
                 </label>
               </div>
               {validationErrors.agreeToTerms && (
@@ -528,11 +530,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                   className="w-5 h-5 mt-0.5 text-emerald-500 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded focus:ring-emerald-500 focus:ring-2"
                 />
                 <label htmlFor="privacy" className="text-sm text-slate-600 dark:text-slate-400">
-                  I agree to the{' '}
+                  {t('register.agreePrefix')}{' '}
                   <a href="/privacy" className="text-emerald-500 hover:text-emerald-600 dark:text-emerald-400">
-                    Privacy Policy
+                    {t('register.privacy')}
                   </a>{' '}
-                  and consent to the processing of my personal data
+                  {t('register.privacySuffix')}
                 </label>
               </div>
               {validationErrors.agreeToPrivacy && (
@@ -551,7 +553,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
                   className="w-5 h-5 mt-0.5 text-emerald-500 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded focus:ring-emerald-500 focus:ring-2"
                 />
                 <label htmlFor="marketing" className="text-sm text-slate-600 dark:text-slate-400">
-                  I would like to receive marketing communications and ownership opportunities (optional)
+                  {t('register.marketing')}
                 </label>
               </div>
             </div>
@@ -576,10 +578,10 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       {/* Header */}
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
-          Create Your Account
+          {t('register.title')}
         </h2>
         <p className="text-slate-600 dark:text-slate-400">
-          Join our platform and start your ownership journey
+          {t('register.subtitle')}
         </p>
       </div>
 
@@ -611,7 +613,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
           )}
-          {googleLoading ? 'Signing up with Google...' : 'Sign up with Google'}
+          {googleLoading ? t('register.googleSigningUp') : t('register.googleSignUp')}
         </div>
         {/* Google's real rendered button (invisible overlay, captures the click) */}
         <div
@@ -628,7 +630,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         </div>
         <div className="relative flex justify-center text-sm">
           <span className="px-4 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400">
-            Or register with email
+            {t('register.orEmail')}
           </span>
         </div>
       </div>
@@ -660,7 +662,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
               {index < STEPS.length - 1 && (
                 <div
                   className={cn(
-                    'w-16 h-0.5 ml-2 transition-all duration-200',
+                    'w-16 h-0.5 ms-2 transition-all duration-200',
                     isCompleted ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'
                   )}
                 />
@@ -703,12 +705,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             currentStep === 0 && 'invisible'
           )}
         >
-          <ChevronLeft className="w-4 h-4" />
-          Back
+          <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
+          {t('actions.back')}
         </Button>
 
         <div className="text-sm text-slate-500 dark:text-slate-400">
-          Step {currentStep + 1} of {STEPS.length}
+          {t('register.stepOf', { current: currentStep + 1, total: STEPS.length })}
         </div>
 
         <Button
@@ -720,11 +722,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           className="flex items-center gap-2"
         >
           {currentStep === STEPS.length - 1 ? (
-            state.isLoading ? 'Creating Account...' : 'Create Account'
+            state.isLoading ? t('register.creating') : t('register.create')
           ) : (
             <>
-              Next
-              <ChevronRight className="w-4 h-4" />
+              {t('actions.next')}
+              <ChevronRight className="w-4 h-4 rtl:rotate-180" />
             </>
           )}
         </Button>
@@ -734,13 +736,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       {onSignIn && (
         <div className="text-center pt-4 border-t border-slate-200 dark:border-slate-700">
           <span className="text-sm text-slate-600 dark:text-slate-400">
-            Already have an account?{' '}
+            {t('register.hasAccount')}{' '}
           </span>
           <button
             onClick={onSignIn}
             className="text-sm text-emerald-500 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium transition-colors"
           >
-            Sign in
+            {t('register.signIn')}
           </button>
         </div>
       )}

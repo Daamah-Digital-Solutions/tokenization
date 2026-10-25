@@ -1,0 +1,445 @@
+{
+  "shared": {
+    "retry": "Retry",
+    "viewAll": "View All",
+    "tbd": "TBD",
+    "bytes": "Bytes",
+    "loading": "Loading…",
+    "saving": "Saving…"
+  },
+  "dashboard": {
+    "errorLoading": "Error Loading Data",
+    "loadFailed": "Failed to load dashboard data",
+    "portfolio": {
+      "title": "Property Portfolio",
+      "loadFailed": "Failed to load your properties",
+      "emptyTitle": "No Properties Yet",
+      "emptyBody": "Start tokenizing your first property to see it here",
+      "addFirst": "Add Your First Property",
+      "totalValue": "Total Value",
+      "funding": "Funding",
+      "monthlyRevenue": "Monthly Revenue",
+      "owners": "Owners",
+      "sharesSold": "Shares Sold"
+    },
+    "charts": {
+      "shareSales": "Share Sales Progress",
+      "revenuePerformance": "Revenue Performance",
+      "tokenizationLoadFailed": "Failed to load tokenization data",
+      "revenueLoadFailed": "Failed to load revenue data"
+    },
+    "topOwners": {
+      "title": "Top Owners",
+      "loadFailed": "Failed to load owner data",
+      "empty": "No owners yet. Start promoting your properties to attract co-owners.",
+      "joined": "Joined {{date}}",
+      "purchase": "Purchase",
+      "properties": "Properties"
+    },
+    "documents": {
+      "title": "Recent Documents",
+      "loadFailed": "Failed to load documents",
+      "noPublicUrl": "This document does not have a public URL configured.",
+      "noDownloadUrl": "This document does not have a download URL configured.",
+      "uploadHint": "Upload a document for one of your properties (Messages)",
+      "upload": "Upload Document",
+      "empty": "No documents uploaded yet. Open a property to upload documentation.",
+      "download": "Download",
+      "downloadNamed": "Download {{name}}",
+      "view": "View",
+      "viewNamed": "View {{name}}"
+    },
+    "stats": {
+      "totalProperties": "Total Properties",
+      "totalPropertiesDesc": "Properties tokenized",
+      "capitalRaised": "Capital Raised",
+      "capitalRaisedDesc": "From share sales",
+      "activeOwners": "Active Owners",
+      "activeOwnersDesc": "Across all properties",
+      "monthlyRevenueDesc": "Rental income generated"
+    },
+    "quick": {
+      "addProperty": "Add Property",
+      "addPropertyDesc": "Tokenize new property",
+      "manageOwners": "Manage Owners",
+      "manageOwnersDesc": "View owner details",
+      "distributeRevenue": "Distribute Revenue",
+      "distributeRevenueDesc": "Process payments",
+      "uploadDocuments": "Upload Documents",
+      "uploadDocumentsDesc": "Manage legal documents"
+    },
+    "revenue": {
+      "totalRevenue": "Total Revenue",
+      "pendingDistributions": "Pending Distributions",
+      "toBeProcessed": "To be processed",
+      "nextDistribution": "Next Distribution",
+      "estimated": "Estimated {{amount}}",
+      "distributionRate": "Distribution Rate",
+      "history": "Revenue Distribution History"
+    },
+    "ownersView": {
+      "loadFailed": "Failed to load owner analytics",
+      "retail": "Retail Owners",
+      "institutional": "Institutional",
+      "highNetWorth": "High Net Worth",
+      "averagePurchase": "Average Purchase",
+      "totalCapitalRaised": "Total Capital Raised",
+      "retention": "Owner Retention",
+      "newOwners30d": "New Owners (30d)",
+      "distribution": "Owner Distribution",
+      "ownersCount": "{{count}} owners",
+      "noDistribution": "No owner distribution data available",
+      "metrics": "Purchase Metrics",
+      "noMetrics": "No purchase metrics available"
+    },
+    "settings": {
+      "saveFailed": "Failed to save profile.",
+      "title": "Account Settings",
+      "subtitle": "Manage your profile information. Email and role can only be changed by support.",
+      "profileInfo": "Profile Information",
+      "updated": "Profile updated.",
+      "email": "Email",
+      "role": "Role",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "phone": "Phone",
+      "country": "Country",
+      "city": "City",
+      "address": "Address",
+      "saveChanges": "Save Changes",
+      "manageKyc": "Manage Identity Verification",
+      "manageRoles": "Manage Roles"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "subtitle": "Updates about your properties, owners, and revenue distributions.",
+      "emptyTitle": "No Notifications",
+      "emptyBody": "You're all caught up. New notifications about your properties and owners will appear here.",
+      "fallbackTitle": "Notification"
+    },
+    "myProperties": {
+      "title": "My Properties",
+      "subtitle": "Manage your tokenized real estate portfolio",
+      "addNew": "Add New Property"
+    },
+    "wallet": {
+      "title": "Wallet & Payouts",
+      "subtitle": "Your available balance and withdrawal history.",
+      "balanceLabel": "Available for payout",
+      "balanceHint": "Revenue is credited to your wallet by the Capimax team; withdraw it to a bank account or crypto wallet."
+    },
+    "underDevelopment": {
+      "title": "{{name}} Dashboard",
+      "body": "This section is under development"
+    },
+    "views": {
+      "overview": "Overview",
+      "properties": "Properties",
+      "my-properties": "My Properties",
+      "tokenization": "Tokenization",
+      "revenue": "Revenue",
+      "wallet": "Wallet",
+      "investors": "Owners",
+      "documents": "Documents",
+      "settings": "Settings",
+      "notifications": "Notifications",
+      "messages": "Messages",
+      "analytics": "Analytics"
+    }
+  },
+  "createForm": {
+    "title": "Create New Property",
+    "back": "Back",
+    "next": "Next",
+    "creating": "Creating...",
+    "create": "Create Property",
+    "descriptionCounter": "Minimum 50 characters ({{count}}/50)",
+    "steps": {
+      "basic": "Basic Information",
+      "financial": "Financial Details",
+      "location": "Location & Details",
+      "review": "Review & Submit"
+    },
+    "types": {
+      "residential": "Residential",
+      "commercial": "Commercial",
+      "industrial": "Industrial",
+      "mixed_use": "Mixed Use",
+      "land": "Land"
+    },
+    "categories": {
+      "under_construction": "Under Construction",
+      "under_constructionDesc": "Property currently being built with installment payment options",
+      "ready_property": "Ready Property",
+      "ready_propertyDesc": "Completed property generating rental income"
+    },
+    "alerts": {
+      "created": "Property created successfully! It has been submitted for approval.",
+      "failed": "Failed to create property: {{message}}"
+    },
+    "errors": {
+      "titleRequired": "Title is required",
+      "titleMin": "Title must be at least 5 characters",
+      "descriptionRequired": "Description is required",
+      "descriptionMin": "Description must be at least 50 characters",
+      "typeRequired": "Property type is required",
+      "categoryRequired": "Property category is required",
+      "totalValuePositive": "Total value must be greater than 0",
+      "sharePricePositive": "Share price must be greater than 0",
+      "totalSharesPositive": "Total shares must be greater than 0",
+      "totalValueMismatch": "Total value must equal share price × total shares",
+      "expectedReturnRequired": "Expected return is required",
+      "rentalYieldRequired": "Rental yield is required for ready properties",
+      "monthlyIncomeRequired": "Monthly rental income is required when rental income is active",
+      "completionDateRequired": "Expected completion date is required for construction properties",
+      "installmentPeriodRequired": "Installment period is required when installments are supported",
+      "addressRequired": "Address is required",
+      "cityRequired": "City is required",
+      "countryRequired": "Country is required",
+      "sizeRequired": "Property size is required",
+      "yearRange": "Year built must be between 1800 and {{max}}"
+    },
+    "fields": {
+      "title": "Property Title",
+      "description": "Description",
+      "type": "Property Type",
+      "category": "Property Category",
+      "totalValue": "Total Property Value ($)",
+      "sharePrice": "Share Price ($)",
+      "totalShares": "Total Shares",
+      "expectedReturn": "Expected Return (%)",
+      "rentalYield": "Rental Yield (%)",
+      "minPurchase": "Minimum Purchase ($)",
+      "monthlyIncome": "Monthly Rental Income ($)",
+      "occupancy": "Occupancy Rate (%)",
+      "completionDate": "Expected Completion Date",
+      "installmentPeriod": "Maximum Installment Period (months)",
+      "address": "Full Address",
+      "city": "City",
+      "state": "State/Province",
+      "country": "Country",
+      "latitude": "Latitude (optional)",
+      "longitude": "Longitude (optional)",
+      "size": "Property Size (sq ft)",
+      "yearBuilt": "Year Built"
+    },
+    "placeholders": {
+      "title": "e.g., Luxury Apartment Complex - Manhattan",
+      "description": "Detailed description of your property...",
+      "type": "Select property type",
+      "address": "456 Park Avenue, New York, NY 10022",
+      "city": "New York",
+      "state": "NY",
+      "country": "USA"
+    },
+    "validation": {
+      "label": "Validation:",
+      "matches": "Matches total value",
+      "shouldMatch": "Should match total value"
+    },
+    "ready": {
+      "title": "Ready Property Settings",
+      "activeIncome": "Property is actively generating rental income"
+    },
+    "construction": {
+      "title": "Construction Property Settings",
+      "supportsInstallments": "Support installment payments for buyers"
+    },
+    "review": {
+      "title": "Review Your Property",
+      "title_": "Title:",
+      "type": "Type:",
+      "category": "Category:",
+      "totalValue": "Total Value:",
+      "sharePrice": "Share Price:",
+      "totalShares": "Total Shares:",
+      "expectedReturn": "Expected Return:",
+      "location": "Location",
+      "address": "Address:",
+      "city": "City:",
+      "propertyDetails": "Property Details",
+      "size": "Size:",
+      "sizeValue": "{{value}} sq ft",
+      "yearBuilt": "Year Built:",
+      "importantLabel": "Important:",
+      "importantBody": "Your property will be submitted for admin review after creation. You can upload images and documents in the next step."
+    }
+  },
+  "approvalStatus": {
+    "status": {
+      "pending": {
+        "title": "Pending Review",
+        "description": "Your property submission is waiting for admin review."
+      },
+      "under_review": {
+        "title": "Under Review",
+        "description": "Our team is currently reviewing your property submission."
+      },
+      "approved": {
+        "title": "Approved",
+        "description": "Congratulations! Your property has been approved for tokenization."
+      },
+      "rejected": {
+        "title": "Rejected",
+        "description": "Your property submission was not approved. Please review the feedback."
+      },
+      "requires_changes": {
+        "title": "Changes Required",
+        "description": "Please make the requested changes and resubmit your property."
+      },
+      "not_submitted": {
+        "title": "Not Submitted",
+        "description": "Your property has not been submitted for approval yet."
+      }
+    },
+    "badges": {
+      "pending": "PENDING",
+      "under_review": "UNDER REVIEW",
+      "approved": "APPROVED",
+      "rejected": "REJECTED",
+      "requires_changes": "CHANGES REQUIRED",
+      "not_submitted": "NOT SUBMITTED"
+    },
+    "submitted": "Submitted: {{date}}",
+    "reviewer": "Reviewer: {{name}}",
+    "reviewed": "Reviewed: {{date}}",
+    "approved": "Approved: {{date}}",
+    "refresh": "Refresh",
+    "submit": "Submit for Approval",
+    "uploadDocument": "Upload Document",
+    "reviewNotes": "Review Notes",
+    "requiredChanges": "Required Changes",
+    "process": {
+      "title": "Approval Process",
+      "submit": {
+        "title": "Submit Property",
+        "description": "Upload all required documents and property information"
+      },
+      "initial": {
+        "title": "Initial Review",
+        "description": "Our team reviews your submission for completeness"
+      },
+      "dueDiligence": {
+        "title": "Due Diligence",
+        "description": "Detailed verification of property and documentation"
+      },
+      "final": {
+        "title": "Final Decision",
+        "description": "Property approved or feedback provided for changes"
+      }
+    },
+    "docTypes": {
+      "property_deed": "Property Deed",
+      "financial_statement": "Financial Statement",
+      "valuation_report": "Valuation Report",
+      "legal_document": "Legal Document",
+      "compliance_certificate": "Compliance Certificate",
+      "other": "Other"
+    },
+    "modal": {
+      "title": "Upload Additional Document",
+      "subtitle": "Upload additional documentation to support your property approval",
+      "documentType": "Document Type",
+      "selectType": "Select document type...",
+      "file": "File Upload",
+      "formats": "Accepted formats: PDF, DOC, DOCX, JPG, PNG (Max 10MB)",
+      "description": "Description (Optional)",
+      "descriptionPlaceholder": "Brief description of the document...",
+      "cancel": "Cancel",
+      "uploading": "Uploading..."
+    }
+  },
+  "documentUpload": {
+    "uploadFailed": "Upload failed",
+    "invalidFormat": "{{name}} is not a valid document format. Please use PDF, DOC, DOCX, JPG, or PNG.",
+    "tooLarge": "{{name}} is too large. Maximum size is 50MB.",
+    "nameRequired": "Document name is required",
+    "typeRequired": "Document type is required",
+    "dropzone": "Drop documents here or click to browse",
+    "supports": "Supports PDF, DOC, DOCX, JPG, PNG • Max 50MB per file",
+    "selected": "Selected Documents ({{count}})",
+    "uploadAll": "Upload All Documents",
+    "remove": "Remove",
+    "name": "Document Name",
+    "namePlaceholder": "e.g., Property Title Deed",
+    "type": "Document Type",
+    "description": "Description (optional)",
+    "descriptionPlaceholder": "Add any additional details about this document...",
+    "types": {
+      "title_deed": "Title Deed",
+      "valuation_report": "Valuation Report",
+      "legal_certificate": "Legal Certificate",
+      "construction_permit": "Construction Permit",
+      "insurance": "Insurance Document",
+      "tax_certificate": "Tax Certificate",
+      "floor_plan": "Floor Plan",
+      "other": "Other Document"
+    },
+    "tips": {
+      "title": "Document Upload Requirements",
+      "requiredLabel": "Required:",
+      "required": "Title deed, valuation report, legal certificates",
+      "recommendedLabel": "Recommended:",
+      "recommended": "Construction permits, insurance docs, tax certificates",
+      "clear": "All documents must be clear, legible, and up-to-date",
+      "reviewed": "Documents will be reviewed by our compliance team",
+      "redacted": "Ensure all sensitive information is properly redacted if needed"
+    }
+  },
+  "imageUpload": {
+    "invalidFormat": "{{name}} is not a valid image format. Please use JPG, PNG, or WEBP.",
+    "tooLarge": "{{name}} is too large. Maximum size is 10MB.",
+    "dropzone": "Drop images here or click to browse",
+    "supports": "Supports JPG, PNG, WEBP • Max 10MB per image",
+    "selected": "Selected Images ({{count}})",
+    "uploadAll": "Upload All Images",
+    "previewAlt": "Preview {{n}}",
+    "primary": "Primary",
+    "remove": "Remove image",
+    "caption": "Caption",
+    "captionPlaceholder": "Add a caption...",
+    "primaryImage": "Primary Image",
+    "setPrimary": "Set as Primary",
+    "upload": "Upload",
+    "tips": {
+      "title": "Image Upload Tips",
+      "quality": "Upload high-quality images showcasing your property's best features",
+      "primary": "The first image (or primary image) will be shown in property listings",
+      "recommended": "Recommended: exterior shots, interior rooms, amenities, location views",
+      "captions": "Use descriptive captions to help buyers understand each image"
+    }
+  },
+  "list": {
+    "status": {
+      "draft": "Draft",
+      "pending_approval": "Pending Approval",
+      "approved": "Approved",
+      "active": "Active",
+      "tokenized": "Tokenized",
+      "delisted": "Delisted"
+    },
+    "allProperties": "All Properties",
+    "alerts": {
+      "submitted": "Property submitted for approval successfully!",
+      "submitFailed": "Failed to submit property: {{message}}"
+    },
+    "errorTitle": "Error Loading Properties",
+    "errorBody": "Failed to load your properties. Please try again.",
+    "subtitle": "Manage and track your tokenized properties",
+    "searchPlaceholder": "Search properties by title, city, or address...",
+    "noneFound": "No Properties Found",
+    "adjustFilters": "Try adjusting your filters or search term",
+    "startCreating": "Start by creating your first property listing",
+    "createFirst": "Create Your First Property",
+    "created": "Created: {{date}}",
+    "updated": "Updated: {{date}}",
+    "sharePrice": "Share Price",
+    "shares": "Shares",
+    "expectedReturn": "Expected Return",
+    "viewDetails": "View Details",
+    "edit": "Edit",
+    "manageMedia": "Manage Media",
+    "submitting": "Submitting...",
+    "checkStatus": "Check Approval Status"
+  }
+}

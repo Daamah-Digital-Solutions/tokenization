@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { constructionStageLabel } from '../../utils/constructionStage';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -91,6 +92,8 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
   const [copiedContract, setCopiedContract] = useState(false);
 
   const { t: tPlan, i18n } = useTranslation('plan');
+  const { t } = useTranslation('propui');
+  const isAr = i18n.language?.startsWith('ar');
   const details = property.listing_details;
   // Purchase methods + schedule set by the admin (client round 3, #18 #20).
   const plan = details?.payment_plan ?? fallbackPlan(property as any);
@@ -113,7 +116,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
   const formatPercentage = (value: number) => `${value.toFixed(1)}%`;
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -124,14 +127,14 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
     Math.round((property.tokens_sold / property.total_tokens) * 100) : 0;
 
   const tabs = [
-    { id: 'overview' as const, label: 'Overview', icon: Eye },
+    { id: 'overview' as const, label: t('detail.tabs.overview'), icon: Eye },
     { id: 'plan' as const, label: tPlan('tab'), icon: CalendarClock },
-    { id: 'financials' as const, label: 'Financials', icon: BarChart3 },
-    { id: 'analytics' as const, label: 'Analytics', icon: Activity },
-    { id: 'spv' as const, label: 'SPV Info', icon: Briefcase },
-    { id: 'blockchain' as const, label: 'Blockchain', icon: Boxes },
-    { id: 'documents' as const, label: 'Data Room', icon: Folder },
-    { id: 'location' as const, label: 'Location', icon: MapPin },
+    { id: 'financials' as const, label: t('detail.tabs.financials'), icon: BarChart3 },
+    { id: 'analytics' as const, label: t('detail.tabs.analytics'), icon: Activity },
+    { id: 'spv' as const, label: t('detail.tabs.spv'), icon: Briefcase },
+    { id: 'blockchain' as const, label: t('detail.tabs.blockchain'), icon: Boxes },
+    { id: 'documents' as const, label: t('detail.tabs.documents'), icon: Folder },
+    { id: 'location' as const, label: t('detail.tabs.location'), icon: MapPin },
   ];
 
   const nextImage = () => {
@@ -180,18 +183,18 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
   const spvAny = property as any;
   const spvInfo = {
     name: spvAny.spv_company_name || `${property.title} SPV Ltd`,
-    jurisdiction: 'United Arab Emirates',
+    jurisdiction: t('detail.spv.uae'),
     formationDate: spvAny.spv_establishment_date
       ? formatDate(spvAny.spv_establishment_date.toString())
       : property.created_at
         ? formatDate(property.created_at.toString())
-        : 'N/A',
+        : t('detail.na'),
     registrationNumber:
       spvAny.spv_registration_number || `SPV-${property.id?.slice(0, 8).toUpperCase()}`,
-    legalStructure: 'Special Purpose Vehicle',
-    managingDirector: 'Capimax RT Management',
-    auditor: 'Independent Audit Firm',
-    custodian: spvAny.spv_bank_name || 'Licensed Custodian Bank',
+    legalStructure: t('detail.spv.legalStructureValue'),
+    managingDirector: t('detail.spv.managingDirectorValue'),
+    auditor: t('detail.spv.auditorValue'),
+    custodian: spvAny.spv_bank_name || t('detail.spv.custodianValue'),
     hasRealRegistration: !!spvAny.spv_registration_number,
   };
 
@@ -224,16 +227,18 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
             <>
               <button
                 onClick={previousImage}
-                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm shadow-lg hover:scale-110 transition-transform"
+                aria-label={t('detail.prevImage')}
+                className="absolute start-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm shadow-lg hover:scale-110 transition-transform"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-5 h-5 rtl:rotate-180" />
               </button>
 
               <button
                 onClick={nextImage}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm shadow-lg hover:scale-110 transition-transform"
+                aria-label={t('detail.nextImage')}
+                className="absolute end-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm shadow-lg hover:scale-110 transition-transform"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-5 h-5 rtl:rotate-180" />
               </button>
 
               {/* Image Indicators */}
@@ -255,11 +260,11 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
           )}
 
           {/* Status Badges */}
-          <div className="absolute top-4 left-4 flex gap-2">
+          <div className="absolute top-4 start-4 flex gap-2">
             {fundingPercentage < 50 && (
               <div className="px-3 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-bold rounded-full flex items-center gap-1">
                 <Award className="w-3 h-3" />
-                FEATURED
+                {t('detail.badges.featured')}
               </div>
             )}
 
@@ -267,23 +272,23 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
             {isUnderConstruction ? (
               <div className="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold rounded-full flex items-center gap-1">
                 <Building2 className="w-3 h-3" />
-                UNDER CONSTRUCTION
+                {t('detail.badges.underConstruction')}
               </div>
             ) : isReadyProperty && property.rental_income_active ? (
               <div className="px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white text-xs font-bold rounded-full flex items-center gap-1">
                 <DollarSign className="w-3 h-3" />
-                INCOME ACTIVE
+                {t('detail.badges.incomeActive')}
               </div>
             ) : (
               <div className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-bold rounded-full flex items-center gap-1">
                 <Home className="w-3 h-3" />
-                READY PROPERTY
+                {t('detail.badges.ready')}
               </div>
             )}
           </div>
 
           {/* Quick Stats Overlay */}
-          <div className="absolute bottom-4 right-4 flex gap-2">
+          <div className="absolute bottom-4 end-4 flex gap-2">
             <div className="px-3 py-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-lg border border-white/20">
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
@@ -315,7 +320,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
               >
                 <img
                   src={image}
-                  alt={`${property.title} ${index + 1}`}
+                  alt={t('detail.imageAlt', { title: property.title, n: index + 1 })}
                   className="w-full h-full object-cover"
                 />
               </button>
@@ -373,10 +378,10 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                         <span className="text-lg">{property.city}, {property.state || property.country}</span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Property Type</div>
+                    <div className="text-end">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">{t('detail.propertyType')}</div>
                       <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {property.property_type?.replace('_', ' ').toUpperCase()}
+                        {property.property_type ? t(`types.${property.property_type}`, { defaultValue: property.property_type.replace('_', ' ').toUpperCase() }) : ''}
                       </div>
                     </div>
                   </div>
@@ -391,14 +396,14 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                       <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                         {formatCurrency(property.total_value)}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Total Value</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{t('detail.totalValue')}</div>
                     </div>
 
                     <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-4 rounded-xl">
                       <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">
                         {formatCurrency(property.token_price)}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Per Token</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{t('detail.perShare')}</div>
                     </div>
 
                     <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-xl">
@@ -406,15 +411,15 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                         {formatPercentage(property.expected_return || 0)}
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {isUnderConstruction ? 'Expected Return' : 'Annual Return'}
+                        {isUnderConstruction ? t('detail.expectedReturn') : t('detail.annualReturn')}
                       </div>
                     </div>
 
                     <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-xl">
                       <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-1">
-                        {property.rental_yield ? formatPercentage(property.rental_yield) : 'N/A'}
+                        {property.rental_yield ? formatPercentage(property.rental_yield) : t('detail.na')}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Rental Yield</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{t('detail.rentalYield')}</div>
                     </div>
                   </div>
                 </Card>
@@ -424,7 +429,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                   {isUnderConstruction ? (
                     <div>
                       <div className="flex justify-between items-center mb-3">
-                        <Text variant="bodyLarge" weight="semibold">Construction Progress</Text>
+                        <Text variant="bodyLarge" weight="semibold">{t('detail.constructionProgress')}</Text>
                         <Text variant="bodyLarge" weight="bold" className="text-orange-600 dark:text-orange-400">
                           {formatPercentage(property.construction_progress || 0)}
                         </Text>
@@ -435,15 +440,15 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                           initial={{ width: 0 }}
                           animate={{ width: `${property.construction_progress || 0}%` }}
                           transition={{ duration: 2, ease: "easeOut" }}
-                          className="h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full relative"
+                          className="h-full bg-gradient-to-r rtl:bg-gradient-to-l from-orange-500 to-red-500 rounded-full relative"
                         >
                           <div className="absolute inset-0 bg-white/20 animate-pulse" />
                         </motion.div>
                       </div>
 
                       <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-6">
-                        <span>{property.construction_status_display || 'In Progress'}</span>
-                        <span>Expected: {property.expected_completion_date ? formatDate(property.expected_completion_date) : 'TBD'}</span>
+                        <span>{constructionStageLabel(property.construction_status_display) || t('detail.inProgress')}</span>
+                        <span>{t('detail.expected', { date: property.expected_completion_date ? formatDate(property.expected_completion_date) : t('detail.tbd') })}</span>
                       </div>
                     </div>
                   ) : null}
@@ -451,9 +456,9 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                   {/* Funding Progress */}
                   <div>
                     <div className="flex justify-between items-center mb-3">
-                      <Text variant="bodyLarge" weight="semibold">Funding Progress</Text>
+                      <Text variant="bodyLarge" weight="semibold">{t('detail.fundingProgress')}</Text>
                       <Text variant="bodyLarge" weight="bold" className="text-emerald-600 dark:text-emerald-400">
-                        {fundingPercentage}% Complete
+                        {t('detail.percentComplete', { percent: fundingPercentage })}
                       </Text>
                     </div>
 
@@ -462,15 +467,15 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                         initial={{ width: 0 }}
                         animate={{ width: `${fundingPercentage}%` }}
                         transition={{ duration: 2, ease: "easeOut" }}
-                        className="h-full bg-gradient-to-r from-emerald-500 to-green-500 rounded-full relative"
+                        className="h-full bg-gradient-to-r rtl:bg-gradient-to-l from-emerald-500 to-green-500 rounded-full relative"
                       >
                         <div className="absolute inset-0 bg-white/20 animate-pulse" />
                       </motion.div>
                     </div>
 
                     <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                      <span>{property.tokens_sold?.toLocaleString()} tokens sold</span>
-                      <span>{(property.total_tokens - property.tokens_sold)?.toLocaleString()} available</span>
+                      <span>{t('detail.sharesSold', { n: property.tokens_sold?.toLocaleString() })}</span>
+                      <span>{t('detail.sharesAvailable', { n: (property.total_tokens - property.tokens_sold)?.toLocaleString() })}</span>
                     </div>
                   </div>
                 </Card>
@@ -505,10 +510,10 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                       <Calendar className="w-5 h-5 text-emerald-600" />
-                      Distribution Schedule
+                      {t('detail.distributionSchedule')}
                     </h3>
                     <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {isReadyProperty ? 'Monthly' : 'Quarterly'} Distributions
+                      {isReadyProperty ? t('detail.monthlyDistributions') : t('detail.quarterlyDistributions')}
                     </span>
                   </div>
 
@@ -519,14 +524,14 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                         className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl text-center"
                       >
                         <div className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
-                          {dist.quarter}
+                          {t(`detail.quarters.${dist.quarter}`)}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {dist.month}
+                          {t(`detail.months.${dist.month}`)}
                         </div>
                         <div className="mt-2">
                           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
-                            Scheduled
+                            {t('detail.scheduled')}
                           </span>
                         </div>
                       </div>
@@ -542,7 +547,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                   <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                     <h3 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                       <Calculator className="w-5 h-5 text-emerald-600" />
-                      Ownership Calculator
+                      {t('calculator.title')}
                     </h3>
                   </div>
 
@@ -550,10 +555,10 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Number of Tokens
+                          {t('calculator.numberOfShares')}
                         </label>
                         <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                          {formatCurrency(property.token_price)}/token
+                          {t('calculator.perShare', { price: formatCurrency(property.token_price) })}
                         </span>
                       </div>
                       <input
@@ -566,7 +571,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-lg font-semibold text-center"
                       />
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Available: {availableTokens.toLocaleString()} tokens
+                        {t('detail.availableShares', { n: availableTokens.toLocaleString() })}
                       </p>
                       {/* Quick token select */}
                       <div className="flex gap-2 mt-2">
@@ -588,31 +593,31 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                     </div>
 
                     <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-4 rounded-xl">
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Your Ownership</h4>
+                      <h4 className="font-semibold text-gray-900 dark:text-white mb-3">{t('calculator.yourOwnership')}</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-gray-600 dark:text-gray-400">Tokens:</span>
+                          <span className="text-gray-600 dark:text-gray-400">{t('detail.sidebar.shares')}</span>
                           <span className="font-semibold text-gray-900 dark:text-white">{tokenCount}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-600 dark:text-gray-400">Total Cost:</span>
+                          <span className="text-gray-600 dark:text-gray-400">{t('detail.sidebar.totalCost')}</span>
                           <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(investmentAmount)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-600 dark:text-gray-400">Ownership:</span>
+                          <span className="text-gray-600 dark:text-gray-400">{t('detail.sidebar.ownership')}</span>
                           <span className="font-semibold text-gray-900 dark:text-white">
                             {((tokenCount / property.total_tokens) * 100).toFixed(4)}%
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-600 dark:text-gray-400">Annual Return:</span>
+                          <span className="text-gray-600 dark:text-gray-400">{t('detail.sidebar.annualReturn')}</span>
                           <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                             {formatCurrency(annualReturn)}
                           </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600 dark:text-gray-400">
-                            {isReadyProperty ? 'Monthly Dividend:' : 'Quarterly Dividend:'}
+                            {isReadyProperty ? t('detail.sidebar.monthlyDividend') : t('detail.sidebar.quarterlyDividend')}
                           </span>
                           <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                             {formatCurrency(isReadyProperty ? monthlyDividend : quarterlyDividend)}
@@ -659,23 +664,23 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
 
                 {/* Trust Indicators */}
                 <Card className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Trust & Security</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('detail.trust.title')}</h3>
                   <div className="space-y-3">
                     <div className="flex items-center gap-3 text-sm">
                       <Shield className="w-5 h-5 text-emerald-500" />
-                      <span className="text-gray-700 dark:text-gray-300">Regulatory Compliant</span>
+                      <span className="text-gray-700 dark:text-gray-300">{t('detail.trust.regulatory')}</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm">
                       <CheckCircle className="w-5 h-5 text-emerald-500" />
-                      <span className="text-gray-700 dark:text-gray-300">Verified Property</span>
+                      <span className="text-gray-700 dark:text-gray-300">{t('detail.trust.verified')}</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm">
                       <Lock className="w-5 h-5 text-emerald-500" />
-                      <span className="text-gray-700 dark:text-gray-300">SPV Protected</span>
+                      <span className="text-gray-700 dark:text-gray-300">{t('detail.trust.spv')}</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm">
                       <Scale className="w-5 h-5 text-emerald-500" />
-                      <span className="text-gray-700 dark:text-gray-300">Independent Valuation</span>
+                      <span className="text-gray-700 dark:text-gray-300">{t('detail.trust.valuation')}</span>
                     </div>
                   </div>
                 </Card>
@@ -700,32 +705,32 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
             <Card className="p-8">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                 <BarChart3 className="w-6 h-6 text-emerald-600" />
-                Financial Details
+                {t('detail.fin.title')}
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Ownership Metrics */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Ownership Metrics</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('detail.fin.ownershipMetrics')}</h3>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">Token Price</span>
+                      <span className="text-gray-600 dark:text-gray-400">{t('detail.fin.sharePrice')}</span>
                       <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(property.token_price)}</span>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">Total Tokens</span>
+                      <span className="text-gray-600 dark:text-gray-400">{t('detail.fin.totalShares')}</span>
                       <span className="font-semibold text-gray-900 dark:text-white">{property.total_tokens?.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">Available Tokens</span>
+                      <span className="text-gray-600 dark:text-gray-400">{t('detail.fin.availableShares')}</span>
                       <span className="font-semibold text-emerald-600 dark:text-emerald-400">{(property.total_tokens - property.tokens_sold)?.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">Minimum Ownership</span>
+                      <span className="text-gray-600 dark:text-gray-400">{t('detail.fin.minOwnership')}</span>
                       <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(property.token_price)}</span>
                     </div>
                     <div className="flex justify-between items-center py-3">
-                      <span className="text-gray-600 dark:text-gray-400">Expected Yield</span>
+                      <span className="text-gray-600 dark:text-gray-400">{t('detail.fin.expectedYield')}</span>
                       <span className="font-semibold text-emerald-600 dark:text-emerald-400">{formatPercentage(property.expected_return || 10)}</span>
                     </div>
                   </div>
@@ -733,28 +738,28 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
 
                 {/* Property Financials */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Property Financials</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('detail.fin.propertyFinancials')}</h3>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">Property Value</span>
+                      <span className="text-gray-600 dark:text-gray-400">{t('detail.fin.propertyValue')}</span>
                       <span className="font-semibold text-gray-900 dark:text-white">{formatCurrency(property.total_value)}</span>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">Rental Yield</span>
+                      <span className="text-gray-600 dark:text-gray-400">{t('detail.rentalYield')}</span>
                       <span className="font-semibold text-gray-900 dark:text-white">{formatPercentage(property.rental_yield || 0)}</span>
                     </div>
                     {property.monthly_rental_income && (
                       <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                        <span className="text-gray-600 dark:text-gray-400">Monthly Rental Income</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('detail.fin.monthlyRent')}</span>
                         <span className="font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(property.monthly_rental_income)}</span>
                       </div>
                     )}
                     <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">Management Fee</span>
+                      <span className="text-gray-600 dark:text-gray-400">{t('detail.fin.managementFee')}</span>
                       <span className="font-semibold text-gray-900 dark:text-white">2.5%</span>
                     </div>
                     <div className="flex justify-between items-center py-3">
-                      <span className="text-gray-600 dark:text-gray-400">Platform Fee</span>
+                      <span className="text-gray-600 dark:text-gray-400">{t('detail.fin.platformFee')}</span>
                       <span className="font-semibold text-gray-900 dark:text-white">1.0%</span>
                     </div>
                   </div>
@@ -795,21 +800,21 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
             const money = (n: number) => `$${Math.round(n || 0).toLocaleString()}`;
             const pct = (n: number) => `${(n || 0).toFixed(2)}%`;
             const tiles: [string, string][] = [
-              ['Annual Return', pct(annual)],
-              ['Monthly Return', pct(monthly)],
-              ['Occupancy', isNaN(occupancy) ? '—' : pct(occupancy)],
-              ['ROI (projected)', pct(roiProj)],
-              ['Capital Growth', pct(capitalGrowth)],
-              ['Rental Yield', pct(rentalYield)],
+              [t('detail.an.annualReturn'), pct(annual)],
+              [t('detail.an.monthlyReturn'), pct(monthly)],
+              [t('detail.an.occupancy'), isNaN(occupancy) ? '—' : pct(occupancy)],
+              [t('detail.an.roi'), pct(roiProj)],
+              [t('detail.an.capitalGrowth'), pct(capitalGrowth)],
+              [t('detail.rentalYield'), pct(rentalYield)],
             ];
             return (
               <Card className="p-8">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
                   <Activity className="w-6 h-6 text-emerald-600" />
-                  Performance & Analytics
+                  {t('detail.an.title')}
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  Property performance, returns, and investment growth over time.
+                  {t('detail.an.subtitle')}
                 </p>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
@@ -824,15 +829,15 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                 {/* Property value growth */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
                   <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Initial Value</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('detail.an.initialValue')}</p>
                     <p className="text-lg font-bold text-gray-900 dark:text-white">{money(origVal)}</p>
                   </div>
                   <div className="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Current Valuation</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('detail.an.currentValuation')}</p>
                     <p className="text-lg font-bold text-gray-900 dark:text-white">{money(curVal)}</p>
                   </div>
                   <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 p-4">
-                    <p className="text-xs text-emerald-700 dark:text-emerald-300">Capital Growth</p>
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300">{t('detail.an.capitalGrowth')}</p>
                     <p className={`text-lg font-bold ${capitalGrowth >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                       {capitalGrowth >= 0 ? '+' : ''}{pct(capitalGrowth)}
                     </p>
@@ -840,7 +845,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                 </div>
 
                 {/* Investment timeline chart */}
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Investment Timeline</h3>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">{t('detail.an.timeline')}</h3>
                 {timeline.length > 0 && cum > 0 ? (
                   <div className="w-full h-72">
                     <ResponsiveContainer width="100%" height="100%">
@@ -853,8 +858,8 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.4} />
                         <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="#9ca3af" />
-                        <YAxis tick={{ fontSize: 11 }} stroke="#9ca3af" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
-                        <RTooltip formatter={(v: any) => [money(Number(v)), 'Cumulative invested']} />
+                        <YAxis tick={{ fontSize: 11 }} stroke="#9ca3af" tickFormatter={(v) => t('units.thousand', { v: (v / 1000).toFixed(0) })} />
+                        <RTooltip formatter={(v: any) => [money(Number(v)), t('detail.an.cumulative')]} />
                         <Area type="monotone" dataKey="invested" stroke="#10b981" strokeWidth={2} fill="url(#invGrad)" />
                       </AreaChart>
                     </ResponsiveContainer>
@@ -863,7 +868,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                   <div className="text-center py-10 px-6 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
                     <BarChart3 className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      No investment activity yet — the timeline chart will populate as investors join.
+                      {t('detail.an.empty')}
                     </p>
                   </div>
                 )}
@@ -875,51 +880,51 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
             <Card className="p-8">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                 <Briefcase className="w-6 h-6 text-emerald-600" />
-                SPV Information
+                {t('detail.spv.title')}
               </h2>
 
               <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-6 mb-8">
                 <p className="text-emerald-800 dark:text-emerald-200">
-                  This property is held through a Special Purpose Vehicle (SPV) structure, providing legal separation and co-owner protection. The SPV owns the underlying asset and co-owners hold economic rights through their token holdings.
+                  {t('detail.spv.intro')}
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">SPV Details</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('detail.spv.details')}</h3>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">SPV Name</span>
+                      <span className="text-gray-600 dark:text-gray-400">{t('detail.spv.name')}</span>
                       <span className="font-semibold text-gray-900 dark:text-white">{spvInfo.name}</span>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">Jurisdiction</span>
+                      <span className="text-gray-600 dark:text-gray-400">{t('detail.spv.jurisdiction')}</span>
                       <span className="font-semibold text-gray-900 dark:text-white">{spvInfo.jurisdiction}</span>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">Formation Date</span>
+                      <span className="text-gray-600 dark:text-gray-400">{t('detail.spv.formationDate')}</span>
                       <span className="font-semibold text-gray-900 dark:text-white">{spvInfo.formationDate}</span>
                     </div>
                     <div className="flex justify-between items-center py-3">
-                      <span className="text-gray-600 dark:text-gray-400">Registration Number</span>
+                      <span className="text-gray-600 dark:text-gray-400">{t('detail.spv.registrationNumber')}</span>
                       <span className="font-semibold text-gray-900 dark:text-white">{spvInfo.registrationNumber}</span>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Service Providers</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('detail.spv.providers')}</h3>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">Managing Director</span>
+                      <span className="text-gray-600 dark:text-gray-400">{t('detail.spv.managingDirector')}</span>
                       <span className="font-semibold text-gray-900 dark:text-white">{spvInfo.managingDirector}</span>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">Auditor</span>
+                      <span className="text-gray-600 dark:text-gray-400">{t('detail.spv.auditor')}</span>
                       <span className="font-semibold text-gray-900 dark:text-white">{spvInfo.auditor}</span>
                     </div>
                     <div className="flex justify-between items-center py-3">
-                      <span className="text-gray-600 dark:text-gray-400">Custodian</span>
+                      <span className="text-gray-600 dark:text-gray-400">{t('detail.spv.custodian')}</span>
                       <span className="font-semibold text-gray-900 dark:text-white">{spvInfo.custodian}</span>
                     </div>
                   </div>
@@ -929,15 +934,15 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
               <div className="mt-8">
                 <Button
                   variant="outline"
-                  className="mr-4"
+                  className="me-4"
                   onClick={() => setActiveTab('documents')}
                 >
-                  <FileText className="w-4 h-4 mr-2" />
-                  View SPV Documents
+                  <FileText className="w-4 h-4 me-2" />
+                  {t('detail.spv.viewDocuments')}
                 </Button>
                 <Button variant="ghost" onClick={() => setShowSpvVerify(true)}>
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Verify Company Registration
+                  <ExternalLink className="w-4 h-4 me-2" />
+                  {t('detail.spv.verify')}
                 </Button>
               </div>
 
@@ -957,29 +962,29 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                       </div>
                       <div>
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
-                          Company Registration
+                          {t('detail.spv.companyRegistration')}
                         </h3>
                         <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-                          {spvInfo.hasRealRegistration ? 'Verified on record' : 'Registration details'}
+                          {spvInfo.hasRealRegistration ? t('detail.spv.verifiedOnRecord') : t('detail.spv.registrationDetails')}
                         </p>
                       </div>
                     </div>
 
                     <div className="space-y-2.5 text-sm">
                       {[
-                        ['Legal entity', spvInfo.name],
-                        ['Registration number', spvInfo.registrationNumber],
-                        ['Jurisdiction', spvInfo.jurisdiction],
-                        ['Formation date', spvInfo.formationDate],
-                        ['Legal structure', spvInfo.legalStructure],
-                        ['Status', 'Registered / Active'],
+                        [t('detail.spv.legalEntity'), spvInfo.name],
+                        [t('detail.spv.registrationNumber'), spvInfo.registrationNumber],
+                        [t('detail.spv.jurisdiction'), spvInfo.jurisdiction],
+                        [t('detail.spv.formationDate'), spvInfo.formationDate],
+                        [t('detail.spv.legalStructure'), spvInfo.legalStructure],
+                        [t('detail.spv.status'), t('detail.spv.statusValue')],
                       ].map(([label, value]) => (
                         <div
                           key={label}
                           className="flex items-start justify-between gap-3 py-1.5 border-b border-slate-100 dark:border-slate-700 last:border-0"
                         >
                           <span className="text-slate-500 dark:text-slate-400">{label}</span>
-                          <span className="text-slate-900 dark:text-white font-medium text-right break-all">
+                          <span className="text-slate-900 dark:text-white font-medium text-end break-all">
                             {value}
                           </span>
                         </div>
@@ -988,27 +993,27 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
 
                     <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
                       {spvInfo.hasRealRegistration
-                        ? 'This SPV is registered to hold the property on behalf of token owners. You can look up the registration number with the relevant company registry in the stated jurisdiction.'
-                        : 'The registration record for this SPV is being finalised. Contact support if you need the official registry reference.'}
+                        ? t('detail.spv.registeredNote')
+                        : t('detail.spv.pendingNote')}
                     </p>
 
                     <div className="mt-5 flex gap-3">
                       <a
                         href={`https://www.google.com/search?q=${encodeURIComponent(
-                          `${spvInfo.name} ${spvInfo.registrationNumber} company registration ${spvInfo.jurisdiction}`,
+                          `${spvInfo.name} ${spvInfo.registrationNumber} company registration United Arab Emirates`,
                         )}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                       >
                         <ExternalLink className="w-4 h-4" />
-                        Look up registry
+                        {t('detail.spv.lookup')}
                       </a>
                       <button
                         onClick={() => setShowSpvVerify(false)}
                         className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2.5 text-sm transition-colors"
                       >
-                        Close
+                        {t('detail.close')}
                       </button>
                     </div>
                   </div>
@@ -1027,21 +1032,20 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
               <Card className="p-8">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
                   <Boxes className="w-6 h-6 text-emerald-600" />
-                  Blockchain & Smart Contract
+                  {t('detail.bc.title')}
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 mb-6">
-                  This property is tokenized on a public blockchain. Verify the token
-                  contract and your digital ownership on-chain at any time.
+                  {t('detail.bc.intro')}
                 </p>
 
                 {bc && bc.contract_address ? (
                   <>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                       {[
-                        ['Network', bc.network || 'Blockchain'],
-                        ['Chain ID', bc.chain_id != null ? String(bc.chain_id) : '—'],
-                        ['Contract Status', bc.status ? String(bc.status).replace(/^\w/, (c: string) => c.toUpperCase()) : 'Active'],
-                        ['Verification', bc.is_verified ? 'Verified' : 'On-chain'],
+                        [t('detail.bc.network'), bc.network || t('detail.bc.blockchain')],
+                        [t('detail.bc.chainId'), bc.chain_id != null ? String(bc.chain_id) : '—'],
+                        [t('detail.bc.contractStatus'), bc.status ? t(`detail.bc.statuses.${String(bc.status).toLowerCase()}`, { defaultValue: String(bc.status).replace(/^\w/, (c: string) => c.toUpperCase()) }) : t('detail.bc.statuses.active')],
+                        [t('detail.bc.verification'), bc.is_verified ? t('detail.bc.verified') : t('detail.bc.onChain')],
                       ].map(([label, value]) => (
                         <div key={label as string} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 px-3 py-2.5">
                           <p className="text-[10px] font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{label}</p>
@@ -1052,7 +1056,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
 
                     <div className="rounded-xl border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
                       <div className="flex items-start justify-between gap-3 px-4 py-3">
-                        <span className="text-sm text-gray-500 dark:text-gray-400 shrink-0">Token Contract</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400 shrink-0">{t('detail.bc.tokenContract')}</span>
                         <span className="flex items-center gap-2 min-w-0">
                           <code className="font-mono text-sm text-gray-800 dark:text-gray-100 break-all">{bc.contract_address}</code>
                           <button
@@ -1060,31 +1064,31 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                             onClick={() => { try { navigator.clipboard?.writeText(bc.contract_address); setCopiedContract(true); setTimeout(() => setCopiedContract(false), 1500); } catch (_) {} }}
                             className="shrink-0 text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
                           >
-                            {copiedContract ? 'Copied' : 'Copy'}
+                            {copiedContract ? t('detail.bc.copied') : t('detail.bc.copy')}
                           </button>
                         </span>
                       </div>
                       <div className="flex items-center justify-between gap-3 px-4 py-3">
-                        <span className="text-sm text-gray-500 dark:text-gray-400">Token ID</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">{t('detail.bc.tokenId')}</span>
                         <code className="font-mono text-sm text-gray-800 dark:text-gray-100">{bc.token_id != null ? bc.token_id : '—'}</code>
                       </div>
                       <div className="flex items-center justify-between gap-3 px-4 py-3">
-                        <span className="text-sm text-gray-500 dark:text-gray-400">Token Standard</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">{t('detail.bc.tokenStandard')}</span>
                         <code className="font-mono text-sm text-gray-800 dark:text-gray-100">ERC-1155</code>
                       </div>
                       <div className="flex items-start justify-between gap-3 px-4 py-3">
-                        <span className="text-sm text-gray-500 dark:text-gray-400 shrink-0">Deployment Tx</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400 shrink-0">{t('detail.bc.deploymentTx')}</span>
                         {txUrl ? (
-                          <a href={txUrl} target="_blank" rel="noopener noreferrer" className="font-mono text-sm text-emerald-600 dark:text-emerald-400 hover:underline break-all text-right">
+                          <a href={txUrl} target="_blank" rel="noopener noreferrer" className="font-mono text-sm text-emerald-600 dark:text-emerald-400 hover:underline break-all text-end">
                             {bc.deployment_transaction}
                           </a>
                         ) : (
-                          <span className="text-sm text-gray-400 dark:text-gray-500">Not recorded</span>
+                          <span className="text-sm text-gray-400 dark:text-gray-500">{t('detail.bc.notRecorded')}</span>
                         )}
                       </div>
                       {bc.deployment_block != null && (
                         <div className="flex items-center justify-between gap-3 px-4 py-3">
-                          <span className="text-sm text-gray-500 dark:text-gray-400">Deployment Block</span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">{t('detail.bc.deploymentBlock')}</span>
                           <code className="font-mono text-sm text-gray-800 dark:text-gray-100">{bc.deployment_block}</code>
                         </div>
                       )}
@@ -1098,7 +1102,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                         className={`inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium px-4 py-2.5 transition-colors ${addrUrl ? '' : 'pointer-events-none opacity-50'}`}
                       >
                         <ExternalLink className="w-4 h-4" />
-                        View Contract on Explorer
+                        {t('detail.bc.viewOnExplorer')}
                       </a>
                       {addrUrl && (
                         <a
@@ -1108,22 +1112,22 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                           className="inline-flex items-center gap-2 rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 text-sm font-medium px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                         >
                           <Shield className="w-4 h-4" />
-                          Verify Contract
+                          {t('detail.bc.verifyContract')}
                         </a>
                       )}
                     </div>
                     {bc.is_testnet && (
                       <p className="mt-3 text-xs text-amber-600 dark:text-amber-400">
-                        Note: this contract is currently deployed on a test network.
+                        {t('detail.bc.testnet')}
                       </p>
                     )}
                   </>
                 ) : (
                   <div className="text-center py-12 px-6 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
                     <Boxes className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-                    <p className="font-medium text-slate-700 dark:text-slate-300 mb-1">Not yet tokenized on-chain</p>
+                    <p className="font-medium text-slate-700 dark:text-slate-300 mb-1">{t('detail.bc.emptyTitle')}</p>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      The smart contract for this property will appear here once it is deployed.
+                      {t('detail.bc.emptyBody')}
                     </p>
                   </div>
                 )}
@@ -1135,11 +1139,11 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
             <Card className="p-8">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                 <Folder className="w-6 h-6 text-emerald-600" />
-                Data Room
+                {t('detail.dr.title')}
               </h2>
 
               <p className="text-gray-600 dark:text-gray-400 mb-8">
-                Access all property documentation, including ownership records, valuation reports, insurance policies, and SPV documents.
+                {t('detail.dr.intro')}
               </p>
 
               {/*
@@ -1153,10 +1157,10 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                 <div className="text-center py-12 px-6 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
                   <FileText className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
                   <p className="font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    No documents available yet
+                    {t('detail.dr.emptyTitle')}
                   </p>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    The property owner has not uploaded supporting documentation for this listing.
+                    {t('detail.dr.emptyBody')}
                   </p>
                 </div>
               ) : (
@@ -1164,14 +1168,14 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                   {(() => {
                     // Friendlier labels for the raw backend `type` strings.
                     const typeLabels: Record<string, string> = {
-                      ownership: 'Ownership Documents',
-                      legal: 'Legal Documents',
-                      financial: 'Financial Reports',
-                      valuation: 'Valuation Reports',
-                      insurance: 'Insurance Documents',
-                      spv: 'SPV Documents',
-                      construction: 'Construction Documents',
-                      other: 'Other Documents',
+                      ownership: t('detail.dr.types.ownership'),
+                      legal: t('detail.dr.types.legal'),
+                      financial: t('detail.dr.types.financial'),
+                      valuation: t('detail.dr.types.valuation'),
+                      insurance: t('detail.dr.types.insurance'),
+                      spv: t('detail.dr.types.spv'),
+                      construction: t('detail.dr.types.construction'),
+                      other: t('detail.dr.types.other'),
                     };
                     const typeIcons: Record<string, any> = {
                       ownership: FileText,
@@ -1193,7 +1197,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
 
                     const handleDownload = (doc: PropertyDocuments) => {
                       if (!doc.url) {
-                        alert('This document does not have a download URL configured.');
+                        alert(t('detail.dr.noUrl'));
                         return;
                       }
                       const a = document.createElement('a');
@@ -1222,9 +1226,9 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                               <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
                                 <Icon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                               </div>
-                              <div className="text-left">
+                              <div className="text-start">
                                 <div className="font-semibold text-gray-900 dark:text-white capitalize">{title}</div>
-                                <div className="text-sm text-gray-500 dark:text-gray-400">{docs.length} document{docs.length === 1 ? '' : 's'}</div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">{t('detail.dr.count', { count: docs.length })}</div>
                               </div>
                             </div>
                             {isExpanded ? (
@@ -1265,8 +1269,8 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => window.open(doc.url, '_blank', 'noopener,noreferrer')}
-                                            title="View"
-                                            aria-label={`View ${doc.name}`}
+                                            title={t('detail.dr.view')}
+                                            aria-label={t('detail.dr.viewName', { name: doc.name })}
                                           >
                                             <Eye className="w-4 h-4" />
                                           </Button>
@@ -1275,8 +1279,8 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                                           variant="ghost"
                                           size="sm"
                                           onClick={() => handleDownload(doc)}
-                                          title="Download"
-                                          aria-label={`Download ${doc.name}`}
+                                          title={t('detail.dr.download')}
+                                          aria-label={t('detail.dr.downloadName', { name: doc.name })}
                                         >
                                           <Download className="w-4 h-4" />
                                         </Button>
@@ -1298,9 +1302,9 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                 <div className="flex items-start gap-3">
                   <Lock className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <div className="font-semibold text-yellow-800 dark:text-yellow-200">Verified Owner Access</div>
+                    <div className="font-semibold text-yellow-800 dark:text-yellow-200">{t('detail.dr.verifiedAccess')}</div>
                     <div className="text-sm text-yellow-700 dark:text-yellow-300">
-                      Some documents require owner verification. Complete your KYC to access all documentation.
+                      {t('detail.dr.verifiedAccessBody')}
                     </div>
                   </div>
                 </div>
@@ -1312,21 +1316,21 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
             <Card className="p-8">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                 <MapPin className="w-6 h-6 text-emerald-600" />
-                Location
+                {t('detail.loc.title')}
               </h2>
 
               {/* Map Placeholder */}
               <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-xl mb-8 flex items-center justify-center">
                 <div className="text-center">
                   <Globe className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-500 dark:text-gray-400">Interactive Map</p>
+                  <p className="text-gray-500 dark:text-gray-400">{t('detail.loc.map')}</p>
                   <p className="text-sm text-gray-400 dark:text-gray-500">{property.address}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Address</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('detail.loc.address')}</h3>
                   <div className="space-y-2 text-gray-600 dark:text-gray-400">
                     <p>{property.address}</p>
                     <p>{property.city}, {property.state}</p>
@@ -1335,12 +1339,12 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Nearby Amenities</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('detail.loc.amenities')}</h3>
                   <div className="space-y-2 text-gray-600 dark:text-gray-400">
-                    <p>• Shopping Centers - 0.5 km</p>
-                    <p>• Public Transport - 0.2 km</p>
-                    <p>• Schools - 1.0 km</p>
-                    <p>• Hospital - 2.0 km</p>
+                    <p>• {t('detail.loc.shopping', { km: '0.5' })}</p>
+                    <p>• {t('detail.loc.transport', { km: '0.2' })}</p>
+                    <p>• {t('detail.loc.schools', { km: '1.0' })}</p>
+                    <p>• {t('detail.loc.hospital', { km: '2.0' })}</p>
                   </div>
                 </div>
               </div>

@@ -1,39 +1,17 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Building2, Globe, Users, Home, TrendingUp, Building } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const WhyChooseUs: React.FC = () => {
+  const { t } = useTranslation('ui');
   const features = [
-    {
-      icon: Shield,
-      title: "Secure & Regulated",
-      description: "Bank-grade security with full regulatory compliance and owner protection."
-    },
-    {
-      icon: Building2,
-      title: "Premium Properties",
-      description: "Carefully vetted institutional-grade real estate opportunities."
-    },
-    {
-      icon: TrendingUp,
-      title: "Proven Returns",
-      description: "Consistent performance with transparent reporting and analytics."
-    },
-    {
-      icon: Globe,
-      title: "Global Access",
-      description: "Own premium properties across major markets worldwide."
-    },
-    {
-      icon: Users,
-      title: "Expert Team",
-      description: "Backed by experienced real estate and blockchain professionals."
-    },
-    {
-      icon: Home,
-      title: "Low Minimums",
-      description: "Start owning with lower capital requirements than traditional real estate."
-    }
+    { icon: Shield, title: t('whyChooseUs.f1.title'), description: t('whyChooseUs.f1.desc') },
+    { icon: Building2, title: t('whyChooseUs.f2.title'), description: t('whyChooseUs.f2.desc') },
+    { icon: TrendingUp, title: t('whyChooseUs.f3.title'), description: t('whyChooseUs.f3.desc') },
+    { icon: Globe, title: t('whyChooseUs.f4.title'), description: t('whyChooseUs.f4.desc') },
+    { icon: Users, title: t('whyChooseUs.f5.title'), description: t('whyChooseUs.f5.desc') },
+    { icon: Home, title: t('whyChooseUs.f6.title'), description: t('whyChooseUs.f6.desc') }
   ];
 
   const containerVariants = {
@@ -65,9 +43,9 @@ export const WhyChooseUs: React.FC = () => {
 
       {/* Floating building icons for real estate feel */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-5 dark:opacity-10">
-        <Building2 className="absolute top-20 left-10 w-32 h-32 text-slate-400 dark:text-slate-600" />
-        <Home className="absolute bottom-20 right-20 w-24 h-24 text-slate-400 dark:text-slate-600" />
-        <Building2 className="absolute top-1/2 right-10 w-20 h-20 text-slate-400 dark:text-slate-600" />
+        <Building2 className="absolute top-20 start-10 w-32 h-32 text-slate-400 dark:text-slate-600" />
+        <Home className="absolute bottom-20 end-20 w-24 h-24 text-slate-400 dark:text-slate-600" />
+        <Building2 className="absolute top-1/2 end-10 w-20 h-20 text-slate-400 dark:text-slate-600" />
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-6">
@@ -86,7 +64,7 @@ export const WhyChooseUs: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-3xl md:text-4xl lg:text-5xl font-semibold text-navy-900 dark:text-white mb-4 leading-tight"
           >
-            Why Choose Our Platform
+            {t('whyChooseUs.title')}
           </motion.h2>
           
           <motion.p
@@ -96,7 +74,7 @@ export const WhyChooseUs: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg text-navy-600 dark:text-navy-200 max-w-2xl mx-auto text-balance"
           >
-            Built for owners who demand security, transparency, and professional expertise
+            {t('whyChooseUs.subtitle')}
           </motion.p>
         </motion.div>
 

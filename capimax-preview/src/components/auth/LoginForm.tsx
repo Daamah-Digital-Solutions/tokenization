@@ -7,6 +7,7 @@ import { cn } from '../../utils/cn';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from '../../utils/router';
 import { AuthService } from '../../services/auth/AuthService';
+import { useTranslation } from 'react-i18next';
 
 // Declare google global for TypeScript
 declare global {
@@ -52,6 +53,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   className
 }) => {
   const { state, login, clearError, setUser } = useAuth();
+  const { t, i18n } = useTranslation('ui');
   const { navigate } = useRouter();
 
   const [formData, setFormData] = useState<LoginData>({
@@ -76,7 +78,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   // Handle Google Sign-In response
   const handleGoogleResponse = useCallback(async (response: any) => {
     if (!response.credential) {
-      setGoogleError('Google authentication failed. Please try again.');
+      setGoogleError(t('login.googleFailed'));
       return;
     }
 
@@ -104,14 +106,14 @@ export const LoginForm: React.FC<LoginFormProps> = ({
 
       // Handle specific error cases
       if (error.status === 409) {
-        setGoogleError('An account with this email already exists. Please sign in with your email and password.');
+        setGoogleError(t('login.googleExists'));
       } else {
-        setGoogleError(error.message || 'Google authentication failed. Please try again.');
+        setGoogleError(error.message || t('login.googleFailed'));
       }
     } finally {
       setGoogleLoading(false);
     }
-  }, [clearError, navigate, onSuccess, setUser]);
+  }, [clearError, navigate, onSuccess, setUser, t]);
 
   // Load and initialize Google Sign-In
   useEffect(() => {
@@ -168,32 +170,32 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             text: 'continue_with',
             shape: 'rectangular',
             width: 400,
-            locale: 'en'
+            locale: i18n.language?.startsWith('ar') ? 'ar' : 'en'
           });
         }
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [googleInitialized]);
+  }, [googleInitialized, i18n.language]);
 
 
   const validateForm = (): boolean => {
     const errors: ValidationErrors = {};
 
     if (!formData.email) {
-      errors.email = 'Email is required';
+      errors.email = t('validation.emailRequired');
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = 'Please enter a valid email address';
+      errors.email = t('validation.emailInvalid');
     }
 
     if (!formData.password) {
-      errors.password = 'Password is required';
+      errors.password = t('validation.passwordRequired');
     } else if (formData.password.length < 6) {
-      errors.password = 'Password must be at least 6 characters';
+      errors.password = t('validation.passwordMin6');
     }
 
     if (showTwoFactor && !formData.twoFactorCode) {
-      errors.twoFactorCode = '2FA code is required';
+      errors.twoFactorCode = t('validation.twoFactorRequired');
     }
 
     setValidationErrors(errors);
@@ -257,10 +259,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       {/* Header */}
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
-          Welcome Back
+          {t('login.title')}
         </h2>
         <p className="text-slate-600 dark:text-slate-400">
-          Sign in to your account to continue
+          {t('login.subtitle')}
         </p>
       </div>
 
@@ -283,8 +285,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         {/* Email Field */}
         <Input
           type="email"
-          label="Email Address"
-          placeholder="Enter your email"
+          label={t('fields.email')}
+          placeholder={t('fields.emailPlaceholder')}
           value={formData.email}
           onChange={handleInputChange('email')}
           leftIcon={<Mail className="w-5 h-5" />}
@@ -296,8 +298,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         {/* Password Field */}
         <Input
           type="password"
-          label="Password"
-          placeholder="Enter your password"
+          label={t('fields.password')}
+          placeholder={t('fields.passwordPlaceholder')}
           value={formData.password}
           onChange={handleInputChange('password')}
           leftIcon={<Lock className="w-5 h-5" />}
@@ -316,8 +318,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           >
             <Input
               type="text"
-              label="Two-Factor Authentication Code"
-              placeholder="Enter your 6-digit code"
+              label={t('login.twoFactorLabel')}
+              placeholder={t('login.twoFactorPlaceholder')}
               value={formData.twoFactorCode || ''}
               onChange={handleInputChange('twoFactorCode')}
               leftIcon={<Lock className="w-5 h-5" />}
@@ -339,7 +341,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               className="w-4 h-4 text-emerald-500 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded focus:ring-emerald-500 focus:ring-2"
             />
             <span className="text-sm text-slate-600 dark:text-slate-400">
-              Remember me
+              {t('login.rememberMe')}
             </span>
           </label>
 
@@ -349,7 +351,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               onClick={onForgotPassword}
               className="text-sm text-emerald-500 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium transition-colors"
             >
-              Forgot password?
+              {t('login.forgotPassword')}
             </button>
           )}
         </div>
@@ -363,7 +365,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           isLoading={state.isLoading}
           disabled={state.isLoading}
         >
-          {state.isLoading ? 'Signing In...' : 'Sign In'}
+          {state.isLoading ? t('login.signingIn') : t('login.signIn')}
         </Button>
       </form>
 
@@ -374,7 +376,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
         </div>
         <div className="relative flex justify-center text-sm">
           <span className="px-4 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400">
-            Or continue with
+            {t('login.orContinueWith')}
           </span>
         </div>
       </div>
@@ -407,7 +409,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
           )}
-          {googleLoading ? 'Signing in with Google...' : 'Continue with Google'}
+          {googleLoading ? t('login.googleSigningIn') : t('login.continueWithGoogle')}
         </div>
         {/* Google's real rendered button (invisible overlay, captures the click) */}
         <div
@@ -421,13 +423,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       {onSignUp && (
         <div className="text-center">
           <span className="text-sm text-slate-600 dark:text-slate-400">
-            Don't have an account?{' '}
+            {t('login.noAccount')}{' '}
           </span>
           <button
             onClick={onSignUp}
             className="text-sm text-emerald-500 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium transition-colors"
           >
-            Create an account
+            {t('login.createAccount')}
           </button>
         </div>
       )}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   CheckCircle,
@@ -31,6 +32,8 @@ export const PropertyApprovalStatus: React.FC<PropertyApprovalStatusProps> = ({
   propertyId,
   className
 }) => {
+  const { t, i18n } = useTranslation('ownerui');
+  const locale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState('');
@@ -75,48 +78,48 @@ export const PropertyApprovalStatus: React.FC<PropertyApprovalStatusProps> = ({
       case 'pending':
         return {
           icon: <Clock className="w-6 h-6 text-orange-500" />,
-          title: 'Pending Review',
-          description: 'Your property submission is waiting for admin review.',
+          title: t('approvalStatus.status.pending.title'),
+          description: t('approvalStatus.status.pending.description'),
           color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-300',
           bgColor: 'bg-orange-50 dark:bg-orange-900/10'
         };
       case 'under_review':
         return {
           icon: <Eye className="w-6 h-6 text-blue-500" />,
-          title: 'Under Review',
-          description: 'Our team is currently reviewing your property submission.',
+          title: t('approvalStatus.status.under_review.title'),
+          description: t('approvalStatus.status.under_review.description'),
           color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300',
           bgColor: 'bg-blue-50 dark:bg-blue-900/10'
         };
       case 'approved':
         return {
           icon: <CheckCircle className="w-6 h-6 text-emerald-500" />,
-          title: 'Approved',
-          description: 'Congratulations! Your property has been approved for tokenization.',
+          title: t('approvalStatus.status.approved.title'),
+          description: t('approvalStatus.status.approved.description'),
           color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300',
           bgColor: 'bg-emerald-50 dark:bg-emerald-900/10'
         };
       case 'rejected':
         return {
           icon: <XCircle className="w-6 h-6 text-red-500" />,
-          title: 'Rejected',
-          description: 'Your property submission was not approved. Please review the feedback.',
+          title: t('approvalStatus.status.rejected.title'),
+          description: t('approvalStatus.status.rejected.description'),
           color: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300',
           bgColor: 'bg-red-50 dark:bg-red-900/10'
         };
       case 'requires_changes':
         return {
           icon: <AlertTriangle className="w-6 h-6 text-yellow-500" />,
-          title: 'Changes Required',
-          description: 'Please make the requested changes and resubmit your property.',
+          title: t('approvalStatus.status.requires_changes.title'),
+          description: t('approvalStatus.status.requires_changes.description'),
           color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300',
           bgColor: 'bg-yellow-50 dark:bg-yellow-900/10'
         };
       default:
         return {
           icon: <FileText className="w-6 h-6 text-slate-500" />,
-          title: 'Not Submitted',
-          description: 'Your property has not been submitted for approval yet.',
+          title: t('approvalStatus.status.not_submitted.title'),
+          description: t('approvalStatus.status.not_submitted.description'),
           color: 'bg-slate-100 text-slate-800 dark:bg-slate-900/20 dark:text-slate-300',
           bgColor: 'bg-slate-50 dark:bg-slate-900/10'
         };
@@ -166,7 +169,9 @@ export const PropertyApprovalStatus: React.FC<PropertyApprovalStatusProps> = ({
                   "px-3 py-1 rounded-full text-sm font-medium",
                   statusInfo.color
                 )}>
-                  {approval?.status?.replace('_', ' ').toUpperCase() || 'NOT SUBMITTED'}
+                  {approval?.status
+                    ? t(`approvalStatus.badges.${approval.status}`, { defaultValue: approval.status.replace('_', ' ').toUpperCase() })
+                    : t('approvalStatus.badges.not_submitted')}
                 </div>
               </div>
 
@@ -180,7 +185,7 @@ export const PropertyApprovalStatus: React.FC<PropertyApprovalStatusProps> = ({
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
                     <span>
-                      Submitted: {approval.submitted_at.toLocaleDateString()}
+                      {t('approvalStatus.submitted', { date: approval.submitted_at.toLocaleDateString(locale) })}
                     </span>
                   </div>
 
@@ -188,7 +193,7 @@ export const PropertyApprovalStatus: React.FC<PropertyApprovalStatusProps> = ({
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4" />
                       <span>
-                        Reviewer: {approval.reviewer.first_name} {approval.reviewer.last_name}
+                        {t('approvalStatus.reviewer', { name: `${approval.reviewer.first_name} ${approval.reviewer.last_name}` })}
                       </span>
                     </div>
                   )}
@@ -197,7 +202,7 @@ export const PropertyApprovalStatus: React.FC<PropertyApprovalStatusProps> = ({
                     <div className="flex items-center gap-2">
                       <Eye className="w-4 h-4" />
                       <span>
-                        Reviewed: {approval.reviewed_at.toLocaleDateString()}
+                        {t('approvalStatus.reviewed', { date: approval.reviewed_at.toLocaleDateString(locale) })}
                       </span>
                     </div>
                   )}
@@ -206,7 +211,7 @@ export const PropertyApprovalStatus: React.FC<PropertyApprovalStatusProps> = ({
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4" />
                       <span>
-                        Approved: {approval.approved_at.toLocaleDateString()}
+                        {t('approvalStatus.approved', { date: approval.approved_at.toLocaleDateString(locale) })}
                       </span>
                     </div>
                   )}
@@ -221,6 +226,7 @@ export const PropertyApprovalStatus: React.FC<PropertyApprovalStatusProps> = ({
               size="sm"
               onClick={() => refetch()}
               disabled={isLoading}
+              aria-label={t('approvalStatus.refresh')}
             >
               <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
             </Button>
@@ -231,7 +237,7 @@ export const PropertyApprovalStatus: React.FC<PropertyApprovalStatusProps> = ({
                 onClick={() => submitForApprovalMutation.mutate()}
                 disabled={submitForApprovalMutation.isPending}
               >
-                Submit for Approval
+                {t('approvalStatus.submit')}
               </Button>
             )}
 
@@ -240,8 +246,8 @@ export const PropertyApprovalStatus: React.FC<PropertyApprovalStatusProps> = ({
                 variant="outline"
                 onClick={() => setShowUploadModal(true)}
               >
-                <Upload className="w-4 h-4 mr-2" />
-                Upload Document
+                <Upload className="w-4 h-4 me-2" />
+                {t('approvalStatus.uploadDocument')}
               </Button>
             )}
           </div>
@@ -255,7 +261,7 @@ export const PropertyApprovalStatus: React.FC<PropertyApprovalStatusProps> = ({
             <MessageSquare className="w-5 h-5 text-blue-500 flex-shrink-0 mt-1" />
             <div>
               <Text variant="h4" weight="semibold" className="mb-2">
-                Review Notes
+                {t('approvalStatus.reviewNotes')}
               </Text>
               <Text variant="body" className="whitespace-pre-wrap">
                 {approval.review_notes}
@@ -272,7 +278,7 @@ export const PropertyApprovalStatus: React.FC<PropertyApprovalStatusProps> = ({
             <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-1" />
             <div>
               <Text variant="h4" weight="semibold" className="mb-2 text-yellow-800 dark:text-yellow-300">
-                Required Changes
+                {t('approvalStatus.requiredChanges')}
               </Text>
               <Text variant="body" className="whitespace-pre-wrap text-yellow-700 dark:text-yellow-200">
                 {approval.required_changes}
@@ -285,36 +291,36 @@ export const PropertyApprovalStatus: React.FC<PropertyApprovalStatusProps> = ({
       {/* Approval Process Steps */}
       <Card className="p-6">
         <Text variant="h4" weight="semibold" className="mb-4">
-          Approval Process
+          {t('approvalStatus.process.title')}
         </Text>
 
         <div className="space-y-4">
           {[
             {
               step: 1,
-              title: 'Submit Property',
-              description: 'Upload all required documents and property information',
+              title: t('approvalStatus.process.submit.title'),
+              description: t('approvalStatus.process.submit.description'),
               completed: !!approval,
               active: !approval
             },
             {
               step: 2,
-              title: 'Initial Review',
-              description: 'Our team reviews your submission for completeness',
+              title: t('approvalStatus.process.initial.title'),
+              description: t('approvalStatus.process.initial.description'),
               completed: approval?.status && ['under_review', 'approved', 'rejected'].includes(approval.status),
               active: approval?.status === 'pending'
             },
             {
               step: 3,
-              title: 'Due Diligence',
-              description: 'Detailed verification of property and documentation',
+              title: t('approvalStatus.process.dueDiligence.title'),
+              description: t('approvalStatus.process.dueDiligence.description'),
               completed: approval?.status && ['approved', 'rejected'].includes(approval.status),
               active: approval?.status === 'under_review'
             },
             {
               step: 4,
-              title: 'Final Decision',
-              description: 'Property approved or feedback provided for changes',
+              title: t('approvalStatus.process.final.title'),
+              description: t('approvalStatus.process.final.description'),
               completed: approval?.status === 'approved',
               active: false
             }
@@ -362,17 +368,17 @@ export const PropertyApprovalStatus: React.FC<PropertyApprovalStatusProps> = ({
             >
               <div className="p-6 border-b border-slate-200 dark:border-slate-700">
                 <Text variant="h3" weight="bold">
-                  Upload Additional Document
+                  {t('approvalStatus.modal.title')}
                 </Text>
                 <Text variant="body" color="muted" className="mt-1">
-                  Upload additional documentation to support your property approval
+                  {t('approvalStatus.modal.subtitle')}
                 </Text>
               </div>
 
               <div className="p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Document Type
+                    {t('approvalStatus.modal.documentType')}
                   </label>
                   <select
                     value={documentType}
@@ -380,19 +386,19 @@ export const PropertyApprovalStatus: React.FC<PropertyApprovalStatusProps> = ({
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:border-slate-600 dark:bg-slate-800"
                     required
                   >
-                    <option value="">Select document type...</option>
-                    <option value="property_deed">Property Deed</option>
-                    <option value="financial_statement">Financial Statement</option>
-                    <option value="valuation_report">Valuation Report</option>
-                    <option value="legal_document">Legal Document</option>
-                    <option value="compliance_certificate">Compliance Certificate</option>
-                    <option value="other">Other</option>
+                    <option value="">{t('approvalStatus.modal.selectType')}</option>
+                    <option value="property_deed">{t('approvalStatus.docTypes.property_deed')}</option>
+                    <option value="financial_statement">{t('approvalStatus.docTypes.financial_statement')}</option>
+                    <option value="valuation_report">{t('approvalStatus.docTypes.valuation_report')}</option>
+                    <option value="legal_document">{t('approvalStatus.docTypes.legal_document')}</option>
+                    <option value="compliance_certificate">{t('approvalStatus.docTypes.compliance_certificate')}</option>
+                    <option value="other">{t('approvalStatus.docTypes.other')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    File Upload
+                    {t('approvalStatus.modal.file')}
                   </label>
                   <input
                     type="file"
@@ -402,20 +408,20 @@ export const PropertyApprovalStatus: React.FC<PropertyApprovalStatusProps> = ({
                     required
                   />
                   <Text variant="caption" color="muted" className="mt-1">
-                    Accepted formats: PDF, DOC, DOCX, JPG, PNG (Max 10MB)
+                    {t('approvalStatus.modal.formats')}
                   </Text>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Description (Optional)
+                    {t('approvalStatus.modal.description')}
                   </label>
                   <textarea
                     value={documentDescription}
                     onChange={(e) => setDocumentDescription(e.target.value)}
                     rows={3}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:border-slate-600 dark:bg-slate-800"
-                    placeholder="Brief description of the document..."
+                    placeholder={t('approvalStatus.modal.descriptionPlaceholder')}
                   />
                 </div>
               </div>
@@ -426,14 +432,14 @@ export const PropertyApprovalStatus: React.FC<PropertyApprovalStatusProps> = ({
                   onClick={() => setShowUploadModal(false)}
                   disabled={uploadDocumentMutation.isPending}
                 >
-                  Cancel
+                  {t('approvalStatus.modal.cancel')}
                 </Button>
                 <Button
                   variant="primary"
                   onClick={handleFileUpload}
                   disabled={!uploadFile || !documentType || uploadDocumentMutation.isPending}
                 >
-                  {uploadDocumentMutation.isPending ? 'Uploading...' : 'Upload Document'}
+                  {uploadDocumentMutation.isPending ? t('approvalStatus.modal.uploading') : t('approvalStatus.uploadDocument')}
                 </Button>
               </div>
             </motion.div>

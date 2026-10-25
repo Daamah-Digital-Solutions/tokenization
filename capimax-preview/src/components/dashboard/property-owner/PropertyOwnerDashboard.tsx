@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { OwnerMessagesPanel } from './OwnerMessagesPanel';
 import { OwnerSubmissionStatus } from './OwnerSubmissionStatus';
 import { useQuery } from '@tanstack/react-query';
@@ -21,6 +22,8 @@ const switchDashboardView = (view: string) => {
   window.history.pushState({}, '', url.toString());
 };
 
+const dateLocale = (lng?: string) => (lng?.startsWith('ar') ? 'ar-EG' : 'en-US');
+
 // Loading and Error Components
 const LoadingStats = () => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -41,22 +44,25 @@ const LoadingChart = ({ title }: { title: string }) => (
   </div>
 );
 
-const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => (
-  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6">
-    <div className="flex items-center justify-between">
-      <div>
-        <h3 className="text-red-800 dark:text-red-200 font-medium">Error Loading Data</h3>
-        <p className="text-red-600 dark:text-red-300 text-sm mt-1">{message}</p>
+const ErrorState = ({ message, onRetry }: { message: string; onRetry: () => void }) => {
+  const { t } = useTranslation('ownerui');
+  return (
+    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-red-800 dark:text-red-200 font-medium">{t('dashboard.errorLoading')}</h3>
+          <p className="text-red-600 dark:text-red-300 text-sm mt-1">{message}</p>
+        </div>
+        <button
+          onClick={onRetry}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+        >
+          {t('shared.retry')}
+        </button>
       </div>
-      <button
-        onClick={onRetry}
-        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-      >
-        Retry
-      </button>
     </div>
-  </div>
-);
+  );
+};
 // Utility functions for data formatting
 const formatCurrency = (amount: number): string => {
   if (amount >= 1000000) {
@@ -80,6 +86,7 @@ const formatChangeType = (change: string): 'positive' | 'negative' | 'neutral' =
 
 
 const PropertyOverview: React.FC = () => {
+  const { t } = useTranslation('ownerui');
   const { navigate } = useRouter();
   const {
     data: properties = [],
@@ -98,7 +105,7 @@ const PropertyOverview: React.FC = () => {
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            Property Portfolio
+            {t('dashboard.portfolio.title')}
           </h3>
         </div>
         <div className="p-6 space-y-4">
@@ -122,12 +129,12 @@ const PropertyOverview: React.FC = () => {
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            Property Portfolio
+            {t('dashboard.portfolio.title')}
           </h3>
         </div>
         <div className="p-6">
           <ErrorState
-            message="Failed to load your properties"
+            message={t('dashboard.portfolio.loadFailed')}
             onRetry={() => refetch()}
           />
         </div>
@@ -140,24 +147,24 @@ const PropertyOverview: React.FC = () => {
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            Property Portfolio
+            {t('dashboard.portfolio.title')}
           </h3>
         </div>
         <div className="p-6">
           <div className="text-center py-8">
             <span className="text-4xl mb-4 block">🏢</span>
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-2">
-              No Properties Yet
+              {t('dashboard.portfolio.emptyTitle')}
             </h3>
             <p className="text-neutral-500 dark:text-slate-400 mb-4">
-              Start tokenizing your first property to see it here
+              {t('dashboard.portfolio.emptyBody')}
             </p>
             <button
               type="button"
               onClick={() => navigate('submit-property')}
               className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
-              Add Your First Property
+              {t('dashboard.portfolio.addFirst')}
             </button>
           </div>
         </div>
@@ -169,7 +176,7 @@ const PropertyOverview: React.FC = () => {
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
       <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
         <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-          Property Portfolio
+          {t('dashboard.portfolio.title')}
         </h3>
       </div>
       <div className="p-6">
@@ -180,7 +187,7 @@ const PropertyOverview: React.FC = () => {
               className="p-4 bg-neutral-50 dark:bg-slate-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-600 transition-colors"
             >
               <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
                     <span className="text-lg">🏢</span>
                   </div>
@@ -201,14 +208,14 @@ const PropertyOverview: React.FC = () => {
 
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                 <div>
-                  <p className="text-neutral-500 dark:text-slate-400">Total Value</p>
+                  <p className="text-neutral-500 dark:text-slate-400">{t('dashboard.portfolio.totalValue')}</p>
                   <p className="font-semibold text-neutral-900 dark:text-slate-100">
                     {formatCurrency(property.total_value)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-neutral-500 dark:text-slate-400">Funding</p>
-                  <div className="flex items-center space-x-2">
+                  <p className="text-neutral-500 dark:text-slate-400">{t('dashboard.portfolio.funding')}</p>
+                  <div className="flex items-center gap-2">
                     <div className="flex-1 bg-neutral-200 dark:bg-slate-600 rounded-full h-2">
                       <div
                         className="bg-primary-500 h-2 rounded-full"
@@ -219,20 +226,20 @@ const PropertyOverview: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <p className="text-neutral-500 dark:text-slate-400">Monthly Revenue</p>
+                  <p className="text-neutral-500 dark:text-slate-400">{t('dashboard.portfolio.monthlyRevenue')}</p>
                   <p className="font-semibold text-green-600 dark:text-green-400">
                     {formatCurrency(property.monthly_rental_income || 0)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-neutral-500 dark:text-slate-400">Owners</p>
+                  <p className="text-neutral-500 dark:text-slate-400">{t('dashboard.portfolio.owners')}</p>
                   <p className="font-semibold text-neutral-900 dark:text-slate-100">
                     {/* This would need to be calculated or provided by the API */}
                     {property.tokens_sold > 0 ? Math.ceil(property.tokens_sold / 100) : 0}
                   </p>
                 </div>
                 <div>
-                  <p className="text-neutral-500 dark:text-slate-400">Tokens Sold</p>
+                  <p className="text-neutral-500 dark:text-slate-400">{t('dashboard.portfolio.sharesSold')}</p>
                   <p className="font-semibold text-neutral-900 dark:text-slate-100">
                     {property.tokens_sold?.toLocaleString() || 0}/{property.total_tokens?.toLocaleString() || 0}
                   </p>
@@ -247,6 +254,7 @@ const PropertyOverview: React.FC = () => {
 };
 
 const TokenizationProgress: React.FC = () => {
+  const { t, i18n } = useTranslation('ownerui');
   const {
     data: tokenizationData = [],
     isLoading: tokenizationLoading,
@@ -273,15 +281,15 @@ const TokenizationProgress: React.FC = () => {
     return data.map(item => ({
       date: item.date,
       value: item.value,
-      label: item.label || new Date(item.date).toLocaleDateString('en-US', { month: 'short' })
+      label: item.label || new Date(item.date).toLocaleDateString(dateLocale(i18n.language), { month: 'short' })
     }));
   };
 
   if (tokenizationLoading || revenueLoading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <LoadingChart title="Token Sales Progress" />
-        <LoadingChart title="Revenue Performance" />
+        <LoadingChart title={t('dashboard.charts.shareSales')} />
+        <LoadingChart title={t('dashboard.charts.revenuePerformance')} />
       </div>
     );
   }
@@ -291,32 +299,32 @@ const TokenizationProgress: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {tokenizationError ? (
           <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
-            <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">Token Sales Progress</h3>
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">{t('dashboard.charts.shareSales')}</h3>
             <ErrorState
-              message="Failed to load tokenization data"
+              message={t('dashboard.charts.tokenizationLoadFailed')}
               onRetry={() => refetchTokenization()}
             />
           </div>
         ) : (
           <PerformanceChart
             data={formatChartData(tokenizationData)}
-            title="Token Sales Progress"
+            title={t('dashboard.charts.shareSales')}
             type="area"
             color="#3b82f6"
           />
         )}
         {revenueError ? (
           <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
-            <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">Revenue Performance</h3>
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">{t('dashboard.charts.revenuePerformance')}</h3>
             <ErrorState
-              message="Failed to load revenue data"
+              message={t('dashboard.charts.revenueLoadFailed')}
               onRetry={() => refetchRevenue()}
             />
           </div>
         ) : (
           <PerformanceChart
             data={formatChartData(revenueData)}
-            title="Revenue Performance"
+            title={t('dashboard.charts.revenuePerformance')}
             type="line"
             color="#10b981"
           />
@@ -329,13 +337,13 @@ const TokenizationProgress: React.FC = () => {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <PerformanceChart
         data={formatChartData(tokenizationData)}
-        title="Token Sales Progress"
+        title={t('dashboard.charts.shareSales')}
         type="area"
         color="#3b82f6"
       />
       <PerformanceChart
         data={formatChartData(revenueData)}
-        title="Revenue Performance"
+        title={t('dashboard.charts.revenuePerformance')}
         type="line"
         color="#10b981"
       />
@@ -344,6 +352,7 @@ const TokenizationProgress: React.FC = () => {
 };
 
 const InvestorManagement: React.FC = () => {
+  const { t, i18n } = useTranslation('ownerui');
   const {
     data: investors = [],
     isLoading,
@@ -360,20 +369,20 @@ const InvestorManagement: React.FC = () => {
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            Top Owners
+            {t('dashboard.topOwners.title')}
           </h3>
         </div>
         <div className="p-6 space-y-3">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg animate-pulse">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-neutral-200 dark:bg-slate-600 rounded-full"></div>
                 <div className="space-y-1">
                   <div className="h-4 w-24 bg-neutral-200 dark:bg-slate-600 rounded"></div>
                   <div className="h-3 w-16 bg-neutral-200 dark:bg-slate-600 rounded"></div>
                 </div>
               </div>
-              <div className="flex space-x-6">
+              <div className="flex gap-6">
                 <div className="h-8 w-16 bg-neutral-200 dark:bg-slate-600 rounded"></div>
                 <div className="h-8 w-12 bg-neutral-200 dark:bg-slate-600 rounded"></div>
               </div>
@@ -389,12 +398,12 @@ const InvestorManagement: React.FC = () => {
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            Top Owners
+            {t('dashboard.topOwners.title')}
           </h3>
         </div>
         <div className="p-6">
           <ErrorState
-            message="Failed to load owner data"
+            message={t('dashboard.topOwners.loadFailed')}
             onRetry={() => refetch()}
           />
         </div>
@@ -407,14 +416,14 @@ const InvestorManagement: React.FC = () => {
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            Top Owners
+            {t('dashboard.topOwners.title')}
           </h3>
         </div>
         <div className="p-6">
           <div className="text-center py-8">
             <span className="text-4xl mb-4 block">👥</span>
             <p className="text-neutral-500 dark:text-slate-400">
-              No owners yet. Start promoting your properties to attract co-owners.
+              {t('dashboard.topOwners.empty')}
             </p>
           </div>
         </div>
@@ -427,14 +436,14 @@ const InvestorManagement: React.FC = () => {
       <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            Top Owners
+            {t('dashboard.topOwners.title')}
           </h3>
           <button
             type="button"
             onClick={() => switchDashboardView('investors')}
             className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
           >
-            View All
+            {t('shared.viewAll')}
           </button>
         </div>
       </div>
@@ -445,7 +454,7 @@ const InvestorManagement: React.FC = () => {
               key={investor.id}
               className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg"
             >
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
                   <span className="text-white font-medium text-sm">
                     {investor.name.charAt(0)}
@@ -456,20 +465,20 @@ const InvestorManagement: React.FC = () => {
                     {investor.name}
                   </h4>
                   <p className="text-sm text-neutral-500 dark:text-slate-400">
-                    Joined {new Date(investor.join_date).toLocaleDateString()}
+                    {t('dashboard.topOwners.joined', { date: new Date(investor.join_date).toLocaleDateString(dateLocale(i18n.language)) })}
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-6 text-sm">
-                <div className="text-right">
-                  <p className="text-neutral-500 dark:text-slate-400">Purchase</p>
+              <div className="flex items-center gap-6 text-sm">
+                <div className="text-end">
+                  <p className="text-neutral-500 dark:text-slate-400">{t('dashboard.topOwners.purchase')}</p>
                   <p className="font-semibold text-neutral-900 dark:text-slate-100">
                     {formatCurrency(investor.total_investment)}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-neutral-500 dark:text-slate-400">Properties</p>
+                <div className="text-end">
+                  <p className="text-neutral-500 dark:text-slate-400">{t('dashboard.topOwners.properties')}</p>
                   <p className="font-semibold text-neutral-900 dark:text-slate-100">
                     {investor.properties_count}
                   </p>
@@ -484,6 +493,7 @@ const InvestorManagement: React.FC = () => {
 };
 
 const PropertyDocuments: React.FC = () => {
+  const { t, i18n } = useTranslation(['ownerui', 'owner']);
   const {
     data: documents = [],
     isLoading,
@@ -496,9 +506,9 @@ const PropertyDocuments: React.FC = () => {
   });
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return `0 ${t('shared.bytes')}`;
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = [t('shared.bytes'), 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
@@ -508,20 +518,20 @@ const PropertyDocuments: React.FC = () => {
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            Recent Documents
+            {t('dashboard.documents.title')}
           </h3>
         </div>
         <div className="p-6 space-y-3">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg animate-pulse">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-neutral-200 dark:bg-slate-600 rounded-lg"></div>
                 <div className="space-y-1">
                   <div className="h-4 w-32 bg-neutral-200 dark:bg-slate-600 rounded"></div>
                   <div className="h-3 w-24 bg-neutral-200 dark:bg-slate-600 rounded"></div>
                 </div>
               </div>
-              <div className="flex space-x-2">
+              <div className="flex gap-2">
                 <div className="w-8 h-8 bg-neutral-200 dark:bg-slate-600 rounded"></div>
                 <div className="w-8 h-8 bg-neutral-200 dark:bg-slate-600 rounded"></div>
               </div>
@@ -537,12 +547,12 @@ const PropertyDocuments: React.FC = () => {
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            Recent Documents
+            {t('dashboard.documents.title')}
           </h3>
         </div>
         <div className="p-6">
           <ErrorState
-            message="Failed to load documents"
+            message={t('dashboard.documents.loadFailed')}
             onRetry={() => refetch()}
           />
         </div>
@@ -556,7 +566,7 @@ const PropertyDocuments: React.FC = () => {
   // window.open(url) with the same tab to preserve the dashboard context.
   const handleViewDocument = (doc: any) => {
     if (!doc?.url) {
-      alert('This document does not have a public URL configured.');
+      alert(t('dashboard.documents.noPublicUrl'));
       return;
     }
     window.open(doc.url, '_blank', 'noopener,noreferrer');
@@ -564,7 +574,7 @@ const PropertyDocuments: React.FC = () => {
 
   const handleDownloadDocument = (doc: any) => {
     if (!doc?.url) {
-      alert('This document does not have a download URL configured.');
+      alert(t('dashboard.documents.noDownloadUrl'));
       return;
     }
     const a = document.createElement('a');
@@ -587,15 +597,15 @@ const PropertyDocuments: React.FC = () => {
       <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            Recent Documents
+            {t('dashboard.documents.title')}
           </h3>
           <button
             type="button"
             onClick={() => switchDashboardView('messages')}
             className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
-            title="Upload a document for one of your properties (Messages)"
+            title={t('dashboard.documents.uploadHint')}
           >
-            Upload Document
+            {t('dashboard.documents.upload')}
           </button>
         </div>
       </div>
@@ -604,7 +614,7 @@ const PropertyDocuments: React.FC = () => {
           <div className="text-center py-8">
             <span className="text-4xl mb-4 block">📄</span>
             <p className="text-neutral-500 dark:text-slate-400">
-              No documents uploaded yet. Open a property to upload documentation.
+              {t('dashboard.documents.empty')}
             </p>
           </div>
         ) : (
@@ -614,7 +624,7 @@ const PropertyDocuments: React.FC = () => {
                 key={doc.id}
                 className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-600 transition-colors"
               >
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                     <span className="text-lg">📄</span>
                   </div>
@@ -623,18 +633,18 @@ const PropertyDocuments: React.FC = () => {
                       {doc.name}
                     </h4>
                     <p className="text-sm text-neutral-500 dark:text-slate-400">
-                      {doc.document_type} • {formatFileSize(doc.file_size)} • {new Date(doc.uploaded_at).toLocaleDateString()}
+                      {t(`owner:submit.documents.types.${doc.document_type}`, { defaultValue: doc.document_type })} • {formatFileSize(doc.file_size)} • {new Date(doc.uploaded_at).toLocaleDateString(dateLocale(i18n.language))}
                       {doc.property_name && ` • ${doc.property_name}`}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => handleDownloadDocument(doc)}
-                    title="Download"
-                    aria-label={`Download ${doc.name}`}
+                    title={t('dashboard.documents.download')}
+                    aria-label={t('dashboard.documents.downloadNamed', { name: doc.name })}
                     className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-slate-300 transition-colors"
                   >
                     <span className="text-lg">📥</span>
@@ -642,8 +652,8 @@ const PropertyDocuments: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleViewDocument(doc)}
-                    title="View"
-                    aria-label={`View ${doc.name}`}
+                    title={t('dashboard.documents.view')}
+                    aria-label={t('dashboard.documents.viewNamed', { name: doc.name })}
                     className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-slate-300 transition-colors"
                   >
                     <span className="text-lg">👁️</span>
@@ -660,6 +670,7 @@ const PropertyDocuments: React.FC = () => {
 
 // Main dashboard overview component with all stats and charts
 const PropertyOwnerOverview: React.FC = () => {
+  const { t } = useTranslation('ownerui');
   const { navigate } = useRouter();
   const {
     data: ownerStats,
@@ -690,39 +701,39 @@ const PropertyOwnerOverview: React.FC = () => {
     return [
       {
         id: 'total-properties',
-        label: 'Total Properties',
+        label: t('dashboard.stats.totalProperties'),
         value: stats.total_properties?.toString() || '0',
         change: stats.total_properties_change || '+0',
         changeType: formatChangeType(stats.total_properties_change || '+0'),
         icon: '🏢',
-        description: 'Properties tokenized'
+        description: t('dashboard.stats.totalPropertiesDesc')
       },
       {
         id: 'capital-raised',
-        label: 'Capital Raised',
+        label: t('dashboard.stats.capitalRaised'),
         value: formatCurrency(stats.capital_raised || 0),
         change: stats.capital_raised_change || '+0%',
         changeType: formatChangeType(stats.capital_raised_change || '+0%'),
         icon: '💰',
-        description: 'From token sales'
+        description: t('dashboard.stats.capitalRaisedDesc')
       },
       {
         id: 'active-investors',
-        label: 'Active Owners',
+        label: t('dashboard.stats.activeOwners'),
         value: stats.active_investors?.toString() || '0',
         change: stats.active_investors_change || '+0',
         changeType: formatChangeType(stats.active_investors_change || '+0'),
         icon: '👥',
-        description: 'Across all properties'
+        description: t('dashboard.stats.activeOwnersDesc')
       },
       {
         id: 'monthly-revenue',
-        label: 'Monthly Revenue',
+        label: t('dashboard.portfolio.monthlyRevenue'),
         value: formatCurrency(stats.monthly_revenue || 0),
         change: stats.monthly_revenue_change || '+0%',
         changeType: formatChangeType(stats.monthly_revenue_change || '+0%'),
         icon: '📈',
-        description: 'Rental income generated'
+        description: t('dashboard.stats.monthlyRevenueDesc')
       }
     ];
   };
@@ -749,32 +760,32 @@ const PropertyOwnerOverview: React.FC = () => {
   const quickActions: QuickAction[] = [
     {
       id: 'add-property',
-      label: 'Add Property',
+      label: t('dashboard.quick.addProperty'),
       icon: '🏢',
-      description: 'Tokenize new property',
+      description: t('dashboard.quick.addPropertyDesc'),
       variant: 'primary',
       onClick: () => navigate('submit-property')
     },
     {
       id: 'manage-investors',
-      label: 'Manage Owners',
+      label: t('dashboard.quick.manageOwners'),
       icon: '👥',
-      description: 'View owner details',
+      description: t('dashboard.quick.manageOwnersDesc'),
       onClick: () => switchDashboardView('investors')
     },
     {
       id: 'distribute-revenue',
-      label: 'Distribute Revenue',
+      label: t('dashboard.quick.distributeRevenue'),
       icon: '💰',
-      description: 'Process payments',
+      description: t('dashboard.quick.distributeRevenueDesc'),
       variant: 'success',
       onClick: () => switchDashboardView('revenue')
     },
     {
       id: 'upload-documents',
-      label: 'Upload Documents',
+      label: t('dashboard.quick.uploadDocuments'),
       icon: '📄',
-      description: 'Manage legal documents',
+      description: t('dashboard.quick.uploadDocumentsDesc'),
       onClick: () => switchDashboardView('messages')
     }
   ];
@@ -786,8 +797,8 @@ const PropertyOwnerOverview: React.FC = () => {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <div className="xl:col-span-2">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <LoadingChart title="Token Sales Progress" />
-              <LoadingChart title="Revenue Performance" />
+              <LoadingChart title={t('dashboard.charts.shareSales')} />
+              <LoadingChart title={t('dashboard.charts.revenuePerformance')} />
             </div>
           </div>
           <QuickActions actions={quickActions} columns={2} />
@@ -800,7 +811,7 @@ const PropertyOwnerOverview: React.FC = () => {
     return (
       <div className="space-y-6">
         <ErrorState
-          message="Failed to load dashboard data"
+          message={t('dashboard.loadFailed')}
           onRetry={() => refetchStats()}
         />
       </div>
@@ -838,6 +849,8 @@ const PropertyOwnerOverview: React.FC = () => {
 
 // Revenue view component with revenue analytics
 const RevenueView: React.FC = () => {
+  const { t, i18n } = useTranslation('ownerui');
+  const locale = dateLocale(i18n.language);
   const {
     data: revenueStats,
     isLoading: statsLoading,
@@ -866,7 +879,7 @@ const RevenueView: React.FC = () => {
     return [
       {
         id: 'total-revenue',
-        label: 'Total Revenue',
+        label: t('dashboard.revenue.totalRevenue'),
         value: formatCurrency(stats.total_revenue || 0),
         change: stats.total_revenue_change || '+0%',
         changeType: formatChangeType(stats.total_revenue_change || '+0%'),
@@ -874,21 +887,21 @@ const RevenueView: React.FC = () => {
       },
       {
         id: 'pending-distributions',
-        label: 'Pending Distributions',
+        label: t('dashboard.revenue.pendingDistributions'),
         value: formatCurrency(stats.pending_distributions || 0),
-        description: 'To be processed',
+        description: t('dashboard.revenue.toBeProcessed'),
         icon: '⏳'
       },
       {
         id: 'next-distribution',
-        label: 'Next Distribution',
-        value: stats.next_distribution_date ? new Date(stats.next_distribution_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD',
-        description: `Estimated ${formatCurrency(stats.next_distribution_amount || 0)}`,
+        label: t('dashboard.revenue.nextDistribution'),
+        value: stats.next_distribution_date ? new Date(stats.next_distribution_date).toLocaleDateString(locale, { month: 'short', day: 'numeric' }) : t('shared.tbd'),
+        description: t('dashboard.revenue.estimated', { amount: formatCurrency(stats.next_distribution_amount || 0) }),
         icon: '📅'
       },
       {
         id: 'distribution-rate',
-        label: 'Distribution Rate',
+        label: t('dashboard.revenue.distributionRate'),
         value: `${stats.distribution_rate || 0}%`,
         change: stats.distribution_rate_change || '+0%',
         changeType: formatChangeType(stats.distribution_rate_change || '+0%'),
@@ -901,7 +914,7 @@ const RevenueView: React.FC = () => {
     return data.map(item => ({
       date: item.date,
       value: item.value,
-      label: item.label || new Date(item.date).toLocaleDateString('en-US', { month: 'short' })
+      label: item.label || new Date(item.date).toLocaleDateString(locale, { month: 'short' })
     }));
   };
 
@@ -909,7 +922,7 @@ const RevenueView: React.FC = () => {
     return (
       <div className="space-y-6">
         <LoadingStats />
-        <LoadingChart title="Revenue Distribution History" />
+        <LoadingChart title={t('dashboard.revenue.history')} />
       </div>
     );
   }
@@ -918,7 +931,7 @@ const RevenueView: React.FC = () => {
     return (
       <div className="space-y-6">
         <ErrorState
-          message="Failed to load revenue data"
+          message={t('dashboard.charts.revenueLoadFailed')}
           onRetry={() => {
             refetchStats();
             refetchChart();
@@ -933,7 +946,7 @@ const RevenueView: React.FC = () => {
       <DashboardStats stats={formatRevenueStats(revenueStats)} />
       <PerformanceChart
         data={formatChartData(revenueData)}
-        title="Revenue Distribution History"
+        title={t('dashboard.revenue.history')}
         type="bar"
         color="#10b981"
       />
@@ -943,6 +956,7 @@ const RevenueView: React.FC = () => {
 
 // Investors view component with investor analytics
 const InvestorsView: React.FC = () => {
+  const { t } = useTranslation('ownerui');
   const {
     data: investorAnalytics,
     isLoading: analyticsLoading,
@@ -1008,7 +1022,7 @@ const InvestorsView: React.FC = () => {
       <div className="space-y-6">
         <InvestorManagement />
         <ErrorState
-          message="Failed to load owner analytics"
+          message={t('dashboard.ownersView.loadFailed')}
           onRetry={() => {
             refetchAnalytics();
             refetchMetrics();
@@ -1020,27 +1034,27 @@ const InvestorsView: React.FC = () => {
 
   const distributionSegments = investorAnalytics ? [
     {
-      label: 'Retail Owners',
+      label: t('dashboard.ownersView.retail'),
       percentage: investorAnalytics.retail_investors?.percentage || 0,
       count: investorAnalytics.retail_investors?.count || 0
     },
     {
-      label: 'Institutional',
+      label: t('dashboard.ownersView.institutional'),
       percentage: investorAnalytics.institutional_investors?.percentage || 0,
       count: investorAnalytics.institutional_investors?.count || 0
     },
     {
-      label: 'High Net Worth',
+      label: t('dashboard.ownersView.highNetWorth'),
       percentage: investorAnalytics.high_net_worth?.percentage || 0,
       count: investorAnalytics.high_net_worth?.count || 0
     }
   ] : [];
 
   const metrics = investmentMetrics ? [
-    { label: 'Average Purchase', value: formatCurrency(investmentMetrics.average_investment || 0) },
-    { label: 'Total Capital Raised', value: formatCurrency(investmentMetrics.total_capital_raised || 0) },
-    { label: 'Owner Retention', value: `${investmentMetrics.investor_retention_rate || 0}%` },
-    { label: 'New Owners (30d)', value: (investmentMetrics.new_investors_30d || 0).toString() }
+    { label: t('dashboard.ownersView.averagePurchase'), value: formatCurrency(investmentMetrics.average_investment || 0) },
+    { label: t('dashboard.ownersView.totalCapitalRaised'), value: formatCurrency(investmentMetrics.total_capital_raised || 0) },
+    { label: t('dashboard.ownersView.retention'), value: `${investmentMetrics.investor_retention_rate || 0}%` },
+    { label: t('dashboard.ownersView.newOwners30d'), value: (investmentMetrics.new_investors_30d || 0).toString() }
   ] : [];
 
   return (
@@ -1049,7 +1063,7 @@ const InvestorsView: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">
-            Owner Distribution
+            {t('dashboard.ownersView.distribution')}
           </h3>
           {distributionSegments.length > 0 ? (
             <div className="space-y-3">
@@ -1060,7 +1074,7 @@ const InvestorsView: React.FC = () => {
                       {segment.label}
                     </span>
                     <span className="text-sm text-neutral-500 dark:text-slate-400">
-                      {segment.count} owners
+                      {t('dashboard.ownersView.ownersCount', { count: segment.count })}
                     </span>
                   </div>
                   <div className="w-full bg-neutral-200 dark:bg-slate-600 rounded-full h-2">
@@ -1075,7 +1089,7 @@ const InvestorsView: React.FC = () => {
           ) : (
             <div className="text-center py-4">
               <p className="text-neutral-500 dark:text-slate-400">
-                No owner distribution data available
+                {t('dashboard.ownersView.noDistribution')}
               </p>
             </div>
           )}
@@ -1083,7 +1097,7 @@ const InvestorsView: React.FC = () => {
 
         <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">
-            Purchase Metrics
+            {t('dashboard.ownersView.metrics')}
           </h3>
           {metrics.length > 0 ? (
             <div className="space-y-4">
@@ -1101,7 +1115,7 @@ const InvestorsView: React.FC = () => {
           ) : (
             <div className="text-center py-4">
               <p className="text-neutral-500 dark:text-slate-400">
-                No purchase metrics available
+                {t('dashboard.ownersView.noMetrics')}
               </p>
             </div>
           )}
@@ -1120,6 +1134,7 @@ const InvestorsView: React.FC = () => {
 // minimum useful surface every authenticated role expects: profile edit
 // (real PUT /auth/profile/), basic account info, and a pointer to KYC.
 const PropertyOwnerSettings: React.FC = () => {
+  const { t } = useTranslation(['ownerui', 'admin']);
   const { state, updateProfile } = useAuth();
   const { navigate } = useRouter();
   const user = state.user;
@@ -1161,7 +1176,7 @@ const PropertyOwnerSettings: React.FC = () => {
       setSuccess(true);
       setTimeout(() => setSuccess(false), 2500);
     } catch (e: any) {
-      setError(e?.message || 'Failed to save profile.');
+      setError(e?.message || t('dashboard.settings.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -1170,7 +1185,7 @@ const PropertyOwnerSettings: React.FC = () => {
   if (!user) {
     return (
       <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
-        Loading…
+        {t('shared.loading')}
       </div>
     );
   }
@@ -1179,16 +1194,16 @@ const PropertyOwnerSettings: React.FC = () => {
     <div className="space-y-6">
       <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
         <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100 mb-1">
-          Account Settings
+          {t('dashboard.settings.title')}
         </h2>
         <p className="text-sm text-neutral-500 dark:text-slate-400">
-          Manage your profile information. Email and role can only be changed by support.
+          {t('dashboard.settings.subtitle')}
         </p>
       </div>
 
       <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
         <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">
-          Profile Information
+          {t('dashboard.settings.profileInfo')}
         </h3>
 
         {error && (
@@ -1198,53 +1213,53 @@ const PropertyOwnerSettings: React.FC = () => {
         )}
         {success && (
           <div className="mb-4 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm text-emerald-700 dark:text-emerald-300">
-            Profile updated.
+            {t('dashboard.settings.updated')}
           </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Email</label>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('dashboard.settings.email')}</label>
             <input type="email" value={user.email} disabled
               className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900 text-sm text-slate-500" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Role</label>
-            <input type="text" value={user.role} disabled
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('dashboard.settings.role')}</label>
+            <input type="text" value={t(`admin:shared.roles.${user.role}`, { defaultValue: user.role })} disabled
               className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900 text-sm text-slate-500" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">First name</label>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('dashboard.settings.firstName')}</label>
             <input type="text" value={form.first_name}
               onChange={(e) => setForm(f => ({ ...f, first_name: e.target.value }))}
               className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Last name</label>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('dashboard.settings.lastName')}</label>
             <input type="text" value={form.last_name}
               onChange={(e) => setForm(f => ({ ...f, last_name: e.target.value }))}
               className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Phone</label>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('dashboard.settings.phone')}</label>
             <input type="tel" value={form.phone}
               onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))}
               className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Country</label>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('dashboard.settings.country')}</label>
             <input type="text" value={form.country}
               onChange={(e) => setForm(f => ({ ...f, country: e.target.value }))}
               className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">City</label>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('dashboard.settings.city')}</label>
             <input type="text" value={form.city}
               onChange={(e) => setForm(f => ({ ...f, city: e.target.value }))}
               className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Address</label>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('dashboard.settings.address')}</label>
             <input type="text" value={form.address}
               onChange={(e) => setForm(f => ({ ...f, address: e.target.value }))}
               className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm" />
@@ -1258,21 +1273,21 @@ const PropertyOwnerSettings: React.FC = () => {
             disabled={saving}
             className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 disabled:opacity-60 transition-colors"
           >
-            {saving ? 'Saving…' : 'Save Changes'}
+            {saving ? t('shared.saving') : t('dashboard.settings.saveChanges')}
           </button>
           <button
             type="button"
             onClick={() => navigate('kyc')}
             className="px-4 py-2 border border-neutral-300 dark:border-slate-600 text-sm font-medium rounded-lg hover:bg-neutral-50 dark:hover:bg-slate-700 transition-colors"
           >
-            Manage Identity Verification
+            {t('dashboard.settings.manageKyc')}
           </button>
           <button
             type="button"
             onClick={() => navigate('role-management')}
             className="px-4 py-2 border border-neutral-300 dark:border-slate-600 text-sm font-medium rounded-lg hover:bg-neutral-50 dark:hover:bg-slate-700 transition-colors"
           >
-            Manage Roles
+            {t('dashboard.settings.manageRoles')}
           </button>
         </div>
       </div>
@@ -1284,6 +1299,7 @@ const PropertyOwnerSettings: React.FC = () => {
 // implementation: query /notifications/, show a friendly empty state, or a
 // minimal list. Avoids the previous "under development" dead-end.
 const PropertyOwnerNotifications: React.FC = () => {
+  const { t, i18n } = useTranslation('ownerui');
   const { data, isLoading } = useQuery({
     queryKey: ['notifications', 'property-owner'],
     queryFn: async () => {
@@ -1303,10 +1319,10 @@ const PropertyOwnerNotifications: React.FC = () => {
     <div className="space-y-6">
       <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
         <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100 mb-1">
-          Notifications
+          {t('dashboard.notifications.title')}
         </h2>
         <p className="text-sm text-neutral-500 dark:text-slate-400">
-          Updates about your properties, owners, and revenue distributions.
+          {t('dashboard.notifications.subtitle')}
         </p>
       </div>
 
@@ -1317,9 +1333,9 @@ const PropertyOwnerNotifications: React.FC = () => {
       ) : list.length === 0 ? (
         <div className="bg-white dark:bg-slate-800 rounded-xl p-12 border border-neutral-200 dark:border-slate-700 text-center">
           <span className="text-4xl mb-4 block">🔔</span>
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-2">No Notifications</h3>
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-2">{t('dashboard.notifications.emptyTitle')}</h3>
           <p className="text-sm text-neutral-500 dark:text-slate-400">
-            You're all caught up. New notifications about your properties and owners will appear here.
+            {t('dashboard.notifications.emptyBody')}
           </p>
         </div>
       ) : (
@@ -1330,11 +1346,11 @@ const PropertyOwnerNotifications: React.FC = () => {
                 <span className="text-lg">🔔</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-neutral-900 dark:text-slate-100">{n.title || 'Notification'}</p>
+                <p className="font-medium text-neutral-900 dark:text-slate-100">{n.title || t('dashboard.notifications.fallbackTitle')}</p>
                 {n.message && <p className="text-sm text-neutral-500 dark:text-slate-400 mt-1">{n.message}</p>}
                 {(n.created_at || n.timestamp) && (
                   <p className="text-xs text-neutral-400 dark:text-slate-500 mt-1">
-                    {new Date(n.created_at || n.timestamp).toLocaleString()}
+                    {new Date(n.created_at || n.timestamp).toLocaleString(dateLocale(i18n.language))}
                   </p>
                 )}
               </div>
@@ -1347,6 +1363,7 @@ const PropertyOwnerNotifications: React.FC = () => {
 };
 
 export const PropertyOwnerDashboard: React.FC<{ currentView: string }> = ({ currentView }) => {
+  const { t } = useTranslation('ownerui');
   const { navigate } = useRouter();
   // NB: the previous version declared a duplicate `quickActions` array here
   // that was never referenced — the real QuickActions live inside
@@ -1364,10 +1381,10 @@ export const PropertyOwnerDashboard: React.FC<{ currentView: string }> = ({ curr
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100">
-                  My Properties
+                  {t('dashboard.myProperties.title')}
                 </h2>
                 <p className="text-neutral-600 dark:text-slate-400 mt-1">
-                  Manage your tokenized real estate portfolio
+                  {t('dashboard.myProperties.subtitle')}
                 </p>
               </div>
               <button
@@ -1375,7 +1392,7 @@ export const PropertyOwnerDashboard: React.FC<{ currentView: string }> = ({ curr
                 onClick={() => navigate('submit-property')}
                 className="px-4 py-2 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 transition-colors"
               >
-                Add New Property
+                {t('dashboard.myProperties.addNew')}
               </button>
             </div>
           </div>
@@ -1407,10 +1424,10 @@ export const PropertyOwnerDashboard: React.FC<{ currentView: string }> = ({ curr
     case 'wallet':
       return (
         <PayoutsPanel
-          title="Wallet & Payouts"
-          subtitle="Your available balance and withdrawal history."
-          balanceLabel="Available for payout"
-          balanceHint="Revenue is credited to your wallet by the Capimax team; withdraw it to a bank account or crypto wallet."
+          title={t('dashboard.wallet.title')}
+          subtitle={t('dashboard.wallet.subtitle')}
+          balanceLabel={t('dashboard.wallet.balanceLabel')}
+          balanceHint={t('dashboard.wallet.balanceHint')}
         />
       );
 
@@ -1439,10 +1456,10 @@ export const PropertyOwnerDashboard: React.FC<{ currentView: string }> = ({ curr
           <div className="text-center">
             <span className="text-4xl mb-4 block">🚧</span>
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-2">
-              {currentView.replace('-', ' ')} Dashboard
+              {t('dashboard.underDevelopment.title', { name: t(`dashboard.views.${currentView}`, { defaultValue: currentView.replace('-', ' ') }) })}
             </h3>
             <p className="text-neutral-500 dark:text-slate-400">
-              This section is under development
+              {t('dashboard.underDevelopment.body')}
             </p>
           </div>
         </div>

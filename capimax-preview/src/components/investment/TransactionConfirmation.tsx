@@ -30,6 +30,7 @@ import type { InvestmentProperty, InvestmentData } from './types';
 import { WalletService } from '../../services/wallet/WalletService';
 import type { WalletInfo } from '../../services/api/types';
 import { cn } from '../../utils/cn';
+import { useTranslation, Trans } from 'react-i18next';
 
 interface TransactionConfirmationProps {
   property: InvestmentProperty;
@@ -46,6 +47,8 @@ export const TransactionConfirmation: React.FC<TransactionConfirmationProps> = (
   onGoToPortfolio,
   transactionId = `TXN-${Date.now()}`
 }) => {
+  const { t, i18n } = useTranslation('invest');
+  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
   const [showReceipt, setShowReceipt] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
@@ -129,7 +132,7 @@ export const TransactionConfirmation: React.FC<TransactionConfirmationProps> = (
   };
 
   const shareInvestment = (platform: string) => {
-    const shareText = `I just bought ${investmentData.tokens} property tokens in ${property.title} through tokenized real estate! 🏢💎`;
+    const shareText = t('confirmation.shareText', { value: investmentData.tokens, title: property.title });
     const shareUrl = window.location.href;
     
     const shareUrls = {
@@ -142,12 +145,14 @@ export const TransactionConfirmation: React.FC<TransactionConfirmationProps> = (
   };
 
   const copyInvestmentDetails = async () => {
-    const details = `Purchase Confirmation
-Property: ${property.title}
-Tokens Purchased: ${investmentData.tokens}
-Total Cost: $${investmentData.amount.toLocaleString()}
-Expected Annual Return: $${returns.annualReturn.toLocaleString()}
-Transaction ID: ${transactionId}`;
+    const details = [
+      t('confirmation.copy.heading'),
+      `${t('confirmation.copy.property')}: ${property.title}`,
+      `${t('confirmation.copy.shares')}: ${investmentData.tokens}`,
+      `${t('confirmation.copy.totalCost')}: $${investmentData.amount.toLocaleString()}`,
+      `${t('confirmation.copy.annualReturn')}: $${returns.annualReturn.toLocaleString()}`,
+      `${t('confirmation.copy.transactionId')}: ${transactionId}`,
+    ].join('\n');
 
     await navigator.clipboard.writeText(details);
     setCopied(true);
@@ -189,10 +194,10 @@ Transaction ID: ${transactionId}`;
           transition={{ delay: 0.3 }}
         >
           <Text variant="h2" weight="bold" className="text-gray-900 dark:text-white mb-2">
-            Purchase Successful!
+            {t('confirmation.success')}
           </Text>
           <Text variant="bodyLarge" color="muted">
-            Welcome to the future of real estate ownership
+            {t('confirmation.welcome')}
           </Text>
         </motion.div>
       </div>
@@ -204,12 +209,12 @@ Transaction ID: ${transactionId}`;
             <Calendar className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
               <Text variant="body" weight="semibold" className="text-blue-800 dark:text-blue-200">
-                Installment plan created{investmentData.total_installments ? ` — ${investmentData.total_installments} monthly payments` : ''}
+                {investmentData.total_installments
+                  ? t('confirmation.planCreatedCount', { value: investmentData.total_installments })
+                  : t('confirmation.planCreated')}
               </Text>
               <Text variant="bodySmall" className="text-blue-700 dark:text-blue-300">
-                Your tokens are reserved and released to you as you pay. Your first installment is
-                due now — pay it from the <strong>Installments</strong> section of your dashboard,
-                funded by your wallet.
+                <Trans t={t} i18nKey="confirmation.planBody" components={{ strong: <strong /> }} />
               </Text>
             </div>
           </div>
@@ -221,11 +226,11 @@ Transaction ID: ${transactionId}`;
         <div className="flex items-center justify-between mb-6">
           <Text variant="h4" weight="semibold" className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-yellow-500" />
-            Your Ownership
+            {t('confirmation.yourOwnership')}
           </Text>
           <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-            <Text variant="bodySmall" weight="medium">Active</Text>
+            <Text variant="bodySmall" weight="medium">{t('confirmation.active')}</Text>
           </div>
         </div>
 
@@ -234,9 +239,9 @@ Transaction ID: ${transactionId}`;
           <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-6 rounded-xl text-center">
             <Gift className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
             <Text variant="h3" className="text-emerald-600 dark:text-emerald-400 mb-1">
-              {investmentData.tokens} {investmentData.tokens === 1 ? 'Token' : 'Tokens'}
+              {t('common.shareCount', { count: investmentData.tokens })}
             </Text>
-            <Text variant="bodySmall" color="muted">Purchased</Text>
+            <Text variant="bodySmall" color="muted">{t('confirmation.purchased')}</Text>
           </div>
 
           {/* Total Cost */}
@@ -245,7 +250,7 @@ Transaction ID: ${transactionId}`;
             <Text variant="h3" className="text-blue-600 dark:text-blue-400 mb-1">
               ${investmentData.amount.toLocaleString()}
             </Text>
-            <Text variant="bodySmall" color="muted">Total Cost</Text>
+            <Text variant="bodySmall" color="muted">{t('amount.totalCost')}</Text>
           </div>
 
           {/* Expected Return */}
@@ -254,27 +259,27 @@ Transaction ID: ${transactionId}`;
             <Text variant="h3" className="text-purple-600 dark:text-purple-400 mb-1">
               {returns.totalROI.toFixed(1)}%
             </Text>
-            <Text variant="bodySmall" color="muted">Expected Annual ROI</Text>
+            <Text variant="bodySmall" color="muted">{t('confirmation.expectedRoi')}</Text>
           </div>
         </div>
 
         <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Property:</span>
-              <span className="font-medium text-right">{property.title}</span>
+              <span className="text-gray-600 dark:text-gray-400">{t('confirmation.copy.property')}:</span>
+              <span className="font-medium text-end">{property.title}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Transaction ID:</span>
-              <span className="font-mono text-right">{transactionId}</span>
+              <span className="text-gray-600 dark:text-gray-400">{t('confirmation.copy.transactionId')}:</span>
+              <span className="font-mono text-end">{transactionId}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Annual Return:</span>
+              <span className="text-gray-600 dark:text-gray-400">{t('amount.annualReturn')}:</span>
               <span className="font-medium text-emerald-600">${returns.annualReturn.toLocaleString()}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600 dark:text-gray-400">Next Dividend:</span>
-              <span className="font-medium">{nextDividendDate.toLocaleDateString()}</span>
+              <span className="text-gray-600 dark:text-gray-400">{t('confirmation.nextDividend')}</span>
+              <span className="font-medium">{nextDividendDate.toLocaleDateString(dateLocale)}</span>
             </div>
           </div>
         </div>
@@ -290,7 +295,7 @@ Transaction ID: ${transactionId}`;
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  Tokens delivered to
+                  {t('confirmation.deliveredTo')}
                 </span>
                 <span
                   className={cn(
@@ -300,7 +305,7 @@ Transaction ID: ${transactionId}`;
                       : 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
                   )}
                 >
-                  {destinationKind === 'custodial' ? 'Platform-managed' : 'Your wallet'}
+                  {destinationKind === 'custodial' ? t('paymentMethod.platformManaged') : t('paymentMethod.yourWallet')}
                 </span>
               </div>
               <code className="block truncate font-mono text-sm text-slate-700 dark:text-slate-200">
@@ -318,7 +323,7 @@ Transaction ID: ${transactionId}`;
               }}
               className="rounded-md px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700"
             >
-              {walletAddrCopied ? 'Copied' : 'Copy'}
+              {walletAddrCopied ? t('common.copied') : t('common.copy')}
             </button>
           </div>
         )}
@@ -328,7 +333,7 @@ Transaction ID: ${transactionId}`;
       <Card className="p-6">
         <Text variant="h4" weight="semibold" className="mb-4 flex items-center gap-2">
           <Calendar className="w-5 h-5 text-blue-500" />
-          What's Next?
+          {t('confirmation.whatsNext')}
         </Text>
 
         <div className="space-y-4">
@@ -345,14 +350,14 @@ Transaction ID: ${transactionId}`;
             <div className="flex-1">
               <div className="flex items-center justify-between">
                 <Text variant="bodyLarge" weight="semibold" className="mb-1">
-                  View Your Portfolio
+                  {t('confirmation.next.portfolioTitle')}
                 </Text>
                 {onGoToPortfolio && (
-                  <ExternalLink className="w-4 h-4 text-blue-500" />
+                  <ExternalLink className="w-4 h-4 text-blue-500 rtl:-scale-x-100" />
                 )}
               </div>
               <Text variant="body" color="muted">
-                Your tokens are ready. Track performance, manage holdings, and view dividends in your portfolio.
+                {t('confirmation.next.portfolioBody')}
               </Text>
             </div>
           </div>
@@ -363,11 +368,13 @@ Transaction ID: ${transactionId}`;
             </div>
             <div>
               <Text variant="bodyLarge" weight="semibold" className="mb-1">
-                First Dividend Payment
+                {t('confirmation.next.dividendTitle')}
               </Text>
               <Text variant="body" color="muted">
-                Your first quarterly dividend of ${returns.quarterlyDividend.toLocaleString()}
-                is expected on {nextDividendDate.toLocaleDateString()}.
+                {t('confirmation.next.dividendBody', {
+                  amount: `$${returns.quarterlyDividend.toLocaleString()}`,
+                  date: nextDividendDate.toLocaleDateString(dateLocale),
+                })}
               </Text>
             </div>
           </div>
@@ -378,10 +385,10 @@ Transaction ID: ${transactionId}`;
             </div>
             <div>
               <Text variant="bodyLarge" weight="semibold" className="mb-1">
-                Ownership Certificate
+                {t('confirmation.next.certificateTitle')}
               </Text>
               <Text variant="body" color="muted">
-                A digital certificate of ownership will be sent to your email within 48 hours.
+                {t('confirmation.next.certificateBody')}
               </Text>
             </div>
           </div>
@@ -397,7 +404,7 @@ Transaction ID: ${transactionId}`;
           className="flex items-center justify-center gap-2"
         >
           <Eye className="w-4 h-4" />
-          View Receipt
+          {t('confirmation.viewReceipt')}
         </Button>
 
         <Button
@@ -407,7 +414,7 @@ Transaction ID: ${transactionId}`;
           className="flex items-center justify-center gap-2"
         >
           <Download className="w-4 h-4" />
-          Download Receipt
+          {t('confirmation.downloadReceipt')}
         </Button>
 
         <Button
@@ -417,7 +424,7 @@ Transaction ID: ${transactionId}`;
           className="flex items-center justify-center gap-2"
         >
           {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-          {copied ? 'Copied!' : 'Copy Details'}
+          {copied ? t('common.copied') : t('confirmation.copyDetails')}
         </Button>
       </div>
 
@@ -426,12 +433,12 @@ Transaction ID: ${transactionId}`;
         <div className="flex items-center justify-between">
           <div>
             <Text variant="bodyLarge" weight="semibold" className="mb-1">
-              Email Confirmation
+              {t('confirmation.email.title')}
             </Text>
             <Text variant="body" color="muted">
               {emailSent
-                ? "Confirmation email sent successfully!"
-                : "Send detailed purchase confirmation to your email"
+                ? t('confirmation.email.sent')
+                : t('confirmation.email.hint')
               }
             </Text>
           </div>
@@ -449,7 +456,7 @@ Transaction ID: ${transactionId}`;
             ) : (
               <Mail className="w-4 h-4" />
             )}
-            {emailSending ? "Sending..." : emailSent ? "Sent!" : "Send Email"}
+            {emailSending ? t('confirmation.email.sending') : emailSent ? t('confirmation.email.sentShort') : t('confirmation.email.send')}
           </Button>
         </div>
       </Card>
@@ -459,10 +466,10 @@ Transaction ID: ${transactionId}`;
         <div className="flex items-center justify-between mb-4">
           <div>
             <Text variant="bodyLarge" weight="semibold" className="mb-1">
-              Share Your Purchase
+              {t('confirmation.share.title')}
             </Text>
             <Text variant="body" color="muted">
-              Let others know about your smart ownership choice
+              {t('confirmation.share.hint')}
             </Text>
           </div>
         </div>
@@ -510,7 +517,7 @@ Transaction ID: ${transactionId}`;
             className="min-w-[200px] flex items-center justify-center gap-2"
           >
             <PieChart className="w-4 h-4" />
-            Go to My Portfolio
+            {t('confirmation.goToPortfolio')}
           </Button>
         )}
         <Button
@@ -519,7 +526,7 @@ Transaction ID: ${transactionId}`;
           onClick={onClose}
           className="min-w-[200px]"
         >
-          Return to Property
+          {t('confirmation.returnToProperty')}
         </Button>
       </div>
 
@@ -543,10 +550,10 @@ Transaction ID: ${transactionId}`;
           ))}
         </div>
         <Text variant="bodyLarge" className="text-emerald-600 dark:text-emerald-400 font-semibold">
-          🎉 Congratulations on your purchase! 🎉
+          🎉 {t('confirmation.congrats')} 🎉
         </Text>
         <Text variant="body" color="muted">
-          You're now part of the future of real estate ownership
+          {t('confirmation.congratsBody')}
         </Text>
       </motion.div>
     </div>

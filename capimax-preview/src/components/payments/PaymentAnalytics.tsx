@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -52,6 +53,9 @@ interface PaymentMethodStats {
 
 export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d' }: PaymentAnalyticsProps) {
   const { state } = usePayment();
+  const { t, i18n } = useTranslation('payments');
+  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
+  const methodName = (m: string) => t(`methodNames.${m}`, { defaultValue: m });
   const [timeRange, setTimeRange] = useState(defaultTimeRange);
   const [selectedMetric, setSelectedMetric] = useState<'volume' | 'count' | 'fees'>('volume');
   const [selectedView, setSelectedView] = useState<'overview' | 'methods' | 'trends'>('overview');
@@ -117,7 +121,7 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
       });
 
       data.push({
-        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        date: date.toLocaleDateString(dateLocale, { month: 'short', day: 'numeric' }),
         amount: dayTransactions.reduce((sum, tx) => sum + tx.amount, 0),
         count: dayTransactions.length,
         fees: dayTransactions.reduce((sum, tx) => sum + (tx.fee || 0), 0)
@@ -125,7 +129,7 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
     }
 
     return data;
-  }, [state.transactions, timeRange]);
+  }, [state.transactions, timeRange, dateLocale]);
 
   // Payment method statistics
   const paymentMethodStats = useMemo((): PaymentMethodStats[] => {
@@ -165,7 +169,7 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Volume</p>
+              <p className="text-sm font-medium text-gray-600">{t('analytics.totalVolume')}</p>
               <p className="text-2xl font-bold text-gray-900">
                 {formatCurrency(analyticsData.totalVolume, 'USD')}
               </p>
@@ -176,23 +180,23 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
           </div>
           <div className="flex items-center mt-4">
             {analyticsData.growth >= 0 ? (
-              <TrendingUp className="h-4 w-4 text-emerald-500 mr-1" />
+              <TrendingUp className="h-4 w-4 text-emerald-500 me-1" />
             ) : (
-              <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
+              <TrendingDown className="h-4 w-4 text-red-500 me-1" />
             )}
             <span className={`text-sm font-medium ${
               analyticsData.growth >= 0 ? 'text-emerald-600' : 'text-red-600'
             }`}>
               {Math.abs(analyticsData.growth).toFixed(1)}%
             </span>
-            <span className="text-sm text-gray-600 ml-1">vs previous period</span>
+            <span className="text-sm text-gray-600 ms-1">{t('analytics.vsPrevious')}</span>
           </div>
         </Card>
 
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Transactions</p>
+              <p className="text-sm font-medium text-gray-600">{t('analytics.transactions')}</p>
               <p className="text-2xl font-bold text-gray-900">
                 {analyticsData.transactionCount.toLocaleString()}
               </p>
@@ -203,7 +207,7 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
           </div>
           <div className="flex items-center mt-4">
             <span className="text-sm text-gray-600">
-              Avg: {formatCurrency(analyticsData.averageAmount, 'USD')}
+              {t('analytics.avg')} {formatCurrency(analyticsData.averageAmount, 'USD')}
             </span>
           </div>
         </Card>
@@ -211,7 +215,7 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Success Rate</p>
+              <p className="text-sm font-medium text-gray-600">{t('analytics.successRate')}</p>
               <p className="text-2xl font-bold text-gray-900">
                 {analyticsData.successRate.toFixed(1)}%
               </p>
@@ -222,7 +226,7 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
           </div>
           <div className="flex items-center mt-4">
             <span className="text-sm text-gray-600">
-              {state.transactions.filter(tx => tx.status === 'completed').length} completed
+              {t('analytics.completedCount', { count: state.transactions.filter(tx => tx.status === 'completed').length })}
             </span>
           </div>
         </Card>
@@ -230,7 +234,7 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
         <Card className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Fees</p>
+              <p className="text-sm font-medium text-gray-600">{t('analytics.totalFees')}</p>
               <p className="text-2xl font-bold text-gray-900">
                 {formatCurrency(analyticsData.totalFees, 'USD')}
               </p>
@@ -241,7 +245,7 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
           </div>
           <div className="flex items-center mt-4">
             <span className="text-sm text-gray-600">
-              {((analyticsData.totalFees / analyticsData.totalVolume) * 100 || 0).toFixed(2)}% of volume
+              {t('analytics.ofVolume', { pct: ((analyticsData.totalFees / analyticsData.totalVolume) * 100 || 0).toFixed(2) })}
             </span>
           </div>
         </Card>
@@ -250,14 +254,14 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
       {/* Chart */}
       <Card className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">Transaction Volume</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('analytics.txVolume')}</h3>
           <Select
             value={selectedMetric}
             onChange={(value) => setSelectedMetric(value as any)}
             options={[
-              { value: 'volume', label: 'Volume' },
-              { value: 'count', label: 'Count' },
-              { value: 'fees', label: 'Fees' }
+              { value: 'volume', label: t('analytics.metrics.volume') },
+              { value: 'count', label: t('analytics.metrics.count') },
+              { value: 'fees', label: t('analytics.metrics.fees') }
             ]}
           />
         </div>
@@ -296,7 +300,7 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Payment Method Breakdown */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Payment Methods</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('analytics.paymentMethods')}</h3>
           <div className="space-y-4">
             {paymentMethodStats.map((method, index) => (
               <motion.div
@@ -313,13 +317,13 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
                     {method.method === 'bank' && <DollarSign className="h-4 w-4 text-green-600" />}
                   </div>
                   <div>
-                    <div className="font-medium text-gray-900 capitalize">{method.method}</div>
+                    <div className="font-medium text-gray-900 capitalize">{methodName(method.method)}</div>
                     <div className="text-sm text-gray-600">
-                      {method.count} transactions
+                      {t('analytics.txCount', { count: method.count })}
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-end">
                   <div className="font-semibold text-gray-900">
                     {formatCurrency(method.volume, 'USD')}
                   </div>
@@ -334,13 +338,13 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
 
         {/* Average Transaction Size */}
         <Card className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Average Transaction Size</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('analytics.avgSize')}</h3>
           <div className="space-y-4">
             {paymentMethodStats.map((method, index) => (
               <div key={method.method} className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-gray-700 capitalize">
-                    {method.method}
+                    {methodName(method.method)}
                   </span>
                   <span className="text-sm font-semibold text-gray-900">
                     {formatCurrency(method.avgAmount, 'USD')}
@@ -365,7 +369,7 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
   const renderTrends = () => (
     <div className="space-y-6">
       <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Transaction Trends</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('analytics.trends')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="text-center p-4 bg-emerald-50 rounded-lg">
             <ArrowUpRight className="h-8 w-8 text-emerald-600 mx-auto mb-2" />
@@ -375,7 +379,7 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
                 'USD'
               )}
             </div>
-            <div className="text-sm text-emerald-700">Last 7 days volume</div>
+            <div className="text-sm text-emerald-700">{t('analytics.last7Volume')}</div>
           </div>
 
           <div className="text-center p-4 bg-blue-50 rounded-lg">
@@ -383,7 +387,7 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
             <div className="text-lg font-semibold text-blue-900">
               {chartData.slice(-7).reduce((sum, d) => sum + d.count, 0)}
             </div>
-            <div className="text-sm text-blue-700">Transactions this week</div>
+            <div className="text-sm text-blue-700">{t('analytics.txThisWeek')}</div>
           </div>
 
           <div className="text-center p-4 bg-purple-50 rounded-lg">
@@ -391,14 +395,14 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
             <div className="text-lg font-semibold text-purple-900">
               {analyticsData.growth > 0 ? '+' : ''}{analyticsData.growth.toFixed(1)}%
             </div>
-            <div className="text-sm text-purple-700">Growth rate</div>
+            <div className="text-sm text-purple-700">{t('analytics.growthRate')}</div>
           </div>
         </div>
       </Card>
 
       {/* Currency Distribution */}
       <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Currency Distribution</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('analytics.currencyDistribution')}</h3>
         <div className="space-y-3">
           {state.balances.map((balance, index) => {
             const info = getCurrencyInfo(balance.currency);
@@ -415,7 +419,7 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
                   <span className="font-medium text-gray-900">{info.name}</span>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="text-right">
+                  <div className="text-end">
                     <div className="font-semibold text-gray-900">
                       {formatCurrency(balance.balance, balance.currency)}
                     </div>
@@ -436,8 +440,8 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
     <div className={className}>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Payment Analytics</h2>
-          <p className="text-gray-600">Track and analyze your payment performance</p>
+          <h2 className="text-2xl font-bold text-gray-900">{t('analytics.title')}</h2>
+          <p className="text-gray-600">{t('analytics.subtitle')}</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -445,17 +449,17 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
             value={timeRange}
             onChange={(value) => setTimeRange(value as any)}
             options={[
-              { value: '7d', label: 'Last 7 days' },
-              { value: '30d', label: 'Last 30 days' },
-              { value: '90d', label: 'Last 90 days' },
-              { value: '1y', label: 'Last year' }
+              { value: '7d', label: t('analytics.ranges.7d') },
+              { value: '30d', label: t('analytics.ranges.30d') },
+              { value: '90d', label: t('analytics.ranges.90d') },
+              { value: '1y', label: t('analytics.ranges.1y') }
             ]}
             icon={<Calendar className="h-4 w-4" />}
           />
           
           <Button variant="outline" className="flex items-center gap-2">
             <Download className="h-4 w-4" />
-            Export
+            {t('analytics.export')}
           </Button>
         </div>
       </div>
@@ -463,9 +467,9 @@ export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d
       {/* View Tabs */}
       <div className="flex mb-6 p-1 bg-gray-100 rounded-lg w-fit">
         {[
-          { key: 'overview', label: 'Overview' },
-          { key: 'methods', label: 'Payment Methods' },
-          { key: 'trends', label: 'Trends' }
+          { key: 'overview', label: t('analytics.tabs.overview') },
+          { key: 'methods', label: t('analytics.tabs.methods') },
+          { key: 'trends', label: t('analytics.tabs.trends') }
         ].map((tab) => (
           <button
             key={tab.key}

@@ -20,6 +20,7 @@ import { Card } from '../design-system/cards/Card';
 import { Button } from '../ui/Button';
 import { Text } from '../design-system/typography/Text';
 import { cn } from '../../utils/cn';
+import { useTranslation } from 'react-i18next';
 
 export interface InvestmentCalculatorProps {
   propertyTitle?: string;
@@ -48,7 +49,7 @@ interface CalculationResults {
 }
 
 export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
-  propertyTitle = "This Property",
+  propertyTitle,
   tokenPrice,
   totalTokens,
   soldTokens,
@@ -59,6 +60,7 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
   onInvest,
   className
 }) => {
+  const { t } = useTranslation(['propui', 'plan']);
   const remainingTokens = totalTokens - soldTokens;
   const [tokenCount, setTokenCount] = useState(1);
   const [investmentTerm, setInvestmentTerm] = useState(5); // years
@@ -135,17 +137,17 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
   return (
     <Card className={cn("overflow-hidden", className)}>
       {/* Header */}
-      <div className="p-6 bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-6 bg-gradient-to-r rtl:bg-gradient-to-l from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center">
             <Calculator className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Ownership Calculator
+              {t('calculator.title')}
             </h3>
             <Text variant="caption" color="muted">
-              Calculate your potential returns for {propertyTitle}
+              {t('calculator.subtitle', { title: propertyTitle || t('calculator.thisProperty') })}
             </Text>
           </div>
         </div>
@@ -156,10 +158,10 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-              Number of Tokens
+              {t('calculator.numberOfShares')}
             </label>
             <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-              {formatCurrency(tokenPrice)}/token
+              {t('calculator.perShare', { price: formatCurrency(tokenPrice) })}
             </span>
           </div>
 
@@ -174,8 +176,8 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
           />
 
           <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
-            <span>Min: 1 token</span>
-            <span>Available: {remainingTokens.toLocaleString()}</span>
+            <span>{t('calculator.minOne')}</span>
+            <span>{t('calculator.available', { n: remainingTokens.toLocaleString() })}</span>
           </div>
 
           {/* Quick Token Buttons */}
@@ -191,7 +193,7 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
                     : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-750"
                 )}
               >
-                {count} {count === 1 ? 'token' : 'tokens'}
+                {t('calculator.shareCount', { count })}
               </button>
             ))}
           </div>
@@ -201,7 +203,7 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
         <div className="space-y-3">
           <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
             <Calendar className="w-4 h-4 text-emerald-600" />
-            Ownership Term
+            {t('calculator.term')}
           </label>
           
           <div className="flex gap-2">
@@ -216,7 +218,7 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
                     : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
                 )}
               >
-                {years} Year{years > 1 ? 's' : ''}
+                {t('calculator.years', { count: years })}
               </button>
             ))}
           </div>
@@ -224,17 +226,17 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
 
         {/* Key Results */}
         <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-xl p-4 space-y-4">
-          <h4 className="font-semibold text-gray-900 dark:text-white">Your Ownership</h4>
+          <h4 className="font-semibold text-gray-900 dark:text-white">{t('calculator.yourOwnership')}</h4>
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Tokens</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">{t('calculator.shares')}</div>
               <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
                 {tokenCount}
               </div>
             </div>
             <div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Total Cost</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">{t('calculator.totalCost')}</div>
               <div className="text-xl font-bold text-gray-900 dark:text-white">
                 {formatCurrency(investmentAmount)}
               </div>
@@ -244,7 +246,7 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
           <div className="pt-3 border-t border-emerald-200 dark:border-emerald-800">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                {dividendFrequency.charAt(0).toUpperCase() + dividendFrequency.slice(1)} Return
+                {t(`calculator.frequencyReturn.${dividendFrequency}`)}
               </span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400 text-lg">
                 {dividendFrequency === 'monthly' && formatCurrency(calculations.monthlyDividend)}
@@ -255,7 +257,7 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
             
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                {investmentTerm}-Year Total Return
+                {t('calculator.termTotalReturn', { count: investmentTerm })}
               </span>
               <span className="font-bold text-gray-900 dark:text-white text-lg">
                 {formatCurrency(calculations.compoundReturn5Years)}
@@ -271,7 +273,7 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
           className="w-full flex items-center justify-center gap-2"
         >
           <BarChart3 className="w-4 h-4" />
-          {showDetailedBreakdown ? 'Hide' : 'Show'} Detailed Breakdown
+          {showDetailedBreakdown ? t('calculator.hideBreakdown') : t('calculator.showBreakdown')}
         </Button>
 
         {/* Detailed Breakdown */}
@@ -283,42 +285,42 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
             className="space-y-4"
           >
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Return Breakdown</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">{t('calculator.returnBreakdown')}</h4>
               
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Gross Annual Return ({formatPercent(expectedReturn)}):</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('calculator.grossAnnual', { percent: formatPercent(expectedReturn) })}</span>
                   <span className="font-medium">{formatCurrency(calculations.annualReturn)}</span>
                 </div>
                 <div className="flex justify-between text-red-600 dark:text-red-400">
-                  <span>Management Fee ({formatPercent(managementFee)}):</span>
+                  <span>{t('calculator.managementFee', { percent: formatPercent(managementFee) })}</span>
                   <span>-{formatCurrency(calculations.managementFeeCost)}</span>
                 </div>
                 <div className="flex justify-between font-semibold border-t border-gray-200 dark:border-gray-700 pt-2">
-                  <span>Net Annual Return:</span>
+                  <span>{t('calculator.netAnnual')}</span>
                   <span className="text-emerald-600 dark:text-emerald-400">{formatCurrency(calculations.netReturn)}</span>
                 </div>
               </div>
             </div>
 
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Ownership Metrics</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">{t('calculator.metrics')}</h4>
               
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Break-even Time</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{t('calculator.breakEven')}</span>
                   </div>
                   <span className="font-medium text-gray-900 dark:text-white">
-                    {Math.round(calculations.breakEvenMonths)} months
+                    {t('calculator.months', { count: Math.round(calculations.breakEvenMonths) })}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Target className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">ROI after {investmentTerm} years</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{t('calculator.roiAfter', { count: investmentTerm })}</span>
                   </div>
                   <span className="font-medium text-emerald-600 dark:text-emerald-400">
                     {formatPercent(investmentAmount > 0 ? (calculations.compoundReturn5Years / investmentAmount) * 100 : 0)}
@@ -328,7 +330,7 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Percent className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Effective Annual Rate</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{t('calculator.effectiveRate')}</span>
                   </div>
                   <span className="font-medium text-gray-900 dark:text-white">
                     {formatPercent(expectedReturn - managementFee)}
@@ -339,7 +341,7 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
 
             {/* Risk Assessment */}
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">Risk Assessment</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-4">{t('calculator.riskAssessment')}</h4>
               
               <div className="space-y-3">
                 <div className={cn("flex items-center gap-2", getRiskLevelColor(riskLevel))}>
@@ -347,29 +349,27 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
                   {riskLevel === 'medium' && <Info className="w-4 h-4" />}
                   {riskLevel === 'high' && <AlertTriangle className="w-4 h-4" />}
                   <span className="text-sm font-medium">
-                    {riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1)} Risk Ownership
+                    {t(`calculator.riskLevel.${riskLevel}`)}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                   <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
                     <Shield className="w-3 h-3" />
-                    <span>SEC Compliant</span>
+                    <span>{t('calculator.secCompliant')}</span>
                   </div>
                   <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
                     <Users className="w-3 h-3" />
-                    <span>Diversified Pool</span>
+                    <span>{t('calculator.diversified')}</span>
                   </div>
                   <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
                     <CheckCircle className="w-3 h-3" />
-                    <span>Insured Property</span>
+                    <span>{t('calculator.insured')}</span>
                   </div>
                 </div>
 
                 <div className="text-xs text-gray-500 dark:text-gray-400 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <strong>Disclaimer:</strong> Past performance does not guarantee future results.
-                  Real estate ownership involves risk and may result in loss of principal.
-                  Please consider your financial situation before buying.
+                  <strong>{t('calculator.disclaimerLabel')}</strong> {t('calculator.disclaimer')}
                 </div>
               </div>
             </div>
@@ -385,12 +385,12 @@ export const InvestmentCalculator: React.FC<InvestmentCalculatorProps> = ({
             disabled={tokenCount === 0}
             className="w-full font-semibold"
           >
-            Buy {tokenCount} {tokenCount === 1 ? 'Token' : 'Tokens'} — {formatCurrency(investmentAmount)}
+            {t('plan:buy.cash', { count: tokenCount, total: formatCurrency(investmentAmount) })}
           </Button>
 
           <div className="text-center">
             <Text variant="caption" color="muted">
-              {tokenCount} {tokenCount === 1 ? 'token' : 'tokens'} x {formatCurrency(tokenPrice)} = {formatCurrency(investmentAmount)}
+              {t('calculator.equation', { shares: t('calculator.shareCount', { count: tokenCount }), price: formatCurrency(tokenPrice), total: formatCurrency(investmentAmount) })}
             </Text>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/Button';
 import { Input } from '../design-system/forms/Input';
+import { useTranslation } from 'react-i18next';
 
 export interface InstallmentPlan {
   id: string;
@@ -53,6 +54,8 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
   onCancel,
   className = ''
 }) => {
+  const { t, i18n } = useTranslation('invest');
+  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
   const [currentStep, setCurrentStep] = useState<'amount' | 'plan' | 'payment' | 'review'>('amount');
   const [selectedTokens, setSelectedTokens] = useState<number>(property.minimumTokens);
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');
@@ -74,15 +77,15 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (selectedTokens < property.minimumTokens) {
-      newErrors.tokens = `Minimum purchase is ${property.minimumTokens} tokens`;
+      newErrors.tokens = t('installment.errors.min', { value: property.minimumTokens });
     }
 
     if (property.maximumTokens && selectedTokens > property.maximumTokens) {
-      newErrors.tokens = `Maximum purchase is ${property.maximumTokens} tokens`;
+      newErrors.tokens = t('installment.errors.max', { value: property.maximumTokens });
     }
 
     if (selectedTokens > property.availableTokens) {
-      newErrors.tokens = `Only ${property.availableTokens} tokens available`;
+      newErrors.tokens = t('flow.errors.maxTokens', { available: property.availableTokens });
     }
 
     setErrors(newErrors);
@@ -93,15 +96,15 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!selectedPlanId) {
-      newErrors.plan = 'Please select an installment plan';
+      newErrors.plan = t('installment.errors.plan');
     }
 
     if (selectedPlan?.minimumInvestment && totalInvestment < selectedPlan.minimumInvestment) {
-      newErrors.plan = `This plan requires minimum purchase of $${selectedPlan.minimumInvestment.toLocaleString()}`;
+      newErrors.plan = t('installment.errors.planMin', { amount: `$${selectedPlan.minimumInvestment.toLocaleString()}` });
     }
 
     if (selectedPlan?.maximumInvestment && totalInvestment > selectedPlan.maximumInvestment) {
-      newErrors.plan = `This plan has maximum purchase limit of $${selectedPlan.maximumInvestment.toLocaleString()}`;
+      newErrors.plan = t('installment.errors.planMax', { amount: `$${selectedPlan.maximumInvestment.toLocaleString()}` });
     }
 
     setErrors(newErrors);
@@ -112,7 +115,7 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!paymentMethod) {
-      newErrors.paymentMethod = 'Please select a payment method';
+      newErrors.paymentMethod = t('flow.errors.paymentMethod');
     }
 
     setErrors(newErrors);
@@ -193,14 +196,14 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100">
-              Installment Purchase
+              {t('installment.title')}
             </h2>
             <p className="text-sm text-neutral-600 dark:text-slate-400 mt-1">
               {property.propertyName}
             </p>
           </div>
-          <div className="text-right">
-            <div className="text-sm text-neutral-500 dark:text-slate-400">Token Price</div>
+          <div className="text-end">
+            <div className="text-sm text-neutral-500 dark:text-slate-400">{t('common.pricePerShare')}</div>
             <div className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
               {formatCurrency(property.tokenPrice)}
             </div>
@@ -215,10 +218,10 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
           ></div>
         </div>
         <div className="flex justify-between mt-2 text-xs text-neutral-500 dark:text-slate-400">
-          <span className={currentStep === 'amount' ? 'text-blue-600 dark:text-blue-400 font-medium' : ''}>Amount</span>
-          <span className={currentStep === 'plan' ? 'text-blue-600 dark:text-blue-400 font-medium' : ''}>Plan</span>
-          <span className={currentStep === 'payment' ? 'text-blue-600 dark:text-blue-400 font-medium' : ''}>Payment</span>
-          <span className={currentStep === 'review' ? 'text-blue-600 dark:text-blue-400 font-medium' : ''}>Review</span>
+          <span className={currentStep === 'amount' ? 'text-blue-600 dark:text-blue-400 font-medium' : ''}>{t('installment.steps.amount')}</span>
+          <span className={currentStep === 'plan' ? 'text-blue-600 dark:text-blue-400 font-medium' : ''}>{t('installment.steps.plan')}</span>
+          <span className={currentStep === 'payment' ? 'text-blue-600 dark:text-blue-400 font-medium' : ''}>{t('installment.steps.payment')}</span>
+          <span className={currentStep === 'review' ? 'text-blue-600 dark:text-blue-400 font-medium' : ''}>{t('installment.steps.review')}</span>
         </div>
       </div>
 
@@ -229,15 +232,15 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100 mb-4">
-                Choose Purchase Amount
+                {t('installment.chooseAmount')}
               </h3>
               
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-                    Number of Tokens
+                    {t('amount.numberOfShares')}
                   </label>
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center gap-3">
                     <Input
                       type="number"
                       value={selectedTokens}
@@ -247,48 +250,48 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
                       className="flex-1"
                       error={errors.tokens}
                     />
-                    <div className="text-right">
+                    <div className="text-end">
                       <div className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
                         {formatCurrency(totalInvestment)}
                       </div>
                       <div className="text-sm text-neutral-500 dark:text-slate-400">
-                        Total Purchase
+                        {t('installment.totalPurchase')}
                       </div>
                     </div>
                   </div>
                   <div className="flex justify-between text-xs text-neutral-500 dark:text-slate-400 mt-1">
-                    <span>Min: {property.minimumTokens.toLocaleString()} tokens</span>
-                    <span>Available: {property.availableTokens.toLocaleString()} tokens</span>
+                    <span>{t('installment.minShares', { value: property.minimumTokens.toLocaleString() })}</span>
+                    <span>{t('amount.available', { available: property.availableTokens.toLocaleString() })}</span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-neutral-50 dark:bg-slate-700 rounded-lg">
                   <div>
-                    <div className="text-sm text-neutral-500 dark:text-slate-400">Risk Level</div>
+                    <div className="text-sm text-neutral-500 dark:text-slate-400">{t('installment.riskLevel')}</div>
                     <div className={`font-medium ${
                       property.riskLevel === 'low' ? 'text-green-600 dark:text-green-400' :
                       property.riskLevel === 'medium' ? 'text-yellow-600 dark:text-yellow-400' :
                       'text-red-600 dark:text-red-400'
                     }`}>
-                      {property.riskLevel.toUpperCase()}
+                      {t(`installment.risk.${property.riskLevel}`, { defaultValue: property.riskLevel.toUpperCase() })}
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-neutral-500 dark:text-slate-400">Est. Yield</div>
+                    <div className="text-sm text-neutral-500 dark:text-slate-400">{t('installment.estYield')}</div>
                     <div className="font-medium text-green-600 dark:text-green-400">
                       {property.estimatedYield}%
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-neutral-500 dark:text-slate-400">Status</div>
+                    <div className="text-sm text-neutral-500 dark:text-slate-400">{t('installment.status')}</div>
                     <div className="font-medium text-neutral-900 dark:text-slate-100">
                       {property.constructionStatus}
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm text-neutral-500 dark:text-slate-400">Completion</div>
+                    <div className="text-sm text-neutral-500 dark:text-slate-400">{t('installment.completion')}</div>
                     <div className="font-medium text-neutral-900 dark:text-slate-100">
-                      {new Date(property.expectedCompletion).toLocaleDateString()}
+                      {new Date(property.expectedCompletion).toLocaleDateString(dateLocale)}
                     </div>
                   </div>
                 </div>
@@ -302,7 +305,7 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100 mb-4">
-                Select Installment Plan
+                {t('installment.selectPlan')}
               </h3>
               
               <div className="space-y-4">
@@ -323,7 +326,7 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-2">
+                          <div className="flex items-center gap-2 mb-2">
                             <input
                               type="radio"
                               checked={selectedPlanId === plan.id}
@@ -340,25 +343,25 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
                           
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
-                              <span className="text-neutral-500 dark:text-slate-400">Down Payment</span>
+                              <span className="text-neutral-500 dark:text-slate-400">{t('schedule.downPayment')}</span>
                               <div className="font-medium text-neutral-900 dark:text-slate-100">
                                 {formatCurrency(planDownPayment)} ({plan.downPaymentPercentage}%)
                               </div>
                             </div>
                             <div>
-                              <span className="text-neutral-500 dark:text-slate-400">Installments</span>
+                              <span className="text-neutral-500 dark:text-slate-400">{t('installment.installments')}</span>
                               <div className="font-medium text-neutral-900 dark:text-slate-100">
                                 {plan.totalPayments} × {formatCurrency(planInstallment)}
                               </div>
                             </div>
                             <div>
-                              <span className="text-neutral-500 dark:text-slate-400">Total Cost</span>
+                              <span className="text-neutral-500 dark:text-slate-400">{t('schedule.totalCost')}</span>
                               <div className="font-medium text-neutral-900 dark:text-slate-100">
                                 {formatCurrency(planTotalWithInterest)}
                               </div>
                             </div>
                             <div>
-                              <span className="text-neutral-500 dark:text-slate-400">APR</span>
+                              <span className="text-neutral-500 dark:text-slate-400">{t('schedule.apr')}</span>
                               <div className="font-medium text-neutral-900 dark:text-slate-100">
                                 {plan.effectiveAPR}%
                               </div>
@@ -367,11 +370,11 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
 
                           {plan.benefits && plan.benefits.length > 0 && (
                             <div className="mt-3">
-                              <div className="text-sm font-medium text-green-700 dark:text-green-400 mb-1">Benefits:</div>
+                              <div className="text-sm font-medium text-green-700 dark:text-green-400 mb-1">{t('schedule.benefits')}</div>
                               <ul className="text-sm text-neutral-600 dark:text-slate-400 space-y-1">
                                 {plan.benefits.map((benefit, index) => (
                                   <li key={index} className="flex items-start">
-                                    <span className="text-green-500 mr-1">•</span>
+                                    <span className="text-green-500 me-1">•</span>
                                     {benefit}
                                   </li>
                                 ))}
@@ -397,15 +400,15 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100 mb-4">
-                Payment Method for Down Payment
+                {t('installment.downPaymentMethod')}
               </h3>
               
               <div className="space-y-3">
                 {[
-                  { id: 'credit_card', name: 'Credit Card', description: 'Instant processing', icon: '💳' },
-                  { id: 'bank_transfer', name: 'Bank Transfer', description: '1-3 business days', icon: '🏦' },
-                  { id: 'crypto', name: 'Cryptocurrency', description: 'USDC, ETH, BTC accepted', icon: '₿' },
-                  { id: 'wire', name: 'Wire Transfer', description: 'For large amounts', icon: '📄' }
+                  { id: 'credit_card', name: t('installment.methods.credit_card.name'), description: t('installment.methods.credit_card.description'), icon: '💳' },
+                  { id: 'bank_transfer', name: t('installment.methods.bank_transfer.name'), description: t('installment.methods.bank_transfer.description'), icon: '🏦' },
+                  { id: 'crypto', name: t('installment.methods.crypto.name'), description: t('installment.methods.crypto.description'), icon: '₿' },
+                  { id: 'wire', name: t('installment.methods.wire.name'), description: t('installment.methods.wire.description'), icon: '📄' }
                 ].map((method) => (
                   <div
                     key={method.id}
@@ -416,7 +419,7 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
                     }`}
                     onClick={() => setPaymentMethod(method.id)}
                   >
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-center gap-3">
                       <input
                         type="radio"
                         checked={paymentMethod === method.id}
@@ -449,35 +452,35 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100 mb-4">
-                Review Your Purchase
+                {t('installment.review')}
               </h3>
               
               <div className="space-y-4">
                 <div className="p-4 bg-neutral-50 dark:bg-slate-700 rounded-lg">
                   <h4 className="font-medium text-neutral-900 dark:text-slate-100 mb-3">
-                    Purchase Summary
+                    {t('amount.summary')}
                   </h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-neutral-500 dark:text-slate-400">Property</span>
+                      <span className="text-neutral-500 dark:text-slate-400">{t('confirmation.copy.property')}</span>
                       <div className="font-medium text-neutral-900 dark:text-slate-100">
                         {property.propertyName}
                       </div>
                     </div>
                     <div>
-                      <span className="text-neutral-500 dark:text-slate-400">Tokens</span>
+                      <span className="text-neutral-500 dark:text-slate-400">{t('common.shares')}</span>
                       <div className="font-medium text-neutral-900 dark:text-slate-100">
-                        {selectedTokens.toLocaleString()} tokens
+                        {t('installment.sharesValue', { value: selectedTokens.toLocaleString() })}
                       </div>
                     </div>
                     <div>
-                      <span className="text-neutral-500 dark:text-slate-400">Total Purchase</span>
+                      <span className="text-neutral-500 dark:text-slate-400">{t('installment.totalPurchase')}</span>
                       <div className="font-medium text-neutral-900 dark:text-slate-100">
                         {formatCurrency(totalInvestment)}
                       </div>
                     </div>
                     <div>
-                      <span className="text-neutral-500 dark:text-slate-400">Plan</span>
+                      <span className="text-neutral-500 dark:text-slate-400">{t('schedule.table.plan')}</span>
                       <div className="font-medium text-neutral-900 dark:text-slate-100">
                         {selectedPlan.name}
                       </div>
@@ -487,25 +490,25 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
 
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                   <h4 className="font-medium text-blue-800 dark:text-blue-300 mb-3">
-                    Payment Breakdown
+                    {t('installment.breakdown')}
                   </h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-blue-600 dark:text-blue-400">Down Payment (Due Now)</span>
+                      <span className="text-blue-600 dark:text-blue-400">{t('installment.downDueNow')}</span>
                       <span className="font-medium text-blue-800 dark:text-blue-300">
                         {formatCurrency(downPayment)}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-blue-600 dark:text-blue-400">
-                        {selectedPlan.totalPayments} Installments of
+                        {t('installment.installmentsOf', { value: selectedPlan.totalPayments })}
                       </span>
                       <span className="font-medium text-blue-800 dark:text-blue-300">
                         {formatCurrency(installmentAmount)}
                       </span>
                     </div>
                     <div className="flex justify-between border-t border-blue-200 dark:border-blue-700 pt-2">
-                      <span className="text-blue-600 dark:text-blue-400">Total with Interest</span>
+                      <span className="text-blue-600 dark:text-blue-400">{t('installment.totalWithInterest')}</span>
                       <span className="font-semibold text-blue-800 dark:text-blue-300">
                         {formatCurrency(totalWithInterest)}
                       </span>
@@ -515,11 +518,10 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
 
                 <div className="text-xs text-neutral-500 dark:text-slate-400">
                   <p className="mb-2">
-                    By proceeding, you agree to the terms and conditions of the installment purchase plan.
-                    Tokens will be reserved upon down payment and released according to the selected plan's schedule.
+                    {t('installment.terms')}
                   </p>
                   <p>
-                    First installment payment will be due 30 days after the down payment is processed.
+                    {t('installment.firstDue')}
                   </p>
                 </div>
               </div>
@@ -531,13 +533,13 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
       {/* Actions */}
       <div className="p-6 border-t border-neutral-200 dark:border-slate-700 bg-neutral-50 dark:bg-slate-900/50">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             <Button
               variant="outline"
               onClick={onCancel}
               disabled={isProcessing}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             {currentStep !== 'amount' && (
               <Button
@@ -545,7 +547,7 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
                 onClick={handlePrevious}
                 disabled={isProcessing}
               >
-                Previous
+                {t('installment.previous')}
               </Button>
             )}
           </div>
@@ -557,14 +559,14 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
             className="min-w-32"
           >
             {isProcessing ? (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Processing...</span>
+                <span>{t('installment.processing')}</span>
               </div>
             ) : currentStep === 'review' ? (
-              'Complete Purchase'
+              t('installment.complete')
             ) : (
-              'Next'
+              t('installment.next')
             )}
           </Button>
         </div>

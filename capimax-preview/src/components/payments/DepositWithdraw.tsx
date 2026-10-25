@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -32,6 +33,7 @@ interface DepositWithdrawProps {
 export function DepositWithdraw({ className, mode: initialMode = 'deposit', onClose }: DepositWithdrawProps) {
   const { state, getBalance, addTransaction, setError } = usePayment();
   const { state: authState } = useAuth();
+  const { t } = useTranslation('payments');
   const [mode, setMode] = useState<'deposit' | 'withdraw'>(initialMode);
   const [step, setStep] = useState<'method' | 'amount' | 'confirm' | 'processing' | 'complete'>('method');
   const [selectedMethod, setSelectedMethod] = useState<'crypto' | 'card' | 'bank' | 'paypal'>('crypto');
@@ -54,12 +56,12 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
     const numAmount = parseFloat(amount);
     
     if (!numAmount || numAmount < minAmount) {
-      setError(`Minimum amount is ${formatCurrency(minAmount, selectedCurrency)}`);
+      setError(t('depositWithdraw.errors.minAmount', { amount: formatCurrency(minAmount, selectedCurrency) }));
       return;
     }
     
     if (!isDeposit && numAmount > maxAmount) {
-      setError(`Insufficient balance. Available: ${formatCurrency(availableBalance, selectedCurrency)}`);
+      setError(t('depositWithdraw.errors.insufficient', { amount: formatCurrency(availableBalance, selectedCurrency) }));
       return;
     }
     
@@ -82,7 +84,7 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
         network: selectedMethod === 'crypto' ? 'ethereum' : undefined,
       } as any,
       timestamp: new Date(),
-      description: `${isDeposit ? 'Deposit' : 'Withdraw'} ${formatCurrency(parseFloat(amount), selectedCurrency)}`,
+      description: t(isDeposit ? 'depositWithdraw.txDeposit' : 'depositWithdraw.txWithdraw', { amount: formatCurrency(parseFloat(amount), selectedCurrency) }),
       fee: selectedMethod === 'crypto' ? 0.001 : parseFloat(amount) * 0.025, // Example fees
     };
     
@@ -105,12 +107,12 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
     <div className="space-y-4">
       <div className="text-center mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          {isDeposit ? 'Add Funds' : 'Withdraw Funds'}
+          {isDeposit ? t('depositWithdraw.addFunds') : t('depositWithdraw.withdrawFunds')}
         </h3>
         <p className="text-sm text-gray-600">
-          {isDeposit 
-            ? 'Choose your preferred deposit method'
-            : 'Select how you\'d like to receive your funds'
+          {isDeposit
+            ? t('depositWithdraw.chooseDeposit')
+            : t('depositWithdraw.chooseWithdraw')
           }
         </p>
       </div>
@@ -125,7 +127,7 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
               <Wallet className="h-6 w-6 text-orange-600" />
             </div>
             <div>
-              <h4 className="font-medium text-gray-900">Cryptocurrency</h4>
+              <h4 className="font-medium text-gray-900">{t('depositWithdraw.methodCards.crypto')}</h4>
               <p className="text-sm text-gray-600">ETH, BTC, USDT, USDC</p>
             </div>
           </div>
@@ -140,7 +142,7 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
               <CreditCard className="h-6 w-6 text-blue-600" />
             </div>
             <div>
-              <h4 className="font-medium text-gray-900">Credit/Debit Card</h4>
+              <h4 className="font-medium text-gray-900">{t('depositWithdraw.methodCards.card')}</h4>
               <p className="text-sm text-gray-600">Visa, Mastercard, Amex</p>
             </div>
           </div>
@@ -155,8 +157,8 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
               <Building2 className="h-6 w-6 text-emerald-600" />
             </div>
             <div>
-              <h4 className="font-medium text-gray-900">Bank Transfer</h4>
-              <p className="text-sm text-gray-600">ACH, Wire transfer</p>
+              <h4 className="font-medium text-gray-900">{t('depositWithdraw.methodCards.bank')}</h4>
+              <p className="text-sm text-gray-600">{t('depositWithdraw.methodCards.bankDesc')}</p>
             </div>
           </div>
         </Card>
@@ -171,7 +173,7 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
             </div>
             <div>
               <h4 className="font-medium text-gray-900">PayPal</h4>
-              <p className="text-sm text-gray-600">Digital payments</p>
+              <p className="text-sm text-gray-600">{t('depositWithdraw.methodCards.paypalDesc')}</p>
             </div>
           </div>
         </Card>
@@ -183,17 +185,17 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
     <div className="space-y-6">
       <div className="text-center">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Enter Amount
+          {t('depositWithdraw.enterAmount')}
         </h3>
         <p className="text-sm text-gray-600">
-          {isDeposit ? 'How much would you like to add?' : 'How much would you like to withdraw?'}
+          {isDeposit ? t('depositWithdraw.howMuchAdd') : t('depositWithdraw.howMuchWithdraw')}
         </p>
       </div>
 
       <div className="space-y-4">
         {selectedMethod === 'crypto' && (
           <Select
-            label="Currency"
+            label={t('depositWithdraw.currency')}
             value={selectedCurrency}
             onChange={setSelectedCurrency}
             options={ALL_CURRENCIES.map(currency => {
@@ -207,17 +209,17 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
         )}
 
         <Input
-          label="Amount"
+          label={t('depositWithdraw.amount')}
           type="number"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          placeholder={`Enter amount in ${selectedCurrency}`}
+          placeholder={t('depositWithdraw.amountPlaceholder', { currency: selectedCurrency })}
           step={selectedMethod === 'crypto' ? '0.000001' : '0.01'}
         />
 
         {!isDeposit && (
           <div className="text-sm text-gray-600">
-            Available balance: {formatCurrency(availableBalance, selectedCurrency)}
+            {t('depositWithdraw.availableBalance')} {formatCurrency(availableBalance, selectedCurrency)}
           </div>
         )}
 
@@ -225,11 +227,11 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
           <Card className="p-4 bg-gray-50">
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span>Amount:</span>
+                <span>{t('depositWithdraw.amountColon')}</span>
                 <span>{formatCurrency(parseFloat(amount) || 0, selectedCurrency)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Fee:</span>
+                <span>{t('depositWithdraw.feeColon')}</span>
                 <span>
                   {selectedMethod === 'crypto' 
                     ? formatCurrency(0.001, selectedCurrency)
@@ -238,7 +240,7 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
                 </span>
               </div>
               <div className="flex justify-between font-semibold border-t pt-2">
-                <span>Total:</span>
+                <span>{t('depositWithdraw.totalColon')}</span>
                 <span>
                   {isDeposit 
                     ? formatCurrency((parseFloat(amount) || 0) + (selectedMethod === 'crypto' ? 0.001 : (parseFloat(amount) || 0) * 0.025), selectedCurrency)
@@ -257,14 +259,14 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
           onClick={() => setStep('method')}
           className="flex-1"
         >
-          Back
+          {t('depositWithdraw.back')}
         </Button>
         <Button 
           onClick={handleAmountConfirm}
           disabled={!amount || parseFloat(amount) < minAmount}
           className="flex-1 bg-emerald-600 hover:bg-emerald-700"
         >
-          Continue
+          {t('depositWithdraw.continue')}
         </Button>
       </div>
     </div>
@@ -274,25 +276,25 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
     <div className="space-y-6">
       <div className="text-center">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Confirm {isDeposit ? 'Deposit' : 'Withdrawal'}
+          {isDeposit ? t('depositWithdraw.confirmDepositTitle') : t('depositWithdraw.confirmWithdrawalTitle')}
         </h3>
         <p className="text-sm text-gray-600">
-          Please review your transaction details
+          {t('depositWithdraw.reviewDetails')}
         </p>
       </div>
 
       <Card className="p-6 bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="font-medium">Amount:</span>
+            <span className="font-medium">{t('depositWithdraw.amountColon')}</span>
             <span className="text-lg font-semibold">{formatCurrency(parseFloat(amount), selectedCurrency)}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="font-medium">Method:</span>
-            <span className="capitalize">{selectedMethod}</span>
+            <span className="font-medium">{t('depositWithdraw.methodColon')}</span>
+            <span className="capitalize">{t(`depositWithdraw.methods.${selectedMethod}`)}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="font-medium">Fee:</span>
+            <span className="font-medium">{t('depositWithdraw.feeColon')}</span>
             <span>
               {selectedMethod === 'crypto' 
                 ? formatCurrency(0.001, selectedCurrency)
@@ -308,8 +310,8 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
           <div className="flex items-start gap-3">
             <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
             <div className="text-sm text-yellow-800">
-              <p className="font-medium mb-1">Important:</p>
-              <p>Only send {selectedCurrency} to this address. Sending other currencies may result in loss of funds.</p>
+              <p className="font-medium mb-1">{t('depositWithdraw.important')}</p>
+              <p>{t('depositWithdraw.onlySend', { currency: selectedCurrency })}</p>
             </div>
           </div>
         </Card>
@@ -321,13 +323,13 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
           onClick={() => setStep('amount')}
           className="flex-1"
         >
-          Back
+          {t('depositWithdraw.back')}
         </Button>
         <Button 
           onClick={handleConfirmTransaction}
           className="flex-1 bg-emerald-600 hover:bg-emerald-700"
         >
-          {isDeposit ? 'Confirm Deposit' : 'Confirm Withdrawal'}
+          {isDeposit ? t('depositWithdraw.confirmDeposit') : t('depositWithdraw.confirmWithdrawal')}
         </Button>
       </div>
     </div>
@@ -341,27 +343,27 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
       
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Processing Transaction
+          {t('depositWithdraw.processingTitle')}
         </h3>
         <p className="text-sm text-gray-600">
-          Please wait while we process your {isDeposit ? 'deposit' : 'withdrawal'}
+          {isDeposit ? t('depositWithdraw.processingDeposit') : t('depositWithdraw.processingWithdrawal')}
         </p>
       </div>
 
       {processingTx && (
-        <Card className="p-4 bg-blue-50 border-blue-200 text-left">
+        <Card className="p-4 bg-blue-50 border-blue-200 text-start">
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span>Transaction ID:</span>
+              <span>{t('depositWithdraw.txId')}</span>
               <span className="font-mono text-xs">{processingTx.id}</span>
             </div>
             <div className="flex justify-between">
-              <span>Amount:</span>
+              <span>{t('depositWithdraw.amountColon')}</span>
               <span>{formatCurrency(processingTx.amount, processingTx.currency)}</span>
             </div>
             <div className="flex justify-between">
-              <span>Status:</span>
-              <span className="capitalize">{processingTx.status}</span>
+              <span>{t('depositWithdraw.statusColon')}</span>
+              <span className="capitalize">{t(`status.${processingTx.status}`, { defaultValue: processingTx.status })}</span>
             </div>
           </div>
         </Card>
@@ -377,26 +379,26 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
       
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Transaction Complete
+          {t('depositWithdraw.completeTitle')}
         </h3>
         <p className="text-sm text-gray-600">
-          Your {isDeposit ? 'deposit' : 'withdrawal'} has been processed successfully
+          {isDeposit ? t('depositWithdraw.completeDeposit') : t('depositWithdraw.completeWithdrawal')}
         </p>
       </div>
 
       {processingTx && (
-        <Card className="p-4 bg-emerald-50 border-emerald-200 text-left">
+        <Card className="p-4 bg-emerald-50 border-emerald-200 text-start">
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span>Transaction ID:</span>
+              <span>{t('depositWithdraw.txId')}</span>
               <span className="font-mono text-xs">{processingTx.id}</span>
             </div>
             <div className="flex justify-between">
-              <span>Amount:</span>
+              <span>{t('depositWithdraw.amountColon')}</span>
               <span>{formatCurrency(processingTx.amount, processingTx.currency)}</span>
             </div>
             <div className="flex justify-between">
-              <span>New Balance:</span>
+              <span>{t('depositWithdraw.newBalance')}</span>
               <span>{formatCurrency(getBalance(processingTx.currency), processingTx.currency)}</span>
             </div>
           </div>
@@ -405,10 +407,10 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
 
       <div className="flex gap-3">
         <Button variant="outline" onClick={resetForm} className="flex-1">
-          {isDeposit ? 'Deposit More' : 'Withdraw More'}
+          {isDeposit ? t('depositWithdraw.depositMore') : t('depositWithdraw.withdrawMore')}
         </Button>
         <Button onClick={onClose} className="flex-1 bg-emerald-600 hover:bg-emerald-700">
-          Done
+          {t('depositWithdraw.done')}
         </Button>
       </div>
     </div>
@@ -432,7 +434,7 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
             }`}
           >
             <ArrowDownLeft className="h-4 w-4" />
-            Deposit
+            {t('depositWithdraw.deposit')}
           </button>
           <button
             onClick={() => {
@@ -446,7 +448,7 @@ export function DepositWithdraw({ className, mode: initialMode = 'deposit', onCl
             }`}
           >
             <ArrowUpRight className="h-4 w-4" />
-            Withdraw
+            {t('depositWithdraw.withdraw')}
           </button>
         </div>
 

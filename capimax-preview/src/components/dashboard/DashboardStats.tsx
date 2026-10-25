@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export interface StatItem {
   id: string;
@@ -27,6 +28,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
   error,
   onRefresh
 }) => {
+  const { t } = useTranslation('dashboard');
   const getChangeColor = (changeType?: 'positive' | 'negative' | 'neutral') => {
     switch (changeType) {
       case 'positive':
@@ -62,7 +64,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
               onClick={onRefresh}
               className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
-              Retry
+              {t('stats.retry')}
             </button>
           )}
         </div>
@@ -108,7 +110,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
                 {stat.value}
               </p>
               {stat.change && (
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center gap-1">
                   <span className={`text-sm font-medium ${getChangeColor(stat.changeType)}`}>
                     {getChangeIcon(stat.changeType)} {stat.change}
                   </span>

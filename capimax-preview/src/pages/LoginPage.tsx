@@ -5,11 +5,13 @@ import { PasswordRecoveryForm } from '../components/auth/PasswordRecoveryForm';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from '../utils/router';
 import { AuthService } from '../services/auth/AuthService';
+import { useTranslation } from 'react-i18next';
 
 type LoginStep = 'login' | 'forgot-password' | 'success';
 
 export const LoginPage: React.FC = () => {
   const { state: authState } = useAuth();
+  const { t } = useTranslation('ui');
   const { navigate } = useRouter();
   const [currentStep, setCurrentStep] = useState<LoginStep>('login');
 
@@ -45,7 +47,7 @@ export const LoginPage: React.FC = () => {
     } catch (error: any) {
       console.error('❌ Password reset request failed:', error);
       // Set a user-friendly error message
-      const errorMessage = error?.message || 'Failed to send reset email. Please try again.';
+      const errorMessage = error?.message || t('loginPage.resetFailed');
       setPasswordResetError(errorMessage);
     } finally {
       setPasswordResetLoading(false);
@@ -99,14 +101,14 @@ export const LoginPage: React.FC = () => {
             </div>
             <div>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                Welcome Back!
+                {t('loginPage.successTitle')}
               </h2>
               <p className="text-slate-600 dark:text-slate-400">
-                You have successfully signed in to your account.
+                {t('loginPage.successMsg')}
               </p>
             </div>
             <div className="text-sm text-slate-500 dark:text-slate-400">
-              Redirecting to dashboard...
+              {t('loginPage.redirecting')}
             </div>
           </div>
         );
@@ -118,8 +120,8 @@ export const LoginPage: React.FC = () => {
 
   return (
     <AuthLayout
-      title="Welcome Back"
-      subtitle="Sign in to access your real estate ownership portfolio and discover new opportunities"
+      title={t('loginPage.layoutTitle')}
+      subtitle={t('loginPage.layoutSubtitle')}
     >
       {renderCurrentStep()}
     </AuthLayout>

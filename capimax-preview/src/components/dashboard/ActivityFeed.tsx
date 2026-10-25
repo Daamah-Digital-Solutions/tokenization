@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export interface ActivityItem {
   id: string;
@@ -23,13 +24,14 @@ interface ActivityFeedProps {
 
 export const ActivityFeed: React.FC<ActivityFeedProps> = ({
   activities,
-  title = 'Recent Activity',
+  title,
   maxItems = 10,
   showViewAll = false,
   onViewAll,
   className = '',
   loading = false
 }) => {
+  const { t, i18n } = useTranslation('dashboard');
   const getActivityIcon = (type: ActivityItem['type'], customIcon?: string) => {
     if (customIcon) return customIcon;
     
@@ -71,11 +73,11 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
+    if (diffMins < 1) return t('activity.justNow');
+    if (diffMins < 60) return t('activity.minutesAgo', { count: diffMins });
+    if (diffHours < 24) return t('activity.hoursAgo', { count: diffHours });
+    if (diffDays < 7) return t('activity.daysAgo', { count: diffDays });
+    return date.toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : undefined);
   };
 
   const displayedActivities = activities.slice(0, maxItems);
@@ -85,14 +87,14 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
       <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            {title}
+            {title ?? t('activity.title')}
           </h3>
           {showViewAll && onViewAll && (
             <button
               onClick={onViewAll}
               className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
             >
-              View All
+              {t('activity.viewAll')}
             </button>
           )}
         </div>
@@ -104,7 +106,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="flex items-start space-x-4 p-4 rounded-lg animate-pulse"
+                className="flex items-start gap-4 p-4 rounded-lg animate-pulse"
               >
                 <div className="flex-shrink-0">
                   <div className="w-10 h-10 bg-neutral-200 dark:bg-slate-600 rounded-full"></div>
@@ -128,7 +130,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
           <div className="text-center py-8">
             <span className="text-4xl mb-4 block opacity-50">📋</span>
             <p className="text-neutral-500 dark:text-slate-400">
-              No recent activity to display
+              {t('activity.empty')}
             </p>
           </div>
         ) : (
@@ -136,7 +138,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
             {displayedActivities.map((activity) => (
               <div
                 key={activity.id}
-                className="flex items-start space-x-4 p-4 rounded-lg hover:bg-neutral-50 dark:hover:bg-slate-700/50 transition-colors"
+                className="flex items-start gap-4 p-4 rounded-lg hover:bg-neutral-50 dark:hover:bg-slate-700/50 transition-colors"
               >
                 {/* Activity Icon */}
                 <div className="flex-shrink-0">
@@ -158,13 +160,13 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
                         {activity.description}
                       </p>
                       
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-2">
                         <span className="text-xs text-neutral-400 dark:text-slate-500">
                           {formatTimestamp(activity.timestamp)}
                         </span>
                         {activity.status && (
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(activity.status)}`}>
-                            {activity.status}
+                            {t(`status.${activity.status}`, { defaultValue: activity.status })}
                           </span>
                         )}
                       </div>
@@ -172,7 +174,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
 
                     {/* Amount */}
                     {activity.amount && (
-                      <div className="flex-shrink-0 text-right">
+                      <div className="flex-shrink-0 text-end">
                         <span className={`text-sm font-semibold ${
                           activity.type === 'investment' || activity.type === 'dividend' 
                             ? 'text-green-600 dark:text-green-400' 

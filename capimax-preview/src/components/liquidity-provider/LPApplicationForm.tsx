@@ -5,6 +5,7 @@ import {
   CheckCircle, AlertCircle, Loader2, ChevronRight, ChevronLeft
 } from 'lucide-react';
 import { apiClient } from '../../services/api/ApiClient';
+import { useTranslation, Trans } from 'react-i18next';
 
 interface LPApplicationFormData {
   // Entity Information
@@ -79,6 +80,7 @@ interface LPApplicationFormProps {
 }
 
 export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess, onCancel }) => {
+  const { t } = useTranslation('brokerui');
   const [formData, setFormData] = useState<LPApplicationFormData>(initialFormData);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -116,36 +118,36 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
     const newErrors: Partial<Record<keyof LPApplicationFormData, string>> = {};
 
     if (step === 1) {
-      if (!formData.legal_entity_name) newErrors.legal_entity_name = 'Required';
-      if (!formData.country) newErrors.country = 'Required';
-      if (!formData.jurisdiction) newErrors.jurisdiction = 'Required';
-      if (!formData.registration_number) newErrors.registration_number = 'Required';
+      if (!formData.legal_entity_name) newErrors.legal_entity_name = t('lp.required');
+      if (!formData.country) newErrors.country = t('lp.required');
+      if (!formData.jurisdiction) newErrors.jurisdiction = t('lp.required');
+      if (!formData.registration_number) newErrors.registration_number = t('lp.required');
     }
 
     if (step === 2) {
-      if (!formData.contact_person_name) newErrors.contact_person_name = 'Required';
-      if (!formData.contact_position) newErrors.contact_position = 'Required';
-      if (!formData.official_email) newErrors.official_email = 'Required';
-      else if (!/\S+@\S+\.\S+/.test(formData.official_email)) newErrors.official_email = 'Invalid email';
-      if (!formData.phone_number) newErrors.phone_number = 'Required';
+      if (!formData.contact_person_name) newErrors.contact_person_name = t('lp.required');
+      if (!formData.contact_position) newErrors.contact_position = t('lp.required');
+      if (!formData.official_email) newErrors.official_email = t('lp.required');
+      else if (!/\S+@\S+\.\S+/.test(formData.official_email)) newErrors.official_email = t('lp.invalidEmail');
+      if (!formData.phone_number) newErrors.phone_number = t('lp.required');
     }
 
     if (step === 3) {
-      if (!formData.approximate_liquidity_available) newErrors.approximate_liquidity_available = 'Required';
-      if (formData.preferred_currencies.length === 0) newErrors.preferred_currencies = 'Select at least one';
-      if (!formData.average_transaction_size) newErrors.average_transaction_size = 'Required';
+      if (!formData.approximate_liquidity_available) newErrors.approximate_liquidity_available = t('lp.required');
+      if (formData.preferred_currencies.length === 0) newErrors.preferred_currencies = t('lp.selectOne');
+      if (!formData.average_transaction_size) newErrors.average_transaction_size = t('lp.required');
     }
 
     if (step === 4) {
-      if (!formData.expected_discount_rate) newErrors.expected_discount_rate = 'Required';
-      if (!formData.max_per_transaction) newErrors.max_per_transaction = 'Required';
-      if (!formData.max_per_month) newErrors.max_per_month = 'Required';
+      if (!formData.expected_discount_rate) newErrors.expected_discount_rate = t('lp.required');
+      if (!formData.max_per_transaction) newErrors.max_per_transaction = t('lp.required');
+      if (!formData.max_per_month) newErrors.max_per_month = t('lp.required');
     }
 
     if (step === 5) {
-      if (!formData.ack_independent_provider) newErrors.ack_independent_provider = 'Must acknowledge';
-      if (!formData.ack_no_exit_guarantee) newErrors.ack_no_exit_guarantee = 'Must acknowledge';
-      if (!formData.ack_compliance_agreement) newErrors.ack_compliance_agreement = 'Must agree';
+      if (!formData.ack_independent_provider) newErrors.ack_independent_provider = t('lp.mustAcknowledge');
+      if (!formData.ack_no_exit_guarantee) newErrors.ack_no_exit_guarantee = t('lp.mustAcknowledge');
+      if (!formData.ack_compliance_agreement) newErrors.ack_compliance_agreement = t('lp.mustAgree');
     }
 
     setErrors(newErrors);
@@ -184,7 +186,7 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
       setSubmitSuccess(true);
       onSuccess?.();
     } catch (error: any) {
-      const message = error.response?.data?.message || error.message || 'Failed to submit application';
+      const message = error.response?.data?.message || error.message || t('lp.errSubmit');
       setSubmitError(message);
     } finally {
       setIsSubmitting(false);
@@ -202,11 +204,10 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
           <CheckCircle className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
         </div>
         <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
-          Application Submitted
+          {t('lp.submittedTitle')}
         </h3>
         <p className="text-slate-600 dark:text-slate-400 max-w-md mx-auto">
-          Thank you for your application. Our team will review your submission and contact you
-          within 5-7 business days.
+          {t('lp.submittedDesc')}
         </p>
       </motion.div>
     );
@@ -218,13 +219,13 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-              Entity Information
+              {t('lp.entityInfo')}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Legal Entity Name *
+                  {t('lp.legalName')}
                 </label>
                 <input
                   type="text"
@@ -232,14 +233,14 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
                   value={formData.legal_entity_name}
                   onChange={handleChange}
                   className={`w-full px-4 py-3 rounded-lg border ${errors.legal_entity_name ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'} bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500`}
-                  placeholder="Company Name Ltd."
+                  placeholder={t('lp.legalNamePh')}
                 />
                 {errors.legal_entity_name && <p className="text-red-500 text-sm mt-1">{errors.legal_entity_name}</p>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Entity Type *
+                  {t('lp.entityType')}
                 </label>
                 <select
                   name="entity_type"
@@ -248,14 +249,14 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
                   className="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 >
                   {entityTypes.map(type => (
-                    <option key={type.value} value={type.value}>{type.label}</option>
+                    <option key={type.value} value={type.value}>{t(`lp.entity.${type.value}`, { defaultValue: type.label })}</option>
                   ))}
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Country *
+                  {t('lp.country')}
                 </label>
                 <input
                   type="text"
@@ -263,14 +264,14 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
                   value={formData.country}
                   onChange={handleChange}
                   className={`w-full px-4 py-3 rounded-lg border ${errors.country ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'} bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500`}
-                  placeholder="United Arab Emirates"
+                  placeholder={t('lp.countryPh')}
                 />
                 {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Jurisdiction *
+                  {t('lp.jurisdiction')}
                 </label>
                 <input
                   type="text"
@@ -278,14 +279,14 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
                   value={formData.jurisdiction}
                   onChange={handleChange}
                   className={`w-full px-4 py-3 rounded-lg border ${errors.jurisdiction ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'} bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500`}
-                  placeholder="DIFC, Dubai"
+                  placeholder={t('lp.jurisdictionPh')}
                 />
                 {errors.jurisdiction && <p className="text-red-500 text-sm mt-1">{errors.jurisdiction}</p>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Registration Number *
+                  {t('lp.registrationNumber')}
                 </label>
                 <input
                   type="text"
@@ -300,7 +301,7 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Website (Optional)
+                  {t('lp.website')}
                 </label>
                 <input
                   type="url"
@@ -319,13 +320,13 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-              Contact Information
+              {t('lp.contactInfo')}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Contact Person Name *
+                  {t('lp.contactName')}
                 </label>
                 <input
                   type="text"
@@ -333,14 +334,14 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
                   value={formData.contact_person_name}
                   onChange={handleChange}
                   className={`w-full px-4 py-3 rounded-lg border ${errors.contact_person_name ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'} bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500`}
-                  placeholder="John Smith"
+                  placeholder={t('lp.contactNamePh')}
                 />
                 {errors.contact_person_name && <p className="text-red-500 text-sm mt-1">{errors.contact_person_name}</p>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Position / Title *
+                  {t('lp.position')}
                 </label>
                 <input
                   type="text"
@@ -348,14 +349,14 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
                   value={formData.contact_position}
                   onChange={handleChange}
                   className={`w-full px-4 py-3 rounded-lg border ${errors.contact_position ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'} bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500`}
-                  placeholder="Chief Investment Officer"
+                  placeholder={t('lp.positionPh')}
                 />
                 {errors.contact_position && <p className="text-red-500 text-sm mt-1">{errors.contact_position}</p>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Official Email *
+                  {t('lp.officialEmail')}
                 </label>
                 <input
                   type="email"
@@ -370,7 +371,7 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Phone Number *
+                  {t('lp.phone')}
                 </label>
                 <input
                   type="tel"
@@ -390,13 +391,13 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-              Financial Information
+              {t('lp.financialInfo')}
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Approximate Liquidity Available (USD) *
+                  {t('lp.liquidity')}
                 </label>
                 <input
                   type="number"
@@ -412,7 +413,7 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Average Transaction Size (USD) *
+                  {t('lp.avgTxSize')}
                 </label>
                 <input
                   type="number"
@@ -429,7 +430,7 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
 
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                Preferred Currencies *
+                {t('lp.currencies')}
               </label>
               <div className="flex flex-wrap gap-3">
                 {currencyOptions.map(currency => (
@@ -443,7 +444,7 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
                         : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-500'
                     }`}
                   >
-                    {currency}
+                    {t(`lp.currency.${currency}`, { defaultValue: currency })}
                   </button>
                 ))}
               </div>
@@ -456,12 +457,12 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-              Operating Policy
+              {t('lp.operatingPolicy')}
             </h3>
 
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                Target Asset Types
+                {t('lp.targetAssets')}
               </label>
               <div className="space-y-3">
                 <label className="flex items-center gap-3 cursor-pointer">
@@ -472,7 +473,7 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
                     onChange={handleChange}
                     className="w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500"
                   />
-                  <span className="text-slate-700 dark:text-slate-300">Ready / Completed Properties</span>
+                  <span className="text-slate-700 dark:text-slate-300">{t('lp.readyProps')}</span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
@@ -482,7 +483,7 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
                     onChange={handleChange}
                     className="w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500"
                   />
-                  <span className="text-slate-700 dark:text-slate-300">Properties Under Construction</span>
+                  <span className="text-slate-700 dark:text-slate-300">{t('lp.underConstruction')}</span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
@@ -492,7 +493,7 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
                     onChange={handleChange}
                     className="w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500"
                   />
-                  <span className="text-slate-700 dark:text-slate-300">Property Portfolios</span>
+                  <span className="text-slate-700 dark:text-slate-300">{t('lp.portfolios')}</span>
                 </label>
               </div>
             </div>
@@ -500,7 +501,7 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Expected Discount Rate (%) *
+                  {t('lp.discountRate')}
                 </label>
                 <input
                   type="number"
@@ -518,7 +519,7 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Max Per Transaction (USD) *
+                  {t('lp.maxPerTx')}
                 </label>
                 <input
                   type="number"
@@ -534,7 +535,7 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Max Per Month (USD) *
+                  {t('lp.maxPerMonth')}
                 </label>
                 <input
                   type="number"
@@ -555,14 +556,14 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-              Acknowledgments
+              {t('lp.acknowledgments')}
             </h3>
 
             <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-4 mb-6">
               <div className="flex gap-3">
                 <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-amber-800 dark:text-amber-200">
-                  Please read and acknowledge the following statements carefully before submitting your application.
+                  {t('lp.ackIntro')}
                 </p>
               </div>
             </div>
@@ -577,7 +578,7 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
                   className="w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500 mt-0.5"
                 />
                 <span className="text-slate-700 dark:text-slate-300 text-sm">
-                  I acknowledge that the liquidity provider operates as an <strong>independent third party</strong> and is not affiliated with, endorsed by, or representing Capimax RT or any SPV.
+                  <Trans t={t} i18nKey="lp.ack1" components={{ strong: <strong /> }} />
                 </span>
               </label>
 
@@ -590,7 +591,7 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
                   className="w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500 mt-0.5"
                 />
                 <span className="text-slate-700 dark:text-slate-300 text-sm">
-                  I understand that as a liquidity provider, I am <strong>not obligated to guarantee exits</strong>, buy all requests, maintain fixed pricing, or provide permanent liquidity.
+                  <Trans t={t} i18nKey="lp.ack2" components={{ strong: <strong /> }} />
                 </span>
               </label>
 
@@ -603,7 +604,7 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
                   className="w-5 h-5 rounded border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-500 mt-0.5"
                 />
                 <span className="text-slate-700 dark:text-slate-300 text-sm">
-                  I agree to comply with all platform terms, conditions, and applicable regulations, and to undergo the KYB (Know Your Business) verification process.
+                  {t('lp.ack3')}
                 </span>
               </label>
             </div>
@@ -621,10 +622,10 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
       <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-            Step {currentStep} of {totalSteps}
+            {t('lp.stepOf', { step: currentStep, total: totalSteps })}
           </span>
           <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
-            {Math.round((currentStep / totalSteps) * 100)}% Complete
+            {t('lp.percentComplete', { value: Math.round((currentStep / totalSteps) * 100) })}
           </span>
         </div>
         <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -659,8 +660,8 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
             onClick={currentStep === 1 ? onCancel : handlePrev}
             className="flex items-center gap-2 px-4 py-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
           >
-            <ChevronLeft className="w-4 h-4" />
-            {currentStep === 1 ? 'Cancel' : 'Previous'}
+            <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
+            {currentStep === 1 ? t('lp.cancel') : t('lp.previous')}
           </button>
 
           {currentStep < totalSteps ? (
@@ -669,8 +670,8 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
               onClick={handleNext}
               className="flex items-center gap-2 px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors"
             >
-              Next
-              <ChevronRight className="w-4 h-4" />
+              {t('lp.next')}
+              <ChevronRight className="w-4 h-4 rtl:rotate-180" />
             </button>
           ) : (
             <button
@@ -681,11 +682,11 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Submitting...
+                  {t('lp.submitting')}
                 </>
               ) : (
                 <>
-                  Submit Application
+                  {t('lp.submit')}
                   <CheckCircle className="w-4 h-4" />
                 </>
               )}

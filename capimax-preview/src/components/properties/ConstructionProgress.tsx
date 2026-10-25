@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export interface ConstructionMilestone {
   id: string;
@@ -50,6 +51,7 @@ export const ConstructionProgress: React.FC<ConstructionProgressProps> = ({
   onMilestoneClick,
   className = ''
 }) => {
+  const { t, i18n } = useTranslation('propui');
   const [selectedMilestone, setSelectedMilestone] = useState<string | null>(null);
   const [showAllMilestones, setShowAllMilestones] = useState(false);
 
@@ -88,7 +90,7 @@ export const ConstructionProgress: React.FC<ConstructionProgressProps> = ({
   const milestonesToShow = showAllMilestones ? progressData.milestones : progressData.milestones.slice(0, 5);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
@@ -102,11 +104,11 @@ export const ConstructionProgress: React.FC<ConstructionProgressProps> = ({
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
     if (diffDays > 0) {
-      return `in ${diffDays} days`;
+      return t('progress.inDays', { count: diffDays });
     } else if (diffDays === 0) {
-      return 'today';
+      return t('progress.today');
     } else {
-      return `${Math.abs(diffDays)} days ago`;
+      return t('progress.daysAgo', { count: Math.abs(diffDays) });
     }
   };
 
@@ -117,18 +119,18 @@ export const ConstructionProgress: React.FC<ConstructionProgressProps> = ({
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100">
-              Construction Progress
+              {t('progress.title')}
             </h2>
             <p className="text-sm text-neutral-600 dark:text-slate-400 mt-1">
               {progressData.propertyName}
             </p>
           </div>
-          <div className="text-right">
+          <div className="text-end">
             <div className="text-2xl font-bold text-neutral-900 dark:text-slate-100">
               {progressData.overallProgress}%
             </div>
             <div className="text-sm text-neutral-500 dark:text-slate-400">
-              Overall Complete
+              {t('progress.overallComplete')}
             </div>
           </div>
         </div>
@@ -137,15 +139,15 @@ export const ConstructionProgress: React.FC<ConstructionProgressProps> = ({
         <div className="mt-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-neutral-700 dark:text-slate-300">
-              Current Phase: {progressData.currentPhase}
+              {t('progress.currentPhase', { phase: progressData.currentPhase })}
             </span>
             <span className="text-sm text-neutral-600 dark:text-slate-400">
-              {completedMilestones} of {totalMilestones} milestones complete
+              {t('progress.milestonesComplete', { done: completedMilestones, total: totalMilestones })}
             </span>
           </div>
           <div className="w-full bg-neutral-200 dark:bg-slate-700 rounded-full h-3">
             <div
-              className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500"
+              className="bg-gradient-to-r rtl:bg-gradient-to-l from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500"
               style={{ width: `${progressData.overallProgress}%` }}
             ></div>
           </div>
@@ -154,24 +156,24 @@ export const ConstructionProgress: React.FC<ConstructionProgressProps> = ({
         {/* Timeline Info */}
         <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
           <div>
-            <p className="text-neutral-500 dark:text-slate-400">Started</p>
+            <p className="text-neutral-500 dark:text-slate-400">{t('progress.started')}</p>
             <p className="font-medium text-neutral-900 dark:text-slate-100">
               {formatDate(progressData.timeline.startDate)}
             </p>
           </div>
           <div>
-            <p className="text-neutral-500 dark:text-slate-400">Planned Completion</p>
+            <p className="text-neutral-500 dark:text-slate-400">{t('progress.plannedCompletion')}</p>
             <p className="font-medium text-neutral-900 dark:text-slate-100">
               {formatDate(progressData.timeline.plannedCompletion)}
             </p>
             {progressData.timeline.revisedCompletion && (
               <p className="text-xs text-orange-600 dark:text-orange-400">
-                Revised: {formatDate(progressData.timeline.revisedCompletion)}
+                {t('progress.revised', { date: formatDate(progressData.timeline.revisedCompletion) })}
               </p>
             )}
           </div>
           <div>
-            <p className="text-neutral-500 dark:text-slate-400">Last Updated</p>
+            <p className="text-neutral-500 dark:text-slate-400">{t('progress.lastUpdated')}</p>
             <p className="font-medium text-neutral-900 dark:text-slate-100">
               {formatDate(progressData.lastUpdated)}
             </p>
@@ -185,7 +187,7 @@ export const ConstructionProgress: React.FC<ConstructionProgressProps> = ({
           {milestonesToShow.map((milestone, index) => (
             <div
               key={milestone.id}
-              className={`relative flex items-start space-x-4 p-4 rounded-lg cursor-pointer transition-colors ${
+              className={`relative flex items-start gap-4 p-4 rounded-lg cursor-pointer transition-colors ${
                 selectedMilestone === milestone.id
                   ? 'bg-primary-50 dark:bg-primary-900/20'
                   : 'hover:bg-neutral-50 dark:hover:bg-slate-700'
@@ -197,7 +199,7 @@ export const ConstructionProgress: React.FC<ConstructionProgressProps> = ({
             >
               {/* Timeline Line */}
               {index < milestonesToShow.length - 1 && (
-                <div className="absolute left-6 top-12 w-0.5 h-16 bg-neutral-200 dark:bg-slate-600"></div>
+                <div className="absolute start-6 top-12 w-0.5 h-16 bg-neutral-200 dark:bg-slate-600"></div>
               )}
 
               {/* Status Icon */}
@@ -216,13 +218,13 @@ export const ConstructionProgress: React.FC<ConstructionProgressProps> = ({
                   <h4 className="font-semibold text-neutral-900 dark:text-slate-100">
                     {milestone.title}
                   </h4>
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center gap-4">
                     <span className={`text-sm font-medium ${getStatusText(milestone.status)}`}>
-                      {milestone.status.replace('_', ' ').toUpperCase()}
+                      {t(`progress.status.${milestone.status}`, { defaultValue: milestone.status.replace('_', ' ').toUpperCase() })}
                     </span>
                     {showPaymentInfo && milestone.paymentRequired && (
                       <span className="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 text-xs font-medium rounded-full">
-                        Payment Required
+                        {t('progress.paymentRequired')}
                       </span>
                     )}
                   </div>
@@ -233,13 +235,13 @@ export const ConstructionProgress: React.FC<ConstructionProgressProps> = ({
                 </p>
 
                 <div className="flex items-center justify-between mt-2">
-                  <div className="flex items-center space-x-4 text-sm">
+                  <div className="flex items-center gap-4 text-sm">
                     <span className="text-neutral-500 dark:text-slate-400">
-                      Planned: {formatDate(milestone.plannedDate)}
+                      {t('progress.planned', { date: formatDate(milestone.plannedDate) })}
                     </span>
                     {milestone.completedDate ? (
                       <span className="text-green-600 dark:text-green-400">
-                        Completed: {formatDate(milestone.completedDate)}
+                        {t('progress.completedOn', { date: formatDate(milestone.completedDate) })}
                       </span>
                     ) : (
                       <span className="text-neutral-500 dark:text-slate-400">
@@ -248,7 +250,7 @@ export const ConstructionProgress: React.FC<ConstructionProgressProps> = ({
                     )}
                   </div>
                   {milestone.progress > 0 && milestone.status !== 'completed' && (
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2">
                       <div className="w-16 bg-neutral-200 dark:bg-slate-600 rounded-full h-1">
                         <div
                           className="bg-blue-500 h-1 rounded-full"
@@ -266,7 +268,7 @@ export const ConstructionProgress: React.FC<ConstructionProgressProps> = ({
                 {showPaymentInfo && milestone.paymentRequired && milestone.paymentAmount && (
                   <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded">
                     <p className="text-sm text-yellow-800 dark:text-yellow-300">
-                      Payment Required: ${milestone.paymentAmount.toLocaleString()}
+                      {t('progress.paymentRequiredAmount', { amount: `$${milestone.paymentAmount.toLocaleString()}` })}
                     </p>
                   </div>
                 )}
@@ -275,7 +277,7 @@ export const ConstructionProgress: React.FC<ConstructionProgressProps> = ({
                 {milestone.status === 'delayed' && milestone.delayReason && (
                   <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded">
                     <p className="text-sm text-red-800 dark:text-red-300">
-                      <strong>Delayed:</strong> {milestone.delayReason}
+                      <strong>{t('progress.delayed')}</strong> {milestone.delayReason}
                     </p>
                   </div>
                 )}
@@ -285,7 +287,7 @@ export const ConstructionProgress: React.FC<ConstructionProgressProps> = ({
                   <div className="mt-4 p-4 bg-white dark:bg-slate-900 border border-neutral-200 dark:border-slate-600 rounded-lg">
                     {milestone.notes && (
                       <div className="mb-4">
-                        <h5 className="font-medium text-neutral-900 dark:text-slate-100 mb-2">Notes</h5>
+                        <h5 className="font-medium text-neutral-900 dark:text-slate-100 mb-2">{t('progress.notes')}</h5>
                         <p className="text-sm text-neutral-600 dark:text-slate-400">
                           {milestone.notes}
                         </p>
@@ -295,14 +297,14 @@ export const ConstructionProgress: React.FC<ConstructionProgressProps> = ({
                     {showImages && milestone.images && milestone.images.length > 0 && (
                       <div>
                         <h5 className="font-medium text-neutral-900 dark:text-slate-100 mb-2">
-                          Progress Images
+                          {t('progress.images')}
                         </h5>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                           {milestone.images.map((image, imgIndex) => (
                             <img
                               key={imgIndex}
                               src={image}
-                              alt={`${milestone.title} progress ${imgIndex + 1}`}
+                              alt={t('progress.imageAlt', { title: milestone.title, n: imgIndex + 1 })}
                               className="w-full h-20 object-cover rounded"
                             />
                           ))}
@@ -324,8 +326,8 @@ export const ConstructionProgress: React.FC<ConstructionProgressProps> = ({
               className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
             >
               {showAllMilestones 
-                ? `Show Less` 
-                : `Show ${progressData.milestones.length - 5} More Milestones`
+                ? t('progress.showLess')
+                : t('progress.showMore', { count: progressData.milestones.length - 5 })
               }
             </button>
           </div>
@@ -335,24 +337,24 @@ export const ConstructionProgress: React.FC<ConstructionProgressProps> = ({
       {/* Developer Info */}
       <div className="p-6 border-t border-neutral-200 dark:border-slate-700 bg-neutral-50 dark:bg-slate-900/50">
         <h3 className="font-medium text-neutral-900 dark:text-slate-100 mb-2">
-          Developer Information
+          {t('progress.developerInfo')}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div>
-            <p className="text-neutral-500 dark:text-slate-400">Developer</p>
+            <p className="text-neutral-500 dark:text-slate-400">{t('progress.developer')}</p>
             <p className="font-medium text-neutral-900 dark:text-slate-100">
               {progressData.developer.name}
             </p>
           </div>
           <div>
-            <p className="text-neutral-500 dark:text-slate-400">Contact</p>
+            <p className="text-neutral-500 dark:text-slate-400">{t('progress.contact')}</p>
             <p className="font-medium text-neutral-900 dark:text-slate-100">
               {progressData.developer.contact}
             </p>
           </div>
           {progressData.developer.projectManager && (
             <div className="md:col-span-2">
-              <p className="text-neutral-500 dark:text-slate-400">Project Manager</p>
+              <p className="text-neutral-500 dark:text-slate-400">{t('progress.projectManager')}</p>
               <p className="font-medium text-neutral-900 dark:text-slate-100">
                 {progressData.developer.projectManager}
               </p>
@@ -362,11 +364,11 @@ export const ConstructionProgress: React.FC<ConstructionProgressProps> = ({
 
         {progressData.nextInspectionDate && (
           <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <span className="text-blue-600 dark:text-blue-400">🔍</span>
               <div>
                 <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
-                  Next Inspection Scheduled
+                  {t('progress.nextInspection')}
                 </p>
                 <p className="text-xs text-blue-600 dark:text-blue-400">
                   {formatDate(progressData.nextInspectionDate)}

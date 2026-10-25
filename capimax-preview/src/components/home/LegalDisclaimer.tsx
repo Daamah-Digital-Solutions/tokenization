@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, ChevronDown, ChevronUp, AlertTriangle, FileText } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../utils/cn';
 
 export const LegalDisclaimer: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { t } = useTranslation('ui');
 
   return (
     <section className="relative py-12 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950">
@@ -24,16 +26,13 @@ export const LegalDisclaimer: React.FC = () => {
               </div>
               <div className="flex-1">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  About Capimax RT
+                  {t('legalDisclaimer.title')}
                   <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full">
-                    Important
+                    {t('legalDisclaimer.important')}
                   </span>
                 </h2>
                 <p className="mt-2 text-slate-600 dark:text-slate-400 leading-relaxed">
-                  Capimax RT - Capimax Real Estate Tokenization is a global technology platform
-                  designed to provide a digital infrastructure for structuring, presenting, and
-                  administering fractional, tokenized real estate ownership opportunities through
-                  independent legal entities such as Special Purpose Vehicles (SPVs).
+                  {t('legalDisclaimer.intro')}
                 </p>
               </div>
             </div>
@@ -54,13 +53,10 @@ export const LegalDisclaimer: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
-                    Platform Role
+                    {t('legalDisclaimer.roleTitle')}
                   </h3>
                   <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                    The platform operates strictly as a technology and operational infrastructure
-                    provider. It is not a bank, financial institution, brokerage firm, asset manager,
-                    investment adviser, fiduciary, or financial intermediary, and it does not provide
-                    investment, financial, legal, or tax advice of any kind.
+                    {t('legalDisclaimer.roleBody')}
                   </p>
                 </div>
               </div>
@@ -68,24 +64,16 @@ export const LegalDisclaimer: React.FC = () => {
               {/* Information Disclaimer */}
               <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
                 <h4 className="font-semibold text-slate-900 dark:text-white mb-3">
-                  All opportunities, information, documentation, reports, projections, and
-                  distributions displayed on the platform:
+                  {t('legalDisclaimer.infoTitle')}
                 </h4>
                 <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
                   <li className="flex items-start gap-2">
                     <span className="text-emerald-500 mt-1">•</span>
-                    <span>
-                      Are provided by relevant third parties, including property owners, developers,
-                      SPVs, asset managers, valuation firms, and insurance providers;
-                    </span>
+                    <span>{t('legalDisclaimer.info1')}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-emerald-500 mt-1">•</span>
-                    <span>
-                      Are presented for informational and organizational purposes only, without any
-                      representation, warranty, or assurance by Capimax RT as to their accuracy,
-                      completeness, or future performance.
-                    </span>
+                    <span>{t('legalDisclaimer.info2')}</span>
                   </li>
                 </ul>
               </div>
@@ -97,20 +85,20 @@ export const LegalDisclaimer: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
-                    Capimax RT does not guarantee:
+                    {t('legalDisclaimer.noGuaranteeTitle')}
                   </h3>
                   <ul className="space-y-1 text-sm text-slate-600 dark:text-slate-400">
                     <li className="flex items-center gap-2">
                       <span className="text-red-500">•</span>
-                      Any returns, income, or profits;
+                      {t('legalDisclaimer.noGuarantee1')}
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="text-red-500">•</span>
-                      Any level of liquidity or exit availability;
+                      {t('legalDisclaimer.noGuarantee2')}
                     </li>
                     <li className="flex items-center gap-2">
                       <span className="text-red-500">•</span>
-                      The preservation of invested capital.
+                      {t('legalDisclaimer.noGuarantee3')}
                     </li>
                   </ul>
                 </div>
@@ -119,25 +107,23 @@ export const LegalDisclaimer: React.FC = () => {
               {/* Risk Warning */}
               <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
                 <h4 className="font-semibold text-amber-800 dark:text-amber-300 mb-2">
-                  Ownership Risk Warning
+                  {t('legalDisclaimer.riskTitle')}
                 </h4>
                 <p className="text-sm text-amber-700 dark:text-amber-400 leading-relaxed mb-3">
-                  Investing through the platform involves material risks, including the potential
-                  loss of some or all invested capital. Users are solely responsible for:
+                  {t('legalDisclaimer.riskBody')}
                 </p>
                 <ul className="space-y-1 text-sm text-amber-700 dark:text-amber-400">
                   <li className="flex items-center gap-2">
                     <span>•</span>
-                    Conducting their own independent due diligence;
+                    {t('legalDisclaimer.risk1')}
                   </li>
                   <li className="flex items-center gap-2">
                     <span>•</span>
-                    Assessing investment suitability and risks;
+                    {t('legalDisclaimer.risk2')}
                   </li>
                   <li className="flex items-center gap-2">
                     <span>•</span>
-                    Seeking advice from appropriately licensed professional advisers before making
-                    any investment decision.
+                    {t('legalDisclaimer.risk3')}
                   </li>
                 </ul>
               </div>
@@ -145,20 +131,19 @@ export const LegalDisclaimer: React.FC = () => {
               {/* Agreement */}
               <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
                 <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                  By accessing or using this platform, you acknowledge and agree to be bound by
-                  the platform's{' '}
+                  {t('legalDisclaimer.agreePrefix')}{' '}
                   <a href="/legal/terms" className="text-emerald-600 dark:text-emerald-400 hover:underline">
-                    Terms & Conditions
+                    {t('legalDisclaimer.terms')}
                   </a>
-                  ,{' '}
+                  {t('legalDisclaimer.comma')}{' '}
                   <a href="/legal/privacy" className="text-emerald-600 dark:text-emerald-400 hover:underline">
-                    Privacy Policy
+                    {t('legalDisclaimer.privacy')}
                   </a>
-                  ,{' '}
+                  {t('legalDisclaimer.comma')}{' '}
                   <a href="/legal/risk-disclosure" className="text-emerald-600 dark:text-emerald-400 hover:underline">
-                    Risk Disclosures
+                    {t('legalDisclaimer.risk')}
                   </a>
-                  , and all applicable regulatory and compliance frameworks adopted by Capimax RT.
+                  {t('legalDisclaimer.agreeSuffix')}
                 </p>
               </div>
             </div>
@@ -178,12 +163,12 @@ export const LegalDisclaimer: React.FC = () => {
             {isExpanded ? (
               <>
                 <ChevronUp className="w-4 h-4" />
-                Show Less
+                {t('legalDisclaimer.showLess')}
               </>
             ) : (
               <>
                 <ChevronDown className="w-4 h-4" />
-                Read Full Disclaimer
+                {t('legalDisclaimer.readFull')}
               </>
             )}
           </button>

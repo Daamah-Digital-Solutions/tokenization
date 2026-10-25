@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Building2, TrendingUp, Shield, Users } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
 import { cn } from '../../utils/cn';
 import CapiMaxLightLogo from '../../assets/tokenization_capi max  tokenization light  uk  copy.svg';
@@ -18,35 +19,38 @@ interface AuthLayoutProps {
 const FEATURES = [
   {
     icon: Building2,
-    title: 'Premium Properties',
-    description: 'Access vetted real estate opportunities with institutional-grade due diligence'
+    title: 'authLayout.features.premium.title',
+    description: 'authLayout.features.premium.desc'
   },
   {
     icon: TrendingUp,
-    title: 'Proven Returns',
-    description: 'Historical returns of 12-18% annually with transparent performance tracking'
+    title: 'authLayout.features.returns.title',
+    description: 'authLayout.features.returns.desc'
   },
   {
     icon: Shield,
-    title: 'Secure & Compliant',
-    description: 'Bank-level security with full regulatory compliance and insurance protection'
+    title: 'authLayout.features.secure.title',
+    description: 'authLayout.features.secure.desc'
   },
   {
     icon: Users,
-    title: 'Expert Support',
-    description: 'Dedicated support team with deep real estate and blockchain expertise'
+    title: 'authLayout.features.support.title',
+    description: 'authLayout.features.support.desc'
   }
 ];
 
 export const AuthLayout: React.FC<AuthLayoutProps> = ({
   children,
-  title = 'Real Estate Tokenization Platform',
-  subtitle = 'Democratizing premium real estate ownership through blockchain technology',
+  title,
+  subtitle,
   showFeatures = true,
   backgroundVariant = 'gradient',
   className
 }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation('ui');
+  const displayTitle = title ?? t('authLayout.title');
+  const displaySubtitle = subtitle ?? t('authLayout.subtitle');
   const backgroundClasses = {
     default: 'bg-slate-50 dark:bg-slate-950',
     gradient: 'bg-gradient-to-br from-emerald-50 via-white to-emerald-50 dark:from-slate-950 dark:via-slate-900 dark:to-emerald-950',
@@ -78,7 +82,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
             <div className="flex items-center gap-3 mb-8">
               <img
                 src={CapiMaxLightLogo}
-                alt="CapiMax"
+                alt={t('brand')}
                 className="h-12 w-auto"
               />
             </div>
@@ -87,10 +91,10 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
             <div className="space-y-6">
               <div>
                 <h2 className="text-4xl font-bold leading-tight mb-4">
-                  {title}
+                  {displayTitle}
                 </h2>
                 <p className="text-xl text-emerald-100 leading-relaxed">
-                  {subtitle}
+                  {displaySubtitle}
                 </p>
               </div>
 
@@ -111,9 +115,9 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
                           <Icon className="w-5 h-5" />
                         </div>
                         <div>
-                          <h3 className="font-semibold mb-1">{feature.title}</h3>
+                          <h3 className="font-semibold mb-1">{t(feature.title)}</h3>
                           <p className="text-emerald-100 text-sm leading-relaxed">
-                            {feature.description}
+                            {t(feature.description)}
                           </p>
                         </div>
                       </motion.div>
@@ -126,15 +130,15 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
               <div className="flex items-center gap-8 pt-8 border-t border-white/10">
                 <div>
                   <div className="text-2xl font-bold">$2.5B+</div>
-                  <div className="text-emerald-200 text-sm">Assets Tokenized</div>
+                  <div className="text-emerald-200 text-sm">{t('authLayout.stats.assets')}</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold">15,000+</div>
-                  <div className="text-emerald-200 text-sm">Active Owners</div>
+                  <div className="text-emerald-200 text-sm">{t('authLayout.stats.owners')}</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold">14.2%</div>
-                  <div className="text-emerald-200 text-sm">Avg. Annual Return</div>
+                  <div className="text-emerald-200 text-sm">{t('authLayout.stats.return')}</div>
                 </div>
               </div>
             </div>
@@ -142,8 +146,8 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
         </div>
 
         {/* Decorative Elements */}
-        <div className="absolute top-1/4 right-0 w-32 h-32 bg-white/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 left-0 w-24 h-24 bg-emerald-300/20 rounded-full blur-2xl"></div>
+        <div className="absolute top-1/4 end-0 w-32 h-32 bg-white/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 start-0 w-24 h-24 bg-emerald-300/20 rounded-full blur-2xl"></div>
       </div>
 
       {/* Right Side - Auth Forms */}
@@ -153,7 +157,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
           <div className="lg:hidden flex items-center mb-8 justify-center">
             <img
               src={theme === 'dark' ? CapiMaxLightLogo : CapiMaxDarkLogo}
-              alt="CapiMax"
+              alt={t('brand')}
               className="h-10 w-auto"
             />
           </div>

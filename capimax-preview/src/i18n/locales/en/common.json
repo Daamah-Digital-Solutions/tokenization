@@ -102,5 +102,22 @@
   "charts": {
     "current": "Current",
     "change": "Change"
+  },
+  "pageLoader": {
+    "title": "Loading…",
+    "wait": "Please wait a moment…",
+    "redirecting": "Redirecting to sign in…"
+  },
+  "constructionStage": {
+    "complete": "Construction Complete",
+    "nearly": "Nearly Complete",
+    "half": "Half Complete",
+    "progress": "In Progress",
+    "started": "Just Started"
+  },
+  "txDescription": {
+    "investmentIn": "Investment in {{property}}",
+    "dividendFrom": "Dividend from {{property}}",
+    "withdrawalFrom": "Withdrawal from {{property}}"
   }
 }

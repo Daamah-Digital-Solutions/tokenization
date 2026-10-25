@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Button } from '../ui/Button';
 import { Card } from '../ui/Card';
 import { useRouter } from '../../utils/router';
+import { useTranslation } from 'react-i18next';
 
 const features = [
   {
@@ -11,8 +12,8 @@ const features = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
     ),
-    title: '8 Complete Pages',
-    description: 'From authentication to property management'
+    title: 'demoShowcase.f1.title',
+    description: 'demoShowcase.f1.desc'
   },
   {
     icon: (
@@ -20,8 +21,8 @@ const features = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
       </svg>
     ),
-    title: '95+ Components',
-    description: 'Complete design system with interactive elements'
+    title: 'demoShowcase.f2.title',
+    description: 'demoShowcase.f2.desc'
   },
   {
     icon: (
@@ -29,8 +30,8 @@ const features = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
       </svg>
     ),
-    title: 'Live Features',
-    description: 'KYC, payments, dashboards, and more'
+    title: 'demoShowcase.f3.title',
+    description: 'demoShowcase.f3.desc'
   },
   {
     icon: (
@@ -38,13 +39,14 @@ const features = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
-    title: 'Production Ready',
-    description: 'TypeScript, accessibility, and performance optimized'
+    title: 'demoShowcase.f4.title',
+    description: 'demoShowcase.f4.desc'
   }
 ];
 
 export const DemoShowcaseSection: React.FC = () => {
   const { navigate } = useRouter();
+  const { t } = useTranslation('ui');
 
   return (
     <section className="py-20 bg-gradient-to-br from-emerald-50 via-white to-emerald-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
@@ -58,7 +60,7 @@ export const DemoShowcaseSection: React.FC = () => {
             className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full text-sm font-medium mb-6"
           >
             <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-            Live Demo Available
+            {t('demoShowcase.badge')}
           </motion.div>
           
           <motion.h2
@@ -68,7 +70,7 @@ export const DemoShowcaseSection: React.FC = () => {
             viewport={{ once: true }}
             className="text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-6"
           >
-            Explore the Complete Platform
+            {t('demoShowcase.title')}
           </motion.h2>
           
           <motion.p
@@ -78,9 +80,7 @@ export const DemoShowcaseSection: React.FC = () => {
             viewport={{ once: true }}
             className="text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto"
           >
-            Dive into our comprehensive demo showcasing all pages, components, and features
-            built for the real estate tokenization platform. Experience the full journey from
-            registration to ownership.
+            {t('demoShowcase.subtitle')}
           </motion.p>
         </div>
 
@@ -99,10 +99,10 @@ export const DemoShowcaseSection: React.FC = () => {
                   {feature.icon}
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                  {feature.title}
+                  {t(feature.title)}
                 </h3>
                 <p className="text-slate-600 dark:text-slate-300 text-sm">
-                  {feature.description}
+                  {t(feature.description)}
                 </p>
               </Card>
             </motion.div>
@@ -133,11 +133,10 @@ export const DemoShowcaseSection: React.FC = () => {
 
             <div className="relative z-10 text-center">
               <h3 className="text-3xl lg:text-4xl font-bold mb-4">
-                Ready to Explore?
+                {t('demoShowcase.readyTitle')}
               </h3>
               <p className="text-emerald-100 text-lg mb-8 max-w-2xl mx-auto">
-                Access the complete demo with all features, pages, and components. 
-                See how every piece comes together in a professional, production-ready platform.
+                {t('demoShowcase.readyBody')}
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -147,10 +146,10 @@ export const DemoShowcaseSection: React.FC = () => {
                   size="lg"
                   className="bg-white text-emerald-600 hover:bg-emerald-50 border-white"
                 >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m-6-8h8a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2v-8a2 2 0 012-2z" />
                   </svg>
-                  View Full Demo
+                  {t('demoShowcase.viewDemo')}
                 </Button>
                 <Button
                   onClick={() => navigate('properties')}
@@ -158,10 +157,10 @@ export const DemoShowcaseSection: React.FC = () => {
                   size="lg"
                   className="border-white text-white hover:bg-white hover:text-emerald-600"
                 >
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 8h5a2 2 0 002-2V9a2 2 0 00-2-2H9a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
-                  Browse Properties
+                  {t('investorCta.browse')}
                 </Button>
               </div>
             </div>
@@ -177,14 +176,14 @@ export const DemoShowcaseSection: React.FC = () => {
           className="mt-12 text-center"
         >
           <p className="text-slate-600 dark:text-slate-400 mb-4">
-            Or jump directly to specific sections:
+            {t('demoShowcase.jumpTo')}
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             {[
-              { label: 'Authentication', route: 'login' },
-              { label: 'KYC Process', route: 'kyc' },
-              { label: 'Dashboard', route: 'dashboard' },
-              { label: 'Wallet', route: 'wallet' }
+              { label: t('demoShowcase.linkAuth'), route: 'login' },
+              { label: t('demoShowcase.linkKyc'), route: 'kyc' },
+              { label: t('demoShowcase.linkDashboard'), route: 'dashboard' },
+              { label: t('demoShowcase.linkWallet'), route: 'wallet' }
             ].map((link) => (
               <button
                 key={link.route}

@@ -1,12 +1,38 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { LegalPageLayout } from '../../components/legal/LegalPageLayout';
 
 export const ComplaintsPage: React.FC = () => {
+  const { i18n } = useTranslation();
+  const isAr = i18n.language?.startsWith('ar');
   return (
     <LegalPageLayout
-      title="Complaints & Dispute Resolution Policy"
-      lastUpdated="January 2026"
+      title={isAr ? 'سياسة الشكاوى وتسوية النزاعات' : 'Complaints & Dispute Resolution Policy'}
+      lastUpdated={isAr ? 'يناير 2026' : 'January 2026'}
     >
+      {isAr ? (
+      <section className="legal-section">
+        <h2>معالجة الشكاوى</h2>
+        <p>
+          يجوز للمستخدمين تقديم الشكاوى من خلال قنوات الدعم المخصصة.
+        </p>
+
+        <h2>إجراءات المعالجة</h2>
+        <ul>
+          <li>الإقرار باستلام الشكوى؛</li>
+          <li>التحقيق الداخلي؛</li>
+          <li>الرد كتابيًا خلال إطار زمني معقول.</li>
+        </ul>
+
+        <h2>تسوية النزاعات</h2>
+        <p>يجوز تسوية النزاعات من خلال:</p>
+        <ul>
+          <li>التفاوض؛</li>
+          <li>الوساطة؛</li>
+          <li>التحكيم أو المحاكم، وفقًا لما هو محدد في الشروط.</li>
+        </ul>
+      </section>
+      ) : (
       <section className="legal-section">
         <h2>Complaints Handling</h2>
         <p>
@@ -28,6 +54,7 @@ export const ComplaintsPage: React.FC = () => {
           <li>Arbitration or courts, as specified in the Terms.</li>
         </ul>
       </section>
+      )}
     </LegalPageLayout>
   );
 };

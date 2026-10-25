@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, CheckCircle, Info, XCircle, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from './Button';
 
 export type ConfirmationType = 'warning' | 'danger' | 'info' | 'success';
@@ -54,14 +55,15 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   onConfirm,
   title,
   message,
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
+  confirmText,
+  cancelText,
   type = 'warning',
   isLoading = false,
   details,
 }) => {
   const config = typeConfig[type];
   const Icon = config.icon;
+  const { t } = useTranslation('shared');
 
   // Handle escape key
   React.useEffect(() => {
@@ -116,7 +118,8 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
                 {!isLoading && (
                   <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-1 rounded-lg
+                    aria-label={t('confirm.close')}
+                    className="absolute top-4 end-4 p-1 rounded-lg
                              text-slate-400 hover:text-slate-600
                              dark:text-slate-500 dark:hover:text-slate-300
                              hover:bg-slate-100 dark:hover:bg-slate-700
@@ -174,7 +177,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
                   disabled={isLoading}
                   className="flex-1"
                 >
-                  {cancelText}
+                  {cancelText ?? t('confirm.cancel')}
                 </Button>
                 <Button
                   onClick={onConfirm}
@@ -182,7 +185,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
                   loading={isLoading}
                   className={`flex-1 text-white ${config.confirmButtonClass}`}
                 >
-                  {confirmText}
+                  {confirmText ?? t('confirm.confirm')}
                 </Button>
               </div>
             </div>

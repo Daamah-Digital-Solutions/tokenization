@@ -1,4 +1,5 @@
 import React, { forwardRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../utils/cn';
 import { ChevronDown, Check, AlertCircle } from 'lucide-react';
 
@@ -46,7 +47,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(({
   size = 'md',
   state = 'default',
   label,
-  placeholder = 'Select an option...',
+  placeholder,
   helperText,
   errorMessage,
   options,
@@ -55,6 +56,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(({
   className,
   ...props
 }, ref) => {
+  const { t } = useTranslation('shared');
   const [isFocused, setIsFocused] = React.useState(false);
   const actualState = errorMessage ? 'error' : state;
 
@@ -77,7 +79,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(({
           className={cn(
             // Base styles
             'w-full rounded-xl font-medium text-slate-900 dark:text-slate-100 cursor-pointer',
-            'transition-all duration-200 outline-none appearance-none pr-10',
+            'transition-all duration-200 outline-none appearance-none pe-10',
             
             // Variant styles
             variantStyles[variant],
@@ -102,7 +104,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(({
           {...props}
         >
           <option value="" disabled hidden>
-            {placeholder}
+            {placeholder ?? t('forms.selectPlaceholder')}
           </option>
           {options.map((option) => (
             <option
@@ -117,7 +119,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(({
         </select>
 
         {/* Icons */}
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
+        <div className="absolute end-3 top-1/2 -translate-y-1/2 flex items-center gap-2 pointer-events-none">
           {/* State Icons */}
           {actualState === 'error' && (
             <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400" />

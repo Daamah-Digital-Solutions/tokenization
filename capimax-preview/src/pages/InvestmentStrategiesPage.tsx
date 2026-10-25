@@ -1,12 +1,255 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { InfoPageLayout } from '../components/info/InfoPageLayout';
 
 export const InvestmentStrategiesPage: React.FC = () => {
+  const { i18n } = useTranslation();
+  const isAr = i18n.language?.startsWith('ar');
   return (
     <InfoPageLayout
-      title="Ownership Strategies"
-      subtitle="Capi Max RT Platform – Tokenized Real Estate Ownership"
+      title={isAr ? 'استراتيجيات التملّك' : 'Ownership Strategies'}
+      subtitle={isAr ? 'منصة كابي مكس RT – التملّك العقاري المرمّز' : 'Capi Max RT Platform – Tokenized Real Estate Ownership'}
     >
+      {isAr ? (
+      <section className="info-section">
+        <h2>1) تملّك الحصص التطويرية</h2>
+
+        <h3>التعريف</h3>
+        <p>
+          شراء عقار تطويري هو شراء أصل عقاري في مراحله المبكرة، إذ يشتري المالك الحصص خلال
+          الجولات الأولى بسعر أقل ودون عوائد دورية، مقابل:
+        </p>
+        <ul>
+          <li>سعر دخول أقل</li>
+          <li>نمو قيمة الحصة عبر جولات التمويل</li>
+          <li>شفافية خطط التسعير المستقبلية</li>
+        </ul>
+
+        <h3>آلية جولات التسعير</h3>
+        <p>يحدّد المطوّر:</p>
+        <ul>
+          <li>عدد الجولات (4 جولات عادةً)</li>
+          <li>سعر الحصة لكل جولة</li>
+          <li>تاريخ طرح كل جولة</li>
+        </ul>
+        <p>وهذه البيانات:</p>
+        <ul>
+          <li>منشورة على المنصة</li>
+          <li>مدعومة بالمستندات</li>
+          <li>مرتبطة بالعقد الذكي</li>
+        </ul>
+
+        <h3>مثال توضيحي:</h3>
+        <div className="overflow-x-auto my-4">
+          <table className="min-w-full border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+            <thead className="bg-slate-50 dark:bg-slate-800">
+              <tr>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">الجولة</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">سعر الحصة</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">التاريخ</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">ملاحظات</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-slate-200 dark:border-slate-700">
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">1</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">$50</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">01/03/2025</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">دخول مبكر</td>
+              </tr>
+              <tr className="border-b border-slate-200 dark:border-slate-700">
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">2</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">$65</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">01/09/2025</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">نمو بنسبة +20%</td>
+              </tr>
+              <tr className="border-b border-slate-200 dark:border-slate-700">
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">3</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">$80</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">01/03/2026</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">نمو تراكمي</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">4</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">$90</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">01/09/2026</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">ما قبل التشغيل</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>كيف يعرف المالك العوائد المتوقعة</h3>
+        <ul>
+          <li>الإعلان المسبق عن سعر الجولة التالية</li>
+          <li>تاريخ الطرح معروف</li>
+          <li>الأداء السابق موثّق</li>
+          <li>إمكانية احتساب الربحية قبل الشراء</li>
+        </ul>
+
+        <h3>خيارات المالك</h3>
+        <ul>
+          <li>التخارج في أي جولة لاحقة</li>
+          <li>البيع في السوق الثانوية</li>
+          <li>الاستمرار حتى التشغيل</li>
+          <li>التحويل لاحقًا إلى نموذج مُدرّ للدخل</li>
+        </ul>
+
+        <h3>التوثيق والشفافية</h3>
+        <ul>
+          <li>جدول الجولات ثابت</li>
+          <li>اتفاقية التطوير موثّقة</li>
+          <li>السعر مثبّت في العقد الذكي</li>
+          <li>لا تغييرات إلا عبر إفصاح رسمي</li>
+        </ul>
+
+        <h2>2) التملّك التطويري بالأقساط</h2>
+
+        <h3>التعريف</h3>
+        <p>خطة تملّك طويلة الأجل تتيح للمالك:</p>
+        <ul>
+          <li>شراء الحصص منذ البداية</li>
+          <li>الدفع على أقساط</li>
+          <li>الاستفادة من نمو قيمة العقار</li>
+          <li>التحول في النهاية إلى عقار مُدرّ للدخل</li>
+        </ul>
+
+        <h3>آلية الأقساط</h3>
+        <p>يحدّد المطوّر:</p>
+        <ul>
+          <li>مدة التقسيط</li>
+          <li>قيمة كل قسط</li>
+          <li>عدد الدفعات</li>
+        </ul>
+        <p>المزايا:</p>
+        <ul>
+          <li>جدول سداد مريح</li>
+          <li>مدة أطول من شروط السوق التقليدية</li>
+          <li>دون فوائد بنكية</li>
+        </ul>
+
+        <h3>الحقوق خلال فترة التقسيط</h3>
+        <ul>
+          <li>ملكية اقتصادية تدريجية</li>
+          <li>ترتفع قيمة الحصة مع تقدّم أعمال الإنشاء</li>
+          <li>خيار التخارج في أي وقت</li>
+        </ul>
+
+        <h3>التخارج خلال فترة التقسيط</h3>
+        <p>عند البيع في السوق الثانوية:</p>
+        <ul>
+          <li>يُحتسب المبلغ المدفوع</li>
+          <li>تُطبّق نسبة نمو السعر</li>
+          <li>تنتقل الحصة إلى المشتري الجديد</li>
+          <li>تستمر الأقساط المتبقية بالشروط نفسها</li>
+          <li>يستفيد المالك الجديد من ارتفاع السعر</li>
+        </ul>
+
+        <h3>المزايا</h3>
+        <ul>
+          <li>مبلغ دخول أولي أقل</li>
+          <li>التزام مالي مريح</li>
+          <li>مرونة عالية</li>
+          <li>سيولة قبل التسليم</li>
+        </ul>
+
+        <h2>3) أصل مستقر مُدرّ للدخل</h2>
+
+        <h3>التعريف</h3>
+        <p>عقار:</p>
+        <ul>
+          <li>جاهز</li>
+          <li>مؤجَّر</li>
+          <li>يُدرّ دخلًا دوريًا</li>
+          <li>يشهد ارتفاعًا تدريجيًا في السعر</li>
+        </ul>
+
+        <h3>مزايا المالك</h3>
+        <ul>
+          <li>عائد إيجاري دوري</li>
+          <li>نمو تدريجي في قيمة الحصة</li>
+          <li>شفافية كاملة للإيرادات</li>
+        </ul>
+
+        <h3>توزيع العوائد</h3>
+        <ul>
+          <li>شهريًا أو ربع سنويًا</li>
+          <li>آليًا عبر العقد الذكي</li>
+          <li>قابلة للسحب أو لإعادة الاستثمار</li>
+        </ul>
+
+        <h3>خيارات التخارج</h3>
+        <ul>
+          <li>بيع الحصة في السوق الثانوية</li>
+          <li>التخارج عند بيع العقار</li>
+          <li>نقل الملكية الرقمية بسهولة</li>
+        </ul>
+
+        <h3>مناسب لـ</h3>
+        <ul>
+          <li>الملاك المحافظين</li>
+          <li>الباحثين عن دخل مستقر</li>
+          <li>الملاك الذين يفضّلون استقرارًا أعلى</li>
+        </ul>
+
+        <h2>مقارنة موجزة بين الاستراتيجيات</h2>
+        <div className="overflow-x-auto my-4">
+          <table className="min-w-full border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+            <thead className="bg-slate-50 dark:bg-slate-800">
+              <tr>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">الميزة</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">التطويري</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">بالأقساط</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">المُدرّ للدخل</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-slate-200 dark:border-slate-700">
+                <td className="px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300">سعر الدخول</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">منخفض</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">مرن</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">أعلى</td>
+              </tr>
+              <tr className="border-b border-slate-200 dark:border-slate-700">
+                <td className="px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300">العائد الدوري</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">لا</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">لا (مؤجّل)</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">نعم</td>
+              </tr>
+              <tr className="border-b border-slate-200 dark:border-slate-700">
+                <td className="px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300">نمو السعر</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">مرتفع</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">مرتفع تدريجيًا</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">مستقر</td>
+              </tr>
+              <tr className="border-b border-slate-200 dark:border-slate-700">
+                <td className="px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300">مرونة التخارج</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">مرنة</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">مرنة</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">مرنة</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300">مستوى المخاطر</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">أعلى</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">متوسط</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">أقل</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>ملخص استراتيجيات كابي مكس RT</h2>
+        <p>توفّر المنصة:</p>
+        <ul>
+          <li>شفافية كاملة</li>
+          <li>تسعير مُعلن مسبقًا</li>
+          <li>عقود موثّقة</li>
+          <li>عقود ذكية ملزمة</li>
+          <li>سيولة منظّمة</li>
+          <li>حماية قانونية</li>
+        </ul>
+      </section>
+      ) : (
       <section className="info-section">
         <h2>1) Development Token Ownership</h2>
 
@@ -41,10 +284,10 @@ export const InvestmentStrategiesPage: React.FC = () => {
           <table className="min-w-full border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
             <thead className="bg-slate-50 dark:bg-slate-800">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Round</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Token Price</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Date</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Notes</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Round</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Token Price</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Date</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Notes</th>
               </tr>
             </thead>
             <tbody>
@@ -194,10 +437,10 @@ export const InvestmentStrategiesPage: React.FC = () => {
           <table className="min-w-full border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
             <thead className="bg-slate-50 dark:bg-slate-800">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Feature</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Development</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Installment</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Income-Generating</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Feature</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Development</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Installment</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Income-Generating</th>
               </tr>
             </thead>
             <tbody>
@@ -246,6 +489,7 @@ export const InvestmentStrategiesPage: React.FC = () => {
           <li>Legal protection</li>
         </ul>
       </section>
+      )}
     </InfoPageLayout>
   );
 };

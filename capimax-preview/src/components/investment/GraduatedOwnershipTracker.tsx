@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export interface OwnershipTier {
   id: string;
@@ -63,11 +64,12 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
   onUpgradeTier,
   className = ''
 }) => {
+  const { t, i18n } = useTranslation('invest');
   const [selectedPosition, setSelectedPosition] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'overview' | 'detailed'>('overview');
 
   const formatCurrency = (amount: number) => `$${amount.toLocaleString()}`;
-  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString();
+  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US');
 
   const getTierColor = (tier: OwnershipTier) => tier.color;
   
@@ -114,18 +116,18 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100">
-              Graduated Ownership Tracker
+              {t('graduated.title')}
             </h2>
             <p className="text-sm text-neutral-600 dark:text-slate-400 mt-1">
-              Track your progressive ownership and tier benefits
+              {t('graduated.subtitle')}
             </p>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setViewMode(viewMode === 'overview' ? 'detailed' : 'overview')}
               className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
             >
-              {viewMode === 'overview' ? 'Detailed View' : 'Overview'}
+              {viewMode === 'overview' ? t('graduated.detailedView') : t('graduated.overview')}
             </button>
           </div>
         </div>
@@ -137,7 +139,7 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
               {activePositions}
             </div>
             <div className="text-sm text-neutral-500 dark:text-slate-400">
-              Active Positions
+              {t('graduated.activePositions')}
             </div>
           </div>
           <div className="text-center p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg">
@@ -145,7 +147,7 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
               {formatCurrency(totalInvested)}
             </div>
             <div className="text-sm text-neutral-500 dark:text-slate-400">
-              Total Purchased
+              {t('graduated.totalPurchased')}
             </div>
           </div>
           <div className="text-center p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg">
@@ -153,7 +155,7 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
               {formatCurrency(totalValue)}
             </div>
             <div className="text-sm text-neutral-500 dark:text-slate-400">
-              Current Value
+              {t('graduated.currentValue')}
             </div>
           </div>
           <div className="text-center p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg">
@@ -161,7 +163,7 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
               {formatCurrency(totalDividends)}
             </div>
             <div className="text-sm text-neutral-500 dark:text-slate-400">
-              Total Dividends
+              {t('graduated.totalDividends')}
             </div>
           </div>
         </div>
@@ -173,10 +175,10 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
           <div className="text-center py-8">
             <span className="text-4xl mb-4 block">📊</span>
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-2">
-              No Ownership Positions
+              {t('graduated.emptyTitle')}
             </h3>
             <p className="text-neutral-600 dark:text-slate-400">
-              Start your graduated ownership journey by making your first purchase
+              {t('graduated.emptyBody')}
             </p>
           </div>
         ) : (
@@ -201,21 +203,21 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
                         <h3 className="font-semibold text-neutral-900 dark:text-slate-100">
                           {position.propertyName}
                         </h3>
-                        <div className="flex items-center space-x-3 mt-1">
+                        <div className="flex items-center gap-3 mt-1">
                           <span className={`text-sm font-medium ${getStatusColor(position.status)}`}>
-                            {position.status.toUpperCase()}
+                            {t(`graduated.status.${position.status}`, { defaultValue: position.status.toUpperCase() })}
                           </span>
                           <span className="text-sm text-neutral-600 dark:text-slate-400">
-                            {position.ownedTokens.toLocaleString()} of {position.totalTokens.toLocaleString()} tokens
+                            {t('graduated.ownedOf', { owned: position.ownedTokens.toLocaleString(), total: position.totalTokens.toLocaleString() })}
                           </span>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-end">
                         <div className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
                           {formatCurrency(position.currentValue)}
                         </div>
                         <div className="text-sm text-neutral-600 dark:text-slate-400">
-                          Current Value
+                          {t('graduated.currentValue')}
                         </div>
                       </div>
                     </div>
@@ -223,7 +225,7 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
                     {/* Current Tier */}
                     <div className="mb-3 p-3 rounded-lg" style={{ backgroundColor: `${position.currentTier.color}20` }}>
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-2">
                           <div 
                             className="w-3 h-3 rounded-full" 
                             style={{ backgroundColor: position.currentTier.color }}
@@ -232,12 +234,12 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
                             {position.currentTier.name}
                           </span>
                           <span className="text-sm text-neutral-600 dark:text-slate-400">
-                            ({position.currentTier.ownershipPercentage}% ownership per token)
+                            {t('graduated.perShare', { value: position.currentTier.ownershipPercentage })}
                           </span>
                         </div>
                         {canUpgrade && (
                           <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 text-xs font-medium rounded-full">
-                            Upgrade Available
+                            {t('graduated.upgradeAvailable')}
                           </span>
                         )}
                       </div>
@@ -253,9 +255,9 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
                       </div>
                       
                       <div className="flex justify-between text-xs text-neutral-600 dark:text-slate-400">
-                        <span>Payment Progress: {Math.round(position.paymentProgress)}%</span>
+                        <span>{t('graduated.paymentProgress', { value: Math.round(position.paymentProgress) })}</span>
                         {position.nextTier && (
-                          <span>Next: {position.nextTier.name} at {position.nextTier.minPaymentPercentage}%</span>
+                          <span>{t('graduated.nextTier', { name: position.nextTier.name, value: position.nextTier.minPaymentPercentage })}</span>
                         )}
                       </div>
                     </div>
@@ -263,25 +265,25 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
                     {/* Key Metrics */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
-                        <span className="text-neutral-500 dark:text-slate-400">Paid</span>
+                        <span className="text-neutral-500 dark:text-slate-400">{t('graduated.paid')}</span>
                         <div className="font-medium text-neutral-900 dark:text-slate-100">
                           {formatCurrency(position.paidAmount)}
                         </div>
                       </div>
                       <div>
-                        <span className="text-neutral-500 dark:text-slate-400">Remaining</span>
+                        <span className="text-neutral-500 dark:text-slate-400">{t('graduated.remaining')}</span>
                         <div className="font-medium text-neutral-900 dark:text-slate-100">
                           {formatCurrency(position.remainingAmount)}
                         </div>
                       </div>
                       <div>
-                        <span className="text-neutral-500 dark:text-slate-400">Dividend Rate</span>
+                        <span className="text-neutral-500 dark:text-slate-400">{t('graduated.dividendRate')}</span>
                         <div className="font-medium text-green-600 dark:text-green-400">
                           {position.currentTier.dividendRate}%
                         </div>
                       </div>
                       <div>
-                        <span className="text-neutral-500 dark:text-slate-400">Dividends Earned</span>
+                        <span className="text-neutral-500 dark:text-slate-400">{t('graduated.dividendsEarned')}</span>
                         <div className="font-medium text-purple-600 dark:text-purple-400">
                           {formatCurrency(position.dividendsEarned)}
                         </div>
@@ -293,10 +295,10 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
                       <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-blue-800 dark:text-blue-300">
-                            Next Milestone: {nextMilestone.name}
+                            {t('graduated.nextMilestone', { name: nextMilestone.name })}
                           </span>
                           <span className="text-sm font-medium text-blue-800 dark:text-blue-300">
-                            {nextMilestone.tokensReleased.toLocaleString()} tokens at {nextMilestone.paymentPercentage}%
+                            {t('graduated.sharesAt', { value: nextMilestone.tokensReleased.toLocaleString(), percent: nextMilestone.paymentPercentage })}
                           </span>
                         </div>
                       </div>
@@ -306,7 +308,7 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
                     {position.nextPaymentDue && (
                       <div className="mt-2 flex items-center justify-between text-sm">
                         <span className="text-neutral-600 dark:text-slate-400">
-                          Next payment due: {formatDate(position.nextPaymentDue)}
+                          {t('reserved.nextPaymentDue', { date: formatDate(position.nextPaymentDue) })}
                         </span>
                         <button
                           onClick={(e) => {
@@ -315,7 +317,7 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
                           }}
                           className="px-3 py-1 bg-primary-600 text-white text-xs font-medium rounded hover:bg-primary-700 transition-colors"
                         >
-                          Make Payment
+                          {t('reserved.makePayment')}
                         </button>
                       </div>
                     )}
@@ -328,37 +330,37 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
                         {/* Tier Benefits */}
                         <div>
                           <h4 className="font-medium text-neutral-900 dark:text-slate-100 mb-3">
-                            Current Tier Benefits
+                            {t('graduated.tierBenefits')}
                           </h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                              <h5 className="text-sm font-medium text-green-700 dark:text-green-400 mb-2">Benefits</h5>
+                              <h5 className="text-sm font-medium text-green-700 dark:text-green-400 mb-2">{t('graduated.benefits')}</h5>
                               <ul className="space-y-1">
                                 {position.currentTier.benefits.map((benefit, index) => (
                                   <li key={index} className="text-sm text-neutral-600 dark:text-slate-400 flex items-start">
-                                    <span className="text-green-500 mr-1">✓</span>
+                                    <span className="text-green-500 me-1">✓</span>
                                     {benefit}
                                   </li>
                                 ))}
                               </ul>
                             </div>
                             <div>
-                              <h5 className="text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">Rights & Options</h5>
+                              <h5 className="text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">{t('graduated.rights')}</h5>
                               <div className="space-y-2 text-sm">
                                 <div className="flex justify-between">
-                                  <span className="text-neutral-600 dark:text-slate-400">Voting Rights</span>
+                                  <span className="text-neutral-600 dark:text-slate-400">{t('graduated.voting')}</span>
                                   <span className={position.currentTier.votingRights ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
-                                    {position.currentTier.votingRights ? 'Yes' : 'No'}
+                                    {position.currentTier.votingRights ? t('graduated.yes') : t('graduated.no')}
                                   </span>
                                 </div>
                                 <div className="flex justify-between">
-                                  <span className="text-neutral-600 dark:text-slate-400">Transfer Rights</span>
+                                  <span className="text-neutral-600 dark:text-slate-400">{t('graduated.transfer')}</span>
                                   <span className="text-neutral-900 dark:text-slate-100 capitalize">
-                                    {position.currentTier.transferRights}
+                                    {t(`graduated.transferRights.${position.currentTier.transferRights}`, { defaultValue: position.currentTier.transferRights })}
                                   </span>
                                 </div>
                                 <div>
-                                  <span className="text-neutral-600 dark:text-slate-400">Liquidity Options</span>
+                                  <span className="text-neutral-600 dark:text-slate-400">{t('graduated.liquidity')}</span>
                                   <div className="flex flex-wrap gap-1 mt-1">
                                     {position.currentTier.liquidityOptions.map((option, index) => (
                                       <span key={index} className="px-2 py-1 bg-neutral-200 dark:bg-slate-600 text-xs rounded">
@@ -375,7 +377,7 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
                         {/* Milestones Progress */}
                         <div>
                           <h4 className="font-medium text-neutral-900 dark:text-slate-100 mb-3">
-                            Milestone Progress
+                            {t('graduated.milestoneProgress')}
                           </h4>
                           <div className="space-y-2">
                             {position.milestones.map((milestone) => (
@@ -387,7 +389,7 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
                                     : 'bg-neutral-50 dark:bg-slate-700'
                                 }`}
                               >
-                                <div className="flex items-center space-x-2">
+                                <div className="flex items-center gap-2">
                                   <span className={milestone.achieved ? 'text-green-600 dark:text-green-400' : 'text-neutral-400'}>
                                     {milestone.achieved ? '✅' : '⏳'}
                                   </span>
@@ -395,12 +397,12 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
                                     {milestone.name}
                                   </span>
                                 </div>
-                                <div className="text-right">
+                                <div className="text-end">
                                   <div className="text-sm font-medium text-neutral-900 dark:text-slate-100">
-                                    {milestone.tokensReleased.toLocaleString()} tokens
+                                    {t('installment.sharesValue', { value: milestone.tokensReleased.toLocaleString() })}
                                   </div>
                                   <div className="text-xs text-neutral-600 dark:text-slate-400">
-                                    At {milestone.paymentPercentage}% payment
+                                    {t('graduated.atPayment', { value: milestone.paymentPercentage })}
                                   </div>
                                 </div>
                               </div>
@@ -409,13 +411,13 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-3">
                           {position.nextPaymentDue && (
                             <button
                               onClick={() => onMakePayment(position.id)}
                               className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded hover:bg-primary-700 transition-colors"
                             >
-                              Make Payment
+                              {t('reserved.makePayment')}
                             </button>
                           )}
                           
@@ -424,7 +426,7 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
                               onClick={() => onUpgradeTier!(position.id, position.nextTier!.id)}
                               className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700 transition-colors"
                             >
-                              Upgrade to {position.nextTier.name}
+                              {t('graduated.upgradeTo', { name: position.nextTier.name })}
                             </button>
                           )}
 
@@ -432,7 +434,7 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
                             onClick={() => onViewProjection(position.id)}
                             className="px-4 py-2 bg-neutral-200 text-neutral-700 dark:bg-slate-600 dark:text-slate-300 text-sm font-medium rounded hover:bg-neutral-300 dark:hover:bg-slate-500 transition-colors"
                           >
-                            View Projections
+                            {t('graduated.viewProjections')}
                           </button>
                         </div>
                       </div>
@@ -449,13 +451,13 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
       {availableTiers.length > 0 && (
         <div className="border-t border-neutral-200 dark:border-slate-700 p-6 bg-neutral-50 dark:bg-slate-900/50">
           <h3 className="font-medium text-neutral-900 dark:text-slate-100 mb-3">
-            Available Ownership Tiers
+            {t('graduated.availableTiers')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {availableTiers.map((tier) => (
               <div 
                 key={tier.id} 
-                className="flex items-center space-x-3 p-2 rounded border"
+                className="flex items-center gap-3 p-2 rounded border"
                 style={{ borderColor: `${tier.color}40` }}
               >
                 <div 
@@ -467,7 +469,7 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
                     {tier.name}
                   </div>
                   <div className="text-xs text-neutral-600 dark:text-slate-400">
-                    {tier.minPaymentPercentage}%-{tier.maxPaymentPercentage}% • {tier.ownershipPercentage}% ownership • {tier.dividendRate}% dividend
+                    {t('graduated.tierLine', { min: tier.minPaymentPercentage, max: tier.maxPaymentPercentage, ownership: tier.ownershipPercentage, dividend: tier.dividendRate })}
                   </div>
                 </div>
               </div>

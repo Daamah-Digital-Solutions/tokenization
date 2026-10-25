@@ -1,0 +1,445 @@
+{
+  "shared": {
+    "retry": "إعادة المحاولة",
+    "viewAll": "عرض الكل",
+    "tbd": "لم يُحدَّد بعد",
+    "bytes": "بايت",
+    "loading": "جارٍ التحميل…",
+    "saving": "جارٍ الحفظ…"
+  },
+  "dashboard": {
+    "errorLoading": "خطأ في تحميل البيانات",
+    "loadFailed": "تعذّر تحميل بيانات لوحة التحكم",
+    "portfolio": {
+      "title": "المحفظة العقارية",
+      "loadFailed": "تعذّر تحميل عقاراتك",
+      "emptyTitle": "لا توجد عقارات بعد",
+      "emptyBody": "ابدأ بترميز عقارك الأول ليظهر هنا",
+      "addFirst": "أضف عقارك الأول",
+      "totalValue": "القيمة الإجمالية",
+      "funding": "التمويل",
+      "monthlyRevenue": "الإيرادات الشهرية",
+      "owners": "الملّاك",
+      "sharesSold": "الحصص المُباعة"
+    },
+    "charts": {
+      "shareSales": "تقدّم بيع الحصص",
+      "revenuePerformance": "أداء الإيرادات",
+      "tokenizationLoadFailed": "تعذّر تحميل بيانات الترميز",
+      "revenueLoadFailed": "تعذّر تحميل بيانات الإيرادات"
+    },
+    "topOwners": {
+      "title": "أبرز الملّاك",
+      "loadFailed": "تعذّر تحميل بيانات الملّاك",
+      "empty": "لا يوجد ملّاك بعد. روّج لعقاراتك لاستقطاب شركاء ملّاك.",
+      "joined": "انضم في {{date}}",
+      "purchase": "الشراء",
+      "properties": "العقارات"
+    },
+    "documents": {
+      "title": "أحدث المستندات",
+      "loadFailed": "تعذّر تحميل المستندات",
+      "noPublicUrl": "لا يتوفر رابط عام لهذا المستند.",
+      "noDownloadUrl": "لا يتوفر رابط تنزيل لهذا المستند.",
+      "uploadHint": "ارفع مستندًا لأحد عقاراتك (الرسائل)",
+      "upload": "رفع مستند",
+      "empty": "لم تُرفع أي مستندات بعد. افتح أحد العقارات لرفع مستنداته.",
+      "download": "تنزيل",
+      "downloadNamed": "تنزيل {{name}}",
+      "view": "عرض",
+      "viewNamed": "عرض {{name}}"
+    },
+    "stats": {
+      "totalProperties": "إجمالي العقارات",
+      "totalPropertiesDesc": "العقارات المُرمَّزة",
+      "capitalRaised": "رأس المال المُجمَّع",
+      "capitalRaisedDesc": "من بيع الحصص",
+      "activeOwners": "الملّاك النشطون",
+      "activeOwnersDesc": "عبر جميع العقارات",
+      "monthlyRevenueDesc": "الدخل الإيجاري المُحقَّق"
+    },
+    "quick": {
+      "addProperty": "إضافة عقار",
+      "addPropertyDesc": "ترميز عقار جديد",
+      "manageOwners": "إدارة الملّاك",
+      "manageOwnersDesc": "عرض بيانات الملّاك",
+      "distributeRevenue": "توزيع الإيرادات",
+      "distributeRevenueDesc": "معالجة الدفعات",
+      "uploadDocuments": "رفع المستندات",
+      "uploadDocumentsDesc": "إدارة المستندات القانونية"
+    },
+    "revenue": {
+      "totalRevenue": "إجمالي الإيرادات",
+      "pendingDistributions": "التوزيعات المعلّقة",
+      "toBeProcessed": "بانتظار المعالجة",
+      "nextDistribution": "التوزيع القادم",
+      "estimated": "التقدير: {{amount}}",
+      "distributionRate": "معدل التوزيع",
+      "history": "سجل توزيع الإيرادات"
+    },
+    "ownersView": {
+      "loadFailed": "تعذّر تحميل تحليلات الملّاك",
+      "retail": "الملّاك الأفراد",
+      "institutional": "المؤسسات",
+      "highNetWorth": "أصحاب الثروات العالية",
+      "averagePurchase": "متوسط الشراء",
+      "totalCapitalRaised": "إجمالي رأس المال المُجمَّع",
+      "retention": "معدل الاحتفاظ بالملّاك",
+      "newOwners30d": "ملّاك جدد (30 يومًا)",
+      "distribution": "توزيع الملّاك",
+      "ownersCount": "{{count}} مالك",
+      "noDistribution": "لا تتوفر بيانات عن توزيع الملّاك",
+      "metrics": "مؤشرات الشراء",
+      "noMetrics": "لا تتوفر مؤشرات شراء"
+    },
+    "settings": {
+      "saveFailed": "تعذّر حفظ الملف الشخصي.",
+      "title": "إعدادات الحساب",
+      "subtitle": "أدِر بيانات ملفك الشخصي. لا يمكن تغيير البريد الإلكتروني والدور إلا عن طريق الدعم.",
+      "profileInfo": "بيانات الملف الشخصي",
+      "updated": "تم تحديث الملف الشخصي.",
+      "email": "البريد الإلكتروني",
+      "role": "الدور",
+      "firstName": "الاسم الأول",
+      "lastName": "اسم العائلة",
+      "phone": "الهاتف",
+      "country": "الدولة",
+      "city": "المدينة",
+      "address": "العنوان",
+      "saveChanges": "حفظ التغييرات",
+      "manageKyc": "إدارة التحقق من الهوية",
+      "manageRoles": "إدارة الأدوار"
+    },
+    "notifications": {
+      "title": "الإشعارات",
+      "subtitle": "تحديثات حول عقاراتك وملّاكها وتوزيعات الإيرادات.",
+      "emptyTitle": "لا توجد إشعارات",
+      "emptyBody": "لا جديد حاليًا. ستظهر هنا الإشعارات الجديدة المتعلقة بعقاراتك وملّاكها.",
+      "fallbackTitle": "إشعار"
+    },
+    "myProperties": {
+      "title": "عقاراتي",
+      "subtitle": "أدِر محفظتك العقارية المُرمَّزة",
+      "addNew": "إضافة عقار جديد"
+    },
+    "wallet": {
+      "title": "المحفظة والمدفوعات",
+      "subtitle": "رصيدك المتاح وسجل عمليات السحب.",
+      "balanceLabel": "المتاح للصرف",
+      "balanceHint": "يُضيف فريق كابي مكس RT الإيرادات إلى محفظتك؛ ويمكنك سحبها إلى حساب بنكي أو محفظة عملات رقمية."
+    },
+    "underDevelopment": {
+      "title": "لوحة تحكم {{name}}",
+      "body": "هذا القسم قيد التطوير"
+    },
+    "views": {
+      "overview": "نظرة عامة",
+      "properties": "العقارات",
+      "my-properties": "عقاراتي",
+      "tokenization": "الترميز",
+      "revenue": "الإيرادات",
+      "wallet": "المحفظة",
+      "investors": "الملّاك",
+      "documents": "المستندات",
+      "settings": "الإعدادات",
+      "notifications": "الإشعارات",
+      "messages": "الرسائل",
+      "analytics": "التحليلات"
+    }
+  },
+  "createForm": {
+    "title": "إنشاء عقار جديد",
+    "back": "رجوع",
+    "next": "التالي",
+    "creating": "جارٍ الإنشاء...",
+    "create": "إنشاء العقار",
+    "descriptionCounter": "50 حرفًا على الأقل ({{count}}/50)",
+    "steps": {
+      "basic": "البيانات الأساسية",
+      "financial": "التفاصيل المالية",
+      "location": "الموقع والتفاصيل",
+      "review": "المراجعة والإرسال"
+    },
+    "types": {
+      "residential": "سكني",
+      "commercial": "تجاري",
+      "industrial": "صناعي",
+      "mixed_use": "متعدد الاستخدامات",
+      "land": "أرض"
+    },
+    "categories": {
+      "under_construction": "قيد الإنشاء",
+      "under_constructionDesc": "عقار قيد البناء مع إمكانية الدفع بالأقساط",
+      "ready_property": "عقار جاهز",
+      "ready_propertyDesc": "عقار مكتمل يحقق دخلًا إيجاريًا"
+    },
+    "alerts": {
+      "created": "تم إنشاء العقار بنجاح! وأُرسل للاعتماد.",
+      "failed": "تعذّر إنشاء العقار: {{message}}"
+    },
+    "errors": {
+      "titleRequired": "العنوان مطلوب",
+      "titleMin": "يجب ألا يقل العنوان عن 5 أحرف",
+      "descriptionRequired": "الوصف مطلوب",
+      "descriptionMin": "يجب ألا يقل الوصف عن 50 حرفًا",
+      "typeRequired": "نوع العقار مطلوب",
+      "categoryRequired": "فئة العقار مطلوبة",
+      "totalValuePositive": "يجب أن تكون القيمة الإجمالية أكبر من 0",
+      "sharePricePositive": "يجب أن يكون سعر الحصة أكبر من 0",
+      "totalSharesPositive": "يجب أن يكون إجمالي الحصص أكبر من 0",
+      "totalValueMismatch": "يجب أن تساوي القيمة الإجمالية سعر الحصة × إجمالي الحصص",
+      "expectedReturnRequired": "العائد المتوقع مطلوب",
+      "rentalYieldRequired": "العائد الإيجاري مطلوب للعقارات الجاهزة",
+      "monthlyIncomeRequired": "الدخل الإيجاري الشهري مطلوب عند تفعيل الدخل الإيجاري",
+      "completionDateRequired": "تاريخ الإنجاز المتوقع مطلوب للعقارات قيد الإنشاء",
+      "installmentPeriodRequired": "مدة الأقساط مطلوبة عند تفعيل الدفع بالأقساط",
+      "addressRequired": "العنوان مطلوب",
+      "cityRequired": "المدينة مطلوبة",
+      "countryRequired": "الدولة مطلوبة",
+      "sizeRequired": "مساحة العقار مطلوبة",
+      "yearRange": "يجب أن تكون سنة البناء بين 1800 و{{max}}"
+    },
+    "fields": {
+      "title": "اسم العقار",
+      "description": "الوصف",
+      "type": "نوع العقار",
+      "category": "فئة العقار",
+      "totalValue": "القيمة الإجمالية للعقار ($)",
+      "sharePrice": "سعر الحصة ($)",
+      "totalShares": "إجمالي الحصص",
+      "expectedReturn": "العائد المتوقع (%)",
+      "rentalYield": "العائد الإيجاري (%)",
+      "minPurchase": "الحد الأدنى للشراء ($)",
+      "monthlyIncome": "الدخل الإيجاري الشهري ($)",
+      "occupancy": "نسبة الإشغال (%)",
+      "completionDate": "تاريخ الإنجاز المتوقع",
+      "installmentPeriod": "أقصى مدة للأقساط (بالأشهر)",
+      "address": "العنوان الكامل",
+      "city": "المدينة",
+      "state": "الولاية/المقاطعة",
+      "country": "الدولة",
+      "latitude": "خط العرض (اختياري)",
+      "longitude": "خط الطول (اختياري)",
+      "size": "مساحة العقار (قدم مربع)",
+      "yearBuilt": "سنة البناء"
+    },
+    "placeholders": {
+      "title": "مثال: مجمّع شقق فاخرة - دبي مارينا",
+      "description": "وصف تفصيلي لعقارك...",
+      "type": "اختر نوع العقار",
+      "address": "مثال: 12 شارع الشيخ زايد، دبي",
+      "city": "دبي",
+      "state": "دبي",
+      "country": "الإمارات العربية المتحدة"
+    },
+    "validation": {
+      "label": "التحقق:",
+      "matches": "مطابق للقيمة الإجمالية",
+      "shouldMatch": "يجب أن يطابق القيمة الإجمالية"
+    },
+    "ready": {
+      "title": "إعدادات العقار الجاهز",
+      "activeIncome": "العقار يحقق دخلًا إيجاريًا حاليًا"
+    },
+    "construction": {
+      "title": "إعدادات العقار قيد الإنشاء",
+      "supportsInstallments": "إتاحة الدفع بالأقساط للمشترين"
+    },
+    "review": {
+      "title": "راجِع بيانات عقارك",
+      "title_": "العنوان:",
+      "type": "النوع:",
+      "category": "الفئة:",
+      "totalValue": "القيمة الإجمالية:",
+      "sharePrice": "سعر الحصة:",
+      "totalShares": "إجمالي الحصص:",
+      "expectedReturn": "العائد المتوقع:",
+      "location": "الموقع",
+      "address": "العنوان:",
+      "city": "المدينة:",
+      "propertyDetails": "تفاصيل العقار",
+      "size": "المساحة:",
+      "sizeValue": "{{value}} قدم مربع",
+      "yearBuilt": "سنة البناء:",
+      "importantLabel": "مهم:",
+      "importantBody": "سيُرسل عقارك لمراجعة الإدارة بعد إنشائه. يمكنك رفع الصور والمستندات في الخطوة التالية."
+    }
+  },
+  "approvalStatus": {
+    "status": {
+      "pending": {
+        "title": "بانتظار المراجعة",
+        "description": "طلب عقارك بانتظار مراجعة الإدارة."
+      },
+      "under_review": {
+        "title": "قيد المراجعة",
+        "description": "يراجع فريقنا طلب عقارك حاليًا."
+      },
+      "approved": {
+        "title": "معتمد",
+        "description": "تهانينا! تم اعتماد عقارك للترميز."
+      },
+      "rejected": {
+        "title": "مرفوض",
+        "description": "لم يُعتمد طلب عقارك. يرجى الاطلاع على الملاحظات."
+      },
+      "requires_changes": {
+        "title": "مطلوب تعديلات",
+        "description": "يرجى إجراء التعديلات المطلوبة وإعادة تقديم عقارك."
+      },
+      "not_submitted": {
+        "title": "لم يُقدَّم",
+        "description": "لم يُقدَّم عقارك للاعتماد بعد."
+      }
+    },
+    "badges": {
+      "pending": "قيد الانتظار",
+      "under_review": "قيد المراجعة",
+      "approved": "معتمد",
+      "rejected": "مرفوض",
+      "requires_changes": "مطلوب تعديلات",
+      "not_submitted": "لم يُقدَّم"
+    },
+    "submitted": "تاريخ التقديم: {{date}}",
+    "reviewer": "المراجِع: {{name}}",
+    "reviewed": "تاريخ المراجعة: {{date}}",
+    "approved": "تاريخ الاعتماد: {{date}}",
+    "refresh": "تحديث",
+    "submit": "إرسال للاعتماد",
+    "uploadDocument": "رفع مستند",
+    "reviewNotes": "ملاحظات المراجعة",
+    "requiredChanges": "التعديلات المطلوبة",
+    "process": {
+      "title": "مراحل الاعتماد",
+      "submit": {
+        "title": "تقديم العقار",
+        "description": "ارفع جميع المستندات المطلوبة وبيانات العقار"
+      },
+      "initial": {
+        "title": "المراجعة الأولية",
+        "description": "يتحقق فريقنا من اكتمال طلبك"
+      },
+      "dueDiligence": {
+        "title": "العناية الواجبة",
+        "description": "تحقق تفصيلي من العقار ومستنداته"
+      },
+      "final": {
+        "title": "القرار النهائي",
+        "description": "اعتماد العقار أو تقديم ملاحظات بالتعديلات المطلوبة"
+      }
+    },
+    "docTypes": {
+      "property_deed": "سند ملكية العقار",
+      "financial_statement": "كشف مالي",
+      "valuation_report": "تقرير التقييم",
+      "legal_document": "مستند قانوني",
+      "compliance_certificate": "شهادة امتثال",
+      "other": "أخرى"
+    },
+    "modal": {
+      "title": "رفع مستند إضافي",
+      "subtitle": "ارفع مستندات إضافية لدعم طلب اعتماد عقارك",
+      "documentType": "نوع المستند",
+      "selectType": "اختر نوع المستند...",
+      "file": "رفع الملف",
+      "formats": "الصيغ المقبولة: PDF وDOC وDOCX وJPG وPNG (بحد أقصى 10 ميجابايت)",
+      "description": "الوصف (اختياري)",
+      "descriptionPlaceholder": "وصف مختصر للمستند...",
+      "cancel": "إلغاء",
+      "uploading": "جارٍ الرفع..."
+    }
+  },
+  "documentUpload": {
+    "uploadFailed": "فشل الرفع",
+    "invalidFormat": "صيغة الملف {{name}} غير مدعومة. يرجى استخدام PDF أو DOC أو DOCX أو JPG أو PNG.",
+    "tooLarge": "حجم الملف {{name}} كبير جدًا. الحد الأقصى 50 ميجابايت.",
+    "nameRequired": "اسم المستند مطلوب",
+    "typeRequired": "نوع المستند مطلوب",
+    "dropzone": "أفلت المستندات هنا أو انقر للاستعراض",
+    "supports": "يدعم PDF وDOC وDOCX وJPG وPNG • بحد أقصى 50 ميجابايت لكل ملف",
+    "selected": "المستندات المحددة ({{count}})",
+    "uploadAll": "رفع جميع المستندات",
+    "remove": "إزالة",
+    "name": "اسم المستند",
+    "namePlaceholder": "مثال: سند ملكية العقار",
+    "type": "نوع المستند",
+    "description": "الوصف (اختياري)",
+    "descriptionPlaceholder": "أضف أي تفاصيل إضافية عن هذا المستند...",
+    "types": {
+      "title_deed": "سند الملكية",
+      "valuation_report": "تقرير التقييم",
+      "legal_certificate": "شهادة قانونية",
+      "construction_permit": "رخصة البناء",
+      "insurance": "وثيقة التأمين",
+      "tax_certificate": "شهادة ضريبية",
+      "floor_plan": "مخطط الطوابق",
+      "other": "مستند آخر"
+    },
+    "tips": {
+      "title": "متطلبات رفع المستندات",
+      "requiredLabel": "مطلوب:",
+      "required": "سند الملكية، وتقرير التقييم، والشهادات القانونية",
+      "recommendedLabel": "يُنصح به:",
+      "recommended": "رخص البناء، ووثائق التأمين، والشهادات الضريبية",
+      "clear": "يجب أن تكون جميع المستندات واضحة ومقروءة وسارية",
+      "reviewed": "سيراجع فريق الامتثال لدينا جميع المستندات",
+      "redacted": "تأكد من حجب أي معلومات حساسة عند الحاجة"
+    }
+  },
+  "imageUpload": {
+    "invalidFormat": "صيغة الصورة {{name}} غير مدعومة. يرجى استخدام JPG أو PNG أو WEBP.",
+    "tooLarge": "حجم الصورة {{name}} كبير جدًا. الحد الأقصى 10 ميجابايت.",
+    "dropzone": "أفلت الصور هنا أو انقر للاستعراض",
+    "supports": "يدعم JPG وPNG وWEBP • بحد أقصى 10 ميجابايت لكل صورة",
+    "selected": "الصور المحددة ({{count}})",
+    "uploadAll": "رفع جميع الصور",
+    "previewAlt": "معاينة {{n}}",
+    "primary": "رئيسية",
+    "remove": "إزالة الصورة",
+    "caption": "التعليق",
+    "captionPlaceholder": "أضف تعليقًا...",
+    "primaryImage": "الصورة الرئيسية",
+    "setPrimary": "تعيين كصورة رئيسية",
+    "upload": "رفع",
+    "tips": {
+      "title": "نصائح رفع الصور",
+      "quality": "ارفع صورًا عالية الجودة تُبرز أفضل مزايا عقارك",
+      "primary": "ستظهر الصورة الأولى (أو الصورة الرئيسية) في قوائم العقارات",
+      "recommended": "يُنصح بـ: لقطات خارجية، والغرف الداخلية، والمرافق، ومشاهد الموقع",
+      "captions": "استخدم تعليقات وصفية لتساعد المشترين على فهم كل صورة"
+    }
+  },
+  "list": {
+    "status": {
+      "draft": "مسودة",
+      "pending_approval": "بانتظار الاعتماد",
+      "approved": "معتمد",
+      "active": "نشط",
+      "tokenized": "مُرمَّز",
+      "delisted": "أُزيل من العرض"
+    },
+    "allProperties": "جميع العقارات",
+    "alerts": {
+      "submitted": "تم إرسال العقار للاعتماد بنجاح!",
+      "submitFailed": "تعذّر إرسال العقار: {{message}}"
+    },
+    "errorTitle": "خطأ في تحميل العقارات",
+    "errorBody": "تعذّر تحميل عقاراتك. يرجى المحاولة مرة أخرى.",
+    "subtitle": "أدِر عقاراتك المُرمَّزة وتابِعها",
+    "searchPlaceholder": "ابحث في العقارات بالاسم أو المدينة أو العنوان...",
+    "noneFound": "لم يتم العثور على عقارات",
+    "adjustFilters": "جرّب تعديل عوامل التصفية أو عبارة البحث",
+    "startCreating": "ابدأ بإنشاء أول عرض لعقارك",
+    "createFirst": "أنشئ عقارك الأول",
+    "created": "تاريخ الإنشاء: {{date}}",
+    "updated": "آخر تحديث: {{date}}",
+    "sharePrice": "سعر الحصة",
+    "shares": "الحصص",
+    "expectedReturn": "العائد المتوقع",
+    "viewDetails": "عرض التفاصيل",
+    "edit": "تعديل",
+    "manageMedia": "إدارة الوسائط",
+    "submitting": "جارٍ الإرسال...",
+    "checkStatus": "متابعة حالة الاعتماد"
+  }
+}

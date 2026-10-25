@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Navbar } from '../components/layout/Navbar';
 import { Footer } from '../components/layout/Footer';
+import { useTranslation } from 'react-i18next';
 
 interface ListingRequestForm {
   propertyType: string;
@@ -33,6 +34,7 @@ interface ListingRequestForm {
 }
 
 export const PropertyOwnerLandingPage: React.FC = () => {
+  const { t } = useTranslation('pages');
   const [formData, setFormData] = useState<ListingRequestForm>({
     propertyType: '',
     propertyName: '',
@@ -81,61 +83,61 @@ export const PropertyOwnerLandingPage: React.FC = () => {
   const benefits = [
     {
       icon: Users,
-      title: 'New Funding Sources',
-      description: 'Open new funding sources through multiple co-owners instead of relying on a single financier.'
+      title: t('ownerLanding.benefits.funding.title'),
+      description: t('ownerLanding.benefits.funding.description')
     },
     {
       icon: FileCheck,
-      title: 'Broader Marketing',
-      description: 'Build trust through documentation, valuation, insurance, and reports with broader marketing reach.'
+      title: t('ownerLanding.benefits.marketing.title'),
+      description: t('ownerLanding.benefits.marketing.description')
     },
     {
       icon: TrendingUp,
-      title: 'Asset Lifecycle Management',
-      description: 'Improved asset lifecycle management: listing, funding collection, execution, operation, distribution, and exit.'
+      title: t('ownerLanding.benefits.lifecycle.title'),
+      description: t('ownerLanding.benefits.lifecycle.description')
     },
     {
       icon: Shield,
-      title: 'Control Over Terms',
-      description: 'Control over listing terms: minimum purchase, lock-up period, distribution policy, and owner criteria.'
+      title: t('ownerLanding.benefits.control.title'),
+      description: t('ownerLanding.benefits.control.description')
     },
     {
       icon: Building2,
-      title: 'Enhanced Liquidity',
-      description: 'Enhanced liquidity through secondary market activation or optional liquidity provider (subject to terms).'
+      title: t('ownerLanding.benefits.liquidity.title'),
+      description: t('ownerLanding.benefits.liquidity.description')
     }
   ];
 
   const steps = [
     {
       number: 1,
-      title: 'Submit Listing Request',
-      description: 'Submit a listing request with initial data and ownership/project documents.'
+      title: t('ownerLanding.steps.submit.title'),
+      description: t('ownerLanding.steps.submit.description')
     },
     {
       number: 2,
-      title: 'Initial Review',
-      description: 'Initial screening: acceptance/rejection review and completion requirements.'
+      title: t('ownerLanding.steps.review.title'),
+      description: t('ownerLanding.steps.review.description')
     },
     {
       number: 3,
-      title: 'SPV Formation',
-      description: 'SPV establishment/linking: ownership structure, operating agreement, manager appointment.'
+      title: t('ownerLanding.steps.spv.title'),
+      description: t('ownerLanding.steps.spv.description')
     },
     {
       number: 4,
-      title: 'Valuation & Insurance',
-      description: 'Reports, policies, and coverage scope arranged with third-party providers.'
+      title: t('ownerLanding.steps.valuation.title'),
+      description: t('ownerLanding.steps.valuation.description')
     },
     {
       number: 5,
-      title: 'Offering Preparation',
-      description: 'Price setting, minimum purchase, schedules, and distribution policy defined.'
+      title: t('ownerLanding.steps.offering.title'),
+      description: t('ownerLanding.steps.offering.description')
     },
     {
       number: 6,
-      title: 'Ownership Opening',
-      description: 'Owner subscriptions opened after KYC/KYB verification.'
+      title: t('ownerLanding.steps.opening.title'),
+      description: t('ownerLanding.steps.opening.description')
     }
   ];
 
@@ -152,7 +154,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-4xl sm:text-5xl font-bold text-white mb-6"
             >
-              For Property Owners & Developers
+              {t('ownerLanding.heroTitle')}
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -160,7 +162,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
               transition={{ delay: 0.1 }}
               className="text-xl text-slate-300 mb-8"
             >
-              Transform your real estate assets into ownership opportunities without selling full ownership. Structure assets within the SPV model and tokenize ownership shares for qualified buyers.
+              {t('ownerLanding.heroText')}
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -172,14 +174,14 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                 href="#listing-form"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-colors"
               >
-                List Your Property
-                <ArrowRight className="w-5 h-5" />
+                {t('ownerLanding.listProperty')}
+                <ArrowRight className="w-5 h-5 rtl:rotate-180" />
               </a>
               <button
                 onClick={() => navigateToPage('/how-it-works')}
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-white/30 hover:border-white/50 text-white font-semibold rounded-xl transition-colors"
               >
-                Learn More
+                {t('ownerLanding.learnMore')}
               </button>
             </motion.div>
           </div>
@@ -191,10 +193,10 @@ export const PropertyOwnerLandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-              Benefits for Property Owners
+              {t('ownerLanding.benefitsTitle')}
             </h2>
             <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-              Discover how tokenization through Capimax RT can benefit your property ownership strategy.
+              {t('ownerLanding.benefitsSubtitle')}
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -227,10 +229,10 @@ export const PropertyOwnerLandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-              How It Works
+              {t('ownerLanding.howTitle')}
             </h2>
             <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-              Asset lifecycle on the platform from listing to exit.
+              {t('ownerLanding.howSubtitle')}
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -268,17 +270,17 @@ export const PropertyOwnerLandingPage: React.FC = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-6">
-                What is SPV and Why Is It Essential?
+                {t('ownerLanding.spvTitle')}
               </h2>
               <p className="text-lg text-slate-600 dark:text-slate-400 mb-6">
-                SPV (Special Purpose Vehicle) is a legal entity created for a specific purpose: owning an asset, managing a project, or issuing shares.
+                {t('ownerLanding.spvText')}
               </p>
               <ul className="space-y-4">
                 {[
-                  'Risk Isolation: Separating the asset/project from other activity risks.',
-                  'Clearer Governance: Specific operating, management, and distribution agreements.',
-                  'Ownability: Ownership documents, valuation, insurance, management, reports.',
-                  'Exit Capability: Through selling shares/rights in the secondary market according to rules.'
+                  t('ownerLanding.spvPoints.risk'),
+                  t('ownerLanding.spvPoints.governance'),
+                  t('ownerLanding.spvPoints.ownability'),
+                  t('ownerLanding.spvPoints.exit')
                 ].map((item, index) => (
                   <li key={index} className="flex items-start gap-3">
                     <CheckCircle2 className="w-6 h-6 text-emerald-500 flex-shrink-0 mt-0.5" />
@@ -290,21 +292,21 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                 onClick={() => navigateToPage('/spv')}
                 className="mt-8 inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-semibold hover:underline"
               >
-                Learn more about SPV
-                <ArrowRight className="w-4 h-4" />
+                {t('ownerLanding.spvLearnMore')}
+                <ArrowRight className="w-4 h-4 rtl:rotate-180" />
               </button>
             </div>
             <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-xl border border-slate-200 dark:border-slate-700">
               <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">
-                SPV Benefits Summary
+                {t('ownerLanding.spvSummaryTitle')}
               </h3>
               <div className="space-y-4">
                 {[
-                  { label: 'Risk Isolation', value: 'Protected' },
-                  { label: 'Asset Separation', value: 'Ring-fenced' },
-                  { label: 'Governance', value: 'Clear & Defined' },
-                  { label: 'Documentation', value: 'Full Transparency' },
-                  { label: 'Exit Options', value: 'Flexible' }
+                  { label: t('ownerLanding.spvSummary.riskLabel'), value: t('ownerLanding.spvSummary.riskValue') },
+                  { label: t('ownerLanding.spvSummary.separationLabel'), value: t('ownerLanding.spvSummary.separationValue') },
+                  { label: t('ownerLanding.spvSummary.governanceLabel'), value: t('ownerLanding.spvSummary.governanceValue') },
+                  { label: t('ownerLanding.spvSummary.documentationLabel'), value: t('ownerLanding.spvSummary.documentationValue') },
+                  { label: t('ownerLanding.spvSummary.exitLabel'), value: t('ownerLanding.spvSummary.exitValue') }
                 ].map((item, index) => (
                   <div key={index} className="flex justify-between items-center py-3 border-b border-slate-200 dark:border-slate-700 last:border-0">
                     <span className="text-slate-600 dark:text-slate-400">{item.label}</span>
@@ -322,10 +324,10 @@ export const PropertyOwnerLandingPage: React.FC = () => {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-              Submit a Listing Request
+              {t('ownerLanding.formTitle')}
             </h2>
             <p className="text-lg text-slate-600 dark:text-slate-400">
-              Fill out the form below to begin the listing process. Our team will review your submission and contact you.
+              {t('ownerLanding.formSubtitle')}
             </p>
           </div>
 
@@ -339,10 +341,10 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                 <CheckCircle2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
               </div>
               <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-                Request Submitted Successfully
+                {t('ownerLanding.successTitle')}
               </h3>
               <p className="text-slate-600 dark:text-slate-400">
-                Thank you for your interest. Our team will review your submission and contact you within 2-3 business days.
+                {t('ownerLanding.successText')}
               </p>
             </motion.div>
           ) : (
@@ -350,12 +352,12 @@ export const PropertyOwnerLandingPage: React.FC = () => {
               {/* Property Information */}
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  Property Information
+                  {t('ownerLanding.form.propertySection')}
                 </h3>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Property Type *
+                      {t('ownerLanding.form.propertyType')}
                     </label>
                     <select
                       name="propertyType"
@@ -364,17 +366,17 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                       required
                       className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                     >
-                      <option value="">Select type</option>
-                      <option value="residential">Residential</option>
-                      <option value="commercial">Commercial</option>
-                      <option value="mixed">Mixed Use</option>
-                      <option value="land">Land</option>
-                      <option value="development">Development Project</option>
+                      <option value="">{t('ownerLanding.form.selectType')}</option>
+                      <option value="residential">{t('ownerLanding.form.types.residential')}</option>
+                      <option value="commercial">{t('ownerLanding.form.types.commercial')}</option>
+                      <option value="mixed">{t('ownerLanding.form.types.mixed')}</option>
+                      <option value="land">{t('ownerLanding.form.types.land')}</option>
+                      <option value="development">{t('ownerLanding.form.types.development')}</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Property Name *
+                      {t('ownerLanding.form.propertyName')}
                     </label>
                     <input
                       type="text"
@@ -387,7 +389,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                   </div>
                   <div className="sm:col-span-2">
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Property Address *
+                      {t('ownerLanding.form.propertyAddress')}
                     </label>
                     <input
                       type="text"
@@ -400,7 +402,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      City *
+                      {t('ownerLanding.form.city')}
                     </label>
                     <input
                       type="text"
@@ -413,7 +415,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Country *
+                      {t('ownerLanding.form.country')}
                     </label>
                     <input
                       type="text"
@@ -426,7 +428,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Estimated Value *
+                      {t('ownerLanding.form.estimatedValue')}
                     </label>
                     <input
                       type="number"
@@ -439,7 +441,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Currency
+                      {t('ownerLanding.form.currency')}
                     </label>
                     <select
                       name="currency"
@@ -459,12 +461,12 @@ export const PropertyOwnerLandingPage: React.FC = () => {
               {/* Funding Details */}
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  Funding Details
+                  {t('ownerLanding.form.fundingSection')}
                 </h3>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Funding Goal *
+                      {t('ownerLanding.form.fundingGoal')}
                     </label>
                     <input
                       type="number"
@@ -477,7 +479,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Minimum Purchase
+                      {t('ownerLanding.form.minimumPurchase')}
                     </label>
                     <input
                       type="number"
@@ -493,12 +495,12 @@ export const PropertyOwnerLandingPage: React.FC = () => {
               {/* Owner Information */}
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  Owner Information
+                  {t('ownerLanding.form.ownerSection')}
                 </h3>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Owner Type *
+                      {t('ownerLanding.form.ownerType')}
                     </label>
                     <select
                       name="ownerType"
@@ -507,15 +509,15 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                       required
                       className="w-full px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                     >
-                      <option value="">Select type</option>
-                      <option value="individual">Individual</option>
-                      <option value="company">Company</option>
-                      <option value="developer">Developer</option>
+                      <option value="">{t('ownerLanding.form.selectType')}</option>
+                      <option value="individual">{t('ownerLanding.form.ownerTypes.individual')}</option>
+                      <option value="company">{t('ownerLanding.form.ownerTypes.company')}</option>
+                      <option value="developer">{t('ownerLanding.form.ownerTypes.developer')}</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Full Name *
+                      {t('ownerLanding.form.fullName')}
                     </label>
                     <input
                       type="text"
@@ -528,7 +530,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Company Name (if applicable)
+                      {t('ownerLanding.form.companyName')}
                     </label>
                     <input
                       type="text"
@@ -540,7 +542,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Email *
+                      {t('ownerLanding.form.email')}
                     </label>
                     <input
                       type="email"
@@ -553,7 +555,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Phone *
+                      {t('ownerLanding.form.phone')}
                     </label>
                     <input
                       type="tel"
@@ -579,7 +581,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                     className="mt-1 w-4 h-4 text-emerald-600 border-slate-300 dark:border-slate-600 rounded focus:ring-emerald-500"
                   />
                   <span className="text-sm text-slate-600 dark:text-slate-400">
-                    I agree to the <button type="button" onClick={() => navigateToPage('/legal/terms')} className="text-emerald-600 dark:text-emerald-400 hover:underline">Terms & Conditions</button> and <button type="button" onClick={() => navigateToPage('/legal/privacy')} className="text-emerald-600 dark:text-emerald-400 hover:underline">Privacy Policy</button>. *
+                    {t('ownerLanding.form.agreePrefix')} <button type="button" onClick={() => navigateToPage('/legal/terms')} className="text-emerald-600 dark:text-emerald-400 hover:underline">{t('ownerLanding.form.terms')}</button> {t('ownerLanding.form.and')} <button type="button" onClick={() => navigateToPage('/legal/privacy')} className="text-emerald-600 dark:text-emerald-400 hover:underline">{t('ownerLanding.form.privacy')}</button>. *
                   </span>
                 </label>
                 <label className="flex items-start gap-3 cursor-pointer">
@@ -592,7 +594,7 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                     className="mt-1 w-4 h-4 text-emerald-600 border-slate-300 dark:border-slate-600 rounded focus:ring-emerald-500"
                   />
                   <span className="text-sm text-slate-600 dark:text-slate-400">
-                    I understand that this submission is subject to review and does not guarantee listing on the platform. *
+                    {t('ownerLanding.form.agreeReview')} *
                   </span>
                 </label>
               </div>
@@ -605,11 +607,11 @@ export const PropertyOwnerLandingPage: React.FC = () => {
                 {isSubmitting ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Submitting...
+                    {t('ownerLanding.form.submitting')}
                   </>
                 ) : (
                   <>
-                    Submit Listing Request
+                    {t('ownerLanding.form.submit')}
                     <Send className="w-5 h-5" />
                   </>
                 )}

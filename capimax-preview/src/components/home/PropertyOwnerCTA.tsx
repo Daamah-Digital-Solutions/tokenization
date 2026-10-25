@@ -10,37 +10,24 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { useTranslation } from 'react-i18next';
 
 export const PropertyOwnerCTA: React.FC = () => {
+  const { t } = useTranslation('ui');
   const benefits = [
-    {
-      icon: Users,
-      text: 'Open new funding sources through multiple co-owners',
-    },
-    {
-      icon: FileText,
-      text: 'Broader marketing with trust built through documentation',
-    },
-    {
-      icon: Settings,
-      text: 'Improved asset lifecycle management',
-    },
-    {
-      icon: CheckCircle2,
-      text: 'Control over listing terms: minimum purchase, lock-up period, distribution policy',
-    },
-    {
-      icon: TrendingUp,
-      text: 'Enhanced liquidity through secondary market',
-    },
+    { icon: Users, text: t('ownerCta.b1') },
+    { icon: FileText, text: t('ownerCta.b2') },
+    { icon: Settings, text: t('ownerCta.b3') },
+    { icon: CheckCircle2, text: t('ownerCta.b4') },
+    { icon: TrendingUp, text: t('ownerCta.b5') },
   ];
 
   return (
     <section className="py-20 bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-700 dark:from-emerald-900 dark:via-emerald-950 dark:to-teal-950 relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/2 translate-y-1/2" />
+        <div className="absolute top-0 start-0 w-96 h-96 bg-white rounded-full -translate-x-1/2 rtl:translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 end-0 w-96 h-96 bg-white rounded-full translate-x-1/2 rtl:-translate-x-1/2 translate-y-1/2" />
       </div>
 
       <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
@@ -55,19 +42,18 @@ export const PropertyOwnerCTA: React.FC = () => {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30 mb-6">
               <Building className="w-4 h-4 text-white" />
               <span className="text-sm font-medium text-white">
-                For Property Owners
+                {t('ownerCta.badge')}
               </span>
             </div>
 
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              For Property Owners{' '}
+              {t('ownerCta.titleA')}{' '}
               <span className="text-emerald-200">&</span>{' '}
-              Developers
+              {t('ownerCta.titleB')}
             </h2>
 
             <p className="text-xl text-emerald-100 mb-8 leading-relaxed">
-              Transform your real estate assets into ownership opportunities without selling
-              full ownership.
+              {t('ownerCta.subtitle')}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
@@ -77,8 +63,8 @@ export const PropertyOwnerCTA: React.FC = () => {
                 className="bg-white text-emerald-700 hover:bg-emerald-50 border-0"
                 onClick={() => window.location.href = '/property-owner'}
               >
-                List Your Property
-                <ArrowRight className="ml-2 w-4 h-4" />
+                {t('ownerCta.list')}
+                <ArrowRight className="ms-2 w-4 h-4 rtl:rotate-180" />
               </Button>
               <Button
                 variant="outline"
@@ -86,7 +72,7 @@ export const PropertyOwnerCTA: React.FC = () => {
                 className="border-white/50 text-white hover:bg-white/10"
                 onClick={() => window.location.href = '/property-owner'}
               >
-                Learn More
+                {t('ownerCta.learnMore')}
               </Button>
             </div>
           </motion.div>
@@ -100,7 +86,7 @@ export const PropertyOwnerCTA: React.FC = () => {
             className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20"
           >
             <h3 className="text-xl font-bold text-white mb-6">
-              Benefits for Property Owners
+              {t('ownerCta.benefitsTitle')}
             </h3>
             <div className="space-y-4">
               {benefits.map((benefit, index) => (

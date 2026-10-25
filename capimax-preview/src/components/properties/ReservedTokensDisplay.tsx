@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/Button';
+import { useTranslation } from 'react-i18next';
 
 export interface ReservedToken {
   id: string;
@@ -50,6 +51,7 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
   className = '',
   showActions = true
 }) => {
+  const { t, i18n } = useTranslation('propui');
   const [expandedToken, setExpandedToken] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
@@ -74,7 +76,7 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
@@ -118,23 +120,23 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100">
-              Reserved Tokens
+              {t('reserved.title')}
             </h2>
             <p className="text-sm text-neutral-600 dark:text-slate-400 mt-1">
-              Manage your token reservations and activation progress
+              {t('reserved.subtitle')}
             </p>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
               className="text-sm border border-neutral-200 dark:border-slate-600 rounded-lg px-3 py-1 bg-white dark:bg-slate-700 text-neutral-900 dark:text-slate-100"
             >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="activated">Activated</option>
-              <option value="expired">Expired</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="all">{t('reserved.allStatus')}</option>
+              <option value="active">{t('reserved.status.active')}</option>
+              <option value="activated">{t('reserved.status.activated')}</option>
+              <option value="expired">{t('reserved.status.expired')}</option>
+              <option value="cancelled">{t('reserved.status.cancelled')}</option>
             </select>
           </div>
         </div>
@@ -146,7 +148,7 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
               {totalTokensReserved.toLocaleString()}
             </div>
             <div className="text-sm text-neutral-500 dark:text-slate-400">
-              Tokens Reserved
+              {t('reserved.sharesReserved')}
             </div>
           </div>
           <div className="text-center p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg">
@@ -154,7 +156,7 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
               {totalTokensActivated.toLocaleString()}
             </div>
             <div className="text-sm text-neutral-500 dark:text-slate-400">
-              Tokens Activated
+              {t('reserved.sharesActivated')}
             </div>
           </div>
           <div className="text-center p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg">
@@ -162,7 +164,7 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
               ${totalReservedValue.toLocaleString()}
             </div>
             <div className="text-sm text-neutral-500 dark:text-slate-400">
-              Reserved Value
+              {t('reserved.reservedValue')}
             </div>
           </div>
           <div className="text-center p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg">
@@ -170,7 +172,7 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
               {reservedTokens.filter(t => t.status === 'active').length}
             </div>
             <div className="text-sm text-neutral-500 dark:text-slate-400">
-              Active Reservations
+              {t('reserved.activeReservations')}
             </div>
           </div>
         </div>
@@ -182,10 +184,10 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
           <div className="text-center py-8">
             <span className="text-4xl mb-4 block">🔍</span>
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-2">
-              No Reserved Tokens
+              {t('reserved.emptyTitle')}
             </h3>
             <p className="text-neutral-600 dark:text-slate-400">
-              {filterStatus === 'all' ? 'You have no token reservations' : `No ${filterStatus} reservations found`}
+              {filterStatus === 'all' ? t('reserved.emptyAll') : t('reserved.emptyFiltered', { status: t(`reserved.status.${filterStatus}`) })}
             </p>
           </div>
         ) : (
@@ -207,46 +209,46 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
                     onClick={() => setExpandedToken(isExpanded ? null : token.id)}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center gap-4">
                         <div className="flex-shrink-0">
                           <span className="text-lg">{getStatusIcon(token.status)}</span>
                         </div>
                         <div>
-                          <div className="flex items-center space-x-2 mb-1">
+                          <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-semibold text-neutral-900 dark:text-slate-100">
                               {token.propertyName}
                             </h4>
                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(token.status)}`}>
-                              {token.status.toUpperCase()}
+                              {t(`reserved.status.${token.status}`, { defaultValue: token.status.toUpperCase() })}
                             </span>
                           </div>
-                          <div className="flex items-center space-x-4 text-sm text-neutral-600 dark:text-slate-400">
+                          <div className="flex items-center gap-4 text-sm text-neutral-600 dark:text-slate-400">
                             <span>
-                              {token.tokensReserved.toLocaleString()} tokens @ ${token.tokenPrice.toLocaleString()}
+                              {t('reserved.sharesAt', { n: token.tokensReserved.toLocaleString(), price: `$${token.tokenPrice.toLocaleString()}` })}
                             </span>
                             {token.status === 'active' && daysRemaining >= 0 && (
                               <span className={getUrgencyColor(daysRemaining)}>
-                                {daysRemaining === 0 ? 'Expires today' : `${daysRemaining} days left`}
+                                {daysRemaining === 0 ? t('reserved.expiresToday') : t('reserved.daysLeft', { count: daysRemaining })}
                               </span>
                             )}
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex items-center space-x-4">
-                        <div className="text-right">
+                      <div className="flex items-center gap-4">
+                        <div className="text-end">
                           <p className="font-semibold text-neutral-900 dark:text-slate-100">
                             ${token.totalValue.toLocaleString()}
                           </p>
                           {token.tokensActivated > 0 && (
                             <p className="text-sm text-green-600 dark:text-green-400">
-                              {token.tokensActivated.toLocaleString()} activated
+                              {t('reserved.activatedCount', { n: token.tokensActivated.toLocaleString() })}
                             </p>
                           )}
                         </div>
 
                         {showActions && token.status === 'active' && (
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center gap-2">
                             {token.installmentPlan && (
                               <Button
                                 size="sm"
@@ -256,7 +258,7 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
                                   onMakePayment(token.id);
                                 }}
                               >
-                                Make Payment
+                                {t('reserved.makePayment')}
                               </Button>
                             )}
                             {activationPercentage === 100 && (
@@ -268,7 +270,7 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
                                   onActivateTokens(token.id);
                                 }}
                               >
-                                Activate
+                                {t('reserved.activate')}
                               </Button>
                             )}
                           </div>
@@ -281,7 +283,7 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
                       <div className="mt-3">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-medium text-neutral-700 dark:text-slate-300">
-                            Activation Progress
+                            {t('reserved.activationProgress')}
                           </span>
                           <span className="text-sm text-neutral-600 dark:text-slate-400">
                             {Math.round(activationPercentage)}%
@@ -289,7 +291,7 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
                         </div>
                         <div className="w-full bg-neutral-200 dark:bg-slate-700 rounded-full h-2">
                           <div
-                            className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500"
+                            className="bg-gradient-to-r rtl:bg-gradient-to-l from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500"
                             style={{ width: `${activationPercentage}%` }}
                           ></div>
                         </div>
@@ -302,29 +304,29 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
                     <div className="border-t border-neutral-200 dark:border-slate-700 p-4 bg-neutral-50 dark:bg-slate-900/50">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
                         <div>
-                          <p className="text-neutral-500 dark:text-slate-400">Reserved Date</p>
+                          <p className="text-neutral-500 dark:text-slate-400">{t('reserved.reservedDate')}</p>
                           <p className="font-medium text-neutral-900 dark:text-slate-100">
                             {formatDate(token.reservationDate)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-neutral-500 dark:text-slate-400">Expiration Date</p>
+                          <p className="text-neutral-500 dark:text-slate-400">{t('reserved.expirationDate')}</p>
                           <p className="font-medium text-neutral-900 dark:text-slate-100">
                             {formatDate(token.expirationDate)}
                           </p>
                         </div>
                         {token.reservationFee && (
                           <div>
-                            <p className="text-neutral-500 dark:text-slate-400">Reservation Fee</p>
+                            <p className="text-neutral-500 dark:text-slate-400">{t('reserved.reservationFee')}</p>
                             <p className="font-medium text-neutral-900 dark:text-slate-100">
                               ${token.reservationFee.toLocaleString()}
                             </p>
                           </div>
                         )}
                         <div>
-                          <p className="text-neutral-500 dark:text-slate-400">Refund Eligible</p>
+                          <p className="text-neutral-500 dark:text-slate-400">{t('reserved.refundEligible')}</p>
                           <p className={`font-medium ${token.refundEligible ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                            {token.refundEligible ? 'Yes' : 'No'}
+                            {token.refundEligible ? t('reserved.yes') : t('reserved.no')}
                           </p>
                         </div>
                       </div>
@@ -337,24 +339,24 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
                           </h5>
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                             <div>
-                              <p className="text-blue-600 dark:text-blue-400">Total Payments</p>
+                              <p className="text-blue-600 dark:text-blue-400">{t('reserved.totalPayments')}</p>
                               <p className="font-medium text-blue-800 dark:text-blue-300">
                                 {token.installmentPlan.totalPayments}
                               </p>
                             </div>
                             <div>
-                              <p className="text-blue-600 dark:text-blue-400">Down Payment</p>
+                              <p className="text-blue-600 dark:text-blue-400">{t('reserved.downPayment')}</p>
                               <p className="font-medium text-blue-800 dark:text-blue-300">
                                 {token.installmentPlan.downPayment}%
                               </p>
                             </div>
                             <div>
-                              <p className="text-blue-600 dark:text-blue-400">Next Payment</p>
+                              <p className="text-blue-600 dark:text-blue-400">{t('reserved.nextPayment')}</p>
                               <p className="font-medium text-blue-800 dark:text-blue-300">
                                 ${token.installmentPlan.nextPaymentAmount.toLocaleString()}
                               </p>
                               <p className="text-xs text-blue-600 dark:text-blue-400">
-                                Due: {formatDate(token.installmentPlan.nextPaymentDue)}
+                                {t('reserved.due', { date: formatDate(token.installmentPlan.nextPaymentDue) })}
                               </p>
                             </div>
                           </div>
@@ -365,7 +367,7 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
                                 variant="outline"
                                 onClick={() => onViewPaymentSchedule(token.paymentScheduleId!)}
                               >
-                                View Full Schedule
+                                {t('reserved.viewSchedule')}
                               </Button>
                             </div>
                           )}
@@ -376,12 +378,12 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
                       {token.conditions && token.conditions.length > 0 && (
                         <div className="mb-4">
                           <h5 className="font-medium text-neutral-900 dark:text-slate-100 mb-2">
-                            Reservation Conditions
+                            {t('reserved.conditions')}
                           </h5>
                           <ul className="space-y-1">
                             {token.conditions.map((condition, index) => (
                               <li key={index} className="text-sm text-neutral-600 dark:text-slate-400 flex items-start">
-                                <span className="text-neutral-400 mr-2">•</span>
+                                <span className="text-neutral-400 me-2">•</span>
                                 {condition}
                               </li>
                             ))}
@@ -391,13 +393,13 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
 
                       {/* Action Buttons */}
                       {showActions && token.status === 'active' && (
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-3">
                           {activationPercentage === 100 && (
                             <Button
                               variant="primary"
                               onClick={() => onActivateTokens(token.id)}
                             >
-                              Activate All Tokens
+                              {t('reserved.activateAll')}
                             </Button>
                           )}
                           {token.installmentPlan && (
@@ -405,7 +407,7 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
                               variant="outline"
                               onClick={() => onMakePayment(token.id)}
                             >
-                              Make Payment
+                              {t('reserved.makePayment')}
                             </Button>
                           )}
                           {onExtendReservation && daysRemaining <= 7 && daysRemaining > 0 && (
@@ -413,7 +415,7 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
                               variant="outline"
                               onClick={() => onExtendReservation(token.id)}
                             >
-                              Extend Reservation
+                              {t('reserved.extend')}
                             </Button>
                           )}
                           {token.cancellationDeadline && getDaysRemaining(token.cancellationDeadline) > 0 && (
@@ -421,7 +423,7 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
                               variant="danger"
                               onClick={() => onCancelReservation(token.id)}
                             >
-                              Cancel Reservation
+                              {t('reserved.cancel')}
                             </Button>
                           )}
                         </div>
@@ -430,11 +432,11 @@ export const ReservedTokensDisplay: React.FC<ReservedTokensDisplayProps> = ({
                       {/* Expiration Warning */}
                       {token.status === 'active' && daysRemaining <= 7 && daysRemaining >= 0 && (
                         <div className="mt-3 p-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center gap-2">
                             <span className="text-orange-600 dark:text-orange-400">⚠️</span>
                             <p className="text-sm text-orange-800 dark:text-orange-300">
-                              <strong>Expiring Soon:</strong> This reservation expires in {daysRemaining} day{daysRemaining !== 1 ? 's' : ''}.
-                              {token.refundEligible ? ' Complete activation or cancel for refund.' : ' Complete activation or lose reservation.'}
+                              <strong>{t('reserved.expiringSoon')}</strong> {t('reserved.expiresIn', { count: daysRemaining })}{' '}
+                              {token.refundEligible ? t('reserved.refundHint') : t('reserved.loseHint')}
                             </p>
                           </div>
                         </div>

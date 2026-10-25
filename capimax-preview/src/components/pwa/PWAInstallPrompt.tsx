@@ -17,6 +17,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, Smartphone, Share, Plus } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -96,6 +97,7 @@ export const PWAInstallPrompt: React.FC = () => {
     useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [mode, setMode] = useState<Mode>('native');
+  const { t } = useTranslation('shared');
 
   useEffect(() => {
     if (isStandalone()) return;
@@ -170,9 +172,9 @@ export const PWAInstallPrompt: React.FC = () => {
   // (which is 64px tall + safe-area-inset-bottom). On md+ it sits in the
   // bottom-right corner.
   const containerCls =
-    'fixed left-3 right-3 z-50 ' +
+    'fixed start-3 end-3 z-50 ' +
     'bottom-[calc(64px+env(safe-area-inset-bottom)+12px)] ' +
-    'md:left-auto md:right-4 md:bottom-4 md:w-96';
+    'md:start-auto md:end-4 md:bottom-4 md:w-96';
 
   return (
     <AnimatePresence>
@@ -189,13 +191,13 @@ export const PWAInstallPrompt: React.FC = () => {
           <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Smartphone className="w-5 h-5 text-white" />
-              <span className="text-white font-semibold">Install Capimax RT</span>
+              <span className="text-white font-semibold">{t('pwa.title')}</span>
             </div>
             <button
               type="button"
               onClick={handleDismiss}
               className="text-white/80 hover:text-white transition-colors"
-              aria-label="Dismiss install prompt"
+              aria-label={t('pwa.dismiss')}
             >
               <X className="w-5 h-5" />
             </button>
@@ -206,22 +208,20 @@ export const PWAInstallPrompt: React.FC = () => {
             {mode === 'native' ? (
               <>
                 <p className="text-sm mb-3">
-                  Add Capimax RT to your home screen for a faster, app-like
-                  experience — offline access, instant launch, and push
-                  notifications.
+                  {t('pwa.nativeBody')}
                 </p>
                 <ul className="text-slate-400 text-xs space-y-1 mb-4">
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                    Quick access from your home screen
+                    {t('pwa.benefit1')}
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                    Full-screen native-app feel
+                    {t('pwa.benefit2')}
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                    Works offline with cached data
+                    {t('pwa.benefit3')}
                   </li>
                 </ul>
                 <div className="flex gap-3">
@@ -231,7 +231,7 @@ export const PWAInstallPrompt: React.FC = () => {
                     className="flex-1 px-4 py-2 text-sm text-slate-400 hover:text-slate-200
                                border border-slate-700 rounded-lg transition-colors"
                   >
-                    Not Now
+                    {t('pwa.notNow')}
                   </button>
                   <button
                     type="button"
@@ -241,14 +241,14 @@ export const PWAInstallPrompt: React.FC = () => {
                                flex items-center justify-center gap-2"
                   >
                     <Download className="w-4 h-4" />
-                    Install
+                    {t('pwa.install')}
                   </button>
                 </div>
               </>
             ) : (
               <>
                 <p className="text-sm mb-4">
-                  Install Capimax RT on your iPhone:
+                  {t('pwa.iosIntro')}
                 </p>
                 <ol className="space-y-3 mb-4 text-sm">
                   <li className="flex items-start gap-3">
@@ -256,9 +256,11 @@ export const PWAInstallPrompt: React.FC = () => {
                       1
                     </span>
                     <span className="flex items-center gap-1.5">
-                      Tap the Share button
-                      <Share className="w-4 h-4 text-emerald-400 inline" />
-                      below
+                      <Trans
+                        t={t}
+                        i18nKey="pwa.iosStep1"
+                        components={{ icon: <Share className="w-4 h-4 text-emerald-400 inline" /> }}
+                      />
                     </span>
                   </li>
                   <li className="flex items-start gap-3">
@@ -266,15 +268,23 @@ export const PWAInstallPrompt: React.FC = () => {
                       2
                     </span>
                     <span className="flex items-center gap-1.5">
-                      Choose <span className="font-medium">Add to Home Screen</span>
-                      <Plus className="w-4 h-4 text-emerald-400 inline" />
+                      <Trans
+                        t={t}
+                        i18nKey="pwa.iosStep2"
+                        components={{
+                          b: <span className="font-medium" />,
+                          icon: <Plus className="w-4 h-4 text-emerald-400 inline" />,
+                        }}
+                      />
                     </span>
                   </li>
                   <li className="flex items-start gap-3">
                     <span className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-600 text-white text-xs font-semibold flex items-center justify-center">
                       3
                     </span>
-                    <span>Tap <span className="font-medium">Add</span> in the top-right</span>
+                    <span>
+                      <Trans t={t} i18nKey="pwa.iosStep3" components={{ b: <span className="font-medium" /> }} />
+                    </span>
                   </li>
                 </ol>
                 <button
@@ -283,7 +293,7 @@ export const PWAInstallPrompt: React.FC = () => {
                   className="w-full px-4 py-2 text-sm text-white bg-emerald-600
                              hover:bg-emerald-500 rounded-lg transition-colors"
                 >
-                  Got it
+                  {t('pwa.gotIt')}
                 </button>
               </>
             )}

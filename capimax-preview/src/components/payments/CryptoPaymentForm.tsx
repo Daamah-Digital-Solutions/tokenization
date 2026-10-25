@@ -31,6 +31,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation, Trans } from 'react-i18next';
 import {
   Bitcoin,
   CheckCircle,
@@ -83,6 +84,7 @@ export function CryptoPaymentForm({
   className,
 }: CryptoPaymentFormProps) {
   const { error: showError } = useNotifications();
+  const { t } = useTranslation('payments');
 
   const [step, setStep] = useState<'intro' | 'awaiting_payment' | 'complete'>('intro');
   const [isCreating, setIsCreating] = useState(false);
@@ -132,18 +134,14 @@ export function CryptoPaymentForm({
       pollStatus(response.payment_id);
     } catch (err: any) {
       const status = err?.statusCode;
-      let message = err?.message || 'Failed to create the crypto invoice.';
+      let message = err?.message || t('crypto.errors.createInvoice');
       if (status === 503) {
-        message =
-          'Crypto payments are not configured for this environment yet. ' +
-          'Please use a different payment method, or contact support.';
+        message = t('crypto.errors.notConfigured');
       } else if (status === 500) {
-        message =
-          'The crypto payment provider could not generate a checkout. ' +
-          'Please try again in a moment or pick another payment method.';
+        message = t('crypto.errors.providerFailed');
       }
       setErrorMessage(message);
-      showError('Crypto payment failed', message);
+      showError(t('crypto.errors.toastTitle'), message);
     } finally {
       setIsCreating(false);
     }
@@ -159,11 +157,7 @@ export function CryptoPaymentForm({
       pollDeadlineRef.current !== null &&
       Date.now() > pollDeadlineRef.current
     ) {
-      setErrorMessage(
-        'Timed out waiting for the on-chain payment. If you have already ' +
-          'sent the funds, they will still credit — check Transactions in a ' +
-          'few minutes. Otherwise you can cancel and try again.',
-      );
+      setErrorMessage(t('crypto.errors.timeout'));
       return;
     }
 
@@ -180,10 +174,7 @@ export function CryptoPaymentForm({
         return;
       }
       if (status.is_failed) {
-        setErrorMessage(
-          'NOWPayments reported this invoice as failed or expired. You can ' +
-            'cancel and try again with a fresh quote.',
-        );
+        setErrorMessage(t('crypto.errors.invoiceFailed'));
         return;
       }
     } catch (err: any) {
@@ -213,22 +204,24 @@ export function CryptoPaymentForm({
       <div className="text-center">
         <Bitcoin className="mx-auto w-10 h-10 text-amber-500" />
         <h3 className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
-          Pay with cryptocurrency
+          {t('crypto.title')}
         </h3>
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-          Pay <strong>${amount.toFixed(2)}</strong>. You&apos;ll pick the
-          coin you want to use on the NOWPayments checkout — Bitcoin, USDT,
-          USDC, ETH, BNB, MATIC and 200+ more are supported there.
+          <Trans
+            t={t}
+            i18nKey="crypto.intro"
+            values={{ amount: `$${amount.toFixed(2)}` }}
+            components={{ b: <strong /> }}
+          />
         </p>
       </div>
 
       <Card className="p-3 bg-blue-50 border-blue-200 text-blue-900 text-sm space-y-1">
-        <p className="font-medium">What happens next?</p>
-        <ol className="list-decimal pl-5 space-y-1">
-          <li>We open the NOWPayments checkout in a new tab.</li>
-          <li>You choose the coin you want to send and complete the payment there.</li>
-          <li>This window stays open and watches for the on-chain confirmation —
-              your purchase finalises automatically when funds arrive.</li>
+        <p className="font-medium">{t('crypto.nextTitle')}</p>
+        <ol className="list-decimal ps-5 space-y-1">
+          <li>{t('crypto.next1')}</li>
+          <li>{t('crypto.next2')}</li>
+          <li>{t('crypto.next3')}</li>
         </ol>
       </Card>
 
@@ -243,7 +236,7 @@ export function CryptoPaymentForm({
 
       <div className="flex gap-3">
         <Button variant="outline" onClick={onCancel} className="flex-1" disabled={isCreating}>
-          Cancel
+          {t('shared.cancel')}
         </Button>
         <Button
           onClick={handleCreateInvoice}
@@ -252,11 +245,11 @@ export function CryptoPaymentForm({
         >
           {isCreating ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Opening checkout…
+              <Loader2 className="w-4 h-4 me-2 animate-spin" />
+              {t('crypto.opening')}
             </>
           ) : (
-            'Continue to NOWPayments'
+            t('crypto.continue')
           )}
         </Button>
       </div>
@@ -265,7 +258,8 @@ export function CryptoPaymentForm({
 
   const renderAwaiting = () => {
     if (!invoice) return null;
-    const statusLabel = (latestStatus || 'waiting').replace(/_/g, ' ');
+    const rawStatus = latestStatus || 'waiting';
+    const statusLabel = t(`crypto.providerStatus.${rawStatus}`, { defaultValue: rawStatus.replace(/_/g, ' ') });
     return (
       <div className="space-y-5">
         <div className="text-center">
@@ -273,18 +267,16 @@ export function CryptoPaymentForm({
             <Clock className="w-6 h-6 text-blue-600 animate-pulse" />
           </div>
           <h3 className="mt-3 text-lg font-semibold text-gray-900 dark:text-white">
-            Awaiting payment on NOWPayments
+            {t('crypto.awaitingTitle')}
           </h3>
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Complete the payment in the new tab we just opened. Your
-            purchase finalises as soon as the network confirms the
-            transfer.
+            {t('crypto.awaitingBody')}
           </p>
         </div>
 
         <Card className="p-3 bg-gray-50 dark:bg-gray-800/40 text-sm space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-gray-600 dark:text-gray-300">Status</span>
+            <span className="text-gray-600 dark:text-gray-300">{t('crypto.statusLabel')}</span>
             <span className="font-semibold capitalize">{statusLabel}</span>
           </div>
           <a
@@ -294,7 +286,7 @@ export function CryptoPaymentForm({
             className="inline-flex items-center gap-1.5 text-emerald-700 hover:text-emerald-800 font-medium"
           >
             <ExternalLink className="w-4 h-4" />
-            Open hosted checkout again
+            {t('crypto.reopen')}
           </a>
         </Card>
 
@@ -302,9 +294,7 @@ export function CryptoPaymentForm({
           <div className="flex gap-2 items-start">
             <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <div>
-              Don&apos;t close this window until the payment confirms —
-              we&apos;re polling for the update every {POLL_INTERVAL_MS / 1000}s.
-              You can leave it running in the background.
+              {t('crypto.keepOpen', { seconds: POLL_INTERVAL_MS / 1000 })}
             </div>
           </div>
         </Card>
@@ -319,7 +309,7 @@ export function CryptoPaymentForm({
         )}
 
         <Button variant="outline" onClick={onCancel} className="w-full">
-          I&apos;ll pay later
+          {t('crypto.payLater')}
         </Button>
       </div>
     );
@@ -332,11 +322,10 @@ export function CryptoPaymentForm({
       </div>
       <div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          Payment received
+          {t('crypto.receivedTitle')}
         </h3>
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-          Your crypto payment is confirmed on chain. Tokens will appear in
-          your wallet shortly — minting runs in the background.
+          {t('crypto.receivedBody')}
         </p>
       </div>
     </div>

@@ -17,6 +17,7 @@ import { Button } from '../ui/Button';
 import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
 import { cn } from '../../utils/cn';
+import { useTranslation } from 'react-i18next';
 import {
   connectWallet,
   detectInjectedWallet,
@@ -43,6 +44,8 @@ interface WalletOption {
   popular?: boolean;
 }
 
+// ``description`` is rendered from the ``invest`` namespace by id
+// (wallet.options.<id>); wallet names are brand names and stay as-is.
 const walletOptions: WalletOption[] = [
   {
     id: 'metamask',
@@ -77,6 +80,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({
   isConnecting = false,
   className
 }) => {
+  const { t } = useTranslation('invest');
   const [connectedWallet, setConnectedWallet] = useState<string | null>(null);
   const [connectedAddress, setConnectedAddress] = useState<string | null>(null);
   const [balance, setBalance] = useState<string | null>(null);
@@ -152,7 +156,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({
       if (err instanceof WalletConnectionError) {
         setError(err.message);
       } else {
-        setError('Failed to connect wallet. Please try again.');
+        setError(t('wallet.connectFailed'));
       }
     } finally {
       setLoading(false);
@@ -198,11 +202,11 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({
         <div className="flex items-center justify-between mb-4">
           <Text variant="h4" weight="semibold" className="flex items-center gap-2">
             <Wallet className="w-5 h-5 text-emerald-500" />
-            Wallet Connected
+            {t('wallet.connectedTitle')}
           </Text>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-            <Text variant="bodySmall" color="muted">Connected</Text>
+            <Text variant="bodySmall" color="muted">{t('wallet.connected')}</Text>
           </div>
         </div>
 
@@ -226,7 +230,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({
               onClick={handleDisconnect}
               className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
             >
-              Disconnect
+              {t('wallet.disconnect')}
             </Button>
           </div>
 
@@ -234,13 +238,14 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
               <div className="flex items-center justify-between mb-2">
-                <Text variant="bodySmall" color="muted">Address</Text>
+                <Text variant="bodySmall" color="muted">{t('wallet.address')}</Text>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowAddress(!showAddress)}
                     className="p-1"
+                    aria-label={showAddress ? t('wallet.hideAddress') : t('wallet.showAddress')}
                   >
                     {showAddress ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                   </Button>
@@ -249,6 +254,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({
                     size="sm"
                     onClick={copyAddress}
                     className="p-1"
+                    aria-label={t('common.copy')}
                   >
                     <Copy className="w-3 h-3" />
                   </Button>
@@ -260,7 +266,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({
             </div>
 
             <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
-              <Text variant="bodySmall" color="muted" className="mb-2">Balance</Text>
+              <Text variant="bodySmall" color="muted" className="mb-2">{t('wallet.balance')}</Text>
               <Text variant="bodyLarge" weight="semibold" className="text-emerald-600">
                 {balance}
               </Text>
@@ -272,12 +278,12 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4 text-blue-600" />
               <Text variant="bodySmall" className="text-blue-800 dark:text-blue-200">
-                Connected to {network}
+                {t('wallet.connectedTo', { network })}
               </Text>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-              <Text variant="bodySmall" className="text-green-600">Active</Text>
+              <Text variant="bodySmall" className="text-green-600">{t('confirmation.active')}</Text>
             </div>
           </div>
         </div>
@@ -289,10 +295,10 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({
     <Card className={cn("p-6", className)}>
       <div className="text-center mb-6">
         <Text variant="h4" weight="semibold" className="mb-2">
-          Connect Your Wallet
+          {t('wallet.title')}
         </Text>
         <Text variant="body" color="muted">
-          Choose a wallet to connect and complete your purchase
+          {t('wallet.subtitle')}
         </Text>
       </div>
 
@@ -320,29 +326,29 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({
           >
             <div className="flex items-center gap-4">
               <div className="text-2xl">{wallet.icon}</div>
-              <div className="text-left">
+              <div className="text-start">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{wallet.name}</span>
                   {wallet.popular && (
                     <span className="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs rounded-full">
-                      Popular
+                      {t('paymentMethod.popular')}
                     </span>
                   )}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  {wallet.description}
+                  {t(`wallet.options.${wallet.id}`, { defaultValue: wallet.description })}
                 </div>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               {wallet.installed === false && (
-                <span className="text-xs text-gray-500 dark:text-gray-400">Not installed</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{t('wallet.notInstalled')}</span>
               )}
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 rtl:rotate-180" />
               )}
             </div>
           </Button>
@@ -352,16 +358,17 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({
       {/* Help Section */}
       <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
         <Text variant="bodySmall" weight="semibold" className="text-amber-800 dark:text-amber-200 mb-1">
-          Don't have a wallet?
+          {t('wallet.noWallet')}
         </Text>
         <div className="flex items-center justify-between">
           <Text variant="bodySmall" className="text-amber-700 dark:text-amber-300">
-            Learn how to set up a crypto wallet
+            {t('wallet.learn')}
           </Text>
           <Button
             variant="ghost"
             size="sm"
             className="text-amber-600 hover:text-amber-700 p-1"
+            aria-label={t('wallet.learn')}
           >
             <ExternalLink className="w-4 h-4" />
           </Button>
@@ -373,7 +380,7 @@ export const WalletConnector: React.FC<WalletConnectorProps> = ({
         <div className="flex items-start gap-2">
           <Shield className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
           <Text variant="bodySmall" className="text-blue-700 dark:text-blue-300">
-            We never store your private keys or seed phrase. Your wallet remains under your complete control.
+            {t('wallet.security')}
           </Text>
         </div>
       </div>

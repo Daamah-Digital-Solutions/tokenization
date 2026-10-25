@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { adminService } from '../../../services';
 import type {
   AdminTransaction,
@@ -8,12 +9,16 @@ import type {
   FinancialMetrics
 } from '../../../services';
 
+const dateLocale = (lng?: string) => (lng?.startsWith('ar') ? 'ar-EG' : 'en-US');
+
 interface TransactionDetailViewProps {
   transaction: AdminTransaction;
   onClose: () => void;
 }
 
 const TransactionDetailView: React.FC<TransactionDetailViewProps> = ({ transaction, onClose }) => {
+  const { t, i18n } = useTranslation('admin');
+  const locale = dateLocale(i18n.language);
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
@@ -21,14 +26,15 @@ const TransactionDetailView: React.FC<TransactionDetailViewProps> = ({ transacti
         <div className="px-6 py-4 border-b border-neutral-200 dark:border-slate-700 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100">
-              Transaction Details
+              {t('transactions.detail.title')}
             </h2>
             <p className="text-sm text-neutral-500 dark:text-slate-400 mt-1">
-              ID: {transaction.id.substring(0, 8)}...
+              {t('transactions.detail.id', { id: transaction.id.substring(0, 8) })}
             </p>
           </div>
           <button
             onClick={onClose}
+            aria-label={t('shared.close')}
             className="text-neutral-400 hover:text-neutral-600 dark:hover:text-slate-300 text-2xl"
           >
             ×
@@ -40,25 +46,25 @@ const TransactionDetailView: React.FC<TransactionDetailViewProps> = ({ transacti
           {/* Transaction Overview */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-4 bg-neutral-50 dark:bg-slate-700 rounded-lg">
-              <p className="text-sm text-neutral-500 dark:text-slate-400 mb-1">Amount</p>
+              <p className="text-sm text-neutral-500 dark:text-slate-400 mb-1">{t('transactions.fields.amount')}</p>
               <p className="text-xl font-bold text-neutral-900 dark:text-slate-100">
                 ${transaction.amount.toLocaleString()}
               </p>
             </div>
             <div className="p-4 bg-neutral-50 dark:bg-slate-700 rounded-lg">
-              <p className="text-sm text-neutral-500 dark:text-slate-400 mb-1">Fee</p>
+              <p className="text-sm text-neutral-500 dark:text-slate-400 mb-1">{t('transactions.fields.fee')}</p>
               <p className="text-xl font-bold text-neutral-900 dark:text-slate-100">
                 ${transaction.fee.toLocaleString()}
               </p>
             </div>
             <div className="p-4 bg-neutral-50 dark:bg-slate-700 rounded-lg">
-              <p className="text-sm text-neutral-500 dark:text-slate-400 mb-1">Type</p>
+              <p className="text-sm text-neutral-500 dark:text-slate-400 mb-1">{t('transactions.fields.type')}</p>
               <p className="text-sm font-semibold text-neutral-900 dark:text-slate-100">
-                {transaction.type}
+                {t(`shared.txTypes.${String(transaction.type || '').toLowerCase()}`, { defaultValue: transaction.type })}
               </p>
             </div>
             <div className="p-4 bg-neutral-50 dark:bg-slate-700 rounded-lg">
-              <p className="text-sm text-neutral-500 dark:text-slate-400 mb-1">Status</p>
+              <p className="text-sm text-neutral-500 dark:text-slate-400 mb-1">{t('transactions.fields.status')}</p>
               <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                 transaction.status === 'completed'
                   ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
@@ -68,25 +74,25 @@ const TransactionDetailView: React.FC<TransactionDetailViewProps> = ({ transacti
                   ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
                   : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
               }`}>
-                {transaction.status}
+                {t(`shared.status.${transaction.status}`, { defaultValue: transaction.status })}
               </span>
             </div>
           </div>
 
           {/* User Information */}
           <div className="bg-neutral-50 dark:bg-slate-700 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">User Information</h3>
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">{t('transactions.detail.userInfo')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-neutral-500 dark:text-slate-400">User Name</p>
+                <p className="text-sm text-neutral-500 dark:text-slate-400">{t('transactions.detail.userName')}</p>
                 <p className="font-medium text-neutral-900 dark:text-slate-100">{transaction.userName}</p>
               </div>
               <div>
-                <p className="text-sm text-neutral-500 dark:text-slate-400">User Email</p>
+                <p className="text-sm text-neutral-500 dark:text-slate-400">{t('transactions.detail.userEmail')}</p>
                 <p className="font-medium text-neutral-900 dark:text-slate-100">{transaction.userEmail}</p>
               </div>
               <div>
-                <p className="text-sm text-neutral-500 dark:text-slate-400">User ID</p>
+                <p className="text-sm text-neutral-500 dark:text-slate-400">{t('transactions.detail.userId')}</p>
                 <p className="font-mono text-sm text-neutral-900 dark:text-slate-100">
                   {transaction.userId.substring(0, 16)}...
                 </p>
@@ -97,14 +103,14 @@ const TransactionDetailView: React.FC<TransactionDetailViewProps> = ({ transacti
           {/* Property Information (if applicable) */}
           {transaction.propertyId && (
             <div className="bg-neutral-50 dark:bg-slate-700 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">Property Information</h3>
+              <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">{t('transactions.detail.propertyInfo')}</h3>
               <div className="space-y-2">
                 <div>
-                  <p className="text-sm text-neutral-500 dark:text-slate-400">Property Title</p>
+                  <p className="text-sm text-neutral-500 dark:text-slate-400">{t('transactions.detail.propertyTitle')}</p>
                   <p className="font-medium text-neutral-900 dark:text-slate-100">{transaction.propertyTitle}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-neutral-500 dark:text-slate-400">Property ID</p>
+                  <p className="text-sm text-neutral-500 dark:text-slate-400">{t('transactions.detail.propertyId')}</p>
                   <p className="font-mono text-sm text-neutral-900 dark:text-slate-100">
                     {transaction.propertyId.substring(0, 16)}...
                   </p>
@@ -115,31 +121,31 @@ const TransactionDetailView: React.FC<TransactionDetailViewProps> = ({ transacti
 
           {/* Payment Details */}
           <div className="bg-neutral-50 dark:bg-slate-700 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">Payment Details</h3>
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">{t('transactions.detail.paymentDetails')}</h3>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-sm text-neutral-500 dark:text-slate-400">Payment Method</span>
+                <span className="text-sm text-neutral-500 dark:text-slate-400">{t('transactions.fields.paymentMethod')}</span>
                 <span className="font-medium text-neutral-900 dark:text-slate-100">{transaction.paymentMethod}</span>
               </div>
               {transaction.paymentReference && (
                 <div className="flex justify-between">
-                  <span className="text-sm text-neutral-500 dark:text-slate-400">Payment Reference</span>
+                  <span className="text-sm text-neutral-500 dark:text-slate-400">{t('transactions.detail.paymentReference')}</span>
                   <span className="font-mono text-sm text-neutral-900 dark:text-slate-100">
                     {transaction.paymentReference}
                   </span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-sm text-neutral-500 dark:text-slate-400">Created At</span>
+                <span className="text-sm text-neutral-500 dark:text-slate-400">{t('transactions.detail.createdAt')}</span>
                 <span className="text-sm text-neutral-900 dark:text-slate-100">
-                  {new Date(transaction.createdAt).toLocaleString()}
+                  {new Date(transaction.createdAt).toLocaleString(locale)}
                 </span>
               </div>
               {transaction.processedAt && (
                 <div className="flex justify-between">
-                  <span className="text-sm text-neutral-500 dark:text-slate-400">Processed At</span>
+                  <span className="text-sm text-neutral-500 dark:text-slate-400">{t('transactions.detail.processedAt')}</span>
                   <span className="text-sm text-neutral-900 dark:text-slate-100">
-                    {new Date(transaction.processedAt).toLocaleString()}
+                    {new Date(transaction.processedAt).toLocaleString(locale)}
                   </span>
                 </div>
               )}
@@ -149,11 +155,11 @@ const TransactionDetailView: React.FC<TransactionDetailViewProps> = ({ transacti
           {/* Blockchain Information (if applicable) */}
           {transaction.blockchain && (
             <div className="bg-neutral-50 dark:bg-slate-700 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">Blockchain Information</h3>
+              <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">{t('transactions.detail.blockchainInfo')}</h3>
               <div className="space-y-3">
                 {transaction.blockchain.transactionHash && (
                   <div>
-                    <p className="text-sm text-neutral-500 dark:text-slate-400 mb-1">Transaction Hash</p>
+                    <p className="text-sm text-neutral-500 dark:text-slate-400 mb-1">{t('transactions.detail.txHash')}</p>
                     <p className="font-mono text-xs text-neutral-900 dark:text-slate-100 break-all">
                       {transaction.blockchain.transactionHash}
                     </p>
@@ -161,7 +167,7 @@ const TransactionDetailView: React.FC<TransactionDetailViewProps> = ({ transacti
                 )}
                 {transaction.blockchain.blockNumber && (
                   <div className="flex justify-between">
-                    <span className="text-sm text-neutral-500 dark:text-slate-400">Block Number</span>
+                    <span className="text-sm text-neutral-500 dark:text-slate-400">{t('transactions.detail.blockNumber')}</span>
                     <span className="font-mono text-sm text-neutral-900 dark:text-slate-100">
                       {transaction.blockchain.blockNumber}
                     </span>
@@ -169,7 +175,7 @@ const TransactionDetailView: React.FC<TransactionDetailViewProps> = ({ transacti
                 )}
                 {transaction.blockchain.gasFee && (
                   <div className="flex justify-between">
-                    <span className="text-sm text-neutral-500 dark:text-slate-400">Gas Fee</span>
+                    <span className="text-sm text-neutral-500 dark:text-slate-400">{t('transactions.detail.gasFee')}</span>
                     <span className="font-mono text-sm text-neutral-900 dark:text-slate-100">
                       ${transaction.blockchain.gasFee.toFixed(4)}
                     </span>
@@ -182,7 +188,7 @@ const TransactionDetailView: React.FC<TransactionDetailViewProps> = ({ transacti
           {/* Failure Reason (if failed) */}
           {transaction.failureReason && (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-red-900 dark:text-red-200 mb-2">Failure Reason</h3>
+              <h3 className="text-lg font-semibold text-red-900 dark:text-red-200 mb-2">{t('transactions.detail.failureReason')}</h3>
               <p className="text-sm text-red-700 dark:text-red-300">{transaction.failureReason}</p>
             </div>
           )}
@@ -190,7 +196,7 @@ const TransactionDetailView: React.FC<TransactionDetailViewProps> = ({ transacti
           {/* Metadata (if available) */}
           {transaction.metadata && Object.keys(transaction.metadata).length > 0 && (
             <div className="bg-neutral-50 dark:bg-slate-700 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">Additional Metadata</h3>
+              <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">{t('transactions.detail.metadata')}</h3>
               <pre className="text-xs text-neutral-700 dark:text-slate-300 bg-white dark:bg-slate-800 p-4 rounded-lg overflow-x-auto">
                 {JSON.stringify(transaction.metadata, null, 2)}
               </pre>
@@ -207,6 +213,8 @@ interface WithdrawalManagementProps {
 }
 
 const WithdrawalManagement: React.FC<WithdrawalManagementProps> = ({ onClose }) => {
+  const { t, i18n } = useTranslation('admin');
+  const statusLabel = (s: string) => t(`shared.status.${s}`, { defaultValue: s });
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -226,7 +234,7 @@ const WithdrawalManagement: React.FC<WithdrawalManagementProps> = ({ onClose }) 
   }, []);
 
   const handleApprove = async (withdrawalId: string) => {
-    const notes = prompt('Add approval notes (optional):');
+    const notes = prompt(t('transactions.withdrawals.approvePrompt'));
     try {
       await adminService.approveWithdrawal(withdrawalId, notes || undefined);
       // Reload withdrawals
@@ -238,7 +246,7 @@ const WithdrawalManagement: React.FC<WithdrawalManagementProps> = ({ onClose }) 
   };
 
   const handleReject = async (withdrawalId: string) => {
-    const reason = prompt('Please provide rejection reason:');
+    const reason = prompt(t('transactions.withdrawals.rejectPrompt'));
     if (reason) {
       try {
         await adminService.rejectWithdrawal(withdrawalId, reason);
@@ -257,10 +265,11 @@ const WithdrawalManagement: React.FC<WithdrawalManagementProps> = ({ onClose }) 
         {/* Header */}
         <div className="px-6 py-4 border-b border-neutral-200 dark:border-slate-700 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100">
-            Withdrawal Requests ({withdrawals.length})
+            {t('transactions.withdrawals.titleCount', { count: withdrawals.length })}
           </h2>
           <button
             onClick={onClose}
+            aria-label={t('shared.close')}
             className="text-neutral-400 hover:text-neutral-600 dark:hover:text-slate-300 text-2xl"
           >
             ×
@@ -289,56 +298,56 @@ const WithdrawalManagement: React.FC<WithdrawalManagementProps> = ({ onClose }) 
                         ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                         : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                     }`}>
-                      {withdrawal.status}
+                      {statusLabel(withdrawal.status)}
                     </span>
                   </div>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div>
-                      <p className="text-sm text-neutral-500 dark:text-slate-400">Amount</p>
+                      <p className="text-sm text-neutral-500 dark:text-slate-400">{t('transactions.fields.amount')}</p>
                       <p className="font-semibold text-neutral-900 dark:text-slate-100">
                         ${withdrawal.amount.toLocaleString()}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-neutral-500 dark:text-slate-400">Fee</p>
+                      <p className="text-sm text-neutral-500 dark:text-slate-400">{t('transactions.fields.fee')}</p>
                       <p className="font-semibold text-neutral-900 dark:text-slate-100">
                         ${withdrawal.fee.toLocaleString()}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-neutral-500 dark:text-slate-400">Net Amount</p>
+                      <p className="text-sm text-neutral-500 dark:text-slate-400">{t('transactions.withdrawals.netAmount')}</p>
                       <p className="font-semibold text-green-600 dark:text-green-400">
                         ${withdrawal.netAmount.toLocaleString()}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-neutral-500 dark:text-slate-400">Requested</p>
+                      <p className="text-sm text-neutral-500 dark:text-slate-400">{t('transactions.withdrawals.requested')}</p>
                       <p className="text-sm text-neutral-900 dark:text-slate-100">
-                        {new Date(withdrawal.requestedAt).toLocaleDateString()}
+                        {new Date(withdrawal.requestedAt).toLocaleDateString(dateLocale(i18n.language))}
                       </p>
                     </div>
                   </div>
 
                   <div className="bg-white dark:bg-slate-800 rounded-lg p-4 mb-4">
-                    <h4 className="text-sm font-semibold text-neutral-900 dark:text-slate-100 mb-2">Bank Details</h4>
+                    <h4 className="text-sm font-semibold text-neutral-900 dark:text-slate-100 mb-2">{t('transactions.withdrawals.bankDetails')}</h4>
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        <p className="text-neutral-500 dark:text-slate-400">Bank Name</p>
+                        <p className="text-neutral-500 dark:text-slate-400">{t('transactions.withdrawals.bankName')}</p>
                         <p className="text-neutral-900 dark:text-slate-100">{withdrawal.bankDetails.bankName}</p>
                       </div>
                       <div>
-                        <p className="text-neutral-500 dark:text-slate-400">Account Holder</p>
+                        <p className="text-neutral-500 dark:text-slate-400">{t('transactions.withdrawals.accountHolder')}</p>
                         <p className="text-neutral-900 dark:text-slate-100">{withdrawal.bankDetails.accountHolderName}</p>
                       </div>
                       <div>
-                        <p className="text-neutral-500 dark:text-slate-400">Account Number</p>
+                        <p className="text-neutral-500 dark:text-slate-400">{t('transactions.withdrawals.accountNumber')}</p>
                         <p className="font-mono text-neutral-900 dark:text-slate-100">
                           {withdrawal.bankDetails.accountNumber}
                         </p>
                       </div>
                       <div>
-                        <p className="text-neutral-500 dark:text-slate-400">Routing Number</p>
+                        <p className="text-neutral-500 dark:text-slate-400">{t('transactions.withdrawals.routingNumber')}</p>
                         <p className="font-mono text-neutral-900 dark:text-slate-100">
                           {withdrawal.bankDetails.routingNumber}
                         </p>
@@ -347,18 +356,18 @@ const WithdrawalManagement: React.FC<WithdrawalManagementProps> = ({ onClose }) 
                   </div>
 
                   {withdrawal.status === 'pending' && (
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleApprove(withdrawal.id)}
                         className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                       >
-                        Approve
+                        {t('shared.approve')}
                       </button>
                       <button
                         onClick={() => handleReject(withdrawal.id)}
                         className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                       >
-                        Reject
+                        {t('shared.reject')}
                       </button>
                     </div>
                   )}
@@ -373,7 +382,7 @@ const WithdrawalManagement: React.FC<WithdrawalManagementProps> = ({ onClose }) 
             </div>
           ) : (
             <div className="text-center py-12 text-neutral-500 dark:text-slate-400">
-              No pending withdrawal requests
+              {t('transactions.withdrawals.empty')}
             </div>
           )}
         </div>
@@ -383,6 +392,8 @@ const WithdrawalManagement: React.FC<WithdrawalManagementProps> = ({ onClose }) 
 };
 
 export const AdminTransactionManagement: React.FC = () => {
+  const { t, i18n } = useTranslation('admin');
+  const locale = dateLocale(i18n.language);
   const [transactions, setTransactions] = useState<PaginatedTransactions | null>(null);
   const [financialMetrics, setFinancialMetrics] = useState<FinancialMetrics | null>(null);
   const [loading, setLoading] = useState(false);
@@ -408,11 +419,11 @@ export const AdminTransactionManagement: React.FC = () => {
       const data = await adminService.getDetailedTransactions(filters);
       setTransactions(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load transactions');
+      setError(err instanceof Error ? err.message : t('transactions.loadFailed'));
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [filters, t]);
 
   // Load financial metrics
   const loadFinancialMetrics = useCallback(async () => {
@@ -441,15 +452,15 @@ export const AdminTransactionManagement: React.FC = () => {
     if (!transactions || transactions.transactions.length === 0) return;
 
     const headers = ['Date', 'Type', 'User', 'Amount', 'Fee', 'Status', 'Payment Method', 'Reference'];
-    const rows = transactions.transactions.map(t => [
-      new Date(t.createdAt).toLocaleDateString(),
-      t.type,
-      t.userName,
-      t.amount.toString(),
-      t.fee.toString(),
-      t.status,
-      t.paymentMethod,
-      t.paymentReference || ''
+    const rows = transactions.transactions.map(tx => [
+      new Date(tx.createdAt).toLocaleDateString(),
+      tx.type,
+      tx.userName,
+      tx.amount.toString(),
+      tx.fee.toString(),
+      tx.status,
+      tx.paymentMethod,
+      tx.paymentReference || ''
     ]);
 
     const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
@@ -467,30 +478,30 @@ export const AdminTransactionManagement: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-slate-100">Transaction Management</h1>
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-slate-100">{t('transactions.title')}</h1>
           <p className="text-neutral-500 dark:text-slate-400 mt-1">
-            Monitor transactions, manage withdrawals, and view financial metrics
+            {t('transactions.subtitle')}
           </p>
         </div>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-3">
           <button
             onClick={() => setShowWithdrawals(true)}
             className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
           >
-            Withdrawal Requests
+            {t('transactions.withdrawals.title')}
           </button>
           <button
             onClick={handleExportCSV}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
-            Export CSV
+            {t('transactions.exportCsv')}
           </button>
           <button
             onClick={loadTransactions}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2"
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
           >
             <span>🔄</span>
-            <span>Refresh</span>
+            <span>{t('shared.refresh')}</span>
           </button>
         </div>
       </div>
@@ -500,27 +511,27 @@ export const AdminTransactionManagement: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[
             {
-              label: 'Total Revenue',
+              label: t('dashboard.financial.totalRevenue'),
               value: `$${financialMetrics.totalRevenue.toLocaleString()}`,
               change: `${financialMetrics.revenueChange > 0 ? '+' : ''}${financialMetrics.revenueChange.toFixed(1)}%`,
               color: 'green'
             },
             {
-              label: 'Monthly Revenue',
+              label: t('dashboard.financial.monthlyRevenue'),
               value: `$${financialMetrics.monthlyRevenue.toLocaleString()}`,
-              change: 'This month',
+              change: t('dashboard.financial.thisMonth'),
               color: 'blue'
             },
             {
-              label: 'Transaction Count',
+              label: t('transactions.stats.count'),
               value: financialMetrics.transactionCount.toLocaleString(),
-              change: `Avg: $${financialMetrics.averageTransactionAmount.toLocaleString()}`,
+              change: t('transactions.stats.average', { amount: `$${financialMetrics.averageTransactionAmount.toLocaleString()}` }),
               color: 'purple'
             },
             {
-              label: 'Pending Withdrawals',
+              label: t('dashboard.financial.pendingWithdrawals'),
               value: `$${financialMetrics.pendingWithdrawalAmount.toLocaleString()}`,
-              change: `${financialMetrics.pendingWithdrawals} requests`,
+              change: t('dashboard.financial.requests', { count: financialMetrics.pendingWithdrawals }),
               color: 'orange'
             }
           ].map((stat) => (
@@ -538,40 +549,40 @@ export const AdminTransactionManagement: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-              Transaction Type
+              {t('transactions.filters.type')}
             </label>
             <select
               value={filters.type || ''}
               onChange={(e) => handleFilterChange('type', e.target.value || undefined)}
               className="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-neutral-300 dark:border-slate-600 rounded-lg text-neutral-900 dark:text-slate-100"
             >
-              <option value="">All Types</option>
-              <option value="investment">Purchase</option>
-              <option value="withdrawal">Withdrawal</option>
-              <option value="deposit">Deposit</option>
-              <option value="dividend">Dividend</option>
-              <option value="commission">Commission</option>
+              <option value="">{t('transactions.filters.allTypes')}</option>
+              <option value="investment">{t('shared.txTypes.investment')}</option>
+              <option value="withdrawal">{t('shared.txTypes.withdrawal')}</option>
+              <option value="deposit">{t('shared.txTypes.deposit')}</option>
+              <option value="dividend">{t('shared.txTypes.dividend')}</option>
+              <option value="commission">{t('shared.txTypes.commission')}</option>
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-              Status
+              {t('transactions.fields.status')}
             </label>
             <select
               value={filters.status || ''}
               onChange={(e) => handleFilterChange('status', e.target.value || undefined)}
               className="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-neutral-300 dark:border-slate-600 rounded-lg text-neutral-900 dark:text-slate-100"
             >
-              <option value="">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="processing">Processing</option>
-              <option value="completed">Completed</option>
-              <option value="failed">Failed</option>
+              <option value="">{t('transactions.filters.allStatuses')}</option>
+              <option value="pending">{t('shared.status.pending')}</option>
+              <option value="processing">{t('shared.status.processing')}</option>
+              <option value="completed">{t('shared.status.completed')}</option>
+              <option value="failed">{t('shared.status.failed')}</option>
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-              Start Date
+              {t('transactions.filters.startDate')}
             </label>
             <input
               type="date"
@@ -582,7 +593,7 @@ export const AdminTransactionManagement: React.FC = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-              End Date
+              {t('transactions.filters.endDate')}
             </label>
             <input
               type="date"
@@ -593,7 +604,7 @@ export const AdminTransactionManagement: React.FC = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-              Results Per Page
+              {t('transactions.filters.perPage')}
             </label>
             <select
               value={filters.limit}
@@ -613,7 +624,7 @@ export const AdminTransactionManagement: React.FC = () => {
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700 overflow-hidden">
         <div className="px-6 py-4 border-b border-neutral-200 dark:border-slate-700">
           <h2 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            Transaction List ({transactions?.totalCount || 0} total)
+            {t('transactions.listTitle', { count: transactions?.totalCount || 0 })}
           </h2>
         </div>
 
@@ -628,7 +639,7 @@ export const AdminTransactionManagement: React.FC = () => {
               onClick={loadTransactions}
               className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
-              Retry
+              {t('shared.retry')}
             </button>
           </div>
         ) : transactions && transactions.transactions.length > 0 ? (
@@ -637,29 +648,29 @@ export const AdminTransactionManagement: React.FC = () => {
               <table className="w-full">
                 <thead className="bg-neutral-50 dark:bg-slate-700">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-slate-400 uppercase tracking-wider">
-                      Date
+                    <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 dark:text-slate-400 uppercase tracking-wider">
+                      {t('transactions.fields.date')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-slate-400 uppercase tracking-wider">
-                      Type
+                    <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 dark:text-slate-400 uppercase tracking-wider">
+                      {t('transactions.fields.type')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-slate-400 uppercase tracking-wider">
-                      User
+                    <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 dark:text-slate-400 uppercase tracking-wider">
+                      {t('transactions.fields.user')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-slate-400 uppercase tracking-wider">
-                      Amount
+                    <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 dark:text-slate-400 uppercase tracking-wider">
+                      {t('transactions.fields.amount')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-slate-400 uppercase tracking-wider">
-                      Fee
+                    <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 dark:text-slate-400 uppercase tracking-wider">
+                      {t('transactions.fields.fee')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-slate-400 uppercase tracking-wider">
-                      Status
+                    <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 dark:text-slate-400 uppercase tracking-wider">
+                      {t('transactions.fields.status')}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 dark:text-slate-400 uppercase tracking-wider">
-                      Payment Method
+                    <th className="px-6 py-3 text-start text-xs font-medium text-neutral-500 dark:text-slate-400 uppercase tracking-wider">
+                      {t('transactions.fields.paymentMethod')}
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-neutral-500 dark:text-slate-400 uppercase tracking-wider">
-                      Actions
+                    <th className="px-6 py-3 text-end text-xs font-medium text-neutral-500 dark:text-slate-400 uppercase tracking-wider">
+                      {t('shared.actions')}
                     </th>
                   </tr>
                 </thead>
@@ -667,13 +678,13 @@ export const AdminTransactionManagement: React.FC = () => {
                   {transactions.transactions.map((transaction) => (
                     <tr key={transaction.id} className="hover:bg-neutral-50 dark:hover:bg-slate-700/50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-500 dark:text-slate-400">
-                        {new Date(transaction.createdAt).toLocaleDateString()}
+                        {new Date(transaction.createdAt).toLocaleDateString(locale)}
                         <br />
-                        <span className="text-xs">{new Date(transaction.createdAt).toLocaleTimeString()}</span>
+                        <span className="text-xs">{new Date(transaction.createdAt).toLocaleTimeString(locale)}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm font-medium text-neutral-900 dark:text-slate-100">
-                          {transaction.type}
+                          {t(`shared.txTypes.${String(transaction.type || '').toLowerCase()}`, { defaultValue: transaction.type })}
                         </span>
                         {transaction.propertyTitle && (
                           <div className="text-xs text-neutral-500 dark:text-slate-400 mt-1">
@@ -703,18 +714,18 @@ export const AdminTransactionManagement: React.FC = () => {
                             ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
                             : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                         }`}>
-                          {transaction.status}
+                          {t(`shared.status.${transaction.status}`, { defaultValue: transaction.status })}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-900 dark:text-slate-100">
                         {transaction.paymentMethod}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-end text-sm">
                         <button
                           onClick={() => setSelectedTransaction(transaction)}
                           className="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
                         >
-                          View Details
+                          {t('shared.viewDetails')}
                         </button>
                       </td>
                     </tr>
@@ -726,34 +737,36 @@ export const AdminTransactionManagement: React.FC = () => {
             {/* Pagination */}
             <div className="px-6 py-4 border-t border-neutral-200 dark:border-slate-700 flex items-center justify-between">
               <div className="text-sm text-neutral-500 dark:text-slate-400">
-                Showing {((filters.page || 1) - 1) * (filters.limit || 20) + 1} to{' '}
-                {Math.min((filters.page || 1) * (filters.limit || 20), transactions.totalCount)} of{' '}
-                {transactions.totalCount} transactions
+                {t('transactions.pagination.showing', {
+                  from: ((filters.page || 1) - 1) * (filters.limit || 20) + 1,
+                  to: Math.min((filters.page || 1) * (filters.limit || 20), transactions.totalCount),
+                  total: transactions.totalCount
+                })}
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => handlePageChange((filters.page || 1) - 1)}
                   disabled={!transactions.hasPreviousPage}
                   className="px-3 py-2 border border-neutral-300 dark:border-slate-600 rounded-lg text-sm font-medium text-neutral-700 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50 dark:hover:bg-slate-700"
                 >
-                  Previous
+                  {t('shared.previous')}
                 </button>
                 <span className="text-sm text-neutral-700 dark:text-slate-300">
-                  Page {filters.page} of {transactions.totalPages}
+                  {t('shared.pageOf', { page: filters.page, pages: transactions.totalPages })}
                 </span>
                 <button
                   onClick={() => handlePageChange((filters.page || 1) + 1)}
                   disabled={!transactions.hasNextPage}
                   className="px-3 py-2 border border-neutral-300 dark:border-slate-600 rounded-lg text-sm font-medium text-neutral-700 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-50 dark:hover:bg-slate-700"
                 >
-                  Next
+                  {t('shared.next')}
                 </button>
               </div>
             </div>
           </>
         ) : (
           <div className="px-6 py-12 text-center text-neutral-500 dark:text-slate-400">
-            No transactions found
+            {t('transactions.empty')}
           </div>
         )}
       </div>

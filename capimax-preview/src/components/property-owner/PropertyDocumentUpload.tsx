@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PropertyService } from '../../services';
 
@@ -17,21 +18,23 @@ interface DocumentFile {
   error?: string;
 }
 
+// Labels are resolved at render time from `ownerui:documentUpload.types.<value>`.
 const DOCUMENT_TYPES = [
-  { value: 'title_deed', label: 'Title Deed', icon: '📜' },
-  { value: 'valuation_report', label: 'Valuation Report', icon: '📊' },
-  { value: 'legal_certificate', label: 'Legal Certificate', icon: '⚖️' },
-  { value: 'construction_permit', label: 'Construction Permit', icon: '🏗️' },
-  { value: 'insurance', label: 'Insurance Document', icon: '🛡️' },
-  { value: 'tax_certificate', label: 'Tax Certificate', icon: '💰' },
-  { value: 'floor_plan', label: 'Floor Plan', icon: '📐' },
-  { value: 'other', label: 'Other Document', icon: '📄' },
+  { value: 'title_deed', icon: '📜' },
+  { value: 'valuation_report', icon: '📊' },
+  { value: 'legal_certificate', icon: '⚖️' },
+  { value: 'construction_permit', icon: '🏗️' },
+  { value: 'insurance', icon: '🛡️' },
+  { value: 'tax_certificate', icon: '💰' },
+  { value: 'floor_plan', icon: '📐' },
+  { value: 'other', icon: '📄' },
 ];
 
 export const PropertyDocumentUpload: React.FC<PropertyDocumentUploadProps> = ({
   propertyId,
   onUploadComplete,
 }) => {
+  const { t } = useTranslation('ownerui');
   const queryClient = useQueryClient();
   const [documents, setDocuments] = useState<DocumentFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -49,7 +52,7 @@ export const PropertyDocumentUpload: React.FC<PropertyDocumentUploadProps> = ({
       setDocuments(prev =>
         prev.map(doc =>
           doc.file === document.file
-            ? { ...doc, uploading: false, error: error.message || 'Upload failed' }
+            ? { ...doc, uploading: false, error: error.message || t('documentUpload.uploadFailed') }
             : doc
         )
       );
@@ -72,12 +75,12 @@ export const PropertyDocumentUpload: React.FC<PropertyDocumentUploadProps> = ({
 
     Array.from(files).forEach(file => {
       if (!allowedTypes.includes(file.type)) {
-        alert(`${file.name} is not a valid document format. Please use PDF, DOC, DOCX, JPG, or PNG.`);
+        alert(t('documentUpload.invalidFormat', { name: file.name }));
         return;
       }
 
       if (file.size > maxSize) {
-        alert(`${file.name} is too large. Maximum size is 50MB.`);
+        alert(t('documentUpload.tooLarge', { name: file.name }));
         return;
       }
 
@@ -92,7 +95,7 @@ export const PropertyDocumentUpload: React.FC<PropertyDocumentUploadProps> = ({
     });
 
     setDocuments(prev => [...prev, ...newDocuments]);
-  }, []);
+  }, [t]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -126,12 +129,12 @@ export const PropertyDocumentUpload: React.FC<PropertyDocumentUploadProps> = ({
 
   const uploadDocument = async (document: DocumentFile, index: number) => {
     if (!document.name.trim()) {
-      updateDocument(index, { error: 'Document name is required' });
+      updateDocument(index, { error: t('documentUpload.nameRequired') });
       return;
     }
 
     if (!document.document_type) {
-      updateDocument(index, { error: 'Document type is required' });
+      updateDocument(index, { error: t('documentUpload.typeRequired') });
       return;
     }
 
@@ -208,7 +211,7 @@ export const PropertyDocumentUpload: React.FC<PropertyDocumentUploadProps> = ({
           htmlFor="document-upload"
           className="cursor-pointer"
         >
-          <div className="flex flex-col items-center space-y-4">
+          <div className="flex flex-col items-center gap-4">
             <div className="w-16 h-16 bg-neutral-100 dark:bg-slate-700 rounded-full flex items-center justify-center">
               <svg className="w-8 h-8 text-neutral-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -216,10 +219,10 @@ export const PropertyDocumentUpload: React.FC<PropertyDocumentUploadProps> = ({
             </div>
             <div>
               <p className="text-lg font-medium text-neutral-900 dark:text-slate-100">
-                Drop documents here or click to browse
+                {t('documentUpload.dropzone')}
               </p>
               <p className="text-sm text-neutral-500 dark:text-slate-400 mt-1">
-                Supports PDF, DOC, DOCX, JPG, PNG • Max 50MB per file
+                {t('documentUpload.supports')}
               </p>
             </div>
           </div>
@@ -231,14 +234,14 @@ export const PropertyDocumentUpload: React.FC<PropertyDocumentUploadProps> = ({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-              Selected Documents ({documents.length})
+              {t('documentUpload.selected', { count: documents.length })}
             </h3>
             <button
               onClick={uploadAllDocuments}
               disabled={documents.some(doc => doc.uploading) || documents.length === 0}
               className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-neutral-400 disabled:cursor-not-allowed transition-colors"
             >
-              Upload All Documents
+              {t('documentUpload.uploadAll')}
             </button>
           </div>
 
@@ -248,7 +251,7 @@ export const PropertyDocumentUpload: React.FC<PropertyDocumentUploadProps> = ({
                 key={index}
                 className="bg-white dark:bg-slate-800 border border-neutral-200 dark:border-slate-700 rounded-lg p-4"
               >
-                <div className="flex items-start space-x-4">
+                <div className="flex items-start gap-4">
                   {/* File Icon */}
                   <div className="flex-shrink-0 w-12 h-12 bg-neutral-100 dark:bg-slate-700 rounded-lg flex items-center justify-center text-2xl">
                     {getFileIcon(document.file.name)}
@@ -270,6 +273,7 @@ export const PropertyDocumentUpload: React.FC<PropertyDocumentUploadProps> = ({
                       {!document.uploading && (
                         <button
                           onClick={() => removeDocument(index)}
+                          aria-label={t('documentUpload.remove')}
                           className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                         >
                           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -283,21 +287,21 @@ export const PropertyDocumentUpload: React.FC<PropertyDocumentUploadProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
                         <label className="block text-xs font-medium text-neutral-700 dark:text-slate-300 mb-1">
-                          Document Name *
+                          {t('documentUpload.name')} *
                         </label>
                         <input
                           type="text"
                           value={document.name}
                           onChange={(e) => updateDocument(index, { name: e.target.value })}
                           disabled={document.uploading}
-                          placeholder="e.g., Property Title Deed"
+                          placeholder={t('documentUpload.namePlaceholder')}
                           className="w-full px-3 py-1.5 text-sm border border-neutral-300 dark:border-slate-600 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-700 dark:text-slate-100 disabled:bg-neutral-100 dark:disabled:bg-slate-600"
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-medium text-neutral-700 dark:text-slate-300 mb-1">
-                          Document Type *
+                          {t('documentUpload.type')} *
                         </label>
                         <select
                           value={document.document_type}
@@ -307,7 +311,7 @@ export const PropertyDocumentUpload: React.FC<PropertyDocumentUploadProps> = ({
                         >
                           {DOCUMENT_TYPES.map(type => (
                             <option key={type.value} value={type.value}>
-                              {type.icon} {type.label}
+                              {type.icon} {t(`documentUpload.types.${type.value}`)}
                             </option>
                           ))}
                         </select>
@@ -316,14 +320,14 @@ export const PropertyDocumentUpload: React.FC<PropertyDocumentUploadProps> = ({
 
                     <div>
                       <label className="block text-xs font-medium text-neutral-700 dark:text-slate-300 mb-1">
-                        Description (optional)
+                        {t('documentUpload.description')}
                       </label>
                       <textarea
                         value={document.description}
                         onChange={(e) => updateDocument(index, { description: e.target.value })}
                         disabled={document.uploading}
                         rows={2}
-                        placeholder="Add any additional details about this document..."
+                        placeholder={t('documentUpload.descriptionPlaceholder')}
                         className="w-full px-3 py-1.5 text-sm border border-neutral-300 dark:border-slate-600 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-700 dark:text-slate-100 disabled:bg-neutral-100 dark:disabled:bg-slate-600"
                       />
                     </div>
@@ -332,7 +336,7 @@ export const PropertyDocumentUpload: React.FC<PropertyDocumentUploadProps> = ({
                     {document.uploading && (
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-neutral-600 dark:text-slate-400">Uploading...</span>
+                          <span className="text-neutral-600 dark:text-slate-400">{t('approvalStatus.modal.uploading')}</span>
                           <span className="text-neutral-600 dark:text-slate-400">{document.progress}%</span>
                         </div>
                         <div className="h-2 bg-neutral-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -360,7 +364,7 @@ export const PropertyDocumentUpload: React.FC<PropertyDocumentUploadProps> = ({
                           onClick={() => uploadDocument(document, index)}
                           className="px-4 py-1.5 text-sm font-medium bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors"
                         >
-                          Upload Document
+                          {t('approvalStatus.uploadDocument')}
                         </button>
                       </div>
                     )}
@@ -374,13 +378,13 @@ export const PropertyDocumentUpload: React.FC<PropertyDocumentUploadProps> = ({
 
       {/* Tips */}
       <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-        <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2">📂 Document Upload Requirements</h4>
+        <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2">📂 {t('documentUpload.tips.title')}</h4>
         <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
-          <li>• <strong>Required:</strong> Title deed, valuation report, legal certificates</li>
-          <li>• <strong>Recommended:</strong> Construction permits, insurance docs, tax certificates</li>
-          <li>• All documents must be clear, legible, and up-to-date</li>
-          <li>• Documents will be reviewed by our compliance team</li>
-          <li>• Ensure all sensitive information is properly redacted if needed</li>
+          <li>• <strong>{t('documentUpload.tips.requiredLabel')}</strong> {t('documentUpload.tips.required')}</li>
+          <li>• <strong>{t('documentUpload.tips.recommendedLabel')}</strong> {t('documentUpload.tips.recommended')}</li>
+          <li>• {t('documentUpload.tips.clear')}</li>
+          <li>• {t('documentUpload.tips.reviewed')}</li>
+          <li>• {t('documentUpload.tips.redacted')}</li>
         </ul>
       </div>
     </div>

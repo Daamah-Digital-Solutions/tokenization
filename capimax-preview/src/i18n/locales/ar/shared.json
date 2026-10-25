@@ -1,0 +1,289 @@
+{
+  "common": {
+    "loading": "جارٍ التحميل...",
+    "close": "إغلاق",
+    "retry": "إعادة المحاولة",
+    "na": "غير متوفر",
+    "tbd": "يُحدَّد لاحقًا",
+    "backToTop": "العودة إلى الأعلى"
+  },
+  "propertyCard": {
+    "featured": "مميّز",
+    "status": {
+      "underConstruction": "قيد الإنشاء",
+      "incomeActive": "دخل نشط",
+      "readyProperty": "عقار جاهز",
+      "active": "نشط",
+      "available": "متاح"
+    },
+    "types": {
+      "residential": "سكني",
+      "commercial": "تجاري",
+      "industrial": "صناعي",
+      "mixed_use": "متعدد الاستخدامات",
+      "land": "أرض"
+    },
+    "property": "عقار",
+    "totalValue": "القيمة الإجمالية",
+    "perToken": "سعر الحصة",
+    "constructionProgress": "تقدّم الإنشاء",
+    "fundingProgress": "تقدّم التمويل",
+    "reserved": "{{value}} محجوزة",
+    "sold": "{{value}} مباعة",
+    "total": "من أصل {{value}}",
+    "complete": "مكتمل",
+    "completion": "موعد الإنجاز",
+    "monthsShort": "{{value}} شهر",
+    "installments": "أقساط",
+    "owners": "الملاك",
+    "monthlyIncome": "الدخل الشهري",
+    "expectedReturn": "العائد المتوقع",
+    "occupancy": "نسبة الإشغال",
+    "built": "سنة البناء",
+    "reserveWithInstallments": "احجز بالتقسيط",
+    "ownNow": "تملّك الآن",
+    "installmentPlan": "خطة تقسيط متاحة لمدة {{value}} شهر",
+    "quickView": "عرض سريع",
+    "calculate": "احسب",
+    "verifiedInsured": "موثّق ومؤمَّن",
+    "activeIncome": "دخل نشط",
+    "preConstruction": "ما قبل الإنشاء",
+    "quarterlyDividends": "توزيعات أرباح ربع سنوية",
+    "addFavorite": "إضافة إلى المفضلة",
+    "removeFavorite": "إزالة من المفضلة",
+    "share": "مشاركة"
+  },
+  "forms": {
+    "selectPlaceholder": "اختر خيارًا...",
+    "showPassword": "إظهار كلمة المرور",
+    "hidePassword": "إخفاء كلمة المرور"
+  },
+  "a11y": {
+    "skipToContent": "الانتقال إلى المحتوى الرئيسي",
+    "enableHighContrast": "تفعيل وضع التباين العالي",
+    "disableHighContrast": "إيقاف وضع التباين العالي",
+    "required": "مطلوب",
+    "valueOfMax": "{{value}} من {{max}}",
+    "percentComplete": "مكتمل بنسبة {{percentage}}%",
+    "progressLabel": "{{label}}: مكتمل بنسبة {{percentage}}%",
+    "fontSize": "حجم الخط:",
+    "decreaseFont": "تصغير حجم الخط",
+    "resetFont": "إعادة ضبط حجم الخط",
+    "increaseFont": "تكبير حجم الخط",
+    "reset": "إعادة ضبط",
+    "options": "خيارات إمكانية الوصول",
+    "optionsTitle": "خيارات إمكانية الوصول",
+    "connection": {
+      "good": "اتصال جيد",
+      "fair": "اتصال متوسط",
+      "poor": "اتصال ضعيف",
+      "offline": "لا يوجد اتصال",
+      "unknown": "حالة الاتصال غير معروفة"
+    }
+  },
+  "blockchain": {
+    "minting": "جارٍ إصدار الرموز الرقمية...",
+    "awaiting": "بانتظار التأكيد على البلوكتشين",
+    "viewOn": "عرض على {{explorer}}",
+    "verifiedOn": "موثّق على {{explorer}}"
+  },
+  "breadcrumb": {
+    "ariaLabel": "مسار التنقل",
+    "home": "الرئيسية",
+    "signIn": "تسجيل الدخول",
+    "createAccount": "إنشاء حساب",
+    "dashboard": "لوحة التحكم",
+    "kyc": "التحقق من الهوية",
+    "properties": "العقارات",
+    "propertyDetails": "تفاصيل العقار",
+    "wallet": "المحفظة",
+    "about": "من نحن",
+    "contact": "اتصل بنا",
+    "page": "صفحة"
+  },
+  "confirm": {
+    "confirm": "تأكيد",
+    "cancel": "إلغاء",
+    "close": "إغلاق"
+  },
+  "errorBoundary": {
+    "title": "حدث خطأ ما",
+    "description": "نعتذر، حدث أمر غير متوقع. تم إبلاغ فريقنا ونعمل على حل المشكلة.",
+    "detailsTitle": "تفاصيل الخطأ (وضع التطوير)",
+    "componentStack": "مكدّس المكوّنات",
+    "tryAgain": "حاول مرة أخرى",
+    "goHome": "الصفحة الرئيسية",
+    "reload": "إعادة تحميل الصفحة",
+    "persists": "إذا استمرت المشكلة، يرجى <link>التواصل مع فريق الدعم</link>"
+  },
+  "theme": {
+    "toggle": "تبديل المظهر"
+  },
+  "chat": {
+    "welcome": "مرحبًا! أنا مساعد كابي مكس RT. اسألني عن عقاراتنا، أو التملّك عبر الحصص الرقمية، أو كيفية البدء.",
+    "noReply": "عذرًا، لم أتمكن من تقديم رد الآن. يرجى المحاولة مرة أخرى.",
+    "networkError": "عذرًا، تعذّر الوصول إلى الخادم. يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
+    "open": "فتح مساعد كابي مكس RT",
+    "dialogLabel": "مساعد كابي مكس RT",
+    "title": "مساعد كابي مكس RT",
+    "online": "متصل",
+    "newChatLabel": "بدء محادثة جديدة",
+    "newChat": "محادثة جديدة",
+    "closeChat": "إغلاق المحادثة",
+    "placeholder": "اكتب رسالتك…",
+    "send": "إرسال الرسالة",
+    "poweredBy": "مدعوم بالذكاء الاصطناعي من كابي مكس RT"
+  },
+  "pwa": {
+    "title": "ثبّت تطبيق كابي مكس RT",
+    "dismiss": "إغلاق نافذة التثبيت",
+    "nativeBody": "أضف كابي مكس RT إلى شاشتك الرئيسية لتجربة أسرع تشبه التطبيقات — وصول دون اتصال، وتشغيل فوري، وإشعارات لحظية.",
+    "benefit1": "وصول سريع من شاشتك الرئيسية",
+    "benefit2": "تجربة ملء الشاشة كالتطبيقات الأصلية",
+    "benefit3": "يعمل دون اتصال بالبيانات المحفوظة",
+    "notNow": "ليس الآن",
+    "install": "تثبيت",
+    "iosIntro": "ثبّت كابي مكس RT على جهاز iPhone:",
+    "iosStep1": "اضغط على زر المشاركة <icon></icon> في الأسفل",
+    "iosStep2": "اختر <b>إضافة إلى الشاشة الرئيسية</b> <icon></icon>",
+    "iosStep3": "اضغط <b>إضافة</b> في أعلى الشاشة",
+    "gotIt": "حسنًا"
+  },
+  "update": {
+    "title": "يتوفر إصدار جديد",
+    "reloading": "ستتم إعادة التحميل خلال {{seconds}} ثانية للحصول على أحدث الإصلاحات.",
+    "reloadNow": "إعادة التحميل الآن",
+    "later": "لاحقًا"
+  },
+  "mobileNav": {
+    "ariaLabel": "التنقل الرئيسي للجوال",
+    "tabs": {
+      "home": "الرئيسية",
+      "properties": "العقارات",
+      "marketplace": "السوق",
+      "dashboard": "لوحة التحكم",
+      "account": "الحساب"
+    }
+  },
+  "analytics": {
+    "unavailableTitle": "نمو المحفظة الاستثمارية غير متاح",
+    "unavailableDesc": "تعذّر تحميل بيانات أداء المحفظة الاستثمارية",
+    "title": "أداء المحفظة الاستثمارية",
+    "gain": "ربح {{amount}}",
+    "loss": "خسارة {{amount}}",
+    "currentValue": "القيمة الحالية",
+    "purchasedAmount": "مبلغ الشراء",
+    "loadingPerformance": "جارٍ تحميل أداء المحفظة الاستثمارية...",
+    "period": {
+      "week": "هذا الأسبوع",
+      "month": "هذا الشهر",
+      "quarter": "هذا الربع",
+      "year": "هذا العام",
+      "default": "هذه الفترة"
+    }
+  },
+  "kycTracker": {
+    "status": {
+      "not_started": {
+        "title": "لم يبدأ التحقق",
+        "description": "أكمل التحقق من هويتك للوصول إلى جميع ميزات المنصة",
+        "badge": "لم يبدأ"
+      },
+      "pending": {
+        "title": "تم رفع المستندات",
+        "description": "تم إرسال مستنداتك وهي بانتظار المراجعة",
+        "badge": "قيد الانتظار"
+      },
+      "processing": {
+        "title": "قيد المراجعة",
+        "description": "يقوم فريقنا حاليًا بمراجعة المستندات المقدَّمة",
+        "badge": "قيد المعالجة"
+      },
+      "approved": {
+        "title": "تم اعتماد التحقق",
+        "description": "تم التحقق من هويتك بنجاح. لديك الآن وصول كامل إلى المنصة.",
+        "badge": "معتمد"
+      },
+      "rejected": {
+        "title": "تم رفض التحقق",
+        "description": "يحتاج طلبك إلى مراجعة. يرجى الاطلاع على الملاحظات وإعادة الإرسال.",
+        "badge": "مرفوض"
+      },
+      "expired": {
+        "title": "انتهت صلاحية التحقق",
+        "description": "انتهت صلاحية التحقق. يرجى إعادة بدء عملية التحقق.",
+        "badge": "منتهي الصلاحية"
+      }
+    },
+    "docs": {
+      "passport": "جواز السفر",
+      "national_id": "بطاقة الهوية الوطنية",
+      "utility_bill": "فاتورة مرافق",
+      "bank_statement": "كشف حساب بنكي",
+      "selfie": "صورة سيلفي مباشرة"
+    },
+    "submitted": "تاريخ الإرسال: {{date}}",
+    "reviewed": "تاريخ المراجعة: {{date}}",
+    "uploaded": "تاريخ الرفع: {{date}}",
+    "estDays_zero": "الإنجاز المتوقع خلال أقل من يوم",
+    "estDays_one": "الإنجاز المتوقع خلال يوم واحد",
+    "estDays_two": "الإنجاز المتوقع خلال يومين",
+    "estDays_few": "الإنجاز المتوقع خلال {{count}} أيام",
+    "estDays_many": "الإنجاز المتوقع خلال {{count}} يومًا",
+    "estDays_other": "الإنجاز المتوقع خلال {{count}} يوم",
+    "estHours_zero": "الإنجاز المتوقع خلال أقل من ساعة",
+    "estHours_one": "الإنجاز المتوقع خلال ساعة واحدة",
+    "estHours_two": "الإنجاز المتوقع خلال ساعتين",
+    "estHours_few": "الإنجاز المتوقع خلال {{count}} ساعات",
+    "estHours_many": "الإنجاز المتوقع خلال {{count}} ساعة",
+    "estHours_other": "الإنجاز المتوقع خلال {{count}} ساعة",
+    "soon": "من المتوقع الإنجاز قريبًا",
+    "documentStatus": "حالة المستندات",
+    "rejectionReason": "سبب الرفض",
+    "nextSteps": "الخطوات التالية",
+    "progress": "تقدّم التحقق",
+    "stepOf": "الخطوة {{current}} من {{total}}",
+    "docReview": "مراجعة المستندات",
+    "identity": "التحقق من الهوية",
+    "finalApproval": "الاعتماد النهائي",
+    "start": "بدء التحقق",
+    "retry": "إعادة محاولة التحقق",
+    "certificate": "عرض الشهادة",
+    "contact": "تواصل مع الدعم",
+    "tip": "<b>نصيحة:</b> تكتمل معظم عمليات التحقق خلال 24-48 ساعة. ستصلك إشعارات عبر البريد الإلكتروني عند تغيّر حالتك."
+  },
+  "info": {
+    "learnMore": "اعرف المزيد",
+    "sidebarTitle": "تعرّف على كابي مكس RT",
+    "nav": {
+      "how-it-works": "كيف يعمل",
+      "tokenization": "ما هو الترميز",
+      "spv": "ما هي الشركة ذات الغرض الخاص (SPV)",
+      "data-room": "غرفة البيانات",
+      "investor-guide": "دليل الشريك المالك",
+      "secondary-market": "السوق الثانوية",
+      "risks": "المخاطر والإفصاحات",
+      "faq": "الأسئلة الشائعة",
+      "property-owner": "لملّاك العقارات"
+    }
+  },
+  "legal": {
+    "documents": "المستندات القانونية",
+    "printTitle": "كابي مكس RT",
+    "printSubtitle": "منصة كابي مكس لترميز العقارات",
+    "lastUpdated": "آخر تحديث: {{date}}",
+    "footerNotice": "هذا المستند جزء من الإطار القانوني لـ كابي مكس RT. للاستفسارات، يرجى التواصل عبر <link>legal@capimaxrt.com</link>",
+    "nav": {
+      "disclaimer": "إخلاء مسؤولية المنصة",
+      "risk-disclosure": "الإفصاح عن المخاطر",
+      "compliance": "نظرة عامة على الامتثال",
+      "privacy": "سياسة الخصوصية",
+      "terms": "الشروط والأحكام",
+      "cookies": "سياسة ملفات تعريف الارتباط",
+      "aml-kyc": "سياسة مكافحة غسل الأموال والتحقق من الهوية (AML/KYC/KYB)",
+      "conflicts": "تضارب المصالح",
+      "complaints": "إجراءات الشكاوى",
+      "security": "سياسة الأمان"
+    }
+  }
+}

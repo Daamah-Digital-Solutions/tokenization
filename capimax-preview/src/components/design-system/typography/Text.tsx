@@ -47,9 +47,9 @@ const colorStyles: Record<TextColor, string> = {
 };
 
 const alignStyles: Record<TextAlign, string> = {
-  left: 'text-left',
+  left: 'text-start',
   center: 'text-center',
-  right: 'text-right',
+  right: 'text-end',
   justify: 'text-justify',
 };
 

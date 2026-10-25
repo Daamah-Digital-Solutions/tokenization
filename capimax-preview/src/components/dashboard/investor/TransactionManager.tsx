@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { localizeTxDescription } from '../../../utils/txDescription';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -45,6 +46,7 @@ import { Card } from '../../design-system';
 import { Text } from '../../design-system/typography/Text';
 import { Button } from '../../ui/Button';
 import { cn } from '../../../utils/cn';
+import { useTranslation } from 'react-i18next';
 
 interface TransactionManagerProps {
   className?: string;
@@ -58,6 +60,8 @@ type DateRange = '7d' | '30d' | '90d' | '1y' | 'all';
 export const TransactionManager: React.FC<TransactionManagerProps> = ({
   className
 }) => {
+  const { t, i18n } = useTranslation('dashboard');
+  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
@@ -329,14 +333,14 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
         <Card className="p-12 text-center">
           <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
           <Text variant="h3" weight="semibold" className="mb-2">
-            Failed to Load Transactions
+            {t('tx.loadErrorTitle')}
           </Text>
           <Text variant="body" color="muted" className="mb-4">
-            {error instanceof Error ? error.message : 'Unable to fetch your transaction history. Please try again.'}
+            {error instanceof Error ? error.message : t('tx.loadErrorText')}
           </Text>
           <Button variant="outline" onClick={() => refetch()}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Try Again
+            <RefreshCw className="w-4 h-4 me-2" />
+            {t('tx.tryAgain')}
           </Button>
         </Card>
       </div>
@@ -367,14 +371,14 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <Text variant="h3" weight="semibold" className="mb-2">
-            Transaction History
+            {t('tx.title')}
           </Text>
           <Text variant="body" color="muted">
-            {filteredTransactions.length} transactions found
+            {t('tx.found', { count: filteredTransactions.length })}
             {summary && (
-              <span className="ml-4">
-                • Total: ${summary.total_amount.toLocaleString()}
-                • Fees: ${summary.fees_paid.toFixed(2)}
+              <span className="ms-4">
+                • {t('tx.total', { amount: `$${summary.total_amount.toLocaleString()}` })}
+                {' '}• {t('tx.fees', { amount: `$${summary.fees_paid.toFixed(2)}` })}
               </span>
             )}
           </Text>
@@ -382,12 +386,12 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
 
         <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting}>
-            <Download className={cn("w-4 h-4 mr-2", isExporting && "animate-pulse")} />
-            {isExporting ? 'Exporting...' : 'Export CSV'}
+            <Download className={cn("w-4 h-4 me-2", isExporting && "animate-pulse")} />
+            {isExporting ? t('tx.exporting') : t('tx.exportCsv')}
           </Button>
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
-            <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
-            {isLoading ? 'Refreshing...' : 'Refresh'}
+            <RefreshCw className={cn("w-4 h-4 me-2", isLoading && "animate-spin")} />
+            {isLoading ? t('invDash.refreshing') : t('common.refresh')}
           </Button>
         </div>
       </div>
@@ -397,13 +401,13 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+            <Search className="w-4 h-4 absolute start-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search transactions..."
+              placeholder={t('tx.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full ps-10 pe-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
@@ -414,10 +418,10 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
               onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
               className="px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
             >
-              <option value="all">All Status</option>
-              <option value="completed">Completed</option>
-              <option value="pending">Pending</option>
-              <option value="failed">Failed</option>
+              <option value="all">{t('tx.allStatus')}</option>
+              <option value="completed">{t('status.completed')}</option>
+              <option value="pending">{t('status.pending')}</option>
+              <option value="failed">{t('status.failed')}</option>
             </select>
 
             <select
@@ -425,13 +429,13 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
               onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
               className="px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
             >
-              <option value="all">All Types</option>
-              <option value={TransactionType.INVESTMENT}>Purchase</option>
-              <option value={TransactionType.DIVIDEND}>Dividend</option>
-              <option value={TransactionType.WITHDRAWAL}>Withdrawal</option>
-              <option value={TransactionType.DEPOSIT}>Deposit</option>
-              <option value={TransactionType.FEE}>Fee</option>
-              <option value={TransactionType.REFUND}>Refund</option>
+              <option value="all">{t('tx.allTypes')}</option>
+              <option value={TransactionType.INVESTMENT}>{t('txTypes.investment')}</option>
+              <option value={TransactionType.DIVIDEND}>{t('txTypes.dividend')}</option>
+              <option value={TransactionType.WITHDRAWAL}>{t('txTypes.withdrawal')}</option>
+              <option value={TransactionType.DEPOSIT}>{t('txTypes.deposit')}</option>
+              <option value={TransactionType.FEE}>{t('txTypes.fee')}</option>
+              <option value={TransactionType.REFUND}>{t('txTypes.refund')}</option>
             </select>
 
             <select
@@ -439,11 +443,11 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
               onChange={(e) => setDateRange(e.target.value as DateRange)}
               className="px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
             >
-              <option value="7d">Last 7 days</option>
-              <option value="30d">Last 30 days</option>
-              <option value="90d">Last 90 days</option>
-              <option value="1y">Last year</option>
-              <option value="all">All time</option>
+              <option value="7d">{t('tx.range.7d')}</option>
+              <option value="30d">{t('tx.range.30d')}</option>
+              <option value="90d">{t('tx.range.90d')}</option>
+              <option value="1y">{t('tx.range.1y')}</option>
+              <option value="all">{t('tx.range.all')}</option>
             </select>
           </div>
         </div>
@@ -455,12 +459,12 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
           <div className="p-12 text-center">
             <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
             <Text variant="h3" weight="semibold" className="mb-2">
-              No transactions found
+              {t('tx.emptyTitle')}
             </Text>
             <Text variant="body" color="muted">
               {searchTerm || statusFilter !== 'all' || typeFilter !== 'all' || dateRange !== '30d'
-                ? 'Try adjusting your filters or search terms'
-                : 'Your transaction history will appear here'}
+                ? t('tx.emptyFiltered')
+                : t('tx.emptyText')}
             </Text>
           </div>
         ) : (
@@ -468,23 +472,23 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
             <table className="w-full">
               <thead className="bg-slate-50 dark:bg-slate-800">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Transaction
+                  <th className="px-6 py-3 text-start text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    {t('tx.cols.transaction')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Type
+                  <th className="px-6 py-3 text-start text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    {t('tx.cols.type')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Amount
+                  <th className="px-6 py-3 text-start text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    {t('tx.cols.amount')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Status
+                  <th className="px-6 py-3 text-start text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    {t('tx.cols.status')}
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Date
+                  <th className="px-6 py-3 text-start text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    {t('tx.cols.date')}
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Actions
+                  <th className="px-6 py-3 text-end text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    {t('tx.cols.actions')}
                   </th>
                 </tr>
               </thead>
@@ -511,10 +515,10 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                               </div>
                               <div>
                                 <Text variant="body" weight="medium" className="truncate max-w-[200px]">
-                                  {transaction.description}
+                                  {localizeTxDescription(transaction.description)}
                                 </Text>
                                 <Text variant="caption" color="muted">
-                                  ID: {transaction.id.slice(0, 8)}...
+                                  {t('tx.idShort', { id: transaction.id.slice(0, 8) })}
                                 </Text>
                               </div>
                             </div>
@@ -522,7 +526,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                           
                           <td className="px-6 py-4">
                             <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-200">
-                              {transaction.type.replace('_', ' ').toUpperCase()}
+                              {t(`txTypes.${transaction.type}`, { defaultValue: transaction.type.replace('_', ' ').toUpperCase() })}
                             </div>
                           </td>
                           
@@ -545,21 +549,21 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                               'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
                               getStatusColor(transaction.status)
                             )}>
-                              <StatusIcon className="w-3 h-3 mr-1" />
-                              {formatStatus(transaction.status)}
+                              <StatusIcon className="w-3 h-3 me-1" />
+                              {t(`status.${transaction.status.toLowerCase()}`, { defaultValue: formatStatus(transaction.status) })}
                             </div>
                           </td>
                           
                           <td className="px-6 py-4">
                             <Text variant="body">
-                              {new Date((transaction as any).date || transaction.created_at).toLocaleDateString()}
+                              {new Date((transaction as any).date || transaction.created_at).toLocaleDateString(dateLocale)}
                             </Text>
                             <Text variant="caption" color="muted">
-                              {new Date((transaction as any).date || transaction.created_at).toLocaleTimeString()}
+                              {new Date((transaction as any).date || transaction.created_at).toLocaleTimeString(dateLocale)}
                             </Text>
                           </td>
                           
-                          <td className="px-6 py-4 text-right">
+                          <td className="px-6 py-4 text-end">
                             <div className="flex items-center justify-end gap-2">
                               {/*
                                 Single chevron toggle for inline details. The
@@ -573,7 +577,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                 variant="outline"
                                 size="sm"
                                 onClick={() => toggleRowExpansion(transaction.id)}
-                                title={isExpanded ? 'Collapse details' : 'Expand details'}
+                                title={isExpanded ? t('tx.collapse') : t('tx.expand')}
                               >
                                 {isExpanded ? (
                                   <ChevronUp className="w-4 h-4" />
@@ -606,7 +610,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                     variant="outline"
                                     size="sm"
                                     onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
-                                    title={`View on ${getExplorerName(network)}`}
+                                    title={t('tx.viewOn', { explorer: getExplorerName(network) })}
                                   >
                                     <ExternalLink className="w-4 h-4" />
                                   </Button>
@@ -619,7 +623,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                   onClick={() => {
                                     window.location.href = `/property-detail?id=${(transaction as any).property.id}`;
                                   }}
-                                  title="View property"
+                                  title={t('tx.viewProperty')}
                                 >
                                   <Eye className="w-4 h-4" />
                                 </Button>
@@ -630,7 +634,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleRetryTransaction(transaction.id)}
-                                  title="Retry failed transaction"
+                                  title={t('tx.retry')}
                                 >
                                   <RefreshCw className="w-4 h-4" />
                                 </Button>
@@ -648,7 +652,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleCancelTransaction(transaction.id)}
-                                  title="Cancel pending transaction"
+                                  title={t('tx.cancel')}
                                 >
                                   <XCircle className="w-4 h-4" />
                                 </Button>
@@ -671,11 +675,11 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                   {/* Transaction Details */}
                                   <div>
                                     <Text variant="body" weight="semibold" className="mb-2">
-                                      Transaction Details
+                                      {t('tx.details.title')}
                                     </Text>
                                     <div className="space-y-2 text-sm">
                                       <div className="flex justify-between">
-                                        <Text variant="caption" color="muted">Transaction ID:</Text>
+                                        <Text variant="caption" color="muted">{t('tx.details.txId')}</Text>
                                         <Text variant="caption" className="font-mono">
                                           {transaction.id}
                                         </Text>
@@ -683,13 +687,13 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                       {transaction.property && (
                                         <>
                                           <div className="flex justify-between">
-                                            <Text variant="caption" color="muted">Property:</Text>
+                                            <Text variant="caption" color="muted">{t('tx.details.property')}</Text>
                                             <Text variant="caption">
                                               {transaction.property.title}
                                             </Text>
                                           </div>
                                           <div className="flex justify-between">
-                                            <Text variant="caption" color="muted">Address:</Text>
+                                            <Text variant="caption" color="muted">{t('tx.details.address')}</Text>
                                             <Text variant="caption">
                                               {transaction.property.address}
                                             </Text>
@@ -715,12 +719,12 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                     transaction.payment_details?.gas_fee) && (
                                     <div>
                                       <Text variant="body" weight="semibold" className="mb-2">
-                                        Payment Details
+                                        {t('tx.details.payment')}
                                       </Text>
                                       <div className="space-y-2 text-sm">
                                         {transaction.payment_details?.method_display && (
                                           <div className="flex justify-between">
-                                            <Text variant="caption" color="muted">Method:</Text>
+                                            <Text variant="caption" color="muted">{t('tx.details.method')}</Text>
                                             <Text variant="caption">
                                               {transaction.payment_details.method_display}
                                             </Text>
@@ -728,7 +732,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                         )}
                                         {transaction.payment_details?.transaction_fee && (
                                           <div className="flex justify-between">
-                                            <Text variant="caption" color="muted">Transaction Fee:</Text>
+                                            <Text variant="caption" color="muted">{t('tx.details.txFee')}</Text>
                                             <Text variant="caption">
                                               ${transaction.payment_details.transaction_fee.toFixed(2)}
                                             </Text>
@@ -736,7 +740,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                         )}
                                         {transaction.payment_details?.gas_fee && (
                                           <div className="flex justify-between">
-                                            <Text variant="caption" color="muted">Gas Fee:</Text>
+                                            <Text variant="caption" color="muted">{t('tx.details.gasFee')}</Text>
                                             <Text variant="caption">
                                               ${transaction.payment_details.gas_fee.toFixed(2)}
                                             </Text>
@@ -750,22 +754,22 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                   {transaction.blockchain_details && (
                                     <div>
                                       <Text variant="body" weight="semibold" className="mb-2">
-                                        Blockchain Details
+                                        {t('tx.details.blockchain')}
                                       </Text>
                                       <div className="space-y-2 text-sm">
                                         <div className="flex justify-between">
-                                          <Text variant="caption" color="muted">Network:</Text>
+                                          <Text variant="caption" color="muted">{t('tx.details.network')}</Text>
                                           <Text variant="caption">{transaction.blockchain_details.network}</Text>
                                         </div>
                                         <div className="flex justify-between">
-                                          <Text variant="caption" color="muted">Confirmations:</Text>
+                                          <Text variant="caption" color="muted">{t('tx.details.confirmations')}</Text>
                                           <Text variant="caption">
                                             {transaction.blockchain_details.confirmations}/{transaction.blockchain_details.required_confirmations}
                                           </Text>
                                         </div>
                                         {transaction.blockchain_details.transaction_hash && (
                                           <div className="flex items-center justify-between">
-                                            <Text variant="caption" color="muted">Hash:</Text>
+                                            <Text variant="caption" color="muted">{t('tx.details.hash')}</Text>
                                             <div className="flex items-center gap-2">
                                               <Text variant="caption" className="font-mono text-xs">
                                                 {transaction.blockchain_details.transaction_hash.slice(0, 10)}...
@@ -793,7 +797,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                                     size="sm"
                                                     className="p-1"
                                                     onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
-                                                    title={`View on ${getExplorerName(transaction.blockchain_details?.network)}`}
+                                                    title={t('tx.viewOn', { explorer: getExplorerName(transaction.blockchain_details?.network) })}
                                                   >
                                                     <ExternalLink className="w-3 h-3" />
                                                   </Button>
@@ -804,7 +808,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                                         )}
                                         {transaction.blockchain_details.gas_used && (
                                           <div className="flex justify-between">
-                                            <Text variant="caption" color="muted">Gas Used:</Text>
+                                            <Text variant="caption" color="muted">{t('tx.details.gasUsed')}</Text>
                                             <Text variant="caption">
                                               {transaction.blockchain_details.gas_used.toLocaleString()}
                                             </Text>
@@ -832,7 +836,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
       {filteredTransactions.length > 0 && (
         <div className="flex items-center justify-between">
           <Text variant="body" color="muted">
-            Showing {filteredTransactions.length} of {pagination?.total || filteredTransactions.length} transactions
+            {t('tx.showing', { shown: filteredTransactions.length, total: pagination?.total || filteredTransactions.length })}
           </Text>
           <div className="flex items-center gap-2">
             <Button
@@ -841,10 +845,10 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1 || isLoading}
             >
-              Previous
+              {t('tx.previous')}
             </Button>
             <span className="px-3 py-1 text-sm text-slate-600 dark:text-slate-400">
-              Page {page} of {pagination?.pages || 1}
+              {t('tx.page', { page, pages: pagination?.pages || 1 })}
             </span>
             <Button
               variant="outline"
@@ -852,7 +856,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
               onClick={() => setPage(p => p + 1)}
               disabled={!pagination || page >= pagination.pages || isLoading}
             >
-              Next
+              {t('tx.next')}
             </Button>
           </div>
         </div>

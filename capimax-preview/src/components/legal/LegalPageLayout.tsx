@@ -16,6 +16,7 @@ import {
   X,
   ChevronRight
 } from 'lucide-react';
+import { useTranslation, Trans } from 'react-i18next';
 import { Navbar } from '../layout/Navbar';
 import { Footer } from '../layout/Footer';
 
@@ -52,6 +53,7 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
 }) => {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { t } = useTranslation('shared');
   const currentPath = window.location.pathname;
 
   useEffect(() => {
@@ -77,8 +79,8 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
     <>
       {/* Print-only header */}
       <div className="print-header hidden print:block">
-        <h1 className="text-2xl font-bold text-center mb-2">Capimax RT</h1>
-        <p className="text-center text-sm text-gray-600 mb-8">Capimax Real Estate Tokenization Platform</p>
+        <h1 className="text-2xl font-bold text-center mb-2">{t('legal.printTitle')}</h1>
+        <p className="text-center text-sm text-gray-600 mb-8">{t('legal.printSubtitle')}</p>
       </div>
 
       <div className="min-h-screen bg-white dark:bg-slate-900 transition-colors duration-500 print:bg-white">
@@ -97,7 +99,7 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
                 className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
               >
                 {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                <span className="font-medium">Legal Documents</span>
+                <span className="font-medium">{t('legal.documents')}</span>
               </button>
             </div>
 
@@ -112,7 +114,7 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
                 >
                   <div className="sticky top-24 space-y-1 bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-700">
                     <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-3 pb-3 mb-2 border-b border-slate-200 dark:border-slate-700">
-                      Legal Documents
+                      {t('legal.documents')}
                     </h3>
                     <nav className="space-y-1">
                       {legalNavItems.map((item) => {
@@ -126,7 +128,7 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
                               navigateToPage(item.path);
                               setSidebarOpen(false);
                             }}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 group ${
+                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-start transition-all duration-200 group ${
                               isActive
                                 ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-medium'
                                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200'
@@ -135,9 +137,9 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
                             <Icon className={`w-4 h-4 flex-shrink-0 ${
                               isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300'
                             }`} />
-                            <span className="text-sm truncate">{item.title}</span>
+                            <span className="text-sm truncate">{t(`legal.nav.${item.id}`, { defaultValue: item.title })}</span>
                             {isActive && (
-                              <ChevronRight className="w-4 h-4 ml-auto text-emerald-500 dark:text-emerald-400" />
+                              <ChevronRight className="w-4 h-4 ms-auto text-emerald-500 dark:text-emerald-400 rtl:rotate-180" />
                             )}
                           </button>
                         );
@@ -163,7 +165,7 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
                       {title}
                     </h1>
                     <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                      Last Updated: {lastUpdated}
+                      {t('legal.lastUpdated', { date: lastUpdated })}
                     </p>
                   </div>
                 </div>
@@ -176,11 +178,13 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
                 {/* Footer Notice - Hidden in print */}
                 <div className="px-6 sm:px-8 py-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 print:hidden">
                   <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
-                    This document is part of Capimax RT's legal framework.
-                    For questions, please contact{' '}
-                    <a href="mailto:legal@capimaxrt.com" className="text-emerald-600 dark:text-emerald-400 hover:underline">
-                      legal@capimaxrt.com
-                    </a>
+                    <Trans
+                      t={t}
+                      i18nKey="legal.footerNotice"
+                      components={{
+                        link: <a href="mailto:legal@capimaxrt.com" className="text-emerald-600 dark:text-emerald-400 hover:underline" />,
+                      }}
+                    />
                   </p>
                 </div>
               </motion.div>
@@ -196,8 +200,8 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               onClick={scrollToTop}
-              className="fixed bottom-8 right-8 p-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full shadow-lg transition-colors z-50 print:hidden"
-              aria-label="Back to top"
+              className="fixed bottom-8 end-8 p-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full shadow-lg transition-colors z-50 print:hidden"
+              aria-label={t('common.backToTop')}
             >
               <ArrowUp className="w-5 h-5" />
             </motion.button>
@@ -233,8 +237,10 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
           margin-bottom: 1.5rem;
           padding: 1rem 1.25rem;
           background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
-          border-left: 4px solid #10b981;
-          border-radius: 0 0.5rem 0.5rem 0;
+          border-inline-start: 4px solid #10b981;
+          border-radius: 0;
+          border-start-end-radius: 0.5rem;
+          border-end-end-radius: 0.5rem;
         }
 
         .dark .legal-content .legal-intro {
@@ -245,8 +251,10 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
           font-weight: 600;
           padding: 1rem 1.25rem;
           background: #fef3c7;
-          border-left: 4px solid #f59e0b;
-          border-radius: 0 0.5rem 0.5rem 0;
+          border-inline-start: 4px solid #f59e0b;
+          border-radius: 0;
+          border-start-end-radius: 0.5rem;
+          border-end-end-radius: 0.5rem;
           margin-top: 1.5rem;
         }
 
@@ -290,13 +298,13 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
 
         .legal-content ul {
           margin: 1rem 0 1.5rem 0;
-          padding-left: 0;
+          padding-inline-start: 0;
           list-style: none;
         }
 
         .legal-content ul li {
           position: relative;
-          padding-left: 1.75rem;
+          padding-inline-start: 1.75rem;
           margin-bottom: 0.75rem;
           line-height: 1.7;
         }
@@ -304,7 +312,7 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
         .legal-content ul li::before {
           content: '';
           position: absolute;
-          left: 0;
+          inset-inline-start: 0;
           top: 0.6rem;
           width: 8px;
           height: 8px;
@@ -353,7 +361,7 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
             font-size: 11pt;
             font-weight: bold;
             background: none;
-            border-left: 3pt solid #000;
+            border-inline-start: 3pt solid #000;
             padding: 0.3cm 0.5cm;
             margin-bottom: 0.5cm;
           }
@@ -361,7 +369,7 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
           .legal-content .legal-emphasis {
             font-weight: bold;
             background: none;
-            border-left: 3pt solid #000;
+            border-inline-start: 3pt solid #000;
             padding: 0.3cm 0.5cm;
             margin-top: 0.5cm;
           }
@@ -395,11 +403,11 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
 
           .legal-content ul {
             margin: 0.3cm 0 0.5cm 0;
-            padding-left: 0;
+            padding-inline-start: 0;
           }
 
           .legal-content ul li {
-            padding-left: 0.8cm;
+            padding-inline-start: 0.8cm;
             margin-bottom: 0.2cm;
             page-break-inside: avoid;
           }

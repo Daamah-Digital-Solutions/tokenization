@@ -56,6 +56,7 @@ import { apiClient } from '../../../services/api/ApiClient';
 import { PropertyService } from '../../../services/property/PropertyService';
 import { PaymentService } from '../../../services/payment/PaymentService';
 import { cn } from '../../../utils/cn';
+import { useTranslation } from 'react-i18next';
 
 interface InvestorControlPanelProps {
   className?: string;
@@ -78,6 +79,7 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
   className,
   currentView
 }) => {
+  const { t } = useTranslation('dashboard');
   // Map dashboard sidebar views to internal tabs
   const mapViewToTab = (view: string): TabType => {
     switch (view) {
@@ -164,12 +166,12 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
   };
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: PieChart },
-    { id: 'marketplace', label: 'Marketplace', icon: Search },
-    { id: 'transactions', label: 'Transactions', icon: Activity },
-    { id: 'wallet', label: 'Wallet', icon: Wallet },
-    { id: 'installments', label: 'Installments', icon: Calendar },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'overview', label: t('nav.overview'), icon: PieChart },
+    { id: 'marketplace', label: t('nav.marketplace'), icon: Search },
+    { id: 'transactions', label: t('nav.transactions'), icon: Activity },
+    { id: 'wallet', label: t('nav.wallet'), icon: Wallet },
+    { id: 'installments', label: t('nav.installments'), icon: Calendar },
+    { id: 'settings', label: t('nav.settings'), icon: Settings },
   ] as const;
 
   const formatCurrency = (amount: number | string | undefined | null) => {
@@ -195,14 +197,14 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
         <Card className="p-8 text-center">
           <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <Text variant="h3" weight="semibold" className="mb-2">
-            Failed to Load Portfolio
+            {t('icp.loadErrorTitle')}
           </Text>
           <Text variant="body" color="muted" className="mb-4">
-            We're having trouble loading your portfolio data. Please try again.
+            {t('icp.loadErrorText')}
           </Text>
           <Button onClick={handleRefresh}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Try Again
+            <RefreshCw className="w-4 h-4 me-2" />
+            {t('tx.tryAgain')}
           </Button>
         </Card>
       </div>
@@ -300,14 +302,17 @@ const OverviewContent: React.FC<{
   formatPercentage: (value: number | undefined | null) => string;
   setActiveTab: (tab: TabType) => void;
   walletBalance: number;
-}> = ({ portfolio, marketInsights, loading, showBalances, formatCurrency, formatPercentage, setActiveTab, walletBalance }) => (
+}> = ({ portfolio, marketInsights, loading, showBalances, formatCurrency, formatPercentage, setActiveTab, walletBalance }) => {
+  const { t, i18n } = useTranslation('dashboard');
+  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
+  return (
   <div className="space-y-6">
     {/* Wallet Balance Banner */}
     {walletBalance > 0 && (
       <Card className="p-4 bg-gradient-to-r from-emerald-500 to-teal-600 border-0">
         <div className="flex items-center justify-between">
           <div>
-            <Text variant="bodySmall" className="text-emerald-100">Wallet Balance</Text>
+            <Text variant="bodySmall" className="text-emerald-100">{t('icp.wallet.balance')}</Text>
             <Text variant="h2" weight="bold" className="text-white">
               {showBalances ? `$${walletBalance.toLocaleString()}` : '$****'}
             </Text>
@@ -318,7 +323,7 @@ const OverviewContent: React.FC<{
             className="border-white/30 text-white hover:bg-white/10"
             onClick={() => setActiveTab('wallet')}
           >
-            Manage Wallet
+            {t('icp.manageWallet')}
           </Button>
         </div>
       </Card>
@@ -334,7 +339,7 @@ const OverviewContent: React.FC<{
           transition={{ delay: 0 }}
         >
           <StatsCard
-            title="Total Portfolio Value"
+            title={t('overview.stats.totalPortfolioValue')}
             value={formatCurrency(portfolio?.current_value || 0)}
             change={formatPercentage(portfolio?.return_percentage || 0)}
             changeType={
@@ -354,9 +359,9 @@ const OverviewContent: React.FC<{
           transition={{ delay: 0.1 }}
         >
           <StatsCard
-            title="Monthly Income"
+            title={t('overview.stats.monthlyIncome')}
             value={formatCurrency(portfolio?.monthly_dividends || 0)}
-            subtitle="From dividends"
+            subtitle={t('overview.stats.fromDividends')}
             icon={TrendingUp}
             variant="accent"
             animated={true}
@@ -371,9 +376,9 @@ const OverviewContent: React.FC<{
           transition={{ delay: 0.2 }}
         >
           <StatsCard
-            title="Active Properties"
+            title={t('overview.stats.activeProperties')}
             value={portfolio?.properties_count || 0}
-            subtitle="In portfolio"
+            subtitle={t('overview.stats.inPortfolio')}
             icon={PieChart}
             animated={true}
             className={loading ? 'animate-pulse' : ''}
@@ -387,9 +392,9 @@ const OverviewContent: React.FC<{
           transition={{ delay: 0.3 }}
         >
           <StatsCard
-            title="Total Owned"
+            title={t('invDash.stats.totalOwned')}
             value={formatCurrency(portfolio?.total_invested || 0)}
-            subtitle="Principal amount"
+            subtitle={t('icp.principal')}
             icon={Wallet}
             animated={true}
             className={loading ? 'animate-pulse' : ''}
@@ -403,7 +408,7 @@ const OverviewContent: React.FC<{
       {/* Quick Actions */}
       <Card className="p-6">
         <Text variant="h3" weight="semibold" className="mb-4">
-          Quick Actions
+          {t('quickActions.title')}
         </Text>
         <div className="space-y-3">
           <Button
@@ -411,32 +416,32 @@ const OverviewContent: React.FC<{
             className="w-full justify-start"
             onClick={() => setActiveTab('marketplace')}
           >
-            <Search className="w-4 h-4 mr-3" />
-            Browse Properties
+            <Search className="w-4 h-4 me-3" />
+            {t('myProps.browseProperties')}
           </Button>
           <Button
             variant="outline"
             className="w-full justify-start"
             onClick={() => setActiveTab('wallet')}
           >
-            <Wallet className="w-4 h-4 mr-3" />
-            Manage Wallet
+            <Wallet className="w-4 h-4 me-3" />
+            {t('icp.manageWallet')}
           </Button>
           <Button
             variant="outline"
             className="w-full justify-start"
             onClick={() => setActiveTab('transactions')}
           >
-            <Activity className="w-4 h-4 mr-3" />
-            Transaction History
+            <Activity className="w-4 h-4 me-3" />
+            {t('overview.actions.transactionHistory')}
           </Button>
           <Button
             variant="outline"
             className="w-full justify-start"
             onClick={() => setActiveTab('settings')}
           >
-            <Settings className="w-4 h-4 mr-3" />
-            Account Settings
+            <Settings className="w-4 h-4 me-3" />
+            {t('icp.accountSettings')}
           </Button>
         </div>
       </Card>
@@ -451,31 +456,31 @@ const OverviewContent: React.FC<{
       {/* Market Insights */}
       <Card className="p-6">
         <Text variant="h3" weight="semibold" className="mb-4">
-          Market Insights
+          {t('overview.sections.marketInsights')}
         </Text>
         <div className="space-y-4">
           <div>
             <Text variant="body" weight="semibold" className="mb-2">
-              Trending Properties
+              {t('overview.trendingProperties')}
             </Text>
             <Text variant="caption" color="muted">
-              {marketInsights?.trending?.length || 0} properties gaining interest
+              {t('overview.trendingCount', { count: marketInsights?.trending?.length || 0 })}
             </Text>
           </div>
           <div>
             <Text variant="body" weight="semibold" className="mb-2">
-              High Yield Opportunities
+              {t('icp.highYield')}
             </Text>
             <Text variant="caption" color="muted">
-              {marketInsights?.highYield?.length || 0} properties with 10%+ ROI
+              {t('icp.highYieldCount', { count: marketInsights?.highYield?.length || 0 })}
             </Text>
           </div>
           <div>
             <Text variant="body" weight="semibold" className="mb-2">
-              New Listings
+              {t('icp.newListings')}
             </Text>
             <Text variant="caption" color="muted">
-              {marketInsights?.newListings?.length || 0} new properties this week
+              {t('icp.newListingsCount', { count: marketInsights?.newListings?.length || 0 })}
             </Text>
           </div>
         </div>
@@ -486,7 +491,7 @@ const OverviewContent: React.FC<{
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <Card className="p-6">
         <Text variant="h3" weight="semibold" className="mb-4">
-          Portfolio Allocation
+          {t('icp.portfolioAllocation')}
         </Text>
         {loading ? (
           <div className="animate-pulse bg-slate-200 dark:bg-slate-700 h-64 rounded" />
@@ -496,7 +501,7 @@ const OverviewContent: React.FC<{
               <div key={allocation.property_type} className="space-y-2">
                 <div className="flex justify-between items-center">
                   <Text variant="body" weight="medium">
-                    {allocation.property_type.replace('_', ' ').toUpperCase()}
+                    {t(`propertyTypes.${allocation.property_type}`, { defaultValue: allocation.property_type.replace('_', ' ').toUpperCase() })}
                   </Text>
                   <Text variant="body" weight="semibold">
                     {allocation.percentage.toFixed(1)}%
@@ -511,7 +516,7 @@ const OverviewContent: React.FC<{
               </div>
             )) || (
               <Text variant="body" color="muted" className="text-center py-8">
-                No portfolio allocation data available
+                {t('icp.noAllocation')}
               </Text>
             )}
           </div>
@@ -520,7 +525,7 @@ const OverviewContent: React.FC<{
 
       <Card className="p-6">
         <Text variant="h3" weight="semibold" className="mb-4">
-          Recent Performance
+          {t('icp.recentPerformance')}
         </Text>
         {loading ? (
           <div className="animate-pulse bg-slate-200 dark:bg-slate-700 h-64 rounded" />
@@ -529,9 +534,9 @@ const OverviewContent: React.FC<{
             {portfolio?.performance_data?.slice(-7).map((point, index) => (
               <div key={index} className="flex justify-between items-center py-2">
                 <Text variant="body" color="muted">
-                  {new Date(point.date).toLocaleDateString()}
+                  {new Date(point.date).toLocaleDateString(dateLocale)}
                 </Text>
-                <div className="text-right">
+                <div className="text-end">
                   <Text variant="body" weight="semibold">
                     ${point.value.toLocaleString()}
                   </Text>
@@ -549,7 +554,7 @@ const OverviewContent: React.FC<{
               </div>
             )) || (
               <Text variant="body" color="muted" className="text-center py-8">
-                No performance data available
+                {t('icp.noPerformance')}
               </Text>
             )}
           </div>
@@ -557,7 +562,8 @@ const OverviewContent: React.FC<{
       </Card>
     </div>
   </div>
-);
+  );
+};
 
 
 
@@ -570,6 +576,7 @@ const SecondaryMarketContent: React.FC = () => <SecondaryMarketDashboard />;
 
 // Marketplace Content Component (primary listings — newly tokenized properties)
 const MarketplaceContent: React.FC = () => {
+  const { t } = useTranslation('dashboard');
   const { navigate } = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -605,8 +612,8 @@ const MarketplaceContent: React.FC = () => {
       <div className="space-y-6">
         <div className="flex flex-col items-center justify-center h-64 text-center">
           <AlertTriangle className="w-12 h-12 text-amber-500 mb-4" />
-          <Text variant="h4" weight="semibold" className="mb-2">Unable to load properties</Text>
-          <Text variant="body" color="muted">Please try refreshing the page</Text>
+          <Text variant="h4" weight="semibold" className="mb-2">{t('icp.loadPropsError')}</Text>
+          <Text variant="body" color="muted">{t('icp.tryRefresh')}</Text>
         </div>
       </div>
     );
@@ -633,20 +640,20 @@ const MarketplaceContent: React.FC = () => {
     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
       <div>
         <Text variant="h3" weight="semibold" className="mb-2">
-          Properties
+          {t('myProps.properties')}
         </Text>
         <Text variant="body" color="muted">
-          Discover and buy tokenized real estate properties
+          {t('icp.discover')}
         </Text>
       </div>
       <div className="relative w-full lg:w-72">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <Search className="w-4 h-4 absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
           type="search"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search by title, city or type"
-          className="w-full pl-9 pr-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+          placeholder={t('icp.searchPlaceholder')}
+          className="w-full ps-9 pe-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
         />
       </div>
     </div>
@@ -667,30 +674,30 @@ const MarketplaceContent: React.FC = () => {
       return (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <StatsCard
-            title="Available Properties"
+            title={t('icp.market.available')}
             value={String(properties.length)}
-            subtitle="Ready for purchase"
+            subtitle={t('icp.market.availableSub')}
             icon={Target}
             variant="default"
           />
           <StatsCard
-            title="Total Market Value"
+            title={t('icp.market.totalValue')}
             value={`$${(totalValue / 1000000).toFixed(1)}M`}
-            subtitle="Combined property value"
+            subtitle={t('icp.market.totalValueSub')}
             icon={DollarSign}
             variant="default"
           />
           <StatsCard
-            title="Average ROI"
+            title={t('invDash.averageRoi')}
             value={`${avgRoi.toFixed(1)}%`}
-            subtitle="Expected annual return"
+            subtitle={t('icp.market.avgRoiSub')}
             icon={TrendingUp}
             variant="default"
           />
           <StatsCard
-            title="Min. Token Price"
+            title={t('icp.market.minPrice')}
             value={`$${minPrice.toLocaleString()}`}
-            subtitle="Lowest entry point"
+            subtitle={t('icp.market.minPriceSub')}
             icon={Wallet}
             variant="default"
           />
@@ -703,7 +710,7 @@ const MarketplaceContent: React.FC = () => {
       <Card className="p-10 text-center">
         <Search className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
         <Text variant="body" color="muted">
-          {q ? `No properties match "${q}".` : 'No active properties available right now.'}
+          {q ? t('icp.noMatch', { q }) : t('icp.noActive')}
         </Text>
       </Card>
     )}
@@ -723,7 +730,7 @@ const MarketplaceContent: React.FC = () => {
               </div>
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-            <div className="absolute bottom-4 left-4 text-white">
+            <div className="absolute bottom-4 start-4 text-white">
               <Text variant="body" weight="semibold">
                 {property.title}
               </Text>
@@ -736,13 +743,13 @@ const MarketplaceContent: React.FC = () => {
           <div className="p-6">
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <Text variant="caption" color="muted">Property Value</Text>
+                <Text variant="caption" color="muted">{t('icp.propertyValue')}</Text>
                 <Text variant="body" weight="semibold">
                   ${Number(property.total_value).toLocaleString()}
                 </Text>
               </div>
               <div>
-                <Text variant="caption" color="muted">Token Price</Text>
+                <Text variant="caption" color="muted">{t('icp.sharePrice')}</Text>
                 <Text variant="body" weight="semibold">
                   ${Number(property.token_price).toLocaleString()}
                 </Text>
@@ -751,7 +758,7 @@ const MarketplaceContent: React.FC = () => {
 
             <div className="space-y-3 mb-4">
               <div className="flex justify-between items-center">
-                <Text variant="caption" color="muted">Available Tokens</Text>
+                <Text variant="caption" color="muted">{t('icp.availableShares')}</Text>
                 <Text variant="caption" weight="semibold">
                   {(property.total_tokens - property.tokens_sold).toLocaleString()} / {property.total_tokens.toLocaleString()}
                 </Text>
@@ -765,8 +772,8 @@ const MarketplaceContent: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <Text variant="caption" color="muted">Expected ROI</Text>
+              <div className="flex items-center gap-2">
+                <Text variant="caption" color="muted">{t('collab.sort.roi')}</Text>
                 <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
                   {Number(property.expected_return) > 0
                     ? `${Number(property.expected_return).toFixed(1)}%`
@@ -776,7 +783,7 @@ const MarketplaceContent: React.FC = () => {
             </div>
 
             <Button className="w-full" onClick={() => navigate('property-detail', { id: property.id })}>
-              Buy Now
+              {t('icp.buyNow')}
             </Button>
           </div>
         </Card>
@@ -805,6 +812,7 @@ export const WalletContent: React.FC<{
   walletBalance: number;
   walletLoading: boolean;
 }> = ({ portfolio, loading, walletBalance, walletLoading }) => {
+  const { t } = useTranslation('dashboard');
   const queryClient = useQueryClient();
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [addFundsOpen, setAddFundsOpen] = useState(false);
@@ -815,10 +823,10 @@ export const WalletContent: React.FC<{
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         <div>
           <Text variant="h3" weight="semibold" className="mb-2">
-            Wallet & Payments
+            {t('icp.wallet.title')}
           </Text>
           <Text variant="body" color="muted">
-            Your platform balance, total owned, and earnings to date.
+            {t('icp.wallet.subtitle')}
           </Text>
         </div>
         <div className="flex gap-3">
@@ -826,10 +834,10 @@ export const WalletContent: React.FC<{
               NOWPayments); Withdraw sends funds out (bank/crypto,
               admin-reviewed). */}
           <Button onClick={() => setAddFundsOpen(true)}>
-            Add Funds
+            {t('icp.wallet.addFunds')}
           </Button>
           <Button variant="outline" onClick={() => setWithdrawOpen(true)}>
-            Withdraw
+            {t('invDash.actions.withdraw')}
           </Button>
           <Button
             variant="outline"
@@ -851,7 +859,7 @@ export const WalletContent: React.FC<{
               }
             }}
           >
-            {statementBusy ? 'Preparing…' : 'Statement (PDF)'}
+            {statementBusy ? t('analytics.preparing') : t('icp.wallet.statement')}
           </Button>
         </div>
       </div>
@@ -859,29 +867,29 @@ export const WalletContent: React.FC<{
       {/* Wallet Balance Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatsCard
-          title="Wallet Balance"
+          title={t('icp.wallet.balance')}
           value={walletLoading ? '$0' : `$${walletBalance.toLocaleString()}`}
-          subtitle="Available funds"
+          subtitle={t('icp.wallet.available')}
           icon={Wallet}
           variant="gradient"
         />
         <StatsCard
-          title="Portfolio Value"
+          title={t('invDash.stats.portfolioValue')}
           value={loading ? '$0' : `$${(parseFloat(String(portfolio?.current_value || 0))).toLocaleString()}`}
-          subtitle="Current portfolio value"
+          subtitle={t('icp.wallet.currentPortfolio')}
           icon={DollarSign}
           variant="accent"
         />
         <StatsCard
-          title="Total Owned"
+          title={t('invDash.stats.totalOwned')}
           value={loading ? '$0' : `$${(parseFloat(String(portfolio?.total_invested || 0))).toLocaleString()}`}
-          subtitle="All-time purchases"
+          subtitle={t('icp.wallet.allTime')}
           icon={RefreshCw}
         />
         <StatsCard
-          title="Total Returns"
+          title={t('icp.wallet.totalReturns')}
           value={loading ? '$0' : `$${(parseFloat(String(portfolio?.total_returns || portfolio?.total_return || 0))).toLocaleString()}`}
-          subtitle="Earnings to date"
+          subtitle={t('icp.wallet.earnings')}
           icon={TrendingUp}
         />
       </div>
@@ -934,6 +942,7 @@ export const WalletContent: React.FC<{
 
 // Notifications Content Component
 const NotificationsContent: React.FC = () => {
+  const { t, i18n } = useTranslation('dashboard');
   const { data: notifications, isLoading } = useQuery({
     queryKey: ['notifications'],
     queryFn: async () => {
@@ -953,8 +962,8 @@ const NotificationsContent: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <Text variant="h3" weight="semibold" className="mb-2">Notifications</Text>
-          <Text variant="body" color="muted">Stay updated on your properties and platform activity</Text>
+          <Text variant="h3" weight="semibold" className="mb-2">{t('nav.notifications')}</Text>
+          <Text variant="body" color="muted">{t('icp.notif.subtitle')}</Text>
         </div>
       </div>
 
@@ -965,9 +974,9 @@ const NotificationsContent: React.FC = () => {
       ) : notificationList.length === 0 ? (
         <Card className="p-12 text-center">
           <Bell className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-          <Text variant="h4" weight="semibold" className="mb-2">No Notifications</Text>
+          <Text variant="h4" weight="semibold" className="mb-2">{t('icp.notif.emptyTitle')}</Text>
           <Text variant="body" color="muted">
-            You're all caught up! New notifications will appear here when there's activity on your properties.
+            {t('icp.notif.emptyText')}
           </Text>
         </Card>
       ) : (
@@ -984,11 +993,11 @@ const NotificationsContent: React.FC = () => {
                   <Bell className="w-5 h-5 text-slate-600 dark:text-slate-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <Text variant="body" weight="medium">{notif.title || notif.message || 'Notification'}</Text>
+                  <Text variant="body" weight="medium">{notif.title || notif.message || t('icp.notif.fallback')}</Text>
                   <Text variant="caption" color="muted">{notif.message || notif.description || ''}</Text>
                   {notif.created_at && (
                     <Text variant="caption" color="muted" className="mt-1">
-                      {new Date(notif.created_at).toLocaleDateString()}
+                      {new Date(notif.created_at).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : undefined)}
                     </Text>
                   )}
                 </div>
@@ -1006,6 +1015,7 @@ const NotificationsContent: React.FC = () => {
 
 // Settings Content Component with Role Management Integration
 const SettingsContent: React.FC = () => {
+  const { t } = useTranslation('dashboard');
   const user = useUser();
   const { updateProfile } = useAuth();
   const { navigate } = useRouter();
@@ -1059,7 +1069,7 @@ const SettingsContent: React.FC = () => {
       setProfileSuccess(true);
       setTimeout(() => setSettingsModal(null), 800);
     } catch (e: any) {
-      setProfileError(e?.message || 'Failed to update profile. Please try again.');
+      setProfileError(e?.message || t('icp.settings.profileError'));
     } finally {
       setProfileSaving(false);
     }
@@ -1083,20 +1093,20 @@ const SettingsContent: React.FC = () => {
 
   const ROLE_INFO = {
     [UserRole.INVESTOR]: {
-      label: 'Owner',
-      description: 'Buy tokenized real estate properties',
+      label: t('icp.settings.roles.investor'),
+      description: t('icp.settings.roles.investorDesc'),
       icon: Briefcase,
       color: 'emerald'
     },
     [UserRole.PROPERTY_OWNER]: {
-      label: 'Property Owner',
-      description: 'List properties for tokenization',
+      label: t('icp.settings.roles.property_owner'),
+      description: t('icp.settings.roles.property_ownerDesc'),
       icon: Building,
       color: 'blue'
     },
     [UserRole.ADMIN]: {
-      label: 'Administrator',
-      description: 'Platform administration access',
+      label: t('icp.settings.roles.admin'),
+      description: t('icp.settings.roles.adminDesc'),
       icon: Shield,
       color: 'purple'
     }
@@ -1107,26 +1117,26 @@ const SettingsContent: React.FC = () => {
   // preferences endpoint. The top-level Notifications sidebar item still
   // shows real notifications. Dropped from this tab list.
   const settingsTabs = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'security', label: 'Security', icon: Shield },
-    { id: 'roles', label: 'Role Management', icon: Users },
-    { id: 'account', label: 'Account', icon: Settings }
+    { id: 'profile', label: t('icp.settings.tabs.profile'), icon: User },
+    { id: 'security', label: t('icp.settings.tabs.security'), icon: Shield },
+    { id: 'roles', label: t('icp.settings.tabs.roles'), icon: Users },
+    { id: 'account', label: t('icp.settings.tabs.account'), icon: Settings }
   ];
 
   return (
     <div className="space-y-6">
       <div>
         <Text variant="h2" weight="bold" className="mb-2">
-          Account Settings
+          {t('icp.accountSettings')}
         </Text>
         <Text variant="body" color="muted">
-          Manage your account preferences, security, and role settings
+          {t('icp.settings.subtitle')}
         </Text>
       </div>
 
       {/* Settings Tab Navigation */}
       <div className="border-b border-slate-200 dark:border-slate-700">
-        <nav className="flex space-x-8" aria-label="Settings Tabs">
+        <nav className="flex gap-8" aria-label={t('icp.settings.tabsLabel')}>
           {settingsTabs.map((tab) => {
             const isActive = activeSettingsTab === tab.id;
             return (
@@ -1142,7 +1152,7 @@ const SettingsContent: React.FC = () => {
               >
                 <tab.icon
                   className={cn(
-                    'mr-2 w-5 h-5',
+                    'me-2 w-5 h-5',
                     isActive
                       ? 'text-emerald-500 dark:text-emerald-400'
                       : 'text-slate-400 group-hover:text-slate-500'
@@ -1168,31 +1178,31 @@ const SettingsContent: React.FC = () => {
             {/* Profile Information */}
             <Card className="p-6">
               <Text variant="body" weight="semibold" className="mb-4">
-                Profile Information
+                {t('icp.settings.profileInfo')}
               </Text>
               <div className="space-y-4">
                 <div>
-                  <Text variant="caption" color="muted" className="mb-1">Full Name</Text>
+                  <Text variant="caption" color="muted" className="mb-1">{t('icp.settings.fullName')}</Text>
                   <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                    <Text variant="body">{user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Not set' : '—'}</Text>
+                    <Text variant="body">{user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || t('icp.settings.notSet') : '—'}</Text>
                   </div>
                 </div>
                 <div>
-                  <Text variant="caption" color="muted" className="mb-1">Email Address</Text>
+                  <Text variant="caption" color="muted" className="mb-1">{t('icp.settings.email')}</Text>
                   <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                     <Text variant="body">{user?.email || '—'}</Text>
                   </div>
                 </div>
                 <div>
-                  <Text variant="caption" color="muted" className="mb-1">Phone Number</Text>
+                  <Text variant="caption" color="muted" className="mb-1">{t('icp.settings.phoneNumber')}</Text>
                   <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                     {/* Was hardcoded "+1 (555) 123-4567" — now reads the
                         actual user phone with a clear empty state. */}
-                    <Text variant="body">{user?.phone || (user as any)?.phone_number || 'Not set'}</Text>
+                    <Text variant="body">{user?.phone || (user as any)?.phone_number || t('icp.settings.notSet')}</Text>
                   </div>
                 </div>
                 <Button variant="outline" className="w-full" onClick={() => setSettingsModal('edit-profile')}>
-                  Edit Profile
+                  {t('icp.settings.editProfile')}
                 </Button>
               </div>
             </Card>
@@ -1210,29 +1220,29 @@ const SettingsContent: React.FC = () => {
             {/* Security Settings — only items with a real backend behind them */}
             <Card className="p-6">
               <Text variant="body" weight="semibold" className="mb-4">
-                Security
+                {t('icp.settings.tabs.security')}
               </Text>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Text variant="body" weight="medium">Two-Factor Authentication</Text>
-                    <Text variant="caption" color="muted">Add an extra layer of security</Text>
+                    <Text variant="body" weight="medium">{t('icp.settings.twoFa')}</Text>
+                    <Text variant="caption" color="muted">{t('icp.settings.twoFaDesc')}</Text>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setSettingsModal('2fa')}>Enable</Button>
+                  <Button variant="outline" size="sm" onClick={() => setSettingsModal('2fa')}>{t('icp.settings.enable')}</Button>
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <Text variant="body" weight="medium">Change Password</Text>
-                    <Text variant="caption" color="muted">Update your login credentials</Text>
+                    <Text variant="body" weight="medium">{t('icp.settings.changePassword')}</Text>
+                    <Text variant="caption" color="muted">{t('icp.settings.changePasswordDesc')}</Text>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setSettingsModal('password')}>Change</Button>
+                  <Button variant="outline" size="sm" onClick={() => setSettingsModal('password')}>{t('icp.settings.change')}</Button>
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <Text variant="body" weight="medium">Login Sessions</Text>
-                    <Text variant="caption" color="muted">Manage active sessions</Text>
+                    <Text variant="body" weight="medium">{t('icp.settings.sessions')}</Text>
+                    <Text variant="caption" color="muted">{t('icp.settings.sessionsDesc')}</Text>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setSettingsModal('sessions')}>View</Button>
+                  <Button variant="outline" size="sm" onClick={() => setSettingsModal('sessions')}>{t('icp.settings.view')}</Button>
                 </div>
               </div>
             </Card>
@@ -1255,14 +1265,14 @@ const SettingsContent: React.FC = () => {
         {activeSettingsTab === 'roles' && (
           <div className="space-y-6">
             <Text variant="h3" weight="semibold">
-              Role Management
+              {t('icp.settings.tabs.roles')}
             </Text>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Current Roles */}
               <Card className="p-6">
                 <Text variant="body" weight="semibold" className="mb-4">
-                  Your Current Roles
+                  {t('icp.settings.currentRoles')}
                 </Text>
                 {isLoadingRoles ? (
                   <div className="text-center py-8">
@@ -1305,7 +1315,7 @@ const SettingsContent: React.FC = () => {
                                   </Text>
                                   {roleData.is_primary && (
                                     <span className="text-xs px-2 py-0.5 bg-emerald-500 text-white rounded-full">
-                                      Primary
+                                      {t('icp.settings.primary')}
                                     </span>
                                   )}
                                 </div>
@@ -1325,31 +1335,30 @@ const SettingsContent: React.FC = () => {
               {/* Role Information */}
               <Card className="p-6">
                 <Text variant="body" weight="semibold" className="mb-4">
-                  About Roles
+                  {t('icp.settings.aboutRoles')}
                 </Text>
                 <div className="space-y-4 text-sm text-slate-600 dark:text-slate-400">
                   <p>
-                    Roles determine what you can do on the platform. You can have multiple roles
-                    and switch between them as needed.
+                    {t('icp.settings.rolesText')}
                   </p>
                   <div className="space-y-2">
                     <div className="flex items-start gap-2">
                       <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></div>
                       <span>
-                        <strong className="text-slate-700 dark:text-slate-300">Primary Role:</strong> Your
-                        default dashboard view
+                        <strong className="text-slate-700 dark:text-slate-300">{t('icp.settings.primaryRole')}</strong>{' '}
+                        {t('icp.settings.primaryRoleText')}
                       </span>
                     </div>
                     <div className="flex items-start gap-2">
                       <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></div>
                       <span>
-                        <strong className="text-slate-700 dark:text-slate-300">Role Switching:</strong> Change
-                        active role from dashboard anytime
+                        <strong className="text-slate-700 dark:text-slate-300">{t('icp.settings.roleSwitching')}</strong>{' '}
+                        {t('icp.settings.roleSwitchingText')}
                       </span>
                     </div>
                   </div>
                   <Button variant="outline" className="w-full mt-4" onClick={() => navigate('role-management')}>
-                    Manage Roles
+                    {t('roleSwitcher.manageRoles')}
                   </Button>
                 </div>
               </Card>
@@ -1362,20 +1371,20 @@ const SettingsContent: React.FC = () => {
             {/* Account Actions */}
             <Card className="p-6">
               <Text variant="body" weight="semibold" className="mb-4">
-                Account Actions
+                {t('icp.settings.accountActions')}
               </Text>
               <div className="space-y-3">
                 <Button variant="outline" className="w-full justify-start" onClick={() => setSettingsModal('export')}>
-                  <Download className="w-4 h-4 mr-3" />
-                  Export Data
+                  <Download className="w-4 h-4 me-3" />
+                  {t('icp.settings.exportData')}
                 </Button>
                 <Button variant="outline" className="w-full justify-start" onClick={() => setSettingsModal('tax')}>
-                  <FileText className="w-4 h-4 mr-3" />
-                  Download Tax Documents
+                  <FileText className="w-4 h-4 me-3" />
+                  {t('icp.settings.taxDocs')}
                 </Button>
                 <Button variant="outline" className="w-full justify-start" onClick={() => setSettingsModal('reports')}>
-                  <FileText className="w-4 h-4 mr-3" />
-                  Download Ownership Reports
+                  <FileText className="w-4 h-4 me-3" />
+                  {t('icp.settings.ownershipReports')}
                 </Button>
               </div>
             </Card>
@@ -1409,7 +1418,7 @@ const SettingsContent: React.FC = () => {
             >
               {settingsModal === 'edit-profile' && (
                 <>
-                  <Text variant="h3" weight="bold" className="mb-3">Edit Profile</Text>
+                  <Text variant="h3" weight="bold" className="mb-3">{t('icp.settings.editProfile')}</Text>
                   {profileError && (
                     <div className="mb-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
                       {profileError}
@@ -1417,13 +1426,13 @@ const SettingsContent: React.FC = () => {
                   )}
                   {profileSuccess && (
                     <div className="mb-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm text-emerald-700 dark:text-emerald-300">
-                      Profile updated.
+                      {t('icp.settings.profileUpdated')}
                     </div>
                   )}
                   <div className="space-y-3 mb-4 max-h-[60vh] overflow-y-auto">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">First name</label>
+                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('icp.settings.firstName')}</label>
                         <input
                           type="text"
                           value={profileForm.first_name}
@@ -1432,7 +1441,7 @@ const SettingsContent: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Last name</label>
+                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('icp.settings.lastName')}</label>
                         <input
                           type="text"
                           value={profileForm.last_name}
@@ -1442,7 +1451,7 @@ const SettingsContent: React.FC = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Phone</label>
+                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('icp.settings.phone')}</label>
                       <input
                         type="tel"
                         value={profileForm.phone}
@@ -1451,7 +1460,7 @@ const SettingsContent: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Address</label>
+                      <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('icp.settings.address')}</label>
                       <input
                         type="text"
                         value={profileForm.address}
@@ -1461,7 +1470,7 @@ const SettingsContent: React.FC = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">City</label>
+                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('icp.settings.city')}</label>
                         <input
                           type="text"
                           value={profileForm.city}
@@ -1470,7 +1479,7 @@ const SettingsContent: React.FC = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Country</label>
+                        <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('icp.settings.country')}</label>
                         <input
                           type="text"
                           value={profileForm.country}
@@ -1481,58 +1490,58 @@ const SettingsContent: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setSettingsModal(null)} className="flex-1" disabled={profileSaving}>Cancel</Button>
+                    <Button variant="outline" onClick={() => setSettingsModal(null)} className="flex-1" disabled={profileSaving}>{t('common.cancel')}</Button>
                     <Button onClick={handleProfileSave} className="flex-1" disabled={profileSaving}>
-                      {profileSaving ? 'Saving…' : 'Save Changes'}
+                      {profileSaving ? t('icp.settings.saving') : t('icp.settings.saveChanges')}
                     </Button>
                   </div>
                 </>
               )}
               {settingsModal === '2fa' && (
                 <>
-                  <Text variant="h3" weight="bold" className="mb-3">Enable Two-Factor Authentication</Text>
+                  <Text variant="h3" weight="bold" className="mb-3">{t('icp.settings.enable2faTitle')}</Text>
                   <Text variant="body" color="muted" className="mb-4">
-                    Two-factor authentication adds an extra layer of security to your account. You will need an authenticator app like Google Authenticator or Authy.
+                    {t('icp.settings.enable2faText')}
                   </Text>
-                  <Text variant="caption" color="muted" className="mb-4 block">This feature is coming soon. We are working on integrating 2FA.</Text>
-                  <Button onClick={() => setSettingsModal(null)} className="w-full">Close</Button>
+                  <Text variant="caption" color="muted" className="mb-4 block">{t('icp.settings.enable2faSoon')}</Text>
+                  <Button onClick={() => setSettingsModal(null)} className="w-full">{t('common.close')}</Button>
                 </>
               )}
               {settingsModal === 'password' && (
                 <>
-                  <Text variant="h3" weight="bold" className="mb-3">Change Password</Text>
+                  <Text variant="h3" weight="bold" className="mb-3">{t('icp.settings.changePassword')}</Text>
                   <div className="space-y-3 mb-4">
-                    <input type="password" placeholder="Current password" className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
-                    <input type="password" placeholder="New password" className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
-                    <input type="password" placeholder="Confirm new password" className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
+                    <input type="password" placeholder={t('icp.settings.currentPassword')} className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
+                    <input type="password" placeholder={t('icp.settings.newPassword')} className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
+                    <input type="password" placeholder={t('icp.settings.confirmPassword')} className="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:border-slate-600" />
                   </div>
                   <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => setSettingsModal(null)} className="flex-1">Cancel</Button>
-                    <Button onClick={() => { alert('Password change submitted'); setSettingsModal(null); }} className="flex-1">Update Password</Button>
+                    <Button variant="outline" onClick={() => setSettingsModal(null)} className="flex-1">{t('common.cancel')}</Button>
+                    <Button onClick={() => { alert(t('icp.settings.passwordSubmitted')); setSettingsModal(null); }} className="flex-1">{t('icp.settings.updatePassword')}</Button>
                   </div>
                 </>
               )}
               {settingsModal === 'sessions' && (
                 <>
-                  <Text variant="h3" weight="bold" className="mb-3">Active Sessions</Text>
+                  <Text variant="h3" weight="bold" className="mb-3">{t('icp.settings.activeSessions')}</Text>
                   <div className="space-y-3 mb-4">
                     <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                      <Text variant="body" weight="medium">Current Session</Text>
-                      <Text variant="caption" color="muted">This device - Active now</Text>
+                      <Text variant="body" weight="medium">{t('icp.settings.currentSession')}</Text>
+                      <Text variant="caption" color="muted">{t('icp.settings.thisDevice')}</Text>
                     </div>
                   </div>
-                  <Button onClick={() => setSettingsModal(null)} className="w-full">Close</Button>
+                  <Button onClick={() => setSettingsModal(null)} className="w-full">{t('common.close')}</Button>
                 </>
               )}
               {(settingsModal === 'export' || settingsModal === 'tax' || settingsModal === 'reports') && (
                 <>
                   <Text variant="h3" weight="bold" className="mb-3">
-                    {settingsModal === 'export' ? 'Export Data' : settingsModal === 'tax' ? 'Tax Documents' : 'Ownership Reports'}
+                    {settingsModal === 'export' ? t('icp.settings.exportData') : settingsModal === 'tax' ? t('icp.settings.taxTitle') : t('icp.settings.reportsTitle')}
                   </Text>
                   <Text variant="body" color="muted" className="mb-4">
-                    This feature is coming soon. Your {settingsModal === 'export' ? 'account data export' : settingsModal === 'tax' ? 'tax documents' : 'ownership reports'} will be available for download once generated.
+                    {settingsModal === 'export' ? t('icp.settings.soonExport') : settingsModal === 'tax' ? t('icp.settings.soonTax') : t('icp.settings.soonReports')}
                   </Text>
-                  <Button onClick={() => setSettingsModal(null)} className="w-full">Close</Button>
+                  <Button onClick={() => setSettingsModal(null)} className="w-full">{t('common.close')}</Button>
                 </>
               )}
             </motion.div>

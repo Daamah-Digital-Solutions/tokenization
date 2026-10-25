@@ -11,39 +11,17 @@ import {
   Building2
 } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { useTranslation } from 'react-i18next';
 
 export const InvestorCTA: React.FC = () => {
+  const { t } = useTranslation('ui');
   const benefits = [
-    {
-      icon: Wallet,
-      title: 'Fractional Ownership',
-      description: 'Start with lower capital and diversify across multiple properties',
-    },
-    {
-      icon: Shield,
-      title: 'SPV Protection',
-      description: 'Your ownership is protected through independent legal structures',
-    },
-    {
-      icon: FileText,
-      title: 'Full Transparency',
-      description: 'Access to all property documents, valuations, and reports',
-    },
-    {
-      icon: PieChart,
-      title: 'Income Distribution',
-      description: 'Receive proportional share of rental income and capital gains',
-    },
-    {
-      icon: Globe,
-      title: 'Global Access',
-      description: 'Own properties worldwide from anywhere',
-    },
-    {
-      icon: TrendingUp,
-      title: 'Secondary Market',
-      description: 'Option to trade your ownership units with other owners',
-    },
+    { icon: Wallet, title: t('investorCta.b1.title'), description: t('investorCta.b1.desc') },
+    { icon: Shield, title: t('investorCta.b2.title'), description: t('investorCta.b2.desc') },
+    { icon: FileText, title: t('investorCta.b3.title'), description: t('investorCta.b3.desc') },
+    { icon: PieChart, title: t('investorCta.b4.title'), description: t('investorCta.b4.desc') },
+    { icon: Globe, title: t('investorCta.b5.title'), description: t('investorCta.b5.desc') },
+    { icon: TrendingUp, title: t('investorCta.b6.title'), description: t('investorCta.b6.desc') },
   ];
 
   return (
@@ -60,18 +38,17 @@ export const InvestorCTA: React.FC = () => {
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-full border border-blue-200 dark:border-blue-800 mb-6">
             <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
-              For Owners
+              {t('investorCta.badge')}
             </span>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6">
-            Own{' '}
+            {t('investorCta.titlePrefix')}{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500">
-              Premium Real Estate
+              {t('investorCta.titleHighlight')}
             </span>
           </h2>
           <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
-            Access institutional-grade real estate ownership with lower capital requirements
-            and full transparency through our tokenized platform.
+            {t('investorCta.subtitle')}
           </p>
         </motion.div>
 
@@ -118,15 +95,15 @@ export const InvestorCTA: React.FC = () => {
               className="group"
               onClick={() => window.location.href = '/properties'}
             >
-              Browse Properties
-              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              {t('investorCta.browse')}
+              <ArrowRight className="ms-2 w-4 h-4 rtl:rotate-180 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform" />
             </Button>
             <Button
               variant="outline"
               size="lg"
               onClick={() => window.location.href = '/register'}
             >
-              Create Free Account
+              {t('investorCta.createAccount')}
             </Button>
           </div>
         </motion.div>

@@ -1,33 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Search, Wallet, Building2, TrendingUp, ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const HowItWorks: React.FC = () => {
+  const { t } = useTranslation('ui');
   const steps = [
-    {
-      icon: Search,
-      title: "Browse Properties",
-      description: "Explore Ready Properties generating immediate income or Under Construction projects with higher returns.",
-      step: "01"
-    },
-    {
-      icon: Wallet,
-      title: "Buy Securely",
-      description: "Connect your wallet and purchase through our regulated, secure platform infrastructure.",
-      step: "02"
-    },
-    {
-      icon: Building2,
-      title: "Own Digital Shares",
-      description: "Receive blockchain tokens representing your fractional ownership in premium properties.",
-      step: "03"
-    },
-    {
-      icon: TrendingUp,
-      title: "Earn Returns",
-      description: "Get quarterly dividends from Ready Properties or construction milestone returns from new developments.",
-      step: "04"
-    }
+    { icon: Search, title: t('howItWorks.s1.title'), description: t('howItWorks.s1.desc'), step: "01" },
+    { icon: Wallet, title: t('howItWorks.s2.title'), description: t('howItWorks.s2.desc'), step: "02" },
+    { icon: Building2, title: t('howItWorks.s3.title'), description: t('howItWorks.s3.desc'), step: "03" },
+    { icon: TrendingUp, title: t('howItWorks.s4.title'), description: t('howItWorks.s4.desc'), step: "04" }
   ];
 
   const containerVariants = {
@@ -73,7 +55,7 @@ export const HowItWorks: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-3xl md:text-4xl lg:text-5xl font-semibold text-navy-900 dark:text-white mb-4 leading-tight"
           >
-            How It Works
+            {t('howItWorks.title')}
           </motion.h2>
           
           <motion.p
@@ -83,7 +65,7 @@ export const HowItWorks: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg text-navy-600 dark:text-navy-200 max-w-2xl mx-auto text-balance"
           >
-            Four simple steps to start owning premium real estate through our secure platform
+            {t('howItWorks.subtitle')}
           </motion.p>
         </motion.div>
 
@@ -111,7 +93,7 @@ export const HowItWorks: React.FC = () => {
                     whileInView={{ scaleX: 1 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.8, delay: 0.6 + index * 0.1 }}
-                    className="hidden lg:block absolute top-16 left-full w-full h-px bg-emerald-200 dark:bg-emerald-800 transform origin-left z-0"
+                    className="hidden lg:block absolute top-16 start-full w-full h-px bg-emerald-200 dark:bg-emerald-800 transform origin-left rtl:origin-right z-0"
                     style={{ width: 'calc(100% - 2rem)' }}
                   />
                 )}
@@ -161,18 +143,18 @@ export const HowItWorks: React.FC = () => {
               className="space-y-4"
             >
               <h3 className="text-2xl font-semibold text-navy-900 dark:text-white">
-                Ready to Get Started?
+                {t('howItWorks.ctaTitle')}
               </h3>
               <p className="text-navy-600 dark:text-navy-200 max-w-lg mx-auto">
-                Join thousands of owners building wealth through tokenized real estate.
+                {t('howItWorks.ctaBody')}
               </p>
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 transition-colors duration-200 text-white font-medium px-6 py-3 rounded-xl"
               >
-                Start Owning
-                <ArrowRight className="w-4 h-4" />
+                {t('howItWorks.ctaButton')}
+                <ArrowRight className="w-4 h-4 rtl:rotate-180" />
               </motion.button>
             </motion.div>
           </div>

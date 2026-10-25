@@ -17,6 +17,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../design-system/cards/Card';
 import { WalletService } from '../../services/wallet/WalletService';
 import type { WalletInfo, CustodialBalance } from '../../services/api/types';
@@ -53,13 +54,13 @@ function shortAddr(a?: string | null): string {
   return a.length > 14 ? `${a.slice(0, 8)}…${a.slice(-6)}` : a;
 }
 
-function networkLabel(network?: string | null, chainId?: number | null): string {
+function networkLabel(network?: string | null, chainId?: number | null, fallback = 'Blockchain'): string {
   if (network) return network;
   const map: Record<number, string> = {
     1: 'Ethereum', 56: 'BNB Smart Chain', 97: 'BNB Testnet',
     137: 'Polygon', 80001: 'Polygon Mumbai',
   };
-  return (chainId && map[chainId]) || 'Blockchain';
+  return (chainId && map[chainId]) || fallback;
 }
 
 interface WalletPanelProps {
@@ -71,6 +72,7 @@ interface WalletPanelProps {
 
 const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false }) => {
   const { refreshUser, state: authState } = useAuth();
+  const { t } = useTranslation('payments');
   const authUser = authState?.user as any;
   const [info, setInfo] = useState<WalletInfo | null>(null);
   const [balances, setBalances] = useState<CustodialBalance[]>([]);
@@ -92,7 +94,7 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
       setBalances(balanceRows);
       setStatus('idle');
     } catch (e: any) {
-      setError(e?.message || 'Failed to load wallet info.');
+      setError(e?.message || t('walletPanel.errors.load'));
       setStatus('error');
     }
   }, []);
@@ -115,9 +117,7 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
     setError(null);
     const injected = detectInjectedWallet();
     if (!injected) {
-      setError(
-        'No browser wallet detected. Install MetaMask (or another EVM wallet) and try again.'
-      );
+      setError(t('walletPanel.errors.noWallet'));
       return;
     }
     setStatus('linking');
@@ -134,13 +134,13 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
       return result;
     } catch (e: any) {
       if (e instanceof WalletConnectionError && e.code === 'USER_REJECTED') {
-        setError('Connection cancelled.');
+        setError(t('walletPanel.errors.cancelled'));
       } else {
-        setError(e?.message || 'Failed to link wallet.');
+        setError(e?.message || t('walletPanel.errors.link'));
       }
       setStatus('idle');
     }
-  }, [refresh, refreshUser]);
+  }, [refresh, refreshUser, t]);
 
   const handleUnlink = useCallback(async () => {
     setError(null);
@@ -149,10 +149,10 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
       await WalletService.unlinkExternalWallet();
       await Promise.all([refresh(), refreshUser?.()]);
     } catch (e: any) {
-      setError(e?.message || 'Failed to unlink wallet.');
+      setError(e?.message || t('walletPanel.errors.unlink'));
       setStatus('idle');
     }
-  }, [refresh, refreshUser]);
+  }, [refresh, refreshUser, t]);
 
   const handleWithdraw = useCallback(
     async (row: CustodialBalance) => {
@@ -160,13 +160,11 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
       setLastWithdrawTx(null);
       const tokens = parseInt(row.custodial_balance, 10) || 0;
       if (tokens <= 0) {
-        setError('Nothing to withdraw for this property.');
+        setError(t('walletPanel.errors.nothingToWithdraw'));
         return;
       }
       const ok = window.confirm(
-        `Withdraw ${tokens} token${tokens === 1 ? '' : 's'} of "${row.property_title}" ` +
-          `to your external wallet?\n\nThis sends an on-chain transaction signed by ` +
-          `the Capimax custody system. Gas is paid by the platform.`,
+        t('walletPanel.confirmWithdraw', { count: tokens, property: row.property_title }),
       );
       if (!ok) return;
       setWithdrawingProperty(row.property_id);
@@ -178,12 +176,12 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
         });
         await refresh();
       } catch (e: any) {
-        setError(e?.message || 'Withdrawal failed.');
+        setError(e?.message || t('walletPanel.errors.withdraw'));
       } finally {
         setWithdrawingProperty(null);
       }
     },
-    [refresh],
+    [refresh, t],
   );
 
   const totalTokens = balances.reduce(
@@ -191,7 +189,7 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
     0,
   );
   const primaryNetwork = balances[0]
-    ? networkLabel(balances[0].network, balances[0].chain_id)
+    ? networkLabel(balances[0].network, balances[0].chain_id, t('walletPanel.blockchain'))
     : 'BNB Testnet';
   const isVerified = !!(
     authUser?.is_verified ||
@@ -225,27 +223,27 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
     <div className="space-y-5">
       <header className="space-y-1">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          Your Capimax Wallet
+          {t('walletPanel.title')}
         </h2>
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Your digital wallet & tokenized property ownership.
+          {t('walletPanel.subtitle')}
         </p>
       </header>
 
       {/* Status summary (#10) */}
       <section className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         <StatusTile
-          label="Wallet Status"
-          value={walletActive ? 'Active' : 'Pending'}
+          label={t('walletPanel.tiles.status')}
+          value={walletActive ? t('walletPanel.tiles.active') : t('walletPanel.tiles.pending')}
           tone={walletActive ? 'ok' : 'muted'}
         />
-        <StatusTile label="Network" value={primaryNetwork} />
+        <StatusTile label={t('walletPanel.tiles.network')} value={primaryNetwork} />
         <StatusTile
-          label="Verification"
-          value={isVerified ? 'Verified' : 'Unverified'}
+          label={t('walletPanel.tiles.verification')}
+          value={isVerified ? t('walletPanel.tiles.verified') : t('walletPanel.tiles.unverified')}
           tone={isVerified ? 'ok' : 'muted'}
         />
-        <StatusTile label="Token Balance" value={totalTokens.toLocaleString()} />
+        <StatusTile label={t('walletPanel.tiles.shareBalance')} value={totalTokens.toLocaleString()} />
       </section>
 
       {/* Primary wallet (custodial in the common case) */}
@@ -253,29 +251,29 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
             {info?.primary_kind === 'external'
-              ? 'Primary wallet (self-custody)'
-              : 'Primary wallet (platform-managed)'}
+              ? t('walletPanel.primarySelf')
+              : t('walletPanel.primaryManaged')}
           </span>
           {info?.primary_kind === 'custodial' && (
             <span className="inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
-              No setup required
+              {t('walletPanel.noSetup')}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-3">
           <code className="flex-1 break-all font-mono text-sm text-slate-700 dark:text-slate-300">
             {status === 'loading'
-              ? 'Loading…'
-              : info?.primary_wallet || 'Not yet assigned'}
+              ? t('walletPanel.loading')
+              : info?.primary_wallet || t('walletPanel.notAssigned')}
           </code>
           {info?.primary_wallet && (
             <button
               type="button"
               onClick={() => handleCopy(info.primary_wallet!)}
               className="rounded-md px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700"
-              aria-label="Copy primary wallet address"
+              aria-label={t('walletPanel.copyPrimaryAria')}
             >
-              {copied === info.primary_wallet ? 'Copied' : 'Copy'}
+              {copied === info.primary_wallet ? t('walletPanel.copied') : t('walletPanel.copy')}
             </button>
           )}
         </div>
@@ -289,7 +287,7 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
       {/* External wallet — optional self-custody slot */}
       <section className="space-y-2">
         <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          External wallet (optional)
+          {t('walletPanel.externalTitle')}
         </span>
 
         {info?.has_external && info.external_wallet ? (
@@ -302,7 +300,7 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
               onClick={() => handleCopy(info.external_wallet!)}
               className="rounded-md px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700"
             >
-              {copied === info.external_wallet ? 'Copied' : 'Copy'}
+              {copied === info.external_wallet ? t('walletPanel.copied') : t('walletPanel.copy')}
             </button>
             <button
               type="button"
@@ -310,15 +308,13 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
               disabled={status === 'unlinking'}
               className="rounded-md px-2 py-1 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50 dark:text-rose-300 dark:hover:bg-rose-900/30"
             >
-              {status === 'unlinking' ? 'Unlinking…' : 'Unlink'}
+              {status === 'unlinking' ? t('walletPanel.unlinking') : t('walletPanel.unlink')}
             </button>
           </div>
         ) : (
           <div className="flex flex-col gap-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-4">
             <p className="text-sm text-slate-600 dark:text-slate-300">
-              Link a self-custody wallet (MetaMask, hardware wallet, etc.) if
-              you want crypto-paid purchases to land directly in it, or to
-              later withdraw your tokens from Capimax custody.
+              {t('walletPanel.linkIntro')}
             </p>
             <button
               type="button"
@@ -326,11 +322,10 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
               disabled={status === 'linking'}
               className="self-start rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-700 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
             >
-              {status === 'linking' ? 'Waiting for wallet…' : 'Link external wallet'}
+              {status === 'linking' ? t('walletPanel.waitingWallet') : t('walletPanel.linkExternal')}
             </button>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              You'll be asked to sign a verification message — no gas, no funds
-              are moved.
+              {t('walletPanel.signNote')}
             </p>
           </div>
         )}
@@ -341,7 +336,7 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
       {balances.length > 0 && (
         <section className="space-y-2">
           <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Tokenized properties in your wallet
+            {t('walletPanel.propertiesTitle')}
           </span>
           <div className="space-y-2">
             {balances.map((row) => {
@@ -362,13 +357,13 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
                       </p>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                         <span className="inline-flex items-center rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5">
-                          {networkLabel(row.network, row.chain_id)}
+                          {networkLabel(row.network, row.chain_id, t('walletPanel.blockchain'))}
                         </span>
                         <span>
-                          <strong className="text-slate-700 dark:text-slate-200 tabular-nums">{total}</strong> tokens
+                          <strong className="text-slate-700 dark:text-slate-200 tabular-nums">{total}</strong> {t('walletPanel.sharesUnit', { count: total })}
                         </span>
                         {external > 0 && (
-                          <span>({inCustody} in custody · {external} in your wallet)</span>
+                          <span>({t('walletPanel.split', { custody: inCustody, external })})</span>
                         )}
                       </div>
                     </div>
@@ -379,13 +374,13 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
                         disabled={busy || inCustody <= 0}
                         className="shrink-0 rounded-md bg-slate-900 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-slate-700 disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                       >
-                        {busy ? 'Withdrawing…' : 'Withdraw'}
+                        {busy ? t('walletPanel.withdrawing') : t('walletPanel.withdraw')}
                       </button>
                     )}
                   </div>
                   {row.contract_address && (
                     <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                      <span className="text-slate-400 dark:text-slate-500">Token contract:</span>
+                      <span className="text-slate-400 dark:text-slate-500">{t('walletPanel.tokenContract')}</span>
                       <code className="font-mono text-slate-600 dark:text-slate-300">
                         {shortAddr(row.contract_address)}
                       </code>
@@ -394,7 +389,7 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
                         onClick={() => handleCopy(row.contract_address)}
                         className="rounded px-1.5 py-0.5 font-medium text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                       >
-                        {copied === row.contract_address ? 'Copied' : 'Copy'}
+                        {copied === row.contract_address ? t('walletPanel.copied') : t('walletPanel.copy')}
                       </button>
                       <a
                         href={`${exp}/token/${row.contract_address}`}
@@ -402,7 +397,7 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
                         rel="noopener noreferrer"
                         className="font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
                       >
-                        View on explorer ↗
+                        {t('walletPanel.viewExplorer')} <span className="inline-block rtl:-scale-x-100">↗</span>
                       </a>
                     </div>
                   )}
@@ -413,22 +408,21 @@ const WalletPanel: React.FC<WalletPanelProps> = ({ className = '', bare = false 
 
           {lastWithdrawTx && (
             <p className="text-xs text-emerald-700 dark:text-emerald-300">
-              Withdrawal broadcast.{' '}
+              {t('walletPanel.withdrawBroadcast')}{' '}
               <a
                 href={`${explorerBase(balances[0]?.chain_id, balances[0]?.network)}/tx/${lastWithdrawTx.hash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium underline"
               >
-                View transaction ↗
+                {t('walletPanel.viewTx')} <span className="inline-block rtl:-scale-x-100">↗</span>
               </a>
             </p>
           )}
 
           {info?.has_external && (
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Tokens held in the platform-managed custodial wallet can be moved
-              to your linked external wallet anytime. Gas is paid by the platform.
+              {t('walletPanel.custodyNote')}
             </p>
           )}
         </section>

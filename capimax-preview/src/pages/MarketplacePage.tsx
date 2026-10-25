@@ -3,15 +3,17 @@ import { Helmet } from 'react-helmet-async';
 import { Navbar } from '../components/layout/Navbar';
 import { Footer } from '../components/layout/Footer';
 import { SecondaryMarketDashboard } from '../components/marketplace/SecondaryMarketDashboard';
+import { useTranslation } from 'react-i18next';
 
 export const MarketplacePage: React.FC = () => {
+  const { t } = useTranslation('market');
   return (
     <>
       <Helmet>
-        <title>Secondary Market | Capimax - Trading Platform</title>
+        <title>{t('page.metaTitle')}</title>
         <meta
           name="description"
-          content="Trade property tokens on the Capimax secondary market. Buy and sell real estate tokens with instant settlement."
+          content={t('page.metaDescription')}
         />
         <meta name="keywords" content="secondary market, property trading, real estate tokens, token trading" />
       </Helmet>

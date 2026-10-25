@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { 
   Eye,
   TrendingUp,
@@ -39,6 +40,10 @@ interface TransactionStep {
 
 export function TransactionTracker({ className, transactionId, compact = false }: TransactionTrackerProps) {
   const { state, updateTransaction, dispatch } = usePayment();
+  const { t, i18n } = useTranslation('payments');
+  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
+  const statusLabel = (s: string) => t(`status.${s}`, { defaultValue: s });
+  const methodName = (m: string) => t(`methodNames.${m}`, { defaultValue: m });
   const [selectedTx, setSelectedTx] = useState<string | null>(transactionId || null);
   const [isTracking, setIsTracking] = useState(false);
   const [filter, setFilter] = useState({
@@ -62,11 +67,11 @@ export function TransactionTracker({ className, transactionId, compact = false }
     // Common initial steps
     baseSteps.push({
       id: 'initiated',
-      title: 'Transaction Initiated',
-      description: 'Payment request created',
+      title: t('tracker.steps.initiated.title'),
+      description: t('tracker.steps.initiated.desc'),
       status: 'completed',
       timestamp: tx.timestamp,
-      details: `${tx.type} of ${formatCurrency(tx.amount, tx.currency)}`
+      details: t('tracker.steps.initiated.details', { type: t(`txTypes.${tx.type}`, { defaultValue: tx.type }), amount: formatCurrency(tx.amount, tx.currency) })
     });
 
     // Payment method specific steps
@@ -74,31 +79,31 @@ export function TransactionTracker({ className, transactionId, compact = false }
       baseSteps.push(
         {
           id: 'wallet_connected',
-          title: 'Wallet Connected',
-          description: 'Cryptocurrency wallet connected',
+          title: t('tracker.steps.walletConnected.title'),
+          description: t('tracker.steps.walletConnected.desc'),
           status: 'completed',
           timestamp: new Date(tx.timestamp.getTime() + 30000),
-          details: `Connected to ${tx.paymentMethod.network} network`
+          details: t('tracker.steps.walletConnected.details', { network: tx.paymentMethod.network })
         },
         {
           id: 'transaction_signed',
-          title: 'Transaction Signed',
-          description: 'Transaction signed in wallet',
+          title: t('tracker.steps.signed.title'),
+          description: t('tracker.steps.signed.desc'),
           status: tx.status === 'failed' ? 'failed' : 'completed',
           timestamp: new Date(tx.timestamp.getTime() + 60000),
-          details: tx.txHash ? `Tx Hash: ${tx.txHash}` : undefined
+          details: tx.txHash ? t('tracker.steps.signed.details', { hash: tx.txHash }) : undefined
         }
       );
 
       if (tx.confirmations !== undefined) {
         baseSteps.push({
           id: 'confirmations',
-          title: 'Network Confirmations',
-          description: `Waiting for network confirmations`,
+          title: t('tracker.steps.confirmations.title'),
+          description: t('tracker.steps.confirmations.desc'),
           status: tx.confirmations >= 12 ? 'completed' : 
                  tx.status === 'failed' ? 'failed' : 'current',
           timestamp: tx.confirmations > 0 ? new Date(tx.timestamp.getTime() + 120000) : undefined,
-          details: `${tx.confirmations || 0}/12 confirmations`,
+          details: t('history.confirmations', { count: tx.confirmations || 0, total: 12 }),
           link: tx.txHash ? `https://etherscan.io/tx/${tx.txHash}` : undefined
         });
       }
@@ -108,16 +113,16 @@ export function TransactionTracker({ className, transactionId, compact = false }
       baseSteps.push(
         {
           id: 'card_processing',
-          title: 'Card Processing',
-          description: 'Processing card payment',
+          title: t('tracker.steps.cardProcessing.title'),
+          description: t('tracker.steps.cardProcessing.desc'),
           status: tx.status === 'failed' ? 'failed' : 'completed',
           timestamp: new Date(tx.timestamp.getTime() + 30000),
-          details: `Card ending in ${tx.paymentMethod.last4}`
+          details: t('tracker.steps.cardProcessing.details', { last4: tx.paymentMethod.last4 })
         },
         {
           id: 'payment_authorized',
-          title: 'Payment Authorized',
-          description: 'Payment authorized by card issuer',
+          title: t('tracker.steps.authorized.title'),
+          description: t('tracker.steps.authorized.desc'),
           status: tx.status === 'failed' ? 'failed' : 'completed',
           timestamp: new Date(tx.timestamp.getTime() + 60000)
         }
@@ -128,12 +133,12 @@ export function TransactionTracker({ className, transactionId, compact = false }
       baseSteps.push(
         {
           id: 'bank_transfer',
-          title: 'Bank Transfer Initiated',
-          description: 'Transfer initiated from your bank',
+          title: t('tracker.steps.bankTransfer.title'),
+          description: t('tracker.steps.bankTransfer.desc'),
           status: tx.status === 'pending' ? 'current' : 
                  tx.status === 'failed' ? 'failed' : 'completed',
           timestamp: new Date(tx.timestamp.getTime() + 300000),
-          details: 'Processing time: 1-3 business days'
+          details: t('tracker.steps.bankTransfer.details')
         }
       );
     }
@@ -141,12 +146,12 @@ export function TransactionTracker({ className, transactionId, compact = false }
     // Final steps
     baseSteps.push({
       id: 'completed',
-      title: 'Payment Complete',
-      description: 'Payment successfully processed',
+      title: t('tracker.steps.complete.title'),
+      description: t('tracker.steps.complete.desc'),
       status: tx.status === 'completed' ? 'completed' :
               tx.status === 'failed' ? 'failed' : 'pending',
       timestamp: tx.status === 'completed' ? new Date(tx.timestamp.getTime() + 180000) : undefined,
-      details: tx.status === 'completed' ? 'Funds have been credited to your account' : undefined
+      details: tx.status === 'completed' ? t('tracker.steps.complete.details') : undefined
     });
 
     return baseSteps;
@@ -166,7 +171,7 @@ export function TransactionTracker({ className, transactionId, compact = false }
         
         if (newConfirmations >= 12 && transaction.status === 'processing') {
           updateTransaction(transaction.id, { status: 'completed' });
-          setNotifications(prev => [...prev, `Transaction ${transaction.id} completed!`]);
+          setNotifications(prev => [...prev, t('tracker.notifCompleted', { id: transaction.id })]);
         }
       } else if (Math.random() > 0.7) {
         // Random status updates for demo
@@ -174,7 +179,7 @@ export function TransactionTracker({ className, transactionId, compact = false }
         const newStatus = statuses[Math.floor(Math.random() * statuses.length)];
         if (newStatus !== transaction.status) {
           updateTransaction(transaction.id, { status: newStatus as any });
-          setNotifications(prev => [...prev, `Transaction ${transaction.id} status updated to ${newStatus}`]);
+          setNotifications(prev => [...prev, t('tracker.notifUpdated', { id: transaction.id, status: statusLabel(newStatus) })]);
         }
       }
     }, 5000);
@@ -244,10 +249,10 @@ export function TransactionTracker({ className, transactionId, compact = false }
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              Transaction Details
+              {t('tracker.detailsTitle')}
             </h3>
             <p className="text-sm text-gray-600">
-              Track the progress of your transaction
+              {t('tracker.detailsSubtitle')}
             </p>
           </div>
           <Button
@@ -258,7 +263,7 @@ export function TransactionTracker({ className, transactionId, compact = false }
             className="flex items-center gap-2"
           >
             <RefreshCw className={`h-4 w-4 ${isTracking ? 'animate-spin' : ''}`} />
-            Refresh
+            {t('tracker.refresh')}
           </Button>
         </div>
 
@@ -268,7 +273,7 @@ export function TransactionTracker({ className, transactionId, compact = false }
             <div>
               <div className="font-semibold text-gray-900">{transaction.description}</div>
               <div className="text-sm text-gray-600">
-                ID: {transaction.id}
+                {t('tracker.id')} {transaction.id}
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -278,34 +283,34 @@ export function TransactionTracker({ className, transactionId, compact = false }
                 transaction.status === 'failed' ? 'text-red-600' :
                 'text-yellow-600'
               }`}>
-                {transaction.status}
+                {statusLabel(transaction.status)}
               </span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-gray-600">Amount:</span>
+              <span className="text-gray-600">{t('depositWithdraw.amountColon')}</span>
               <div className="font-semibold">
                 {formatCurrency(transaction.amount, transaction.currency)}
               </div>
             </div>
             <div>
-              <span className="text-gray-600">Method:</span>
+              <span className="text-gray-600">{t('depositWithdraw.methodColon')}</span>
               <div className="font-semibold capitalize">
-                {transaction.paymentMethod.type}
+                {methodName(transaction.paymentMethod.type)}
               </div>
             </div>
             <div>
-              <span className="text-gray-600">Started:</span>
+              <span className="text-gray-600">{t('tracker.started')}</span>
               <div className="font-semibold">
-                {transaction.timestamp.toLocaleDateString()} at {transaction.timestamp.toLocaleTimeString()}
+                {t('tracker.dateAtTime', { date: transaction.timestamp.toLocaleDateString(dateLocale), time: transaction.timestamp.toLocaleTimeString(dateLocale) })}
               </div>
             </div>
             <div>
-              <span className="text-gray-600">Fee:</span>
+              <span className="text-gray-600">{t('depositWithdraw.feeColon')}</span>
               <div className="font-semibold">
-                {transaction.fee ? formatCurrency(transaction.fee, transaction.currency) : 'No fee'}
+                {transaction.fee ? formatCurrency(transaction.fee, transaction.currency) : t('tracker.noFee')}
               </div>
             </div>
           </div>
@@ -313,7 +318,7 @@ export function TransactionTracker({ className, transactionId, compact = false }
 
         {/* Progress Steps */}
         <Card className="p-4">
-          <h4 className="font-semibold text-gray-900 mb-4">Progress</h4>
+          <h4 className="font-semibold text-gray-900 mb-4">{t('tracker.progress')}</h4>
           <div className="space-y-4">
             {steps.map((step, index) => (
               <motion.div
@@ -355,7 +360,7 @@ export function TransactionTracker({ className, transactionId, compact = false }
                     </h5>
                     {step.timestamp && (
                       <span className="text-xs text-gray-500">
-                        {step.timestamp.toLocaleTimeString()}
+                        {step.timestamp.toLocaleTimeString(dateLocale)}
                       </span>
                     )}
                   </div>
@@ -375,7 +380,7 @@ export function TransactionTracker({ className, transactionId, compact = false }
                       className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 mt-1"
                     >
                       <ExternalLink className="h-3 w-3" />
-                      View on blockchain
+                      {t('tracker.viewOnChain')}
                     </button>
                   )}
                 </div>
@@ -390,7 +395,7 @@ export function TransactionTracker({ className, transactionId, compact = false }
             <div className="flex items-start gap-3">
               <Bell className="h-5 w-5 text-blue-600 mt-0.5" />
               <div>
-                <h5 className="font-medium text-blue-900 mb-2">Recent Updates</h5>
+                <h5 className="font-medium text-blue-900 mb-2">{t('tracker.recentUpdates')}</h5>
                 <div className="space-y-1">
                   {notifications.slice(-3).map((notification, index) => (
                     <p key={index} className="text-sm text-blue-800">
@@ -410,7 +415,7 @@ export function TransactionTracker({ className, transactionId, compact = false }
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900">
-          All Transactions
+          {t('tracker.allTransactions')}
         </h3>
         <Button
           onClick={handleRefresh}
@@ -420,14 +425,14 @@ export function TransactionTracker({ className, transactionId, compact = false }
           className="flex items-center gap-2"
         >
           <RefreshCw className={`h-4 w-4 ${isTracking ? 'animate-spin' : ''}`} />
-          Refresh
+          {t('tracker.refresh')}
         </Button>
       </div>
 
       {!compact && (
         <div className="flex flex-wrap gap-3 mb-4">
           <Input
-            placeholder="Search transactions..."
+            placeholder={t('history.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="flex-1 min-w-[200px]"
@@ -438,11 +443,11 @@ export function TransactionTracker({ className, transactionId, compact = false }
             value={filter.status}
             onChange={(value) => setFilter(prev => ({ ...prev, status: value }))}
             options={[
-              { value: 'all', label: 'All Status' },
-              { value: 'completed', label: 'Completed' },
-              { value: 'pending', label: 'Pending' },
-              { value: 'processing', label: 'Processing' },
-              { value: 'failed', label: 'Failed' },
+              { value: 'all', label: t('history.allStatus') },
+              { value: 'completed', label: t('status.completed') },
+              { value: 'pending', label: t('status.pending') },
+              { value: 'processing', label: t('status.processing') },
+              { value: 'failed', label: t('status.failed') },
             ]}
           />
           
@@ -450,11 +455,11 @@ export function TransactionTracker({ className, transactionId, compact = false }
             value={filter.type}
             onChange={(value) => setFilter(prev => ({ ...prev, type: value }))}
             options={[
-              { value: 'all', label: 'All Types' },
-              { value: 'investment', label: 'Purchase' },
-              { value: 'deposit', label: 'Deposit' },
-              { value: 'withdrawal', label: 'Withdrawal' },
-              { value: 'dividend', label: 'Dividend' },
+              { value: 'all', label: t('history.types.all') },
+              { value: 'investment', label: t('txTypes.investment') },
+              { value: 'deposit', label: t('txTypes.deposit') },
+              { value: 'withdrawal', label: t('txTypes.withdrawal') },
+              { value: 'dividend', label: t('txTypes.dividend') },
             ]}
           />
           
@@ -462,10 +467,10 @@ export function TransactionTracker({ className, transactionId, compact = false }
             value={filter.timeRange}
             onChange={(value) => setFilter(prev => ({ ...prev, timeRange: value }))}
             options={[
-              { value: '24h', label: 'Last 24h' },
-              { value: '7days', label: 'Last 7 days' },
-              { value: '30days', label: 'Last 30 days' },
-              { value: 'all', label: 'All time' },
+              { value: '24h', label: t('tracker.ranges.24h') },
+              { value: '7days', label: t('analytics.ranges.7d') },
+              { value: '30days', label: t('analytics.ranges.30d') },
+              { value: 'all', label: t('history.ranges.all') },
             ]}
             icon={<Calendar className="h-4 w-4" />}
           />
@@ -496,12 +501,12 @@ export function TransactionTracker({ className, transactionId, compact = false }
                         {tx.description}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {tx.timestamp.toLocaleDateString()} • {tx.paymentMethod.type}
+                        {tx.timestamp.toLocaleDateString(dateLocale)} • {methodName(tx.paymentMethod.type)}
                       </div>
                     </div>
                   </div>
                   
-                  <div className="text-right">
+                  <div className="text-end">
                     <div className="font-semibold text-gray-900">
                       {formatCurrency(tx.amount, tx.currency)}
                     </div>
@@ -510,7 +515,7 @@ export function TransactionTracker({ className, transactionId, compact = false }
                       tx.status === 'failed' ? 'text-red-600' :
                       'text-yellow-600'
                     }`}>
-                      {tx.status}
+                      {statusLabel(tx.status)}
                     </div>
                   </div>
                 </div>
@@ -522,9 +527,9 @@ export function TransactionTracker({ className, transactionId, compact = false }
 
       {filteredTransactions.length === 0 && (
         <Card className="p-8 text-center">
-          <div className="text-gray-500 mb-2">No transactions found</div>
+          <div className="text-gray-500 mb-2">{t('history.emptyTitle')}</div>
           <div className="text-sm text-gray-400">
-            Try adjusting your filters or search query
+            {t('tracker.emptyHint')}
           </div>
         </Card>
       )}
@@ -541,9 +546,9 @@ export function TransactionTracker({ className, transactionId, compact = false }
           <div>{selectedTx ? renderTransactionDetails() : (
             <Card className="p-8 text-center">
               <Eye className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <div className="text-gray-500 mb-2">Select a transaction</div>
+              <div className="text-gray-500 mb-2">{t('tracker.selectTitle')}</div>
               <div className="text-sm text-gray-400">
-                Click on a transaction to view detailed tracking information
+                {t('tracker.selectHint')}
               </div>
             </Card>
           )}</div>

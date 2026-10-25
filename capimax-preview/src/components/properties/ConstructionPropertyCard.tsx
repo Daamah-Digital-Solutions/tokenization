@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from '../ui/Button';
+import { useTranslation } from 'react-i18next';
 
 export interface ConstructionProperty {
   id: string;
@@ -45,6 +46,8 @@ export const ConstructionPropertyCard: React.FC<ConstructionPropertyCardProps> =
   onViewDetails,
   className = ''
 }) => {
+  const { t, i18n } = useTranslation('propui');
+  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
   const progressPercentage = property.constructionProgress;
   const tokenAvailability = ((property.totalTokens - property.reservedTokens - property.activeTokens) / property.totalTokens) * 100;
   
@@ -77,17 +80,17 @@ export const ConstructionPropertyCard: React.FC<ConstructionPropertyCardProps> =
           alt={property.name}
           className="w-full h-full object-cover"
         />
-        <div className="absolute top-4 left-4 flex space-x-2">
+        <div className="absolute top-4 start-4 flex gap-2">
           <span className="px-2 py-1 bg-blue-600 text-white text-xs font-medium rounded-full">
-            Under Construction
+            {t('constructionCard.underConstruction')}
           </span>
           <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStageColor(property.developmentStage)}`}>
-            {property.developmentStage.charAt(0).toUpperCase() + property.developmentStage.slice(1)}
+            {t(`constructionCard.stages.${property.developmentStage}`, { defaultValue: property.developmentStage.charAt(0).toUpperCase() + property.developmentStage.slice(1) })}
           </span>
         </div>
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 end-4">
           <span className={`px-2 py-1 bg-white dark:bg-slate-800 text-xs font-medium rounded-full ${getRiskColor(property.riskLevel)}`}>
-            {property.riskLevel.toUpperCase()} RISK
+            {t(`constructionCard.risk.${property.riskLevel}`, { defaultValue: `${property.riskLevel.toUpperCase()} RISK` })}
           </span>
         </div>
       </div>
@@ -99,7 +102,7 @@ export const ConstructionPropertyCard: React.FC<ConstructionPropertyCardProps> =
             {property.name}
           </h3>
           <p className="text-sm text-neutral-600 dark:text-slate-400">
-            {property.location} • by {property.developer}
+            {t('constructionCard.locationBy', { location: property.location, developer: property.developer })}
           </p>
         </div>
 
@@ -107,7 +110,7 @@ export const ConstructionPropertyCard: React.FC<ConstructionPropertyCardProps> =
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-neutral-700 dark:text-slate-300">
-              Construction Progress
+              {t('constructionCard.progress')}
             </span>
             <span className="text-sm font-semibold text-neutral-900 dark:text-slate-100">
               {progressPercentage}%
@@ -120,32 +123,32 @@ export const ConstructionPropertyCard: React.FC<ConstructionPropertyCardProps> =
             ></div>
           </div>
           <p className="text-xs text-neutral-500 dark:text-slate-400">
-            Current: {property.currentMilestone}
+            {t('constructionCard.current', { milestone: property.currentMilestone })}
           </p>
         </div>
 
         {/* Investment Details */}
         <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
           <div>
-            <p className="text-neutral-500 dark:text-slate-400">Token Price</p>
+            <p className="text-neutral-500 dark:text-slate-400">{t('constructionCard.tokenPrice')}</p>
             <p className="font-semibold text-neutral-900 dark:text-slate-100">
               ${property.tokenPrice.toLocaleString()}
             </p>
           </div>
           <div>
-            <p className="text-neutral-500 dark:text-slate-400">Min. Ownership</p>
+            <p className="text-neutral-500 dark:text-slate-400">{t('constructionCard.minOwnership')}</p>
             <p className="font-semibold text-neutral-900 dark:text-slate-100">
               ${property.minimumInvestment.toLocaleString()}
             </p>
           </div>
           <div>
-            <p className="text-neutral-500 dark:text-slate-400">Est. Completion</p>
+            <p className="text-neutral-500 dark:text-slate-400">{t('constructionCard.estCompletion')}</p>
             <p className="font-semibold text-neutral-900 dark:text-slate-100">
-              {new Date(property.expectedCompletion).toLocaleDateString()}
+              {new Date(property.expectedCompletion).toLocaleDateString(dateLocale)}
             </p>
           </div>
           <div>
-            <p className="text-neutral-500 dark:text-slate-400">Est. Yield</p>
+            <p className="text-neutral-500 dark:text-slate-400">{t('constructionCard.estYield')}</p>
             <p className="font-semibold text-green-600 dark:text-green-400">
               {property.estimatedYield}%
             </p>
@@ -156,34 +159,34 @@ export const ConstructionPropertyCard: React.FC<ConstructionPropertyCardProps> =
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-neutral-700 dark:text-slate-300">
-              Token Availability
+              {t('constructionCard.availability')}
             </span>
             <span className="text-sm text-neutral-600 dark:text-slate-400">
-              {(property.totalTokens - property.reservedTokens - property.activeTokens).toLocaleString()} available
+              {t('constructionCard.available', { n: (property.totalTokens - property.reservedTokens - property.activeTokens).toLocaleString() })}
             </span>
           </div>
-          <div className="flex space-x-1 h-2 rounded-full overflow-hidden bg-neutral-200 dark:bg-slate-700">
+          <div className="flex gap-1 h-2 rounded-full overflow-hidden bg-neutral-200 dark:bg-slate-700">
             <div 
               className="bg-green-500"
               style={{ width: `${(property.activeTokens / property.totalTokens) * 100}%` }}
-              title={`${property.activeTokens.toLocaleString()} Active Tokens`}
+              title={t('constructionCard.activeTitle', { n: property.activeTokens.toLocaleString() })}
             ></div>
             <div 
               className="bg-yellow-500"
               style={{ width: `${(property.reservedTokens / property.totalTokens) * 100}%` }}
-              title={`${property.reservedTokens.toLocaleString()} Reserved Tokens`}
+              title={t('constructionCard.reservedTitle', { n: property.reservedTokens.toLocaleString() })}
             ></div>
           </div>
           <div className="flex items-center justify-between mt-1 text-xs text-neutral-500 dark:text-slate-400">
-            <span>🟢 Active: {property.activeTokens.toLocaleString()}</span>
-            <span>🟡 Reserved: {property.reservedTokens.toLocaleString()}</span>
+            <span>🟢 {t('constructionCard.active', { n: property.activeTokens.toLocaleString() })}</span>
+            <span>🟡 {t('constructionCard.reserved', { n: property.reservedTokens.toLocaleString() })}</span>
           </div>
         </div>
 
         {/* Installment Options Preview */}
         <div className="mb-4 p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg">
           <h4 className="text-sm font-medium text-neutral-900 dark:text-slate-100 mb-2">
-            Installment Options Available
+            {t('constructionCard.installmentOptions')}
           </h4>
           <div className="space-y-1">
             {property.installmentOptions.slice(0, 2).map((option) => (
@@ -192,13 +195,13 @@ export const ConstructionPropertyCard: React.FC<ConstructionPropertyCardProps> =
                   {option.name}
                 </span>
                 <span className="text-neutral-900 dark:text-slate-100 font-medium">
-                  {option.payments} payments, {option.downPayment}% down
+                  {t('constructionCard.optionTerms', { payments: option.payments, down: option.downPayment })}
                 </span>
               </div>
             ))}
             {property.installmentOptions.length > 2 && (
               <p className="text-xs text-primary-600 dark:text-primary-400">
-                +{property.installmentOptions.length - 2} more options
+                {t('constructionCard.moreOptions', { count: property.installmentOptions.length - 2 })}
               </p>
             )}
           </div>
@@ -207,14 +210,14 @@ export const ConstructionPropertyCard: React.FC<ConstructionPropertyCardProps> =
         {/* Next Payment Due (if applicable) */}
         {property.nextPaymentDue && (
           <div className="mb-4 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <span className="text-yellow-600 dark:text-yellow-400 text-sm">⏰</span>
               <div>
                 <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
-                  Next Payment Due
+                  {t('constructionCard.nextPaymentDue')}
                 </p>
                 <p className="text-xs text-yellow-600 dark:text-yellow-400">
-                  {new Date(property.nextPaymentDue).toLocaleDateString()}
+                  {new Date(property.nextPaymentDue).toLocaleDateString(dateLocale)}
                 </p>
               </div>
             </div>
@@ -222,7 +225,7 @@ export const ConstructionPropertyCard: React.FC<ConstructionPropertyCardProps> =
         )}
 
         {/* Action Buttons */}
-        <div className="flex space-x-3">
+        <div className="flex gap-3">
           <Button
             variant="primary"
             size="sm"
@@ -230,7 +233,7 @@ export const ConstructionPropertyCard: React.FC<ConstructionPropertyCardProps> =
             onClick={() => onReserveTokens(property.id)}
             disabled={tokenAvailability === 0}
           >
-            {tokenAvailability === 0 ? 'Fully Reserved' : 'Reserve Tokens'}
+            {tokenAvailability === 0 ? t('constructionCard.fullyReserved') : t('constructionCard.reserveShares')}
           </Button>
           <Button
             variant="outline"
@@ -238,17 +241,17 @@ export const ConstructionPropertyCard: React.FC<ConstructionPropertyCardProps> =
             className="flex-1"
             onClick={() => onViewDetails(property.id)}
           >
-            View Details
+            {t('constructionCard.viewDetails')}
           </Button>
         </div>
 
         {/* Completion Risk Warning */}
         {property.completionRisk && (
           <div className="mt-3 p-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
-            <div className="flex items-start space-x-2">
+            <div className="flex items-start gap-2">
               <span className="text-orange-600 dark:text-orange-400 text-sm">⚠️</span>
               <p className="text-xs text-orange-800 dark:text-orange-300">
-                <strong>Risk Notice:</strong> {property.completionRisk}
+                <strong>{t('constructionCard.riskNotice')}</strong> {property.completionRisk}
               </p>
             </div>
           </div>

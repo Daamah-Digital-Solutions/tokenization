@@ -24,6 +24,7 @@ import { marketplaceService, type SecondaryMarketListing, type TradeOrderRequest
 import { useAuth } from '../../contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { PaymentService } from '../../services/payment/PaymentService';
+import { useTranslation } from 'react-i18next';
 
 interface BuyOrderModalProps {
   isOpen: boolean;
@@ -39,6 +40,7 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
   onSuccess
 }) => {
   const { user } = useAuth();
+  const { t } = useTranslation('market');
   const [step, setStep] = useState<'order' | 'confirm' | 'processing' | 'success'>('order');
   const [orderData, setOrderData] = useState({
     tokens_requested: 1,
@@ -86,15 +88,15 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (orderData.tokens_requested < listing.minimum_order_size) {
-      newErrors.tokens_requested = `Minimum order size is ${listing.minimum_order_size} tokens`;
+      newErrors.tokens_requested = t('buy.errMinOrder', { value: listing.minimum_order_size });
     }
 
     if (orderData.tokens_requested > listing.tokens_remaining) {
-      newErrors.tokens_requested = `Only ${listing.tokens_remaining} tokens available`;
+      newErrors.tokens_requested = t('buy.errOnlyAvailable', { value: listing.tokens_remaining });
     }
 
     if (orderData.order_type === 'limit' && (!orderData.price_per_token || parseFloat(orderData.price_per_token) <= 0)) {
-      newErrors.price_per_token = 'Please enter a valid price per token';
+      newErrors.price_per_token = t('buy.errValidPrice');
     }
 
     setErrors(newErrors);
@@ -148,11 +150,11 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
       } else {
         // No identifying field came back — surface the failure rather
         // than leave the UI stuck on the processing step.
-        throw new Error('Order submission did not return a confirmation.');
+        throw new Error(t('buy.errNoConfirmation'));
       }
     } catch (error: any) {
       console.error('Order submission failed:', error);
-      setErrors({ general: error.message || 'Failed to submit order. Please try again.' });
+      setErrors({ general: error.message || t('buy.errSubmit') });
       setStep('confirm');
     } finally {
       setIsSubmitting(false);
@@ -194,7 +196,7 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                   </div>
                   <div>
                     <Heading level="h3" size="xl">
-                      Buy Property Tokens
+                      {t('buy.title')}
                     </Heading>
                     <Text variant="bodySmall" color="secondary">
                       {listing.property_listing.title}
@@ -246,23 +248,23 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                         {listing.property_listing.title}
                       </h4>
                       <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        <MapPin className="w-4 h-4 mr-1" />
+                        <MapPin className="w-4 h-4 me-1" />
                         {listing.property_listing.city}
                       </div>
                     </div>
                     <Badge variant="secondary">
-                      {listing.property_listing.property_type}
+                      {t(`propertyTypes.${listing.property_listing.property_type}`, { defaultValue: listing.property_listing.property_type })}
                     </Badge>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-500 dark:text-gray-400">Available Tokens</span>
+                      <span className="text-gray-500 dark:text-gray-400">{t('buy.availableTokens')}</span>
                       <div className="font-semibold text-gray-900 dark:text-white">
                         {listing.tokens_remaining.toLocaleString()}
                       </div>
                     </div>
                     <div>
-                      <span className="text-gray-500 dark:text-gray-400">Current Price</span>
+                      <span className="text-gray-500 dark:text-gray-400">{t('buy.currentPrice')}</span>
                       <div className="font-semibold text-gray-900 dark:text-white">
                         ${parseFloat(listing.price_per_token).toFixed(2)}
                       </div>
@@ -279,7 +281,7 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                   {/* Order Type */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                      Order Type
+                      {t('buy.orderType')}
                     </label>
                     <div className="grid grid-cols-2 gap-3">
                       <button
@@ -289,7 +291,7 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                           order_type: 'market',
                           price_per_token: listing.price_per_token
                         }))}
-                        className={`text-left rounded-xl border p-4 transition-colors ${
+                        className={`text-start rounded-xl border p-4 transition-colors ${
                           orderData.order_type === 'market'
                             ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/30 ring-2 ring-emerald-500/40'
                             : 'border-gray-200 dark:border-gray-700 hover:border-emerald-300'
@@ -297,11 +299,10 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                       >
                         <div className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white">
                           <Zap className="w-4 h-4 text-emerald-600" />
-                          Market Order
+                          {t('buy.marketOrder')}
                         </div>
                         <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 leading-snug">
-                          Buy immediately at the current listed price (${parseFloat(listing.price_per_token).toFixed(2)}).
-                          Executes right away — no waiting.
+                          {t('buy.marketOrderDesc', { price: parseFloat(listing.price_per_token).toFixed(2) })}
                         </p>
                       </button>
                       <button
@@ -311,7 +312,7 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                           order_type: 'limit',
                           price_per_token: listing.price_per_token
                         }))}
-                        className={`text-left rounded-xl border p-4 transition-colors ${
+                        className={`text-start rounded-xl border p-4 transition-colors ${
                           orderData.order_type === 'limit'
                             ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 ring-2 ring-blue-500/40'
                             : 'border-gray-200 dark:border-gray-700 hover:border-blue-300'
@@ -319,19 +320,16 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                       >
                         <div className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white">
                           <TrendingUp className="w-4 h-4 text-blue-600" />
-                          Limit Order
+                          {t('buy.limitOrder')}
                         </div>
                         <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 leading-snug">
-                          Set your maximum price. The order waits in the book
-                          and fills only when a seller meets your price.
+                          {t('buy.limitOrderDesc')}
                         </p>
                       </button>
                     </div>
                     {orderData.order_type === 'limit' && (
                       <p className="mt-3 text-xs text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-2.5">
-                        Limit orders may take time to fill — or never fill if the
-                        market price stays above your limit. You can cancel any
-                        time from your order history.
+                        {t('buy.limitOrderNote')}
                       </p>
                     )}
                   </div>
@@ -339,7 +337,7 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                   {/* Token Amount */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Number of Tokens
+                      {t('buy.numberOfTokens')}
                     </label>
                     <Input
                       type="number"
@@ -356,8 +354,8 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                       <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.tokens_requested}</p>
                     )}
                     <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      <span>Min: {listing.minimum_order_size}</span>
-                      <span>Max: {listing.tokens_remaining}</span>
+                      <span>{t('buy.min', { value: listing.minimum_order_size })}</span>
+                      <span>{t('buy.max', { value: listing.tokens_remaining })}</span>
                     </div>
                   </div>
 
@@ -365,7 +363,7 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                   {orderData.order_type === 'limit' && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Price per Token ($)
+                        {t('buy.pricePerTokenUsd')}
                       </label>
                       <Input
                         type="number"
@@ -381,7 +379,7 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                         <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.price_per_token}</p>
                       )}
                       <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        Current market price: ${parseFloat(listing.price_per_token).toFixed(2)}
+                        {t('buy.currentMarketPrice', { price: parseFloat(listing.price_per_token).toFixed(2) })}
                       </p>
                     </div>
                   )}
@@ -390,32 +388,32 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                   <Card variant="outline" className="p-4 bg-gray-50 dark:bg-gray-900/50">
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">Tokens</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('buy.tokens')}</span>
                         <span className="font-medium text-gray-900 dark:text-white">
                           {orderData.tokens_requested.toLocaleString()}
                         </span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">Price per Token</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('buy.pricePerToken')}</span>
                         <span className="font-medium text-gray-900 dark:text-white">
                           ${pricePerToken.toFixed(2)}
                         </span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('buy.subtotal')}</span>
                         <span className="font-medium text-gray-900 dark:text-white">
                           ${totalCost.toFixed(2)}
                         </span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">Platform Fee (1.25%)</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('buy.platformFee')}</span>
                         <span className="font-medium text-gray-900 dark:text-white">
                           ${estimatedFees.toFixed(2)}
                         </span>
                       </div>
                       <div className="border-t border-gray-200 dark:border-gray-700 pt-2">
                         <div className="flex justify-between">
-                          <span className="font-semibold text-gray-900 dark:text-white">Total</span>
+                          <span className="font-semibold text-gray-900 dark:text-white">{t('buy.total')}</span>
                           <span className="font-bold text-xl text-gray-900 dark:text-white">
                             ${totalWithFees.toFixed(2)}
                           </span>
@@ -426,10 +424,10 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
 
                   <div className="sticky bottom-0 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex gap-3">
                     <Button variant="outline" onClick={onClose} className="flex-1">
-                      Cancel
+                      {t('common.cancel')}
                     </Button>
                     <Button onClick={handleContinue} className="flex-1">
-                      Continue
+                      {t('common.continue')}
                     </Button>
                   </div>
                 </div>
@@ -442,10 +440,10 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                       <Calculator className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                     </div>
                     <Heading level="h4" size="lg" className="mb-2">
-                      Confirm Your Order
+                      {t('buy.confirmTitle')}
                     </Heading>
                     <Text variant="body" color="secondary">
-                      Please review your order details before submitting
+                      {t('buy.confirmSubtitle')}
                     </Text>
                   </div>
 
@@ -453,26 +451,26 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                   <Card variant="outline" className="p-6">
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600 dark:text-gray-400">Order Type</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('buy.orderType')}</span>
                         <Badge variant={orderData.order_type === 'market' ? 'accent' : 'secondary'}>
-                          {orderData.order_type === 'market' ? 'Market Order' : 'Limit Order'}
+                          {orderData.order_type === 'market' ? t('buy.marketOrder') : t('buy.limitOrder')}
                         </Badge>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Tokens to Purchase</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('buy.tokensToPurchase')}</span>
                         <span className="font-semibold text-gray-900 dark:text-white">
                           {orderData.tokens_requested.toLocaleString()}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Price per Token</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('buy.pricePerToken')}</span>
                         <span className="font-semibold text-gray-900 dark:text-white">
                           ${pricePerToken.toFixed(2)}
                         </span>
                       </div>
                       <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                         <div className="flex justify-between text-lg">
-                          <span className="font-semibold text-gray-900 dark:text-white">Total Cost</span>
+                          <span className="font-semibold text-gray-900 dark:text-white">{t('buy.totalCost')}</span>
                           <span className="font-bold text-gray-900 dark:text-white">
                             ${totalWithFees.toFixed(2)}
                           </span>
@@ -484,15 +482,15 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                   {/* Important Notes */}
                   <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                     <div className="flex">
-                      <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-3 mt-0.5 flex-shrink-0" />
+                      <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 me-3 mt-0.5 flex-shrink-0" />
                       <div className="text-sm">
                         <p className="font-medium text-yellow-800 dark:text-yellow-200 mb-1">
-                          Important Notes:
+                          {t('buy.importantNotes')}
                         </p>
                         <ul className="text-yellow-700 dark:text-yellow-300 space-y-1">
-                          <li>• The total is paid from your wallet balance and the order executes immediately</li>
-                          <li>• The shares are added to your portfolio as soon as the order completes</li>
-                          <li>• Platform fees are non-refundable</li>
+                          <li>• {t('buy.note1')}</li>
+                          <li>• {t('buy.note2')}</li>
+                          <li>• {t('buy.note3')}</li>
                         </ul>
                       </div>
                     </div>
@@ -504,14 +502,14 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                       ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
                       : 'bg-gray-50 dark:bg-gray-900/40 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
                   )}>
-                    <span>Wallet balance: <strong>${walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
-                    {insufficient && <span className="font-medium">Add funds to complete this purchase</span>}
+                    <span>{t('buy.walletBalance')} <strong>${walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
+                    {insufficient && <span className="font-medium">{t('buy.addFunds')}</span>}
                   </div>
 
                   {errors.general && (
                     <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                       <div className="flex">
-                        <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mr-3 mt-0.5 flex-shrink-0" />
+                        <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 me-3 mt-0.5 flex-shrink-0" />
                         <p className="text-sm text-red-700 dark:text-red-300">{errors.general}</p>
                       </div>
                     </div>
@@ -519,10 +517,10 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
 
                   <div className="sticky bottom-0 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex gap-3">
                     <Button variant="outline" onClick={() => setStep('order')} className="flex-1">
-                      Back
+                      {t('common.back')}
                     </Button>
                     <Button onClick={handleSubmitOrder} disabled={isSubmitting || insufficient} className="flex-1">
-                      {isSubmitting ? 'Submitting...' : 'Submit Order'}
+                      {isSubmitting ? t('buy.submitting') : t('buy.submitOrder')}
                     </Button>
                   </div>
                 </div>
@@ -534,10 +532,10 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                     <Clock className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" />
                   </div>
                   <Heading level="h4" size="lg" className="mb-2">
-                    Processing Your Order
+                    {t('buy.processingTitle')}
                   </Heading>
                   <Text variant="body" color="secondary">
-                    Please wait while we process your token purchase...
+                    {t('buy.processingDesc')}
                   </Text>
                 </div>
               )}
@@ -552,13 +550,13 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                     <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
                   </motion.div>
                   <Heading level="h4" size="lg" className="mb-2">
-                    Order Submitted Successfully!
+                    {t('buy.successTitle')}
                   </Heading>
                   <Text variant="body" color="secondary" className="mb-4">
-                    Your buy order has been submitted and is being processed. You'll receive a confirmation email shortly.
+                    {t('buy.successDesc')}
                   </Text>
                   <Text variant="bodySmall" color="secondary">
-                    Redirecting you back to the marketplace...
+                    {t('buy.redirecting')}
                   </Text>
                 </div>
               )}

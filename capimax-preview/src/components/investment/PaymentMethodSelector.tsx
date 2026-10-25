@@ -23,6 +23,7 @@ import type { InvestmentData } from './types';
 import type { WalletInfo } from '../../services/api/types';
 import { WalletService } from '../../services/wallet/WalletService';
 import { cn } from '../../utils/cn';
+import { useTranslation } from 'react-i18next';
 
 interface PaymentMethodSelectorProps {
   investmentData: InvestmentData;
@@ -44,6 +45,8 @@ interface PaymentMethodOption {
   discount?: string;
 }
 
+// Display text is rendered from the ``invest`` namespace by ``id``
+// (paymentMethod.methods.<id>.*); the English fields below are fallbacks.
 const PAYMENT_METHODS: PaymentMethodOption[] = [
   {
     id: 'wallet',
@@ -106,6 +109,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   onPaymentComplete,
   onAdvanceToProcessing
 }) => {
+  const { t } = useTranslation('invest');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(
     investmentData.paymentMethod || null
   );
@@ -187,10 +191,10 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
       <Card className="p-8 text-center">
         <Coins className="w-12 h-12 text-gray-400 mx-auto mb-4" />
         <Text variant="h4" className="text-gray-600 mb-2">
-          Purchase Amount Required
+          {t('paymentMethod.amountRequired')}
         </Text>
         <Text variant="bodySmall" className="text-gray-500">
-          Please select a purchase amount to proceed with payment options
+          {t('paymentMethod.amountRequiredHint')}
         </Text>
       </Card>
     );
@@ -220,10 +224,10 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
       {/* Header */}
       <div className="text-center">
         <Text variant="h3" className="text-gray-900 mb-2">
-          Choose Payment Method
+          {t('paymentMethod.title')}
         </Text>
         <Text variant="body" className="text-gray-600 mb-4">
-          Pay ${investmentData.amount.toLocaleString()} for your real estate purchase
+          {t('paymentMethod.subtitle', { amount: `$${investmentData.amount.toLocaleString()}` })}
         </Text>
       </div>
 
@@ -255,17 +259,17 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
                   <div className="flex gap-2">
                     {method.discount && (
                       <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full font-bold">
-                        {method.discount}
+                        {t(`paymentMethod.methods.${method.id}.discount`, { defaultValue: method.discount })}
                       </span>
                     )}
                     {method.recommended && (
                       <span className="px-2 py-1 text-xs bg-emerald-100 text-emerald-800 rounded-full font-medium">
-                        Recommended
+                        {t('paymentMethod.recommended')}
                       </span>
                     )}
                     {method.popular && (
                       <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full font-medium">
-                        Popular
+                        {t('paymentMethod.popular')}
                       </span>
                     )}
                   </div>
@@ -299,10 +303,10 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
 
                   <div>
                     <Text variant="bodyLarge" weight="semibold" className="text-gray-900">
-                      {method.name}
+                      {t(`paymentMethod.methods.${method.id}.name`, { defaultValue: method.name })}
                     </Text>
                     <Text variant="bodySmall" className="text-gray-600">
-                      {method.description}
+                      {t(`paymentMethod.methods.${method.id}.description`, { defaultValue: method.description })}
                     </Text>
                   </div>
                 </div>
@@ -312,26 +316,26 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
                   <div>
                     <div className="flex items-center gap-1 text-gray-600 mb-1">
                       <DollarSign className="h-3 w-3" />
-                      <span>{fee < 0 ? 'Discount' : 'Fee'}</span>
+                      <span>{fee < 0 ? t('paymentMethod.discount') : t('paymentMethod.fee')}</span>
                     </div>
                     <div className={cn("font-medium", fee < 0 && "text-emerald-600")}>
                       {fee < 0 ? `-$${Math.abs(fee).toFixed(2)}` : `$${fee.toFixed(2)}`}
                     </div>
-                    <div className="text-xs text-gray-500">{method.fee}</div>
+                    <div className="text-xs text-gray-500">{t(`paymentMethod.methods.${method.id}.fee`, { defaultValue: method.fee })}</div>
                   </div>
 
                   <div>
                     <div className="flex items-center gap-1 text-gray-600 mb-1">
                       <Clock className="h-3 w-3" />
-                      <span>Processing</span>
+                      <span>{t('paymentMethod.processing')}</span>
                     </div>
-                    <div className="font-medium text-sm">{method.processingTime}</div>
+                    <div className="font-medium text-sm">{t(`paymentMethod.methods.${method.id}.time`, { defaultValue: method.processingTime })}</div>
                   </div>
                 </div>
 
                 {/* Total Amount */}
                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Total:</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('common.total')}:</span>
                   <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
                     ${totalAmount.toLocaleString()}
                   </span>
@@ -364,10 +368,10 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
               <CheckCircle className="w-6 h-6 text-emerald-600" />
               <div>
                 <Text variant="body" weight="semibold" className="text-emerald-800 dark:text-emerald-200">
-                  {PAYMENT_METHODS.find(m => m.id === selectedMethod)?.name} selected
+                  {t('paymentMethod.selected', { name: t(`paymentMethod.methods.${selectedMethod}.name`, { defaultValue: PAYMENT_METHODS.find(m => m.id === selectedMethod)?.name }) })}
                 </Text>
                 <Text variant="bodySmall" className="text-emerald-700 dark:text-emerald-300">
-                  Click "Confirm & Pay" below to proceed
+                  {t('paymentMethod.selectedHint')}
                 </Text>
               </div>
             </div>
@@ -387,12 +391,10 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
             <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-amber-900 dark:text-amber-200 space-y-2">
               <div className="font-medium">
-                Tokens will land in your Capimax wallet
+                {t('paymentMethod.cryptoGuidanceTitle')}
               </div>
               <div>
-                Your property tokens are minted into a Capimax-managed wallet
-                tied to your account. You can view the balance and on-chain
-                history from the Portfolio tab any time.
+                {t('paymentMethod.cryptoGuidanceBody')}
               </div>
             </div>
           </div>
@@ -412,7 +414,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                    Tokens will be minted to
+                    {t('paymentMethod.mintedTo')}
                   </span>
                   <span
                     className={cn(
@@ -422,7 +424,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
                         : 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
                     )}
                   >
-                    {showExternal ? 'Your wallet' : 'Platform-managed'}
+                    {showExternal ? t('paymentMethod.yourWallet') : t('paymentMethod.platformManaged')}
                   </span>
                 </div>
                 <code className="block truncate font-mono text-xs text-slate-700 dark:text-slate-200">
@@ -439,10 +441,9 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
         <div className="flex items-start gap-3">
           <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
           <div className="text-sm text-blue-800 dark:text-blue-200">
-            <div className="font-medium mb-1">Secure Payment Processing</div>
+            <div className="font-medium mb-1">{t('paymentMethod.securityTitle')}</div>
             <div>
-              All payments are processed through encrypted channels with industry-standard security measures.
-              Your financial information is never stored on our servers.
+              {t('paymentMethod.securityBody')}
             </div>
           </div>
         </div>

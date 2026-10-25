@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import BrokerService, { BrokerApplication } from '../../services/broker/BrokerService';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 interface FormErrors {
   [key: string]: string;
@@ -19,8 +20,22 @@ const SPECIALIZATIONS = [
   'General Real Estate',
 ];
 
+// Display keys for the specialization values above (values stay English for the API).
+const SPECIALIZATION_KEYS: Record<string, string> = {
+  'Residential Properties': 'residential',
+  'Commercial Properties': 'commercial',
+  'Industrial Properties': 'industrial',
+  'Mixed-Use Developments': 'mixedUse',
+  'Land & Development': 'land',
+  'Luxury Real Estate': 'luxury',
+  'Investment Properties': 'investment',
+  'Property Management': 'management',
+  'General Real Estate': 'general',
+};
+
 export const BrokerApplicationForm: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation('brokerui');
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState<FormErrors>({});
   const [applicationId, setApplicationId] = useState<string | null>(null);
@@ -47,7 +62,7 @@ export const BrokerApplicationForm: React.FC = () => {
       setCurrentStep(4); // Move to success step
     },
     onError: (error: any) => {
-      const errorMessage = error?.response?.data?.detail || error.message || 'Failed to submit application';
+      const errorMessage = error?.response?.data?.detail || error.message || t('appForm.errSubmit');
       setErrors({ submit: errorMessage });
     },
   });
@@ -70,39 +85,39 @@ export const BrokerApplicationForm: React.FC = () => {
     if (step === 1) {
       // Personal Information
       if (!formData.full_name || formData.full_name.trim().length < 3) {
-        newErrors.full_name = 'Full name must be at least 3 characters';
+        newErrors.full_name = t('appForm.errFullName');
       }
 
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!formData.email || !emailRegex.test(formData.email)) {
-        newErrors.email = 'Please enter a valid email address';
+        newErrors.email = t('appForm.errEmail');
       }
 
       const phoneRegex = /^[\d\s\-\+\(\)]{10,}$/;
       if (!formData.phone_number || !phoneRegex.test(formData.phone_number)) {
-        newErrors.phone_number = 'Please enter a valid phone number (min 10 digits)';
+        newErrors.phone_number = t('appForm.errPhone');
       }
     }
 
     if (step === 2) {
       // Professional Information
       if (!formData.specialization) {
-        newErrors.specialization = 'Please select your specialization';
+        newErrors.specialization = t('appForm.errSpecialization');
       }
 
       if (formData.years_of_experience < 0) {
-        newErrors.years_of_experience = 'Years of experience cannot be negative';
+        newErrors.years_of_experience = t('appForm.errYears');
       }
 
       if (formData.linkedin_url && !formData.linkedin_url.includes('linkedin.com')) {
-        newErrors.linkedin_url = 'Please enter a valid LinkedIn URL';
+        newErrors.linkedin_url = t('appForm.errLinkedin');
       }
 
       if (formData.portfolio_url) {
         try {
           new URL(formData.portfolio_url);
         } catch {
-          newErrors.portfolio_url = 'Please enter a valid URL';
+          newErrors.portfolio_url = t('appForm.errUrl');
         }
       }
     }
@@ -110,11 +125,11 @@ export const BrokerApplicationForm: React.FC = () => {
     if (step === 3) {
       // Motivation & Goals
       if (!formData.motivation || formData.motivation.trim().length < 100) {
-        newErrors.motivation = 'Please provide at least 100 characters explaining your motivation';
+        newErrors.motivation = t('appForm.errMotivation');
       }
 
       if (formData.expected_clients && formData.expected_clients < 0) {
-        newErrors.expected_clients = 'Expected clients cannot be negative';
+        newErrors.expected_clients = t('appForm.errClients');
       }
     }
 
@@ -142,9 +157,9 @@ export const BrokerApplicationForm: React.FC = () => {
 
   const renderStepIndicator = () => {
     const steps = [
-      { number: 1, label: 'Personal Info' },
-      { number: 2, label: 'Professional Info' },
-      { number: 3, label: 'Motivation & Goals' },
+      { number: 1, label: t('appForm.stepPersonal') },
+      { number: 2, label: t('appForm.stepProfessional') },
+      { number: 3, label: t('appForm.stepMotivation') },
     ];
 
     return (
@@ -179,18 +194,18 @@ export const BrokerApplicationForm: React.FC = () => {
   const renderPersonalInfo = () => (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-neutral-900 dark:text-slate-100 mb-6">
-        Personal Information
+        {t('appForm.personalTitle')}
       </h2>
 
       <div>
         <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-          Full Name *
+          {t('appForm.fullName')}
         </label>
         <input
           type="text"
           value={formData.full_name}
           onChange={(e) => updateField('full_name', e.target.value)}
-          placeholder="John Doe"
+          placeholder={t('appForm.fullNamePh')}
           className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-700 dark:text-slate-100 ${errors.full_name ? 'border-red-500' : 'border-neutral-300 dark:border-slate-600'
             }`}
         />
@@ -201,7 +216,7 @@ export const BrokerApplicationForm: React.FC = () => {
 
       <div>
         <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-          Email Address *
+          {t('appForm.email')}
         </label>
         <input
           type="email"
@@ -218,7 +233,7 @@ export const BrokerApplicationForm: React.FC = () => {
 
       <div>
         <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-          Phone Number *
+          {t('appForm.phone')}
         </label>
         <input
           type="tel"
@@ -235,13 +250,13 @@ export const BrokerApplicationForm: React.FC = () => {
 
       <div>
         <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-          Company Name (Optional)
+          {t('appForm.company')}
         </label>
         <input
           type="text"
           value={formData.company_name}
           onChange={(e) => updateField('company_name', e.target.value)}
-          placeholder="ABC Realty Group"
+          placeholder={t('appForm.companyPh')}
           className="w-full px-4 py-2 border border-neutral-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-700 dark:text-slate-100"
         />
       </div>
@@ -251,12 +266,12 @@ export const BrokerApplicationForm: React.FC = () => {
   const renderProfessionalInfo = () => (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-neutral-900 dark:text-slate-100 mb-6">
-        Professional Information
+        {t('appForm.professionalTitle')}
       </h2>
 
       <div>
         <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-          Specialization *
+          {t('appForm.specialization')}
         </label>
         <select
           value={formData.specialization}
@@ -264,9 +279,9 @@ export const BrokerApplicationForm: React.FC = () => {
           className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-700 dark:text-slate-100 ${errors.specialization ? 'border-red-500' : 'border-neutral-300 dark:border-slate-600'
             }`}
         >
-          <option value="">Select your specialization...</option>
+          <option value="">{t('appForm.selectSpecialization')}</option>
           {SPECIALIZATIONS.map(spec => (
-            <option key={spec} value={spec}>{spec}</option>
+            <option key={spec} value={spec}>{t(`appForm.spec.${SPECIALIZATION_KEYS[spec]}`, { defaultValue: spec })}</option>
           ))}
         </select>
         {errors.specialization && (
@@ -276,7 +291,7 @@ export const BrokerApplicationForm: React.FC = () => {
 
       <div>
         <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-          Years of Experience *
+          {t('appForm.years')}
         </label>
         <input
           type="number"
@@ -294,7 +309,7 @@ export const BrokerApplicationForm: React.FC = () => {
 
       <div>
         <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-          License Number (Optional)
+          {t('appForm.license')}
         </label>
         <input
           type="text"
@@ -304,13 +319,13 @@ export const BrokerApplicationForm: React.FC = () => {
           className="w-full px-4 py-2 border border-neutral-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-700 dark:text-slate-100"
         />
         <p className="text-xs text-neutral-500 dark:text-slate-400 mt-1">
-          If you have a real estate license, please provide the number
+          {t('appForm.licenseHint')}
         </p>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-          LinkedIn Profile (Optional)
+          {t('appForm.linkedin')}
         </label>
         <input
           type="url"
@@ -327,7 +342,7 @@ export const BrokerApplicationForm: React.FC = () => {
 
       <div>
         <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-          Portfolio Website (Optional)
+          {t('appForm.portfolio')}
         </label>
         <input
           type="url"
@@ -347,17 +362,17 @@ export const BrokerApplicationForm: React.FC = () => {
   const renderMotivationAndGoals = () => (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-neutral-900 dark:text-slate-100 mb-6">
-        Motivation & Goals
+        {t('appForm.motivationTitle')}
       </h2>
 
       <div>
         <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-          Why do you want to become a broker on our platform? *
+          {t('appForm.motivation')}
         </label>
         <textarea
           value={formData.motivation}
           onChange={(e) => updateField('motivation', e.target.value)}
-          placeholder="Tell us about your motivation, experience, and how you can help clients buy tokenized real estate..."
+          placeholder={t('appForm.motivationPh')}
           rows={8}
           className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-700 dark:text-slate-100 ${errors.motivation ? 'border-red-500' : 'border-neutral-300 dark:border-slate-600'
             }`}
@@ -366,34 +381,34 @@ export const BrokerApplicationForm: React.FC = () => {
           {errors.motivation && (
             <p className="text-red-600 dark:text-red-400 text-sm">{errors.motivation}</p>
           )}
-          <p className={`text-sm ml-auto ${formData.motivation.length < 100
+          <p className={`text-sm ms-auto ${formData.motivation.length < 100
               ? 'text-red-600 dark:text-red-400'
               : 'text-neutral-500 dark:text-slate-400'
             }`}>
-            {formData.motivation.length} / 100 minimum
+            {t('appForm.minChars', { value: formData.motivation.length })}
           </p>
         </div>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-          Target Market (Optional)
+          {t('appForm.targetMarket')}
         </label>
         <input
           type="text"
           value={formData.target_market}
           onChange={(e) => updateField('target_market', e.target.value)}
-          placeholder="e.g., High-net-worth individuals, International buyers"
+          placeholder={t('appForm.targetMarketPh')}
           className="w-full px-4 py-2 border border-neutral-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-700 dark:text-slate-100"
         />
         <p className="text-xs text-neutral-500 dark:text-slate-400 mt-1">
-          Describe your target client demographic
+          {t('appForm.targetMarketHint')}
         </p>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-          Expected Clients in First Year (Optional)
+          {t('appForm.expectedClients')}
         </label>
         <input
           type="number"
@@ -412,14 +427,14 @@ export const BrokerApplicationForm: React.FC = () => {
       {/* Terms & Conditions */}
       <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
         <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2">
-          By submitting this application, you agree to:
+          {t('appForm.agreeTitle')}
         </h4>
         <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
-          <li>• Follow our broker code of conduct and ethical guidelines</li>
-          <li>• Provide accurate and honest information to all clients</li>
-          <li>• Comply with all applicable real estate and securities regulations</li>
-          <li>• Maintain active communication with referred clients</li>
-          <li>• Accept our commission structure and payment terms</li>
+          <li>• {t('appForm.agree1')}</li>
+          <li>• {t('appForm.agree2')}</li>
+          <li>• {t('appForm.agree3')}</li>
+          <li>• {t('appForm.agree4')}</li>
+          <li>• {t('appForm.agree5')}</li>
         </ul>
       </div>
     </div>
@@ -434,21 +449,21 @@ export const BrokerApplicationForm: React.FC = () => {
       </div>
 
       <h2 className="text-3xl font-bold text-neutral-900 dark:text-slate-100 mb-4">
-        Application Submitted Successfully!
+        {t('appForm.successTitle')}
       </h2>
 
       <p className="text-neutral-600 dark:text-slate-400 mb-2">
-        Thank you for applying to become a broker on our platform.
+        {t('appForm.successThanks')}
       </p>
 
       <p className="text-neutral-600 dark:text-slate-400 mb-8">
-        We will review your application and contact you within 3-5 business days.
+        {t('appForm.successReview')}
       </p>
 
       {applicationId && (
         <div className="bg-neutral-100 dark:bg-slate-800 rounded-lg p-4 mb-8 max-w-md mx-auto">
           <p className="text-sm text-neutral-600 dark:text-slate-400 mb-2">
-            Application ID:
+            {t('appForm.applicationId')}
           </p>
           <p className="text-lg font-mono font-semibold text-neutral-900 dark:text-slate-100">
             {applicationId}
@@ -461,7 +476,7 @@ export const BrokerApplicationForm: React.FC = () => {
           onClick={() => navigate('/dashboard')}
           className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
         >
-          Go to Dashboard
+          {t('appForm.goDashboard')}
         </button>
         <br />
         {applicationId && (
@@ -469,7 +484,7 @@ export const BrokerApplicationForm: React.FC = () => {
             onClick={() => navigate(`/broker/application-status/${applicationId}`)}
             className="px-6 py-3 bg-neutral-200 dark:bg-slate-700 text-neutral-900 dark:text-slate-100 rounded-lg hover:bg-neutral-300 dark:hover:bg-slate-600 transition-colors font-medium"
           >
-            Check Application Status
+            {t('appForm.checkStatus')}
           </button>
         )}
       </div>
@@ -483,10 +498,10 @@ export const BrokerApplicationForm: React.FC = () => {
         {currentStep < 4 && (
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-neutral-900 dark:text-slate-100 mb-2">
-              Broker Application
+              {t('appForm.title')}
             </h1>
             <p className="text-neutral-600 dark:text-slate-400">
-              Join our network of professional real estate brokers and earn competitive commissions
+              {t('appForm.subtitle')}
             </p>
           </div>
         )}
@@ -515,7 +530,7 @@ export const BrokerApplicationForm: React.FC = () => {
                 onClick={handleBack}
                 className="px-6 py-2 border border-neutral-300 dark:border-slate-600 text-neutral-700 dark:text-slate-300 rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-700 transition-colors font-medium"
               >
-                Back
+                {t('appForm.back')}
               </button>
             ) : (
               <div />
@@ -526,7 +541,7 @@ export const BrokerApplicationForm: React.FC = () => {
                 onClick={handleNext}
                 className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
               >
-                Next Step
+                {t('appForm.nextStep')}
               </button>
             ) : (
               <button
@@ -534,7 +549,7 @@ export const BrokerApplicationForm: React.FC = () => {
                 disabled={submitMutation.isPending}
                 className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-neutral-400 disabled:cursor-not-allowed transition-colors font-medium"
               >
-                {submitMutation.isPending ? 'Submitting...' : 'Submit Application'}
+                {submitMutation.isPending ? t('appForm.submitting') : t('appForm.submit')}
               </button>
             )}
           </div>

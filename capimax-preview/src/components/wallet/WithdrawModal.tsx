@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { apiClient } from '../../services/api/ApiClient';
 import { Button } from '../ui/Button';
 import { Text } from '../design-system/typography/Text';
@@ -9,6 +10,7 @@ export const WithdrawModal: React.FC<{
   onClose: () => void;
   onSuccess: () => void;
 }> = ({ availableBalance, onClose, onSuccess }) => {
+  const { t } = useTranslation('payments');
   const [method, setMethod] = useState<'bank' | 'crypto'>('bank');
   const [amount, setAmount] = useState<string>('');
   const [accountHolderName, setAccountHolderName] = useState('');
@@ -39,16 +41,16 @@ export const WithdrawModal: React.FC<{
     if (!amountValid) {
       setError(
         amountValue > availableBalance
-          ? `Amount exceeds your available balance of $${availableBalance.toLocaleString()}.`
-          : 'Enter an amount of at least $10.',
+          ? t('withdraw.errors.exceedsBalance', { balance: `$${availableBalance.toLocaleString()}` })
+          : t('withdraw.errors.minAmount'),
       );
       return;
     }
     if (!detailsValid) {
       setError(
         method === 'bank'
-          ? 'Account holder name, bank name, and account number are required.'
-          : 'Asset, network, and wallet address are required.',
+          ? t('withdraw.errors.bankRequired')
+          : t('withdraw.errors.cryptoRequired'),
       );
       return;
     }
@@ -85,15 +87,16 @@ export const WithdrawModal: React.FC<{
       );
       const refId = result?.id;
       const dest = method === 'bank' ? bankName : `${cryptoAsset} (${cryptoNetwork})`;
-      const verb = method === 'bank' ? 'wire' : 'send';
       setSuccess(
-        `Withdrawal request submitted. Compliance will review and ${verb} ` +
-          `$${amountValue.toFixed(2)} to ${dest} within 48 hours. ` +
-          (refId ? `Reference: ${refId.slice(0, 8)}.` : ''),
+        t(method === 'bank' ? 'withdraw.successBank' : 'withdraw.successCrypto', {
+          amount: `$${amountValue.toFixed(2)}`,
+          dest,
+        }) +
+          (refId ? ` ${t('withdraw.reference', { ref: refId.slice(0, 8) })}` : ''),
       );
       setTimeout(() => onSuccess(), 2500);
     } catch (e: any) {
-      const msg = e?.message || 'Failed to submit the withdrawal request.';
+      const msg = e?.message || t('withdraw.errors.submitFailed');
       const details = e?.details;
       if (details && typeof details === 'object') {
         const flat = Object.entries(details)
@@ -111,9 +114,9 @@ export const WithdrawModal: React.FC<{
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
-        <Text variant="h3" weight="bold" className="mb-1">Withdraw Funds</Text>
+        <Text variant="h3" weight="bold" className="mb-1">{t('withdraw.title')}</Text>
         <Text variant="caption" color="muted" className="mb-5 block">
-          Available balance: <strong>${availableBalance.toLocaleString()}</strong>
+          {t('withdraw.availableBalance')} <strong>${availableBalance.toLocaleString()}</strong>
         </Text>
 
         {success ? (
@@ -121,11 +124,11 @@ export const WithdrawModal: React.FC<{
             <div className="p-4 mb-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm text-emerald-700 dark:text-emerald-300">
               {success}
             </div>
-            <Button onClick={onClose} className="w-full">Close</Button>
+            <Button onClick={onClose} className="w-full">{t('withdraw.close')}</Button>
           </>
         ) : (
           <>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Amount (USD)</label>
+            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.amountLabel')}</label>
             <input
               type="number"
               min={10}
@@ -151,7 +154,7 @@ export const WithdrawModal: React.FC<{
                       : 'text-slate-500 dark:text-slate-400',
                   )}
                 >
-                  {m === 'bank' ? 'Bank transfer' : 'Crypto'}
+                  {m === 'bank' ? t('withdraw.methodBank') : t('withdraw.methodCrypto')}
                 </button>
               ))}
             </div>
@@ -159,57 +162,57 @@ export const WithdrawModal: React.FC<{
             {method === 'bank' && (
             <div className="grid grid-cols-2 gap-3 mb-3">
               <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Account holder name *</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.holderName')} *</label>
                 <input
                   type="text"
-                  placeholder="As shown on the account"
+                  placeholder={t('withdraw.placeholders.holderName')}
                   value={accountHolderName}
                   onChange={(e) => setAccountHolderName(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Bank name *</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.bankName')} *</label>
                 <input
                   type="text"
-                  placeholder="e.g. HSBC"
+                  placeholder={t('withdraw.placeholders.bankName')}
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
                 />
               </div>
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Account number / IBAN *</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.accountNumber')} *</label>
                 <input
                   type="text"
-                  placeholder="Receiving account"
+                  placeholder={t('withdraw.placeholders.accountNumber')}
                   value={accountNumber}
                   onChange={(e) => setAccountNumber(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">SWIFT / BIC</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.swift')}</label>
                 <input
                   type="text"
-                  placeholder="For international wires"
+                  placeholder={t('withdraw.placeholders.swift')}
                   value={swiftCode}
                   onChange={(e) => setSwiftCode(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Routing / sort code</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.routing')}</label>
                 <input
                   type="text"
-                  placeholder="Optional"
+                  placeholder={t('withdraw.placeholders.optional')}
                   value={routingNumber}
                   onChange={(e) => setRoutingNumber(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Bank country (ISO-2)</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.bankCountry')}</label>
                 <input
                   type="text"
                   maxLength={2}
@@ -225,7 +228,7 @@ export const WithdrawModal: React.FC<{
             {method === 'crypto' && (
             <div className="grid grid-cols-2 gap-3 mb-3">
               <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Asset *</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.asset')} *</label>
                 <select
                   value={cryptoAsset}
                   onChange={(e) => setCryptoAsset(e.target.value)}
@@ -237,7 +240,7 @@ export const WithdrawModal: React.FC<{
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Network *</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.network')} *</label>
                 <select
                   value={cryptoNetwork}
                   onChange={(e) => setCryptoNetwork(e.target.value)}
@@ -251,20 +254,20 @@ export const WithdrawModal: React.FC<{
                 </select>
               </div>
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Wallet address *</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.walletAddress')} *</label>
                 <input
                   type="text"
-                  placeholder="Destination wallet address"
+                  placeholder={t('withdraw.placeholders.walletAddress')}
                   value={cryptoAddress}
                   onChange={(e) => setCryptoAddress(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm font-mono"
                 />
               </div>
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Memo / tag (optional)</label>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.memo')}</label>
                 <input
                   type="text"
-                  placeholder="Only if your exchange/chain requires it"
+                  placeholder={t('withdraw.placeholders.memo')}
                   value={cryptoMemo}
                   onChange={(e) => setCryptoMemo(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
@@ -274,10 +277,10 @@ export const WithdrawModal: React.FC<{
             )}
 
             <div className="mb-3">
-              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Note for compliance (optional)</label>
+              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.notes')}</label>
               <textarea
                 rows={2}
-                placeholder="E.g. urgency, preferred reference, etc."
+                placeholder={t('withdraw.placeholders.notes')}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
@@ -285,7 +288,7 @@ export const WithdrawModal: React.FC<{
             </div>
 
             <div className="p-3 mb-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-900 dark:text-amber-200">
-              Compliance reviews each request. Funds are locked from your available balance the moment the request is submitted, then {method === 'bank' ? 'wired to your bank account' : 'sent to your wallet address'} within 48 hours of approval. You&apos;ll receive an email at each step.
+              {method === 'bank' ? t('withdraw.noticeBank') : t('withdraw.noticeCrypto')}
             </div>
 
             {error && (
@@ -295,9 +298,9 @@ export const WithdrawModal: React.FC<{
             )}
 
             <div className="flex gap-3">
-              <Button variant="outline" onClick={onClose} className="flex-1" disabled={submitting}>Cancel</Button>
+              <Button variant="outline" onClick={onClose} className="flex-1" disabled={submitting}>{t('withdraw.cancel')}</Button>
               <Button onClick={handleSubmit} className="flex-1" disabled={submitting || !isValid}>
-                {submitting ? 'Submitting…' : `Withdraw $${amountValid ? amountValue.toFixed(2) : '0.00'}`}
+                {submitting ? t('withdraw.submitting') : t('withdraw.submit', { amount: `$${amountValid ? amountValue.toFixed(2) : '0.00'}` })}
               </Button>
             </div>
           </>

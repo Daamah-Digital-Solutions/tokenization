@@ -1,5 +1,6 @@
 import React from 'react';
 import { ExternalLink, CheckCircle, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from './Button';
 import { cn } from '../../utils/cn';
 
@@ -49,6 +50,7 @@ export const BlockchainLink: React.FC<BlockchainLinkProps> = ({
   showStatus = false,
   className,
 }) => {
+  const { t } = useTranslation('shared');
   // Only show link when transaction is completed and hash exists
   const isCompleted = status === 'completed';
   const hasHash = transactionHash && transactionHash.length > 0;
@@ -77,7 +79,7 @@ export const BlockchainLink: React.FC<BlockchainLinkProps> = ({
       )}>
         <Loader2 className="w-4 h-4 animate-spin" />
         <span className="text-sm">
-          {status === 'minting' ? 'Minting tokens...' : 'Awaiting blockchain confirmation'}
+          {status === 'minting' ? t('blockchain.minting') : t('blockchain.awaiting')}
         </span>
       </div>
     );
@@ -105,7 +107,7 @@ export const BlockchainLink: React.FC<BlockchainLinkProps> = ({
             size === 'md' && 'w-4 h-4',
             size === 'lg' && 'w-5 h-5',
           )} />}
-          <span>View on {explorerName}</span>
+          <span>{t('blockchain.viewOn', { explorer: explorerName })}</span>
         </a>
       );
     }
@@ -130,7 +132,7 @@ export const BlockchainLink: React.FC<BlockchainLinkProps> = ({
             size === 'md' && 'w-3.5 h-3.5',
             size === 'lg' && 'w-4 h-4',
           )} />
-          <span>Verified on {explorerName}</span>
+          <span>{t('blockchain.verifiedOn', { explorer: explorerName })}</span>
           {showIcon && <ExternalLink className={cn(
             size === 'sm' && 'w-3 h-3',
             size === 'md' && 'w-3.5 h-3.5',
@@ -153,12 +155,12 @@ export const BlockchainLink: React.FC<BlockchainLinkProps> = ({
         )}
       >
         {showIcon && <ExternalLink className={cn(
-          'mr-2',
+          'me-2',
           size === 'sm' && 'w-3.5 h-3.5',
           size === 'md' && 'w-4 h-4',
           size === 'lg' && 'w-5 h-5',
         )} />}
-        View on {explorerName}
+        {t('blockchain.viewOn', { explorer: explorerName })}
       </Button>
     );
   }

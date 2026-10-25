@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { localizeTxDescription } from '../../utils/txDescription';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { 
@@ -29,6 +30,8 @@ import { StatsCard, Card } from '../design-system';
 import { Text } from '../design-system/typography/Text';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 
 interface DashboardContent {
   stats: Array<{
@@ -60,11 +63,11 @@ interface DynamicUserDashboardProps {
   onViewChange?: (view: string) => void;
 }
 
-const roleBasedContent: Record<UserRole, (data: any) => DashboardContent> = {
-  [UserRole.INVESTOR]: (data) => ({
+const roleBasedContent: Record<UserRole, (data: any, t: TFunction) => DashboardContent> = {
+  [UserRole.INVESTOR]: (data, t) => ({
     stats: [
       {
-        title: 'Total Portfolio Value',
+        title: t('overview.stats.totalPortfolioValue'),
         value: `$${data.stats?.totalValue?.toLocaleString() || '0'}`,
         change: data.stats?.portfolioGrowth ? `+${data.stats.portfolioGrowth}%` : undefined,
         changeType: 'positive' as const,
@@ -72,101 +75,101 @@ const roleBasedContent: Record<UserRole, (data: any) => DashboardContent> = {
         variant: 'gradient' as const,
       },
       {
-        title: 'Monthly Income',
+        title: t('overview.stats.monthlyIncome'),
         value: `$${data.stats?.monthlyIncome?.toLocaleString() || '0'}`,
-        subtitle: 'From dividends',
+        subtitle: t('overview.stats.fromDividends'),
         icon: TrendingUp,
         variant: 'accent' as const,
       },
       {
-        title: 'Active Properties',
+        title: t('overview.stats.activeProperties'),
         value: data.stats?.activeProperties || 0,
-        subtitle: 'In portfolio',
+        subtitle: t('overview.stats.inPortfolio'),
         icon: Building,
       },
       {
-        title: 'Total ROI',
+        title: t('overview.stats.totalRoi'),
         value: `${data.stats?.roi || 0}%`,
-        change: data.stats?.roi > 0 ? 'positive' : 'neutral',
+        change: data.stats?.roi > 0 ? t('overview.stats.positive') : t('overview.stats.neutral'),
         changeType: data.stats?.roi > 0 ? 'positive' as const : 'neutral' as const,
         icon: BarChart3,
       },
     ],
     quickActions: [
       {
-        title: 'Browse Properties',
-        description: 'Discover new ownership opportunities',
+        title: t('overview.actions.browseProperties'),
+        description: t('overview.actions.browsePropertiesDesc'),
         icon: Building,
         action: () => window.location.href = '/properties',
         variant: 'primary' as const,
       },
       {
-        title: 'View Portfolio',
-        description: 'Manage your properties',
+        title: t('overview.actions.viewPortfolio'),
+        description: t('overview.actions.manageYourProperties'),
         icon: PieChart,
         action: () => window.location.href = '/dashboard/investor',
         variant: 'secondary' as const,
       },
       {
-        title: 'Transaction History',
-        description: 'Track your ownership activity',
+        title: t('overview.actions.transactionHistory'),
+        description: t('overview.actions.transactionHistoryDesc'),
         icon: Activity,
         action: () => window.location.href = '/transactions',
         variant: 'outline' as const,
       },
     ],
     sections: [
-      { title: 'Recent Transactions', component: RecentTransactions, priority: 1 },
-      { title: 'Market Insights', component: MarketInsightsSection, priority: 2 },
-      { title: 'Portfolio Performance', component: PortfolioPerformance, priority: 3 },
+      { title: t('overview.sections.recentTransactions'), component: RecentTransactions, priority: 1 },
+      { title: t('overview.sections.marketInsights'), component: MarketInsightsSection, priority: 2 },
+      { title: t('overview.sections.portfolioPerformance'), component: PortfolioPerformance, priority: 3 },
     ],
   }),
 
-  [UserRole.PROPERTY_OWNER]: (data) => ({
+  [UserRole.PROPERTY_OWNER]: (data, t) => ({
     stats: [
       {
-        title: 'Listed Properties',
+        title: t('overview.stats.listedProperties'),
         value: data.stats?.activeProperties || 0,
-        subtitle: 'Currently active',
+        subtitle: t('overview.stats.currentlyActive'),
         icon: Building,
         variant: 'gradient' as const,
       },
       {
-        title: 'Total Raised',
+        title: t('overview.stats.totalRaised'),
         value: `$${data.stats?.totalValue?.toLocaleString() || '0'}`,
         icon: DollarSign,
         variant: 'accent' as const,
       },
       {
-        title: 'Owners',
+        title: t('overview.stats.owners'),
         value: data.stats?.totalInvestments || 0,
-        subtitle: 'Across all properties',
+        subtitle: t('overview.stats.acrossAllProperties'),
         icon: Users,
       },
       {
-        title: 'Occupancy Rate',
+        title: t('overview.stats.occupancyRate'),
         value: data.stats?.occupancyRate ? `${data.stats.occupancyRate}%` : '--',
         icon: TrendingUp,
       },
     ],
     quickActions: [
       {
-        title: 'List New Property',
-        description: 'Tokenize your next property',
+        title: t('overview.actions.listNewProperty'),
+        description: t('overview.actions.listNewPropertyDesc'),
         icon: Building,
         action: () => window.location.href = '/properties/create',
         variant: 'primary' as const,
       },
       {
-        title: 'Manage Properties',
-        description: 'View all your listings',
+        title: t('overview.actions.manageProperties'),
+        description: t('overview.actions.managePropertiesDesc'),
         icon: Settings,
         action: () => window.location.href = '/dashboard/property-owner',
         variant: 'secondary' as const,
       },
       {
-        title: 'Analytics',
-        description: 'View performance metrics',
+        title: t('overview.actions.analytics'),
+        description: t('overview.actions.analyticsDesc'),
         icon: BarChart3,
         action: () => window.location.href = '/analytics',
         variant: 'outline' as const,
@@ -180,51 +183,51 @@ const roleBasedContent: Record<UserRole, (data: any) => DashboardContent> = {
     sections: [],
   }),
 
-  [UserRole.BROKER]: (data) => ({
+  [UserRole.BROKER]: (data, t) => ({
     stats: [
       {
-        title: 'Total Commissions',
+        title: t('overview.stats.totalCommissions'),
         value: `$${data.stats?.totalReturns?.toLocaleString() || '0'}`,
-        subtitle: 'This month',
+        subtitle: t('overview.stats.thisMonth'),
         icon: DollarSign,
         variant: 'gradient' as const,
       },
       {
-        title: 'Active Referrals',
+        title: t('overview.stats.activeReferrals'),
         value: data.stats?.activeProperties || 0,
         icon: Users,
         variant: 'accent' as const,
       },
       {
-        title: 'Properties Sold',
+        title: t('overview.stats.propertiesSold'),
         value: data.stats?.totalInvestments || 0,
-        subtitle: 'All time',
+        subtitle: t('overview.stats.allTime'),
         icon: Building,
       },
       {
-        title: 'Conversion Rate',
+        title: t('overview.stats.conversionRate'),
         value: data.stats?.conversionRate ? `${data.stats.conversionRate}%` : '--',
         icon: TrendingUp,
       },
     ],
     quickActions: [
       {
-        title: 'Refer Client',
-        description: 'Add new referral',
+        title: t('overview.actions.referClient'),
+        description: t('overview.actions.referClientDesc'),
         icon: Users,
         action: () => window.location.href = '/referrals/create',
         variant: 'primary' as const,
       },
       {
-        title: 'View Commissions',
-        description: 'Track your earnings',
+        title: t('overview.actions.viewCommissions'),
+        description: t('overview.actions.viewCommissionsDesc'),
         icon: DollarSign,
         action: () => window.location.href = '/dashboard/broker',
         variant: 'secondary' as const,
       },
       {
-        title: 'Marketing Tools',
-        description: 'Access promotional materials',
+        title: t('overview.actions.marketingTools'),
+        description: t('overview.actions.marketingToolsDesc'),
         icon: FileText,
         action: () => window.location.href = '/marketing',
         variant: 'outline' as const,
@@ -236,17 +239,17 @@ const roleBasedContent: Record<UserRole, (data: any) => DashboardContent> = {
     sections: [],
   }),
 
-  [UserRole.ADMIN]: (data) => ({
+  [UserRole.ADMIN]: (data, t) => ({
     stats: [
       {
-        title: 'Platform Revenue',
+        title: t('overview.stats.platformRevenue'),
         value: `$${data.stats?.totalValue?.toLocaleString() || '0'}`,
-        subtitle: 'This month',
+        subtitle: t('overview.stats.thisMonth'),
         icon: DollarSign,
         variant: 'gradient' as const,
       },
       {
-        title: 'Total Users',
+        title: t('overview.stats.totalUsers'),
         value: data.stats?.totalInvestments || 0,
         change: '+12%',
         changeType: 'positive' as const,
@@ -254,43 +257,43 @@ const roleBasedContent: Record<UserRole, (data: any) => DashboardContent> = {
         variant: 'accent' as const,
       },
       {
-        title: 'Active Properties',
+        title: t('overview.stats.activeProperties'),
         value: data.stats?.activeProperties || 0,
         icon: Building,
       },
       {
-        title: 'Pending Reviews',
+        title: t('overview.stats.pendingReviews'),
         value: data.stats?.pendingTransactions || 0,
         icon: Calendar,
       },
     ],
     quickActions: [
       {
-        title: 'User Management',
-        description: 'Manage platform users',
+        title: t('overview.actions.userManagement'),
+        description: t('overview.actions.userManagementDesc'),
         icon: Users,
         action: () => window.location.href = '/admin/users',
         variant: 'primary' as const,
       },
       {
-        title: 'Property Reviews',
-        description: 'Review pending properties',
+        title: t('overview.actions.propertyReviews'),
+        description: t('overview.actions.propertyReviewsDesc'),
         icon: Building,
         action: () => window.location.href = '/admin/properties',
         variant: 'secondary' as const,
       },
       {
-        title: 'Platform Analytics',
-        description: 'View detailed analytics',
+        title: t('overview.actions.platformAnalytics'),
+        description: t('overview.actions.platformAnalyticsDesc'),
         icon: BarChart3,
         action: () => window.location.href = '/admin/analytics',
         variant: 'outline' as const,
       },
     ],
     sections: [
-      { title: 'Platform Overview', component: PlatformOverview, priority: 1 },
-      { title: 'User Activity', component: UserActivity, priority: 2 },
-      { title: 'System Health', component: SystemHealth, priority: 3 },
+      { title: t('overview.sections.platformOverview'), component: PlatformOverview, priority: 1 },
+      { title: t('overview.sections.userActivity'), component: UserActivity, priority: 2 },
+      { title: t('overview.sections.systemHealth'), component: SystemHealth, priority: 3 },
     ],
   }),
 };
@@ -301,6 +304,7 @@ export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
 }) => {
   const { theme, toggleTheme } = useTheme();
   const { navigate } = useRouter();
+  const { t } = useTranslation('dashboard');
   const [user, setUser] = useState<UserType | null>(null);
 
   // Fetch user data
@@ -372,7 +376,7 @@ export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
     transactions: recentTransactions,
   };
 
-  const content = roleBasedContent[user.role](dashboardData);
+  const content = roleBasedContent[user.role](dashboardData, t);
 
   // Override quick actions to use the SPA router instead of window.location.href.
   // The raw quickActions arrays defined in `roleBasedContent` above use full
@@ -385,22 +389,22 @@ export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
   if (user.role === UserRole.INVESTOR && onViewChange) {
     content.quickActions = [
       {
-        title: 'Browse Properties',
-        description: 'Discover new ownership opportunities',
+        title: t('overview.actions.browseProperties'),
+        description: t('overview.actions.browsePropertiesDesc'),
         icon: Building,
         action: () => navigate('properties'),
         variant: 'primary' as const,
       },
       {
-        title: 'View Portfolio',
-        description: 'See your properties & returns',
+        title: t('overview.actions.viewPortfolio'),
+        description: t('overview.actions.viewPortfolioDesc'),
         icon: PieChart,
         action: () => onViewChange('portfolio'),
         variant: 'secondary' as const,
       },
       {
-        title: 'Transaction History',
-        description: 'Track your ownership activity',
+        title: t('overview.actions.transactionHistory'),
+        description: t('overview.actions.transactionHistoryDesc'),
         icon: Activity,
         action: () => onViewChange('transactions'),
         variant: 'outline' as const,
@@ -411,22 +415,22 @@ export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
   if (user.role === UserRole.PROPERTY_OWNER && onViewChange) {
     content.quickActions = [
       {
-        title: 'List New Property',
-        description: 'Tokenize your next property',
+        title: t('overview.actions.listNewProperty'),
+        description: t('overview.actions.listNewPropertyDesc'),
         icon: Building,
         action: () => navigate('submit-property'),
         variant: 'primary' as const,
       },
       {
-        title: 'Manage Properties',
-        description: 'View all your listings',
+        title: t('overview.actions.manageProperties'),
+        description: t('overview.actions.managePropertiesDesc'),
         icon: Settings,
         action: () => onViewChange('properties'),
         variant: 'secondary' as const,
       },
       {
-        title: 'View Owners',
-        description: 'See who bought into your properties',
+        title: t('overview.actions.viewOwners'),
+        description: t('overview.actions.viewOwnersDesc'),
         icon: Users,
         action: () => onViewChange('investors'),
         variant: 'outline' as const,
@@ -437,22 +441,22 @@ export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
   if (user.role === UserRole.BROKER && onViewChange) {
     content.quickActions = [
       {
-        title: 'Manage Referrals',
-        description: 'Track your referral network',
+        title: t('overview.actions.manageReferrals'),
+        description: t('overview.actions.manageReferralsDesc'),
         icon: Users,
         action: () => onViewChange('referrals'),
         variant: 'primary' as const,
       },
       {
-        title: 'View Commissions',
-        description: 'Track your earnings',
+        title: t('overview.actions.viewCommissions'),
+        description: t('overview.actions.viewCommissionsDesc'),
         icon: DollarSign,
         action: () => onViewChange('commissions'),
         variant: 'secondary' as const,
       },
       {
-        title: 'Performance Analytics',
-        description: 'Review your conversion metrics',
+        title: t('overview.actions.performanceAnalytics'),
+        description: t('overview.actions.performanceAnalyticsDesc'),
         icon: BarChart3,
         action: () => onViewChange('analytics'),
         variant: 'outline' as const,
@@ -466,10 +470,10 @@ export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <Text variant="h2" weight="bold" className="mb-2">
-            Welcome back, {user.first_name}!
+            {t('overview.welcome', { name: user.first_name })}
           </Text>
           <Text variant="body" color="muted">
-            {getRoleGreeting(user.role)}
+            {getRoleGreeting(user.role, t)}
           </Text>
         </div>
 
@@ -488,13 +492,13 @@ export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
           </Button>
           
           <Button variant="outline" size="sm" onClick={() => onViewChange?.('notifications')}>
-            <Bell className="w-4 h-4 mr-2" />
-            Notifications
+            <Bell className="w-4 h-4 me-2" />
+            {t('nav.notifications')}
           </Button>
 
           <Button variant="outline" size="sm" onClick={() => onViewChange?.('settings')}>
-            <Settings className="w-4 h-4 mr-2" />
-            Settings
+            <Settings className="w-4 h-4 me-2" />
+            {t('nav.settings')}
           </Button>
         </div>
       </div>
@@ -523,7 +527,7 @@ export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
       {/* Quick Actions */}
       <Card className="p-6">
         <Text variant="h3" weight="semibold" className="mb-4">
-          Quick Actions
+          {t('quickActions.title')}
         </Text>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {content.quickActions.map((action, index) => (
@@ -588,23 +592,25 @@ export const DynamicUserDashboard: React.FC<DynamicUserDashboardProps> = ({
 };
 
 // Helper function to get role-specific greeting
-function getRoleGreeting(role: UserRole): string {
+function getRoleGreeting(role: UserRole, t: TFunction): string {
   switch (role) {
     case UserRole.INVESTOR:
-      return "Track your owned properties and discover new opportunities";
+      return t('overview.greeting.investor');
     case UserRole.PROPERTY_OWNER:
-      return "Manage your properties and connect with owners";
+      return t('overview.greeting.propertyOwner');
     case UserRole.BROKER:
-      return "Track commissions and expand your network";
+      return t('overview.greeting.broker');
     case UserRole.ADMIN:
-      return "Monitor platform performance and user activity";
+      return t('overview.greeting.admin');
     default:
-      return "Welcome to your dashboard";
+      return t('overview.greeting.default');
   }
 }
 
 // Placeholder components for different sections
-const RecentTransactions: React.FC<{ data: any; loading: boolean }> = ({ data, loading }) => (
+const RecentTransactions: React.FC<{ data: any; loading: boolean }> = ({ data, loading }) => {
+  const { t, i18n } = useTranslation('dashboard');
+  return (
   <div className="space-y-3">
     {loading ? (
       <div className="space-y-3">
@@ -617,22 +623,25 @@ const RecentTransactions: React.FC<{ data: any; loading: boolean }> = ({ data, l
         <div key={transaction.id} className="flex items-center justify-between py-2">
           <div>
             <Text variant="body" weight="medium">
-              {transaction.description}
+              {localizeTxDescription(transaction.description)}
             </Text>
             <Text variant="caption" color="muted">
-              {new Date(transaction.date || transaction.created_at).toLocaleDateString()}
+              {new Date(transaction.date || transaction.created_at).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : undefined)}
             </Text>
           </div>
           <Text variant="body" weight="semibold">
             ${transaction.amount.toLocaleString()}
           </Text>
         </div>
-      )) || <Text variant="body" color="muted">No recent transactions</Text>
+      )) || <Text variant="body" color="muted">{t('overview.noRecentTransactions')}</Text>
     )}
   </div>
-);
+  );
+};
 
-const MarketInsightsSection: React.FC<{ data: any; loading: boolean }> = ({ data, loading }) => (
+const MarketInsightsSection: React.FC<{ data: any; loading: boolean }> = ({ data, loading }) => {
+  const { t } = useTranslation('dashboard');
+  return (
   <div className="space-y-4">
     {loading ? (
       <div className="animate-pulse bg-slate-200 dark:bg-slate-700 h-32 rounded" />
@@ -640,26 +649,29 @@ const MarketInsightsSection: React.FC<{ data: any; loading: boolean }> = ({ data
       <>
         <div>
           <Text variant="body" weight="semibold" className="mb-2">
-            Trending Properties
+            {t('overview.trendingProperties')}
           </Text>
           <Text variant="caption" color="muted">
-            {data.insights?.trending?.length || 0} properties gaining interest
+            {t('overview.trendingCount', { count: data.insights?.trending?.length || 0 })}
           </Text>
         </div>
         <div>
           <Text variant="body" weight="semibold" className="mb-2">
-            Market Performance
+            {t('overview.marketPerformance')}
           </Text>
           <Text variant="caption" color="muted">
-            Average ROI: 8.5% • Market Cap: $12.4M
+            {t('overview.marketPerformanceValue', { roi: '8.5%', cap: '$12.4M' })}
           </Text>
         </div>
       </>
     )}
   </div>
-);
+  );
+};
 
-const PortfolioPerformance: React.FC<{ data: any; loading: boolean }> = ({ data, loading }) => (
+const PortfolioPerformance: React.FC<{ data: any; loading: boolean }> = ({ data, loading }) => {
+  const { t } = useTranslation('dashboard');
+  return (
   <div className="space-y-4">
     {loading ? (
       <div className="animate-pulse bg-slate-200 dark:bg-slate-700 h-32 rounded" />
@@ -667,7 +679,7 @@ const PortfolioPerformance: React.FC<{ data: any; loading: boolean }> = ({ data,
       <>
         <div className="flex justify-between items-center">
           <Text variant="body" weight="semibold">
-            Total Return
+            {t('overview.totalReturn')}
           </Text>
           <Text variant="body" weight="semibold" className="text-emerald-600">
             +{data.stats?.roi || 0}%
@@ -675,7 +687,7 @@ const PortfolioPerformance: React.FC<{ data: any; loading: boolean }> = ({ data,
         </div>
         <div className="flex justify-between items-center">
           <Text variant="body" weight="semibold">
-            Monthly Income
+            {t('overview.stats.monthlyIncome')}
           </Text>
           <Text variant="body" weight="semibold">
             ${data.stats?.monthlyIncome?.toLocaleString() || '0'}
@@ -684,41 +696,51 @@ const PortfolioPerformance: React.FC<{ data: any; loading: boolean }> = ({ data,
       </>
     )}
   </div>
-);
+  );
+};
 
 // Additional placeholder components
-const PropertyPerformance: React.FC<{ data: any; loading: boolean }> = ({ loading }) => (
-  <div>{loading ? 'Loading...' : 'Property performance content'}</div>
-);
+const PropertyPerformance: React.FC<{ data: any; loading: boolean }> = ({ loading }) => {
+  const { t } = useTranslation('dashboard');
+  return <div>{loading ? t('overview.loading') : t('overview.placeholders.propertyPerformance')}</div>;
+};
 
-const InvestorActivity: React.FC<{ data: any; loading: boolean }> = ({ loading }) => (
-  <div>{loading ? 'Loading...' : 'Owner activity content'}</div>
-);
+const InvestorActivity: React.FC<{ data: any; loading: boolean }> = ({ loading }) => {
+  const { t } = useTranslation('dashboard');
+  return <div>{loading ? t('overview.loading') : t('overview.placeholders.ownerActivity')}</div>;
+};
 
-const PendingApprovals: React.FC<{ data: any; loading: boolean }> = ({ loading }) => (
-  <div>{loading ? 'Loading...' : 'Pending approvals content'}</div>
-);
+const PendingApprovals: React.FC<{ data: any; loading: boolean }> = ({ loading }) => {
+  const { t } = useTranslation('dashboard');
+  return <div>{loading ? t('overview.loading') : t('overview.placeholders.pendingApprovals')}</div>;
+};
 
-const CommissionTracking: React.FC<{ data: any; loading: boolean }> = ({ loading }) => (
-  <div>{loading ? 'Loading...' : 'Commission tracking content'}</div>
-);
+const CommissionTracking: React.FC<{ data: any; loading: boolean }> = ({ loading }) => {
+  const { t } = useTranslation('dashboard');
+  return <div>{loading ? t('overview.loading') : t('overview.placeholders.commissionTracking')}</div>;
+};
 
-const ReferralNetwork: React.FC<{ data: any; loading: boolean }> = ({ loading }) => (
-  <div>{loading ? 'Loading...' : 'Referral network content'}</div>
-);
+const ReferralNetwork: React.FC<{ data: any; loading: boolean }> = ({ loading }) => {
+  const { t } = useTranslation('dashboard');
+  return <div>{loading ? t('overview.loading') : t('overview.placeholders.referralNetwork')}</div>;
+};
 
-const BrokerAnalytics: React.FC<{ data: any; loading: boolean }> = ({ loading }) => (
-  <div>{loading ? 'Loading...' : 'Broker analytics content'}</div>
-);
+const BrokerAnalytics: React.FC<{ data: any; loading: boolean }> = ({ loading }) => {
+  const { t } = useTranslation('dashboard');
+  return <div>{loading ? t('overview.loading') : t('overview.placeholders.brokerAnalytics')}</div>;
+};
 
-const PlatformOverview: React.FC<{ data: any; loading: boolean }> = ({ loading }) => (
-  <div>{loading ? 'Loading...' : 'Platform overview content'}</div>
-);
+const PlatformOverview: React.FC<{ data: any; loading: boolean }> = ({ loading }) => {
+  const { t } = useTranslation('dashboard');
+  return <div>{loading ? t('overview.loading') : t('overview.placeholders.platformOverview')}</div>;
+};
 
-const UserActivity: React.FC<{ data: any; loading: boolean }> = ({ loading }) => (
-  <div>{loading ? 'Loading...' : 'User activity content'}</div>
-);
+const UserActivity: React.FC<{ data: any; loading: boolean }> = ({ loading }) => {
+  const { t } = useTranslation('dashboard');
+  return <div>{loading ? t('overview.loading') : t('overview.placeholders.userActivity')}</div>;
+};
 
-const SystemHealth: React.FC<{ data: any; loading: boolean }> = ({ loading }) => (
-  <div>{loading ? 'Loading...' : 'System health content'}</div>
-);
+const SystemHealth: React.FC<{ data: any; loading: boolean }> = ({ loading }) => {
+  const { t } = useTranslation('dashboard');
+  return <div>{loading ? t('overview.loading') : t('overview.placeholders.systemHealth')}</div>;
+};

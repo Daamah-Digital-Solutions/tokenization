@@ -1,0 +1,822 @@
+{
+  "brand": "Capimax RT",
+  "authLayout": {
+    "title": "Real Estate Tokenization Platform",
+    "subtitle": "Democratizing premium real estate ownership through blockchain technology",
+    "features": {
+      "premium": {
+        "title": "Premium Properties",
+        "desc": "Access vetted real estate opportunities with institutional-grade due diligence"
+      },
+      "returns": {
+        "title": "Proven Returns",
+        "desc": "Historical returns of 12-18% annually with transparent performance tracking"
+      },
+      "secure": {
+        "title": "Secure & Compliant",
+        "desc": "Bank-level security with full regulatory compliance and insurance protection"
+      },
+      "support": {
+        "title": "Expert Support",
+        "desc": "Dedicated support team with deep real estate and blockchain expertise"
+      }
+    },
+    "stats": {
+      "assets": "Assets Tokenized",
+      "owners": "Active Owners",
+      "return": "Avg. Annual Return"
+    }
+  },
+  "fields": {
+    "email": "Email Address",
+    "emailPlaceholder": "Enter your email",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "emailAddressPlaceholder": "Enter your email address",
+    "firstName": "First Name",
+    "firstNamePlaceholder": "Enter your first name",
+    "lastName": "Last Name",
+    "lastNamePlaceholder": "Enter your last name",
+    "phone": "Phone Number",
+    "phonePlaceholder": "Enter your phone number",
+    "country": "Country",
+    "countryPlaceholder": "Select your country",
+    "city": "City",
+    "cityPlaceholder": "Enter your city",
+    "createPasswordPlaceholder": "Create a strong password",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Confirm your password"
+  },
+  "validation": {
+    "emailRequired": "Email is required",
+    "emailInvalid": "Please enter a valid email address",
+    "passwordRequired": "Password is required",
+    "passwordMin6": "Password must be at least 6 characters",
+    "twoFactorRequired": "2FA code is required",
+    "firstNameRequired": "First name is required",
+    "lastNameRequired": "Last name is required",
+    "phoneRequired": "Phone number is required",
+    "countryRequired": "Country is required",
+    "cityRequired": "City is required",
+    "passwordMin8": "Password must be at least 8 characters",
+    "passwordComplexity": "Password must contain uppercase, lowercase, and number",
+    "confirmRequired": "Please confirm your password",
+    "passwordMismatch": "Passwords do not match",
+    "roleRequired": "Please select at least one role",
+    "termsRequired": "You must agree to the terms and conditions",
+    "privacyRequired": "You must agree to the privacy policy"
+  },
+  "login": {
+    "title": "Welcome Back",
+    "subtitle": "Sign in to your account to continue",
+    "googleFailed": "Google authentication failed. Please try again.",
+    "googleExists": "An account with this email already exists. Please sign in with your email and password.",
+    "twoFactorLabel": "Two-Factor Authentication Code",
+    "twoFactorPlaceholder": "Enter your 6-digit code",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "signingIn": "Signing In...",
+    "signIn": "Sign In",
+    "orContinueWith": "Or continue with",
+    "googleSigningIn": "Signing in with Google...",
+    "continueWithGoogle": "Continue with Google",
+    "noAccount": "Don't have an account?",
+    "createAccount": "Create an account"
+  },
+  "recovery": {
+    "title": "Forgot Your Password?",
+    "subtitle": "No worries! Enter your email and we'll send you a reset code.",
+    "sending": "Sending Reset Link...",
+    "send": "Send Reset Link",
+    "checkEmail": "Check Your Email",
+    "sentTo": "We've sent a password reset link to",
+    "clickLink": "Click the secure link in your email to create a new password. The link will expire in 24 hours.",
+    "tipSpam": "Check your spam folder if you don't see the email in your inbox",
+    "tipOnce": "The link can only be used once for security purposes",
+    "sendingShort": "Sending...",
+    "sendAgain": "Didn't receive the email? Send again",
+    "differentEmail": "Use a different email address",
+    "backToSignIn": "Back to Sign In"
+  },
+  "actions": {
+    "back": "Back",
+    "next": "Next",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "save": "Save",
+    "submit": "Submit",
+    "retry": "Retry",
+    "close": "Close"
+  },
+  "register": {
+    "steps": {
+      "personal": "Personal Info",
+      "location": "Location",
+      "account": "Account",
+      "agreements": "Agreements"
+    },
+    "roles": {
+      "owner": {
+        "title": "Owner",
+        "desc": "I want to buy real estate"
+      },
+      "propertyOwner": {
+        "title": "Property Owner",
+        "desc": "I want to tokenize my property"
+      }
+    },
+    "failedTitle": "Registration Failed",
+    "failedMsg": "Unable to create account. Please try again.",
+    "selectRoles": "Select your role(s)",
+    "switchRoles": "You can switch between roles anytime from your dashboard",
+    "passwordHelper": "Must be 8+ characters with uppercase, lowercase, and number",
+    "agreePrefix": "I agree to the",
+    "terms": "Terms and Conditions",
+    "termsSuffix": "and understand the risks involved in real estate tokenization",
+    "privacy": "Privacy Policy",
+    "privacySuffix": "and consent to the processing of my personal data",
+    "marketing": "I would like to receive marketing communications and ownership opportunities (optional)",
+    "title": "Create Your Account",
+    "subtitle": "Join our platform and start your ownership journey",
+    "googleSigningUp": "Signing up with Google...",
+    "googleSignUp": "Sign up with Google",
+    "orEmail": "Or register with email",
+    "stepOf": "Step {{current}} of {{total}}",
+    "creating": "Creating Account...",
+    "create": "Create Account",
+    "hasAccount": "Already have an account?",
+    "signIn": "Sign in"
+  },
+  "twoFactor": {
+    "methods": {
+      "sms": {
+        "title": "SMS Verification",
+        "desc": "Receive codes via text message"
+      },
+      "authenticator": {
+        "title": "Authenticator App",
+        "desc": "Use Google Authenticator or similar app"
+      },
+      "biometric": {
+        "title": "Biometric Authentication",
+        "desc": "Use fingerprint or face recognition"
+      }
+    },
+    "codeRequired": "Verification code is required",
+    "codeLength": "Code must be 6 digits",
+    "chooseTitle": "Choose Authentication Method",
+    "chooseSubtitle": "Select how you'd like to secure your account",
+    "continueWith": "Continue with {{method}}",
+    "smsSetupTitle": "SMS Verification Setup",
+    "smsSetupSubtitle": "Enter your phone number to receive verification codes",
+    "sendingCode": "Sending Code...",
+    "sendCode": "Send Verification Code",
+    "smsSentTo": "We've sent a verification code to",
+    "codeLabel": "Verification Code",
+    "codePlaceholder": "Enter 6-digit code",
+    "verifying": "Verifying...",
+    "verifyEnableSms": "Verify & Enable SMS 2FA",
+    "appSetupTitle": "Authenticator App Setup",
+    "appSetupSubtitle": "Set up two-factor authentication using an authenticator app",
+    "scanQr": "Scan this QR code with your authenticator app",
+    "qrAlt": "QR Code",
+    "manualKey": "Can't scan? Enter this key manually:",
+    "addedAccount": "I've Added the Account",
+    "enterAppCode": "Enter the 6-digit code from your authenticator app to verify setup",
+    "verifyEnable": "Verify & Enable 2FA",
+    "enabledTitle": "Two-Factor Authentication Enabled!",
+    "enabledMsg": "Your account is now protected with two-factor authentication",
+    "backupTitle": "Save Your Backup Codes",
+    "backupMsg": "Store these codes safely. You can use them to access your account if you lose your device.",
+    "copyAll": "Copy All Codes",
+    "title": "Two-Factor Authentication",
+    "enterFromPhone": "Enter the verification code from your phone",
+    "enterFromApp": "Enter the verification code from your authenticator app",
+    "verifyCode": "Verify Code"
+  },
+  "loginPage": {
+    "resetFailed": "Failed to send reset email. Please try again.",
+    "successTitle": "Welcome Back!",
+    "successMsg": "You have successfully signed in to your account.",
+    "redirecting": "Redirecting to dashboard...",
+    "layoutTitle": "Welcome Back",
+    "layoutSubtitle": "Sign in to access your real estate ownership portfolio and discover new opportunities"
+  },
+  "registerPage": {
+    "layoutTitle": "Join Capimax RT",
+    "layoutSubtitle": "Create your account and start owning tokenized real estate with as little as $100"
+  },
+  "newPassword": {
+    "missingToken": "Invalid or missing reset token. Please request a new password reset.",
+    "required": "New password is required",
+    "failed": "Failed to reset password. Please try again or request a new reset link.",
+    "layoutTitle": "Set New Password",
+    "layoutSubtitle": "Creating secure access to your account",
+    "validating": "Validating reset link...",
+    "invalidTitle": "Invalid Reset Link",
+    "invalidMsg": "The password reset link is invalid or has expired. Please request a new one.",
+    "requestNew": "Request New Reset Link",
+    "successLayoutTitle": "Password Updated Successfully",
+    "successLayoutSubtitle": "You can now sign in with your new password",
+    "successTitle": "Password Updated Successfully!",
+    "successMsg": "Your password has been updated. You can now sign in with your new password.",
+    "continueSignIn": "Continue to Sign In",
+    "formLayoutTitle": "Set Your New Password",
+    "formLayoutSubtitle": "Enter your new password to regain access to your account",
+    "formTitle": "Create New Password",
+    "formSubtitle": "Enter your new password below",
+    "newLabel": "New Password",
+    "newPlaceholder": "Enter new password",
+    "confirmLabel": "Confirm New Password",
+    "confirmPlaceholder": "Confirm new password",
+    "updating": "Updating Password...",
+    "update": "Update Password"
+  },
+  "passwordResetPage": {
+    "layoutTitle": "Reset Password",
+    "successLayoutTitle": "Password Reset Successful",
+    "successTitle": "Password Reset Successfully!",
+    "formLayoutTitle": "Reset Your Password",
+    "resetting": "Resetting Password...",
+    "reset": "Reset Password"
+  },
+  "emailVerify": {
+    "yourEmail": "your email",
+    "verifiedShort": "Email verified successfully!",
+    "failedMsg": "Email verification failed. Please try again.",
+    "resent": "Verification email sent successfully!",
+    "resendFailed": "Failed to resend verification email. Please try again.",
+    "verifying": "Verifying Your Email...",
+    "pleaseWait": "Please wait while we verify your email address.",
+    "sentLink": "We've sent a verification link to {{email}}. Please check your inbox and click the link to verify your account.",
+    "tipSpam": "Check your spam/junk folder if you don't see the email",
+    "tipExpire": "The verification link will expire in 24 hours",
+    "tipMust": "You must verify your email before you can sign in",
+    "resend": "Resend Verification Email",
+    "backToLogin": "Back to Login",
+    "successTitle": "Email Verified Successfully!",
+    "successMsg": "Your email has been verified. You can now sign in to your account.",
+    "redirecting": "Redirecting to login page...",
+    "continueLogin": "Continue to Login",
+    "failedTitle": "Verification Failed",
+    "invalidLink": "The verification link is invalid or has expired.",
+    "tipExpireAfter": "Verification links expire after 24 hours",
+    "tipComplete": "Make sure you clicked the complete link from your email",
+    "tipRequest": "You can request a new verification email below",
+    "sendNew": "Send New Verification Email",
+    "layoutTitle": "Email Verification",
+    "layoutSubtitle": "Verify your email address to complete your account setup"
+  },
+  "googleProfile": {
+    "failed": "Failed to complete profile. Please try again.",
+    "title": "Complete Your Profile",
+    "welcome": "Welcome, {{name}}! Please complete your profile to continue.",
+    "verified": "Verified",
+    "contact": "Contact Information",
+    "dob": "Date of Birth (Optional)",
+    "terms": "Terms & Agreements",
+    "completing": "Completing Profile...",
+    "complete": "Complete Profile & Continue"
+  },
+  "roleMgmt": {
+    "roles": {
+      "investor": {
+        "label": "Co-Owner",
+        "desc": "Own tokenized real estate properties and earn returns",
+        "f1": "Browse and buy properties",
+        "f2": "Track portfolio performance",
+        "f3": "Receive dividend payments",
+        "f4": "Access ownership analytics",
+        "f5": "Participate in property voting"
+      },
+      "owner": {
+        "label": "Property Owner",
+        "desc": "List your properties for tokenization and raise capital",
+        "f1": "List properties for tokenization",
+        "f2": "Set ownership terms",
+        "f3": "Track buyer interest",
+        "f4": "Manage property documents",
+        "f5": "Distribute dividends to co-owners"
+      },
+      "admin": {
+        "label": "Administrator",
+        "desc": "Full platform administration and management access",
+        "f1": "Manage all users and roles",
+        "f2": "Approve property listings",
+        "f3": "Monitor platform activity",
+        "f4": "Access system settings",
+        "f5": "Generate platform reports"
+      }
+    },
+    "loadFailed": "Failed to load role information",
+    "added": "Successfully added {{role}} role",
+    "addFailed": "Failed to add role",
+    "confirmRemove": "Are you sure you want to remove the {{role}} role?",
+    "removed": "Successfully removed {{role}} role",
+    "removeFailed": "Failed to remove role",
+    "primarySet": "{{role}} is now your primary role",
+    "primaryFailed": "Failed to set primary role",
+    "backToDashboard": "Back to Dashboard",
+    "title": "Role Management",
+    "currentRoles": "Your Current Roles",
+    "primary": "Primary",
+    "addedOn": "Added on {{date}}",
+    "setPrimary": "Set as Primary",
+    "addAnother": "Add Another Role",
+    "permissions": "Your Permissions",
+    "capabilitiesTitle": "Current Capabilities",
+    "capabilities": {
+      "can_invest": "Can Invest",
+      "can_list_properties": "Can List Properties",
+      "is_admin": "Is Admin",
+      "can_access_investor_dashboard": "Can Access Owner Dashboard",
+      "can_access_property_owner_dashboard": "Can Access Property Owner Dashboard",
+      "can_access_admin_panel": "Can Access Admin Panel"
+    },
+    "actionRequired": "Action Required",
+    "requirements": {
+      "email_verification_required": "Email Verification Required",
+      "kyc_verification_required": "Identity Verification Required"
+    },
+    "addRole": "Add Role",
+    "addThis": "Add This Role",
+    "aboutTitle": "About Roles",
+    "aboutBody": "Roles determine what you can do on the platform. You can have multiple roles and switch between them as needed.",
+    "primaryRoleLabel": "Primary Role:",
+    "primaryRoleText": "Your default dashboard view",
+    "multipleLabel": "Multiple Roles:",
+    "multipleText": "Access different features without separate accounts",
+    "switchingLabel": "Role Switching:",
+    "switchingText": "Change active role from dashboard anytime",
+    "helpTitle": "Need Help?",
+    "helpBody": "Contact our support team if you need assistance with role management.",
+    "contactSupport": "Contact Support"
+  },
+  "investorCta": {
+    "b1": {
+      "title": "Fractional Ownership",
+      "desc": "Start with lower capital and diversify across multiple properties"
+    },
+    "b2": {
+      "title": "SPV Protection",
+      "desc": "Your ownership is protected through independent legal structures"
+    },
+    "b3": {
+      "title": "Full Transparency",
+      "desc": "Access to all property documents, valuations, and reports"
+    },
+    "b4": {
+      "title": "Income Distribution",
+      "desc": "Receive proportional share of rental income and capital gains"
+    },
+    "b5": {
+      "title": "Global Access",
+      "desc": "Own properties worldwide from anywhere"
+    },
+    "b6": {
+      "title": "Secondary Market",
+      "desc": "Option to trade your ownership units with other owners"
+    },
+    "badge": "For Owners",
+    "titlePrefix": "Own",
+    "titleHighlight": "Premium Real Estate",
+    "subtitle": "Access institutional-grade real estate ownership with lower capital requirements and full transparency through our tokenized platform.",
+    "browse": "Browse Properties",
+    "createAccount": "Create Free Account"
+  },
+  "legalDisclaimer": {
+    "title": "About Capimax RT",
+    "important": "Important",
+    "intro": "Capimax RT - Capimax Real Estate Tokenization is a global technology platform designed to provide a digital infrastructure for structuring, presenting, and administering fractional, tokenized real estate ownership opportunities through independent legal entities such as Special Purpose Vehicles (SPVs).",
+    "roleTitle": "Platform Role",
+    "roleBody": "The platform operates strictly as a technology and operational infrastructure provider. It is not a bank, financial institution, brokerage firm, asset manager, investment adviser, fiduciary, or financial intermediary, and it does not provide investment, financial, legal, or tax advice of any kind.",
+    "infoTitle": "All opportunities, information, documentation, reports, projections, and distributions displayed on the platform:",
+    "info1": "Are provided by relevant third parties, including property owners, developers, SPVs, asset managers, valuation firms, and insurance providers;",
+    "info2": "Are presented for informational and organizational purposes only, without any representation, warranty, or assurance by Capimax RT as to their accuracy, completeness, or future performance.",
+    "noGuaranteeTitle": "Capimax RT does not guarantee:",
+    "noGuarantee1": "Any returns, income, or profits;",
+    "noGuarantee2": "Any level of liquidity or exit availability;",
+    "noGuarantee3": "The preservation of invested capital.",
+    "riskTitle": "Ownership Risk Warning",
+    "riskBody": "Investing through the platform involves material risks, including the potential loss of some or all invested capital. Users are solely responsible for:",
+    "risk1": "Conducting their own independent due diligence;",
+    "risk2": "Assessing investment suitability and risks;",
+    "risk3": "Seeking advice from appropriately licensed professional advisers before making any investment decision.",
+    "agreePrefix": "By accessing or using this platform, you acknowledge and agree to be bound by the platform's",
+    "terms": "Terms & Conditions",
+    "comma": ",",
+    "privacy": "Privacy Policy",
+    "risk": "Risk Disclosures",
+    "agreeSuffix": ", and all applicable regulatory and compliance frameworks adopted by Capimax RT.",
+    "showLess": "Show Less",
+    "readFull": "Read Full Disclaimer"
+  },
+  "lpCta": {
+    "h1": {
+      "label": "Competitive Returns",
+      "value": "Market-based yields"
+    },
+    "h2": {
+      "label": "Risk Management",
+      "value": "Diversified portfolio"
+    },
+    "h3": {
+      "label": "Flexible Terms",
+      "value": "Various commitment periods"
+    },
+    "h4": {
+      "label": "Verified Platform",
+      "value": "Regulated operations"
+    },
+    "badge": "Liquidity Program",
+    "titlePrefix": "Become a",
+    "titleHighlight": "Liquidity Provider",
+    "subtitle": "Support the platform ecosystem by providing liquidity to the secondary market. Earn competitive returns while helping owners access exit opportunities.",
+    "apply": "Apply Now",
+    "learnMore": "Learn More",
+    "benefitsTitle": "LP Program Benefits",
+    "benefitsSubtitle": "For qualified participants",
+    "benefit1": "Priority access to ownership opportunities",
+    "benefit2": "Reduced platform fees",
+    "benefit3": "Dedicated account management",
+    "benefit4": "Advanced reporting and analytics",
+    "benefit5": "Early access to new features",
+    "disclaimer": "Liquidity provider program is subject to qualification requirements and terms. Returns are not guaranteed and past performance does not indicate future results."
+  },
+  "ownerCta": {
+    "b1": "Open new funding sources through multiple co-owners",
+    "b2": "Broader marketing with trust built through documentation",
+    "b3": "Improved asset lifecycle management",
+    "b4": "Control over listing terms: minimum purchase, lock-up period, distribution policy",
+    "b5": "Enhanced liquidity through secondary market",
+    "badge": "For Property Owners",
+    "titleA": "For Property Owners",
+    "titleB": "Developers",
+    "subtitle": "Transform your real estate assets into ownership opportunities without selling full ownership.",
+    "list": "List Your Property",
+    "learnMore": "Learn More",
+    "benefitsTitle": "Benefits for Property Owners"
+  },
+  "visual": {
+    "global": {
+      "titleBefore": "Own Global",
+      "titleHighlight": "Real",
+      "titleAfter": "Estate",
+      "subtitle": "Access Premium Properties Worldwide",
+      "description": "Diversify your portfolio across international markets with institutional-grade real estate ownership.",
+      "statCountries": "Countries",
+      "statProperties": "Properties",
+      "statReturns": "Avg. Returns",
+      "cta": "View Properties"
+    },
+    "institutional": {
+      "titleBefore": "Institutional-Grade Property",
+      "titleHighlight": "Assets",
+      "titleAfter": "",
+      "subtitle": "Premium Real Estate Ownership",
+      "description": "Access the same quality ownership opportunities traditionally reserved for institutional buyers.",
+      "statMinValue": "Min. Asset Value",
+      "statVetted": "Vetted",
+      "statProtected": "Protected",
+      "cta": "Learn More"
+    }
+  },
+  "spvExplainer": {
+    "b1": {
+      "title": "Risk Isolation",
+      "desc": "Each asset is ring-fenced in its own legal entity"
+    },
+    "b2": {
+      "title": "Prevents Asset Mixing",
+      "desc": "Your ownership is separate from other projects"
+    },
+    "b3": {
+      "title": "Protects from Unrelated Debts",
+      "desc": "Limited liability protects owners"
+    },
+    "b4": {
+      "title": "Clear Governance",
+      "desc": "Defined reporting and financial accounts"
+    },
+    "b5": {
+      "title": "Exit Flexibility",
+      "desc": "Units can be transferred without affecting asset ownership"
+    },
+    "badge": "Legal Structure",
+    "titlePrefix": "What is",
+    "titleHighlight": "SPV",
+    "titleSuffix": "?",
+    "intro": "SPV (Special Purpose Vehicle) is an independent legal company created specifically to own one property or execute one real estate project.",
+    "ownTitle": "What Owners Actually Own",
+    "ownBody": "Owners hold economic or contractual rights in the SPV, documented by contract and transferable under platform rules.",
+    "learnMore": "Learn More About SPV",
+    "whyTitle": "Why Capimax RT Uses SPV"
+  },
+  "secondaryPreview": {
+    "f1": {
+      "title": "List Your Units",
+      "desc": "Put your ownership units up for sale at your desired price"
+    },
+    "f2": {
+      "title": "Purchase Units",
+      "desc": "Buy units from other owners on the marketplace"
+    },
+    "f3": {
+      "title": "Market-Driven Pricing",
+      "desc": "Prices determined by supply and demand dynamics"
+    },
+    "f4": {
+      "title": "Compliance-Verified",
+      "desc": "All transactions meet regulatory requirements"
+    },
+    "badge": "Trading Platform",
+    "titlePrefix": "Secondary",
+    "titleHighlight": "Market",
+    "subtitle": "Trade your ownership units with other verified owners through our organized secondary marketplace.",
+    "explore": "Explore Marketplace",
+    "example": "Example Listing",
+    "active": "Active",
+    "property": "Property",
+    "propertyName": "Dubai Marina Tower",
+    "unitsAvailable": "Units Available",
+    "units_one": "{{count}} unit",
+    "units_other": "{{count}} units",
+    "pricePerUnit": "Price per Unit",
+    "noticeTitle": "Important Notice",
+    "noticeBody": "Liquidity is not guaranteed. Prices may fluctuate based on supply and demand. Past performance does not indicate future results.",
+    "units_zero": "{{count}} units",
+    "units_two": "{{count}} units",
+    "units_few": "{{count}} units",
+    "units_many": "{{count}} units"
+  },
+  "tokenExplainer": {
+    "enables1": "Dividing ownership into small units",
+    "enables2": "Lowering the minimum entry threshold",
+    "enables3": "Expanding the owner base",
+    "enables4": "Improving transparency",
+    "enables5": "Facilitating organized trading",
+    "not1": "Does not guarantee profits",
+    "not2": "Does not mean instant liquidity",
+    "not3": "Does not mean direct ownership in the land registry",
+    "not4": "Does not eliminate ownership risks",
+    "badge": "Understanding Tokenization",
+    "titlePrefix": "What is",
+    "titleHighlight": "Tokenization",
+    "titleSuffix": "?",
+    "intro": "Tokenization is a modern method of converting economic rights associated with real estate into digital ownership units, enabling multiple co-owners to participate in a single asset instead of owning it entirely.",
+    "enablesTitle": "What Tokenization Enables",
+    "notTitle": "What Tokenization Does NOT Mean",
+    "learnMore": "Learn More About Tokenization"
+  },
+  "hero": {
+    "bgAlt": "Real Estate Ownership",
+    "viewBackground": "View background {{n}}",
+    "discoverMore": "Discover More"
+  },
+  "demoShowcase": {
+    "f1": {
+      "title": "8 Complete Pages",
+      "desc": "From authentication to property management"
+    },
+    "f2": {
+      "title": "95+ Components",
+      "desc": "Complete design system with interactive elements"
+    },
+    "f3": {
+      "title": "Live Features",
+      "desc": "KYC, payments, dashboards, and more"
+    },
+    "f4": {
+      "title": "Production Ready",
+      "desc": "TypeScript, accessibility, and performance optimized"
+    },
+    "badge": "Live Demo Available",
+    "title": "Explore the Complete Platform",
+    "subtitle": "Dive into our comprehensive demo showcasing all pages, components, and features built for the real estate tokenization platform. Experience the full journey from registration to ownership.",
+    "readyTitle": "Ready to Explore?",
+    "readyBody": "Access the complete demo with all features, pages, and components. See how every piece comes together in a professional, production-ready platform.",
+    "viewDemo": "View Full Demo",
+    "jumpTo": "Or jump directly to specific sections:",
+    "linkAuth": "Authentication",
+    "linkKyc": "KYC Process",
+    "linkDashboard": "Dashboard",
+    "linkWallet": "Wallet"
+  },
+  "featured": {
+    "loadFailed": "Failed to load featured properties",
+    "badge": "Premium Ownership Opportunities",
+    "title": "Featured Properties",
+    "loading": "Loading featured properties...",
+    "tryAgain": "Try Again",
+    "subtitle": "Carefully vetted premium real estate opportunities with verified returns, transparent purchase terms, and institutional-grade due diligence",
+    "categories": {
+      "all": "All",
+      "Residential": "Residential",
+      "Commercial": "Commercial",
+      "Hospitality": "Hospitality"
+    },
+    "emptyAllTitle": "New properties coming soon",
+    "emptyCategoryTitle": "No {{category}} properties yet",
+    "emptyAllBody": "Our team is finalising the next batch of tokenized properties. Check back shortly or browse the full catalogue.",
+    "emptyCategoryBody": "Try a different category, or browse the full catalogue for all live listings.",
+    "browseAll": "Browse all properties",
+    "prev": "Previous properties",
+    "next": "Next properties",
+    "featuredBadge": "FEATURED",
+    "totalValue": "Total Value",
+    "perToken": "Per Token",
+    "fundingProgress": "Funding Progress",
+    "sold": "{{n}} sold",
+    "total": "{{n}} total",
+    "owners": "Owners",
+    "returns": "Returns",
+    "built": "Built",
+    "ownNow": "Own Now",
+    "verified": "Verified & Insured Property",
+    "quarterly": "Quarterly Dividend Payments",
+    "ctaTitle": "Discover More Ownership Opportunities",
+    "ctaBody": "Access our complete portfolio of 500+ premium properties across residential, commercial, and hospitality sectors",
+    "browseAllCta": "Browse All Properties",
+    "calculator": "Purchase Calculator",
+    "invalidData": "Invalid properties data received from the server"
+  },
+  "howItWorks": {
+    "s1": {
+      "title": "Browse Properties",
+      "desc": "Explore Ready Properties generating immediate income or Under Construction projects with higher returns."
+    },
+    "s2": {
+      "title": "Buy Securely",
+      "desc": "Connect your wallet and purchase through our regulated, secure platform infrastructure."
+    },
+    "s3": {
+      "title": "Own Digital Shares",
+      "desc": "Receive blockchain tokens representing your fractional ownership in premium properties."
+    },
+    "s4": {
+      "title": "Earn Returns",
+      "desc": "Get quarterly dividends from Ready Properties or construction milestone returns from new developments."
+    },
+    "title": "How It Works",
+    "subtitle": "Four simple steps to start owning premium real estate through our secure platform",
+    "ctaTitle": "Ready to Get Started?",
+    "ctaBody": "Join thousands of owners building wealth through tokenized real estate.",
+    "ctaButton": "Start Owning"
+  },
+  "testimonials": {
+    "t1": {
+      "name": "Michael Chen",
+      "title": "Portfolio Manager",
+      "company": "Blackstone Group",
+      "quote": "The platform's institutional-grade infrastructure and transparent process gave us confidence to deploy significant capital. Returns exceeded expectations."
+    },
+    "t2": {
+      "name": "Sarah Williams",
+      "title": "Investment Director",
+      "company": "Family Office",
+      "quote": "Sophisticated approach to real estate tokenization with thorough due diligence and regulatory compliance that gives us peace of mind."
+    },
+    "t3": {
+      "name": "David Rodriguez",
+      "title": "Fund Manager",
+      "company": "Sovereign Wealth",
+      "quote": "Delivers the highest standards of security and compliance while providing access to premium opportunities through traditional channels."
+    },
+    "title": "Trusted by Professionals",
+    "subtitle": "See what real estate professionals say about our platform",
+    "quoteWrap": "\"{{quote}}\""
+  },
+  "whyChooseUs": {
+    "f1": {
+      "title": "Secure & Regulated",
+      "desc": "Bank-grade security with full regulatory compliance and owner protection."
+    },
+    "f2": {
+      "title": "Premium Properties",
+      "desc": "Carefully vetted institutional-grade real estate opportunities."
+    },
+    "f3": {
+      "title": "Proven Returns",
+      "desc": "Consistent performance with transparent reporting and analytics."
+    },
+    "f4": {
+      "title": "Global Access",
+      "desc": "Own premium properties across major markets worldwide."
+    },
+    "f5": {
+      "title": "Expert Team",
+      "desc": "Backed by experienced real estate and blockchain professionals."
+    },
+    "f6": {
+      "title": "Low Minimums",
+      "desc": "Start owning with lower capital requirements than traditional real estate."
+    },
+    "title": "Why Choose Our Platform",
+    "subtitle": "Built for owners who demand security, transparency, and professional expertise"
+  },
+  "trustedPartners": {
+    "title": "Trusted Partners"
+  },
+  "navbar": {
+    "about": "About",
+    "whyCapimax": "Why Capimax RT",
+    "properties": "Properties",
+    "secondaryMarket": "Secondary Market",
+    "structure": "Structure",
+    "documentCenter": "Document Center",
+    "support": "Support",
+    "home": "Home",
+    "myPortfolio": "My Portfolio",
+    "submitProperty": "Submit Property",
+    "dashboard": "Dashboard",
+    "logoutFailedTitle": "Logout Failed",
+    "logoutFailedMsg": "Unable to log out. Please try again.",
+    "myProperties": "My Properties",
+    "myReferrals": "My Referrals",
+    "goHome": "Go to home page",
+    "user": "User",
+    "logout": "Logout",
+    "signIn": "Sign In",
+    "getStarted": "Get Started",
+    "toggleMenu": "Toggle mobile menu"
+  },
+  "connection": {
+    "offline": "Offline",
+    "excellent": "Excellent",
+    "good": "Good",
+    "fair": "Fair",
+    "poor": "Poor",
+    "requiresInternet": "This action requires an internet connection"
+  },
+  "propertiesPage": {
+    "loadFailed": "Failed to load properties",
+    "title": "Property Marketplace",
+    "subtitle": "Discover premium real estate ownership opportunities with verified returns and transparent tokenization",
+    "statProperties": "Properties",
+    "searchPlaceholder": "Search properties by name, location, or type...",
+    "status": {
+      "all": "All",
+      "funding": "Funding",
+      "funded": "Funded",
+      "upcoming": "Upcoming",
+      "approved": "Approved"
+    },
+    "filters": "Filters",
+    "sort": {
+      "featured": "Featured First",
+      "priceLow": "Price: Low to High",
+      "priceHigh": "Price: High to Low",
+      "returnHigh": "Returns: High to Low",
+      "returnLow": "Returns: Low to High",
+      "newest": "Newest First",
+      "oldest": "Oldest First"
+    },
+    "viewGrid": "Grid view",
+    "viewList": "List view",
+    "viewMap": "Map view",
+    "advancedFilters": "Advanced Filters",
+    "priceRange": "Price Range",
+    "minReturn": "Minimum Return",
+    "any": "Any",
+    "yearBuilt": "Year Built",
+    "loading": "Loading properties...",
+    "failedTitle": "Failed to Load Properties",
+    "found_one": "{{count}} Property Found",
+    "found_other": "{{count}} Properties Found",
+    "showingFor": "Showing results for \"{{query}}\"",
+    "allProperties": "all properties",
+    "tokenPrice": "Token Price",
+    "expectedReturn": "Expected Return",
+    "funded": "{{pct}}% funded",
+    "viewDetails": "View Details",
+    "own": "Own",
+    "mapSoonTitle": "Map View Coming Soon",
+    "mapSoonBody": "Interactive map functionality will be available in the next update",
+    "noneTitle": "No Properties Found",
+    "noneBody": "Try adjusting your filters or search terms to find more properties",
+    "clearFilters": "Clear All Filters",
+    "found_zero": "{{count}} Properties Found",
+    "found_two": "{{count}} Properties Found",
+    "found_few": "{{count}} Properties Found",
+    "found_many": "{{count}} Properties Found"
+  },
+  "propertyDetail": {
+    "loadFailed": "Failed to load property",
+    "loadDataFailed": "Failed to load property data",
+    "noneTitle": "No Property Selected",
+    "noneBody": "Please select a property from the properties page to view its details.",
+    "loading": "Loading property details...",
+    "notFoundTitle": "Property Not Found",
+    "notFoundBody": "The requested property could not be found.",
+    "goBack": "Go Back",
+    "inProgress": "In Progress",
+    "developer": "Property Developer",
+    "unknown": "Unknown",
+    "contactViaPlatform": "Contact via platform",
+    "projectManager": "Project Manager",
+    "backToProperties": "Back to Properties",
+    "saved": "Saved",
+    "save": "Save",
+    "share": "Share"
+  }
+}

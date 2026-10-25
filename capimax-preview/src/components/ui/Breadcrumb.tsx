@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ChevronRight, Home } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useRouter } from '../../utils/router';
 
 // Breadcrumb item interface
@@ -96,7 +97,7 @@ const Separator: React.FC = () => (
     transition={{ duration: 0.2 }}
     className="flex-shrink-0"
   >
-    <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+    <ChevronRight className="w-4 h-4 text-slate-400 dark:text-slate-500 rtl:rotate-180" />
   </motion.div>
 );
 
@@ -108,6 +109,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
   maxItems = 5
 }) => {
   const { navigate } = useRouter();
+  const { t } = useTranslation('shared');
 
   const handleNavigate = (item: BreadcrumbItem) => {
     if (item.route) {
@@ -158,14 +160,14 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
 
   return (
     <nav
-      aria-label="Breadcrumb"
-      className={`flex items-center space-x-2 ${className}`}
+      aria-label={t('breadcrumb.ariaLabel')}
+      className={`flex items-center gap-2 ${className}`}
     >
       <motion.ol
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex items-center space-x-2 flex-wrap"
+        className="flex items-center gap-2 flex-wrap"
       >
         {itemsWithHomeIcon.map((item, index) => {
           const isLast = index === itemsWithHomeIcon.length - 1;
@@ -212,56 +214,57 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
 // Hook to generate breadcrumbs based on current route
 export const useBreadcrumbs = () => {
   const { currentRoute } = useRouter();
+  const { t } = useTranslation('shared');
 
   const getBreadcrumbsForRoute = (route: string, additionalItems: BreadcrumbItem[] = []): BreadcrumbItem[] => {
     const baseBreadcrumbs: Record<string, BreadcrumbItem[]> = {
       home: [
-        { label: 'Home', route: 'home', isActive: true }
+        { label: t('breadcrumb.home'), route: 'home', isActive: true }
       ],
       login: [
-        { label: 'Home', route: 'home' },
-        { label: 'Sign In', route: 'login', isActive: true }
+        { label: t('breadcrumb.home'), route: 'home' },
+        { label: t('breadcrumb.signIn'), route: 'login', isActive: true }
       ],
       register: [
-        { label: 'Home', route: 'home' },
-        { label: 'Create Account', route: 'register', isActive: true }
+        { label: t('breadcrumb.home'), route: 'home' },
+        { label: t('breadcrumb.createAccount'), route: 'register', isActive: true }
       ],
       kyc: [
-        { label: 'Home', route: 'home' },
-        { label: 'Dashboard', route: 'dashboard' },
-        { label: 'KYC Verification', route: 'kyc', isActive: true }
+        { label: t('breadcrumb.home'), route: 'home' },
+        { label: t('breadcrumb.dashboard'), route: 'dashboard' },
+        { label: t('breadcrumb.kyc'), route: 'kyc', isActive: true }
       ],
       dashboard: [
-        { label: 'Home', route: 'home' },
-        { label: 'Dashboard', route: 'dashboard', isActive: true }
+        { label: t('breadcrumb.home'), route: 'home' },
+        { label: t('breadcrumb.dashboard'), route: 'dashboard', isActive: true }
       ],
       properties: [
-        { label: 'Home', route: 'home' },
-        { label: 'Properties', route: 'properties', isActive: true }
+        { label: t('breadcrumb.home'), route: 'home' },
+        { label: t('breadcrumb.properties'), route: 'properties', isActive: true }
       ],
       'property-detail': [
-        { label: 'Home', route: 'home' },
-        { label: 'Properties', route: 'properties' },
-        { label: 'Property Details', route: 'property-detail', isActive: true }
+        { label: t('breadcrumb.home'), route: 'home' },
+        { label: t('breadcrumb.properties'), route: 'properties' },
+        { label: t('breadcrumb.propertyDetails'), route: 'property-detail', isActive: true }
       ],
       wallet: [
-        { label: 'Home', route: 'home' },
-        { label: 'Dashboard', route: 'dashboard' },
-        { label: 'Wallet', route: 'wallet', isActive: true }
+        { label: t('breadcrumb.home'), route: 'home' },
+        { label: t('breadcrumb.dashboard'), route: 'dashboard' },
+        { label: t('breadcrumb.wallet'), route: 'wallet', isActive: true }
       ],
       about: [
-        { label: 'Home', route: 'home' },
-        { label: 'About', route: 'about', isActive: true }
+        { label: t('breadcrumb.home'), route: 'home' },
+        { label: t('breadcrumb.about'), route: 'about', isActive: true }
       ],
       contact: [
-        { label: 'Home', route: 'home' },
-        { label: 'Contact', route: 'contact', isActive: true }
+        { label: t('breadcrumb.home'), route: 'home' },
+        { label: t('breadcrumb.contact'), route: 'contact', isActive: true }
       ]
     };
 
     const baseCrumbs = baseBreadcrumbs[route] || [
-      { label: 'Home', route: 'home' },
-      { label: 'Page', isActive: true }
+      { label: t('breadcrumb.home'), route: 'home' },
+      { label: t('breadcrumb.page'), isActive: true }
     ];
 
     // Insert additional items before the last (active) item

@@ -31,6 +31,7 @@ import { cn } from '../../utils/cn';
 import { marketplaceService, type SecondaryMarketListing } from '../../services/marketplace/MarketplaceService';
 import { useAuth } from '../../contexts/AuthContext';
 import { PROPERTY_PLACEHOLDER, handleImageFallback } from '../../utils/imageFallback';
+import { useTranslation } from 'react-i18next';
 
 interface ManageListingsPageProps {
   className?: string;
@@ -40,6 +41,7 @@ export const ManageListingsPage: React.FC<ManageListingsPageProps> = ({
   className
 }) => {
   const { user } = useAuth();
+  const { t } = useTranslation('market');
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -84,7 +86,7 @@ export const ManageListingsPage: React.FC<ManageListingsPageProps> = ({
   }, [listings, searchQuery]);
 
   const handleCancelListing = async (listingId: string) => {
-    if (confirm('Are you sure you want to cancel this listing?')) {
+    if (confirm(t('manage.confirmCancel'))) {
       try {
         await cancelListingMutation.mutateAsync(listingId);
       } catch (error) {
@@ -99,12 +101,12 @@ export const ManageListingsPage: React.FC<ManageListingsPageProps> = ({
   };
 
   const statusFilters = [
-    { id: 'all', label: 'All Listings', count: totalCount },
-    { id: 'active', label: 'Active', count: listings.filter(l => l.status === 'active').length },
-    { id: 'partially_filled', label: 'Partially Filled', count: listings.filter(l => l.status === 'partially_filled').length },
-    { id: 'completed', label: 'Completed', count: listings.filter(l => l.status === 'completed').length },
-    { id: 'cancelled', label: 'Cancelled', count: listings.filter(l => l.status === 'cancelled').length },
-    { id: 'expired', label: 'Expired', count: listings.filter(l => l.status === 'expired').length }
+    { id: 'all', label: t('smd.tabAll'), count: totalCount },
+    { id: 'active', label: t('status.active'), count: listings.filter(l => l.status === 'active').length },
+    { id: 'partially_filled', label: t('status.partially_filled'), count: listings.filter(l => l.status === 'partially_filled').length },
+    { id: 'completed', label: t('status.completed'), count: listings.filter(l => l.status === 'completed').length },
+    { id: 'cancelled', label: t('status.cancelled'), count: listings.filter(l => l.status === 'cancelled').length },
+    { id: 'expired', label: t('status.expired'), count: listings.filter(l => l.status === 'expired').length }
   ];
 
   const getStatusColor = (status: string) => {
@@ -125,10 +127,10 @@ export const ManageListingsPage: React.FC<ManageListingsPageProps> = ({
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Manage Listings
+              {t('manage.title')}
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              View and manage your active marketplace listings
+              {t('manage.subtitle')}
             </p>
           </div>
           <Button
@@ -137,7 +139,7 @@ export const ManageListingsPage: React.FC<ManageListingsPageProps> = ({
             className="flex items-center gap-2"
           >
             <RefreshCw className="w-4 h-4" />
-            Refresh
+            {t('common.refresh')}
           </Button>
         </div>
 
@@ -146,20 +148,20 @@ export const ManageListingsPage: React.FC<ManageListingsPageProps> = ({
           {/* Search Bar */}
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
                 type="text"
-                placeholder="Search by property name or location..."
+                placeholder={t('manage.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="ps-10"
               />
             </div>
           </div>
         </div>
 
         {/* Status Filter Tabs */}
-        <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mb-6 overflow-x-auto">
+        <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mb-6 overflow-x-auto">
           {statusFilters.map((filter) => (
             <button
               key={filter.id}
@@ -199,9 +201,9 @@ export const ManageListingsPage: React.FC<ManageListingsPageProps> = ({
       {error && (
         <div className="text-center py-12">
           <div className="text-red-600 dark:text-red-400 mb-4">
-            Failed to load your listings
+            {t('manage.loadError')}
           </div>
-          <Button onClick={() => refetch()}>Try Again</Button>
+          <Button onClick={() => refetch()}>{t('smd.tryAgain')}</Button>
         </div>
       )}
 
@@ -210,11 +212,11 @@ export const ManageListingsPage: React.FC<ManageListingsPageProps> = ({
         <div className="text-center py-12">
           <Activity className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <div className="text-gray-500 dark:text-gray-400 mb-4">
-            {totalCount === 0 ? "You haven't created any listings yet" : "No listings found matching your criteria"}
+            {totalCount === 0 ? t('manage.noListingsYet') : t('smd.noResults')}
           </div>
           {totalCount === 0 && (
             <Button onClick={() => window.location.href = '/marketplace'}>
-              Create Your First Listing
+              {t('manage.createFirst')}
             </Button>
           )}
         </div>
@@ -245,17 +247,17 @@ export const ManageListingsPage: React.FC<ManageListingsPageProps> = ({
                 disabled={currentPage <= 1}
                 onClick={() => setCurrentPage(prev => prev - 1)}
               >
-                Previous
+                {t('smd.previous')}
               </Button>
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                Page {currentPage} of {totalPages}
+                {t('smd.pageOf', { page: currentPage, total: totalPages })}
               </span>
               <Button
                 variant="outline"
                 disabled={currentPage >= totalPages}
                 onClick={() => setCurrentPage(prev => prev + 1)}
               >
-                Next
+                {t('smd.next')}
               </Button>
             </div>
           )}
@@ -279,6 +281,8 @@ const ListingRow: React.FC<ListingRowProps> = ({
   onExtend,
   isLoading
 }) => {
+  const { t, i18n } = useTranslation('market');
+  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
   const fillPercentage = ((listing.tokens_offered - listing.tokens_remaining) / listing.tokens_offered) * 100;
   const expiresAt = new Date(listing.expires_at);
   const isExpiringSoon = (expiresAt.getTime() - Date.now()) < 24 * 60 * 60 * 1000; // 24 hours
@@ -320,17 +324,17 @@ const ListingRow: React.FC<ListingRowProps> = ({
                   {listing.property_listing.title}
                 </h3>
                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  <MapPin className="w-4 h-4 mr-1" />
+                  <MapPin className="w-4 h-4 me-1" />
                   {listing.property_listing.city}
                 </div>
               </div>
               <div className="flex gap-2">
                 <Badge className={cn("text-xs font-medium px-2 py-1", getStatusColor(listing.status))}>
-                  {listing.status.replace('_', ' ')}
+                  {t(`status.${listing.status}`, { defaultValue: listing.status.replace('_', ' ') })}
                 </Badge>
                 {isExpiringSoon && listing.status === 'active' && (
                   <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 text-xs">
-                    Expires Soon
+                    {t('smd.expiresSoon')}
                   </Badge>
                 )}
               </div>
@@ -339,9 +343,9 @@ const ListingRow: React.FC<ListingRowProps> = ({
             {/* Progress Bar */}
             <div className="mb-3">
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-600 dark:text-gray-400">Progress</span>
+                <span className="text-gray-600 dark:text-gray-400">{t('manage.progress')}</span>
                 <span className="font-medium text-gray-900 dark:text-white">
-                  {(listing.tokens_offered - listing.tokens_remaining).toLocaleString()} / {listing.tokens_offered.toLocaleString()} tokens
+                  {t('manage.soldOfTotal', { sold: (listing.tokens_offered - listing.tokens_remaining).toLocaleString(), total: listing.tokens_offered.toLocaleString() })}
                 </span>
               </div>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
@@ -351,7 +355,7 @@ const ListingRow: React.FC<ListingRowProps> = ({
                 />
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {fillPercentage.toFixed(1)}% filled
+                {t('manage.filledPct', { value: fillPercentage.toFixed(1) })}
               </div>
             </div>
           </div>
@@ -362,27 +366,27 @@ const ListingRow: React.FC<ListingRowProps> = ({
           {/* Pricing Info */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
             <div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Price/Token</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{t('manage.pricePerToken')}</span>
               <div className="font-bold text-lg text-gray-900 dark:text-white">
                 ${parseFloat(listing.price_per_token).toFixed(2)}
               </div>
             </div>
             <div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Total Value</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{t('smd.totalValue')}</span>
               <div className="font-semibold text-gray-900 dark:text-white">
                 ${parseFloat(listing.total_price).toLocaleString()}
               </div>
             </div>
             <div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Min. Order</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{t('smd.minOrder')}</span>
               <div className="font-semibold text-gray-900 dark:text-white">
-                {listing.minimum_order_size} tokens
+                {t('smd.nTokens', { value: listing.minimum_order_size })}
               </div>
             </div>
             <div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Expires</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{t('manage.expires')}</span>
               <div className="font-semibold text-gray-900 dark:text-white text-sm">
-                {expiresAt.toLocaleDateString()}
+                {expiresAt.toLocaleDateString(dateLocale)}
               </div>
             </div>
           </div>
@@ -395,7 +399,7 @@ const ListingRow: React.FC<ListingRowProps> = ({
               className="flex items-center gap-1"
             >
               <Eye className="w-4 h-4" />
-              View
+              {t('manage.view')}
             </Button>
             {canExtend && (
               <Button
@@ -405,7 +409,7 @@ const ListingRow: React.FC<ListingRowProps> = ({
                 className="flex items-center gap-1"
               >
                 <Calendar className="w-4 h-4" />
-                Extend
+                {t('manage.extend')}
               </Button>
             )}
             {canCancel && (
@@ -417,7 +421,7 @@ const ListingRow: React.FC<ListingRowProps> = ({
                 className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:border-red-300"
               >
                 <X className="w-4 h-4" />
-                Cancel
+                {t('common.cancel')}
               </Button>
             )}
           </div>
@@ -429,19 +433,19 @@ const ListingRow: React.FC<ListingRowProps> = ({
         <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
           <div className="flex items-center gap-4">
             <div className="flex items-center">
-              <Clock className="w-4 h-4 mr-1" />
-              Created {new Date(listing.created_at).toLocaleDateString()}
+              <Clock className="w-4 h-4 me-1" />
+              {t('manage.created', { date: new Date(listing.created_at).toLocaleDateString(dateLocale) })}
             </div>
             {listing.accepts_partial_fills && (
               <div className="flex items-center">
-                <CheckCircle className="w-4 h-4 mr-1 text-green-500" />
-                Partial fills allowed
+                <CheckCircle className="w-4 h-4 me-1 text-green-500" />
+                {t('manage.partialAllowed')}
               </div>
             )}
           </div>
           {listing.notes && (
             <div className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-              Note: {listing.notes.substring(0, 50)}{listing.notes.length > 50 ? '...' : ''}
+              {t('manage.note')} {listing.notes.substring(0, 50)}{listing.notes.length > 50 ? '...' : ''}
             </div>
           )}
         </div>

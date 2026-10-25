@@ -63,6 +63,7 @@ export const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
   onRoleSwitch
 }) => {
   const { t } = useTranslation('partners');
+  const { t: td } = useTranslation('dashboard');
   const user = useUser();
   const { navigate } = useRouter();
   const { error: showError } = useNotifications();
@@ -106,7 +107,7 @@ export const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
       // Notify parent component - this will handle state sync
       onRoleSwitch?.(newRole);
     } catch (error: any) {
-      showError('Role Switch Failed', error.message || 'Unable to switch role. Please try again.');
+      showError(td('roleSwitcher.switchFailed'), error.message || td('roleSwitcher.switchFailedMsg'));
     } finally {
       setIsLoading(false);
     }
@@ -144,12 +145,12 @@ export const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
           )} />
         </div>
 
-        <div className="flex-1 text-left">
+        <div className="flex-1 text-start">
           <div className="text-sm font-medium text-slate-900 dark:text-white">
             {primaryRole ? t(`roles.${primaryRole}`, { defaultValue: currentRoleInfo?.label }) : ''}
           </div>
           <div className="text-xs text-slate-500 dark:text-slate-400">
-            Current Role
+            {td('roleSwitcher.currentRole')}
           </div>
         </div>
 
@@ -187,7 +188,7 @@ export const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
             >
               <div className="p-2">
                 <div className="text-xs font-medium text-slate-500 dark:text-slate-400 px-3 py-2">
-                  SWITCH TO
+                  {td('roleSwitcher.switchTo')}
                 </div>
 
                 {availableRoles.map(role => {
@@ -225,7 +226,7 @@ export const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
                         )} />
                       </div>
 
-                      <div className="flex-1 text-left">
+                      <div className="flex-1 text-start">
                         <div className="text-sm font-medium">
                           {t(`roles.${role}`, { defaultValue: roleInfo.label })}
                         </div>
@@ -248,13 +249,13 @@ export const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
                       navigate('role-management');
                     }}
                     className={cn(
-                      'block w-full text-left px-3 py-2 rounded-lg',
+                      'block w-full text-start px-3 py-2 rounded-lg',
                       'text-sm text-slate-600 dark:text-slate-400',
                       'hover:bg-slate-50 dark:hover:bg-slate-700/50',
                       'transition-colors duration-200'
                     )}
                   >
-                    Manage Roles
+                    {td('roleSwitcher.manageRoles')}
                   </button>
                 </div>
               </div>

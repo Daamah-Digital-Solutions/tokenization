@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/Button';
 import { Input } from '../design-system/forms/Input';
+import { useTranslation } from 'react-i18next';
 
 export interface TokenReservation {
   id: string;
@@ -42,6 +43,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
   onModifyReservation,
   className = ''
 }) => {
+  const { t, i18n } = useTranslation('invest');
   const [selectedReservation, setSelectedReservation] = useState<string | null>(null);
   const [activationAmount, setActivationAmount] = useState<number>(0);
   const [extensionDays, setExtensionDays] = useState<number>(30);
@@ -49,7 +51,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
   const [actionType, setActionType] = useState<'activate' | 'extend' | 'modify' | null>(null);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
@@ -122,11 +124,11 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
       <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100">
-            Token Reservation Manager
+            {t('reserved.title')}
           </h2>
           {nearExpiration > 0 && (
             <div className="px-3 py-1 bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 text-sm font-medium rounded-full">
-              {nearExpiration} expiring soon
+              {t('reserved.expiringSoon', { value: nearExpiration })}
             </div>
           )}
         </div>
@@ -137,7 +139,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
               {activeReservations.length}
             </div>
             <div className="text-sm text-neutral-500 dark:text-slate-400">
-              Active Reservations
+              {t('reserved.activeReservations')}
             </div>
           </div>
           <div className="text-center p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg">
@@ -145,7 +147,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
               ${totalReservedValue.toLocaleString()}
             </div>
             <div className="text-sm text-neutral-500 dark:text-slate-400">
-              Reserved Value
+              {t('reserved.reservedValue')}
             </div>
           </div>
           <div className="text-center p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg">
@@ -153,7 +155,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
               ${totalActivatedValue.toLocaleString()}
             </div>
             <div className="text-sm text-neutral-500 dark:text-slate-400">
-              Activated Value
+              {t('reserved.activatedValue')}
             </div>
           </div>
           <div className="text-center p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg">
@@ -161,7 +163,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
               {reservations.filter(r => canActivate(r)).length}
             </div>
             <div className="text-sm text-neutral-500 dark:text-slate-400">
-              Ready to Activate
+              {t('reserved.readyToActivate')}
             </div>
           </div>
         </div>
@@ -173,10 +175,10 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
           <div className="text-center py-8">
             <span className="text-4xl mb-4 block">📋</span>
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-2">
-              No Token Reservations
+              {t('reserved.emptyTitle')}
             </h3>
             <p className="text-neutral-600 dark:text-slate-400">
-              You don't have any token reservations yet
+              {t('reserved.emptyBody')}
             </p>
           </div>
         ) : (
@@ -199,16 +201,16 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
                           {reservation.propertyName}
                         </h3>
                         <p className="text-sm text-neutral-600 dark:text-slate-400">
-                          {reservation.tokensReserved.toLocaleString()} tokens @ ${reservation.tokenPrice.toLocaleString()}
+                          {t('reserved.sharesAt', { value: reservation.tokensReserved.toLocaleString(), price: `$${reservation.tokenPrice.toLocaleString()}` })}
                         </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-end">
                         <div className={`text-sm font-medium ${getStatusColor(reservation.status)}`}>
-                          {reservation.status.toUpperCase()}
+                          {t(`reserved.status.${reservation.status}`, { defaultValue: reservation.status.toUpperCase() })}
                         </div>
                         {reservation.status === 'active' && (
                           <div className="text-xs text-neutral-500 dark:text-slate-400">
-                            {daysRemaining >= 0 ? `${daysRemaining} days left` : 'Expired'}
+                            {daysRemaining >= 0 ? t('reserved.daysLeft', { value: daysRemaining }) : t('reserved.status.expired')}
                           </div>
                         )}
                       </div>
@@ -218,10 +220,10 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
                     <div className="mb-3">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-medium text-neutral-700 dark:text-slate-300">
-                          Payment Progress
+                          {t('reserved.paymentProgress')}
                         </span>
                         <span className="text-sm text-neutral-600 dark:text-slate-400">
-                          {reservation.paymentsPaid}/{reservation.totalPayments} payments
+                          {t('reserved.paymentsCount', { paid: reservation.paymentsPaid, total: reservation.totalPayments })}
                         </span>
                       </div>
                       <div className="w-full bg-neutral-200 dark:bg-slate-700 rounded-full h-2">
@@ -231,10 +233,10 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
                         ></div>
                       </div>
                       <div className="flex justify-between mt-1 text-xs text-neutral-500 dark:text-slate-400">
-                        <span>{Math.round(progress)}% complete</span>
+                        <span>{t('reserved.percentComplete', { value: Math.round(progress) })}</span>
                         <span>
                           {reservation.tokensActivated > 0 && 
-                            `${reservation.tokensActivated.toLocaleString()} tokens activated`
+                            t('reserved.sharesActivated', { value: reservation.tokensActivated.toLocaleString() })
                           }
                         </span>
                       </div>
@@ -243,25 +245,25 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
                     {/* Token Status */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3 text-sm">
                       <div>
-                        <span className="text-neutral-500 dark:text-slate-400">Reserved</span>
+                        <span className="text-neutral-500 dark:text-slate-400">{t('reserved.reserved')}</span>
                         <div className="font-medium text-neutral-900 dark:text-slate-100">
                           {reservation.tokensReserved.toLocaleString()}
                         </div>
                       </div>
                       <div>
-                        <span className="text-neutral-500 dark:text-slate-400">Activated</span>
+                        <span className="text-neutral-500 dark:text-slate-400">{t('reserved.activated')}</span>
                         <div className="font-medium text-green-600 dark:text-green-400">
                           {reservation.tokensActivated.toLocaleString()}
                         </div>
                       </div>
                       <div>
-                        <span className="text-neutral-500 dark:text-slate-400">Available</span>
+                        <span className="text-neutral-500 dark:text-slate-400">{t('reserved.available')}</span>
                         <div className="font-medium text-blue-600 dark:text-blue-400">
                           {maxActivatable.toLocaleString()}
                         </div>
                       </div>
                       <div>
-                        <span className="text-neutral-500 dark:text-slate-400">Remaining Balance</span>
+                        <span className="text-neutral-500 dark:text-slate-400">{t('reserved.remainingBalance')}</span>
                         <div className="font-medium text-neutral-900 dark:text-slate-100">
                           ${reservation.remainingBalance.toLocaleString()}
                         </div>
@@ -272,14 +274,15 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
                     <div className="flex items-center justify-between mb-3 p-2 bg-neutral-50 dark:bg-slate-700 rounded">
                       <div>
                         <span className="text-sm font-medium text-neutral-900 dark:text-slate-100">
-                          Auto Activation
+                          {t('reserved.autoActivation')}
                         </span>
                         <p className="text-xs text-neutral-500 dark:text-slate-400">
-                          Automatically activate tokens when {reservation.activationThreshold}% payments are made
+                          {t('reserved.autoActivationHint', { value: reservation.activationThreshold })}
                         </p>
                       </div>
                       <button
                         onClick={() => onToggleAutoActivation(reservation.id, !reservation.autoActivation)}
+                        aria-label={t('reserved.autoActivation')}
                         className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
                           reservation.autoActivation 
                             ? 'bg-primary-600' 
@@ -288,7 +291,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
                       >
                         <span
                           className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                            reservation.autoActivation ? 'translate-x-5' : 'translate-x-1'
+                            reservation.autoActivation ? 'translate-x-5 rtl:-translate-x-5' : 'translate-x-1 rtl:-translate-x-1'
                           }`}
                         />
                       </button>
@@ -297,10 +300,10 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
                     {/* Alerts */}
                     {isNearExpiration && (
                       <div className="mb-3 p-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded">
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-2">
                           <span className="text-orange-600 dark:text-orange-400">⚠️</span>
                           <span className="text-sm text-orange-800 dark:text-orange-300">
-                            Reservation expires in {daysRemaining} day{daysRemaining !== 1 ? 's' : ''}
+                            {t('reserved.expiresIn', { value: daysRemaining })}
                           </span>
                         </div>
                       </div>
@@ -310,7 +313,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
                       <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded">
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-blue-800 dark:text-blue-300">
-                            Next payment due: {formatDate(reservation.nextPaymentDue)}
+                            {t('reserved.nextPaymentDue', { date: formatDate(reservation.nextPaymentDue) })}
                           </span>
                           {reservation.nextPaymentAmount && (
                             <span className="text-sm font-medium text-blue-800 dark:text-blue-300">
@@ -322,7 +325,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
                     )}
 
                     {/* Action Buttons */}
-                    <div className="flex items-center space-x-2 flex-wrap gap-2">
+                    <div className="flex items-center flex-wrap gap-2">
                       {canActivate(reservation) && maxActivatable > 0 && (
                         <Button
                           size="sm"
@@ -333,7 +336,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
                             setActivationAmount(maxActivatable);
                           }}
                         >
-                          Activate {maxActivatable.toLocaleString()} Tokens
+                          {t('reserved.activateN', { value: maxActivatable.toLocaleString() })}
                         </Button>
                       )}
 
@@ -343,7 +346,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
                           variant="outline"
                           onClick={() => onMakePayment(reservation.id)}
                         >
-                          Make Payment
+                          {t('reserved.makePayment')}
                         </Button>
                       )}
 
@@ -356,7 +359,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
                             setActionType('extend');
                           }}
                         >
-                          Extend Reservation
+                          {t('reserved.extend')}
                         </Button>
                       )}
 
@@ -370,7 +373,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
                             setModifyTokens(reservation.tokensReserved);
                           }}
                         >
-                          Modify
+                          {t('reserved.modify')}
                         </Button>
                       )}
 
@@ -380,7 +383,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
                           variant="danger"
                           onClick={() => onCancelReservation(reservation.id)}
                         >
-                          Cancel
+                          {t('common.cancel')}
                         </Button>
                       )}
                     </div>
@@ -397,16 +400,16 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-slate-800 rounded-xl p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">
-              {actionType === 'activate' && 'Activate Tokens'}
-              {actionType === 'extend' && 'Extend Reservation'}
-              {actionType === 'modify' && 'Modify Reservation'}
+              {actionType === 'activate' && t('reserved.modal.activate')}
+              {actionType === 'extend' && t('reserved.extend')}
+              {actionType === 'modify' && t('reserved.modal.modify')}
             </h3>
 
             {actionType === 'activate' && (
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-                    Tokens to Activate
+                    {t('reserved.modal.toActivate')}
                   </label>
                   <Input
                     type="number"
@@ -416,7 +419,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
                     min={1}
                   />
                   <p className="text-xs text-neutral-500 dark:text-slate-400 mt-1">
-                    Maximum available: {getMaxActivatableTokens(reservations.find(r => r.id === selectedReservation)!).toLocaleString()}
+                    {t('reserved.modal.maxAvailable', { value: getMaxActivatableTokens(reservations.find(r => r.id === selectedReservation)!).toLocaleString() })}
                   </p>
                 </div>
               </div>
@@ -426,7 +429,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-                    Extension Period (Days)
+                    {t('reserved.modal.extensionDays')}
                   </label>
                   <Input
                     type="number"
@@ -436,7 +439,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
                     max={90}
                   />
                   <p className="text-xs text-neutral-500 dark:text-slate-400 mt-1">
-                    Extension fee may apply
+                    {t('reserved.modal.extensionFee')}
                   </p>
                 </div>
               </div>
@@ -446,7 +449,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-                    New Token Amount
+                    {t('reserved.modal.newAmount')}
                   </label>
                   <Input
                     type="number"
@@ -455,13 +458,13 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
                     min={1}
                   />
                   <p className="text-xs text-neutral-500 dark:text-slate-400 mt-1">
-                    Additional payment may be required for increases
+                    {t('reserved.modal.additionalPayment')}
                   </p>
                 </div>
               </div>
             )}
 
-            <div className="flex items-center space-x-3 mt-6">
+            <div className="flex items-center gap-3 mt-6">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -470,14 +473,14 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
                 }}
                 className="flex-1"
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 variant="primary"
                 onClick={handleActionSubmit}
                 className="flex-1"
               >
-                Confirm
+                {t('reserved.modal.confirm')}
               </Button>
             </div>
           </div>

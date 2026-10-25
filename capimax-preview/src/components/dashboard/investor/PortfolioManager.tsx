@@ -40,6 +40,7 @@ import { BlockchainLink } from '../../ui/BlockchainLink';
 import { cn } from '../../../utils/cn';
 import { useUser } from '../../../contexts/AuthContext';
 import { downloadOwnershipCertificatePdf } from '../../../utils/ownershipCertificatePdf';
+import { useTranslation } from 'react-i18next';
 
 interface PortfolioManagerProps {
   portfolio: Portfolio | undefined;
@@ -119,6 +120,8 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
   loading,
   className
 }) => {
+  const { t, i18n } = useTranslation('dashboard');
+  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<SortField>('value');
@@ -134,7 +137,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
     authUser?.name ||
     [authUser?.first_name, authUser?.last_name].filter(Boolean).join(' ') ||
     authUser?.email ||
-    'Investor';
+    t('docsPanel.holderFallback');
 
   const handleDownloadCertificate = async (cert: Certificate) => {
     setDownloadingCert(cert.id);
@@ -173,9 +176,9 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
       // Use real property data if available, otherwise create placeholder
       const propertyData = investment.property_id ? {
         id: investment.property_id,
-        title: investment.property_title || `Property ${investment.property_id.slice(0, 6)}`,
-        address: investment.property_address || 'Address not available',
-        city: investment.property_city || 'City',
+        title: investment.property_title || t('portfolio.propertyFallback', { id: investment.property_id.slice(0, 6) }),
+        address: investment.property_address || t('portfolio.addressUnavailable'),
+        city: investment.property_city || t('portfolio.cityFallback'),
         images: investment.property_images || [],
         property_type: (investment.property_type as PropertyType) || PropertyType.RESIDENTIAL,
         rental_yield: investment.rental_yield || 8.5,
@@ -201,7 +204,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
         }
       };
     });
-  }, [portfolio?.investments]);
+  }, [portfolio?.investments, t]);
 
   // Sample distributions data (would come from API)
   const distributions: Distribution[] = useMemo(() => {
@@ -212,7 +215,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
           id: `dist-${idx}-1`,
           date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
           propertyId: inv.property?.id || '',
-          propertyName: inv.property?.title || 'Property',
+          propertyName: inv.property?.title || t('portfolio.cols.property'),
           amount: inv.performance?.monthly_income || 0,
           type: 'rental' as const,
           status: 'paid' as const
@@ -221,7 +224,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
           id: `dist-${idx}-2`,
           date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
           propertyId: inv.property?.id || '',
-          propertyName: inv.property?.title || 'Property',
+          propertyName: inv.property?.title || t('portfolio.cols.property'),
           amount: inv.performance?.monthly_income || 0,
           type: 'rental' as const,
           status: 'paid' as const
@@ -245,7 +248,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
           return {
             id: `cert-${idx}`,
             propertyId: propId,
-            propertyName: inv.property?.title || 'Property',
+            propertyName: inv.property?.title || t('portfolio.cols.property'),
             // Stable certificate number (same scheme as the Document Center).
             certificateNumber: `CMX-${propId.replace(/-/g, '').slice(0, 8).toUpperCase()}`,
             issueDate: new Date(inv.created_at),
@@ -465,7 +468,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
               <DollarSign className="w-5 h-5 text-emerald-600" />
             </div>
             <div>
-              <Text variant="caption" color="muted">Total Owned</Text>
+              <Text variant="caption" color="muted">{t('invDash.stats.totalOwned')}</Text>
               <Text variant="bodyLarge" weight="bold">{formatCurrency(portfolioSummary.totalInvested)}</Text>
             </div>
           </div>
@@ -477,7 +480,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
               <TrendingUp className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <Text variant="caption" color="muted">Current Value</Text>
+              <Text variant="caption" color="muted">{t('myProps.currentValue')}</Text>
               <Text variant="bodyLarge" weight="bold">{formatCurrency(portfolioSummary.currentValue)}</Text>
             </div>
           </div>
@@ -498,12 +501,12 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
               )}
             </div>
             <div>
-              <Text variant="caption" color="muted">Total Return</Text>
+              <Text variant="caption" color="muted">{t('overview.totalReturn')}</Text>
               <Text variant="bodyLarge" weight="bold" className={cn(
                 portfolioSummary.totalReturn >= 0 ? "text-emerald-600" : "text-red-600"
               )}>
                 {portfolioSummary.totalReturn >= 0 ? '+' : ''}{formatCurrency(portfolioSummary.totalReturn)}
-                <span className="text-sm ml-1">({portfolioSummary.returnPercentage.toFixed(1)}%)</span>
+                <span className="text-sm ms-1">({portfolioSummary.returnPercentage.toFixed(1)}%)</span>
               </Text>
             </div>
           </div>
@@ -515,7 +518,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
               <Wallet className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <Text variant="caption" color="muted">Monthly Income</Text>
+              <Text variant="caption" color="muted">{t('overview.stats.monthlyIncome')}</Text>
               <Text variant="bodyLarge" weight="bold">{formatCurrency(portfolioSummary.monthlyIncome)}</Text>
             </div>
           </div>
@@ -525,10 +528,10 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
       {/* Section Tabs */}
       <div className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-slate-700 pb-4">
         {[
-          { id: 'investments' as const, label: 'Properties', icon: Building, count: investments.length },
-          { id: 'distributions' as const, label: 'Distributions', icon: Receipt, count: distributions.length },
-          { id: 'certificates' as const, label: 'Certificates', icon: Award, count: certificates.length },
-          { id: 'transactions' as const, label: 'Transaction History', icon: History, count: transactions.length },
+          { id: 'investments' as const, label: t('myProps.properties'), icon: Building, count: investments.length },
+          { id: 'distributions' as const, label: t('portfolio.tabs.distributions'), icon: Receipt, count: distributions.length },
+          { id: 'certificates' as const, label: t('portfolio.tabs.certificates'), icon: Award, count: certificates.length },
+          { id: 'transactions' as const, label: t('overview.actions.transactionHistory'), icon: History, count: transactions.length },
         ].map((tab) => {
           const Icon = tab.icon;
           return (
@@ -544,7 +547,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
             >
               <Icon className="w-4 h-4" />
               {tab.label}
-              <span className="ml-1 px-2 py-0.5 bg-slate-200 dark:bg-slate-700 rounded-full text-xs">
+              <span className="ms-1 px-2 py-0.5 bg-slate-200 dark:bg-slate-700 rounded-full text-xs">
                 {tab.count}
               </span>
             </button>
@@ -565,10 +568,10 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div>
                 <Text variant="h3" weight="semibold" className="mb-2">
-                  My Properties
+                  {t('myProps.title')}
                 </Text>
                 <Text variant="body" color="muted">
-                  {filteredInvestments.length} of {investments.length} properties
+                  {t('portfolio.countOf', { shown: filteredInvestments.length, total: investments.length })}
                 </Text>
               </div>
 
@@ -577,6 +580,8 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
                 <div className="flex rounded-lg border border-slate-200 dark:border-slate-700 p-1">
                   <button
                     onClick={() => setViewMode('grid')}
+                    title={t('portfolio.gridView')}
+                    aria-label={t('portfolio.gridView')}
                     className={cn(
                       'p-2 rounded transition-colors',
                       viewMode === 'grid'
@@ -588,6 +593,8 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
+                    title={t('portfolio.listView')}
+                    aria-label={t('portfolio.listView')}
                     className={cn(
                       'p-2 rounded transition-colors',
                       viewMode === 'list'
@@ -601,13 +608,13 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
 
                 {/* Search */}
                 <div className="relative">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                  <Search className="w-4 h-4 absolute start-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Search properties..."
+                    placeholder={t('collab.searchPlaceholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 w-48"
+                    className="ps-10 pe-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 w-48"
                   />
                 </div>
 
@@ -617,30 +624,30 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
                   onChange={(e) => setTypeFilter(e.target.value as FilterType)}
                   className="px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm"
                 >
-                  <option value="all">All Types</option>
-                  <option value={PropertyType.RESIDENTIAL}>Residential</option>
-                  <option value={PropertyType.COMMERCIAL}>Commercial</option>
-                  <option value={PropertyType.MIXED_USE}>Mixed Use</option>
+                  <option value="all">{t('tx.allTypes')}</option>
+                  <option value={PropertyType.RESIDENTIAL}>{t('propertyTypes.residential')}</option>
+                  <option value={PropertyType.COMMERCIAL}>{t('propertyTypes.commercial')}</option>
+                  <option value={PropertyType.MIXED_USE}>{t('propertyTypes.mixed_use')}</option>
                 </select>
 
                 {/* Export Button */}
                 <Button variant="outline" size="sm" onClick={handleExportCSV}>
-                  <FileSpreadsheet className="w-4 h-4 mr-2" />
-                  Export CSV
+                  <FileSpreadsheet className="w-4 h-4 me-2" />
+                  {t('tx.exportCsv')}
                 </Button>
               </div>
             </div>
 
             {/* Sort Controls */}
             <div className="flex items-center gap-4 py-2 border-b border-slate-200 dark:border-slate-700">
-              <Text variant="body" color="muted" className="mr-4">
-                Sort by:
+              <Text variant="body" color="muted" className="me-4">
+                {t('portfolio.sortBy')}
               </Text>
               {[
-                { field: 'value' as const, label: 'Current Value' },
-                { field: 'return' as const, label: 'ROI' },
-                { field: 'date' as const, label: 'Date' },
-                { field: 'name' as const, label: 'Name' },
+                { field: 'value' as const, label: t('myProps.currentValue') },
+                { field: 'return' as const, label: t('portfolio.roi') },
+                { field: 'date' as const, label: t('tx.cols.date') },
+                { field: 'name' as const, label: t('portfolio.name') },
               ].map(({ field, label }) => (
                 <button
                   key={field}
@@ -665,16 +672,16 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
               <div className="text-center py-12">
                 <Building className="w-16 h-16 text-slate-300 mx-auto mb-4" />
                 <Text variant="h3" weight="semibold" className="mb-2">
-                  No properties found
+                  {t('portfolio.noProperties')}
                 </Text>
                 <Text variant="body" color="muted" className="mb-4">
                   {searchTerm || typeFilter !== 'all' || statusFilter !== 'all'
-                    ? 'Try adjusting your filters or search terms'
-                    : 'Start building your real estate portfolio'}
+                    ? t('tx.emptyFiltered')
+                    : t('portfolio.startBuilding')}
                 </Text>
                 <Button variant="primary" onClick={() => window.location.href = '/properties'}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Browse Properties
+                  <Plus className="w-4 h-4 me-2" />
+                  {t('myProps.browseProperties')}
                 </Button>
               </div>
             ) : viewMode === 'grid' ? (
@@ -716,15 +723,15 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <Text variant="h3" weight="semibold" className="mb-2">
-                  Distribution History
+                  {t('portfolio.distributionHistory')}
                 </Text>
                 <Text variant="body" color="muted">
-                  Total distributions received: {formatCurrency(portfolioSummary.totalDistributions)}
+                  {t('portfolio.totalDistributions', { amount: formatCurrency(portfolioSummary.totalDistributions) })}
                 </Text>
               </div>
               <Button variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Download Statement
+                <Download className="w-4 h-4 me-2" />
+                {t('portfolio.downloadStatement')}
               </Button>
             </div>
 
@@ -733,24 +740,24 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-slate-700">
-                      <th className="text-left py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Date</th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Property</th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Type</th>
-                      <th className="text-right py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Amount</th>
-                      <th className="text-center py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Status</th>
+                      <th className="text-start py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t('tx.cols.date')}</th>
+                      <th className="text-start py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t('portfolio.cols.property')}</th>
+                      <th className="text-start py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t('tx.cols.type')}</th>
+                      <th className="text-end py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t('tx.cols.amount')}</th>
+                      <th className="text-center py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t('tx.cols.status')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {distributions.map((dist) => (
                       <tr key={dist.id} className="border-b border-slate-100 dark:border-slate-800">
                         <td className="py-3 px-4 text-slate-900 dark:text-white">
-                          {new Date(dist.date).toLocaleDateString()}
+                          {new Date(dist.date).toLocaleDateString(dateLocale)}
                         </td>
                         <td className="py-3 px-4 text-slate-900 dark:text-white">{dist.propertyName}</td>
                         <td className="py-3 px-4">
-                          <span className="capitalize text-slate-600 dark:text-slate-400">{dist.type}</span>
+                          <span className="capitalize text-slate-600 dark:text-slate-400">{t(`portfolio.distTypes.${dist.type}`, { defaultValue: dist.type })}</span>
                         </td>
-                        <td className="py-3 px-4 text-right font-semibold text-emerald-600">
+                        <td className="py-3 px-4 text-end font-semibold text-emerald-600">
                           +{formatCurrency(dist.amount)}
                         </td>
                         <td className="py-3 px-4 text-center">
@@ -760,7 +767,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
                             dist.status === 'pending' ? "bg-yellow-100 text-yellow-700" :
                             "bg-blue-100 text-blue-700"
                           )}>
-                            {dist.status}
+                            {t(`status.${dist.status}`, { defaultValue: dist.status })}
                           </span>
                         </td>
                       </tr>
@@ -782,10 +789,10 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
           >
             <div>
               <Text variant="h3" weight="semibold" className="mb-2">
-                Ownership Certificates
+                {t('portfolio.certificatesTitle')}
               </Text>
               <Text variant="body" color="muted">
-                Download your digital ownership certificates for each property.
+                {t('portfolio.certificatesText')}
               </Text>
             </div>
 
@@ -805,24 +812,24 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
                     {cert.propertyName}
                   </Text>
                   <Text variant="caption" color="muted" className="mb-4">
-                    Issued: {new Date(cert.issueDate).toLocaleDateString()}
+                    {t('portfolio.issued', { date: new Date(cert.issueDate).toLocaleDateString(dateLocale) })}
                   </Text>
 
                   <div className="border-t border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700/60">
                     <div className="flex justify-between items-center py-2.5">
-                      <span className="text-sm text-slate-600 dark:text-slate-400">Shares Held</span>
+                      <span className="text-sm text-slate-600 dark:text-slate-400">{t('portfolio.sharesHeld')}</span>
                       <span className="font-semibold text-slate-900 dark:text-white">
                         {cert.unitsHeld.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between items-center py-2.5">
-                      <span className="text-sm text-slate-600 dark:text-slate-400">Ownership</span>
+                      <span className="text-sm text-slate-600 dark:text-slate-400">{t('myProps.ownershipShare')}</span>
                       <span className="font-semibold text-slate-900 dark:text-white">
                         {(cert.ownershipPct || 0).toFixed(4)}%
                       </span>
                     </div>
                     <div className="flex justify-between items-center py-2.5">
-                      <span className="text-sm text-slate-600 dark:text-slate-400">Investment Value</span>
+                      <span className="text-sm text-slate-600 dark:text-slate-400">{t('portfolio.investmentValue')}</span>
                       <span className="font-semibold text-slate-900 dark:text-white">
                         ${(cert.investmentValue || 0).toLocaleString()}
                       </span>
@@ -836,8 +843,8 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
                     onClick={() => handleDownloadCertificate(cert)}
                     disabled={downloadingCert === cert.id}
                   >
-                    <Download className="w-4 h-4 mr-2" />
-                    {downloadingCert === cert.id ? 'Generating…' : 'Download PDF'}
+                    <Download className="w-4 h-4 me-2" />
+                    {downloadingCert === cert.id ? t('docsPanel.generating') : t('docsPanel.downloadPdf')}
                   </Button>
                 </Card>
               ))}
@@ -856,15 +863,15 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <Text variant="h3" weight="semibold" className="mb-2">
-                  Transaction History
+                  {t('overview.actions.transactionHistory')}
                 </Text>
                 <Text variant="body" color="muted">
-                  Complete history of all your portfolio transactions.
+                  {t('portfolio.txHistoryText')}
                 </Text>
               </div>
               <Button variant="outline" size="sm" onClick={handleExportCSV}>
-                <FileSpreadsheet className="w-4 h-4 mr-2" />
-                Export CSV
+                <FileSpreadsheet className="w-4 h-4 me-2" />
+                {t('tx.exportCsv')}
               </Button>
             </div>
 
@@ -873,19 +880,19 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-slate-700">
-                      <th className="text-left py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Date</th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Type</th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Property</th>
-                      <th className="text-right py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Amount</th>
-                      <th className="text-center py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Status</th>
-                      <th className="text-center py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">Details</th>
+                      <th className="text-start py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t('tx.cols.date')}</th>
+                      <th className="text-start py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t('tx.cols.type')}</th>
+                      <th className="text-start py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t('portfolio.cols.property')}</th>
+                      <th className="text-end py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t('tx.cols.amount')}</th>
+                      <th className="text-center py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t('tx.cols.status')}</th>
+                      <th className="text-center py-3 px-4 font-semibold text-slate-600 dark:text-slate-400">{t('portfolio.cols.details')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {transactions.map((tx) => (
                       <tr key={tx.id} className="border-b border-slate-100 dark:border-slate-800">
                         <td className="py-3 px-4 text-slate-900 dark:text-white">
-                          {new Date(tx.date).toLocaleDateString()}
+                          {new Date(tx.date).toLocaleDateString(dateLocale)}
                         </td>
                         <td className="py-3 px-4">
                           <span className={cn(
@@ -895,14 +902,14 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
                             tx.type === 'distribution' ? "bg-purple-100 text-purple-700" :
                             "bg-yellow-100 text-yellow-700"
                           )}>
-                            {tx.type}
+                            {t(`portfolio.txTypes.${tx.type}`, { defaultValue: tx.type })}
                           </span>
                         </td>
                         <td className="py-3 px-4 text-slate-900 dark:text-white">
                           {tx.propertyName || '-'}
-                          {tx.units && <span className="text-sm text-slate-500 ml-2">({tx.units} tokens)</span>}
+                          {tx.units && <span className="text-sm text-slate-500 ms-2">({t('portfolio.sharesCount', { count: tx.units })})</span>}
                         </td>
-                        <td className="py-3 px-4 text-right font-semibold">
+                        <td className="py-3 px-4 text-end font-semibold">
                           <span className={cn(
                             tx.type === 'purchase' || tx.type === 'withdrawal' ? "text-red-600" : "text-emerald-600"
                           )}>
@@ -917,7 +924,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
                             tx.status === 'pending' ? "bg-yellow-100 text-yellow-700" :
                             "bg-red-100 text-red-700"
                           )}>
-                            {tx.status}
+                            {t(`status.${tx.status}`, { defaultValue: tx.status })}
                           </span>
                         </td>
                         <td className="py-3 px-4 text-center">
@@ -953,6 +960,8 @@ const InvestmentCard: React.FC<{
   getStatusIcon: (status: InvestmentStatus) => React.FC<{ className?: string }>;
   formatCurrency: (amount: number) => string;
 }> = ({ investment, getStatusColor, getStatusIcon, formatCurrency }) => {
+  const { t, i18n } = useTranslation('dashboard');
+  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
   const StatusIcon = getStatusIcon(investment.status);
 
   return (
@@ -978,13 +987,13 @@ const InvestmentCard: React.FC<{
           )}
 
           {/* Status Badge */}
-          <div className="absolute top-3 left-3">
+          <div className="absolute top-3 start-3">
             <div className={cn(
               'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
               getStatusColor(investment.status)
             )}>
-              <StatusIcon className="w-3 h-3 mr-1" />
-              {investment.status.replace('_', ' ').toUpperCase()}
+              <StatusIcon className="w-3 h-3 me-1" />
+              {t(`status.${investment.status}`, { defaultValue: investment.status.replace('_', ' ').toUpperCase() })}
             </div>
           </div>
         </div>
@@ -996,12 +1005,12 @@ const InvestmentCard: React.FC<{
               {investment.property?.title}
             </Text>
             <div className="flex items-center text-slate-500 dark:text-slate-400 text-sm">
-              <MapPin className="w-4 h-4 mr-1" />
+              <MapPin className="w-4 h-4 me-1" />
               {investment.property?.city}
             </div>
             <div className="flex items-center text-slate-500 dark:text-slate-400 text-sm mt-1">
-              <Calendar className="w-4 h-4 mr-1" />
-              Purchased {new Date(investment.created_at).toLocaleDateString()}
+              <Calendar className="w-4 h-4 me-1" />
+              {t('portfolio.purchased', { date: new Date(investment.created_at).toLocaleDateString(dateLocale) })}
             </div>
           </div>
 
@@ -1009,7 +1018,7 @@ const InvestmentCard: React.FC<{
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div>
               <Text variant="caption" color="muted" className="mb-1">
-                Current Value
+                {t('myProps.currentValue')}
               </Text>
               <Text variant="body" weight="semibold">
                 {formatCurrency(investment.performance?.current_value || 0)}
@@ -1017,7 +1026,7 @@ const InvestmentCard: React.FC<{
             </div>
             <div>
               <Text variant="caption" color="muted" className="mb-1">
-                ROI
+                {t('portfolio.roi')}
               </Text>
               <Text
                 variant="body"
@@ -1034,7 +1043,7 @@ const InvestmentCard: React.FC<{
             </div>
             <div>
               <Text variant="caption" color="muted" className="mb-1">
-                Tokens Owned
+                {t('myProps.sharesOwned')}
               </Text>
               <Text variant="body" weight="semibold">
                 {investment.token_amount.toLocaleString()}
@@ -1042,7 +1051,7 @@ const InvestmentCard: React.FC<{
             </div>
             <div>
               <Text variant="caption" color="muted" className="mb-1">
-                Monthly Income
+                {t('overview.stats.monthlyIncome')}
               </Text>
               <Text variant="body" weight="semibold">
                 {formatCurrency(investment.performance?.monthly_income || 0)}
@@ -1057,7 +1066,7 @@ const InvestmentCard: React.FC<{
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-emerald-600" />
                   <Text variant="caption" weight="medium" className="text-emerald-700 dark:text-emerald-300">
-                    Verified on Blockchain
+                    {t('portfolio.verified')}
                   </Text>
                 </div>
                 <BlockchainLink
@@ -1079,8 +1088,8 @@ const InvestmentCard: React.FC<{
               className="flex-1"
               onClick={() => window.location.href = '/properties'}
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Buy More
+              <Plus className="w-4 h-4 me-2" />
+              {t('myProps.buyMore')}
             </Button>
             <Button
               variant="outline"
@@ -1088,8 +1097,8 @@ const InvestmentCard: React.FC<{
               className="flex-1"
               onClick={() => window.location.href = `/properties/${investment.property_id}`}
             >
-              <Eye className="w-4 h-4 mr-2" />
-              View Details
+              <Eye className="w-4 h-4 me-2" />
+              {t('myProps.viewDetails')}
             </Button>
           </div>
         </div>
@@ -1105,6 +1114,8 @@ const InvestmentListItem: React.FC<{
   getStatusIcon: (status: InvestmentStatus) => React.FC<{ className?: string }>;
   formatCurrency: (amount: number) => string;
 }> = ({ investment, getStatusColor, getStatusIcon, formatCurrency }) => {
+  const { t, i18n } = useTranslation('dashboard');
+  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
   const StatusIcon = getStatusIcon(investment.status);
 
   return (
@@ -1138,23 +1149,23 @@ const InvestmentListItem: React.FC<{
                   'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
                   getStatusColor(investment.status)
                 )}>
-                  <StatusIcon className="w-3 h-3 mr-1" />
-                  {investment.status.replace('_', ' ').toUpperCase()}
+                  <StatusIcon className="w-3 h-3 me-1" />
+                  {t(`status.${investment.status}`, { defaultValue: investment.status.replace('_', ' ').toUpperCase() })}
                 </div>
               </div>
 
               <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
                 <div className="flex items-center">
-                  <MapPin className="w-4 h-4 mr-1" />
+                  <MapPin className="w-4 h-4 me-1" />
                   {investment.property?.city}
                 </div>
                 <div className="flex items-center">
-                  <Calendar className="w-4 h-4 mr-1" />
-                  {new Date(investment.created_at).toLocaleDateString()}
+                  <Calendar className="w-4 h-4 me-1" />
+                  {new Date(investment.created_at).toLocaleDateString(dateLocale)}
                 </div>
                 <div className="flex items-center">
-                  <Wallet className="w-4 h-4 mr-1" />
-                  {investment.token_amount.toLocaleString()} tokens
+                  <Wallet className="w-4 h-4 me-1" />
+                  {t('portfolio.sharesCount', { count: investment.token_amount })}
                 </div>
               </div>
             </div>
@@ -1162,18 +1173,18 @@ const InvestmentListItem: React.FC<{
 
           {/* Metrics */}
           <div className="flex items-center gap-8">
-            <div className="text-right">
+            <div className="text-end">
               <Text variant="caption" color="muted">
-                Current Value
+                {t('myProps.currentValue')}
               </Text>
               <Text variant="body" weight="semibold">
                 {formatCurrency(investment.performance?.current_value || 0)}
               </Text>
             </div>
 
-            <div className="text-right">
+            <div className="text-end">
               <Text variant="caption" color="muted">
-                ROI
+                {t('portfolio.roi')}
               </Text>
               <Text
                 variant="body"
@@ -1189,9 +1200,9 @@ const InvestmentListItem: React.FC<{
               </Text>
             </div>
 
-            <div className="text-right">
+            <div className="text-end">
               <Text variant="caption" color="muted">
-                Monthly Income
+                {t('overview.stats.monthlyIncome')}
               </Text>
               <Text variant="body" weight="semibold">
                 {formatCurrency(investment.performance?.monthly_income || 0)}
@@ -1200,7 +1211,7 @@ const InvestmentListItem: React.FC<{
 
             {/* Blockchain Verification */}
             {investment.status === InvestmentStatus.COMPLETED && investment.transaction_hash && (
-              <div className="text-right mr-4">
+              <div className="text-end me-4">
                 <BlockchainLink
                   transactionHash={investment.transaction_hash}
                   network="polygon"

@@ -13,6 +13,7 @@ import { useRouter } from '../utils/router';
 import { PropertyService } from '../services/property/PropertyService';
 import type { Property } from '../services/api/types';
 import { InvestmentFlow, type InvestmentProperty, type InvestmentData } from '../components/investment';
+import { useTranslation } from 'react-i18next';
 
 
 type ViewMode = 'grid' | 'list' | 'map';
@@ -20,6 +21,7 @@ type SortOption = 'featured' | 'price-low' | 'price-high' | 'return-high' | 'ret
 
 export const PropertiesPage: React.FC = () => {
   const { navigate } = useRouter();
+  const { t } = useTranslation('ui');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -74,7 +76,7 @@ export const PropertiesPage: React.FC = () => {
       }
     } catch (err: any) {
       console.error('Failed to load properties:', err);
-      setError(err.message || 'Failed to load properties');
+      setError(err.message || t('propertiesPage.loadFailed'));
       setProperties([]);
     } finally {
       setLoading(false);
@@ -196,12 +198,12 @@ export const PropertiesPage: React.FC = () => {
           <motion.div
             animate={{ opacity: [0.1, 0.2, 0.1] }}
             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-1/4 left-1/4 w-64 h-64 bg-gradient-to-br from-emerald-500/20 to-green-500/20 rounded-full blur-3xl"
+            className="absolute top-1/4 start-1/4 w-64 h-64 bg-gradient-to-br from-emerald-500/20 to-green-500/20 rounded-full blur-3xl"
           />
           <motion.div
             animate={{ opacity: [0.1, 0.15, 0.1] }}
             transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-            className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl"
+            className="absolute bottom-1/4 end-1/4 w-64 h-64 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full blur-3xl"
           />
         </div>
 
@@ -213,29 +215,29 @@ export const PropertiesPage: React.FC = () => {
             className="text-center"
           >
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4">
-              Property Marketplace
+              {t('propertiesPage.title')}
             </h1>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Discover premium real estate ownership opportunities with verified returns and transparent tokenization
+              {t('propertiesPage.subtitle')}
             </p>
             
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
               <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
                 <div className="text-2xl font-bold text-white">500+</div>
-                <div className="text-sm text-gray-300">Properties</div>
+                <div className="text-sm text-gray-300">{t('propertiesPage.statProperties')}</div>
               </div>
               <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
                 <div className="text-2xl font-bold text-white">$2.8B+</div>
-                <div className="text-sm text-gray-300">Total Value</div>
+                <div className="text-sm text-gray-300">{t('featured.totalValue')}</div>
               </div>
               <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
                 <div className="text-2xl font-bold text-white">25K+</div>
-                <div className="text-sm text-gray-300">Owners</div>
+                <div className="text-sm text-gray-300">{t('featured.owners')}</div>
               </div>
               <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20">
                 <div className="text-2xl font-bold text-white">16.8%</div>
-                <div className="text-sm text-gray-300">Avg. Returns</div>
+                <div className="text-sm text-gray-300">{t('visual.global.statReturns')}</div>
               </div>
             </div>
           </motion.div>
@@ -251,7 +253,7 @@ export const PropertiesPage: React.FC = () => {
               value={searchQuery}
               onChange={setSearchQuery}
               onSearch={(query) => setSearchQuery(query)}
-              placeholder="Search properties by name, location, or type..."
+              placeholder={t('propertiesPage.searchPlaceholder')}
             />
 
             {/* Filter Bar */}
@@ -270,7 +272,7 @@ export const PropertiesPage: React.FC = () => {
                           : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
                       )}
                     >
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                      {t(`featured.categories.${type}`)}
                     </button>
                   ))}
                 </div>
@@ -288,7 +290,7 @@ export const PropertiesPage: React.FC = () => {
                           : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
                       )}
                     >
-                      {status}
+                      {t(`propertiesPage.status.${status}`)}
                     </button>
                   ))}
                 </div>
@@ -303,7 +305,7 @@ export const PropertiesPage: React.FC = () => {
                   className="flex items-center gap-2"
                 >
                   <SlidersHorizontal className="w-4 h-4" />
-                  Filters
+                  {t('propertiesPage.filters')}
                 </Button>
 
                 {/* Sort Dropdown */}
@@ -312,19 +314,21 @@ export const PropertiesPage: React.FC = () => {
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
                   className="px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 >
-                  <option value="featured">Featured First</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                  <option value="return-high">Returns: High to Low</option>
-                  <option value="return-low">Returns: Low to High</option>
-                  <option value="newest">Newest First</option>
-                  <option value="oldest">Oldest First</option>
+                  <option value="featured">{t('propertiesPage.sort.featured')}</option>
+                  <option value="price-low">{t('propertiesPage.sort.priceLow')}</option>
+                  <option value="price-high">{t('propertiesPage.sort.priceHigh')}</option>
+                  <option value="return-high">{t('propertiesPage.sort.returnHigh')}</option>
+                  <option value="return-low">{t('propertiesPage.sort.returnLow')}</option>
+                  <option value="newest">{t('propertiesPage.sort.newest')}</option>
+                  <option value="oldest">{t('propertiesPage.sort.oldest')}</option>
                 </select>
 
                 {/* View Mode Toggle */}
                 <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('grid')}
+                    aria-label={t('propertiesPage.viewGrid')}
+                    title={t('propertiesPage.viewGrid')}
                     className={cn(
                       "p-2 rounded-md transition-all duration-200",
                       viewMode === 'grid'
@@ -336,6 +340,8 @@ export const PropertiesPage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
+                    aria-label={t('propertiesPage.viewList')}
+                    title={t('propertiesPage.viewList')}
                     className={cn(
                       "p-2 rounded-md transition-all duration-200",
                       viewMode === 'list'
@@ -347,6 +353,8 @@ export const PropertiesPage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setViewMode('map')}
+                    aria-label={t('propertiesPage.viewMap')}
+                    title={t('propertiesPage.viewMap')}
                     className={cn(
                       "p-2 rounded-md transition-all duration-200",
                       viewMode === 'map'
@@ -369,11 +377,11 @@ export const PropertiesPage: React.FC = () => {
                 transition={{ duration: 0.3 }}
                 className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700"
               >
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Advanced Filters</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{t('propertiesPage.advancedFilters')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Price Range
+                      {t('propertiesPage.priceRange')}
                     </label>
                     <div className="space-y-2">
                       <input
@@ -393,10 +401,10 @@ export const PropertiesPage: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Minimum Return
+                      {t('propertiesPage.minReturn')}
                     </label>
                     <select className="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
-                      <option>Any</option>
+                      <option>{t('propertiesPage.any')}</option>
                       <option>5%+</option>
                       <option>10%+</option>
                       <option>15%+</option>
@@ -405,10 +413,10 @@ export const PropertiesPage: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Year Built
+                      {t('propertiesPage.yearBuilt')}
                     </label>
                     <select className="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600">
-                      <option>Any</option>
+                      <option>{t('propertiesPage.any')}</option>
                       <option>2020+</option>
                       <option>2015+</option>
                       <option>2010+</option>
@@ -430,7 +438,7 @@ export const PropertiesPage: React.FC = () => {
             <div className="flex items-center justify-center py-16">
               <div className="text-center">
                 <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-emerald-600" />
-                <p className="text-gray-600 dark:text-gray-400">Loading properties...</p>
+                <p className="text-gray-600 dark:text-gray-400">{t('propertiesPage.loading')}</p>
               </div>
             </div>
           )}
@@ -442,11 +450,11 @@ export const PropertiesPage: React.FC = () => {
                 <Search className="w-8 h-8 text-red-600 dark:text-red-400" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                Failed to Load Properties
+                {t('propertiesPage.failedTitle')}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">{error}</p>
               <Button variant="primary" onClick={loadProperties}>
-                Try Again
+                {t('featured.tryAgain')}
               </Button>
             </div>
           )}
@@ -457,10 +465,10 @@ export const PropertiesPage: React.FC = () => {
               <div className="mb-6 flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {filteredAndSortedProperties.length} Properties Found
+                    {t('propertiesPage.found', { count: filteredAndSortedProperties.length })}
                   </h2>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Showing results for "{searchQuery || 'all properties'}"
+                    {t('propertiesPage.showingFor', { query: searchQuery || t('propertiesPage.allProperties') })}
                   </p>
                 </div>
               </div>
@@ -494,8 +502,8 @@ export const PropertiesPage: React.FC = () => {
               {filteredAndSortedProperties.map((property, index) => (
                 <motion.div
                   key={property.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   className="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800 hover:border-emerald-400 dark:hover:border-emerald-500 transition-all duration-300"
                 >
@@ -525,21 +533,21 @@ export const PropertiesPage: React.FC = () => {
                       </div>
                       <div className="grid grid-cols-4 gap-4 mb-4">
                         <div>
-                          <div className="text-sm text-gray-500">Total Value</div>
+                          <div className="text-sm text-gray-500">{t('featured.totalValue')}</div>
                           <div className="font-bold text-gray-900 dark:text-white">
                             ${(property.total_value / 1000000).toFixed(2)}M
                           </div>
                         </div>
                         <div>
-                          <div className="text-sm text-gray-500">Token Price</div>
+                          <div className="text-sm text-gray-500">{t('propertiesPage.tokenPrice')}</div>
                           <div className="font-bold text-emerald-600">${property.token_price.toFixed(0)}</div>
                         </div>
                         <div>
-                          <div className="text-sm text-gray-500">Expected Return</div>
+                          <div className="text-sm text-gray-500">{t('propertiesPage.expectedReturn')}</div>
                           <div className="font-bold text-emerald-600">{property.expected_return}%</div>
                         </div>
                         <div>
-                          <div className="text-sm text-gray-500">Owners</div>
+                          <div className="text-sm text-gray-500">{t('featured.owners')}</div>
                           <div className="font-bold text-gray-900 dark:text-white">
                             {property.investor_count || Math.floor(property.tokens_sold / 10)}
                           </div>
@@ -547,7 +555,7 @@ export const PropertiesPage: React.FC = () => {
                       </div>
                       <div className="flex justify-between items-center">
                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                          {Math.round((property.tokens_sold / property.total_tokens) * 100)}% funded
+                          {t('propertiesPage.funded', { pct: Math.round((property.tokens_sold / property.total_tokens) * 100) })}
                         </div>
                         <div className="flex gap-2">
                           <Button
@@ -555,14 +563,14 @@ export const PropertiesPage: React.FC = () => {
                             size="sm"
                             onClick={() => navigate('property-detail', { id: property.id })}
                           >
-                            View Details
+                            {t('propertiesPage.viewDetails')}
                           </Button>
                           <Button
                             variant="primary"
                             size="sm"
                             onClick={() => handleInvestClick(property)}
                           >
-                            Own
+                            {t('propertiesPage.own')}
                           </Button>
                         </div>
                       </div>
@@ -578,10 +586,10 @@ export const PropertiesPage: React.FC = () => {
               <div className="text-center">
                 <Map className="w-16 h-16 mx-auto text-gray-400 mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                  Map View Coming Soon
+                  {t('propertiesPage.mapSoonTitle')}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Interactive map functionality will be available in the next update
+                  {t('propertiesPage.mapSoonBody')}
                 </p>
               </div>
             </div>
@@ -594,10 +602,10 @@ export const PropertiesPage: React.FC = () => {
                 <Search className="w-8 h-8 text-gray-400" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                No Properties Found
+                {t('propertiesPage.noneTitle')}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Try adjusting your filters or search terms to find more properties
+                {t('propertiesPage.noneBody')}
               </p>
               <Button
                 variant="primary"
@@ -607,7 +615,7 @@ export const PropertiesPage: React.FC = () => {
                   setSelectedStatus('all');
                 }}
               >
-                Clear All Filters
+                {t('propertiesPage.clearFilters')}
               </Button>
             </div>
           )}

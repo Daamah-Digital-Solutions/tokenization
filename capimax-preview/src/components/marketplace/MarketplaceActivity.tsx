@@ -14,6 +14,7 @@ import {
 import { Badge } from '../ui/Badge';
 import { cn } from '../../utils/cn';
 import type { MarketplaceActivity as ActivityType } from '../../services/marketplace/MarketplaceService';
+import { useTranslation } from 'react-i18next';
 
 interface MarketplaceActivityProps {
   activities: ActivityType[];
@@ -27,6 +28,7 @@ interface ActivityItemProps {
 }
 
 const ActivityItem: React.FC<ActivityItemProps> = ({ activity, isFirst, isLast }) => {
+  const { t, i18n } = useTranslation('market');
   const getActivityConfig = (type: ActivityType['type']) => {
     switch (type) {
       case 'LISTING_CREATED':
@@ -34,40 +36,40 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity, isFirst, isLast }
           icon: Plus,
           color: 'text-blue-600',
           bgColor: 'bg-blue-100',
-          title: 'New Listing',
-          description: 'Property listed for sale'
+          title: t('activity.newListing'),
+          description: t('activity.newListingDesc')
         };
       case 'LISTING_SOLD':
         return {
           icon: CheckCircle,
           color: 'text-green-600',
           bgColor: 'bg-green-100',
-          title: 'Listing Sold',
-          description: 'Property sale completed'
+          title: t('activity.listingSold'),
+          description: t('activity.listingSoldDesc')
         };
       case 'BID_PLACED':
         return {
           icon: Gavel,
           color: 'text-orange-600',
           bgColor: 'bg-orange-100',
-          title: 'Bid Placed',
-          description: 'New auction bid'
+          title: t('activity.bidPlaced'),
+          description: t('activity.bidPlacedDesc')
         };
       case 'AUCTION_ENDED':
         return {
           icon: Clock,
           color: 'text-purple-600',
           bgColor: 'bg-purple-100',
-          title: 'Auction Ended',
-          description: 'Auction completed'
+          title: t('activity.auctionEnded'),
+          description: t('activity.auctionEndedDesc')
         };
       default:
         return {
           icon: Activity,
           color: 'text-gray-600',
           bgColor: 'bg-gray-100',
-          title: 'Activity',
-          description: 'Marketplace activity'
+          title: t('activity.activity'),
+          description: t('activity.activityDesc')
         };
     }
   };
@@ -83,11 +85,11 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity, isFirst, isLast }
     const diffInHours = Math.floor(diffInMinutes / 60);
     const diffInDays = Math.floor(diffInHours / 24);
 
-    if (diffInMinutes < 1) return 'Just now';
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    if (diffInDays < 7) return `${diffInDays}d ago`;
-    return date.toLocaleDateString();
+    if (diffInMinutes < 1) return t('activity.justNow');
+    if (diffInMinutes < 60) return t('activity.minutesAgo', { value: diffInMinutes });
+    if (diffInHours < 24) return t('activity.hoursAgo', { value: diffInHours });
+    if (diffInDays < 7) return t('activity.daysAgo', { value: diffInDays });
+    return date.toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : undefined);
   };
 
   return (
@@ -98,7 +100,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity, isFirst, isLast }
     >
       {/* Timeline Line */}
       {!isLast && (
-        <div className="absolute left-4 top-8 w-px h-full bg-gray-200" />
+        <div className="absolute start-4 top-8 w-px h-full bg-gray-200" />
       )}
 
       {/* Activity Icon */}
@@ -143,19 +145,19 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity, isFirst, isLast }
         {/* Transaction Details */}
         <div className="space-y-1">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-600">Amount:</span>
+            <span className="text-gray-600">{t('activity.amount')}</span>
             <span className="font-medium text-gray-900">
               ${activity.amount.toLocaleString()}
             </span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-600">Tokens:</span>
+            <span className="text-gray-600">{t('activity.tokens')}</span>
             <span className="font-medium text-gray-900">
               {activity.tokens.toLocaleString()}
             </span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-600">Price/Token:</span>
+            <span className="text-gray-600">{t('activity.pricePerToken')}</span>
             <span className="font-medium text-green-600">
               ${activity.price_per_token.toFixed(2)}
             </span>
@@ -190,6 +192,7 @@ export const MarketplaceActivity: React.FC<MarketplaceActivityProps> = ({
   activities,
   className
 }) => {
+  const { t } = useTranslation('market');
   if (activities.length === 0) {
     return (
       <div className={cn(
@@ -198,11 +201,11 @@ export const MarketplaceActivity: React.FC<MarketplaceActivityProps> = ({
       )}>
         <div className="flex items-center gap-2 mb-4">
           <Activity className="w-5 h-5 text-gray-400" />
-          <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('activity.recent')}</h3>
         </div>
         <div className="text-center py-8 text-gray-500">
           <Activity className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-          <p className="text-sm">No recent activity</p>
+          <p className="text-sm">{t('activity.none')}</p>
         </div>
       </div>
     );
@@ -222,14 +225,14 @@ export const MarketplaceActivity: React.FC<MarketplaceActivityProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Activity className="w-5 h-5 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('activity.recent')}</h3>
           </div>
           <Badge variant="secondary" className="text-xs">
-            {activities.length} items
+            {t('activity.items', { value: activities.length })}
           </Badge>
         </div>
         <p className="text-sm text-gray-600 mt-1">
-          Latest marketplace transactions and listings
+          {t('activity.latest')}
         </p>
       </div>
 
@@ -252,11 +255,11 @@ export const MarketplaceActivity: React.FC<MarketplaceActivityProps> = ({
         <div className="flex items-center justify-between text-xs text-gray-500">
           <div className="flex items-center gap-1">
             <TrendingUp className="w-3 h-3" />
-            <span>Live updates</span>
+            <span>{t('activity.live')}</span>
           </div>
           <div className="flex items-center gap-1">
             <Calendar className="w-3 h-3" />
-            <span>Last 24 hours</span>
+            <span>{t('activity.last24h')}</span>
           </div>
         </div>
       </div>

@@ -1,0 +1,952 @@
+{
+  "addFunds": {
+    "title": "Add Funds",
+    "subtitle": "Top up your wallet balance to purchase property shares.",
+    "successCard": "Payment confirmed — your wallet balance has been topped up.",
+    "done": "Done",
+    "cryptoPending": "Complete your crypto payment in the newly-opened checkout tab. Your wallet balance updates automatically once the payment is confirmed on-chain (this can take a few minutes).",
+    "bankSubmitted": "Bank deposit request submitted. Once our team confirms your transfer, <b>{{amount}}</b> will be credited to your wallet — usually within 1–2 business days. You'll get a notification when it's done.",
+    "back": "Back",
+    "addingToWallet": "Adding <b>{{amount}}</b> to your wallet.",
+    "bankIntro": "Transfer <b>{{amount}}</b> to the account below, then submit this form. We'll credit your wallet once the transfer is confirmed.",
+    "loadingBank": "Loading bank details…",
+    "bankUnavailable": "Bank transfer isn't available right now — no receiving account is configured. Please use card or crypto, or try again later.",
+    "transferTo": "Transfer to",
+    "details": {
+      "accountHolder": "Account holder",
+      "bank": "Bank",
+      "account": "Account / IBAN",
+      "swift": "SWIFT / BIC",
+      "routing": "Routing / sort code",
+      "bankAddress": "Bank address",
+      "country": "Country",
+      "currency": "Currency"
+    },
+    "copy": "Copy",
+    "copied": "Copied",
+    "preparing": "Preparing…",
+    "downloadInstructions": "Download transfer instructions (PDF)",
+    "referenceLabel": "Transfer reference (optional)",
+    "referencePlaceholder": "e.g. your account email",
+    "proofLabel": "Proof of transfer (optional — speeds up review)",
+    "submitting": "Submitting…",
+    "madeTransfer": "I've made the transfer",
+    "amountLabel": "Amount (USD)",
+    "methods": {
+      "card": "Card",
+      "crypto": "Crypto",
+      "bank": "Bank"
+    },
+    "cancel": "Cancel",
+    "continueCard": "Continue to card",
+    "continueBank": "Continue to bank transfer",
+    "starting": "Starting…",
+    "payCrypto": "Pay with crypto",
+    "errors": {
+      "loadBank": "Could not load bank details. Please try again.",
+      "minAmount": "Enter an amount of at least {{min}}.",
+      "cryptoStartRetry": "Could not start the crypto checkout. Please try again.",
+      "cryptoStart": "Could not start the crypto checkout.",
+      "bankSubmit": "Could not submit your bank deposit. Please try again."
+    }
+  },
+  "methodNames": {
+    "crypto": "Crypto",
+    "card": "Card",
+    "bank": "Bank",
+    "bank_transfer": "Bank transfer",
+    "paypal": "PayPal",
+    "wallet": "Wallet",
+    "nova_sukuk": "Nova Sukuk"
+  },
+  "analytics": {
+    "title": "Payment Analytics",
+    "subtitle": "Track and analyze your payment performance",
+    "totalVolume": "Total Volume",
+    "vsPrevious": "vs previous period",
+    "transactions": "Transactions",
+    "avg": "Avg:",
+    "successRate": "Success Rate",
+    "completedCount_one": "{{count}} completed",
+    "completedCount_other": "{{count}} completed",
+    "totalFees": "Total Fees",
+    "ofVolume": "{{pct}}% of volume",
+    "txVolume": "Transaction Volume",
+    "metrics": {
+      "volume": "Volume",
+      "count": "Count",
+      "fees": "Fees"
+    },
+    "paymentMethods": "Payment Methods",
+    "txCount_one": "{{count}} transaction",
+    "txCount_other": "{{count}} transactions",
+    "avgSize": "Average Transaction Size",
+    "trends": "Transaction Trends",
+    "last7Volume": "Last 7 days volume",
+    "txThisWeek": "Transactions this week",
+    "growthRate": "Growth rate",
+    "currencyDistribution": "Currency Distribution",
+    "ranges": {
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "90d": "Last 90 days",
+      "1y": "Last year"
+    },
+    "export": "Export",
+    "tabs": {
+      "overview": "Overview",
+      "methods": "Payment Methods",
+      "trends": "Trends"
+    }
+  },
+  "card": {
+    "title": "Card Payment",
+    "subtitle": "Pay {{amount}} with your credit or debit card",
+    "holderName": "Cardholder Name",
+    "holderPlaceholder": "As shown on the card",
+    "cardDetails": "Card details",
+    "saveCard": "Save this card for future payments",
+    "pciTitle": "PCI-DSS Secure",
+    "pciBody": "Card data is collected by Stripe inside an isolated iframe. Capimax RT never sees your card number, CVC, or expiry.",
+    "continue": "Continue",
+    "back": "Back",
+    "billingTitle": "Billing Address",
+    "billingSubtitle": "Enter your billing address for verification",
+    "street": "Street Address",
+    "streetPlaceholder": "123 Main Street",
+    "city": "City",
+    "cityPlaceholder": "New York",
+    "state": "State",
+    "zip": "ZIP Code",
+    "country": "Country",
+    "subtotal": "Subtotal:",
+    "processingFeePct": "Processing Fee ({{pct}}%):",
+    "completePayment": "Complete Payment",
+    "processingTitle": "Processing Payment",
+    "processingBody": "Please wait while we confirm your card payment with Stripe",
+    "doNotClose": "Do not close this window or refresh the page",
+    "successTitle": "Payment Successful",
+    "successBody": "Your card payment has been processed successfully",
+    "paymentId": "Payment ID:",
+    "receiptSent": "A receipt has been sent to your email address",
+    "done": "Done",
+    "confirmTitle": "Confirm Payment",
+    "confirmMessage": "Are you sure you want to proceed with this payment? This action cannot be undone.",
+    "processing": "Processing…",
+    "amount": "Amount",
+    "processingFee": "Processing Fee",
+    "total": "Total",
+    "txDescription": "Purchase payment of {{amount}}",
+    "errors": {
+      "streetRequired": "Street address is required",
+      "cityRequired": "City is required",
+      "stateRequired": "State is required",
+      "zipRequired": "ZIP code is required",
+      "countryRequired": "Country is required",
+      "stripeLoading": "Stripe.js has not finished loading yet. Please try again in a moment.",
+      "cardNotReady": "Card input is not ready. Please refresh and try again.",
+      "declined": "Card declined",
+      "badStatus": "Payment is in status \"{{status}}\". Please try again or contact support.",
+      "toastTitle": "Payment Failed",
+      "processingRetry": "Payment processing failed. Please try again.",
+      "processing": "Payment processing failed",
+      "completeCard": "Please complete your card details.",
+      "required": "Required"
+    }
+  },
+  "depositWithdraw": {
+    "addFunds": "Add Funds",
+    "withdrawFunds": "Withdraw Funds",
+    "chooseDeposit": "Choose your preferred deposit method",
+    "chooseWithdraw": "Select how you'd like to receive your funds",
+    "methodCards": {
+      "crypto": "Cryptocurrency",
+      "card": "Credit/Debit Card",
+      "bank": "Bank Transfer",
+      "bankDesc": "ACH, Wire transfer",
+      "paypalDesc": "Digital payments"
+    },
+    "methods": {
+      "crypto": "Crypto",
+      "card": "Card",
+      "bank": "Bank",
+      "paypal": "PayPal"
+    },
+    "enterAmount": "Enter Amount",
+    "howMuchAdd": "How much would you like to add?",
+    "howMuchWithdraw": "How much would you like to withdraw?",
+    "currency": "Currency",
+    "amount": "Amount",
+    "amountPlaceholder": "Enter amount in {{currency}}",
+    "availableBalance": "Available balance:",
+    "amountColon": "Amount:",
+    "feeColon": "Fee:",
+    "totalColon": "Total:",
+    "methodColon": "Method:",
+    "statusColon": "Status:",
+    "txId": "Transaction ID:",
+    "newBalance": "New Balance:",
+    "back": "Back",
+    "continue": "Continue",
+    "confirmDepositTitle": "Confirm Deposit",
+    "confirmWithdrawalTitle": "Confirm Withdrawal",
+    "reviewDetails": "Please review your transaction details",
+    "important": "Important:",
+    "onlySend": "Only send {{currency}} to this address. Sending other currencies may result in loss of funds.",
+    "confirmDeposit": "Confirm Deposit",
+    "confirmWithdrawal": "Confirm Withdrawal",
+    "processingTitle": "Processing Transaction",
+    "processingDeposit": "Please wait while we process your deposit",
+    "processingWithdrawal": "Please wait while we process your withdrawal",
+    "completeTitle": "Transaction Complete",
+    "completeDeposit": "Your deposit has been processed successfully",
+    "completeWithdrawal": "Your withdrawal has been processed successfully",
+    "depositMore": "Deposit More",
+    "withdrawMore": "Withdraw More",
+    "done": "Done",
+    "deposit": "Deposit",
+    "withdraw": "Withdraw",
+    "txDeposit": "Deposit {{amount}}",
+    "txWithdraw": "Withdraw {{amount}}",
+    "errors": {
+      "minAmount": "Minimum amount is {{amount}}",
+      "insufficient": "Insufficient balance. Available: {{amount}}"
+    }
+  },
+  "status": {
+    "pending": "Pending",
+    "processing": "Processing",
+    "completed": "Completed",
+    "failed": "Failed",
+    "cancelled": "Cancelled",
+    "confirmed": "Confirmed",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "active": "Active"
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo_one": "{{count}}m ago",
+    "minutesAgo_other": "{{count}}m ago",
+    "hoursAgo_one": "{{count}}h ago",
+    "hoursAgo_other": "{{count}}h ago",
+    "daysAgo_one": "{{count}}d ago",
+    "daysAgo_other": "{{count}}d ago"
+  },
+  "history": {
+    "title": "Transaction History",
+    "export": "Export",
+    "searchPlaceholder": "Search transactions...",
+    "types": {
+      "all": "All Types",
+      "deposit": "Deposits",
+      "withdrawal": "Withdrawals",
+      "investment": "Purchases",
+      "dividend": "Dividends",
+      "fee": "Fees"
+    },
+    "allStatus": "All Status",
+    "ranges": {
+      "all": "All Time",
+      "today": "Today",
+      "week": "This Week",
+      "month": "This Month"
+    },
+    "emptyTitle": "No transactions found",
+    "emptyFiltered": "Try adjusting your filters",
+    "emptyDefault": "Your transaction history will appear here",
+    "view": "View",
+    "fee": "Fee:",
+    "confirmations": "{{count}}/{{total}} confirmations",
+    "paymentMethod": "Payment Method:",
+    "viewAll": "View All Transactions"
+  },
+  "crypto": {
+    "title": "Pay with cryptocurrency",
+    "intro": "Pay <b>{{amount}}</b>. You'll pick the coin you want to use on the NOWPayments checkout — Bitcoin, USDT, USDC, ETH, BNB, MATIC and 200+ more are supported there.",
+    "nextTitle": "What happens next?",
+    "next1": "We open the NOWPayments checkout in a new tab.",
+    "next2": "You choose the coin you want to send and complete the payment there.",
+    "next3": "This window stays open and watches for the on-chain confirmation — your purchase finalises automatically when funds arrive.",
+    "opening": "Opening checkout…",
+    "continue": "Continue to NOWPayments",
+    "awaitingTitle": "Awaiting payment on NOWPayments",
+    "awaitingBody": "Complete the payment in the new tab we just opened. Your purchase finalises as soon as the network confirms the transfer.",
+    "statusLabel": "Status",
+    "reopen": "Open hosted checkout again",
+    "keepOpen": "Don't close this window until the payment confirms — we're polling for the update every {{seconds}}s. You can leave it running in the background.",
+    "payLater": "I'll pay later",
+    "receivedTitle": "Payment received",
+    "receivedBody": "Your crypto payment is confirmed on chain. Shares will appear in your wallet shortly — minting runs in the background.",
+    "providerStatus": {
+      "waiting": "Waiting",
+      "confirming": "Confirming",
+      "confirmed": "Confirmed",
+      "sending": "Sending",
+      "partially_paid": "Partially paid",
+      "finished": "Finished",
+      "failed": "Failed",
+      "refunded": "Refunded",
+      "expired": "Expired"
+    },
+    "errors": {
+      "createInvoice": "Failed to create the crypto invoice.",
+      "notConfigured": "Crypto payments are not configured for this environment yet. Please use a different payment method, or contact support.",
+      "providerFailed": "The crypto payment provider could not generate a checkout. Please try again in a moment or pick another payment method.",
+      "toastTitle": "Crypto payment failed",
+      "timeout": "Timed out waiting for the on-chain payment. If you have already sent the funds, they will still credit — check Transactions in a few minutes. Otherwise you can cancel and try again.",
+      "invoiceFailed": "NOWPayments reported this invoice as failed or expired. You can cancel and try again with a fresh quote."
+    }
+  },
+  "multiWallet": {
+    "title": "Connect Wallet",
+    "close": "Close",
+    "connected": "Wallet Connected",
+    "address": "Address:",
+    "copyAddress": "Copy address",
+    "balance": "Balance:",
+    "network": "Network:",
+    "unknownNetwork": "Unknown",
+    "disconnect": "Disconnect",
+    "continue": "Continue",
+    "popular": "Popular",
+    "moreOptions": "More Options",
+    "securityNote": "Your wallet credentials are never stored on our servers",
+    "installed": "Installed",
+    "wallets": {
+      "metamask": "Connect using browser wallet",
+      "walletconnect": "Scan with your mobile wallet",
+      "coinbase": "Connect your Coinbase Wallet",
+      "trust": "Mobile-first crypto wallet",
+      "phantom": "Solana and Ethereum wallet",
+      "rainbow": "Fun and simple crypto wallet"
+    },
+    "errors": {
+      "notSupported": "Wallet {{name}} not supported yet",
+      "noAccounts": "No accounts found",
+      "connectFailed": "Failed to connect wallet"
+    }
+  },
+  "shared": {
+    "cancel": "Cancel",
+    "submitForReview": "Submit for review",
+    "submittedForReview": "Submitted for review",
+    "fileTooLarge": "File too large (max 10MB).",
+    "max10mb": "Max 10MB",
+    "noInvestmentReturned": "Submission accepted but no investment was returned."
+  },
+  "nova": {
+    "title": "Nova Sukuk — submit document",
+    "intro": "Upload your signed Sukuk certificate of <b>{{amount}}</b> for admin review. Shares are minted once the document is approved.",
+    "referenceLabel": "Sukuk reference number",
+    "referencePlaceholder": "Reference printed on the certificate",
+    "documentLabel": "Sukuk document (PDF / image)",
+    "uploadPrompt": "Click to upload PDF or image",
+    "uploading": "Uploading your Sukuk document…",
+    "doneBody": "Your Sukuk document is in the admin queue. Shares will be minted once the document is approved — you'll get a notification + email when that happens.",
+    "errors": {
+      "fileType": "Upload a PDF or image (JPG / PNG).",
+      "fileRequired": "Please upload the signed Sukuk document.",
+      "referenceRequired": "Sukuk reference number is required.",
+      "submitFailed": "Failed to submit Nova Sukuk payment."
+    }
+  },
+  "bankForm": {
+    "title": "Bank transfer — submit proof",
+    "intro": "Send <b>{{amount}}</b> from your bank and upload a screenshot or PDF receipt. An admin will verify and release your shares once the funds arrive (typically 1–3 business days).",
+    "fields": {
+      "holderName": "Account holder name",
+      "bankName": "Bank name",
+      "accountNumber": "Account number / IBAN",
+      "routing": "Routing / sort code",
+      "swift": "SWIFT / BIC",
+      "reference": "Reference / memo"
+    },
+    "placeholders": {
+      "holderName": "As it appears on the account",
+      "bankName": "e.g. HSBC",
+      "accountNumber": "Sending account",
+      "optional": "Optional",
+      "swift": "For international wires",
+      "reference": "Optional note for the admin"
+    },
+    "proofLabel": "Proof of transfer",
+    "uploadPrompt": "Click to upload JPG, PNG or PDF",
+    "uploading": "Uploading your proof of transfer…",
+    "doneBody": "Your shares are reserved. An admin will release them once the funds arrive on our end. You'll get a notification + email when that happens.",
+    "includeReference": "Include this reference on your wire memo:",
+    "errors": {
+      "fileType": "Upload a JPG/PNG/WEBP image or a PDF.",
+      "holderRequired": "Account holder name is required.",
+      "bankRequired": "Bank name is required.",
+      "accountRequired": "Account number is required.",
+      "proofRequired": "Please upload proof of the transfer.",
+      "submitFailed": "Failed to submit bank transfer."
+    }
+  },
+  "payouts": {
+    "title": "Wallet & Payouts",
+    "subtitle": "Your available balance and withdrawal history.",
+    "balanceLabel": "Available balance",
+    "withdraw": "Withdraw"
+  },
+  "security": {
+    "title": "Payment Security",
+    "subtitle": "Manage your account security and compliance settings",
+    "tabs": {
+      "overview": "Overview",
+      "rules": "Security Rules",
+      "twoFactor": "Two-Factor Auth",
+      "alerts": "Security Alerts",
+      "compliance": "Compliance"
+    },
+    "score": "Security Score",
+    "scoreSubtitle": "Your account security rating",
+    "outOf100": "out of 100",
+    "twoFactorShort": "Two-Factor Auth",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "paymentLimits": "Payment Limits",
+    "perDay": "{{amount}} daily",
+    "activeAlerts": "Active Alerts",
+    "unresolved_one": "{{count}} unresolved",
+    "unresolved_other": "{{count}} unresolved",
+    "recentActivity": "Recent Security Activity",
+    "rulesTitle": "Security Rules",
+    "rulesSubtitle": "Configure security policies for your account",
+    "severity": {
+      "low": "low",
+      "medium": "medium",
+      "high": "high"
+    },
+    "rules": {
+      "daily_limit": {
+        "title": "Daily Transaction Limit",
+        "description": "Maximum amount that can be spent per day"
+      },
+      "single_tx_limit": {
+        "title": "Single Transaction Limit",
+        "description": "Maximum amount for a single transaction"
+      },
+      "require_2fa": {
+        "title": "Two-Factor Authentication",
+        "description": "Require 2FA for all transactions above threshold"
+      },
+      "geo_restriction": {
+        "title": "Geographic Restrictions",
+        "description": "Block transactions from restricted countries"
+      },
+      "velocity_check": {
+        "title": "Velocity Monitoring",
+        "description": "Monitor for unusual transaction patterns"
+      },
+      "device_verification": {
+        "title": "Device Verification",
+        "description": "Verify new devices before allowing transactions"
+      }
+    },
+    "alerts": {
+      "alert_1": {
+        "title": "Unusual Login Location",
+        "description": "Login detected from new location: San Francisco, CA"
+      },
+      "alert_2": {
+        "title": "Daily Limit Approached",
+        "description": "You have used 85% of your daily transaction limit"
+      }
+    },
+    "setup2fa": "Setup 2FA",
+    "chooseMethod": "Choose your preferred 2FA method:",
+    "methods": {
+      "sms": {
+        "label": "SMS",
+        "desc": "Receive codes via text message"
+      },
+      "email": {
+        "label": "Email",
+        "desc": "Receive codes via email"
+      },
+      "authenticator": {
+        "label": "Authenticator App",
+        "desc": "Use Google Authenticator or similar"
+      }
+    },
+    "continue": "Continue",
+    "back": "Back",
+    "verify": "Verify",
+    "enterCode": "Enter the verification code sent to your {{method}}:",
+    "codePlaceholder": "Enter 6-digit code",
+    "backupCodes": "Backup Codes",
+    "backupCodesBody": "Save these codes in a secure place. You can use them to access your account if you lose your device.",
+    "completeSetup": "Complete Setup",
+    "alertsTitle": "Security Alerts",
+    "alertsSubtitle": "Monitor and manage security notifications",
+    "resolve": "Resolve",
+    "complianceTitle": "Compliance & Verification",
+    "complianceSubtitle": "Account verification and regulatory compliance status",
+    "identity": "Identity Verification",
+    "emailVerified": "Email Verified",
+    "phoneVerified": "Phone Verified",
+    "idDocument": "ID Document",
+    "addressProof": "Address Proof",
+    "amlStatus": "AML/KYC Status",
+    "riskAssessment": "Risk Assessment",
+    "lowRisk": "Low Risk",
+    "txLimit": "Transaction Limit",
+    "lastReview": "Last Review",
+    "regulatory": "Regulatory Compliance",
+    "regulatoryBody": "Your account complies with applicable financial regulations including AML, KYC, and data protection laws.",
+    "gdpr": "GDPR Compliant",
+    "pci": "PCI DSS Certified",
+    "twoFactorTitle": "Two-Factor Authentication",
+    "twoFactorSubtitle": "Add an extra layer of security to your account",
+    "twoFactorActive": "2FA is active",
+    "usingMethod": "Using {{method}} as primary method"
+  },
+  "selector": {
+    "title": "Choose Payment Method",
+    "subtitle": "Pay {{amount}} for your real estate purchase",
+    "compare": "Compare Methods",
+    "recommended": "Recommended",
+    "popular": "Popular",
+    "discount": "Discount",
+    "fee": "Fee",
+    "free": "Free",
+    "processing": "Processing",
+    "totalAmount": "Total Amount:",
+    "minAmount": "Minimum amount: {{amount}}",
+    "maxAmount": "Maximum amount: {{amount}}",
+    "walletRequired": "Wallet connection required",
+    "notImplemented": "Payment method not yet implemented",
+    "back": "Back",
+    "backToMethods": "Back to Methods",
+    "backToProperty": "Back to Property",
+    "submitting": "Submitting...",
+    "close": "Close",
+    "comparisonTitle": "Payment Method Comparison",
+    "table": {
+      "method": "Method",
+      "fee": "Fee",
+      "processingTime": "Processing Time",
+      "limits": "Limits",
+      "bestFor": "Best For"
+    },
+    "secureTitle": "Secure Payment Processing",
+    "secureBody": "All payments are processed through encrypted channels with industry-standard security measures. Your financial information is never stored on our servers.",
+    "nova": {
+      "receivedTitle": "Submission Received",
+      "receivedBody": "Your Nova Sukuk certificate has been submitted for admin review. You will be notified once the review is complete (1-2 business days).",
+      "title": "Nova Sukuk Payment",
+      "subtitle": "Upload your Sukuk certificate PDF for review",
+      "purchaseAmount": "Purchase Amount:",
+      "certificate": "Sukuk Certificate (PDF)",
+      "uploadPrompt": "Click to upload PDF",
+      "maxSize": "Maximum file size: 10MB",
+      "referencePlaceholder": "Enter your Sukuk reference number"
+    },
+    "pronova": {
+      "submittedTitle": "Transaction Submitted",
+      "submittedBody": "Your Pronova transaction is being verified on-chain. This typically takes 5-15 minutes.",
+      "title": "Pronova Payment",
+      "subtitle": "BNB Smart Chain - 5% discount applied",
+      "originalAmount": "Original Amount",
+      "discount5": "5% Discount",
+      "youPay": "You Pay",
+      "howItWorks": "How it works:",
+      "step1": "Send Pronova tokens to the platform wallet address",
+      "step2": "Enter your transaction hash for verification",
+      "step3": "Wait for on-chain confirmation (5-15 min)",
+      "step4": "Shares are allocated to your account automatically",
+      "proceed": "Proceed to Payment",
+      "sendTo": "Send Pronova tokens to:",
+      "equivalent": "{{amount}} equivalent in Pronova",
+      "sent": "I've Sent the Payment",
+      "txHash": "Transaction Hash",
+      "invalidHash": "Invalid transaction hash format (must be 0x + 64 hex characters)",
+      "verifying": "Verifying...",
+      "verify": "Verify Transaction"
+    },
+    "methods": {
+      "crypto": {
+        "name": "Cryptocurrency",
+        "description": "Pay with Bitcoin, Ethereum, or other cryptocurrencies",
+        "fee": "0.1-0.5%",
+        "processingTime": "10-30 minutes",
+        "discount": "",
+        "features": [
+          "Decentralized",
+          "Global",
+          "Fast Settlement"
+        ],
+        "pros": [
+          "Low fees",
+          "No chargebacks",
+          "Global access",
+          "Fast for large amounts"
+        ],
+        "cons": [
+          "Price volatility",
+          "Technical complexity",
+          "Requires wallet"
+        ]
+      },
+      "card": {
+        "name": "Credit/Debit Card",
+        "description": "Pay instantly with Visa, Mastercard, or American Express",
+        "fee": "2.9% + $0.30",
+        "processingTime": "Instant",
+        "discount": "",
+        "features": [
+          "Instant Processing",
+          "Consumer Protection",
+          "Widely Accepted"
+        ],
+        "pros": [
+          "Instant confirmation",
+          "Familiar process",
+          "Buyer protection",
+          "Rewards points"
+        ],
+        "cons": [
+          "Higher fees",
+          "Chargeback risk",
+          "Geographic restrictions"
+        ]
+      },
+      "bank": {
+        "name": "Bank Transfer",
+        "description": "Direct transfer from your bank account (ACH/Wire)",
+        "fee": "ACH: Free, Wire: $25",
+        "processingTime": "ACH: 1-3 days, Wire: Same day",
+        "discount": "",
+        "features": [
+          "High Limits",
+          "Secure",
+          "Cost Effective"
+        ],
+        "pros": [
+          "Low/no fees",
+          "High limits",
+          "Secure",
+          "No intermediaries"
+        ],
+        "cons": [
+          "Slower processing",
+          "Banking hours",
+          "More complex setup"
+        ]
+      },
+      "paypal": {
+        "name": "PayPal",
+        "description": "Pay using your PayPal balance or connected accounts",
+        "fee": "3.49% + $0.49",
+        "processingTime": "Instant",
+        "discount": "",
+        "features": [
+          "Buyer Protection",
+          "Easy Setup",
+          "Mobile Friendly"
+        ],
+        "pros": [
+          "Quick setup",
+          "Buyer protection",
+          "Mobile friendly",
+          "No card details shared"
+        ],
+        "cons": [
+          "Higher fees",
+          "Account freezing risk",
+          "Limited to PayPal users"
+        ]
+      },
+      "nova_sukuk": {
+        "name": "Nova Sukuk",
+        "description": "Pay with Nova Sukuk certificate - upload PDF for admin review",
+        "fee": "Free",
+        "processingTime": "1-2 business days (manual review)",
+        "discount": "",
+        "features": [
+          "Sharia Compliant",
+          "No Fees",
+          "High Limits"
+        ],
+        "pros": [
+          "No transaction fees",
+          "Sharia-compliant",
+          "High purchase limits"
+        ],
+        "cons": [
+          "Manual review required",
+          "Longer processing time"
+        ]
+      },
+      "pronova": {
+        "name": "Pronova",
+        "description": "Pay with Pronova crypto on BNB Smart Chain - get 5% discount!",
+        "fee": "Free",
+        "processingTime": "5-15 minutes",
+        "discount": "5% OFF",
+        "features": [
+          "5% Discount",
+          "BNB Smart Chain",
+          "Fast Settlement"
+        ],
+        "pros": [
+          "5% discount on purchase",
+          "Low fees",
+          "Fast confirmation",
+          "On-chain verification"
+        ],
+        "cons": [
+          "Requires Pronova tokens",
+          "Requires crypto wallet"
+        ]
+      }
+    }
+  },
+  "txTypes": {
+    "investment": "Purchase",
+    "deposit": "Deposit",
+    "withdrawal": "Withdrawal",
+    "dividend": "Dividend",
+    "fee": "Fee",
+    "refund": "Refund"
+  },
+  "tracker": {
+    "steps": {
+      "initiated": {
+        "title": "Transaction Initiated",
+        "desc": "Payment request created",
+        "details": "{{type}} of {{amount}}"
+      },
+      "walletConnected": {
+        "title": "Wallet Connected",
+        "desc": "Cryptocurrency wallet connected",
+        "details": "Connected to {{network}} network"
+      },
+      "signed": {
+        "title": "Transaction Signed",
+        "desc": "Transaction signed in wallet",
+        "details": "Tx Hash: {{hash}}"
+      },
+      "confirmations": {
+        "title": "Network Confirmations",
+        "desc": "Waiting for network confirmations"
+      },
+      "cardProcessing": {
+        "title": "Card Processing",
+        "desc": "Processing card payment",
+        "details": "Card ending in {{last4}}"
+      },
+      "authorized": {
+        "title": "Payment Authorized",
+        "desc": "Payment authorized by card issuer"
+      },
+      "bankTransfer": {
+        "title": "Bank Transfer Initiated",
+        "desc": "Transfer initiated from your bank",
+        "details": "Processing time: 1-3 business days"
+      },
+      "complete": {
+        "title": "Payment Complete",
+        "desc": "Payment successfully processed",
+        "details": "Funds have been credited to your account"
+      }
+    },
+    "notifCompleted": "Transaction {{id}} completed!",
+    "notifUpdated": "Transaction {{id}} status updated to {{status}}",
+    "detailsTitle": "Transaction Details",
+    "detailsSubtitle": "Track the progress of your transaction",
+    "refresh": "Refresh",
+    "id": "ID:",
+    "started": "Started:",
+    "dateAtTime": "{{date}} at {{time}}",
+    "noFee": "No fee",
+    "progress": "Progress",
+    "viewOnChain": "View on blockchain",
+    "recentUpdates": "Recent Updates",
+    "allTransactions": "All Transactions",
+    "ranges": {
+      "24h": "Last 24h"
+    },
+    "emptyHint": "Try adjusting your filters or search query",
+    "selectTitle": "Select a transaction",
+    "selectHint": "Click on a transaction to view detailed tracking information"
+  },
+  "walletBalance": {
+    "totalValue": "Total Portfolio Value",
+    "hideBalances": "Hide balances",
+    "showBalances": "Show balances",
+    "growthError": "Unable to load growth data",
+    "retry": "Retry",
+    "retrying": "Retrying...",
+    "growthLoading": "Growth data loading...",
+    "hideGrowth": "Hide growth data",
+    "showGrowth": "Show growth data",
+    "period": {
+      "week": "this week",
+      "month": "this month",
+      "quarter": "this quarter",
+      "year": "this year"
+    },
+    "addFunds": "Add Funds",
+    "withdraw": "Withdraw",
+    "withdrawFunds": "Withdraw Funds",
+    "deposit": "Deposit",
+    "refresh": "Refresh",
+    "currencyBalances": "Currency Balances",
+    "noBalances": "No balances available",
+    "addFirstFunds": "Add Your First Funds",
+    "locked": "{{amount}} locked",
+    "analyticsUnavailable": "Portfolio analytics temporarily unavailable",
+    "pendingTx_one": "{{count}} transaction pending",
+    "pendingTx_other": "{{count}} transactions pending",
+    "loading": "Loading..."
+  },
+  "walletPanel": {
+    "title": "Your Capimax Wallet",
+    "subtitle": "Your digital wallet & tokenized property ownership.",
+    "blockchain": "Blockchain",
+    "tiles": {
+      "status": "Wallet Status",
+      "active": "Active",
+      "pending": "Pending",
+      "network": "Network",
+      "verification": "Verification",
+      "verified": "Verified",
+      "unverified": "Unverified",
+      "shareBalance": "Share Balance"
+    },
+    "primarySelf": "Primary wallet (self-custody)",
+    "primaryManaged": "Primary wallet (platform-managed)",
+    "noSetup": "No setup required",
+    "loading": "Loading…",
+    "notAssigned": "Not yet assigned",
+    "copyPrimaryAria": "Copy primary wallet address",
+    "copy": "Copy",
+    "copied": "Copied",
+    "externalTitle": "External wallet (optional)",
+    "unlink": "Unlink",
+    "unlinking": "Unlinking…",
+    "linkIntro": "Link a self-custody wallet (MetaMask, hardware wallet, etc.) if you want crypto-paid purchases to land directly in it, or to later withdraw your shares from Capimax custody.",
+    "linkExternal": "Link external wallet",
+    "waitingWallet": "Waiting for wallet…",
+    "signNote": "You'll be asked to sign a verification message — no gas, no funds are moved.",
+    "propertiesTitle": "Tokenized properties in your wallet",
+    "sharesUnit_one": "share",
+    "sharesUnit_other": "shares",
+    "split": "{{custody}} in custody · {{external}} in your wallet",
+    "withdraw": "Withdraw",
+    "withdrawing": "Withdrawing…",
+    "tokenContract": "Token contract:",
+    "viewExplorer": "View on explorer",
+    "withdrawBroadcast": "Withdrawal broadcast.",
+    "viewTx": "View transaction",
+    "custodyNote": "Shares held in the platform-managed custodial wallet can be moved to your linked external wallet anytime. Gas is paid by the platform.",
+    "confirmWithdraw_one": "Withdraw {{count}} share of \"{{property}}\" to your external wallet?\n\nThis sends an on-chain transaction signed by the Capimax custody system. Gas is paid by the platform.",
+    "confirmWithdraw_other": "Withdraw {{count}} shares of \"{{property}}\" to your external wallet?\n\nThis sends an on-chain transaction signed by the Capimax custody system. Gas is paid by the platform.",
+    "errors": {
+      "load": "Failed to load wallet info.",
+      "noWallet": "No browser wallet detected. Install MetaMask (or another EVM wallet) and try again.",
+      "cancelled": "Connection cancelled.",
+      "link": "Failed to link wallet.",
+      "unlink": "Failed to unlink wallet.",
+      "nothingToWithdraw": "Nothing to withdraw for this property.",
+      "withdraw": "Withdrawal failed."
+    }
+  },
+  "withdraw": {
+    "title": "Withdraw Funds",
+    "availableBalance": "Available balance:",
+    "close": "Close",
+    "cancel": "Cancel",
+    "amountLabel": "Amount (USD)",
+    "methodBank": "Bank transfer",
+    "methodCrypto": "Crypto",
+    "fields": {
+      "holderName": "Account holder name",
+      "bankName": "Bank name",
+      "accountNumber": "Account number / IBAN",
+      "swift": "SWIFT / BIC",
+      "routing": "Routing / sort code",
+      "bankCountry": "Bank country (ISO-2)",
+      "asset": "Asset",
+      "network": "Network",
+      "walletAddress": "Wallet address",
+      "memo": "Memo / tag (optional)",
+      "notes": "Note for compliance (optional)"
+    },
+    "placeholders": {
+      "holderName": "As shown on the account",
+      "bankName": "e.g. HSBC",
+      "accountNumber": "Receiving account",
+      "swift": "For international wires",
+      "optional": "Optional",
+      "walletAddress": "Destination wallet address",
+      "memo": "Only if your exchange/chain requires it",
+      "notes": "E.g. urgency, preferred reference, etc."
+    },
+    "noticeBank": "Compliance reviews each request. Funds are locked from your available balance the moment the request is submitted, then wired to your bank account within 48 hours of approval. You'll receive an email at each step.",
+    "noticeCrypto": "Compliance reviews each request. Funds are locked from your available balance the moment the request is submitted, then sent to your wallet address within 48 hours of approval. You'll receive an email at each step.",
+    "submitting": "Submitting…",
+    "submit": "Withdraw {{amount}}",
+    "successBank": "Withdrawal request submitted. Compliance will review and wire {{amount}} to {{dest}} within 48 hours.",
+    "successCrypto": "Withdrawal request submitted. Compliance will review and send {{amount}} to {{dest}} within 48 hours.",
+    "reference": "Reference: {{ref}}.",
+    "errors": {
+      "exceedsBalance": "Amount exceeds your available balance of {{balance}}.",
+      "minAmount": "Enter an amount of at least $10.",
+      "bankRequired": "Account holder name, bank name, and account number are required.",
+      "cryptoRequired": "Asset, network, and wallet address are required.",
+      "submitFailed": "Failed to submit the withdrawal request."
+    }
+  },
+  "withdrawals": {
+    "title": "Your withdrawal requests",
+    "subtitle": "Each request lists the account it's being sent to and where it is in the review pipeline. Pending and approved requests have already been locked from your available balance.",
+    "loading": "Loading withdrawal history…",
+    "loadError": "Could not load your withdrawal history.",
+    "emptyBefore": "You haven't requested any withdrawals yet. Hit ",
+    "emptyAction": "Withdraw",
+    "emptyAfter": " above to move funds to your bank.",
+    "dest": {
+      "asset": "Asset",
+      "network": "Network",
+      "address": "Address",
+      "accountHolder": "Account holder",
+      "bank": "Bank",
+      "account": "Account"
+    },
+    "requestedAt": "Requested {{date}}",
+    "completedAt": "Completed {{date}}",
+    "complianceNote": "Compliance note:",
+    "pdf": "PDF",
+    "pdfTitle": "Download withdrawal confirmation (PDF)",
+    "status": {
+      "pending": {
+        "label": "Pending Review",
+        "help": "Compliance is reviewing your request."
+      },
+      "approved": {
+        "label": "Approved",
+        "help": "Approved. Wire will be executed within 48h."
+      },
+      "processing": {
+        "label": "Wire In Progress",
+        "help": "Wire has been initiated — funds in transit."
+      },
+      "completed": {
+        "label": "Completed",
+        "help": "Funds have landed in your bank account."
+      },
+      "rejected": {
+        "label": "Rejected",
+        "help": "Funds returned to your wallet balance."
+      },
+      "cancelled": {
+        "label": "Cancelled",
+        "help": "Cancelled before review."
+      }
+    }
+  }
+}

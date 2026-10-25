@@ -19,6 +19,7 @@ import {
 import { Button } from '../ui/Button';
 import { Card } from '../design-system/cards/Card';
 import { cn } from '../../utils/cn';
+import { useTranslation } from 'react-i18next';
 
 export interface PropertyMapPin {
   id: number;
@@ -103,6 +104,7 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
   fullscreen = false,
   onFullscreenToggle
 }) => {
+  const { t } = useTranslation('propui');
   const [hoveredPin, setHoveredPin] = useState<number | null>(null);
   const [mapCenter, setMapCenter] = useState({ lat: 39.8283, lng: -98.5795 }); // Center of US
   const [zoomLevel, setZoomLevel] = useState(4);
@@ -250,7 +252,7 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
                           <div className="flex items-center gap-2 mt-1">
                             <MapPin className="w-3 h-3 text-gray-400" />
                             <span className="text-xs text-gray-500 dark:text-gray-400">
-                              {property.type}
+                              {t(`types.${String(property.type).toLowerCase().replace(/[\s-]+/g, '_')}`, { defaultValue: property.type })}
                             </span>
                           </div>
                         </div>
@@ -259,15 +261,15 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
                       <div className="grid grid-cols-3 gap-2 mt-3 text-xs">
                         <div className="text-center">
                           <div className="font-semibold text-gray-900 dark:text-white">{property.price}</div>
-                          <div className="text-gray-500">Price</div>
+                          <div className="text-gray-500">{t('map.price')}</div>
                         </div>
                         <div className="text-center">
                           <div className="font-semibold text-emerald-600 dark:text-emerald-400">{property.expectedReturn}</div>
-                          <div className="text-gray-500">Return</div>
+                          <div className="text-gray-500">{t('map.return')}</div>
                         </div>
                         <div className="text-center">
                           <div className="font-semibold text-gray-900 dark:text-white">{property.fundingPercentage}%</div>
-                          <div className="text-gray-500">Funded</div>
+                          <div className="text-gray-500">{t('map.funded')}</div>
                         </div>
                       </div>
                       
@@ -289,8 +291,8 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
                           }}
                           className="text-xs px-2 py-1"
                         >
-                          <Eye className="w-3 h-3 mr-1" />
-                          View
+                          <Eye className="w-3 h-3 me-1" />
+                          {t('map.view')}
                         </Button>
                       </div>
                     </Card>
@@ -307,12 +309,13 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
         })}
 
         {/* Map Controls */}
-        <div className="absolute top-4 right-4 flex flex-col gap-2">
+        <div className="absolute top-4 end-4 flex flex-col gap-2">
           {onFullscreenToggle && (
             <Button
               variant="ghost"
               size="sm"
               onClick={onFullscreenToggle}
+              aria-label={fullscreen ? t('map.exitFullscreen') : t('map.fullscreen')}
               className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border border-gray-200 dark:border-gray-700"
             >
               {fullscreen ? <X className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -323,6 +326,7 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
             variant="ghost"
             size="sm"
             onClick={zoomIn}
+            aria-label={t('map.zoomIn')}
             className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border border-gray-200 dark:border-gray-700"
           >
             <ZoomIn className="w-4 h-4" />
@@ -332,6 +336,7 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
             variant="ghost"
             size="sm"
             onClick={zoomOut}
+            aria-label={t('map.zoomOut')}
             className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border border-gray-200 dark:border-gray-700"
           >
             <ZoomOut className="w-4 h-4" />
@@ -341,6 +346,7 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
             variant="ghost"
             size="sm"
             onClick={resetView}
+            aria-label={t('map.resetView')}
             className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border border-gray-200 dark:border-gray-700"
           >
             <Navigation className="w-4 h-4" />
@@ -348,7 +354,7 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
         </div>
 
         {/* Map Style Selector */}
-        <div className="absolute bottom-4 left-4">
+        <div className="absolute bottom-4 start-4">
           <div className="flex bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-700 p-1">
             {(['default', 'satellite', 'terrain'] as const).map((style) => (
               <button
@@ -361,28 +367,28 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
                     : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                 )}
               >
-                {style.charAt(0).toUpperCase() + style.slice(1)}
+                {t(`map.styles.${style}`)}
               </button>
             ))}
           </div>
         </div>
 
         {/* Map Legend */}
-        <div className="absolute bottom-4 right-4">
+        <div className="absolute bottom-4 end-4">
           <Card className="p-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm">
-            <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">Legend</div>
+            <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">{t('map.legend')}</div>
             <div className="space-y-1 text-xs">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                <span className="text-gray-600 dark:text-gray-400">Funding</span>
+                <span className="text-gray-600 dark:text-gray-400">{t('map.legendFunding')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-blue-500" />
-                <span className="text-gray-600 dark:text-gray-400">Funded</span>
+                <span className="text-gray-600 dark:text-gray-400">{t('map.legendFunded')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-purple-500" />
-                <span className="text-gray-600 dark:text-gray-400">Upcoming</span>
+                <span className="text-gray-600 dark:text-gray-400">{t('map.legendUpcoming')}</span>
               </div>
             </div>
           </Card>
@@ -399,10 +405,10 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
             <Card className="p-6 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-white/20 text-center">
               <Map className="w-8 h-8 mx-auto text-emerald-600 mb-3" />
               <div className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Interactive Map Preview
+                {t('map.previewTitle')}
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">
-                Full map functionality coming soon
+                {t('map.previewBody')}
               </div>
             </Card>
           </motion.div>
@@ -410,9 +416,9 @@ export const PropertyMap: React.FC<PropertyMapProps> = ({
       </div>
 
       {/* Property Counter */}
-      <div className="absolute top-4 left-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2">
+      <div className="absolute top-4 start-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2">
         <div className="text-sm font-medium text-gray-900 dark:text-white">
-          {properties.length} Properties
+          {t('map.count', { count: properties.length })}
         </div>
       </div>
     </div>

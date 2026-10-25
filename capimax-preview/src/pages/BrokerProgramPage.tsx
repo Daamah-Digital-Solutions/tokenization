@@ -34,6 +34,7 @@ import { Card } from '../components/design-system/cards/Card';
 import { Badge } from '../components/design-system/icons/Badge';
 import { StatsCard } from '../components/design-system/cards/StatsCard';
 import { useRouter } from '../utils/router';
+import { useTranslation } from 'react-i18next';
 
 const partnerStats = [
   { number: "$250M+", label: "Partner Volume", icon: DollarSign },
@@ -132,22 +133,23 @@ const commissionTiers = [
 
 export const BrokerProgramPage: React.FC = () => {
   const { navigate } = useRouter();
+  const { t } = useTranslation('brokerui');
 
   const handleApplyNow = () => {
     navigate('broker-application');
   };
 
   const handleContactSales = () => {
-    alert('Contact form coming soon! Email us at partners@capimax.com');
+    alert(t('program.contactSoon'));
   };
 
   return (
     <>
       <Helmet>
-        <title>Partner Program | Capimax - Professional Broker Partnership</title>
+        <title>{t('program.metaTitle')}</title>
         <meta
           name="description"
-          content="Join the exclusive Capimax Partner Program. Earn premium commissions, access institutional opportunities, and grow your business with cutting-edge real estate technology."
+          content={t('program.metaDescription')}
         />
         <meta name="keywords" content="broker program, real estate broker, partner program, commissions, referral program, institutional real estate" />
       </Helmet>
@@ -168,7 +170,7 @@ export const BrokerProgramPage: React.FC = () => {
                   opacity: [0.1, 0.2, 0.1]
                 }}
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="absolute top-20 right-20 w-72 h-72 bg-gradient-to-r from-emerald-400/10 to-green-400/10 dark:from-emerald-500/20 dark:to-green-500/20 rounded-full blur-3xl"
+                className="absolute top-20 end-20 w-72 h-72 bg-gradient-to-r from-emerald-400/10 to-green-400/10 dark:from-emerald-500/20 dark:to-green-500/20 rounded-full blur-3xl"
               />
               <motion.div
                 animate={{
@@ -177,7 +179,7 @@ export const BrokerProgramPage: React.FC = () => {
                   opacity: [0.1, 0.15, 0.1]
                 }}
                 transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                className="absolute bottom-20 left-20 w-96 h-96 bg-gradient-to-r from-blue-400/10 to-purple-400/10 dark:from-blue-500/15 dark:to-purple-500/15 rounded-full blur-3xl"
+                className="absolute bottom-20 start-20 w-96 h-96 bg-gradient-to-r from-blue-400/10 to-purple-400/10 dark:from-blue-500/15 dark:to-purple-500/15 rounded-full blur-3xl"
               />
 
               {/* Floating particles */}
@@ -229,7 +231,7 @@ export const BrokerProgramPage: React.FC = () => {
                         <Sparkles className="w-5 h-5 text-yellow-400/60 dark:text-yellow-300/80" />
                       </motion.div>
                     </div>
-                    <span className="text-sm font-semibold text-slate-700 dark:text-gray-200">Elite Partner Program</span>
+                    <span className="text-sm font-semibold text-slate-700 dark:text-gray-200">{t('program.badge')}</span>
                   </motion.div>
 
                   {/* Main Headlines */}
@@ -240,9 +242,9 @@ export const BrokerProgramPage: React.FC = () => {
                       transition={{ duration: 0.8, delay: 0.2 }}
                       className="text-5xl lg:text-7xl font-bold leading-[1.05] tracking-tight text-slate-800 dark:text-white"
                     >
-                      Partner with the{' '}
+                      {t('program.heroTitle1')}{' '}
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 dark:from-emerald-400 dark:via-green-400 dark:to-teal-400 relative">
-                        Future of Real Estate
+                        {t('program.heroTitle2')}
                         <motion.div
                           animate={{
                             scaleX: [0, 1, 0],
@@ -253,7 +255,7 @@ export const BrokerProgramPage: React.FC = () => {
                             repeat: Infinity,
                             delay: 1
                           }}
-                          className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 dark:from-emerald-400 dark:via-green-400 dark:to-teal-400 rounded-full"
+                          className="absolute -bottom-2 start-0 end-0 h-1 bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 dark:from-emerald-400 dark:via-green-400 dark:to-teal-400 rounded-full"
                         />
                       </span>
                     </motion.h1>
@@ -264,8 +266,7 @@ export const BrokerProgramPage: React.FC = () => {
                       transition={{ duration: 0.8, delay: 0.4 }}
                       className="text-xl lg:text-2xl leading-relaxed text-slate-600 dark:text-gray-300 max-w-4xl mx-auto font-light"
                     >
-                      Join our exclusive network of elite real estate professionals and unlock unprecedented earning potential
-                      through institutional-grade tokenized real estate ownership.
+                      {t('program.heroDesc')}
                     </motion.p>
                   </div>
 
@@ -278,11 +279,11 @@ export const BrokerProgramPage: React.FC = () => {
                   >
                     <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-500/30">
                       <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                      <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Applications Open</span>
+                      <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">{t('program.applicationsOpen')}</span>
                     </div>
                     <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-500/30">
                       <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                      <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">Limited Positions</span>
+                      <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">{t('program.limitedPositions')}</span>
                     </div>
                   </motion.div>
 
@@ -310,12 +311,12 @@ export const BrokerProgramPage: React.FC = () => {
                         className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
                       />
                       <span className="relative z-10 flex items-center">
-                        Apply Now
+                        {t('program.applyNow')}
                         <motion.div
                           animate={{ x: [0, 4, 0] }}
                           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                         >
-                          <ArrowRight className="ml-3 w-5 h-5" />
+                          <ArrowRight className="ms-3 w-5 h-5 rtl:rotate-180" />
                         </motion.div>
                       </span>
                     </Button>
@@ -326,8 +327,8 @@ export const BrokerProgramPage: React.FC = () => {
                       className="group px-10 py-5 text-lg font-semibold transition-all duration-500 rounded-2xl"
                       onClick={handleContactSales}
                     >
-                      <Phone className="mr-3 w-5 h-5 group-hover:text-emerald-500 transition-colors duration-300" />
-                      Contact Sales
+                      <Phone className="me-3 w-5 h-5 group-hover:text-emerald-500 transition-colors duration-300" />
+                      {t('program.contactSales')}
                     </Button>
                   </motion.div>
                 </div>
@@ -363,7 +364,7 @@ export const BrokerProgramPage: React.FC = () => {
                     {stat.number}
                   </div>
                   <div className="text-sm text-slate-600 dark:text-gray-400 font-medium">
-                    {stat.label}
+                    {t(`program.stats.s${index}`, { defaultValue: stat.label })}
                   </div>
                 </motion.div>
               ))}
@@ -383,7 +384,7 @@ export const BrokerProgramPage: React.FC = () => {
                   align="center"
                   className="mb-4"
                 >
-                  Unmatched Partner Benefits
+                  {t('program.benefitsTitle')}
                 </Heading>
                 <Text
                   variant="bodyLarge"
@@ -392,7 +393,7 @@ export const BrokerProgramPage: React.FC = () => {
                   className="max-w-3xl mx-auto"
                   as="p"
                 >
-                  Experience the advantages of partnering with the most innovative real estate ownership platform
+                  {t('program.benefitsDesc')}
                 </Text>
               </motion.div>
             </div>
@@ -423,16 +424,16 @@ export const BrokerProgramPage: React.FC = () => {
                             <IconComponent className="w-8 h-8 text-white" />
                           </div>
                           <Badge variant="accent" size="sm">
-                            {benefit.highlight}
+                            {t(`program.benefits.b${index}.highlight`, { defaultValue: benefit.highlight })}
                           </Badge>
                         </div>
 
                         <div className="space-y-3">
                           <Heading level="h3" size="xl" className="group-hover:text-emerald-600 transition-colors duration-300">
-                            {benefit.title}
+                            {t(`program.benefits.b${index}.title`, { defaultValue: benefit.title })}
                           </Heading>
                           <Text variant="body" color="secondary" as="p">
-                            {benefit.description}
+                            {t(`program.benefits.b${index}.description`, { defaultValue: benefit.description })}
                           </Text>
                         </div>
                       </div>
@@ -456,7 +457,7 @@ export const BrokerProgramPage: React.FC = () => {
                   align="center"
                   className="mb-4"
                 >
-                  Commission Structure
+                  {t('program.structureTitle')}
                 </Heading>
                 <Text
                   variant="bodyLarge"
@@ -465,7 +466,7 @@ export const BrokerProgramPage: React.FC = () => {
                   className="max-w-3xl mx-auto"
                   as="p"
                 >
-                  Transparent, performance-based commission tiers that reward your success
+                  {t('program.structureDesc')}
                 </Text>
               </motion.div>
             </div>
@@ -503,7 +504,7 @@ export const BrokerProgramPage: React.FC = () => {
                           {tier.tier === 'Bronze' && <Briefcase className="w-8 h-8 text-white" />}
                         </div>
                         <Heading level="h3" size="xl" className="mb-2">
-                          {tier.tier}
+                          {t(`program.tiers.t${index}.name`, { defaultValue: tier.tier })}
                         </Heading>
                         <Text variant="bodySmall" color="secondary" as="p">
                           {tier.volume}
@@ -516,21 +517,21 @@ export const BrokerProgramPage: React.FC = () => {
                           {tier.rate}
                         </div>
                         <Text variant="bodySmall" color="secondary" as="p">
-                          Commission Rate
+                          {t('program.commissionRate')}
                         </Text>
                       </div>
 
                       {/* Benefits */}
                       <div className="space-y-3">
                         <Text variant="label" color="primary" as="p" className="font-semibold">
-                          Tier Benefits:
+                          {t('program.tierBenefits')}
                         </Text>
                         <ul className="space-y-2">
                           {tier.benefits.map((benefit, i) => (
                             <li key={i} className="flex items-center gap-2">
                               <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                               <Text variant="bodySmall" color="secondary">
-                                {benefit}
+                                {t(`program.tiers.t${index}.benefits.${i}`, { defaultValue: benefit })}
                               </Text>
                             </li>
                           ))}
@@ -539,9 +540,9 @@ export const BrokerProgramPage: React.FC = () => {
                     </div>
 
                     {tier.tier === 'Platinum' && (
-                      <div className="absolute top-4 right-4">
+                      <div className="absolute top-4 end-4">
                         <Badge variant="accent" size="sm" icon={Crown}>
-                          Most Popular
+                          {t('program.mostPopular')}
                         </Badge>
                       </div>
                     )}
@@ -561,14 +562,14 @@ export const BrokerProgramPage: React.FC = () => {
               >
                 <div className="space-y-4">
                   <Heading level="h2" size="4xl">
-                    Partner Requirements
+                    {t('program.requirementsTitle')}
                   </Heading>
                   <Text
                     variant="bodyLarge"
                     color="secondary"
                     as="p"
                   >
-                    We partner with exceptional professionals who meet our high standards of excellence and integrity
+                    {t('program.requirementsDesc')}
                   </Text>
                 </div>
 
@@ -583,7 +584,7 @@ export const BrokerProgramPage: React.FC = () => {
                     >
                       <CheckCircle className="w-6 h-6 text-emerald-500 flex-shrink-0 mt-0.5" />
                       <Text variant="body" color="primary">
-                        {requirement}
+                        {t(`program.requirements.r${index}`, { defaultValue: requirement })}
                       </Text>
                     </motion.li>
                   ))}
@@ -608,7 +609,7 @@ export const BrokerProgramPage: React.FC = () => {
 
                     <div className="space-y-4">
                       <Heading level="h3" size="2xl" align="center">
-                        Ready to Partner?
+                        {t('program.readyTitle')}
                       </Heading>
                       <Text
                         variant="body"
@@ -616,7 +617,7 @@ export const BrokerProgramPage: React.FC = () => {
                         align="center"
                         as="p"
                       >
-                        Join our exclusive network of elite real estate professionals and start earning premium commissions today.
+                        {t('program.readyDesc')}
                       </Text>
                     </div>
 
@@ -626,24 +627,24 @@ export const BrokerProgramPage: React.FC = () => {
                         className="w-full"
                         onClick={handleApplyNow}
                       >
-                        Start Application
-                        <ArrowRight className="ml-2 w-5 h-5" />
+                        {t('program.startApplication')}
+                        <ArrowRight className="ms-2 w-5 h-5 rtl:rotate-180" />
                       </Button>
 
                       <div className="flex items-center justify-center gap-4 text-sm">
                         <div className="flex items-center gap-2">
                           <Shield className="w-4 h-4 text-emerald-500" />
-                          <span className="text-slate-600 dark:text-slate-400">Secure Process</span>
+                          <span className="text-slate-600 dark:text-slate-400">{t('program.secureProcess')}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Zap className="w-4 h-4 text-emerald-500" />
-                          <span className="text-slate-600 dark:text-slate-400">Quick Approval</span>
+                          <span className="text-slate-600 dark:text-slate-400">{t('program.quickApproval')}</span>
                         </div>
                       </div>
                     </div>
 
                     <Text variant="caption" color="muted" align="center" as="p">
-                      Questions? Contact our Partner Team at{' '}
+                      {t('program.questions')}{' '}
                       <a href="mailto:partners@capimax.com" className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium">
                         partners@capimax.com
                       </a>
@@ -673,7 +674,7 @@ export const BrokerProgramPage: React.FC = () => {
                   align="center"
                   className="text-white"
                 >
-                  Transform Your Business Today
+                  {t('program.finalTitle')}
                 </Heading>
                 <Text
                   variant="bodyLarge"
@@ -681,7 +682,7 @@ export const BrokerProgramPage: React.FC = () => {
                   className="max-w-2xl mx-auto text-white/90"
                   as="p"
                 >
-                  Join the most sophisticated real estate ownership platform and unlock unprecedented growth opportunities for your practice.
+                  {t('program.finalDesc')}
                 </Text>
               </motion.div>
 
@@ -691,8 +692,8 @@ export const BrokerProgramPage: React.FC = () => {
                   className="bg-white text-slate-900 hover:bg-slate-100 px-10 py-5 text-lg font-semibold"
                   onClick={handleApplyNow}
                 >
-                  Begin Partnership Application
-                  <ArrowRight className="ml-3 w-5 h-5" />
+                  {t('program.beginApplication')}
+                  <ArrowRight className="ms-3 w-5 h-5 rtl:rotate-180" />
                 </Button>
                 <Button
                   size="lg"
@@ -700,8 +701,8 @@ export const BrokerProgramPage: React.FC = () => {
                   className="border-white/30 text-white hover:bg-white/10 px-10 py-5 text-lg font-semibold"
                   onClick={() => navigate('contact')}
                 >
-                  Schedule Consultation
-                  <Phone className="ml-3 w-5 h-5" />
+                  {t('program.schedule')}
+                  <Phone className="ms-3 w-5 h-5" />
                 </Button>
               </div>
 
@@ -714,7 +715,7 @@ export const BrokerProgramPage: React.FC = () => {
                   <div key={index} className="text-center space-y-2">
                     <feature.icon className="w-8 h-8 text-emerald-400 mx-auto" />
                     <Text variant="bodySmall" className="text-white/80" as="p">
-                      {feature.label}
+                      {t(`program.features.f${index}`, { defaultValue: feature.label })}
                     </Text>
                   </div>
                 ))}

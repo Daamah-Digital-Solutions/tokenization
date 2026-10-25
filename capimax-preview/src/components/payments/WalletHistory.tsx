@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { 
   Search, 
   Filter, 
@@ -29,6 +30,8 @@ interface WalletHistoryProps {
 
 export function WalletHistory({ className, compact = false, limit }: WalletHistoryProps) {
   const { state } = usePayment();
+  const { t, i18n } = useTranslation('payments');
+  const isAr = i18n.language?.startsWith('ar');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -97,11 +100,11 @@ export function WalletHistory({ className, compact = false, limit }: WalletHisto
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pending' },
-      processing: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Processing' },
-      completed: { bg: 'bg-emerald-100', text: 'text-emerald-800', label: 'Completed' },
-      failed: { bg: 'bg-red-100', text: 'text-red-800', label: 'Failed' },
-      cancelled: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Cancelled' },
+      pending: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: t('status.pending') },
+      processing: { bg: 'bg-blue-100', text: 'text-blue-800', label: t('status.processing') },
+      completed: { bg: 'bg-emerald-100', text: 'text-emerald-800', label: t('status.completed') },
+      failed: { bg: 'bg-red-100', text: 'text-red-800', label: t('status.failed') },
+      cancelled: { bg: 'bg-gray-100', text: 'text-gray-800', label: t('status.cancelled') },
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
@@ -120,12 +123,12 @@ export function WalletHistory({ className, compact = false, limit }: WalletHisto
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffMins < 1) return t('time.justNow');
+    if (diffMins < 60) return t('time.minutesAgo', { count: diffMins });
+    if (diffHours < 24) return t('time.hoursAgo', { count: diffHours });
+    if (diffDays < 7) return t('time.daysAgo', { count: diffDays });
     
-    return date.toLocaleDateString('en-US', { 
+    return date.toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { 
       month: 'short', 
       day: 'numeric',
       year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
@@ -136,12 +139,12 @@ export function WalletHistory({ className, compact = false, limit }: WalletHisto
     <div className={className}>
       <div className="flex items-center justify-between mb-4">
         <h3 className={`${compact ? 'text-base' : 'text-lg'} font-semibold text-gray-900`}>
-          Transaction History
+          {t('history.title')}
         </h3>
         {!compact && (
           <Button variant="outline" size="sm" className="flex items-center gap-2">
             <Download className="h-4 w-4" />
-            Export
+            {t('history.export')}
           </Button>
         )}
       </div>
@@ -150,10 +153,10 @@ export function WalletHistory({ className, compact = false, limit }: WalletHisto
         <div className="flex flex-wrap gap-3 mb-6">
           <div className="flex-1 min-w-[200px]">
             <Input
-              placeholder="Search transactions..."
+              placeholder={t('history.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="ps-10"
               icon={<Search className="h-4 w-4 text-gray-400" />}
             />
           </div>
@@ -162,12 +165,12 @@ export function WalletHistory({ className, compact = false, limit }: WalletHisto
             value={selectedType}
             onChange={setSelectedType}
             options={[
-              { value: 'all', label: 'All Types' },
-              { value: 'deposit', label: 'Deposits' },
-              { value: 'withdrawal', label: 'Withdrawals' },
-              { value: 'investment', label: 'Purchases' },
-              { value: 'dividend', label: 'Dividends' },
-              { value: 'fee', label: 'Fees' },
+              { value: 'all', label: t('history.types.all') },
+              { value: 'deposit', label: t('history.types.deposit') },
+              { value: 'withdrawal', label: t('history.types.withdrawal') },
+              { value: 'investment', label: t('history.types.investment') },
+              { value: 'dividend', label: t('history.types.dividend') },
+              { value: 'fee', label: t('history.types.fee') },
             ]}
           />
           
@@ -175,11 +178,11 @@ export function WalletHistory({ className, compact = false, limit }: WalletHisto
             value={selectedStatus}
             onChange={setSelectedStatus}
             options={[
-              { value: 'all', label: 'All Status' },
-              { value: 'completed', label: 'Completed' },
-              { value: 'pending', label: 'Pending' },
-              { value: 'processing', label: 'Processing' },
-              { value: 'failed', label: 'Failed' },
+              { value: 'all', label: t('history.allStatus') },
+              { value: 'completed', label: t('status.completed') },
+              { value: 'pending', label: t('status.pending') },
+              { value: 'processing', label: t('status.processing') },
+              { value: 'failed', label: t('status.failed') },
             ]}
           />
           
@@ -187,10 +190,10 @@ export function WalletHistory({ className, compact = false, limit }: WalletHisto
             value={dateRange}
             onChange={setDateRange}
             options={[
-              { value: 'all', label: 'All Time' },
-              { value: 'today', label: 'Today' },
-              { value: 'week', label: 'This Week' },
-              { value: 'month', label: 'This Month' },
+              { value: 'all', label: t('history.ranges.all') },
+              { value: 'today', label: t('history.ranges.today') },
+              { value: 'week', label: t('history.ranges.week') },
+              { value: 'month', label: t('history.ranges.month') },
             ]}
             icon={<Calendar className="h-4 w-4" />}
           />
@@ -200,11 +203,11 @@ export function WalletHistory({ className, compact = false, limit }: WalletHisto
       <div className="space-y-3">
         {filteredTransactions.length === 0 ? (
           <Card className="p-8 text-center">
-            <div className="text-gray-500 mb-2">No transactions found</div>
+            <div className="text-gray-500 mb-2">{t('history.emptyTitle')}</div>
             <div className="text-sm text-gray-400">
               {searchTerm || selectedType !== 'all' || selectedStatus !== 'all' || dateRange !== 'all'
-                ? 'Try adjusting your filters'
-                : 'Your transaction history will appear here'
+                ? t('history.emptyFiltered')
+                : t('history.emptyDefault')
               }
             </div>
           </Card>
@@ -248,14 +251,14 @@ export function WalletHistory({ className, compact = false, limit }: WalletHisto
                                 className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800"
                               >
                                 <ExternalLink className="h-3 w-3" />
-                                View
+                                {t('history.view')}
                               </button>
                             )}
                           </div>
                         </div>
                       </div>
                       
-                      <div className="text-right flex-shrink-0">
+                      <div className="text-end flex-shrink-0">
                         <div className={`font-semibold ${
                           isIncoming ? 'text-emerald-600' : 'text-gray-900'
                         }`}>
@@ -264,13 +267,13 @@ export function WalletHistory({ className, compact = false, limit }: WalletHisto
                         
                         {transaction.fee && transaction.fee > 0 && (
                           <div className="text-sm text-gray-500">
-                            Fee: {formatCurrency(transaction.fee, transaction.currency)}
+                            {t('history.fee')} {formatCurrency(transaction.fee, transaction.currency)}
                           </div>
                         )}
                         
                         {transaction.confirmations !== undefined && (
                           <div className="text-xs text-gray-400">
-                            {transaction.confirmations}/12 confirmations
+                            {t('history.confirmations', { count: transaction.confirmations, total: 12 })}
                           </div>
                         )}
                       </div>
@@ -279,12 +282,12 @@ export function WalletHistory({ className, compact = false, limit }: WalletHisto
                     {!compact && transaction.paymentMethod && (
                       <div className="mt-3 pt-3 border-t border-gray-100">
                         <div className="text-sm text-gray-500">
-                          Payment Method: {
+                          {t('history.paymentMethod')} {
                             transaction.paymentMethod.type === 'crypto'
                               ? `${transaction.paymentMethod.currency} (${transaction.paymentMethod.network})`
                               : transaction.paymentMethod.type === 'card'
                               ? `•••• •••• •••• ${transaction.paymentMethod.last4}`
-                              : transaction.paymentMethod.type
+                              : t(`methodNames.${transaction.paymentMethod.type}`, { defaultValue: transaction.paymentMethod.type })
                           }
                         </div>
                       </div>
@@ -300,7 +303,7 @@ export function WalletHistory({ className, compact = false, limit }: WalletHisto
       {!compact && limit && state.transactions.length > limit && (
         <div className="text-center mt-6">
           <Button variant="outline">
-            View All Transactions
+            {t('history.viewAll')}
           </Button>
         </div>
       )}

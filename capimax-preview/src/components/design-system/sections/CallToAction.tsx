@@ -80,7 +80,7 @@ export const CallToAction: React.FC<CallToActionProps> = ({
                   onClick={action.onClick}
                   className="font-semibold"
                 >
-                  {ActionIcon && <ActionIcon className="mr-2 w-5 h-5" />}
+                  {ActionIcon && <ActionIcon className="me-2 w-5 h-5" />}
                   {action.label}
                 </Button>
               );
@@ -192,7 +192,7 @@ export const CallToAction: React.FC<CallToActionProps> = ({
                         variant === 'gradient' && action.variant === 'ghost' && 'bg-white/10 text-white hover:bg-white/20 border-white/20'
                       )}
                     >
-                      {ActionIcon && <ActionIcon className="mr-2 w-5 h-5" />}
+                      {ActionIcon && <ActionIcon className="me-2 w-5 h-5" />}
                       {action.label}
                     </Button>
                   );

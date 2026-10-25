@@ -50,12 +50,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const { t: tKyc } = useTranslation('kyc');
   const { t: tOwner } = useTranslation('owner');
   const { t: tPartners } = useTranslation('partners');
+  const { t } = useTranslation('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Navigation items based on user role
   const getNavigationItems = (role: UserRole) => {
     const baseItems = [
-      { id: 'overview', label: 'Overview', icon: '📊' },
+      { id: 'overview', label: t('nav.overview'), icon: '📊' },
     ];
 
     switch (role) {
@@ -69,18 +70,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         // ``marketplace`` = secondary market (peer-to-peer token resale).
         return [
           ...baseItems,
-          { id: 'my-properties', label: 'My Properties', icon: '🏠' },
-          { id: 'portfolio', label: 'My Portfolio', icon: '💼' },
-          { id: 'properties', label: 'Browse Properties', icon: '🏢' },
-          { id: 'marketplace', label: 'Marketplace', icon: '🏪' },
-          { id: 'transactions', label: 'Transactions', icon: '💳' },
-          { id: 'analytics', label: 'Analytics', icon: '📈' },
-          { id: 'reports', label: 'Reports', icon: '📊' },
-          { id: 'wallet', label: 'Wallet', icon: '💰' },
-          { id: 'installments', label: 'Installments', icon: '📅' },
-          { id: 'documents', label: 'Documents', icon: '📄' },
-          { id: 'notifications', label: 'Notifications', icon: '🔔' },
-          { id: 'settings', label: 'Settings', icon: '⚙️' },
+          { id: 'my-properties', label: t('nav.myProperties'), icon: '🏠' },
+          { id: 'portfolio', label: t('nav.portfolio'), icon: '💼' },
+          { id: 'properties', label: t('nav.browseProperties'), icon: '🏢' },
+          { id: 'marketplace', label: t('nav.marketplace'), icon: '🏪' },
+          { id: 'transactions', label: t('nav.transactions'), icon: '💳' },
+          { id: 'analytics', label: t('nav.analytics'), icon: '📈' },
+          { id: 'reports', label: t('nav.reports'), icon: '📊' },
+          { id: 'wallet', label: t('nav.wallet'), icon: '💰' },
+          { id: 'installments', label: t('nav.installments'), icon: '📅' },
+          { id: 'documents', label: t('nav.documents'), icon: '📄' },
+          { id: 'notifications', label: t('nav.notifications'), icon: '🔔' },
+          { id: 'settings', label: t('nav.settings'), icon: '⚙️' },
         ];
       case 'property_owner':
         // ``my-properties`` (not ``properties``) — the handleNavigationClick
@@ -88,23 +89,23 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         // marketplace, which would kick the owner out of their dashboard.
         return [
           ...baseItems,
-          { id: 'my-properties', label: 'My Properties', icon: '🏢' },
-          { id: 'tokenization', label: 'Tokenization', icon: '🪙' },
-          { id: 'revenue', label: 'Revenue', icon: '💸' },
-          { id: 'wallet', label: 'Wallet', icon: '💰' },
-          { id: 'investors', label: 'Owners', icon: '👥' },
-          { id: 'documents', label: 'Documents', icon: '📄' },
+          { id: 'my-properties', label: t('nav.myProperties'), icon: '🏢' },
+          { id: 'tokenization', label: t('nav.tokenization'), icon: '🪙' },
+          { id: 'revenue', label: t('nav.revenue'), icon: '💸' },
+          { id: 'wallet', label: t('nav.wallet'), icon: '💰' },
+          { id: 'investors', label: t('nav.owners'), icon: '👥' },
+          { id: 'documents', label: t('nav.documents'), icon: '📄' },
           // Team ↔ owner/developer messages (client round 3, #23)
           { id: 'messages', label: tOwner('messages.title'), icon: '✉️' },
         ];
       case 'admin':
         return [
           ...baseItems,
-          { id: 'users', label: 'User Management', icon: '👤' },
-          { id: 'properties-admin', label: 'Properties', icon: '🏠' },
-          { id: 'transactions-admin', label: 'Transactions', icon: '💎' },
-          { id: 'platform', label: 'Platform Metrics', icon: '📈' },
-          { id: 'system', label: 'System Health', icon: '⚙️' },
+          { id: 'users', label: t('nav.users'), icon: '👤' },
+          { id: 'properties-admin', label: t('nav.propertiesAdmin'), icon: '🏠' },
+          { id: 'transactions-admin', label: t('nav.transactions'), icon: '💎' },
+          { id: 'platform', label: t('nav.platform'), icon: '📈' },
+          { id: 'system', label: t('nav.system'), icon: '⚙️' },
         ];
       case 'broker':
         return [
@@ -158,15 +159,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       )}
 
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-[80%] md:w-64' : 'w-16'} bg-white dark:bg-slate-800 border-r border-neutral-200 dark:border-slate-700 transition-all duration-300 flex flex-col ${sidebarOpen ? 'fixed inset-y-0 left-0 md:relative z-50 md:z-auto' : 'hidden md:flex'}`}>
+      <div className={`${sidebarOpen ? 'w-[80%] md:w-64' : 'w-16'} bg-white dark:bg-slate-800 border-e border-neutral-200 dark:border-slate-700 transition-all duration-300 flex flex-col ${sidebarOpen ? 'fixed inset-y-0 start-0 md:relative z-50 md:z-auto' : 'hidden md:flex'}`}>
         {/* Sidebar Header */}
         <div className="p-4 border-b border-neutral-200 dark:border-slate-700">
           <div className="flex items-center justify-between">
             {sidebarOpen && (
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-3">
                 <img
                   src={theme === 'dark' ? CapiMaxLightLogo : CapiMaxDarkLogo}
-                  alt="CapiMax"
+                  alt={t('page.logoAlt')}
                   className="h-8 w-auto"
                 />
               </div>
@@ -174,8 +175,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-1 rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-700 transition-colors"
+              aria-label={sidebarOpen ? t('page.collapseSidebar') : t('page.expandSidebar')}
             >
-              <span className="text-lg">{sidebarOpen ? '⟨' : '⟩'}</span>
+              <span className="text-lg inline-block rtl:rotate-180">{sidebarOpen ? '⟨' : '⟩'}</span>
             </button>
           </div>
         </div>
@@ -189,7 +191,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               onClick={() => handleNavigationClick(item.id)}
               aria-label={item.label}
               title={item.label}
-              className={`w-full flex items-center ${sidebarOpen ? 'space-x-3 px-3' : 'justify-center px-2'} py-2 rounded-lg transition-colors ${
+              className={`w-full flex items-center ${sidebarOpen ? 'gap-3 px-3' : 'justify-center px-2'} py-2 rounded-lg transition-colors ${
                 currentView === item.id
                   ? 'bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400'
                   : 'text-neutral-600 hover:bg-neutral-50 dark:text-slate-400 dark:hover:bg-slate-700'
@@ -205,7 +207,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
         {/* User Profile */}
         <div className="p-4 border-t border-neutral-200 dark:border-slate-700">
-          <div className={`flex items-center ${sidebarOpen ? 'space-x-3' : 'justify-center'}`}>
+          <div className={`flex items-center ${sidebarOpen ? 'gap-3' : 'justify-center'}`}>
             <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
               <span className="text-white font-medium text-sm">
                 {user.name.charAt(0)}
@@ -217,7 +219,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   {user.name}
                 </p>
                 <p className="text-xs text-neutral-500 dark:text-slate-400 capitalize">
-                  {user.role.replace('_', ' ')}
+                  {tPartners(`roles.${user.role}`, { defaultValue: user.role.replace('_', ' ') })}
                 </p>
               </div>
             )}
@@ -234,8 +236,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               {/* Mobile menu button */}
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="p-2 mr-3 text-neutral-600 hover:text-neutral-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors md:hidden"
-                title="Open menu"
+                className="p-2 me-3 text-neutral-600 hover:text-neutral-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors md:hidden"
+                title={t('page.openMenu')}
               >
                 <span className="text-lg">☰</span>
               </button>
@@ -244,7 +246,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <div className="flex items-center md:hidden">
                 <img
                   src={theme === 'dark' ? CapiMaxLightLogo : CapiMaxDarkLogo}
-                  alt="CapiMax"
+                  alt={t('page.logoAlt')}
                   className="h-8 w-auto"
                 />
               </div>
@@ -252,23 +254,29 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               {/* Desktop: Page title and welcome message */}
               <div className="min-w-0 flex-1 hidden md:block">
                 <h1 className="text-xl sm:text-2xl font-semibold text-neutral-900 dark:text-slate-100 truncate">
-                  {currentView
-                    .replace(/-/g, ' ')
-                    .replace(/\b\w/g, (c) => c.toUpperCase())} Dashboard
+                  {t('page.title', {
+                    view:
+                      navigationItems.find((item) => item.id === currentView)?.label ??
+                      t(`nav.views.${currentView}`, {
+                        defaultValue: currentView
+                          .replace(/-/g, ' ')
+                          .replace(/\b\w/g, (c) => c.toUpperCase()),
+                      }),
+                  })}
                 </h1>
                 <p className="text-sm text-neutral-500 dark:text-slate-400 mt-1">
-                  Welcome back, {user.name}
+                  {t('page.welcomeBack', { name: user.name })}
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
               {/* Role Switcher */}
               <RoleSwitcher onRoleSwitch={onRoleSwitch} />
 
               {/* Notifications Icon */}
               <button
                 className="p-2 text-neutral-600 hover:text-neutral-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-700"
-                title="Notifications"
+                title={t('nav.notifications')}
                 onClick={() => onViewChange('notifications')}
               >
                 <Bell className="w-5 h-5" />
@@ -278,7 +286,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <button
                 onClick={toggleTheme}
                 className="p-2 text-neutral-600 hover:text-neutral-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-700"
-                title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                title={theme === 'dark' ? t('page.lightMode') : t('page.darkMode')}
               >
                 {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
@@ -288,15 +296,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 onClick={() => navigate('home')}
                 className="px-3 py-2 text-sm font-medium text-neutral-600 hover:text-neutral-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors hidden sm:inline-flex"
               >
-                Exit Dashboard
+                {t('page.exitDashboard')}
               </button>
               {/* Mobile Exit Button */}
               <button
                 onClick={() => navigate('home')}
                 className="p-2 text-neutral-600 hover:text-neutral-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors sm:hidden"
-                title="Exit Dashboard"
+                title={t('page.exitDashboard')}
               >
-                <span className="text-lg">←</span>
+                <span className="text-lg inline-block rtl:rotate-180">←</span>
               </button>
             </div>
           </div>
@@ -318,6 +326,7 @@ export const DashboardPage: React.FC = () => {
   const [currentView, setCurrentView] = useState(initialView);
   const [activeRole, setActiveRole] = useState<UserRole | null>(null);
   const { state, refreshUser } = useAuth();
+  const { t } = useTranslation('dashboard');
   const { navigate, getQueryParam } = useRouter();
   const authUser = state.user;
 
@@ -402,7 +411,7 @@ export const DashboardPage: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-900">
         <div className="text-center p-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-          <p className="text-slate-600 dark:text-slate-300 font-medium">Loading dashboard...</p>
+          <p className="text-slate-600 dark:text-slate-300 font-medium">{t('page.loading')}</p>
         </div>
       </div>
     );
@@ -416,7 +425,7 @@ export const DashboardPage: React.FC = () => {
   // Map auth user to dashboard user format, using active role for multi-role support
   const user: DashboardUser = authUser ? {
     id: authUser.id,
-    name: `${authUser.first_name} ${authUser.last_name}`.trim() || 'User',
+    name: `${authUser.first_name} ${authUser.last_name}`.trim() || t('page.userFallback'),
     email: authUser.email,
     role: activeRole || (authUser.role as UserRole), // Use active role if available, fallback to user's default role
     avatar: undefined,
@@ -437,7 +446,7 @@ export const DashboardPage: React.FC = () => {
     })()
   } : {
     id: '1',
-    name: 'Guest User',
+    name: t('page.guestUser'),
     email: 'guest@example.com',
     role: 'investor' as UserRole,
     avatar: undefined,
@@ -488,10 +497,10 @@ export const DashboardPage: React.FC = () => {
             <div className="text-center">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500 mx-auto mb-4"></div>
               <p className="text-slate-600 dark:text-slate-300 font-medium">
-                Redirecting to Django Admin…
+                {t('page.redirectingAdmin')}
               </p>
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-                Admin operations are now performed in <code>/admin/</code>.
+                {t('page.adminMovedPrefix')} <code>/admin/</code>.
               </p>
             </div>
           </div>
@@ -502,10 +511,10 @@ export const DashboardPage: React.FC = () => {
             <div className="text-center">
               <span className="text-4xl mb-4 block">❓</span>
               <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-2">
-                Unknown User Role
+                {t('page.unknownRole')}
               </h3>
               <p className="text-neutral-500 dark:text-slate-400">
-                Please contact support if this error persists
+                {t('page.unknownRoleHelp')}
               </p>
             </div>
           </div>

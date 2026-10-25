@@ -26,30 +26,27 @@ import { Section } from '../components/design-system/sections/Section';
 import { Heading } from '../components/design-system/typography/Heading';
 import { Text } from '../components/design-system/typography/Text';
 import { Card } from '../components/design-system/cards/Card';
+import { useTranslation } from 'react-i18next';
 
 const coreValues = [
   {
     icon: Shield,
-    title: 'Security First',
-    description: 'Bank-grade security with multi-layer encryption, secure wallets, and rigorous compliance protocols protect your owned properties.',
+    key: 'security',
     color: 'from-blue-500 to-cyan-500'
   },
   {
     icon: Users,
-    title: 'Accessibility',
-    description: 'We democratize real estate ownership, making premium properties accessible to everyone regardless of capital size.',
+    key: 'accessibility',
     color: 'from-emerald-500 to-green-500'
   },
   {
     icon: Lock,
-    title: 'Transparency',
-    description: 'Blockchain technology ensures complete transparency with immutable records of ownership and transactions.',
+    key: 'transparency',
     color: 'from-purple-500 to-pink-500'
   },
   {
     icon: Globe,
-    title: 'Global Reach',
-    description: 'Access curated properties across international markets, diversifying your portfolio beyond local boundaries.',
+    key: 'globalReach',
     color: 'from-orange-500 to-red-500'
   }
 ];
@@ -58,44 +55,42 @@ const howItWorks = [
   {
     step: '01',
     icon: FileCheck,
-    title: 'Property Verification',
-    description: 'Each property undergoes rigorous due diligence including legal verification, valuation, and compliance checks before listing.'
+    key: 'verification'
   },
   {
     step: '02',
     icon: Coins,
-    title: 'Tokenization',
-    description: 'Properties are tokenized into digital shares on the blockchain, with each token representing fractional ownership.'
+    key: 'tokenization'
   },
   {
     step: '03',
     icon: Wallet,
-    title: 'Ownership',
-    description: 'Owners can purchase tokens starting from minimal amounts, receiving proportional ownership and returns.'
+    key: 'ownership'
   },
   {
     step: '04',
     icon: BarChart3,
-    title: 'Returns & Liquidity',
-    description: 'Earn rental income distributions and capital appreciation. Trade tokens on our secondary marketplace for liquidity.'
+    key: 'returns'
   }
 ];
 
 const teamStats = [
-  { number: '$4.2B+', label: 'Assets Tokenized', icon: Building2 },
-  { number: '50K+', label: 'Global Owners', icon: Users },
-  { number: '1,200+', label: 'Properties Listed', icon: Landmark },
-  { number: '15+', label: 'Countries Served', icon: Globe }
+  { number: '$4.2B+', key: 'assetsTokenized', icon: Building2 },
+  { number: '50K+', key: 'globalOwners', icon: Users },
+  { number: '1,200+', key: 'propertiesListed', icon: Landmark },
+  { number: '15+', key: 'countriesServed', icon: Globe }
 ];
 
 export const AboutPage: React.FC = () => {
+  const { t } = useTranslation('pages');
+
   return (
     <>
       <Helmet>
-        <title>About Us | Capimax - Real Estate Tokenization Platform</title>
+        <title>{t('about.metaTitle')}</title>
         <meta
           name="description"
-          content="Learn about Capimax, the leading real estate tokenization platform. We make property ownership accessible through blockchain technology, enabling fractional ownership of premium real estate worldwide."
+          content={t('about.metaDescription')}
         />
         <meta name="keywords" content="about capimax, real estate tokenization, fractional ownership, blockchain real estate, real estate ownership platform" />
       </Helmet>
@@ -115,7 +110,7 @@ export const AboutPage: React.FC = () => {
                   opacity: [0.1, 0.2, 0.1]
                 }}
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="absolute top-20 right-20 w-72 h-72 bg-gradient-to-r from-emerald-400/10 to-green-400/10 dark:from-emerald-500/20 dark:to-green-500/20 rounded-full blur-3xl"
+                className="absolute top-20 end-20 w-72 h-72 bg-gradient-to-r from-emerald-400/10 to-green-400/10 dark:from-emerald-500/20 dark:to-green-500/20 rounded-full blur-3xl"
               />
               <motion.div
                 animate={{
@@ -124,7 +119,7 @@ export const AboutPage: React.FC = () => {
                   opacity: [0.1, 0.15, 0.1]
                 }}
                 transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                className="absolute bottom-20 left-20 w-96 h-96 bg-gradient-to-r from-blue-400/10 to-purple-400/10 dark:from-blue-500/15 dark:to-purple-500/15 rounded-full blur-3xl"
+                className="absolute bottom-20 start-20 w-96 h-96 bg-gradient-to-r from-blue-400/10 to-purple-400/10 dark:from-blue-500/15 dark:to-purple-500/15 rounded-full blur-3xl"
               />
 
               {/* Floating particles */}
@@ -165,7 +160,7 @@ export const AboutPage: React.FC = () => {
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-emerald-200/50 dark:border-emerald-500/30 shadow-xl"
                   >
                     <Award className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
-                    <span className="text-sm font-semibold text-slate-700 dark:text-gray-200">Trusted by 50,000+ Owners Worldwide</span>
+                    <span className="text-sm font-semibold text-slate-700 dark:text-gray-200">{t('about.badge')}</span>
                   </motion.div>
 
                   <motion.h1
@@ -174,9 +169,9 @@ export const AboutPage: React.FC = () => {
                     transition={{ duration: 0.8, delay: 0.2 }}
                     className="text-5xl lg:text-6xl font-bold leading-tight tracking-tight text-slate-800 dark:text-white"
                   >
-                    About{' '}
+                    {t('about.titleLead')}{' '}
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 dark:from-emerald-400 dark:via-green-400 dark:to-teal-400">
-                      Capimax
+                      {t('about.titleHighlight')}
                     </span>
                   </motion.h1>
 
@@ -186,8 +181,7 @@ export const AboutPage: React.FC = () => {
                     transition={{ duration: 0.8, delay: 0.4 }}
                     className="text-xl lg:text-2xl leading-relaxed text-slate-600 dark:text-gray-300 max-w-3xl mx-auto font-light"
                   >
-                    We are transforming real estate ownership through blockchain technology,
-                    making premium property ownership accessible to everyone.
+                    {t('about.heroText')}
                   </motion.p>
                 </div>
               </Container>
@@ -222,7 +216,7 @@ export const AboutPage: React.FC = () => {
                     {stat.number}
                   </div>
                   <div className="text-sm text-slate-600 dark:text-gray-400 font-medium">
-                    {stat.label}
+                    {t(`about.stats.${stat.key}`)}
                   </div>
                 </motion.div>
               ))}
@@ -238,23 +232,16 @@ export const AboutPage: React.FC = () => {
                 className="space-y-6"
               >
                 <Heading level="h2" size="4xl">
-                  Our Mission
+                  {t('about.missionTitle')}
                 </Heading>
                 <Text variant="bodyLarge" color="secondary" as="p" className="leading-relaxed">
-                  Capimax was founded with a clear vision: to democratize real estate ownership
-                  and break down the barriers that have traditionally limited access to premium
-                  property markets.
+                  {t('about.missionP1')}
                 </Text>
                 <Text variant="body" color="secondary" as="p" className="leading-relaxed">
-                  Through blockchain technology and tokenization, we enable owners of all
-                  sizes to own fractional shares of carefully vetted properties worldwide.
-                  Our platform combines the stability of real estate with the flexibility
-                  and transparency of digital assets.
+                  {t('about.missionP2')}
                 </Text>
                 <Text variant="body" color="secondary" as="p" className="leading-relaxed">
-                  Whether you're buying your first $100 share or diversifying a multi-million
-                  dollar portfolio, Capimax provides the tools, security, and opportunities
-                  to build wealth through real estate.
+                  {t('about.missionP3')}
                 </Text>
               </motion.div>
 
@@ -274,20 +261,14 @@ export const AboutPage: React.FC = () => {
                       <Target className="w-8 h-8 text-white" />
                     </div>
                     <Heading level="h3" size="2xl">
-                      What We Solve
+                      {t('about.solveTitle')}
                     </Heading>
                     <ul className="space-y-4">
-                      {[
-                        'High capital requirements that exclude most buyers',
-                        'Lack of liquidity in traditional real estate',
-                        'Geographic limitations on property access',
-                        'Complex legal processes and paperwork',
-                        'Limited transparency in property transactions'
-                      ].map((item, index) => (
+                      {['capital', 'liquidity', 'geography', 'legal', 'transparency'].map((item, index) => (
                         <li key={index} className="flex items-start gap-3">
                           <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
                           <Text variant="body" color="secondary">
-                            {item}
+                            {t(`about.solve.${item}`)}
                           </Text>
                         </li>
                       ))}
@@ -306,7 +287,7 @@ export const AboutPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
               >
                 <Heading level="h2" size="4xl" align="center" className="mb-4">
-                  How Real Estate Tokenization Works
+                  {t('about.howTitle')}
                 </Heading>
                 <Text
                   variant="bodyLarge"
@@ -315,7 +296,7 @@ export const AboutPage: React.FC = () => {
                   className="max-w-3xl mx-auto"
                   as="p"
                 >
-                  Our streamlined process makes property ownership simple, secure, and accessible
+                  {t('about.howSubtitle')}
                 </Text>
               </motion.div>
             </div>
@@ -331,7 +312,7 @@ export const AboutPage: React.FC = () => {
                 >
                   {/* Connector Line */}
                   {index < howItWorks.length - 1 && (
-                    <div className="hidden lg:block absolute top-16 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-emerald-300 to-emerald-100 dark:from-emerald-600 dark:to-emerald-800" />
+                    <div className="hidden lg:block absolute top-16 start-[60%] w-[80%] h-0.5 bg-gradient-to-r rtl:bg-gradient-to-l from-emerald-300 to-emerald-100 dark:from-emerald-600 dark:to-emerald-800" />
                   )}
 
                   <Card
@@ -351,10 +332,10 @@ export const AboutPage: React.FC = () => {
                         </span>
                       </div>
                       <Heading level="h3" size="lg">
-                        {step.title}
+                        {t(`about.steps.${step.key}.title`)}
                       </Heading>
                       <Text variant="body" color="secondary" as="p">
-                        {step.description}
+                        {t(`about.steps.${step.key}.description`)}
                       </Text>
                     </div>
                   </Card>
@@ -371,7 +352,7 @@ export const AboutPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
               >
                 <Heading level="h2" size="4xl" align="center" className="mb-4">
-                  Our Core Values
+                  {t('about.valuesTitle')}
                 </Heading>
                 <Text
                   variant="bodyLarge"
@@ -380,7 +361,7 @@ export const AboutPage: React.FC = () => {
                   className="max-w-3xl mx-auto"
                   as="p"
                 >
-                  The principles that guide everything we do at Capimax
+                  {t('about.valuesSubtitle')}
                 </Text>
               </motion.div>
             </div>
@@ -390,7 +371,7 @@ export const AboutPage: React.FC = () => {
                 const IconComponent = value.icon;
                 return (
                   <motion.div
-                    key={value.title}
+                    key={value.key}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
@@ -410,10 +391,10 @@ export const AboutPage: React.FC = () => {
                         </div>
                         <div className="space-y-3">
                           <Heading level="h3" size="xl" className="group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-300">
-                            {value.title}
+                            {t(`about.values.${value.key}.title`)}
                           </Heading>
                           <Text variant="body" color="secondary" as="p">
-                            {value.description}
+                            {t(`about.values.${value.key}.description`)}
                           </Text>
                         </div>
                       </div>
@@ -442,14 +423,14 @@ export const AboutPage: React.FC = () => {
                       <Shield className="w-8 h-8 text-white" />
                     </div>
                     <Heading level="h3" size="2xl">
-                      Security & Compliance
+                      {t('about.securityTitle')}
                     </Heading>
                     <div className="space-y-4">
                       {[
-                        { icon: Lock, text: 'Bank-grade encryption for all data' },
-                        { icon: FileCheck, text: 'KYC/AML compliance for all users' },
-                        { icon: Layers, text: 'Smart contract audited by leading firms' },
-                        { icon: Shield, text: 'Secure custody of digital assets' }
+                        { icon: Lock, text: t('about.security.encryption') },
+                        { icon: FileCheck, text: t('about.security.kyc') },
+                        { icon: Layers, text: t('about.security.audit') },
+                        { icon: Shield, text: t('about.security.custody') }
                       ].map((item, index) => (
                         <div key={index} className="flex items-center gap-3">
                           <item.icon className="w-5 h-5 text-blue-500" />
@@ -469,22 +450,16 @@ export const AboutPage: React.FC = () => {
                 className="space-y-6"
               >
                 <Heading level="h2" size="4xl">
-                  Built on Trust & Technology
+                  {t('about.trustTitle')}
                 </Heading>
                 <Text variant="bodyLarge" color="secondary" as="p" className="leading-relaxed">
-                  At Capimax, security isn't an afterthought—it's the foundation of everything
-                  we build. Our platform combines cutting-edge blockchain technology with
-                  rigorous compliance standards to protect your owned properties.
+                  {t('about.trustP1')}
                 </Text>
                 <Text variant="body" color="secondary" as="p" className="leading-relaxed">
-                  Every property listed on our platform undergoes comprehensive due diligence,
-                  including legal verification, professional valuation, and regulatory compliance
-                  checks. Our smart contracts are audited by industry-leading security firms,
-                  and we maintain full regulatory compliance in all jurisdictions we operate in.
+                  {t('about.trustP2')}
                 </Text>
                 <Text variant="body" color="secondary" as="p" className="leading-relaxed">
-                  Your trust is our most valuable asset. We're committed to maintaining the
-                  highest standards of transparency, security, and integrity in everything we do.
+                  {t('about.trustP3')}
                 </Text>
               </motion.div>
             </div>
@@ -499,7 +474,7 @@ export const AboutPage: React.FC = () => {
                 className="space-y-6"
               >
                 <Heading level="h2" size="4xl" align="center" className="text-white">
-                  Ready to Start Owning?
+                  {t('about.ctaTitle')}
                 </Heading>
                 <Text
                   variant="bodyLarge"
@@ -507,8 +482,7 @@ export const AboutPage: React.FC = () => {
                   className="max-w-2xl mx-auto text-white/90"
                   as="p"
                 >
-                  Join thousands of owners who are building wealth through tokenized real estate.
-                  Start your journey today with as little as $100.
+                  {t('about.ctaText')}
                 </Text>
               </motion.div>
 
@@ -517,15 +491,15 @@ export const AboutPage: React.FC = () => {
                   href="/register"
                   className="inline-flex items-center justify-center bg-white text-slate-900 hover:bg-slate-100 px-10 py-4 text-lg font-semibold rounded-2xl transition-colors duration-300"
                 >
-                  Create Free Account
-                  <TrendingUp className="ml-3 w-5 h-5" />
+                  {t('about.ctaCreateAccount')}
+                  <TrendingUp className="ms-3 w-5 h-5" />
                 </a>
                 <a
                   href="/properties"
                   className="inline-flex items-center justify-center border border-white/30 text-white hover:bg-white/10 px-10 py-4 text-lg font-semibold rounded-2xl transition-colors duration-300"
                 >
-                  Browse Properties
-                  <Building2 className="ml-3 w-5 h-5" />
+                  {t('about.ctaBrowse')}
+                  <Building2 className="ms-3 w-5 h-5" />
                 </a>
               </div>
             </div>

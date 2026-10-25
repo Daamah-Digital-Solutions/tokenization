@@ -2,9 +2,11 @@ import React from 'react';
 import { AuthLayout } from '../components/auth/AuthLayout';
 import { RegisterForm } from '../components/auth/RegisterForm';
 import { useRouter } from '../utils/router';
+import { useTranslation } from 'react-i18next';
 
 export const RegisterPage: React.FC = () => {
   const { navigate } = useRouter();
+  const { t } = useTranslation('ui');
 
   const handleSuccess = (email: string) => {
     // Redirect directly to code verification with email parameter
@@ -19,8 +21,8 @@ export const RegisterPage: React.FC = () => {
 
   return (
     <AuthLayout
-      title="Join Capimax"
-      subtitle="Create your account and start owning tokenized real estate with as little as $100"
+      title={t('registerPage.layoutTitle')}
+      subtitle={t('registerPage.layoutSubtitle')}
     >
       <RegisterForm
         onSignIn={handleGoToLogin}

@@ -13,6 +13,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
+import { useTranslation } from 'react-i18next';
 
 export interface SearchSuggestion {
   id: string;
@@ -40,7 +41,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   value,
   onChange,
   onSearch,
-  placeholder = "Search properties by name, location, or type...",
+  placeholder,
   suggestions = [],
   isLoading = false,
   showSuggestions = true,
@@ -48,6 +49,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   onRecentSearch,
   className
 }) => {
+  const { t } = useTranslation('propui');
   const [isFocused, setIsFocused] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -67,7 +69,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       id: '2',
       type: 'location',
       title: 'New York',
-      subtitle: '47 properties available',
+      subtitle: t('search.propertiesAvailable', { count: 47 }),
       icon: MapPin,
       value: 'New York'
     },
@@ -75,15 +77,15 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       id: '3',
       type: 'location',
       title: 'California',
-      subtitle: '23 properties available',
+      subtitle: t('search.propertiesAvailable', { count: 23 }),
       icon: MapPin,
       value: 'California'
     },
     {
       id: '4',
       type: 'type',
-      title: 'Commercial',
-      subtitle: 'Office buildings and retail spaces',
+      title: t('search.commercial'),
+      subtitle: t('search.commercialHint'),
       icon: Building,
       value: 'Commercial'
     },
@@ -176,7 +178,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           "relative transition-all duration-200",
           isFocused && "transform scale-[1.02]"
         )}>
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 transition-colors duration-200" />
+          <Search className="absolute start-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 transition-colors duration-200" />
           
           <input
             ref={inputRef}
@@ -185,9 +187,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             onChange={handleInputChange}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            placeholder={placeholder}
+            placeholder={placeholder ?? t('search.placeholder')}
             className={cn(
-              "w-full pl-12 pr-12 py-4 text-lg rounded-2xl border-2 transition-all duration-200",
+              "w-full ps-12 pe-12 py-4 text-lg rounded-2xl border-2 transition-all duration-200",
               "bg-white dark:bg-gray-900 text-gray-900 dark:text-white",
               "placeholder-gray-500 dark:placeholder-gray-400",
               "focus:outline-none focus:ring-4",
@@ -197,7 +199,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             )}
           />
           
-          <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+          <div className="absolute end-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
             {isLoading && (
               <div className="p-2">
                 <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
@@ -208,6 +210,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
               <button
                 type="button"
                 onClick={clearSearch}
+                aria-label={t('search.clear')}
                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <X className="w-4 h-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
@@ -216,9 +219,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             
             <button
               type="submit"
+              aria-label={t('search.submit')}
               className="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors"
             >
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4 rtl:rotate-180" />
             </button>
           </div>
         </div>
@@ -233,7 +237,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl z-50 overflow-hidden"
+            className="absolute top-full start-0 end-0 mt-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl z-50 overflow-hidden"
           >
             <div className="max-h-96 overflow-y-auto">
               {/* Recent Searches */}
@@ -241,14 +245,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 <div className="p-4 border-b border-gray-100 dark:border-gray-800">
                   <div className="flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
                     <Clock className="w-4 h-4" />
-                    Recent Searches
+                    {t('search.recent')}
                   </div>
                   <div className="space-y-2">
                     {recentSearches.slice(0, 5).map((query, index) => (
                       <button
                         key={index}
                         onClick={() => handleRecentSearchClick(query)}
-                        className="flex items-center gap-3 w-full p-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                        className="flex items-center gap-3 w-full p-2 text-start hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
                       >
                         <Clock className="w-4 h-4 text-gray-400" />
                         <span className="text-gray-700 dark:text-gray-300">{query}</span>
@@ -263,16 +267,21 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 <div className="p-4 border-b border-gray-100 dark:border-gray-800">
                   <div className="flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">
                     <Filter className="w-4 h-4" />
-                    Quick Filters
+                    {t('search.quickFilters')}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {['High Return', 'Low Risk', 'Fully Funded', 'New Listings'].map((filter) => (
+                    {[
+                      { value: 'High Return', key: 'highReturn' },
+                      { value: 'Low Risk', key: 'lowRisk' },
+                      { value: 'Fully Funded', key: 'fullyFunded' },
+                      { value: 'New Listings', key: 'newListings' },
+                    ].map(({ value: filter, key }) => (
                       <button
                         key={filter}
-                        onClick={() => handleSuggestionClick({ id: filter, type: 'type', title: filter, value: filter })}
+                        onClick={() => handleSuggestionClick({ id: filter, type: 'type', title: t(`search.filters.${key}`), value: filter })}
                         className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
                       >
-                        {filter}
+                        {t(`search.filters.${key}`)}
                       </button>
                     ))}
                   </div>
@@ -284,7 +293,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 <div className="p-2">
                   {value && (
                     <div className="px-2 py-1 text-sm text-gray-500 dark:text-gray-400 mb-2">
-                      Suggestions
+                      {t('search.suggestions')}
                     </div>
                   )}
                   {filteredSuggestions.map((suggestion) => {
@@ -293,7 +302,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                       <button
                         key={suggestion.id}
                         onClick={() => handleSuggestionClick(suggestion)}
-                        className="flex items-center gap-3 w-full p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-colors group"
+                        className="flex items-center gap-3 w-full p-3 text-start hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-colors group"
                       >
                         <div className={cn(
                           "p-2 rounded-lg transition-colors",
@@ -313,7 +322,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                             </div>
                           )}
                         </div>
-                        <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-500 opacity-0 group-hover:opacity-100 transform translate-x-1 group-hover:translate-x-0 transition-all" />
+                        <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-500 opacity-0 group-hover:opacity-100 transform translate-x-1 group-hover:translate-x-0 transition-all rtl:rotate-180" />
                       </button>
                     );
                   })}
@@ -324,9 +333,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
               {value && filteredSuggestions.length === 0 && !isLoading && (
                 <div className="p-8 text-center">
                   <Search className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                  <div className="text-gray-500 dark:text-gray-400">No suggestions found</div>
+                  <div className="text-gray-500 dark:text-gray-400">{t('search.noSuggestions')}</div>
                   <div className="text-sm text-gray-400 dark:text-gray-500 mt-1">
-                    Try searching for property names, locations, or types
+                    {t('search.noSuggestionsHint')}
                   </div>
                 </div>
               )}
@@ -335,16 +344,21 @@ export const SearchBar: React.FC<SearchBarProps> = ({
               {!value && (
                 <div className="p-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700">
                   <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                    Popular: 
+                    {t('search.popular')}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {['Manhattan', 'Commercial', 'High Yield', 'Tech Hub'].map((term) => (
+                    {[
+                      { value: 'Manhattan', key: null },
+                      { value: 'Commercial', key: 'commercial' },
+                      { value: 'High Yield', key: 'highYield' },
+                      { value: 'Tech Hub', key: 'techHub' },
+                    ].map(({ value: term, key }) => (
                       <button
                         key={term}
-                        onClick={() => handleSuggestionClick({ id: term, type: 'recent', title: term, value: term })}
+                        onClick={() => handleSuggestionClick({ id: term, type: 'recent', title: key ? t(`search.popularTerms.${key}`) : term, value: term })}
                         className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded hover:bg-emerald-200 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
                       >
-                        {term}
+                        {key ? t(`search.popularTerms.${key}`) : term}
                       </button>
                     ))}
                   </div>

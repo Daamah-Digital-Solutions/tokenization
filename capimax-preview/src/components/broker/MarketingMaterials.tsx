@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/Button';
+import { useTranslation } from 'react-i18next';
 
 export interface MarketingMaterial {
   id: string;
@@ -41,6 +42,7 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
   onCustomize,
   className = ''
 }) => {
+  const { t, i18n } = useTranslation('brokerui');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -88,7 +90,7 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
   const types = Array.from(new Set(materials.map(m => m.type)));
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
@@ -118,19 +120,19 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100">
-              Marketing Materials
+              {t('materials.title')}
             </h2>
             <p className="text-sm text-neutral-600 dark:text-slate-400 mt-1">
-              Download and share professional sales materials
+              {t('materials.subtitle')}
             </p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             <Button
               size="sm"
               variant="outline"
               onClick={() => setShowRequestModal(true)}
             >
-              Request Material
+              {t('materials.requestMaterial')}
             </Button>
             <div className="flex rounded-lg border border-neutral-200 dark:border-slate-600 overflow-hidden">
               <button
@@ -141,7 +143,7 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
                     : 'bg-white dark:bg-slate-700 text-neutral-700 dark:text-slate-300'
                 }`}
               >
-                Grid
+                {t('materials.grid')}
               </button>
               <button
                 onClick={() => setViewMode('list')}
@@ -151,7 +153,7 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
                     : 'bg-white dark:bg-slate-700 text-neutral-700 dark:text-slate-300'
                 }`}
               >
-                List
+                {t('materials.list')}
               </button>
             </div>
           </div>
@@ -163,25 +165,25 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
             <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
               {materials.length}
             </div>
-            <div className="text-sm text-blue-800 dark:text-blue-300">Total Materials</div>
+            <div className="text-sm text-blue-800 dark:text-blue-300">{t('materials.totalMaterials')}</div>
           </div>
           <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
             <div className="text-lg font-semibold text-green-600 dark:text-green-400">
               {materials.filter(m => m.isNew).length}
             </div>
-            <div className="text-sm text-green-800 dark:text-green-300">New This Week</div>
+            <div className="text-sm text-green-800 dark:text-green-300">{t('materials.newThisWeek')}</div>
           </div>
           <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
             <div className="text-lg font-semibold text-purple-600 dark:text-purple-400">
               {materials.reduce((sum, m) => sum + m.downloadCount, 0)}
             </div>
-            <div className="text-sm text-purple-800 dark:text-purple-300">Total Downloads</div>
+            <div className="text-sm text-purple-800 dark:text-purple-300">{t('materials.totalDownloads')}</div>
           </div>
           <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
             <div className="text-lg font-semibold text-orange-600 dark:text-orange-400">
               {categories.length}
             </div>
-            <div className="text-sm text-orange-800 dark:text-orange-300">Categories</div>
+            <div className="text-sm text-orange-800 dark:text-orange-300">{t('materials.categories')}</div>
           </div>
         </div>
 
@@ -190,7 +192,7 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
           <div className="flex-1 min-w-0">
             <input
               type="text"
-              placeholder="Search materials..."
+              placeholder={t('materials.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full border border-neutral-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-neutral-900 dark:text-slate-100"
@@ -201,10 +203,10 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="text-sm border border-neutral-200 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-neutral-900 dark:text-slate-100"
           >
-            <option value="all">All Categories</option>
+            <option value="all">{t('materials.allCategories')}</option>
             {categories.map(cat => (
               <option key={cat} value={cat}>
-                {cat.replace('_', ' ').charAt(0).toUpperCase() + cat.replace('_', ' ').slice(1)}
+                {t(`materials.category.${cat}`, { defaultValue: cat.replace('_', ' ').charAt(0).toUpperCase() + cat.replace('_', ' ').slice(1) })}
               </option>
             ))}
           </select>
@@ -213,10 +215,10 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
             onChange={(e) => setSelectedType(e.target.value)}
             className="text-sm border border-neutral-200 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-neutral-900 dark:text-slate-100"
           >
-            <option value="all">All Types</option>
+            <option value="all">{t('materials.allTypes')}</option>
             {types.map(type => (
               <option key={type} value={type}>
-                {type.charAt(0).toUpperCase() + type.slice(1)}
+                {t(`materials.type.${type}`, { defaultValue: type.charAt(0).toUpperCase() + type.slice(1) })}
               </option>
             ))}
           </select>
@@ -229,7 +231,7 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
           {/* Popular Materials */}
           <div>
             <h3 className="font-medium text-neutral-900 dark:text-slate-100 mb-3">
-              Most Downloaded
+              {t('materials.mostDownloaded')}
             </h3>
             <div className="space-y-2">
               {popularMaterials.slice(0, 3).map((material) => (
@@ -237,19 +239,19 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
                   key={material.id}
                   className="flex items-center justify-between p-2 bg-white dark:bg-slate-800 rounded border hover:bg-neutral-50 dark:hover:bg-slate-700 transition-colors"
                 >
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center gap-3">
                     <span className="text-lg">{getTypeIcon(material.type)}</span>
                     <div>
                       <div className="font-medium text-sm text-neutral-900 dark:text-slate-100">
                         {material.title}
                       </div>
                       <div className="text-xs text-neutral-600 dark:text-slate-400">
-                        {material.downloadCount} downloads
+                        {t('materials.downloads', { value: material.downloadCount })}
                       </div>
                     </div>
                   </div>
                   <Button size="sm" variant="outline" onClick={() => onDownload(material.id)}>
-                    Download
+                    {t('materials.download')}
                   </Button>
                 </div>
               ))}
@@ -259,7 +261,7 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
           {/* Recent Materials */}
           <div>
             <h3 className="font-medium text-neutral-900 dark:text-slate-100 mb-3">
-              Recently Added
+              {t('materials.recentlyAdded')}
             </h3>
             <div className="space-y-2">
               {recentMaterials.map((material) => (
@@ -267,24 +269,24 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
                   key={material.id}
                   className="flex items-center justify-between p-2 bg-white dark:bg-slate-800 rounded border hover:bg-neutral-50 dark:hover:bg-slate-700 transition-colors"
                 >
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center gap-3">
                     <span className="text-lg">{getTypeIcon(material.type)}</span>
                     <div>
                       <div className="font-medium text-sm text-neutral-900 dark:text-slate-100">
                         {material.title}
                       </div>
                       <div className="text-xs text-neutral-600 dark:text-slate-400">
-                        Added {formatDate(material.lastUpdated)}
+                        {t('materials.added', { date: formatDate(material.lastUpdated) })}
                       </div>
                     </div>
                     {material.isNew && (
                       <span className="px-1 py-0.5 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 text-xs rounded">
-                        New
+                        {t('materials.new')}
                       </span>
                     )}
                   </div>
                   <Button size="sm" variant="outline" onClick={() => onDownload(material.id)}>
-                    Download
+                    {t('materials.download')}
                   </Button>
                 </div>
               ))}
@@ -299,13 +301,13 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
           <div className="text-center py-8">
             <span className="text-4xl mb-4 block">📄</span>
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-2">
-              No Materials Found
+              {t('materials.noMaterials')}
             </h3>
             <p className="text-neutral-600 dark:text-slate-400 mb-4">
-              Try adjusting your filters or search terms
+              {t('materials.noMaterialsHint')}
             </p>
             <Button variant="primary" onClick={() => setShowRequestModal(true)}>
-              Request Custom Material
+              {t('materials.requestCustom')}
             </Button>
           </div>
         ) : viewMode === 'grid' ? (
@@ -319,13 +321,13 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
                 <div className="relative h-32 bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 flex items-center justify-center">
                   <span className="text-4xl">{getTypeIcon(material.type)}</span>
                   {material.isNew && (
-                    <div className="absolute top-2 right-2 px-2 py-1 bg-green-500 text-white text-xs font-medium rounded-full">
-                      New
+                    <div className="absolute top-2 end-2 px-2 py-1 bg-green-500 text-white text-xs font-medium rounded-full">
+                      {t('materials.new')}
                     </div>
                   )}
                   {material.requiresCustomization && (
-                    <div className="absolute top-2 left-2 px-2 py-1 bg-yellow-500 text-white text-xs font-medium rounded-full">
-                      Customizable
+                    <div className="absolute top-2 start-2 px-2 py-1 bg-yellow-500 text-white text-xs font-medium rounded-full">
+                      {t('materials.customizable')}
                     </div>
                   )}
                 </div>
@@ -336,7 +338,7 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
                       {material.title}
                     </h3>
                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${getCategoryColor(material.category)}`}>
-                      {material.category.replace('_', ' ')}
+                      {t(`materials.category.${material.category}`, { defaultValue: material.category.replace('_', ' ') })}
                     </span>
                   </div>
 
@@ -346,7 +348,7 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
 
                   <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-slate-400 mb-3">
                     <span>{material.fileSize || material.duration}</span>
-                    <span>{material.downloadCount} downloads</span>
+                    <span>{t('materials.downloads', { value: material.downloadCount })}</span>
                   </div>
 
                   <div className="flex flex-wrap gap-1 mb-3">
@@ -360,19 +362,19 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
                     ))}
                     {material.tags.length > 2 && (
                       <span className="text-xs text-neutral-500 dark:text-slate-400">
-                        +{material.tags.length - 2} more
+                        {t('materials.more', { value: material.tags.length - 2 })}
                       </span>
                     )}
                   </div>
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2">
                     <Button
                       size="sm"
                       variant="primary"
                       onClick={() => onDownload(material.id)}
                       className="flex-1"
                     >
-                      Download
+                      {t('materials.download')}
                     </Button>
                     {material.previewUrl && (
                       <Button
@@ -380,7 +382,7 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
                         variant="outline"
                         onClick={() => onPreview(material.id)}
                       >
-                        Preview
+                        {t('materials.preview')}
                       </Button>
                     )}
                     <Button
@@ -388,7 +390,7 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
                       variant="outline"
                       onClick={() => onShare(material.id)}
                     >
-                      Share
+                      {t('materials.share')}
                     </Button>
                   </div>
 
@@ -400,7 +402,7 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
                         onClick={() => onCustomize(material.id)}
                         className="w-full"
                       >
-                        Customize
+                        {t('materials.customize')}
                       </Button>
                     </div>
                   )}
@@ -416,40 +418,40 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
                 key={material.id}
                 className="flex items-center justify-between p-4 border border-neutral-200 dark:border-slate-700 rounded-lg hover:bg-neutral-50 dark:hover:bg-slate-700 transition-colors"
               >
-                <div className="flex items-center space-x-4 flex-1">
+                <div className="flex items-center gap-4 flex-1">
                   <span className="text-2xl">{getTypeIcon(material.type)}</span>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-medium text-neutral-900 dark:text-slate-100 truncate">
                         {material.title}
                       </h3>
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${getCategoryColor(material.category)}`}>
-                        {material.category.replace('_', ' ')}
+                        {t(`materials.category.${material.category}`, { defaultValue: material.category.replace('_', ' ') })}
                       </span>
                       {material.isNew && (
                         <span className="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 text-xs font-medium rounded-full">
-                          New
+                          {t('materials.new')}
                         </span>
                       )}
                     </div>
                     <p className="text-sm text-neutral-600 dark:text-slate-400 truncate">
                       {material.description}
                     </p>
-                    <div className="flex items-center space-x-4 mt-1 text-xs text-neutral-500 dark:text-slate-400">
+                    <div className="flex items-center gap-4 mt-1 text-xs text-neutral-500 dark:text-slate-400">
                       <span>{material.fileSize || material.duration}</span>
-                      <span>{material.downloadCount} downloads</span>
-                      <span>Updated {formatDate(material.lastUpdated)}</span>
+                      <span>{t('materials.downloads', { value: material.downloadCount })}</span>
+                      <span>{t('materials.updated', { date: formatDate(material.lastUpdated) })}</span>
                     </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <Button
                     size="sm"
                     variant="primary"
                     onClick={() => onDownload(material.id)}
                   >
-                    Download
+                    {t('materials.download')}
                   </Button>
                   {material.previewUrl && (
                     <Button
@@ -457,7 +459,7 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
                       variant="outline"
                       onClick={() => onPreview(material.id)}
                     >
-                      Preview
+                      {t('materials.preview')}
                     </Button>
                   )}
                   <Button
@@ -465,7 +467,7 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
                     variant="outline"
                     onClick={() => onShare(material.id)}
                   >
-                    Share
+                    {t('materials.share')}
                   </Button>
                 </div>
               </div>
@@ -479,56 +481,56 @@ export const MarketingMaterials: React.FC<MarketingMaterialsProps> = ({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-slate-800 rounded-xl p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">
-              Request Custom Material
+              {t('materials.requestCustom')}
             </h3>
             
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-                  Category
+                  {t('materials.categoryLabel')}
                 </label>
                 <select
                   value={requestCategory}
                   onChange={(e) => setRequestCategory(e.target.value)}
                   className="w-full border border-neutral-200 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-neutral-900 dark:text-slate-100"
                 >
-                  <option value="general">General</option>
-                  <option value="property_specific">Property Specific</option>
-                  <option value="education">Education</option>
-                  <option value="compliance">Compliance</option>
-                  <option value="social_media">Social Media</option>
-                  <option value="email">Email Templates</option>
+                  <option value="general">{t('materials.category.general')}</option>
+                  <option value="property_specific">{t('materials.category.property_specific')}</option>
+                  <option value="education">{t('materials.category.education')}</option>
+                  <option value="compliance">{t('materials.category.compliance')}</option>
+                  <option value="social_media">{t('materials.category.social_media')}</option>
+                  <option value="email">{t('materials.category.email')}</option>
                 </select>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-                  Description
+                  {t('materials.description')}
                 </label>
                 <textarea
                   value={requestDescription}
                   onChange={(e) => setRequestDescription(e.target.value)}
-                  placeholder="Describe the material you need..."
+                  placeholder={t('materials.descriptionPh')}
                   rows={4}
                   className="w-full border border-neutral-200 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-neutral-900 dark:text-slate-100"
                 />
               </div>
             </div>
 
-            <div className="flex items-center space-x-3 mt-6">
+            <div className="flex items-center gap-3 mt-6">
               <Button
                 variant="outline"
                 onClick={() => setShowRequestModal(false)}
                 className="flex-1"
               >
-                Cancel
+                {t('materials.cancel')}
               </Button>
               <Button
                 variant="primary"
                 onClick={handleRequestSubmit}
                 className="flex-1"
               >
-                Submit Request
+                {t('materials.submitRequest')}
               </Button>
             </div>
           </div>

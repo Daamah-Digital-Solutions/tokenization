@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, ReactNode, KeyboardEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 // Skip to content link component
 export const SkipToContent: React.FC<{ targetId?: string }> = ({ 
   targetId = 'main-content' 
 }) => {
+  const { t } = useTranslation('shared');
   const handleSkip = () => {
     const target = document.getElementById(targetId);
     if (target) {
@@ -18,14 +20,14 @@ export const SkipToContent: React.FC<{ targetId?: string }> = ({
       type="button"
       onClick={handleSkip}
       className="
-        sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4
+        sr-only focus:not-sr-only focus:absolute focus:top-4 focus:start-4
         bg-emerald-600 text-white px-4 py-2 rounded-lg shadow-lg
         z-[9999] font-medium text-sm
         transition-all duration-200
         focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2
       "
     >
-      Skip to main content
+      {t('a11y.skipToContent')}
     </button>
   );
 };
@@ -130,6 +132,7 @@ export const Announcement: React.FC<{
 
 // High contrast mode toggle
 export const HighContrastToggle: React.FC = () => {
+  const { t } = useTranslation('shared');
   const [isHighContrast, setIsHighContrast] = useState(false);
 
   useEffect(() => {
@@ -152,7 +155,7 @@ export const HighContrastToggle: React.FC = () => {
   return (
     <button
       onClick={toggleHighContrast}
-      aria-label={`${isHighContrast ? 'Disable' : 'Enable'} high contrast mode`}
+      aria-label={isHighContrast ? t('a11y.disableHighContrast') : t('a11y.enableHighContrast')}
       className="
         p-2 rounded-lg border border-gray-300 dark:border-gray-600
         hover:bg-gray-100 dark:hover:bg-gray-800
@@ -161,7 +164,7 @@ export const HighContrastToggle: React.FC = () => {
       "
     >
       <span className="sr-only">
-        {isHighContrast ? 'Disable' : 'Enable'} high contrast mode
+        {isHighContrast ? t('a11y.disableHighContrast') : t('a11y.enableHighContrast')}
       </span>
       <svg
         className="w-5 h-5 text-gray-600 dark:text-gray-300"
@@ -220,6 +223,7 @@ export const AccessibleField: React.FC<{
 }> = ({ label, error, help, required = false, children, id }) => {
   const errorId = `${id}-error`;
   const helpId = `${id}-help`;
+  const { t } = useTranslation('shared');
 
   return (
     <div className="space-y-1">
@@ -229,7 +233,7 @@ export const AccessibleField: React.FC<{
       >
         {label}
         {required && (
-          <span className="text-red-500 ml-1" aria-label="required">
+          <span className="text-red-500 ms-1" aria-label={t('a11y.required')}>
             *
           </span>
         )}
@@ -269,6 +273,7 @@ export const AccessibleProgress: React.FC<{
   showValue?: boolean;
 }> = ({ value, max, label, showValue = true }) => {
   const percentage = Math.round((value / max) * 100);
+  const { t } = useTranslation('shared');
 
   return (
     <div className="w-full">
@@ -278,7 +283,7 @@ export const AccessibleProgress: React.FC<{
         </label>
         {showValue && (
           <span className="text-sm text-gray-500 dark:text-gray-400">
-            {value} of {max}
+            {t('a11y.valueOfMax', { value, max })}
           </span>
         )}
       </div>
@@ -288,7 +293,7 @@ export const AccessibleProgress: React.FC<{
         aria-valuenow={value}
         aria-valuemin={0}
         aria-valuemax={max}
-        aria-label={`${label}: ${percentage}% complete`}
+        aria-label={t('a11y.progressLabel', { label, percentage })}
         className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2"
       >
         <motion.div
@@ -300,7 +305,7 @@ export const AccessibleProgress: React.FC<{
       </div>
       
       <ScreenReaderOnly>
-        {percentage}% complete
+        {t('a11y.percentComplete', { percentage })}
       </ScreenReaderOnly>
     </div>
   );
@@ -424,6 +429,7 @@ export const AccessibleTabs: React.FC<{
 
 // Font size controller
 export const FontSizeController: React.FC = () => {
+  const { t } = useTranslation('shared');
   const [fontSize, setFontSize] = useState(16);
 
   useEffect(() => {
@@ -444,10 +450,10 @@ export const FontSizeController: React.FC = () => {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm text-gray-600 dark:text-gray-300">Font Size:</span>
+      <span className="text-sm text-gray-600 dark:text-gray-300">{t('a11y.fontSize')}</span>
       <button
         onClick={decreaseFontSize}
-        aria-label="Decrease font size"
+        aria-label={t('a11y.decreaseFont')}
         disabled={fontSize <= 12}
         className="
           w-8 h-8 rounded-lg border border-gray-300 dark:border-gray-600
@@ -460,18 +466,18 @@ export const FontSizeController: React.FC = () => {
       </button>
       <button
         onClick={resetFontSize}
-        aria-label="Reset font size"
+        aria-label={t('a11y.resetFont')}
         className="
           px-2 py-1 text-sm rounded-lg border border-gray-300 dark:border-gray-600
           hover:bg-gray-100 dark:hover:bg-gray-800
           focus:outline-none focus:ring-2 focus:ring-emerald-500
         "
       >
-        Reset
+        {t('a11y.reset')}
       </button>
       <button
         onClick={increaseFontSize}
-        aria-label="Increase font size"
+        aria-label={t('a11y.increaseFont')}
         disabled={fontSize >= 24}
         className="
           w-8 h-8 rounded-lg border border-gray-300 dark:border-gray-600
@@ -495,6 +501,7 @@ export const ConnectionQualityIndicator: React.FC<{
 }> = ({ size = 'md' }) => {
   const [connectionQuality, setConnectionQuality] = useState<'good' | 'fair' | 'poor' | 'offline'>('good');
   const [isVisible, setIsVisible] = useState(false);
+  const { t } = useTranslation('shared');
 
   useEffect(() => {
     const checkConnection = () => {
@@ -575,11 +582,11 @@ export const ConnectionQualityIndicator: React.FC<{
 
   const getStatusText = () => {
     switch (connectionQuality) {
-      case 'good': return 'Good connection';
-      case 'fair': return 'Fair connection';
-      case 'poor': return 'Poor connection';
-      case 'offline': return 'No connection';
-      default: return 'Unknown connection status';
+      case 'good': return t('a11y.connection.good');
+      case 'fair': return t('a11y.connection.fair');
+      case 'poor': return t('a11y.connection.poor');
+      case 'offline': return t('a11y.connection.offline');
+      default: return t('a11y.connection.unknown');
     }
   };
 
@@ -644,6 +651,7 @@ export const ConnectionQualityIndicator: React.FC<{
 
 // Accessibility menu component
 export const AccessibilityMenu: React.FC = () => {
+  const { t } = useTranslation('shared');
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -651,7 +659,7 @@ export const AccessibilityMenu: React.FC = () => {
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
-        aria-label="Accessibility options"
+        aria-label={t('a11y.options')}
         className="
           p-2 rounded-lg border border-gray-300 dark:border-gray-600
           hover:bg-gray-100 dark:hover:bg-gray-800
@@ -681,14 +689,14 @@ export const AccessibilityMenu: React.FC = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -10 }}
               className="
-                absolute right-0 top-full mt-2 w-80
+                absolute end-0 top-full mt-2 w-80
                 bg-white dark:bg-gray-800 rounded-xl shadow-lg
                 border border-gray-200 dark:border-gray-700
                 p-4 space-y-4 z-50
               "
             >
               <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
-                Accessibility Options
+                {t('a11y.optionsTitle')}
               </h3>
               
               <div className="space-y-3">
@@ -703,7 +711,7 @@ export const AccessibilityMenu: React.FC = () => {
                   hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500
                 "
               >
-                Close
+                {t('common.close')}
               </button>
             </motion.div>
           </FocusTrap>

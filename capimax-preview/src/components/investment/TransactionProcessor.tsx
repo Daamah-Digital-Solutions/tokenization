@@ -27,6 +27,7 @@ import { InvestmentService } from '../../services/investment/InvestmentService';
 import { InstallmentService } from '../../services/installments/InstallmentService';
 import type { InvestmentProperty, InvestmentData } from './types';
 import { cn } from '../../utils/cn';
+import { useTranslation } from 'react-i18next';
 
 interface TransactionProcessorProps {
   property: InvestmentProperty;
@@ -38,6 +39,8 @@ interface TransactionProcessorProps {
   onGoBack?: () => void;
 }
 
+// ``title``, ``description`` and ``estimatedTime`` hold i18n keys in the
+// ``invest`` namespace; they are translated at render time.
 interface TransactionStep {
   id: string;
   title: string;
@@ -56,6 +59,7 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
   autoStart = false,
   onGoBack
 }) => {
+  const { t } = useTranslation('invest');
   const [currentStep, setCurrentStep] = useState(0);
   const [steps, setSteps] = useState<TransactionStep[]>([]);
   const [transactionHash, setTransactionHash] = useState<string | null>(null);
@@ -103,25 +107,25 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
   } | null {
     const m = message.toLowerCase();
     if (m.includes('verified kyc profile')) {
-      return { label: 'Complete KYC', href: '/kyc' };
+      return { label: t('processor.cta.kyc'), href: '/kyc' };
     }
     if (m.includes('unresolved compliance review')) {
       return {
-        label: 'Contact support',
+        label: t('processor.cta.support'),
         href: 'mailto:support@capimax.com?subject=Compliance%20review',
       };
     }
     if (m.includes('annual limit')) {
       return {
-        label: 'Reduce purchase amount',
+        label: t('processor.cta.reduce'),
         onClick: () => onGoBack?.(),
       };
     }
     if (m.includes('accredited investors')) {
-      return { label: 'Apply for accredited status', href: '/kyc?upgrade=accredited' };
+      return { label: t('processor.cta.accredited'), href: '/kyc?upgrade=accredited' };
     }
     if (m.includes('country of residence is not eligible')) {
-      return { label: 'Browse eligible properties', href: '/properties' };
+      return { label: t('processor.cta.browse'), href: '/properties' };
     }
     return null;
   }
@@ -157,13 +161,14 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
 
   const getPaymentMethodLabel = () => {
     switch (investmentData.paymentMethod) {
-      case 'crypto': return 'Cryptocurrency';
-      case 'fiat': return 'Credit/Debit Card';
-      case 'bank': return 'Bank Transfer';
-      case 'wallet': return 'CapiMax Wallet';
-      case 'nova_sukuk': return 'Nova Sukuk';
-      case 'pronova': return 'Pronova';
-      default: return 'Payment';
+      case 'crypto':
+      case 'fiat':
+      case 'bank':
+      case 'wallet':
+      case 'nova_sukuk':
+      case 'pronova':
+        return t(`paymentMethod.methods.${investmentData.paymentMethod}.name`);
+      default: return t('processor.payment');
     }
   };
 
@@ -189,27 +194,27 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
       // process (= create NOWPayments invoice + watch for receipt), then
       // confirm tokens.
       setSteps([
-        { id: 'validate', title: 'Validate Purchase', description: 'Verifying availability and limits', status: 'pending', estimatedTime: '10s' },
-        { id: 'process', title: 'Process Payment', description: 'Get crypto payment address and await funds', status: 'pending', estimatedTime: '5-30 min' },
-        { id: 'tokens', title: 'Confirm Tokens', description: 'Confirming your property tokens', status: 'pending', estimatedTime: '10s' }
+        { id: 'validate', title: 'processor.steps.validate.title', description: 'processor.steps.validate.description', status: 'pending', estimatedTime: 'processor.eta.s10' },
+        { id: 'process', title: 'processor.steps.process.title', description: 'processor.steps.process.cryptoDescription', status: 'pending', estimatedTime: 'processor.eta.m5_30' },
+        { id: 'tokens', title: 'processor.steps.tokens.title', description: 'processor.steps.tokens.description', status: 'pending', estimatedTime: 'processor.eta.s10' }
       ]);
     } else if (investmentData.paymentMethod === 'nova_sukuk') {
       setSteps([
-        { id: 'validate', title: 'Validate Purchase', description: 'Verifying availability and limits', status: 'pending', estimatedTime: '10s' },
-        { id: 'process', title: 'Upload Sukuk Document', description: 'Submitting PDF for admin review', status: 'pending', estimatedTime: '15s' },
-        { id: 'tokens', title: 'Pending Review', description: 'Admin will review and approve your payment', status: 'pending' }
+        { id: 'validate', title: 'processor.steps.validate.title', description: 'processor.steps.validate.description', status: 'pending', estimatedTime: 'processor.eta.s10' },
+        { id: 'process', title: 'processor.steps.sukukUpload.title', description: 'processor.steps.sukukUpload.description', status: 'pending', estimatedTime: 'processor.eta.s15' },
+        { id: 'tokens', title: 'processor.steps.sukukReview.title', description: 'processor.steps.sukukReview.description', status: 'pending' }
       ]);
     } else if (investmentData.paymentMethod === 'pronova') {
       setSteps([
-        { id: 'validate', title: 'Validate Purchase', description: 'Verifying availability and calculating 5% discount', status: 'pending', estimatedTime: '10s' },
-        { id: 'process', title: 'Create Payment', description: 'Setting up Pronova payment with discount', status: 'pending', estimatedTime: '15s' },
-        { id: 'tokens', title: 'Awaiting Payment', description: 'Send Pronova to platform wallet to complete', status: 'pending' }
+        { id: 'validate', title: 'processor.steps.validate.title', description: 'processor.steps.validate.pronovaDescription', status: 'pending', estimatedTime: 'processor.eta.s10' },
+        { id: 'process', title: 'processor.steps.pronovaCreate.title', description: 'processor.steps.pronovaCreate.description', status: 'pending', estimatedTime: 'processor.eta.s15' },
+        { id: 'tokens', title: 'processor.steps.pronovaAwait.title', description: 'processor.steps.pronovaAwait.description', status: 'pending' }
       ]);
     } else {
       setSteps([
-        { id: 'validate', title: 'Validate Purchase', description: 'Verifying availability and limits', status: 'pending', estimatedTime: '10s' },
-        { id: 'process', title: 'Process Payment', description: `Processing ${getPaymentMethodLabel()} payment`, status: 'pending', estimatedTime: '30s' },
-        { id: 'tokens', title: 'Confirm Tokens', description: 'Confirming your property tokens', status: 'pending', estimatedTime: '10s' }
+        { id: 'validate', title: 'processor.steps.validate.title', description: 'processor.steps.validate.description', status: 'pending', estimatedTime: 'processor.eta.s10' },
+        { id: 'process', title: 'processor.steps.process.title', description: 'processor.steps.process.description', status: 'pending', estimatedTime: 'processor.eta.s30' },
+        { id: 'tokens', title: 'processor.steps.tokens.title', description: 'processor.steps.tokens.description', status: 'pending', estimatedTime: 'processor.eta.s10' }
       ]);
     }
   }, [investmentData.paymentMethod]);
@@ -399,7 +404,7 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
     } catch (err: any) {
       // Extract a useful error message from the backend response
       const errorData = err?.response?.data;
-      let errorMessage = 'Transaction failed. Please try again or use a different payment method.';
+      let errorMessage = t('processor.errors.failed');
 
       if (errorData) {
         if (typeof errorData.error === 'string') {
@@ -482,7 +487,7 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
     setSteps(prev => prev.map(s =>
       s.status === 'processing' ? { ...s, status: 'failed' } : s
     ));
-    setError('Card payment was cancelled. You can try again or pick a different method.');
+    setError(t('processor.errors.cardCancelled'));
     setIsProcessing(false);
   };
 
@@ -512,10 +517,7 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
     setSteps(prev => prev.map(s =>
       s.status === 'processing' ? { ...s, status: 'failed' } : s
     ));
-    setError(
-      'Crypto payment was cancelled. You can retry or pick a different method — ' +
-      'if you already sent funds they will still credit, but you may need to refresh.'
-    );
+    setError(t('processor.errors.cryptoCancelled'));
     setIsProcessing(false);
   };
 
@@ -548,7 +550,7 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
     setSteps(prev => prev.map(s =>
       s.status === 'processing' ? { ...s, status: 'failed' } : s
     ));
-    setError('Submission cancelled. You can retry or pick a different payment method.');
+    setError(t('processor.errors.submissionCancelled'));
     setIsProcessing(false);
   };
 
@@ -564,35 +566,35 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
       <Card className="p-6">
         <Text variant="h4" weight="semibold" className="mb-4 flex items-center gap-2">
           <Receipt className="w-5 h-5 text-blue-500" />
-          Transaction Summary
+          {t('processor.summary')}
         </Text>
 
         <div className="space-y-3">
           <div className="flex justify-between items-center">
-            <Text variant="body">Property Tokens:</Text>
-            <Text variant="body" weight="semibold">{investmentData.tokens} {investmentData.tokens === 1 ? 'token' : 'tokens'}</Text>
+            <Text variant="body">{t('processor.propertyShares')}</Text>
+            <Text variant="body" weight="semibold">{t('common.shareCount', { count: investmentData.tokens })}</Text>
           </div>
 
           <div className="flex justify-between items-center">
-            <Text variant="body">Token Price:</Text>
-            <Text variant="body" weight="semibold">${(investmentData.amount / investmentData.tokens).toLocaleString()} each</Text>
+            <Text variant="body">{t('common.pricePerShare')}:</Text>
+            <Text variant="body" weight="semibold">{t('processor.each', { price: `$${(investmentData.amount / investmentData.tokens).toLocaleString()}` })}</Text>
           </div>
 
           <div className="flex justify-between items-center">
-            <Text variant="body">Subtotal:</Text>
+            <Text variant="body">{t('processor.subtotal')}</Text>
             <Text variant="body" weight="semibold">${investmentData.amount.toLocaleString()}</Text>
           </div>
 
           <div className="flex justify-between items-center">
-            <Text variant="body">{getPaymentMethodLabel()} Fee:</Text>
+            <Text variant="body">{t('processor.methodFee', { method: getPaymentMethodLabel() })}</Text>
             <Text variant="body" weight="semibold">
-              {fees.paymentFee === 0 ? 'Free' : `$${fees.paymentFee.toFixed(2)}`}
+              {fees.paymentFee === 0 ? t('common.free') : `$${fees.paymentFee.toFixed(2)}`}
             </Text>
           </div>
 
           <div className="border-t pt-3">
             <div className="flex justify-between items-center">
-              <Text variant="bodyLarge" weight="semibold">Total:</Text>
+              <Text variant="bodyLarge" weight="semibold">{t('common.total')}:</Text>
               <Text variant="bodyLarge" weight="bold" className="text-emerald-600">
                 ${fees.total.toFixed(2)}
               </Text>
@@ -659,7 +661,7 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
           <div className="flex items-center justify-between mb-6">
             <Text variant="h4" weight="semibold" className="flex items-center gap-2">
               <Zap className="w-5 h-5 text-yellow-500" />
-              Transaction Progress
+              {t('processor.progress')}
             </Text>
           </div>
 
@@ -695,12 +697,12 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
                 {/* Step Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <Text variant="body" weight="semibold">{step.title}</Text>
+                    <Text variant="body" weight="semibold">{t(step.title)}</Text>
                     {step.estimatedTime && step.status === 'processing' && (
-                      <Text variant="bodySmall" color="muted">~{step.estimatedTime}</Text>
+                      <Text variant="bodySmall" color="muted">~{t(step.estimatedTime)}</Text>
                     )}
                   </div>
-                  <Text variant="bodySmall" color="muted">{step.description}</Text>
+                  <Text variant="bodySmall" color="muted">{t(step.description, { method: getPaymentMethodLabel() })}</Text>
 
                   {/* Transaction Hash */}
                   {step.transactionHash && (
@@ -708,7 +710,7 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
                       <Text variant="bodySmall" className="font-mono text-gray-500 truncate">
                         {step.transactionHash}
                       </Text>
-                      <button onClick={copyTransactionHash} className="text-gray-400 hover:text-gray-600">
+                      <button onClick={copyTransactionHash} className="text-gray-400 hover:text-gray-600" title={t('common.copy')} aria-label={t('common.copy')}>
                         <Copy className="w-3 h-3" />
                       </button>
                     </div>
@@ -754,7 +756,7 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
                         className="flex items-center gap-2"
                       >
                         <RefreshCw className="w-3 h-3" />
-                        Try Again
+                        {t('common.retry')}
                       </Button>
                     )}
                     {onGoBack && (
@@ -764,8 +766,8 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
                         onClick={onGoBack}
                         className="flex items-center gap-2"
                       >
-                        <ArrowLeft className="w-3 h-3" />
-                        Change Payment Method
+                        <ArrowLeft className="w-3 h-3 rtl:rotate-180" />
+                        {t('processor.changeMethod')}
                       </Button>
                     )}
                   </div>
@@ -780,7 +782,7 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
               <div className="flex items-start gap-2">
                 <Loader2 className="w-4 h-4 text-blue-600 animate-spin flex-shrink-0 mt-0.5" />
                 <Text variant="bodySmall" className="text-blue-700 dark:text-blue-300">
-                  Please don't close this window. Your transaction is being processed securely.
+                  {t('processor.dontClose')}
                 </Text>
               </div>
             </div>
@@ -792,7 +794,7 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
         <div className="flex items-start gap-3">
           <Shield className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
           <Text variant="bodySmall" className="text-green-700 dark:text-green-300">
-            Your purchase is processed through secure, audited smart contracts. All transactions are recorded on the blockchain.
+            {t('processor.security')}
           </Text>
         </div>
       </Card>

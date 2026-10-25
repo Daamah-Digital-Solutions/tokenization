@@ -14,6 +14,18 @@ import enPartners from './locales/en/partners.json';
 import enPlan from './locales/en/plan.json';
 import enDocs from './locales/en/docs.json';
 import enSite from './locales/en/site.json';
+// Wave 15 language sweep (client round 3, #10)
+import enDashboardW15 from './locales/en/dashboard.json';
+import enAdminW15 from './locales/en/admin.json';
+import enOwneruiW15 from './locales/en/ownerui.json';
+import enPaymentsW15 from './locales/en/payments.json';
+import enInvestW15 from './locales/en/invest.json';
+import enPropuiW15 from './locales/en/propui.json';
+import enMarketW15 from './locales/en/market.json';
+import enBrokeruiW15 from './locales/en/brokerui.json';
+import enUiW15 from './locales/en/ui.json';
+import enSharedW15 from './locales/en/shared.json';
+import enPagesW15 from './locales/en/pages.json';
 
 import arCommon from './locales/ar/common.json';
 import arAuth from './locales/ar/auth.json';
@@ -26,6 +38,17 @@ import arPartners from './locales/ar/partners.json';
 import arPlan from './locales/ar/plan.json';
 import arDocs from './locales/ar/docs.json';
 import arSite from './locales/ar/site.json';
+import arDashboardW15 from './locales/ar/dashboard.json';
+import arAdminW15 from './locales/ar/admin.json';
+import arOwneruiW15 from './locales/ar/ownerui.json';
+import arPaymentsW15 from './locales/ar/payments.json';
+import arInvestW15 from './locales/ar/invest.json';
+import arPropuiW15 from './locales/ar/propui.json';
+import arMarketW15 from './locales/ar/market.json';
+import arBrokeruiW15 from './locales/ar/brokerui.json';
+import arUiW15 from './locales/ar/ui.json';
+import arSharedW15 from './locales/ar/shared.json';
+import arPagesW15 from './locales/ar/pages.json';
 
 // Define resources
 const resources = {
@@ -41,6 +64,17 @@ const resources = {
     plan: enPlan,
     docs: enDocs,
     site: enSite,
+    dashboard: enDashboardW15,
+    admin: enAdminW15,
+    ownerui: enOwneruiW15,
+    payments: enPaymentsW15,
+    invest: enInvestW15,
+    propui: enPropuiW15,
+    market: enMarketW15,
+    brokerui: enBrokeruiW15,
+    ui: enUiW15,
+    shared: enSharedW15,
+    pages: enPagesW15,
   },
   ar: {
     common: arCommon,
@@ -54,6 +88,17 @@ const resources = {
     plan: arPlan,
     docs: arDocs,
     site: arSite,
+    dashboard: arDashboardW15,
+    admin: arAdminW15,
+    ownerui: arOwneruiW15,
+    payments: arPaymentsW15,
+    invest: arInvestW15,
+    propui: arPropuiW15,
+    market: arMarketW15,
+    brokerui: arBrokeruiW15,
+    ui: arUiW15,
+    shared: arSharedW15,
+    pages: arPagesW15,
   },
 };
 
@@ -65,7 +110,7 @@ i18n
     resources,
     fallbackLng: 'en',
     defaultNS: 'common',
-    ns: ['common', 'auth', 'navigation', 'properties', 'legal', 'kyc', 'owner', 'partners', 'plan', 'docs', 'site'],
+    ns: ['common', 'auth', 'navigation', 'properties', 'legal', 'kyc', 'owner', 'partners', 'plan', 'docs', 'site', 'dashboard', 'admin', 'ownerui', 'payments', 'invest', 'propui', 'market', 'brokerui', 'ui', 'shared', 'pages'],
 
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],

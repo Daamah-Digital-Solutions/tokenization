@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/Button';
+import { useTranslation } from 'react-i18next';
 
 export interface InstallmentPayment {
   id: string;
@@ -50,6 +51,7 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
   className = '',
   showActions = true
 }) => {
+  const { t, i18n } = useTranslation(['propui', 'plan']);
   const [viewMode, setViewMode] = useState<'upcoming' | 'all'>('upcoming');
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
 
@@ -76,7 +78,7 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
@@ -108,18 +110,18 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100">
-              Payment Schedule
+              {t('schedule.title')}
             </h2>
             <p className="text-sm text-neutral-600 dark:text-slate-400 mt-1">
               {scheduleData.propertyName}
             </p>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setViewMode(viewMode === 'upcoming' ? 'all' : 'upcoming')}
               className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
             >
-              {viewMode === 'upcoming' ? 'View All' : 'View Upcoming'}
+              {viewMode === 'upcoming' ? t('schedule.viewAll') : t('schedule.viewUpcoming')}
             </button>
           </div>
         </div>
@@ -131,7 +133,7 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
               {paidPayments}/{scheduleData.totalPayments}
             </div>
             <div className="text-sm text-neutral-500 dark:text-slate-400">
-              Payments Made
+              {t('schedule.paymentsMade')}
             </div>
           </div>
           <div className="text-center">
@@ -139,7 +141,7 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
               ${totalPaid.toLocaleString()}
             </div>
             <div className="text-sm text-neutral-500 dark:text-slate-400">
-              Total Paid
+              {t('schedule.totalPaid')}
             </div>
           </div>
           <div className="text-center">
@@ -147,7 +149,7 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
               ${scheduleData.installmentAmount.toLocaleString()}
             </div>
             <div className="text-sm text-neutral-500 dark:text-slate-400">
-              Payment Amount
+              {t('schedule.paymentAmount')}
             </div>
           </div>
           <div className="text-center">
@@ -155,7 +157,7 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
               {Math.round(completionPercentage)}%
             </div>
             <div className="text-sm text-neutral-500 dark:text-slate-400">
-              Complete
+              {t('schedule.complete')}
             </div>
           </div>
         </div>
@@ -163,7 +165,7 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
         {/* Progress Bar */}
         <div className="w-full bg-neutral-200 dark:bg-slate-700 rounded-full h-2">
           <div
-            className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500"
+            className="bg-gradient-to-r rtl:bg-gradient-to-l from-blue-500 to-green-500 h-2 rounded-full transition-all duration-500"
             style={{ width: `${completionPercentage}%` }}
           ></div>
         </div>
@@ -172,11 +174,11 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
         {scheduleData.nextPaymentDue && (
           <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-3">
                 <span className="text-blue-600 dark:text-blue-400 text-lg">💰</span>
                 <div>
                   <p className="font-medium text-blue-800 dark:text-blue-300">
-                    Next Payment Due
+                    {t('schedule.nextPaymentDue')}
                   </p>
                   <p className="text-sm text-blue-600 dark:text-blue-400">
                     {formatDate(scheduleData.nextPaymentDue)} - ${scheduleData.installmentAmount.toLocaleString()}
@@ -184,7 +186,7 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
                 </div>
               </div>
               {showActions && (
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   {!scheduleData.autoPayEnabled && (
                     <Button
                       size="sm"
@@ -194,7 +196,7 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
                         if (nextPayment) onMakePayment(nextPayment.id);
                       }}
                     >
-                      Pay Now
+                      {t('schedule.payNow')}
                     </Button>
                   )}
                   <Button
@@ -202,7 +204,7 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
                     variant="outline"
                     onClick={onSetupAutoPay}
                   >
-                    {scheduleData.autoPayEnabled ? 'Manage' : 'Setup'} AutoPay
+                    {scheduleData.autoPayEnabled ? t('schedule.manageAutoPay') : t('schedule.setupAutoPay')}
                   </Button>
                 </div>
               )}
@@ -230,23 +232,23 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
                   onClick={() => setSelectedPayment(isSelected ? null : payment.id)}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center gap-4">
                       <div className="flex-shrink-0">
                         <span className="text-lg">{getStatusIcon(payment.status)}</span>
                       </div>
                       <div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-2">
                           <h4 className="font-medium text-neutral-900 dark:text-slate-100">
-                            Payment #{payment.paymentNumber}
+                            {t('schedule.paymentNumber', { n: payment.paymentNumber })}
                           </h4>
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(payment.status)}`}>
-                            {payment.status.toUpperCase()}
+                            {t(`plan:status.${payment.status}`, { defaultValue: payment.status.toUpperCase() })}
                           </span>
                         </div>
-                        <div className="flex items-center space-x-4 mt-1 text-sm text-neutral-600 dark:text-slate-400">
-                          <span>Due: {formatDate(payment.dueDate)}</span>
+                        <div className="flex items-center gap-4 mt-1 text-sm text-neutral-600 dark:text-slate-400">
+                          <span>{t('schedule.due', { date: formatDate(payment.dueDate) })}</span>
                           {payment.milestone && (
-                            <span>Milestone: {payment.milestone}</span>
+                            <span>{t('schedule.milestone', { milestone: payment.milestone })}</span>
                           )}
                           {daysUntil >= 0 && payment.status !== 'paid' && (
                             <span className={
@@ -254,28 +256,28 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
                               daysUntil <= 0 ? 'text-red-600 dark:text-red-400' : 
                               'text-neutral-600 dark:text-slate-400'
                             }>
-                              {daysUntil === 0 ? 'Due Today' : 
-                               daysUntil < 0 ? `${Math.abs(daysUntil)} days overdue` :
-                               `${daysUntil} days remaining`}
+                              {daysUntil === 0 ? t('schedule.dueToday') :
+                               daysUntil < 0 ? t('schedule.daysOverdue', { count: Math.abs(daysUntil) }) :
+                               t('schedule.daysRemaining', { count: daysUntil })}
                             </span>
                           )}
                         </div>
                       </div>
                     </div>
                     
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
+                    <div className="flex items-center gap-4">
+                      <div className="text-end">
                         <p className="font-semibold text-neutral-900 dark:text-slate-100">
                           ${payment.amount.toLocaleString()}
                         </p>
                         {payment.lateFee && payment.lateFee > 0 && (
                           <p className="text-sm text-red-600 dark:text-red-400">
-                            +${payment.lateFee.toLocaleString()} late fee
+                            {t('schedule.lateFee', { amount: `$${payment.lateFee.toLocaleString()}` })}
                           </p>
                         )}
                         {payment.tokenReleaseAmount && (
                           <p className="text-xs text-green-600 dark:text-green-400">
-                            {payment.tokenReleaseAmount} tokens released
+                            {t('schedule.sharesReleased', { count: payment.tokenReleaseAmount })}
                           </p>
                         )}
                       </div>
@@ -289,7 +291,7 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
                             onMakePayment(payment.id);
                           }}
                         >
-                          Pay Now
+                          {t('schedule.payNow')}
                         </Button>
                       )}
                     </div>
@@ -302,7 +304,7 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       {payment.paidDate && (
                         <div>
-                          <p className="text-neutral-500 dark:text-slate-400">Paid Date</p>
+                          <p className="text-neutral-500 dark:text-slate-400">{t('schedule.paidDate')}</p>
                           <p className="font-medium text-neutral-900 dark:text-slate-100">
                             {formatDate(payment.paidDate)}
                           </p>
@@ -310,7 +312,7 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
                       )}
                       {payment.paidAmount && payment.paidAmount !== payment.amount && (
                         <div>
-                          <p className="text-neutral-500 dark:text-slate-400">Amount Paid</p>
+                          <p className="text-neutral-500 dark:text-slate-400">{t('schedule.amountPaid')}</p>
                           <p className="font-medium text-neutral-900 dark:text-slate-100">
                             ${payment.paidAmount.toLocaleString()}
                           </p>
@@ -318,7 +320,7 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
                       )}
                       {payment.tokenReleaseAmount && (
                         <div>
-                          <p className="text-neutral-500 dark:text-slate-400">Tokens Released</p>
+                          <p className="text-neutral-500 dark:text-slate-400">{t('schedule.sharesReleasedLabel')}</p>
                           <p className="font-medium text-green-600 dark:text-green-400">
                             {payment.tokenReleaseAmount.toLocaleString()}
                           </p>
@@ -326,9 +328,9 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
                       )}
                       {payment.status === 'overdue' && (
                         <div>
-                          <p className="text-neutral-500 dark:text-slate-400">Grace Period</p>
+                          <p className="text-neutral-500 dark:text-slate-400">{t('schedule.gracePeriod')}</p>
                           <p className="font-medium text-orange-600 dark:text-orange-400">
-                            {scheduleData.gracePeriodDays} days
+                            {t('schedule.days', { count: scheduleData.gracePeriodDays })}
                           </p>
                         </div>
                       )}
@@ -336,7 +338,7 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
                     
                     {payment.notes && (
                       <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-slate-700">
-                        <p className="text-sm font-medium text-neutral-900 dark:text-slate-100 mb-1">Notes</p>
+                        <p className="text-sm font-medium text-neutral-900 dark:text-slate-100 mb-1">{t('schedule.notes')}</p>
                         <p className="text-sm text-neutral-600 dark:text-slate-400">
                           {payment.notes}
                         </p>
@@ -353,10 +355,10 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
           <div className="text-center py-8">
             <span className="text-4xl mb-4 block">🎉</span>
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-2">
-              All Caught Up!
+              {t('schedule.allCaughtUp')}
             </h3>
             <p className="text-neutral-600 dark:text-slate-400">
-              {viewMode === 'upcoming' ? 'No upcoming payments' : 'All payments completed'}
+              {viewMode === 'upcoming' ? t('schedule.noUpcoming') : t('schedule.allCompleted')}
             </p>
           </div>
         )}
@@ -366,48 +368,48 @@ export const InstallmentSchedule: React.FC<InstallmentScheduleProps> = ({
       {showActions && (
         <div className="border-t border-neutral-200 dark:border-slate-700 p-6 bg-neutral-50 dark:bg-slate-900/50">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                 <span className={`w-3 h-3 rounded-full ${scheduleData.autoPayEnabled ? 'bg-green-500' : 'bg-neutral-300'}`}></span>
                 <span className="text-sm font-medium text-neutral-900 dark:text-slate-100">
-                  AutoPay {scheduleData.autoPayEnabled ? 'Enabled' : 'Disabled'}
+                  {scheduleData.autoPayEnabled ? t('schedule.autoPayEnabled') : t('schedule.autoPayDisabled')}
                 </span>
               </div>
               {scheduleData.paymentMethod && (
                 <div className="text-sm text-neutral-600 dark:text-slate-400">
-                  Payment Method: {scheduleData.paymentMethod}
+                  {t('schedule.paymentMethodValue', { method: scheduleData.paymentMethod })}
                 </div>
               )}
             </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center gap-3">
               <Button
                 size="sm"
                 variant="outline"
                 onClick={onEditPaymentMethod}
               >
-                Payment Method
+                {t('schedule.paymentMethod')}
               </Button>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={onSetupAutoPay}
               >
-                {scheduleData.autoPayEnabled ? 'Manage' : 'Setup'} AutoPay
+                {scheduleData.autoPayEnabled ? t('schedule.manageAutoPay') : t('schedule.setupAutoPay')}
               </Button>
             </div>
           </div>
 
           {scheduleData.completionBonus && scheduleData.completionBonus > 0 && (
             <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <span className="text-green-600 dark:text-green-400">🎁</span>
                 <div>
                   <p className="text-sm font-medium text-green-800 dark:text-green-300">
-                    Completion Bonus Available
+                    {t('schedule.completionBonus')}
                   </p>
                   <p className="text-xs text-green-600 dark:text-green-400">
-                    Earn ${scheduleData.completionBonus.toLocaleString()} for completing all payments on time
+                    {t('schedule.completionBonusHint', { amount: `$${scheduleData.completionBonus.toLocaleString()}` })}
                   </p>
                 </div>
               </div>

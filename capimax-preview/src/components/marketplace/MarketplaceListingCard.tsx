@@ -14,6 +14,7 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { cn } from '../../utils/cn';
 import type { SecondaryMarketListing } from '../../services/marketplace/MarketplaceService';
+import { useTranslation } from 'react-i18next';
 
 interface MarketplaceListingCardProps {
   listing: SecondaryMarketListing;
@@ -32,6 +33,8 @@ export const MarketplaceListingCard: React.FC<MarketplaceListingCardProps> = ({
   className,
   showActions = true
 }) => {
+  const { t, i18n } = useTranslation('market');
+  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
   const isAuction = listing.listing_type === 'AUCTION';
   const isExpired = listing.status === 'EXPIRED';
   const isSold = listing.status === 'SOLD';
@@ -49,15 +52,15 @@ export const MarketplaceListingCard: React.FC<MarketplaceListingCardProps> = ({
     : null;
 
   const formatTimeRemaining = (ms: number) => {
-    if (ms <= 0) return 'Expired';
+    if (ms <= 0) return t('status.expired');
 
     const days = Math.floor(ms / (1000 * 60 * 60 * 24));
     const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
 
-    if (days > 0) return `${days}d ${hours}h`;
-    if (hours > 0) return `${hours}h ${minutes}m`;
-    return `${minutes}m`;
+    if (days > 0) return t('card.daysHours', { days, hours });
+    if (hours > 0) return t('card.hoursMinutes', { hours, minutes });
+    return t('card.minutes', { minutes });
   };
 
   return (
@@ -80,7 +83,7 @@ export const MarketplaceListingCard: React.FC<MarketplaceListingCardProps> = ({
         />
 
         {/* Status Badge */}
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-3 start-3">
           <Badge
             variant="outline"
             className={cn(
@@ -88,25 +91,25 @@ export const MarketplaceListingCard: React.FC<MarketplaceListingCardProps> = ({
               statusColor
             )}
           >
-            {listing.status}
+            {t(`status.${String(listing.status).toLowerCase()}`, { defaultValue: listing.status })}
           </Badge>
         </div>
 
         {/* Listing Type Badge */}
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 end-3">
           <Badge
             variant={isAuction ? "destructive" : "default"}
             className="backdrop-blur-sm"
           >
             {isAuction ? (
               <>
-                <Clock className="w-3 h-3 mr-1" />
-                Auction
+                <Clock className="w-3 h-3 me-1" />
+                {t('card.auction')}
               </>
             ) : (
               <>
-                <DollarSign className="w-3 h-3 mr-1" />
-                Buy Now
+                <DollarSign className="w-3 h-3 me-1" />
+                {t('card.buyNow')}
               </>
             )}
           </Badge>
@@ -114,10 +117,10 @@ export const MarketplaceListingCard: React.FC<MarketplaceListingCardProps> = ({
 
         {/* Auction Timer Overlay */}
         {isAuction && timeRemaining && timeRemaining > 0 && (
-          <div className="absolute bottom-3 left-3 right-3">
+          <div className="absolute bottom-3 start-3 end-3">
             <div className="bg-black/60 backdrop-blur-sm rounded-lg px-3 py-2">
               <div className="flex items-center justify-between text-white text-sm">
-                <span>Time remaining:</span>
+                <span>{t('card.timeRemaining')}</span>
                 <span className="font-bold text-yellow-400">
                   {formatTimeRemaining(timeRemaining)}
                 </span>
@@ -135,7 +138,7 @@ export const MarketplaceListingCard: React.FC<MarketplaceListingCardProps> = ({
             {listing.property.name}
           </h3>
           <div className="flex items-center text-gray-600 mb-3">
-            <MapPin className="w-4 h-4 mr-1" />
+            <MapPin className="w-4 h-4 me-1" />
             <span className="text-sm">{listing.property.location}</span>
           </div>
         </div>
@@ -144,13 +147,13 @@ export const MarketplaceListingCard: React.FC<MarketplaceListingCardProps> = ({
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Tokens for Sale</span>
+              <span className="text-sm text-gray-600">{t('create.tokensForSale')}</span>
               <span className="font-semibold text-gray-900">
                 {listing.tokens_for_sale.toLocaleString()}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Price per Token</span>
+              <span className="text-sm text-gray-600">{t('smd.pricePerToken')}</span>
               <span className="font-semibold text-green-600">
                 ${listing.price_per_token.toFixed(2)}
               </span>
@@ -158,13 +161,13 @@ export const MarketplaceListingCard: React.FC<MarketplaceListingCardProps> = ({
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Total Value</span>
+              <span className="text-sm text-gray-600">{t('smd.totalValue')}</span>
               <span className="font-bold text-gray-900">
                 ${listing.total_value.toLocaleString()}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Token Symbol</span>
+              <span className="text-sm text-gray-600">{t('card.tokenSymbol')}</span>
               <span className="font-semibold text-blue-600">
                 {listing.property.token_symbol}
               </span>
@@ -175,7 +178,7 @@ export const MarketplaceListingCard: React.FC<MarketplaceListingCardProps> = ({
         {/* Property Value Reference */}
         <div className="bg-gray-50 rounded-lg p-3 mb-4">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Property Total Value</span>
+            <span className="text-gray-600">{t('card.propertyTotalValue')}</span>
             <span className="font-semibold text-gray-900">
               ${listing.property.total_value.toLocaleString()}
             </span>
@@ -193,8 +196,8 @@ export const MarketplaceListingCard: React.FC<MarketplaceListingCardProps> = ({
                   onClick={() => onViewDetails?.(listing.id)}
                   className="flex-1"
                 >
-                  View Bids
-                  <ChevronRight className="w-4 h-4 ml-1" />
+                  {t('card.viewBids')}
+                  <ChevronRight className="w-4 h-4 ms-1 rtl:rotate-180" />
                 </Button>
                 <Button
                   variant="default"
@@ -202,8 +205,8 @@ export const MarketplaceListingCard: React.FC<MarketplaceListingCardProps> = ({
                   onClick={() => onBid?.(listing.id)}
                   className="flex-1"
                 >
-                  Place Bid
-                  <Award className="w-4 h-4 ml-1" />
+                  {t('card.placeBid')}
+                  <Award className="w-4 h-4 ms-1" />
                 </Button>
               </>
             ) : (
@@ -214,8 +217,8 @@ export const MarketplaceListingCard: React.FC<MarketplaceListingCardProps> = ({
                   onClick={() => onViewDetails?.(listing.id)}
                   className="flex-1"
                 >
-                  Details
-                  <ChevronRight className="w-4 h-4 ml-1" />
+                  {t('smd.details')}
+                  <ChevronRight className="w-4 h-4 ms-1 rtl:rotate-180" />
                 </Button>
                 <Button
                   variant="default"
@@ -223,8 +226,8 @@ export const MarketplaceListingCard: React.FC<MarketplaceListingCardProps> = ({
                   onClick={() => onPurchase?.(listing.id)}
                   className="flex-1"
                 >
-                  Buy Now
-                  <DollarSign className="w-4 h-4 ml-1" />
+                  {t('card.buyNow')}
+                  <DollarSign className="w-4 h-4 ms-1" />
                 </Button>
               </>
             )}
@@ -238,7 +241,7 @@ export const MarketplaceListingCard: React.FC<MarketplaceListingCardProps> = ({
               "text-sm font-medium",
               isSold ? "text-green-600" : "text-gray-500"
             )}>
-              {isSold ? "This listing has been sold" : `This listing is ${listing.status.toLowerCase()}`}
+              {isSold ? t('card.soldMsg') : t('card.statusMsg', { status: t(`status.${String(listing.status).toLowerCase()}`, { defaultValue: listing.status.toLowerCase() }) })}
             </span>
           </div>
         )}
@@ -248,12 +251,12 @@ export const MarketplaceListingCard: React.FC<MarketplaceListingCardProps> = ({
       <div className="px-6 py-3 border-t border-gray-100 bg-gray-50/50">
         <div className="flex items-center justify-between text-xs text-gray-500">
           <div className="flex items-center">
-            <Calendar className="w-3 h-3 mr-1" />
-            Listed {new Date(listing.created_at).toLocaleDateString()}
+            <Calendar className="w-3 h-3 me-1" />
+            {t('card.listed', { date: new Date(listing.created_at).toLocaleDateString(dateLocale) })}
           </div>
           {listing.updated_at !== listing.created_at && (
             <div>
-              Updated {new Date(listing.updated_at).toLocaleDateString()}
+              {t('card.updated', { date: new Date(listing.updated_at).toLocaleDateString(dateLocale) })}
             </div>
           )}
         </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PropertyService } from '../../services';
 import type { Property, PropertyType, PropertyCategory } from '../../services/api/types';
@@ -45,30 +46,32 @@ interface FormErrors {
   [key: string]: string;
 }
 
+// Labels are i18n keys in the `ownerui` namespace, resolved at render time.
 const PROPERTY_TYPES: { value: PropertyType; label: string }[] = [
-  { value: 'residential', label: 'Residential' },
-  { value: 'commercial', label: 'Commercial' },
-  { value: 'industrial', label: 'Industrial' },
-  { value: 'mixed_use', label: 'Mixed Use' },
-  { value: 'land', label: 'Land' },
+  { value: 'residential', label: 'createForm.types.residential' },
+  { value: 'commercial', label: 'createForm.types.commercial' },
+  { value: 'industrial', label: 'createForm.types.industrial' },
+  { value: 'mixed_use', label: 'createForm.types.mixed_use' },
+  { value: 'land', label: 'createForm.types.land' },
 ];
 
 const PROPERTY_CATEGORIES: { value: PropertyCategory; label: string; description: string }[] = [
   {
     value: 'under_construction',
-    label: 'Under Construction',
-    description: 'Property currently being built with installment payment options',
+    label: 'createForm.categories.under_construction',
+    description: 'createForm.categories.under_constructionDesc',
   },
   {
     value: 'ready_property',
-    label: 'Ready Property',
-    description: 'Completed property generating rental income',
+    label: 'createForm.categories.ready_property',
+    description: 'createForm.categories.ready_propertyDesc',
   },
 ];
 
-const STEP_TITLES = ['Basic Information', 'Financial Details', 'Location & Details', 'Review & Submit'];
+const STEP_TITLES = ['createForm.steps.basic', 'createForm.steps.financial', 'createForm.steps.location', 'createForm.steps.review'];
 
 export const CreatePropertyForm: React.FC = () => {
+  const { t } = useTranslation('ownerui');
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<FormData>({
@@ -104,11 +107,11 @@ export const CreatePropertyForm: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['properties', 'owner'] });
       // Show success message and redirect
-      alert('Property created successfully! It has been submitted for approval.');
+      alert(t('createForm.alerts.created'));
       window.location.href = '/property-owner/dashboard';
     },
     onError: (error: any) => {
-      alert(`Failed to create property: ${error.message}`);
+      alert(t('createForm.alerts.failed', { message: error.message }));
     },
   });
 
@@ -116,23 +119,23 @@ export const CreatePropertyForm: React.FC = () => {
     const newErrors: FormErrors = {};
 
     if (step === 0) {
-      if (!formData.title.trim()) newErrors.title = 'Title is required';
-      if (formData.title.length < 5) newErrors.title = 'Title must be at least 5 characters';
-      if (!formData.description.trim()) newErrors.description = 'Description is required';
-      if (formData.description.length < 50) newErrors.description = 'Description must be at least 50 characters';
-      if (!formData.property_type) newErrors.property_type = 'Property type is required';
-      if (!formData.property_category) newErrors.property_category = 'Property category is required';
+      if (!formData.title.trim()) newErrors.title = t('createForm.errors.titleRequired');
+      if (formData.title.length < 5) newErrors.title = t('createForm.errors.titleMin');
+      if (!formData.description.trim()) newErrors.description = t('createForm.errors.descriptionRequired');
+      if (formData.description.length < 50) newErrors.description = t('createForm.errors.descriptionMin');
+      if (!formData.property_type) newErrors.property_type = t('createForm.errors.typeRequired');
+      if (!formData.property_category) newErrors.property_category = t('createForm.errors.categoryRequired');
     }
 
     if (step === 1) {
       if (!formData.total_value || parseFloat(formData.total_value) <= 0) {
-        newErrors.total_value = 'Total value must be greater than 0';
+        newErrors.total_value = t('createForm.errors.totalValuePositive');
       }
       if (!formData.token_price || parseFloat(formData.token_price) <= 0) {
-        newErrors.token_price = 'Token price must be greater than 0';
+        newErrors.token_price = t('createForm.errors.sharePricePositive');
       }
       if (!formData.total_tokens || parseInt(formData.total_tokens) <= 0) {
-        newErrors.total_tokens = 'Total tokens must be greater than 0';
+        newErrors.total_tokens = t('createForm.errors.totalSharesPositive');
       }
 
       // Validate that total_value = token_price * total_tokens
@@ -140,42 +143,42 @@ export const CreatePropertyForm: React.FC = () => {
         const calculatedValue = parseFloat(formData.token_price) * parseInt(formData.total_tokens);
         const totalValue = parseFloat(formData.total_value);
         if (Math.abs(calculatedValue - totalValue) > 0.01) {
-          newErrors.total_value = 'Total value must equal token price × total tokens';
+          newErrors.total_value = t('createForm.errors.totalValueMismatch');
         }
       }
 
       if (!formData.expected_return || parseFloat(formData.expected_return) < 0) {
-        newErrors.expected_return = 'Expected return is required';
+        newErrors.expected_return = t('createForm.errors.expectedReturnRequired');
       }
 
       if (formData.property_category === 'ready_property') {
         if (!formData.rental_yield || parseFloat(formData.rental_yield) < 0) {
-          newErrors.rental_yield = 'Rental yield is required for ready properties';
+          newErrors.rental_yield = t('createForm.errors.rentalYieldRequired');
         }
         if (formData.rental_income_active && (!formData.monthly_rental_income || parseFloat(formData.monthly_rental_income) <= 0)) {
-          newErrors.monthly_rental_income = 'Monthly rental income is required when rental income is active';
+          newErrors.monthly_rental_income = t('createForm.errors.monthlyIncomeRequired');
         }
       }
 
       if (formData.property_category === 'under_construction') {
         if (!formData.expected_completion_date) {
-          newErrors.expected_completion_date = 'Expected completion date is required for construction properties';
+          newErrors.expected_completion_date = t('createForm.errors.completionDateRequired');
         }
         if (formData.supports_installments && (!formData.installment_period_months || parseInt(formData.installment_period_months) <= 0)) {
-          newErrors.installment_period_months = 'Installment period is required when installments are supported';
+          newErrors.installment_period_months = t('createForm.errors.installmentPeriodRequired');
         }
       }
     }
 
     if (step === 2) {
-      if (!formData.address.trim()) newErrors.address = 'Address is required';
-      if (!formData.city.trim()) newErrors.city = 'City is required';
-      if (!formData.country.trim()) newErrors.country = 'Country is required';
+      if (!formData.address.trim()) newErrors.address = t('createForm.errors.addressRequired');
+      if (!formData.city.trim()) newErrors.city = t('createForm.errors.cityRequired');
+      if (!formData.country.trim()) newErrors.country = t('createForm.errors.countryRequired');
       if (!formData.property_size || parseFloat(formData.property_size) <= 0) {
-        newErrors.property_size = 'Property size is required';
+        newErrors.property_size = t('createForm.errors.sizeRequired');
       }
       if (!formData.year_built || parseInt(formData.year_built) < 1800 || parseInt(formData.year_built) > new Date().getFullYear() + 10) {
-        newErrors.year_built = 'Year built must be between 1800 and ' + (new Date().getFullYear() + 10);
+        newErrors.year_built = t('createForm.errors.yearRange', { max: new Date().getFullYear() + 10 });
       }
     }
 
@@ -276,7 +279,7 @@ export const CreatePropertyForm: React.FC = () => {
               <span className={`mt-2 text-xs font-medium ${
                 currentStep >= index ? 'text-neutral-900 dark:text-slate-100' : 'text-neutral-500 dark:text-slate-400'
               }`}>
-                {title}
+                {t(title)}
               </span>
             </div>
             {index < STEP_TITLES.length - 1 && (
@@ -294,7 +297,7 @@ export const CreatePropertyForm: React.FC = () => {
     <div className="space-y-6">
       <div>
         <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-          Property Title *
+          {t('createForm.fields.title')} *
         </label>
         <input
           type="text"
@@ -304,14 +307,14 @@ export const CreatePropertyForm: React.FC = () => {
           className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 ${
             errors.title ? 'border-red-500' : 'border-neutral-300'
           }`}
-          placeholder="e.g., Luxury Apartment Complex - Manhattan"
+          placeholder={t('createForm.placeholders.title')}
         />
         {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
       </div>
 
       <div>
         <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-          Description *
+          {t('createForm.fields.description')} *
         </label>
         <textarea
           name="description"
@@ -321,15 +324,15 @@ export const CreatePropertyForm: React.FC = () => {
           className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 ${
             errors.description ? 'border-red-500' : 'border-neutral-300'
           }`}
-          placeholder="Detailed description of your property..."
+          placeholder={t('createForm.placeholders.description')}
         />
-        <p className="mt-1 text-sm text-neutral-500">Minimum 50 characters ({formData.description.length}/50)</p>
+        <p className="mt-1 text-sm text-neutral-500">{t('createForm.descriptionCounter', { count: formData.description.length })}</p>
         {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
       </div>
 
       <div>
         <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-          Property Type *
+          {t('createForm.fields.type')} *
         </label>
         <select
           name="property_type"
@@ -339,9 +342,9 @@ export const CreatePropertyForm: React.FC = () => {
             errors.property_type ? 'border-red-500' : 'border-neutral-300'
           }`}
         >
-          <option value="">Select property type</option>
+          <option value="">{t('createForm.placeholders.type')}</option>
           {PROPERTY_TYPES.map(type => (
-            <option key={type.value} value={type.value}>{type.label}</option>
+            <option key={type.value} value={type.value}>{t(type.label)}</option>
           ))}
         </select>
         {errors.property_type && <p className="mt-1 text-sm text-red-600">{errors.property_type}</p>}
@@ -349,7 +352,7 @@ export const CreatePropertyForm: React.FC = () => {
 
       <div>
         <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-          Property Category *
+          {t('createForm.fields.category')} *
         </label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {PROPERTY_CATEGORIES.map(category => (
@@ -371,8 +374,8 @@ export const CreatePropertyForm: React.FC = () => {
                   : 'border-neutral-300 hover:border-primary-300 dark:border-slate-600 dark:hover:border-primary-500'
               }`}
             >
-              <h4 className="font-semibold text-neutral-900 dark:text-slate-100 mb-1">{category.label}</h4>
-              <p className="text-sm text-neutral-600 dark:text-slate-400">{category.description}</p>
+              <h4 className="font-semibold text-neutral-900 dark:text-slate-100 mb-1">{t(category.label)}</h4>
+              <p className="text-sm text-neutral-600 dark:text-slate-400">{t(category.description)}</p>
             </div>
           ))}
         </div>
@@ -386,7 +389,7 @@ export const CreatePropertyForm: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-            Total Property Value ($) *
+            {t('createForm.fields.totalValue')} *
           </label>
           <input
             type="number"
@@ -404,7 +407,7 @@ export const CreatePropertyForm: React.FC = () => {
 
         <div>
           <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-            Token Price ($) *
+            {t('createForm.fields.sharePrice')} *
           </label>
           <input
             type="number"
@@ -422,7 +425,7 @@ export const CreatePropertyForm: React.FC = () => {
 
         <div>
           <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-            Total Tokens *
+            {t('createForm.fields.totalShares')} *
           </label>
           <input
             type="number"
@@ -441,10 +444,10 @@ export const CreatePropertyForm: React.FC = () => {
       {formData.total_value && formData.token_price && formData.total_tokens && (
         <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
           <p className="text-sm text-blue-800 dark:text-blue-200">
-            <strong>Validation:</strong> ${parseFloat(formData.token_price).toFixed(2)} × {parseInt(formData.total_tokens).toLocaleString()} =
+            <strong>{t('createForm.validation.label')}</strong> ${parseFloat(formData.token_price).toFixed(2)} × {parseInt(formData.total_tokens).toLocaleString()} =
             ${(parseFloat(formData.token_price) * parseInt(formData.total_tokens)).toLocaleString('en-US', { minimumFractionDigits: 2 })}
             {Math.abs((parseFloat(formData.token_price) * parseInt(formData.total_tokens)) - parseFloat(formData.total_value)) < 0.01 ?
-              ' ✓ Matches total value' : ' ⚠️ Should match total value'}
+              ` ✓ ${t('createForm.validation.matches')}` : ` ⚠️ ${t('createForm.validation.shouldMatch')}`}
           </p>
         </div>
       )}
@@ -452,7 +455,7 @@ export const CreatePropertyForm: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-            Expected Return (%) *
+            {t('createForm.fields.expectedReturn')} *
           </label>
           <input
             type="number"
@@ -471,7 +474,7 @@ export const CreatePropertyForm: React.FC = () => {
         {formData.property_category === 'ready_property' && (
           <div>
             <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-              Rental Yield (%) *
+              {t('createForm.fields.rentalYield')} *
             </label>
             <input
               type="number"
@@ -490,7 +493,7 @@ export const CreatePropertyForm: React.FC = () => {
 
         <div>
           <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-            Minimum Purchase ($)
+            {t('createForm.fields.minPurchase')}
           </label>
           <input
             type="number"
@@ -506,9 +509,9 @@ export const CreatePropertyForm: React.FC = () => {
 
       {formData.property_category === 'ready_property' && (
         <div className="p-4 bg-neutral-50 dark:bg-slate-800 rounded-lg space-y-4">
-          <h4 className="font-semibold text-neutral-900 dark:text-slate-100">Ready Property Settings</h4>
+          <h4 className="font-semibold text-neutral-900 dark:text-slate-100">{t('createForm.ready.title')}</h4>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             <input
               type="checkbox"
               name="rental_income_active"
@@ -517,7 +520,7 @@ export const CreatePropertyForm: React.FC = () => {
               className="w-5 h-5"
             />
             <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">
-              Property is actively generating rental income
+              {t('createForm.ready.activeIncome')}
             </label>
           </div>
 
@@ -525,7 +528,7 @@ export const CreatePropertyForm: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-                  Monthly Rental Income ($) *
+                  {t('createForm.fields.monthlyIncome')} *
                 </label>
                 <input
                   type="number"
@@ -543,7 +546,7 @@ export const CreatePropertyForm: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-                  Occupancy Rate (%)
+                  {t('createForm.fields.occupancy')}
                 </label>
                 <input
                   type="number"
@@ -563,11 +566,11 @@ export const CreatePropertyForm: React.FC = () => {
 
       {formData.property_category === 'under_construction' && (
         <div className="p-4 bg-neutral-50 dark:bg-slate-800 rounded-lg space-y-4">
-          <h4 className="font-semibold text-neutral-900 dark:text-slate-100">Construction Property Settings</h4>
+          <h4 className="font-semibold text-neutral-900 dark:text-slate-100">{t('createForm.construction.title')}</h4>
 
           <div>
             <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-              Expected Completion Date *
+              {t('createForm.fields.completionDate')} *
             </label>
             <input
               type="date"
@@ -582,7 +585,7 @@ export const CreatePropertyForm: React.FC = () => {
             {errors.expected_completion_date && <p className="mt-1 text-sm text-red-600">{errors.expected_completion_date}</p>}
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             <input
               type="checkbox"
               name="supports_installments"
@@ -591,14 +594,14 @@ export const CreatePropertyForm: React.FC = () => {
               className="w-5 h-5"
             />
             <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">
-              Support installment payments for buyers
+              {t('createForm.construction.supportsInstallments')}
             </label>
           </div>
 
           {formData.supports_installments && (
             <div>
               <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-                Maximum Installment Period (months) *
+                {t('createForm.fields.installmentPeriod')} *
               </label>
               <input
                 type="number"
@@ -623,7 +626,7 @@ export const CreatePropertyForm: React.FC = () => {
     <div className="space-y-6">
       <div>
         <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-          Full Address *
+          {t('createForm.fields.address')} *
         </label>
         <input
           type="text"
@@ -633,7 +636,7 @@ export const CreatePropertyForm: React.FC = () => {
           className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 ${
             errors.address ? 'border-red-500' : 'border-neutral-300'
           }`}
-          placeholder="456 Park Avenue, New York, NY 10022"
+          placeholder={t('createForm.placeholders.address')}
         />
         {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
       </div>
@@ -641,7 +644,7 @@ export const CreatePropertyForm: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-            City *
+            {t('createForm.fields.city')} *
           </label>
           <input
             type="text"
@@ -651,14 +654,14 @@ export const CreatePropertyForm: React.FC = () => {
             className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 ${
               errors.city ? 'border-red-500' : 'border-neutral-300'
             }`}
-            placeholder="New York"
+            placeholder={t('createForm.placeholders.city')}
           />
           {errors.city && <p className="mt-1 text-sm text-red-600">{errors.city}</p>}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-            State/Province
+            {t('createForm.fields.state')}
           </label>
           <input
             type="text"
@@ -666,13 +669,13 @@ export const CreatePropertyForm: React.FC = () => {
             value={formData.state}
             onChange={handleInputChange}
             className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100"
-            placeholder="NY"
+            placeholder={t('createForm.placeholders.state')}
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-            Country *
+            {t('createForm.fields.country')} *
           </label>
           <input
             type="text"
@@ -682,7 +685,7 @@ export const CreatePropertyForm: React.FC = () => {
             className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 ${
               errors.country ? 'border-red-500' : 'border-neutral-300'
             }`}
-            placeholder="USA"
+            placeholder={t('createForm.placeholders.country')}
           />
           {errors.country && <p className="mt-1 text-sm text-red-600">{errors.country}</p>}
         </div>
@@ -691,7 +694,7 @@ export const CreatePropertyForm: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-            Latitude (optional)
+            {t('createForm.fields.latitude')}
           </label>
           <input
             type="number"
@@ -706,7 +709,7 @@ export const CreatePropertyForm: React.FC = () => {
 
         <div>
           <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-            Longitude (optional)
+            {t('createForm.fields.longitude')}
           </label>
           <input
             type="number"
@@ -723,7 +726,7 @@ export const CreatePropertyForm: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-            Property Size (sq ft) *
+            {t('createForm.fields.size')} *
           </label>
           <input
             type="number"
@@ -741,7 +744,7 @@ export const CreatePropertyForm: React.FC = () => {
 
         <div>
           <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-            Year Built *
+            {t('createForm.fields.yearBuilt')} *
           </label>
           <input
             type="number"
@@ -762,72 +765,72 @@ export const CreatePropertyForm: React.FC = () => {
   const renderStep3 = () => (
     <div className="space-y-6">
       <div className="p-6 bg-neutral-50 dark:bg-slate-800 rounded-lg">
-        <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">Review Your Property</h3>
+        <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">{t('createForm.review.title')}</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <h4 className="font-medium text-neutral-700 dark:text-slate-300 mb-2">Basic Information</h4>
+            <h4 className="font-medium text-neutral-700 dark:text-slate-300 mb-2">{t('createForm.steps.basic')}</h4>
             <dl className="space-y-2 text-sm">
               <div>
-                <dt className="text-neutral-500 dark:text-slate-400">Title:</dt>
+                <dt className="text-neutral-500 dark:text-slate-400">{t('createForm.review.title_')}</dt>
                 <dd className="font-medium text-neutral-900 dark:text-slate-100">{formData.title}</dd>
               </div>
               <div>
-                <dt className="text-neutral-500 dark:text-slate-400">Type:</dt>
-                <dd className="font-medium text-neutral-900 dark:text-slate-100">{formData.property_type}</dd>
+                <dt className="text-neutral-500 dark:text-slate-400">{t('createForm.review.type')}</dt>
+                <dd className="font-medium text-neutral-900 dark:text-slate-100">{formData.property_type ? t(`createForm.types.${formData.property_type}`, { defaultValue: formData.property_type }) : ''}</dd>
               </div>
               <div>
-                <dt className="text-neutral-500 dark:text-slate-400">Category:</dt>
-                <dd className="font-medium text-neutral-900 dark:text-slate-100">{formData.property_category}</dd>
+                <dt className="text-neutral-500 dark:text-slate-400">{t('createForm.review.category')}</dt>
+                <dd className="font-medium text-neutral-900 dark:text-slate-100">{formData.property_category ? t(`createForm.categories.${formData.property_category}`, { defaultValue: formData.property_category }) : ''}</dd>
               </div>
             </dl>
           </div>
 
           <div>
-            <h4 className="font-medium text-neutral-700 dark:text-slate-300 mb-2">Financial Details</h4>
+            <h4 className="font-medium text-neutral-700 dark:text-slate-300 mb-2">{t('createForm.steps.financial')}</h4>
             <dl className="space-y-2 text-sm">
               <div>
-                <dt className="text-neutral-500 dark:text-slate-400">Total Value:</dt>
+                <dt className="text-neutral-500 dark:text-slate-400">{t('createForm.review.totalValue')}</dt>
                 <dd className="font-medium text-neutral-900 dark:text-slate-100">${parseFloat(formData.total_value).toLocaleString()}</dd>
               </div>
               <div>
-                <dt className="text-neutral-500 dark:text-slate-400">Token Price:</dt>
+                <dt className="text-neutral-500 dark:text-slate-400">{t('createForm.review.sharePrice')}</dt>
                 <dd className="font-medium text-neutral-900 dark:text-slate-100">${parseFloat(formData.token_price).toFixed(2)}</dd>
               </div>
               <div>
-                <dt className="text-neutral-500 dark:text-slate-400">Total Tokens:</dt>
+                <dt className="text-neutral-500 dark:text-slate-400">{t('createForm.review.totalShares')}</dt>
                 <dd className="font-medium text-neutral-900 dark:text-slate-100">{parseInt(formData.total_tokens).toLocaleString()}</dd>
               </div>
               <div>
-                <dt className="text-neutral-500 dark:text-slate-400">Expected Return:</dt>
+                <dt className="text-neutral-500 dark:text-slate-400">{t('createForm.review.expectedReturn')}</dt>
                 <dd className="font-medium text-neutral-900 dark:text-slate-100">{parseFloat(formData.expected_return).toFixed(2)}%</dd>
               </div>
             </dl>
           </div>
 
           <div>
-            <h4 className="font-medium text-neutral-700 dark:text-slate-300 mb-2">Location</h4>
+            <h4 className="font-medium text-neutral-700 dark:text-slate-300 mb-2">{t('createForm.review.location')}</h4>
             <dl className="space-y-2 text-sm">
               <div>
-                <dt className="text-neutral-500 dark:text-slate-400">Address:</dt>
+                <dt className="text-neutral-500 dark:text-slate-400">{t('createForm.review.address')}</dt>
                 <dd className="font-medium text-neutral-900 dark:text-slate-100">{formData.address}</dd>
               </div>
               <div>
-                <dt className="text-neutral-500 dark:text-slate-400">City:</dt>
+                <dt className="text-neutral-500 dark:text-slate-400">{t('createForm.review.city')}</dt>
                 <dd className="font-medium text-neutral-900 dark:text-slate-100">{formData.city}, {formData.country}</dd>
               </div>
             </dl>
           </div>
 
           <div>
-            <h4 className="font-medium text-neutral-700 dark:text-slate-300 mb-2">Property Details</h4>
+            <h4 className="font-medium text-neutral-700 dark:text-slate-300 mb-2">{t('createForm.review.propertyDetails')}</h4>
             <dl className="space-y-2 text-sm">
               <div>
-                <dt className="text-neutral-500 dark:text-slate-400">Size:</dt>
-                <dd className="font-medium text-neutral-900 dark:text-slate-100">{parseFloat(formData.property_size).toLocaleString()} sq ft</dd>
+                <dt className="text-neutral-500 dark:text-slate-400">{t('createForm.review.size')}</dt>
+                <dd className="font-medium text-neutral-900 dark:text-slate-100">{t('createForm.review.sizeValue', { value: parseFloat(formData.property_size).toLocaleString() })}</dd>
               </div>
               <div>
-                <dt className="text-neutral-500 dark:text-slate-400">Year Built:</dt>
+                <dt className="text-neutral-500 dark:text-slate-400">{t('createForm.review.yearBuilt')}</dt>
                 <dd className="font-medium text-neutral-900 dark:text-slate-100">{formData.year_built}</dd>
               </div>
             </dl>
@@ -837,8 +840,7 @@ export const CreatePropertyForm: React.FC = () => {
 
       <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
         <p className="text-sm text-yellow-800 dark:text-yellow-200">
-          <strong>Important:</strong> Your property will be submitted for admin review after creation.
-          You can upload images and documents in the next step.
+          <strong>{t('createForm.review.importantLabel')}</strong> {t('createForm.review.importantBody')}
         </p>
       </div>
     </div>
@@ -847,7 +849,7 @@ export const CreatePropertyForm: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-neutral-900 dark:text-slate-100 mb-8">Create New Property</h1>
+        <h1 className="text-3xl font-bold text-neutral-900 dark:text-slate-100 mb-8">{t('createForm.title')}</h1>
 
         {renderStepIndicator()}
 
@@ -864,7 +866,7 @@ export const CreatePropertyForm: React.FC = () => {
                 onClick={handleBack}
                 className="px-6 py-2 border border-neutral-300 dark:border-slate-600 text-neutral-700 dark:text-slate-300 rounded-lg hover:bg-neutral-50 dark:hover:bg-slate-800 transition-colors"
               >
-                Back
+                {t('createForm.back')}
               </button>
             )}
 
@@ -872,17 +874,17 @@ export const CreatePropertyForm: React.FC = () => {
               <button
                 type="button"
                 onClick={handleNext}
-                className="ml-auto px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                className="ms-auto px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
               >
-                Next
+                {t('createForm.next')}
               </button>
             ) : (
               <button
                 type="submit"
                 disabled={createPropertyMutation.isPending}
-                className="ml-auto px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-neutral-400 disabled:cursor-not-allowed transition-colors"
+                className="ms-auto px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-neutral-400 disabled:cursor-not-allowed transition-colors"
               >
-                {createPropertyMutation.isPending ? 'Creating...' : 'Create Property'}
+                {createPropertyMutation.isPending ? t('createForm.creating') : t('createForm.create')}
               </button>
             )}
           </div>

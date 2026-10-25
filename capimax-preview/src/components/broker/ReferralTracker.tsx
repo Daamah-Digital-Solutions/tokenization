@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/Button';
+import { useTranslation } from 'react-i18next';
 
 export interface ReferralClient {
   id: string;
@@ -52,6 +53,7 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
   onExportData,
   className = ''
 }) => {
+  const { t, i18n } = useTranslation('brokerui');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterTier, setFilterTier] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('joinDate');
@@ -109,7 +111,7 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
     });
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric'
@@ -130,14 +132,14 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
       <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100">
-            Referral Tracker
+            {t('referrals.title')}
           </h2>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             <Button size="sm" variant="outline" onClick={onExportData}>
-              Export Data
+              {t('referrals.exportData')}
             </Button>
             <Button size="sm" variant="primary" onClick={onGenerateLink}>
-              Generate Link
+              {t('referrals.generateLink')}
             </Button>
           </div>
         </div>
@@ -148,42 +150,42 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
             <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {metrics.totalReferrals}
             </div>
-            <div className="text-sm text-blue-800 dark:text-blue-300">Total Referrals</div>
+            <div className="text-sm text-blue-800 dark:text-blue-300">{t('referrals.totalReferrals')}</div>
           </div>
           <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
             <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {Math.round(metrics.conversionRate)}%
             </div>
-            <div className="text-sm text-green-800 dark:text-green-300">Conversion Rate</div>
+            <div className="text-sm text-green-800 dark:text-green-300">{t('referrals.conversionRate')}</div>
           </div>
           <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
             <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
               ${metrics.totalCommission.toLocaleString()}
             </div>
-            <div className="text-sm text-purple-800 dark:text-purple-300">Total Commission</div>
+            <div className="text-sm text-purple-800 dark:text-purple-300">{t('referrals.totalCommission')}</div>
           </div>
           <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
             <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
               ${metrics.averageInvestmentSize.toLocaleString()}
             </div>
-            <div className="text-sm text-orange-800 dark:text-orange-300">Avg Purchase</div>
+            <div className="text-sm text-orange-800 dark:text-orange-300">{t('referrals.avgPurchase')}</div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-4">
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
             className="text-sm border border-neutral-200 dark:border-slate-600 rounded-lg px-3 py-1 bg-white dark:bg-slate-700 text-neutral-900 dark:text-slate-100"
           >
-            <option value="all">All Status</option>
-            <option value="lead">Leads</option>
-            <option value="registered">Registered</option>
-            <option value="kyc_pending">KYC Pending</option>
-            <option value="active">Active</option>
-            <option value="invested">Owners</option>
-            <option value="inactive">Inactive</option>
+            <option value="all">{t('referrals.allStatus')}</option>
+            <option value="lead">{t('referrals.status.leads')}</option>
+            <option value="registered">{t('referrals.status.registered')}</option>
+            <option value="kyc_pending">{t('referrals.status.kyc_pending')}</option>
+            <option value="active">{t('referrals.status.active')}</option>
+            <option value="invested">{t('referrals.status.owners')}</option>
+            <option value="inactive">{t('referrals.status.inactive')}</option>
           </select>
 
           <select
@@ -191,11 +193,11 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
             onChange={(e) => setFilterTier(e.target.value)}
             className="text-sm border border-neutral-200 dark:border-slate-600 rounded-lg px-3 py-1 bg-white dark:bg-slate-700 text-neutral-900 dark:text-slate-100"
           >
-            <option value="all">All Tiers</option>
-            <option value="bronze">Bronze</option>
-            <option value="silver">Silver</option>
-            <option value="gold">Gold</option>
-            <option value="platinum">Platinum</option>
+            <option value="all">{t('referrals.allTiers')}</option>
+            <option value="bronze">{t('referrals.tier.bronze')}</option>
+            <option value="silver">{t('referrals.tier.silver')}</option>
+            <option value="gold">{t('referrals.tier.gold')}</option>
+            <option value="platinum">{t('referrals.tier.platinum')}</option>
           </select>
 
           <select
@@ -203,10 +205,10 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
             onChange={(e) => setSortBy(e.target.value)}
             className="text-sm border border-neutral-200 dark:border-slate-600 rounded-lg px-3 py-1 bg-white dark:bg-slate-700 text-neutral-900 dark:text-slate-100"
           >
-            <option value="joinDate">Sort by Join Date</option>
-            <option value="investment">Sort by Purchase Amount</option>
-            <option value="commission">Sort by Commission</option>
-            <option value="activity">Sort by Activity</option>
+            <option value="joinDate">{t('referrals.sortJoin')}</option>
+            <option value="investment">{t('referrals.sortPurchase')}</option>
+            <option value="commission">{t('referrals.sortCommission')}</option>
+            <option value="activity">{t('referrals.sortActivity')}</option>
           </select>
         </div>
       </div>
@@ -217,16 +219,16 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
           <div className="text-center py-8">
             <span className="text-4xl mb-4 block">🎯</span>
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-2">
-              No Referrals Found
+              {t('referrals.noReferrals')}
             </h3>
             <p className="text-neutral-600 dark:text-slate-400 mb-4">
               {referrals.length === 0 
-                ? "You haven't made any referrals yet"
-                : `No referrals match the selected filters`
+                ? t('referrals.noReferralsYet')
+                : t('referrals.noMatch')
               }
             </p>
             <Button variant="primary" onClick={onGenerateLink}>
-              Generate Referral Link
+              {t('referrals.generateReferralLink')}
             </Button>
           </div>
         ) : (
@@ -247,14 +249,14 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
                     onClick={() => setSelectedClient(isExpanded ? null : client.id)}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center">
                           <span className="text-white font-medium text-sm">
                             {client.name.split(' ').map(n => n[0]).join('')}
                           </span>
                         </div>
                         <div>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center gap-2">
                             <h4 className="font-medium text-neutral-900 dark:text-slate-100">
                               {client.name}
                             </h4>
@@ -262,41 +264,41 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
                               {getTierIcon(client.tier)}
                             </span>
                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(client.status)}`}>
-                              {client.status.replace('_', ' ').toUpperCase()}
+                              {t(`referrals.status.${client.status}`, { defaultValue: client.status.replace('_', ' ').toUpperCase() })}
                             </span>
                           </div>
-                          <div className="flex items-center space-x-4 mt-1 text-sm text-neutral-600 dark:text-slate-400">
+                          <div className="flex items-center gap-4 mt-1 text-sm text-neutral-600 dark:text-slate-400">
                             <span>{client.email}</span>
-                            <span>via {client.referralSource}</span>
-                            <span>Joined {formatDate(client.joinDate)}</span>
+                            <span>{t('referrals.via', { source: client.referralSource })}</span>
+                            <span>{t('referrals.joined', { date: formatDate(client.joinDate) })}</span>
                           </div>
                         </div>
                       </div>
                       
-                      <div className="flex items-center space-x-6">
-                        <div className="text-right">
-                          <div className="text-sm text-neutral-500 dark:text-slate-400">Purchase</div>
+                      <div className="flex items-center gap-6">
+                        <div className="text-end">
+                          <div className="text-sm text-neutral-500 dark:text-slate-400">{t('referrals.purchase')}</div>
                           <div className="font-semibold text-neutral-900 dark:text-slate-100">
                             ${client.totalInvestment.toLocaleString()}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-sm text-neutral-500 dark:text-slate-400">Commission</div>
+                        <div className="text-end">
+                          <div className="text-sm text-neutral-500 dark:text-slate-400">{t('referrals.commission')}</div>
                           <div className="font-semibold text-green-600 dark:text-green-400">
                             ${client.commissionEarned.toLocaleString()}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-sm text-neutral-500 dark:text-slate-400">Last Activity</div>
+                        <div className="text-end">
+                          <div className="text-sm text-neutral-500 dark:text-slate-400">{t('referrals.lastActivity')}</div>
                           <div className={`font-medium ${
                             daysSinceActivity > 30 ? 'text-red-600 dark:text-red-400' :
                             daysSinceActivity > 7 ? 'text-yellow-600 dark:text-yellow-400' :
                             'text-green-600 dark:text-green-400'
                           }`}>
-                            {daysSinceActivity === 0 ? 'Today' : `${daysSinceActivity}d ago`}
+                            {daysSinceActivity === 0 ? t('referrals.today') : t('referrals.daysAgo', { value: daysSinceActivity })}
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-2">
                           <Button
                             size="sm"
                             variant="outline"
@@ -305,7 +307,7 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
                               onContactClient(client.id);
                             }}
                           >
-                            Contact
+                            {t('referrals.contact')}
                           </Button>
                         </div>
                       </div>
@@ -331,27 +333,27 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
                     <div className="border-t border-neutral-200 dark:border-slate-700 p-4 bg-neutral-50 dark:bg-slate-900/50">
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
                         <div>
-                          <span className="text-neutral-500 dark:text-slate-400">Phone</span>
+                          <span className="text-neutral-500 dark:text-slate-400">{t('referrals.phone')}</span>
                           <div className="font-medium text-neutral-900 dark:text-slate-100">
-                            {client.phone || 'Not provided'}
+                            {client.phone || t('referrals.notProvided')}
                           </div>
                         </div>
                         <div>
-                          <span className="text-neutral-500 dark:text-slate-400">Purchase Count</span>
+                          <span className="text-neutral-500 dark:text-slate-400">{t('referrals.purchaseCount')}</span>
                           <div className="font-medium text-neutral-900 dark:text-slate-100">
                             {client.investmentCount}
                           </div>
                         </div>
                         <div>
-                          <span className="text-neutral-500 dark:text-slate-400">Lifetime Value</span>
+                          <span className="text-neutral-500 dark:text-slate-400">{t('referrals.lifetimeValue')}</span>
                           <div className="font-medium text-purple-600 dark:text-purple-400">
                             ${client.lifetime_value.toLocaleString()}
                           </div>
                         </div>
                         <div>
-                          <span className="text-neutral-500 dark:text-slate-400">Conversion Date</span>
+                          <span className="text-neutral-500 dark:text-slate-400">{t('referrals.conversionDate')}</span>
                           <div className="font-medium text-neutral-900 dark:text-slate-100">
-                            {client.conversionDate ? formatDate(client.conversionDate) : 'Not converted'}
+                            {client.conversionDate ? formatDate(client.conversionDate) : t('referrals.notConverted')}
                           </div>
                         </div>
                       </div>
@@ -359,7 +361,7 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
                       {/* Notes */}
                       <div className="mb-4">
                         <h5 className="text-sm font-medium text-neutral-900 dark:text-slate-100 mb-2">
-                          Notes
+                          {t('referrals.notes')}
                         </h5>
                         {client.notes ? (
                           <p className="text-sm text-neutral-600 dark:text-slate-400 mb-2">
@@ -367,15 +369,15 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
                           </p>
                         ) : (
                           <p className="text-sm text-neutral-500 dark:text-slate-400 italic mb-2">
-                            No notes added yet
+                            {t('referrals.noNotes')}
                           </p>
                         )}
-                        <div className="flex space-x-2">
+                        <div className="flex gap-2">
                           <input
                             type="text"
                             value={newNote}
                             onChange={(e) => setNewNote(e.target.value)}
-                            placeholder="Add a note..."
+                            placeholder={t('referrals.addNotePh')}
                             className="flex-1 text-sm border border-neutral-200 dark:border-slate-600 rounded px-2 py-1 bg-white dark:bg-slate-700 text-neutral-900 dark:text-slate-100"
                           />
                           <Button
@@ -387,31 +389,31 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
                               }
                             }}
                           >
-                            Add Note
+                            {t('referrals.addNote')}
                           </Button>
                         </div>
                       </div>
 
                       {/* Status Update */}
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center gap-3">
                         <select
                           value={client.status}
                           onChange={(e) => onUpdateStatus(client.id, e.target.value as ReferralClient['status'])}
                           className="text-sm border border-neutral-200 dark:border-slate-600 rounded px-2 py-1 bg-white dark:bg-slate-700 text-neutral-900 dark:text-slate-100"
                         >
-                          <option value="lead">Lead</option>
-                          <option value="registered">Registered</option>
-                          <option value="kyc_pending">KYC Pending</option>
-                          <option value="active">Active</option>
-                          <option value="invested">Owner</option>
-                          <option value="inactive">Inactive</option>
+                          <option value="lead">{t('referrals.status.lead')}</option>
+                          <option value="registered">{t('referrals.status.registered')}</option>
+                          <option value="kyc_pending">{t('referrals.status.kyc_pending')}</option>
+                          <option value="active">{t('referrals.status.active')}</option>
+                          <option value="invested">{t('referrals.status.invested')}</option>
+                          <option value="inactive">{t('referrals.status.inactive')}</option>
                         </select>
                         <Button
                           size="sm"
                           variant="primary"
                           onClick={() => onContactClient(client.id)}
                         >
-                          Send Message
+                          {t('referrals.sendMessage')}
                         </Button>
                       </div>
                     </div>

@@ -1,7 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { InfoPageLayout } from '../components/info/InfoPageLayout';
 
 export const SecondaryMarketPage: React.FC = () => {
+  const { i18n } = useTranslation();
+  const isAr = i18n.language?.startsWith('ar');
   const navigateToPage = (path: string) => {
     window.history.pushState({}, '', path);
     window.dispatchEvent(new PopStateEvent('popstate'));
@@ -10,9 +13,67 @@ export const SecondaryMarketPage: React.FC = () => {
 
   return (
     <InfoPageLayout
-      title="Secondary Market & Exit Options"
-      subtitle="Understanding exit mechanisms transparently and without misleading assurances"
+      title={isAr ? 'السوق الثانوية وخيارات التخارج' : 'Secondary Market & Exit Options'}
+      subtitle={isAr ? 'فهم آليات التخارج بشفافية ودون ضمانات مضلّلة' : 'Understanding exit mechanisms transparently and without misleading assurances'}
     >
+      {isAr ? (
+      <section className="info-section">
+        <p className="info-intro">
+          يشرح هذا القسم آليات التخارج بشفافية ودون ضمانات مضلّلة.
+        </p>
+
+        <h2>السوق الثانوية</h2>
+        <p>
+          تتيح السوق الثانوية للملاك:
+        </p>
+        <ul>
+          <li>عرض وحداتهم للبيع</li>
+          <li>شراء وحدات من ملاك آخرين</li>
+          <li>التداول بناءً على العرض والطلب</li>
+        </ul>
+
+        <h2>المبادئ الأساسية</h2>
+        <ul className="cross-list">
+          <li>السيولة غير مضمونة</li>
+          <li>قد تتقلب الأسعار</li>
+          <li>تخضع عمليات التداول لفحوصات الامتثال</li>
+        </ul>
+
+        <h2>مزوّد السيولة (اختياري)</h2>
+        <p>
+          خيار إضافي للتخارج يعمل وفق شروط محددة:
+        </p>
+        <ul>
+          <li>خيار إضافي للتخارج</li>
+          <li>يعمل ضمن حدود وقواعد تسعير محددة</li>
+          <li>قد ينطوي على خصومات أو فروق أسعار</li>
+          <li>لا يُعدّ استردادًا مضمونًا</li>
+        </ul>
+
+        <div className="info-warning">
+          <strong>مهم:</strong> لا تضمن السوق الثانوية السيولة. وتعتمد القدرة على بيع الوحدات على طلب السوق والتسعير ومتطلبات الامتثال. ويعمل مزوّدو السيولة، إن وُجدوا، وفق شروطهم وأحكامهم الخاصة ولا يضمنون التخارج.
+        </div>
+
+        <h2>فهم الفرق</h2>
+        <div className="info-highlight">
+          <p><strong>السوق الثانوية:</strong> تداول بين الملاك مباشرةً بناءً على العرض والطلب.</p>
+          <p><strong>مزوّد السيولة:</strong> طرف ثالث اختياري يوفّر سيولة مشروطة وفق شروط محددة مسبقًا.</p>
+        </div>
+
+        <h2>صفحات ذات صلة</h2>
+        <div>
+          <button className="link-button" onClick={() => navigateToPage('/marketplace')}>
+            الانتقال إلى السوق
+          </button>
+          <button className="link-button" onClick={() => navigateToPage('/investor-guide')}>
+            دليل الشريك المالك
+          </button>
+          <button className="link-button-outline" onClick={() => navigateToPage('/risks')}>
+            إفصاحات المخاطر
+          </button>
+        </div>
+      </section>
+      ) : (
       <section className="info-section">
         <p className="info-intro">
           This section explains exit mechanisms transparently and without misleading assurances.
@@ -69,6 +130,7 @@ export const SecondaryMarketPage: React.FC = () => {
           </button>
         </div>
       </section>
+      )}
     </InfoPageLayout>
   );
 };

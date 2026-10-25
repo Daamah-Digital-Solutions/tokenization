@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/Button';
 import { Input } from '../design-system/forms/Input';
+import { useTranslation } from 'react-i18next';
 
 export interface CommissionTier {
   id: string;
@@ -56,6 +57,7 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
   onCalculate,
   className = ''
 }) => {
+  const { t } = useTranslation('brokerui');
   const [investmentAmount, setInvestmentAmount] = useState<number>(50000);
   const [propertyType, setPropertyType] = useState<string>('standard');
   const [referralCount, setReferralCount] = useState<number>(0);
@@ -127,14 +129,14 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
       <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100">
-            Commission Calculator
+            {t('calc.title')}
           </h2>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setProjectionMode(projectionMode === 'single' ? 'monthly' : 'single')}
               className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors"
             >
-              {projectionMode === 'single' ? 'Show Monthly Projection' : 'Show Single Transaction'}
+              {projectionMode === 'single' ? t('calc.showMonthly') : t('calc.showSingle')}
             </button>
           </div>
         </div>
@@ -145,25 +147,25 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
             <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
               {currentTier.name}
             </div>
-            <div className="text-sm text-blue-800 dark:text-blue-300">Current Tier</div>
+            <div className="text-sm text-blue-800 dark:text-blue-300">{t('calc.currentTier')}</div>
           </div>
           <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
             <div className="text-lg font-semibold text-green-600 dark:text-green-400">
               {currentTier.rate}%
             </div>
-            <div className="text-sm text-green-800 dark:text-green-300">Base Rate</div>
+            <div className="text-sm text-green-800 dark:text-green-300">{t('calc.baseRate')}</div>
           </div>
           <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
             <div className="text-lg font-semibold text-purple-600 dark:text-purple-400">
               ${currentVolume.toLocaleString()}
             </div>
-            <div className="text-sm text-purple-800 dark:text-purple-300">Total Volume</div>
+            <div className="text-sm text-purple-800 dark:text-purple-300">{t('calc.totalVolume')}</div>
           </div>
           <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
             <div className="text-lg font-semibold text-orange-600 dark:text-orange-400">
-              {structure.payoutSchedule.charAt(0).toUpperCase() + structure.payoutSchedule.slice(1)}
+              {t(`calc.payout.${structure.payoutSchedule}`, { defaultValue: structure.payoutSchedule })}
             </div>
-            <div className="text-sm text-orange-800 dark:text-orange-300">Payout Schedule</div>
+            <div className="text-sm text-orange-800 dark:text-orange-300">{t('calc.payoutSchedule')}</div>
           </div>
         </div>
       </div>
@@ -174,12 +176,12 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
           {/* Input Section */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100">
-              Purchase Details
+              {t('calc.purchaseDetails')}
             </h3>
 
             <div>
               <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-                Purchase Amount
+                {t('calc.purchaseAmount')}
               </label>
               <Input
                 type="number"
@@ -189,7 +191,7 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
                 step={1000}
                 className="w-full"
               />
-              <div className="mt-1 flex space-x-2">
+              <div className="mt-1 flex gap-2">
                 {[25000, 50000, 100000, 250000].map((amount) => (
                   <button
                     key={amount}
@@ -204,22 +206,22 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-                Property Type
+                {t('calc.propertyType')}
               </label>
               <select
                 value={propertyType}
                 onChange={(e) => setPropertyType(e.target.value)}
                 className="w-full border border-neutral-200 dark:border-slate-600 rounded-lg px-3 py-2 bg-white dark:bg-slate-700 text-neutral-900 dark:text-slate-100"
               >
-                <option value="standard">Standard Property</option>
-                <option value="construction">Construction Property (+{structure.specialRates.constructionProperties}%)</option>
-                <option value="premium">Premium Property (+{structure.specialRates.premiumProperties}%)</option>
+                <option value="standard">{t('calc.standard')}</option>
+                <option value="construction">{t('calc.construction', { value: structure.specialRates.constructionProperties })}</option>
+                <option value="premium">{t('calc.premium', { value: structure.specialRates.premiumProperties })}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-neutral-700 dark:text-slate-300 mb-2">
-                Additional Referrals This Month
+                {t('calc.additionalReferrals')}
               </label>
               <Input
                 type="number"
@@ -229,7 +231,7 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
                 className="w-full"
               />
               <p className="text-xs text-neutral-500 dark:text-slate-400 mt-1">
-                +{structure.specialRates.referralBonus}% per referral
+                {t('calc.plusPerReferral', { value: structure.specialRates.referralBonus })}
               </p>
             </div>
           </div>
@@ -238,19 +240,19 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
           {calculation && (
             <div className="space-y-4">
               <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100">
-                Commission Breakdown
+                {t('calc.breakdown')}
               </h3>
               
               <div className="space-y-3">
                 <div className="flex justify-between p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg">
-                  <span className="text-sm text-neutral-600 dark:text-slate-400">Purchase Amount</span>
+                  <span className="text-sm text-neutral-600 dark:text-slate-400">{t('calc.purchaseAmount')}</span>
                   <span className="font-semibold text-neutral-900 dark:text-slate-100">
                     ${calculation.investmentAmount.toLocaleString()}
                   </span>
                 </div>
 
                 <div className="flex justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <span className="text-sm text-blue-600 dark:text-blue-400">Base Commission ({calculation.baseRate}%)</span>
+                  <span className="text-sm text-blue-600 dark:text-blue-400">{t('calc.baseCommission', { value: calculation.baseRate })}</span>
                   <span className="font-semibold text-blue-800 dark:text-blue-300">
                     ${calculation.baseCommission.toLocaleString()}
                   </span>
@@ -258,7 +260,7 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
 
                 {calculation.bonusCommission > 0 && (
                   <div className="flex justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                    <span className="text-sm text-green-600 dark:text-green-400">Bonus Commission ({calculation.bonusRate}%)</span>
+                    <span className="text-sm text-green-600 dark:text-green-400">{t('calc.bonusCommission', { value: calculation.bonusRate })}</span>
                     <span className="font-semibold text-green-800 dark:text-green-300">
                       ${calculation.bonusCommission.toLocaleString()}
                     </span>
@@ -266,7 +268,7 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
                 )}
 
                 <div className="flex justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border-2 border-purple-200 dark:border-purple-800">
-                  <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">Total Commission ({calculation.totalRate}%)</span>
+                  <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">{t('calc.totalCommission', { value: calculation.totalRate })}</span>
                   <span className="text-lg font-bold text-purple-800 dark:text-purple-300">
                     ${calculation.totalCommission.toLocaleString()}
                   </span>
@@ -274,7 +276,7 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
 
                 {projectionMode === 'monthly' && (
                   <div className="flex justify-between p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                    <span className="text-sm text-orange-600 dark:text-orange-400">Yearly Projection</span>
+                    <span className="text-sm text-orange-600 dark:text-orange-400">{t('calc.yearlyProjection')}</span>
                     <span className="font-semibold text-orange-800 dark:text-orange-300">
                       ${calculation.projectedYearlyCommission.toLocaleString()}
                     </span>
@@ -287,14 +289,14 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
                 <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
-                      Next Tier: {calculation.nextTier.name}
+                      {t('calc.nextTier', { name: calculation.nextTier.name })}
                     </span>
                     <span className="text-sm text-yellow-600 dark:text-yellow-400">
-                      {calculation.nextTier.rate}% rate
+                      {t('calc.rate', { value: calculation.nextTier.rate })}
                     </span>
                   </div>
                   <div className="text-xs text-yellow-600 dark:text-yellow-400">
-                    ${calculation.volumeToNextTier.toLocaleString()} more volume needed
+                    {t('calc.moreVolume', { value: calculation.volumeToNextTier.toLocaleString() })}
                   </div>
                   <div className="mt-2 w-full bg-yellow-200 dark:bg-yellow-800 rounded-full h-2">
                     <div
@@ -313,14 +315,14 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
         {/* Commission Structure */}
         <div className="mt-8">
           <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100 mb-4">
-            Commission Structure
+            {t('calc.structure')}
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Base Tiers */}
             <div>
               <h4 className="font-medium text-neutral-900 dark:text-slate-100 mb-3">
-                Base Commission Tiers
+                {t('calc.baseTiers')}
               </h4>
               <div className="space-y-2">
                 {structure.baseTiers.map((tier) => (
@@ -348,7 +350,7 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
                     {tier.requirements && tier.requirements.length > 0 && (
                       <div className="mt-2">
                         <p className="text-xs text-neutral-500 dark:text-slate-400">
-                          Requirements: {tier.requirements.join(', ')}
+                          {t('calc.requirements')} {tier.requirements.join('، ')}
                         </p>
                       </div>
                     )}
@@ -360,12 +362,12 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
             {/* Special Rates */}
             <div>
               <h4 className="font-medium text-neutral-900 dark:text-slate-100 mb-3">
-                Special Rates & Bonuses
+                {t('calc.specialRates')}
               </h4>
               <div className="space-y-3">
                 <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                   <div className="flex justify-between">
-                    <span className="text-sm text-green-800 dark:text-green-300">Construction Properties</span>
+                    <span className="text-sm text-green-800 dark:text-green-300">{t('calc.constructionProps')}</span>
                     <span className="font-semibold text-green-600 dark:text-green-400">
                       +{structure.specialRates.constructionProperties}%
                     </span>
@@ -373,7 +375,7 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
                 </div>
                 <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
                   <div className="flex justify-between">
-                    <span className="text-sm text-purple-800 dark:text-purple-300">Premium Properties</span>
+                    <span className="text-sm text-purple-800 dark:text-purple-300">{t('calc.premiumProps')}</span>
                     <span className="font-semibold text-purple-600 dark:text-purple-400">
                       +{structure.specialRates.premiumProperties}%
                     </span>
@@ -381,16 +383,16 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
                 </div>
                 <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <div className="flex justify-between">
-                    <span className="text-sm text-blue-800 dark:text-blue-300">Referral Bonus</span>
+                    <span className="text-sm text-blue-800 dark:text-blue-300">{t('calc.referralBonus')}</span>
                     <span className="font-semibold text-blue-600 dark:text-blue-400">
-                      {structure.specialRates.referralBonus}% per referral
+                      {t('calc.perReferral', { value: structure.specialRates.referralBonus })}
                     </span>
                   </div>
                 </div>
                 {structure.specialRates.teamOverride && (
                   <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                     <div className="flex justify-between">
-                      <span className="text-sm text-orange-800 dark:text-orange-300">Team Override</span>
+                      <span className="text-sm text-orange-800 dark:text-orange-300">{t('calc.teamOverride')}</span>
                       <span className="font-semibold text-orange-600 dark:text-orange-400">
                         {structure.specialRates.teamOverride}%
                       </span>
@@ -401,8 +403,8 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
 
               <div className="mt-4 p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg">
                 <div className="text-xs text-neutral-600 dark:text-slate-400 space-y-1">
-                  <p><strong>Minimum Payout:</strong> ${structure.minimumPayout.toLocaleString()}</p>
-                  <p><strong>Payout Schedule:</strong> {structure.payoutSchedule.replace('_', ' ').charAt(0).toUpperCase() + structure.payoutSchedule.replace('_', ' ').slice(1)}</p>
+                  <p><strong>{t('calc.minPayout')}</strong> ${structure.minimumPayout.toLocaleString()}</p>
+                  <p><strong>{t('calc.payoutScheduleLabel')}</strong> {t(`calc.payout.${structure.payoutSchedule}`, { defaultValue: structure.payoutSchedule })}</p>
                 </div>
               </div>
             </div>
@@ -410,27 +412,26 @@ export const CommissionCalculator: React.FC<CommissionCalculatorProps> = ({
         </div>
 
         {calculation && (
-          <div className="mt-6 flex items-center space-x-3">
+          <div className="mt-6 flex items-center gap-3">
             <Button
               variant="primary"
               onClick={calculateCommission}
             >
-              Recalculate
+              {t('calc.recalculate')}
             </Button>
             <Button
               variant="outline"
               onClick={() => {
-                const calculationText = `
-Commission Calculation:
-Purchase: $${calculation.investmentAmount.toLocaleString()}
-Property Type: ${calculation.propertyType}
-Total Rate: ${calculation.totalRate}%
-Total Commission: $${calculation.totalCommission.toLocaleString()}
-                `.trim();
+                const calculationText = t('calc.copyText', {
+                  amount: calculation.investmentAmount.toLocaleString(),
+                  type: t(`calc.types.${calculation.propertyType}`, { defaultValue: calculation.propertyType }),
+                  rate: calculation.totalRate,
+                  total: calculation.totalCommission.toLocaleString(),
+                });
                 navigator.clipboard.writeText(calculationText);
               }}
             >
-              Copy Results
+              {t('calc.copyResults')}
             </Button>
           </div>
         )}

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { apiClient } from '../../services/api/ApiClient';
 import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
@@ -23,17 +24,20 @@ interface WithdrawalRequest {
   completed_at: string | null;
 }
 
-const WITHDRAWAL_STATUS_COPY: Record<WithdrawalRequest['status'], { label: string; tone: string; help: string }> = {
-  pending:    { label: 'Pending Review',  tone: 'bg-amber-50 text-amber-800 border-amber-200',   help: 'Compliance is reviewing your request.' },
-  approved:   { label: 'Approved',        tone: 'bg-blue-50 text-blue-800 border-blue-200',     help: 'Approved. Wire will be executed within 48h.' },
-  processing: { label: 'Wire In Progress', tone: 'bg-blue-50 text-blue-800 border-blue-200',    help: 'Wire has been initiated — funds in transit.' },
-  completed:  { label: 'Completed',       tone: 'bg-emerald-50 text-emerald-800 border-emerald-200', help: 'Funds have landed in your bank account.' },
-  rejected:   { label: 'Rejected',        tone: 'bg-red-50 text-red-800 border-red-200',         help: 'Funds returned to your wallet balance.' },
-  cancelled:  { label: 'Cancelled',       tone: 'bg-gray-100 text-gray-700 border-gray-200',     help: 'Cancelled before review.' },
+// Labels/help text live in the `payments` namespace under withdrawals.status.<key>.
+const WITHDRAWAL_STATUS_COPY: Record<WithdrawalRequest['status'], { key: string; tone: string }> = {
+  pending:    { key: 'pending',    tone: 'bg-amber-50 text-amber-800 border-amber-200' },
+  approved:   { key: 'approved',   tone: 'bg-blue-50 text-blue-800 border-blue-200' },
+  processing: { key: 'processing', tone: 'bg-blue-50 text-blue-800 border-blue-200' },
+  completed:  { key: 'completed',  tone: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+  rejected:   { key: 'rejected',   tone: 'bg-red-50 text-red-800 border-red-200' },
+  cancelled:  { key: 'cancelled',  tone: 'bg-gray-100 text-gray-700 border-gray-200' },
 };
 
 export const WithdrawalRequestsSection: React.FC = () => {
   const user: any = useUser();
+  const { t, i18n } = useTranslation('payments');
+  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
   const { data, isLoading, error } = useQuery({
     queryKey: ['wallet', 'withdraw-requests'],
     queryFn: async () => {
@@ -52,20 +56,20 @@ export const WithdrawalRequestsSection: React.FC = () => {
     <Card variant="outline" className="p-5">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <Text variant="h4" weight="semibold" className="mb-0.5">Your withdrawal requests</Text>
+          <Text variant="h4" weight="semibold" className="mb-0.5">{t('withdrawals.title')}</Text>
           <Text variant="caption" color="muted">
-            Each request lists the bank account it&apos;s being sent to and where it is in the review pipeline. Pending and approved requests have already been locked from your available balance.
+            {t('withdrawals.subtitle')}
           </Text>
         </div>
       </div>
 
       {isLoading ? (
-        <div className="text-sm text-slate-500 py-6 text-center">Loading withdrawal history…</div>
+        <div className="text-sm text-slate-500 py-6 text-center">{t('withdrawals.loading')}</div>
       ) : error ? (
-        <div className="text-sm text-red-600 py-6 text-center">Could not load your withdrawal history.</div>
+        <div className="text-sm text-red-600 py-6 text-center">{t('withdrawals.loadError')}</div>
       ) : requests.length === 0 ? (
         <div className="text-sm text-slate-500 dark:text-slate-400 py-6 text-center">
-          You haven&apos;t requested any withdrawals yet. Hit <strong>Withdraw</strong> above to move funds to your bank.
+          {t('withdrawals.emptyBefore')}<strong>{t('withdrawals.emptyAction')}</strong>{t('withdrawals.emptyAfter')}
         </div>
       ) : (
         <div className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -82,9 +86,9 @@ export const WithdrawalRequestsSection: React.FC = () => {
                 status: r.status,
                 requestedAt: new Date(r.created_at),
                 destination: r.withdrawal_method === 'crypto'
-                  ? [['Asset', r.crypto_asset || ''], ['Network', r.crypto_network || ''], ['Address', r.crypto_address || '']]
-                  : [['Account holder', r.account_holder_name], ['Bank', r.bank_name],
-                     ['Account', r.account_number ? `…${r.account_number.slice(-4)}` : '']],
+                  ? [[t('withdrawals.dest.asset'), r.crypto_asset || ''], [t('withdrawals.dest.network'), r.crypto_network || ''], [t('withdrawals.dest.address'), r.crypto_address || '']]
+                  : [[t('withdrawals.dest.accountHolder'), r.account_holder_name], [t('withdrawals.dest.bank'), r.bank_name],
+                     [t('withdrawals.dest.account'), r.account_number ? `…${r.account_number.slice(-4)}` : '']],
               }).catch((e) => console.error('Withdrawal PDF failed:', e));
             const copy = WITHDRAWAL_STATUS_COPY[r.status] ?? WITHDRAWAL_STATUS_COPY.pending;
             const isCrypto = r.withdrawal_method === 'crypto';
@@ -109,28 +113,29 @@ export const WithdrawalRequestsSection: React.FC = () => {
                     </span>
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Requested {new Date(r.created_at).toLocaleString()}
-                    {r.completed_at && ` · Completed ${new Date(r.completed_at).toLocaleString()}`}
+                    {t('withdrawals.requestedAt', { date: new Date(r.created_at).toLocaleString(dateLocale) })}
+                    {r.completed_at && ` · ${t('withdrawals.completedAt', { date: new Date(r.completed_at).toLocaleString(dateLocale) })}`}
                   </div>
                   <div className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
-                    {copy.help}
+                    {t(`withdrawals.status.${copy.key}.help`)}
                   </div>
                   {r.status === 'rejected' && r.review_note && (
                     <div className="text-xs text-red-700 dark:text-red-300 mt-1">
-                      <strong>Compliance note:</strong> {r.review_note}
+                      <strong>{t('withdrawals.complianceNote')}</strong> {r.review_note}
                     </div>
                   )}
                 </div>
                 <div className="shrink-0 flex flex-col items-end gap-1.5">
                   <span className={`inline-block text-xs font-semibold px-2 py-1 rounded-full border ${copy.tone}`}>
-                    {copy.label}
+                    {t(`withdrawals.status.${copy.key}.label`)}
                   </span>
                   <button
                     type="button"
                     onClick={downloadConfirmation}
                     className="text-xs font-medium text-emerald-600 hover:text-emerald-700"
+                    title={t('withdrawals.pdfTitle')}
                   >
-                    PDF
+                    {t('withdrawals.pdf')}
                   </button>
                 </div>
               </div>

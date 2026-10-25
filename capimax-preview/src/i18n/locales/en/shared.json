@@ -1,0 +1,289 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "close": "Close",
+    "retry": "Retry",
+    "na": "N/A",
+    "tbd": "TBD",
+    "backToTop": "Back to top"
+  },
+  "propertyCard": {
+    "featured": "FEATURED",
+    "status": {
+      "underConstruction": "Under Construction",
+      "incomeActive": "Income Active",
+      "readyProperty": "Ready Property",
+      "active": "Active",
+      "available": "Available"
+    },
+    "types": {
+      "residential": "Residential",
+      "commercial": "Commercial",
+      "industrial": "Industrial",
+      "mixed_use": "Mixed Use",
+      "land": "Land"
+    },
+    "property": "Property",
+    "totalValue": "Total Value",
+    "perToken": "Per Token",
+    "constructionProgress": "Construction Progress",
+    "fundingProgress": "Funding Progress",
+    "reserved": "{{value}} reserved",
+    "sold": "{{value}} sold",
+    "total": "{{value}} total",
+    "complete": "Complete",
+    "completion": "Completion",
+    "monthsShort": "{{value}}mo",
+    "installments": "Installments",
+    "owners": "Owners",
+    "monthlyIncome": "Monthly Income",
+    "expectedReturn": "Expected Return",
+    "occupancy": "Occupancy",
+    "built": "Built",
+    "reserveWithInstallments": "Reserve with Installments",
+    "ownNow": "Own Now",
+    "installmentPlan": "{{value}} month installment plan available",
+    "quickView": "Quick View",
+    "calculate": "Calculate",
+    "verifiedInsured": "Verified & Insured",
+    "activeIncome": "Active Income",
+    "preConstruction": "Pre-Construction",
+    "quarterlyDividends": "Quarterly Dividends",
+    "addFavorite": "Add to favorites",
+    "removeFavorite": "Remove from favorites",
+    "share": "Share"
+  },
+  "forms": {
+    "selectPlaceholder": "Select an option...",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
+  },
+  "a11y": {
+    "skipToContent": "Skip to main content",
+    "enableHighContrast": "Enable high contrast mode",
+    "disableHighContrast": "Disable high contrast mode",
+    "required": "required",
+    "valueOfMax": "{{value}} of {{max}}",
+    "percentComplete": "{{percentage}}% complete",
+    "progressLabel": "{{label}}: {{percentage}}% complete",
+    "fontSize": "Font Size:",
+    "decreaseFont": "Decrease font size",
+    "resetFont": "Reset font size",
+    "increaseFont": "Increase font size",
+    "reset": "Reset",
+    "options": "Accessibility options",
+    "optionsTitle": "Accessibility Options",
+    "connection": {
+      "good": "Good connection",
+      "fair": "Fair connection",
+      "poor": "Poor connection",
+      "offline": "No connection",
+      "unknown": "Unknown connection status"
+    }
+  },
+  "blockchain": {
+    "minting": "Minting tokens...",
+    "awaiting": "Awaiting blockchain confirmation",
+    "viewOn": "View on {{explorer}}",
+    "verifiedOn": "Verified on {{explorer}}"
+  },
+  "breadcrumb": {
+    "ariaLabel": "Breadcrumb",
+    "home": "Home",
+    "signIn": "Sign In",
+    "createAccount": "Create Account",
+    "dashboard": "Dashboard",
+    "kyc": "KYC Verification",
+    "properties": "Properties",
+    "propertyDetails": "Property Details",
+    "wallet": "Wallet",
+    "about": "About",
+    "contact": "Contact",
+    "page": "Page"
+  },
+  "confirm": {
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "close": "Close"
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "description": "We're sorry, but something unexpected happened. Our team has been notified and we're working to fix this issue.",
+    "detailsTitle": "Error Details (Development Mode)",
+    "componentStack": "Component Stack",
+    "tryAgain": "Try Again",
+    "goHome": "Go Home",
+    "reload": "Reload Page",
+    "persists": "If this problem persists, please <link>contact our support team</link>"
+  },
+  "theme": {
+    "toggle": "Toggle theme"
+  },
+  "chat": {
+    "welcome": "Hi! I'm the Capimax RT assistant. Ask me anything about our properties, tokenized ownership, or getting started.",
+    "noReply": "Sorry, I couldn't come up with a reply just now. Please try again.",
+    "networkError": "Sorry — I had trouble reaching the server. Please check your connection and try again.",
+    "open": "Open Capimax RT assistant",
+    "dialogLabel": "Capimax RT assistant",
+    "title": "Capimax RT Assistant",
+    "online": "Online",
+    "newChatLabel": "Start a new chat",
+    "newChat": "New chat",
+    "closeChat": "Close chat",
+    "placeholder": "Type your message…",
+    "send": "Send message",
+    "poweredBy": "Powered by Capimax RT AI"
+  },
+  "pwa": {
+    "title": "Install Capimax RT",
+    "dismiss": "Dismiss install prompt",
+    "nativeBody": "Add Capimax RT to your home screen for a faster, app-like experience — offline access, instant launch, and push notifications.",
+    "benefit1": "Quick access from your home screen",
+    "benefit2": "Full-screen native-app feel",
+    "benefit3": "Works offline with cached data",
+    "notNow": "Not Now",
+    "install": "Install",
+    "iosIntro": "Install Capimax RT on your iPhone:",
+    "iosStep1": "Tap the Share button <icon></icon> below",
+    "iosStep2": "Choose <b>Add to Home Screen</b> <icon></icon>",
+    "iosStep3": "Tap <b>Add</b> in the top-right",
+    "gotIt": "Got it"
+  },
+  "update": {
+    "title": "New version available",
+    "reloading": "Reloading in {{seconds}}s to get the latest fixes.",
+    "reloadNow": "Reload now",
+    "later": "Later"
+  },
+  "mobileNav": {
+    "ariaLabel": "Primary mobile navigation",
+    "tabs": {
+      "home": "Home",
+      "properties": "Properties",
+      "marketplace": "Market",
+      "dashboard": "Dashboard",
+      "account": "Account"
+    }
+  },
+  "analytics": {
+    "unavailableTitle": "Portfolio Growth Unavailable",
+    "unavailableDesc": "Unable to load portfolio performance data",
+    "title": "Portfolio Performance",
+    "gain": "{{amount}} gain",
+    "loss": "{{amount}} loss",
+    "currentValue": "Current Value",
+    "purchasedAmount": "Purchased Amount",
+    "loadingPerformance": "Loading portfolio performance...",
+    "period": {
+      "week": "this week",
+      "month": "this month",
+      "quarter": "this quarter",
+      "year": "this year",
+      "default": "this period"
+    }
+  },
+  "kycTracker": {
+    "status": {
+      "not_started": {
+        "title": "Verification Not Started",
+        "description": "Complete your identity verification to access all platform features",
+        "badge": "Not started"
+      },
+      "pending": {
+        "title": "Documents Uploaded",
+        "description": "Your documents have been submitted and are awaiting review",
+        "badge": "Pending"
+      },
+      "processing": {
+        "title": "Under Review",
+        "description": "Our team is currently reviewing your submitted documents",
+        "badge": "Processing"
+      },
+      "approved": {
+        "title": "Verification Approved",
+        "description": "Your identity has been successfully verified. You now have full access to the platform.",
+        "badge": "Approved"
+      },
+      "rejected": {
+        "title": "Verification Rejected",
+        "description": "Your submission requires attention. Please review the feedback and resubmit.",
+        "badge": "Rejected"
+      },
+      "expired": {
+        "title": "Verification Expired",
+        "description": "Your verification has expired. Please restart the verification process.",
+        "badge": "Expired"
+      }
+    },
+    "docs": {
+      "passport": "Passport",
+      "national_id": "National ID",
+      "utility_bill": "Utility Bill",
+      "bank_statement": "Bank Statement",
+      "selfie": "Live Selfie"
+    },
+    "submitted": "Submitted: {{date}}",
+    "reviewed": "Reviewed: {{date}}",
+    "uploaded": "Uploaded: {{date}}",
+    "estDays_zero": "Estimated completion: {{count}} days",
+    "estDays_one": "Estimated completion: {{count}} day",
+    "estDays_two": "Estimated completion: {{count}} days",
+    "estDays_few": "Estimated completion: {{count}} days",
+    "estDays_many": "Estimated completion: {{count}} days",
+    "estDays_other": "Estimated completion: {{count}} days",
+    "estHours_zero": "Estimated completion: {{count}} hours",
+    "estHours_one": "Estimated completion: {{count}} hour",
+    "estHours_two": "Estimated completion: {{count}} hours",
+    "estHours_few": "Estimated completion: {{count}} hours",
+    "estHours_many": "Estimated completion: {{count}} hours",
+    "estHours_other": "Estimated completion: {{count}} hours",
+    "soon": "Expected to complete soon",
+    "documentStatus": "Document Status",
+    "rejectionReason": "Rejection Reason",
+    "nextSteps": "Next Steps",
+    "progress": "Verification Progress",
+    "stepOf": "Step {{current}} of {{total}}",
+    "docReview": "Document Review",
+    "identity": "Identity Verification",
+    "finalApproval": "Final Approval",
+    "start": "Start Verification",
+    "retry": "Retry Verification",
+    "certificate": "View Certificate",
+    "contact": "Contact Support",
+    "tip": "<b>Tip:</b> Most verifications are completed within 24-48 hours. You'll receive email notifications when your status changes."
+  },
+  "info": {
+    "learnMore": "Learn More",
+    "sidebarTitle": "Learn About Capimax RT",
+    "nav": {
+      "how-it-works": "How It Works",
+      "tokenization": "What is Tokenization",
+      "spv": "What is SPV",
+      "data-room": "Data Room",
+      "investor-guide": "Co-Owner Guide",
+      "secondary-market": "Secondary Market",
+      "risks": "Risks & Disclosures",
+      "faq": "FAQ",
+      "property-owner": "For Property Owners"
+    }
+  },
+  "legal": {
+    "documents": "Legal Documents",
+    "printTitle": "Capimax RT",
+    "printSubtitle": "Capimax Real Estate Tokenization Platform",
+    "lastUpdated": "Last Updated: {{date}}",
+    "footerNotice": "This document is part of Capimax RT's legal framework. For questions, please contact <link>legal@capimaxrt.com</link>",
+    "nav": {
+      "disclaimer": "Platform Disclaimer",
+      "risk-disclosure": "Risk Disclosure",
+      "compliance": "Compliance Overview",
+      "privacy": "Privacy Policy",
+      "terms": "Terms & Conditions",
+      "cookies": "Cookies Policy",
+      "aml-kyc": "AML/KYC/KYB Policy",
+      "conflicts": "Conflicts of Interest",
+      "complaints": "Complaints Procedure",
+      "security": "Security Policy"
+    }
+  }
+}

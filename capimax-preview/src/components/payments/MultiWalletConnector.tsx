@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { 
   Wallet, 
   Smartphone, 
@@ -94,6 +95,7 @@ interface ConnectedWalletInfo {
 
 export function MultiWalletConnector({ className, onConnect, onClose, isOpen }: MultiWalletConnectorProps) {
   const { state, dispatch } = usePayment();
+  const { t } = useTranslation('payments');
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectingWallet, setConnectingWallet] = useState<string | null>(null);
   const [connectedWallet, setConnectedWallet] = useState<ConnectedWalletInfo | null>(null);
@@ -178,11 +180,11 @@ export function MultiWalletConnector({ className, onConnect, onClose, isOpen }: 
           break;
           
         default:
-          throw new Error(`Wallet ${wallet.name} not supported yet`);
+          throw new Error(t('multiWallet.errors.notSupported', { name: wallet.name }));
       }
 
       if (accounts.length === 0) {
-        throw new Error('No accounts found');
+        throw new Error(t('multiWallet.errors.noAccounts'));
       }
 
       // Get balance and chain info
@@ -229,7 +231,7 @@ export function MultiWalletConnector({ className, onConnect, onClose, isOpen }: 
 
     } catch (err: any) {
       console.error('Wallet connection failed:', err);
-      setError(err.message || 'Failed to connect wallet');
+      setError(err.message || t('multiWallet.errors.connectFailed'));
     } finally {
       setIsConnecting(false);
       setConnectingWallet(null);
@@ -254,7 +256,7 @@ export function MultiWalletConnector({ className, onConnect, onClose, isOpen }: 
       '0xa4b1': 'Arbitrum',
       '0xa': 'Optimism',
     };
-    return chains[chainId] || 'Unknown';
+    return chains[chainId] || t('multiWallet.unknownNetwork');
   };
 
   const formatWalletOptions = () => {
@@ -286,10 +288,11 @@ export function MultiWalletConnector({ className, onConnect, onClose, isOpen }: 
         >
           <Card className="p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">Connect Wallet</h2>
+              <h2 className="text-xl font-semibold text-gray-900">{t('multiWallet.title')}</h2>
               <button
                 onClick={onClose}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label={t('multiWallet.close')}
               >
                 <X className="h-5 w-5 text-gray-500" />
               </button>
@@ -301,14 +304,14 @@ export function MultiWalletConnector({ className, onConnect, onClose, isOpen }: 
                 <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
                   <CheckCircle className="h-5 w-5 text-emerald-600" />
                   <div className="flex-1">
-                    <div className="font-medium text-emerald-900">Wallet Connected</div>
+                    <div className="font-medium text-emerald-900">{t('multiWallet.connected')}</div>
                     <div className="text-sm text-emerald-700">{connectedWallet.walletName}</div>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm font-medium text-gray-700">Address:</span>
+                    <span className="text-sm font-medium text-gray-700">{t('multiWallet.address')}</span>
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-mono text-gray-900">
                         {`${connectedWallet.address.slice(0, 6)}...${connectedWallet.address.slice(-4)}`}
@@ -316,6 +319,7 @@ export function MultiWalletConnector({ className, onConnect, onClose, isOpen }: 
                       <button
                         onClick={() => copyAddress(connectedWallet.address)}
                         className="p-1 hover:bg-gray-200 rounded transition-colors"
+                        aria-label={t('multiWallet.copyAddress')}
                       >
                         <Copy className="h-3 w-3 text-gray-500" />
                       </button>
@@ -323,14 +327,14 @@ export function MultiWalletConnector({ className, onConnect, onClose, isOpen }: 
                   </div>
 
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm font-medium text-gray-700">Balance:</span>
+                    <span className="text-sm font-medium text-gray-700">{t('multiWallet.balance')}</span>
                     <span className="text-sm font-mono text-gray-900">
                       {connectedWallet.balance} ETH
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm font-medium text-gray-700">Network:</span>
+                    <span className="text-sm font-medium text-gray-700">{t('multiWallet.network')}</span>
                     <span className="text-sm text-gray-900">{connectedWallet.chain}</span>
                   </div>
                 </div>
@@ -341,13 +345,13 @@ export function MultiWalletConnector({ className, onConnect, onClose, isOpen }: 
                     onClick={handleDisconnect}
                     className="flex-1"
                   >
-                    Disconnect
+                    {t('multiWallet.disconnect')}
                   </Button>
                   <Button
                     onClick={onClose}
                     className="flex-1 bg-emerald-600 hover:bg-emerald-700"
                   >
-                    Continue
+                    {t('multiWallet.continue')}
                   </Button>
                 </div>
               </div>
@@ -363,7 +367,7 @@ export function MultiWalletConnector({ className, onConnect, onClose, isOpen }: 
 
                 {/* Popular Wallets */}
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900 mb-3">Popular</h3>
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">{t('multiWallet.popular')}</h3>
                   <div className="space-y-2">
                     {popular.map((wallet) => (
                       <WalletOption
@@ -379,7 +383,7 @@ export function MultiWalletConnector({ className, onConnect, onClose, isOpen }: 
 
                 {/* Other Wallets */}
                 <div>
-                  <h3 className="text-sm font-medium text-gray-900 mb-3">More Options</h3>
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">{t('multiWallet.moreOptions')}</h3>
                   <div className="space-y-2">
                     {others.map((wallet) => (
                       <WalletOption
@@ -396,7 +400,7 @@ export function MultiWalletConnector({ className, onConnect, onClose, isOpen }: 
                 <div className="pt-4 border-t border-gray-200">
                   <div className="flex items-center gap-2 text-xs text-gray-500">
                     <Shield className="h-3 w-3" />
-                    <span>Your wallet credentials are never stored on our servers</span>
+                    <span>{t('multiWallet.securityNote')}</span>
                   </div>
                 </div>
               </div>
@@ -416,6 +420,7 @@ interface WalletOptionProps {
 }
 
 function WalletOption({ wallet, isInstalled, isConnecting, onClick }: WalletOptionProps) {
+  const { t } = useTranslation('payments');
   return (
     <button
       onClick={onClick}
@@ -424,9 +429,9 @@ function WalletOption({ wallet, isInstalled, isConnecting, onClick }: WalletOpti
     >
       <div className="flex items-center gap-3">
         <span className="text-2xl">{wallet.icon}</span>
-        <div className="text-left">
+        <div className="text-start">
           <div className="font-medium text-gray-900">{wallet.name}</div>
-          <div className="text-sm text-gray-600">{wallet.description}</div>
+          <div className="text-sm text-gray-600">{t(`multiWallet.wallets.${wallet.id}`, { defaultValue: wallet.description })}</div>
         </div>
       </div>
       
@@ -437,7 +442,7 @@ function WalletOption({ wallet, isInstalled, isConnecting, onClick }: WalletOpti
         
         {isInstalled ? (
           <span className="px-2 py-1 text-xs bg-emerald-100 text-emerald-800 rounded-full">
-            Installed
+            {t('multiWallet.installed')}
           </span>
         ) : wallet.downloadUrl ? (
           <ExternalLink className="h-4 w-4 text-gray-400" />

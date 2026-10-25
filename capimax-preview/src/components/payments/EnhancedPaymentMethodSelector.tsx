@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
   CreditCard,
   Wallet,
@@ -151,6 +152,14 @@ export function EnhancedPaymentMethodSelector({
   className 
 }: EnhancedPaymentMethodSelectorProps) {
   const { state, getBalance } = usePayment();
+  const { t } = useTranslation('payments');
+  // PAYMENT_METHODS keeps English defaults; user-visible copy is resolved by id here.
+  const mText = (method: PaymentMethodInfo, field: 'name' | 'description' | 'fee' | 'processingTime' | 'discount') =>
+    t(`selector.methods.${method.id}.${field}`, { defaultValue: method[field] ?? '' });
+  const mList = (method: PaymentMethodInfo, field: 'features' | 'pros' | 'cons'): string[] => {
+    const v = t(`selector.methods.${method.id}.${field}`, { returnObjects: true, defaultValue: method[field] }) as unknown;
+    return Array.isArray(v) ? (v as string[]) : method[field];
+  };
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [showWalletConnector, setShowWalletConnector] = useState(false);
@@ -206,17 +215,17 @@ export function EnhancedPaymentMethodSelector({
   const getMethodAvailability = (method: PaymentMethodInfo): { available: boolean; reason?: string } => {
     // Amount limits
     if (amount < method.minAmount) {
-      return { available: false, reason: `Minimum amount: ${formatCurrency(method.minAmount, 'USD')}` };
+      return { available: false, reason: t('selector.minAmount', { amount: formatCurrency(method.minAmount, 'USD') }) };
     }
     if (amount > method.maxAmount) {
-      return { available: false, reason: `Maximum amount: ${formatCurrency(method.maxAmount, 'USD')}` };
+      return { available: false, reason: t('selector.maxAmount', { amount: formatCurrency(method.maxAmount, 'USD') }) };
     }
 
     // Crypto specific checks
     if (method.type === 'crypto') {
       const hasBalance = state.balances.some(b => b.balance > 0);
       if (!hasBalance) {
-        return { available: true, reason: 'Wallet connection required' };
+        return { available: true, reason: t('selector.walletRequired') };
       }
     }
 
@@ -245,20 +254,20 @@ export function EnhancedPaymentMethodSelector({
           onClick={() => availability.available && handleMethodSelect(method.id)}
         >
           {/* Badges */}
-          <div className="absolute top-4 right-4 flex gap-2">
+          <div className="absolute top-4 end-4 flex gap-2">
             {method.discount && (
               <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full font-bold">
-                {method.discount}
+                {mText(method, 'discount')}
               </span>
             )}
             {method.recommended && (
               <span className="px-2 py-1 text-xs bg-emerald-100 text-emerald-800 rounded-full font-medium">
-                Recommended
+                {t('selector.recommended')}
               </span>
             )}
             {method.popular && (
               <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full font-medium">
-                Popular
+                {t('selector.popular')}
               </span>
             )}
           </div>
@@ -286,17 +295,17 @@ export function EnhancedPaymentMethodSelector({
             {/* Content */}
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">{method.name}</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{mText(method, 'name')}</h3>
                 {method.type === 'crypto' && (
                   <Zap className="h-4 w-4 text-yellow-500" />
                 )}
               </div>
               
-              <p className="text-gray-600 mb-4">{method.description}</p>
+              <p className="text-gray-600 mb-4">{mText(method, 'description')}</p>
 
               {/* Features */}
               <div className="flex flex-wrap gap-2 mb-4">
-                {method.features.map((feature, index) => (
+                {mList(method, 'features').map((feature, index) => (
                   <span 
                     key={index}
                     className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded"
@@ -311,26 +320,26 @@ export function EnhancedPaymentMethodSelector({
                 <div>
                   <div className="flex items-center gap-1 text-gray-600 mb-1">
                     <DollarSign className="h-3 w-3" />
-                    <span>{fee < 0 ? 'Discount' : 'Fee'}</span>
+                    <span>{fee < 0 ? t('selector.discount') : t('selector.fee')}</span>
                   </div>
                   <div className={`font-medium ${fee < 0 ? 'text-emerald-600' : ''}`}>
                     {fee < 0 ? `-${formatCurrency(Math.abs(fee), 'USD')}` : formatCurrency(fee, 'USD')}
                   </div>
-                  <div className="text-xs text-gray-500">{method.fee}</div>
+                  <div className="text-xs text-gray-500">{mText(method, 'fee')}</div>
                 </div>
 
                 <div>
                   <div className="flex items-center gap-1 text-gray-600 mb-1">
                     <Clock className="h-3 w-3" />
-                    <span>Processing</span>
+                    <span>{t('selector.processing')}</span>
                   </div>
-                  <div className="font-medium">{method.processingTime}</div>
+                  <div className="font-medium">{mText(method, 'processingTime')}</div>
                 </div>
               </div>
 
               {/* Total Amount */}
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700">Total Amount:</span>
+                <span className="text-sm font-medium text-gray-700">{t('selector.totalAmount')}</span>
                 <span className="text-lg font-bold text-gray-900">
                   {formatCurrency(totalAmount, 'USD')}
                 </span>
@@ -377,8 +386,8 @@ export function EnhancedPaymentMethodSelector({
       default:
         return (
           <Card className="p-6 text-center">
-            <div className="text-gray-500 mb-4">Payment method not yet implemented</div>
-            <Button onClick={commonProps.onCancel}>Back</Button>
+            <div className="text-gray-500 mb-4">{t('selector.notImplemented')}</div>
+            <Button onClick={commonProps.onCancel}>{t('selector.back')}</Button>
           </Card>
         );
     }
@@ -419,12 +428,11 @@ export function EnhancedPaymentMethodSelector({
       return (
         <Card className="p-8 text-center">
           <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Submission Received</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">{t('selector.nova.receivedTitle')}</h3>
           <p className="text-gray-600 mb-4">
-            Your Nova Sukuk certificate has been submitted for admin review.
-            You will be notified once the review is complete (1-2 business days).
+            {t('selector.nova.receivedBody')}
           </p>
-          <Button onClick={onCancel}>Back to Methods</Button>
+          <Button onClick={onCancel}>{t('selector.backToMethods')}</Button>
         </Card>
       );
     }
@@ -436,19 +444,19 @@ export function EnhancedPaymentMethodSelector({
             <FileText className="h-5 w-5 text-indigo-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Nova Sukuk Payment</h3>
-            <p className="text-sm text-gray-600">Upload your Sukuk certificate PDF for review</p>
+            <h3 className="text-lg font-semibold text-gray-900">{t('selector.nova.title')}</h3>
+            <p className="text-sm text-gray-600">{t('selector.nova.subtitle')}</p>
           </div>
         </div>
 
         <div className="space-y-4">
           <div className="p-4 bg-indigo-50 rounded-lg text-sm text-indigo-800">
-            <strong>Purchase Amount:</strong> ${amount.toLocaleString()} | <strong>Fee:</strong> Free
+            <strong>{t('selector.nova.purchaseAmount')}</strong> ${amount.toLocaleString()} | <strong>{t('depositWithdraw.feeColon')}</strong> {t('selector.free')}
           </div>
 
           {/* PDF Upload */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Sukuk Certificate (PDF)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('selector.nova.certificate')}</label>
             <input
               ref={fileInputRef}
               type="file"
@@ -470,8 +478,8 @@ export function EnhancedPaymentMethodSelector({
               ) : (
                 <div className="text-gray-500">
                   <Upload className="h-8 w-8 mx-auto mb-2" />
-                  <p className="font-medium">Click to upload PDF</p>
-                  <p className="text-xs">Maximum file size: 10MB</p>
+                  <p className="font-medium">{t('selector.nova.uploadPrompt')}</p>
+                  <p className="text-xs">{t('selector.nova.maxSize')}</p>
                 </div>
               )}
             </button>
@@ -479,27 +487,27 @@ export function EnhancedPaymentMethodSelector({
 
           {/* Reference Number */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Sukuk Reference Number</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('nova.referenceLabel')}</label>
             <input
               type="text"
               value={referenceNumber}
               onChange={(e) => setReferenceNumber(e.target.value)}
-              placeholder="Enter your Sukuk reference number"
+              placeholder={t('selector.nova.referencePlaceholder')}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button variant="outline" onClick={onCancel} className="flex-1">Back</Button>
+            <Button variant="outline" onClick={onCancel} className="flex-1">{t('selector.back')}</Button>
             <Button
               onClick={handleSubmit}
               disabled={!selectedFile || !referenceNumber.trim() || isSubmitting}
               className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-50"
             >
               {isSubmitting ? (
-                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</span>
+                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {t('selector.submitting')}</span>
               ) : (
-                'Submit for Review'
+                t('shared.submitForReview')
               )}
             </Button>
           </div>
@@ -540,12 +548,11 @@ export function EnhancedPaymentMethodSelector({
       return (
         <Card className="p-8 text-center">
           <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Transaction Submitted</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">{t('selector.pronova.submittedTitle')}</h3>
           <p className="text-gray-600 mb-4">
-            Your Pronova transaction is being verified on-chain.
-            This typically takes 5-15 minutes.
+            {t('selector.pronova.submittedBody')}
           </p>
-          <Button onClick={onCancel}>Back to Methods</Button>
+          <Button onClick={onCancel}>{t('selector.backToMethods')}</Button>
         </Card>
       );
     }
@@ -557,23 +564,23 @@ export function EnhancedPaymentMethodSelector({
             <Coins className="h-5 w-5 text-yellow-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">Pronova Payment</h3>
-            <p className="text-sm text-gray-600">BNB Smart Chain - 5% discount applied</p>
+            <h3 className="text-lg font-semibold text-gray-900">{t('selector.pronova.title')}</h3>
+            <p className="text-sm text-gray-600">{t('selector.pronova.subtitle')}</p>
           </div>
         </div>
 
         {/* Discount Summary */}
         <div className="p-4 bg-yellow-50 rounded-lg mb-6">
           <div className="flex justify-between text-sm mb-1">
-            <span className="text-gray-600">Original Amount</span>
+            <span className="text-gray-600">{t('selector.pronova.originalAmount')}</span>
             <span className="line-through text-gray-400">${amount.toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-sm mb-1">
-            <span className="text-emerald-600 font-medium">5% Discount</span>
+            <span className="text-emerald-600 font-medium">{t('selector.pronova.discount5')}</span>
             <span className="text-emerald-600 font-medium">-${savings.toLocaleString()}</span>
           </div>
           <div className="border-t border-yellow-200 mt-2 pt-2 flex justify-between">
-            <span className="font-bold text-gray-900">You Pay</span>
+            <span className="font-bold text-gray-900">{t('selector.pronova.youPay')}</span>
             <span className="font-bold text-gray-900 text-lg">${discountedAmount.toLocaleString()}</span>
           </div>
         </div>
@@ -581,18 +588,18 @@ export function EnhancedPaymentMethodSelector({
         {step === 'info' && (
           <div className="space-y-4">
             <div className="p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
-              <p className="font-medium text-gray-900 mb-2">How it works:</p>
+              <p className="font-medium text-gray-900 mb-2">{t('selector.pronova.howItWorks')}</p>
               <ol className="list-decimal list-inside space-y-1">
-                <li>Send Pronova tokens to the platform wallet address</li>
-                <li>Enter your transaction hash for verification</li>
-                <li>Wait for on-chain confirmation (5-15 min)</li>
-                <li>Tokens are allocated to your account automatically</li>
+                <li>{t('selector.pronova.step1')}</li>
+                <li>{t('selector.pronova.step2')}</li>
+                <li>{t('selector.pronova.step3')}</li>
+                <li>{t('selector.pronova.step4')}</li>
               </ol>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" onClick={onCancel} className="flex-1">Back</Button>
+              <Button variant="outline" onClick={onCancel} className="flex-1">{t('selector.back')}</Button>
               <Button onClick={() => setStep('awaiting')} className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white">
-                Proceed to Payment
+                {t('selector.pronova.proceed')}
               </Button>
             </div>
           </div>
@@ -601,21 +608,21 @@ export function EnhancedPaymentMethodSelector({
         {step === 'awaiting' && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Send Pronova tokens to:</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('selector.pronova.sendTo')}</label>
               <div className="flex items-center gap-2 p-3 bg-gray-100 rounded-lg font-mono text-sm break-all">
                 <span className="flex-1">{platformWallet}</span>
-                <button onClick={handleCopyAddress} className="shrink-0 p-2 hover:bg-gray-200 rounded">
+                <button onClick={handleCopyAddress} className="shrink-0 p-2 hover:bg-gray-200 rounded" aria-label={t('multiWallet.copyAddress')}>
                   {copied ? <CheckCircle className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-gray-500" />}
                 </button>
               </div>
             </div>
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-              <strong>Network:</strong> BNB Smart Chain (BSC) | <strong>Amount:</strong> ${discountedAmount.toLocaleString()} equivalent in Pronova
+              <strong>{t('multiWallet.network')}</strong> BNB Smart Chain (BSC) | <strong>{t('depositWithdraw.amountColon')}</strong> {t('selector.pronova.equivalent', { amount: `$${discountedAmount.toLocaleString()}` })}
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep('info')} className="flex-1">Back</Button>
+              <Button variant="outline" onClick={() => setStep('info')} className="flex-1">{t('selector.back')}</Button>
               <Button onClick={() => setStep('confirm')} className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white">
-                I've Sent the Payment
+                {t('selector.pronova.sent')}
               </Button>
             </div>
           </div>
@@ -624,7 +631,7 @@ export function EnhancedPaymentMethodSelector({
         {step === 'confirm' && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Transaction Hash</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{t('selector.pronova.txHash')}</label>
               <input
                 type="text"
                 value={txHash}
@@ -633,20 +640,20 @@ export function EnhancedPaymentMethodSelector({
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
               />
               {txHash && !txHash.match(/^0x[a-fA-F0-9]{64}$/) && (
-                <p className="text-red-500 text-xs mt-1">Invalid transaction hash format (must be 0x + 64 hex characters)</p>
+                <p className="text-red-500 text-xs mt-1">{t('selector.pronova.invalidHash')}</p>
               )}
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep('awaiting')} className="flex-1">Back</Button>
+              <Button variant="outline" onClick={() => setStep('awaiting')} className="flex-1">{t('selector.back')}</Button>
               <Button
                 onClick={handleConfirmTx}
                 disabled={!txHash.match(/^0x[a-fA-F0-9]{64}$/) || isVerifying}
                 className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white disabled:opacity-50"
               >
                 {isVerifying ? (
-                  <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Verifying...</span>
+                  <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> {t('selector.pronova.verifying')}</span>
                 ) : (
-                  'Verify Transaction'
+                  t('selector.pronova.verify')
                 )}
               </Button>
             </div>
@@ -659,9 +666,9 @@ export function EnhancedPaymentMethodSelector({
   const renderComparison = () => (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">Payment Method Comparison</h3>
+        <h3 className="text-lg font-semibold text-gray-900">{t('selector.comparisonTitle')}</h3>
         <Button size="sm" onClick={() => setShowComparison(false)}>
-          Close
+          {t('selector.close')}
         </Button>
       </div>
 
@@ -669,11 +676,11 @@ export function EnhancedPaymentMethodSelector({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200">
-              <th className="text-left py-3 px-4">Method</th>
-              <th className="text-left py-3 px-4">Fee</th>
-              <th className="text-left py-3 px-4">Processing Time</th>
-              <th className="text-left py-3 px-4">Limits</th>
-              <th className="text-left py-3 px-4">Best For</th>
+              <th className="text-start py-3 px-4">{t('selector.table.method')}</th>
+              <th className="text-start py-3 px-4">{t('selector.table.fee')}</th>
+              <th className="text-start py-3 px-4">{t('selector.table.processingTime')}</th>
+              <th className="text-start py-3 px-4">{t('selector.table.limits')}</th>
+              <th className="text-start py-3 px-4">{t('selector.table.bestFor')}</th>
             </tr>
           </thead>
           <tbody>
@@ -682,20 +689,20 @@ export function EnhancedPaymentMethodSelector({
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-2">
                     <method.icon className="h-4 w-4 text-gray-600" />
-                    <span className="font-medium">{method.name}</span>
+                    <span className="font-medium">{mText(method, 'name')}</span>
                   </div>
                 </td>
                 <td className="py-3 px-4">
                   <div>{formatCurrency(calculateFee(method), 'USD')}</div>
-                  <div className="text-xs text-gray-500">{method.fee}</div>
+                  <div className="text-xs text-gray-500">{mText(method, 'fee')}</div>
                 </td>
-                <td className="py-3 px-4">{method.processingTime}</td>
+                <td className="py-3 px-4">{mText(method, 'processingTime')}</td>
                 <td className="py-3 px-4">
                   <div>{formatCurrency(method.minAmount, 'USD')} - {formatCurrency(method.maxAmount, 'USD')}</div>
                 </td>
                 <td className="py-3 px-4">
                   <div className="text-xs space-y-1">
-                    {method.pros.slice(0, 2).map((pro, index) => (
+                    {mList(method, 'pros').slice(0, 2).map((pro, index) => (
                       <div key={index} className="text-emerald-600">• {pro}</div>
                     ))}
                   </div>
@@ -733,10 +740,10 @@ export function EnhancedPaymentMethodSelector({
         {/* Header */}
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Choose Payment Method
+            {t('selector.title')}
           </h2>
           <p className="text-gray-600 mb-4">
-            Pay {formatCurrency(amount, 'USD')} for your real estate purchase
+            {t('selector.subtitle', { amount: formatCurrency(amount, 'USD') })}
           </p>
           
           <div className="flex items-center justify-center gap-4">
@@ -747,7 +754,7 @@ export function EnhancedPaymentMethodSelector({
               className="flex items-center gap-2"
             >
               <Info className="h-4 w-4" />
-              Compare Methods
+              {t('selector.compare')}
             </Button>
           </div>
         </div>
@@ -764,10 +771,9 @@ export function EnhancedPaymentMethodSelector({
           <div className="flex items-start gap-3">
             <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
             <div className="text-sm text-blue-800">
-              <div className="font-medium mb-1">Secure Payment Processing</div>
+              <div className="font-medium mb-1">{t('selector.secureTitle')}</div>
               <div>
-                All payments are processed through encrypted channels with industry-standard security measures. 
-                Your financial information is never stored on our servers.
+                {t('selector.secureBody')}
               </div>
             </div>
           </div>
@@ -779,7 +785,7 @@ export function EnhancedPaymentMethodSelector({
             variant="outline"
             onClick={onCancel}
           >
-            Back to Property
+            {t('selector.backToProperty')}
           </Button>
         </div>
       </div>

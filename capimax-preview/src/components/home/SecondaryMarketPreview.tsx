@@ -10,29 +10,15 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { useTranslation } from 'react-i18next';
 
 export const SecondaryMarketPreview: React.FC = () => {
+  const { t } = useTranslation('ui');
   const features = [
-    {
-      icon: Tag,
-      title: 'List Your Units',
-      description: 'Put your ownership units up for sale at your desired price',
-    },
-    {
-      icon: ShoppingCart,
-      title: 'Purchase Units',
-      description: 'Buy units from other owners on the marketplace',
-    },
-    {
-      icon: TrendingUp,
-      title: 'Market-Driven Pricing',
-      description: 'Prices determined by supply and demand dynamics',
-    },
-    {
-      icon: ShieldCheck,
-      title: 'Compliance-Verified',
-      description: 'All transactions meet regulatory requirements',
-    },
+    { icon: Tag, title: t('secondaryPreview.f1.title'), description: t('secondaryPreview.f1.desc') },
+    { icon: ShoppingCart, title: t('secondaryPreview.f2.title'), description: t('secondaryPreview.f2.desc') },
+    { icon: TrendingUp, title: t('secondaryPreview.f3.title'), description: t('secondaryPreview.f3.desc') },
+    { icon: ShieldCheck, title: t('secondaryPreview.f4.title'), description: t('secondaryPreview.f4.desc') },
   ];
 
   return (
@@ -49,20 +35,19 @@ export const SecondaryMarketPreview: React.FC = () => {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 dark:bg-purple-900/20 rounded-full border border-purple-200 dark:border-purple-800 mb-6">
               <ArrowLeftRight className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               <span className="text-sm font-medium text-purple-700 dark:text-purple-400">
-                Trading Platform
+                {t('secondaryPreview.badge')}
               </span>
             </div>
 
             <h2 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6">
-              Secondary{' '}
+              {t('secondaryPreview.titlePrefix')}{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-500">
-                Market
+                {t('secondaryPreview.titleHighlight')}
               </span>
             </h2>
 
             <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
-              Trade your ownership units with other verified owners through our organized
-              secondary marketplace.
+              {t('secondaryPreview.subtitle')}
             </p>
 
             {/* Features */}
@@ -97,8 +82,8 @@ export const SecondaryMarketPreview: React.FC = () => {
               className="group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
               onClick={() => window.location.href = '/marketplace'}
             >
-              Explore Marketplace
-              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              {t('secondaryPreview.explore')}
+              <ArrowRight className="ms-2 w-4 h-4 rtl:rotate-180 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform" />
             </Button>
           </motion.div>
 
@@ -114,23 +99,23 @@ export const SecondaryMarketPreview: React.FC = () => {
               <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-6 mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                    Example Listing
+                    {t('secondaryPreview.example')}
                   </span>
                   <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded-full">
-                    Active
+                    {t('secondaryPreview.active')}
                   </span>
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-600 dark:text-slate-400">Property</span>
-                    <span className="font-semibold text-slate-900 dark:text-white">Dubai Marina Tower</span>
+                    <span className="text-slate-600 dark:text-slate-400">{t('secondaryPreview.property')}</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">{t('secondaryPreview.propertyName')}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-600 dark:text-slate-400">Units Available</span>
-                    <span className="font-semibold text-slate-900 dark:text-white">50 units</span>
+                    <span className="text-slate-600 dark:text-slate-400">{t('secondaryPreview.unitsAvailable')}</span>
+                    <span className="font-semibold text-slate-900 dark:text-white">{t('secondaryPreview.units', { count: 50 })}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-600 dark:text-slate-400">Price per Unit</span>
+                    <span className="text-slate-600 dark:text-slate-400">{t('secondaryPreview.pricePerUnit')}</span>
                     <span className="font-semibold text-purple-600 dark:text-purple-400">$105.00</span>
                   </div>
                 </div>
@@ -142,11 +127,10 @@ export const SecondaryMarketPreview: React.FC = () => {
                   <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                   <div>
                     <h4 className="font-semibold text-amber-800 dark:text-amber-300 text-sm mb-1">
-                      Important Notice
+                      {t('secondaryPreview.noticeTitle')}
                     </h4>
                     <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
-                      Liquidity is not guaranteed. Prices may fluctuate based on supply
-                      and demand. Past performance does not indicate future results.
+                      {t('secondaryPreview.noticeBody')}
                     </p>
                   </div>
                 </div>

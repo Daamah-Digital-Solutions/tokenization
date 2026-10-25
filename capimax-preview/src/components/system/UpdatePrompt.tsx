@@ -19,11 +19,13 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 // virtual:pwa-register/react is provided by vite-plugin-pwa at build time.
 // Types come from `vite-plugin-pwa/react` (referenced in vite-env.d.ts).
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 export function UpdatePrompt() {
+  const { t } = useTranslation('shared');
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
@@ -73,14 +75,14 @@ export function UpdatePrompt() {
   return (
     <div
       role="status"
-      className="fixed bottom-4 right-4 z-[1000] max-w-sm rounded-xl bg-emerald-600 text-white shadow-2xl"
+      className="fixed bottom-4 end-4 z-[1000] max-w-sm rounded-xl bg-emerald-600 text-white shadow-2xl"
     >
       <div className="flex items-start gap-3 p-4">
         <span aria-hidden className="text-2xl leading-none">↻</span>
         <div className="flex-1">
-          <p className="font-semibold">New version available</p>
+          <p className="font-semibold">{t('update.title')}</p>
           <p className="mt-0.5 text-sm text-emerald-50">
-            Reloading in {secondsLeft}s to get the latest fixes.
+            {t('update.reloading', { seconds: secondsLeft })}
           </p>
           <div className="mt-3 flex gap-2">
             <button
@@ -88,14 +90,14 @@ export function UpdatePrompt() {
               onClick={() => updateServiceWorker(true)}
               className="rounded-lg bg-white px-3 py-1.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
             >
-              Reload now
+              {t('update.reloadNow')}
             </button>
             <button
               type="button"
               onClick={() => setNeedRefresh(false)}
               className="rounded-lg border border-white/30 px-3 py-1.5 text-sm font-medium text-white hover:bg-white/10"
             >
-              Later
+              {t('update.later')}
             </button>
           </div>
         </div>

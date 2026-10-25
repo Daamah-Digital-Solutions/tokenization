@@ -23,6 +23,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Home, Building2, ArrowLeftRight, LayoutDashboard, User } from 'lucide-react';
 import { useRouter } from '../../utils/router';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 
 // Routes where the tab bar would be disruptive (auth flows, KYC capture,
@@ -100,6 +101,7 @@ const TABS: TabConfig[] = [
 export const MobileBottomNav: React.FC = () => {
   const { currentRoute, navigate } = useRouter();
   const { state: authState } = useAuth();
+  const { t } = useTranslation('shared');
 
   if (HIDDEN_ROUTES.has(currentRoute)) return null;
 
@@ -107,7 +109,7 @@ export const MobileBottomNav: React.FC = () => {
     <>
       <nav
         role="navigation"
-        aria-label="Primary mobile navigation"
+        aria-label={t('mobileNav.ariaLabel')}
         className="
           md:hidden fixed bottom-0 inset-x-0 z-40
           bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg
@@ -134,7 +136,7 @@ export const MobileBottomNav: React.FC = () => {
                     }
                   `}
                   aria-current={active ? 'page' : undefined}
-                  aria-label={tab.label}
+                  aria-label={t(`mobileNav.tabs.${tab.key}`, { defaultValue: tab.label })}
                 >
                   {active && (
                     <motion.span
@@ -152,7 +154,7 @@ export const MobileBottomNav: React.FC = () => {
                       className={`w-5 h-5 ${active ? 'stroke-[2.4]' : 'stroke-2'}`}
                     />
                     <span className="text-[10px] font-medium leading-tight">
-                      {tab.label}
+                      {t(`mobileNav.tabs.${tab.key}`, { defaultValue: tab.label })}
                     </span>
                   </motion.span>
                 </button>

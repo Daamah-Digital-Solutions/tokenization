@@ -11,6 +11,7 @@ import { Text } from '../components/design-system/typography/Text';
 import { Button } from '../components/ui/Button';
 import { PartnerCard, PartnerCardProps, PartnerCategory } from '../components/partners/PartnerCard';
 import { useRouter } from '../utils/router';
+import { useTranslation } from 'react-i18next';
 
 type FilterCategory = 'all' | PartnerCategory;
 
@@ -102,8 +103,22 @@ const partners: PartnerCardProps[] = [
   }
 ];
 
+// Translation keys for the partner entries above (names stay as brand names).
+const PARTNER_KEYS: Record<string, string> = {
+  'Elite Gate': 'eliteGate',
+  'Prime One': 'primeOne',
+  'TDH': 'tdh',
+  'Capimax Development': 'capimaxDevelopment',
+  'Capimax Financial': 'capimaxFinancial',
+  'CIM Financial Group': 'cim',
+  'Assurax': 'assurax',
+  'HCC': 'hcc',
+  'Nova Property': 'nova',
+};
+
 export const PartnersPage: React.FC = () => {
   const { navigate } = useRouter();
+  const { t } = useTranslation('brokerui');
   const [activeCategory, setActiveCategory] = useState<FilterCategory>('all');
 
   const filteredPartners = activeCategory === 'all'
@@ -121,10 +136,10 @@ export const PartnersPage: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>Our Partners | Capimax RT - Trusted Ecosystem Partners</title>
+        <title>{t('partnersPage.metaTitle')}</title>
         <meta
           name="description"
-          content="Meet our trusted network of partners including property developers, financial advisors, insurance providers, and property management companies working together to deliver exceptional real estate ownership opportunities."
+          content={t('partnersPage.metaDescription')}
         />
         <meta name="keywords" content="real estate partners, property developers, financial management, insurance, property management, Capimax RT" />
       </Helmet>
@@ -140,12 +155,12 @@ export const PartnersPage: React.FC = () => {
               <motion.div
                 animate={{ rotate: [0, 360] }}
                 transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
-                className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-r from-emerald-400/10 to-blue-400/10 dark:from-emerald-500/10 dark:to-blue-500/10 rounded-full blur-3xl"
+                className="absolute -top-40 -end-40 w-80 h-80 bg-gradient-to-r from-emerald-400/10 to-blue-400/10 dark:from-emerald-500/10 dark:to-blue-500/10 rounded-full blur-3xl"
               />
               <motion.div
                 animate={{ rotate: [360, 0] }}
                 transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-                className="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-r from-purple-400/10 to-pink-400/10 dark:from-purple-500/10 dark:to-pink-500/10 rounded-full blur-3xl"
+                className="absolute -bottom-40 -start-40 w-96 h-96 bg-gradient-to-r from-purple-400/10 to-pink-400/10 dark:from-purple-500/10 dark:to-pink-500/10 rounded-full blur-3xl"
               />
             </div>
 
@@ -158,7 +173,7 @@ export const PartnersPage: React.FC = () => {
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-700 mb-6"
                 >
                   <Handshake className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Trusted Ecosystem</span>
+                  <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{t('partnersPage.badge')}</span>
                 </motion.div>
 
                 <motion.h1
@@ -167,9 +182,9 @@ export const PartnersPage: React.FC = () => {
                   transition={{ duration: 0.6, delay: 0.1 }}
                   className="text-4xl lg:text-6xl font-bold text-slate-900 dark:text-white mb-6"
                 >
-                  Our{' '}
+                  {t('partnersPage.heroTitle1')}{' '}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500">
-                    Partners
+                    {t('partnersPage.heroTitle2')}
                   </span>
                 </motion.h1>
 
@@ -179,9 +194,7 @@ export const PartnersPage: React.FC = () => {
                   transition={{ duration: 0.6, delay: 0.2 }}
                   className="text-lg lg:text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto"
                 >
-                  We work with industry-leading partners to deliver exceptional real estate ownership
-                  opportunities. Our trusted ecosystem ensures quality, transparency, and professional
-                  management at every stage.
+                  {t('partnersPage.heroDesc')}
                 </motion.p>
               </div>
             </Container>
@@ -208,7 +221,7 @@ export const PartnersPage: React.FC = () => {
                     `}
                   >
                     <IconComponent className="w-4 h-4" />
-                    <span>{tab.label}</span>
+                    <span>{t(`partnersPage.tabs.${tab.id}.label`, { defaultValue: tab.label })}</span>
                     <span className={`
                       text-xs px-2 py-0.5 rounded-full
                       ${isActive
@@ -242,7 +255,12 @@ export const PartnersPage: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                   >
-                    <PartnerCard {...partner} />
+                    <PartnerCard
+                      {...partner}
+                      name={t(`partnersPage.list.${PARTNER_KEYS[partner.name]}.name`, { defaultValue: partner.name })}
+                      description={t(`partnersPage.list.${PARTNER_KEYS[partner.name]}.description`, { defaultValue: partner.description })}
+                      role={t(`partnersPage.list.${PARTNER_KEYS[partner.name]}.role`, { defaultValue: partner.role })}
+                    />
                   </motion.div>
                 ))}
               </motion.div>
@@ -251,7 +269,7 @@ export const PartnersPage: React.FC = () => {
             {filteredPartners.length === 0 && (
               <div className="text-center py-16">
                 <p className="text-slate-500 dark:text-slate-400">
-                  No partners found in this category.
+                  {t('partnersPage.noPartners')}
                 </p>
               </div>
             )}
@@ -261,10 +279,10 @@ export const PartnersPage: React.FC = () => {
           <Section variant="gradient" size="xl" backgroundPattern>
             <div className="text-center mb-12">
               <Heading level="h2" size="3xl" align="center" className="mb-4">
-                Partner Categories
+                {t('partnersPage.categoriesTitle')}
               </Heading>
               <Text variant="bodyLarge" color="secondary" align="center" className="max-w-2xl mx-auto" as="p">
-                Each partner plays a crucial role in our ecosystem, ensuring quality and professionalism at every stage of your ownership journey.
+                {t('partnersPage.categoriesDesc')}
               </Text>
             </div>
 
@@ -286,13 +304,13 @@ export const PartnersPage: React.FC = () => {
                       </div>
                       <div className="flex-1">
                         <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                          {category.label}
+                          {t(`partnersPage.tabs.${category.id}.label`, { defaultValue: category.label })}
                         </h3>
                         <p className="text-slate-600 dark:text-slate-400 text-sm">
-                          {category.description}
+                          {t(`partnersPage.tabs.${category.id}.description`, { defaultValue: category.description })}
                         </p>
                         <p className="mt-2 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
-                          {partnerCounts[category.id]} partner{partnerCounts[category.id] !== 1 ? 's' : ''}
+                          {t('partnersPage.partnerCount', { count: partnerCounts[category.id] })}
                         </p>
                       </div>
                     </div>
@@ -311,11 +329,10 @@ export const PartnersPage: React.FC = () => {
                 className="space-y-6"
               >
                 <Heading level="h2" size="3xl" align="center" className="text-white">
-                  Interested in Partnering with Us?
+                  {t('partnersPage.ctaTitle')}
                 </Heading>
                 <Text variant="bodyLarge" align="center" className="text-white/80" as="p">
-                  If you are a property developer, financial institution, insurance provider, or property management
-                  company interested in joining our ecosystem, we would love to hear from you.
+                  {t('partnersPage.ctaDesc')}
                 </Text>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                   <Button
@@ -323,8 +340,8 @@ export const PartnersPage: React.FC = () => {
                     className="bg-white text-slate-900 hover:bg-slate-100"
                     onClick={() => navigate('contact')}
                   >
-                    Contact Us
-                    <ArrowRight className="ml-2 w-5 h-5" />
+                    {t('partnersPage.contactUs')}
+                    <ArrowRight className="ms-2 w-5 h-5 rtl:rotate-180" />
                   </Button>
                   <Button
                     size="lg"
@@ -332,11 +349,11 @@ export const PartnersPage: React.FC = () => {
                     className="border-white/30 text-white hover:bg-white/10"
                     onClick={() => navigate('broker-program')}
                   >
-                    Broker Program
+                    {t('partnersPage.brokerProgram')}
                   </Button>
                 </div>
                 <Text variant="caption" align="center" className="text-white/60 pt-4" as="p">
-                  For partnership inquiries, contact us at{' '}
+                  {t('partnersPage.inquiries')}{' '}
                   <a href="mailto:partners@capimaxrt.com" className="text-emerald-400 hover:underline">
                     partners@capimaxrt.com
                   </a>

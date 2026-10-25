@@ -69,7 +69,7 @@ export const AcceptedPaymentsNotice: React.FC = () => {
             whileHover={{ y: -4 }}
             className="group relative block rounded-2xl border border-navy-200 dark:border-navy-700 bg-white dark:bg-navy-900 p-6 shadow-sm hover:shadow-lg transition-shadow"
           >
-            <span className="absolute top-4 right-4 px-2.5 py-1 text-xs font-bold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
+            <span className="absolute top-4 end-4 px-2.5 py-1 text-xs font-bold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
               {t('acceptedPayments.pronova.discount')}
             </span>
             <div className="flex items-start gap-4">

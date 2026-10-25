@@ -13,6 +13,7 @@ import CapiMaxDarkLogo from '../../assets/tokenization_capi max tokenization uk 
 
 export const Navbar: React.FC = () => {
   const { t: tKyc } = useTranslation('kyc');
+  const { t } = useTranslation('ui');
   const [isOpen, setIsOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
@@ -35,13 +36,13 @@ export const Navbar: React.FC = () => {
 
   // Public navigation items (not logged in)
   const publicNavItems = [
-    { name: 'About', route: 'about' as const },
-    { name: 'Why Capimax RT', route: 'why-capimax' as const },
-    { name: 'Properties', route: 'properties' as const },
-    { name: 'Secondary Market', route: 'marketplace' as const },
-    { name: 'Structure', route: 'structure' as const },
-    { name: 'Document Center', route: 'document-center' as const },
-    { name: 'Support', route: 'support' as const }
+    { name: t('navbar.about'), route: 'about' as const },
+    { name: t('navbar.whyCapimax'), route: 'why-capimax' as const },
+    { name: t('navbar.properties'), route: 'properties' as const },
+    { name: t('navbar.secondaryMarket'), route: 'marketplace' as const },
+    { name: t('navbar.structure'), route: 'structure' as const },
+    { name: t('navbar.documentCenter'), route: 'document-center' as const },
+    { name: t('navbar.support'), route: 'support' as const }
   ];
 
   // Authenticated navigation items — role-aware.
@@ -52,13 +53,13 @@ export const Navbar: React.FC = () => {
   // Multi-role users see it as soon as one of their assigned roles is owner.
   const getAuthNavItems = () => {
     const items: Array<{ name: string; route: string; params?: Record<string, string> }> = [
-      { name: 'Home', route: 'home' },
-      { name: 'Properties', route: 'properties' },
+      { name: t('navbar.home'), route: 'home' },
+      { name: t('navbar.properties'), route: 'properties' },
     ];
 
     // Add "My Portfolio" for investors as a direct link
     if (user?.role === 'investor') {
-      items.push({ name: 'My Portfolio', route: 'dashboard', params: { view: 'portfolio' } });
+      items.push({ name: t('navbar.myPortfolio'), route: 'dashboard', params: { view: 'portfolio' } });
     }
 
     // Add "Submit Property" for property owners (and admins, for testing).
@@ -67,13 +68,13 @@ export const Navbar: React.FC = () => {
       user?.role === 'admin' ||
       (user as any)?.available_roles?.includes?.('property_owner');
     if (ownerLike) {
-      items.push({ name: 'Submit Property', route: 'submit-property' });
+      items.push({ name: t('navbar.submitProperty'), route: 'submit-property' });
     }
 
     items.push(
-      { name: 'Secondary Market', route: 'marketplace' },
-      { name: 'Document Center', route: 'document-center' },
-      { name: 'Dashboard', route: 'dashboard' }
+      { name: t('navbar.secondaryMarket'), route: 'marketplace' },
+      { name: t('navbar.documentCenter'), route: 'document-center' },
+      { name: t('navbar.dashboard'), route: 'dashboard' }
     );
     return items;
   };
@@ -93,7 +94,7 @@ export const Navbar: React.FC = () => {
       await logout();
       navigate('home');
     } catch (error: any) {
-      showError('Logout Failed', error.message || 'Unable to log out. Please try again.');
+      showError(t('navbar.logoutFailedTitle'), error.message || t('navbar.logoutFailedMsg'));
     }
     setProfileDropdownOpen(false);
   };
@@ -112,16 +113,16 @@ export const Navbar: React.FC = () => {
     // nav and the dashboard's Wallet card, and the duplicate dropdown entry
     // led to confused users + a broken-feeling navigation path.
     const baseItems: Array<{ name: string; route: string; icon: any; params?: Record<string, string> }> = [
-      { name: 'Dashboard', route: 'dashboard', icon: LayoutDashboard },
+      { name: t('navbar.dashboard'), route: 'dashboard', icon: LayoutDashboard },
     ];
 
     // Add role-specific dashboard label with appropriate params
     if (user?.role === 'investor') {
-      baseItems[0] = { name: 'My Portfolio', route: 'dashboard', icon: TrendingUp, params: { view: 'portfolio' } };
+      baseItems[0] = { name: t('navbar.myPortfolio'), route: 'dashboard', icon: TrendingUp, params: { view: 'portfolio' } };
     } else if (user?.role === 'property_owner') {
-      baseItems[0] = { name: 'My Properties', route: 'dashboard', icon: Building2 };
+      baseItems[0] = { name: t('navbar.myProperties'), route: 'dashboard', icon: Building2 };
     } else if (user?.role === 'broker') {
-      baseItems[0] = { name: 'My Referrals', route: 'dashboard', icon: Users };
+      baseItems[0] = { name: t('navbar.myReferrals'), route: 'dashboard', icon: Users };
     }
 
     // Identity verification is always one click away (client round 3, #3).
@@ -137,7 +138,7 @@ export const Navbar: React.FC = () => {
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-navy-900/95 backdrop-blur-md border-b border-navy-200 dark:border-navy-700"
+      className="fixed top-0 inset-x-0 z-50 bg-white/95 dark:bg-navy-900/95 backdrop-blur-md border-b border-navy-200 dark:border-navy-700"
     >
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex justify-between items-center gap-x-6 h-16">
@@ -145,12 +146,12 @@ export const Navbar: React.FC = () => {
           <motion.button
             whileHover={{ scale: 1.02 }}
             onClick={() => handleNavClick('home')}
-            className="flex items-center space-x-3 cursor-pointer shrink-0"
-            aria-label="Go to home page"
+            className="flex items-center gap-3 cursor-pointer shrink-0"
+            aria-label={t('navbar.goHome')}
           >
             <img
               src={theme === 'dark' ? CapiMaxLightLogo : CapiMaxDarkLogo}
-              alt="CapiMax"
+              alt={t('brand')}
               className="h-8 w-auto"
             />
           </motion.button>
@@ -172,7 +173,7 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-4 shrink-0">
+          <div className="hidden md:flex items-center gap-4 shrink-0">
             {/* Language Switcher */}
             <LanguageSwitcher />
 
@@ -186,14 +187,14 @@ export const Navbar: React.FC = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-navy-100 dark:hover:bg-navy-800 transition-colors duration-200"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-navy-100 dark:hover:bg-navy-800 transition-colors duration-200"
                 >
                   {/* Avatar */}
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center text-white text-sm font-semibold">
                     {getUserInitials()}
                   </div>
                   <span className="text-sm font-medium text-navy-700 dark:text-navy-200 hidden lg:block">
-                    {user?.first_name || 'User'}
+                    {user?.first_name || t('navbar.user')}
                   </span>
                   <ChevronDown className={`w-4 h-4 text-navy-500 dark:text-navy-400 transition-transform duration-200 ${profileDropdownOpen ? 'rotate-180' : ''}`} />
                 </motion.button>
@@ -206,7 +207,7 @@ export const Navbar: React.FC = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 mt-2 w-56 bg-white dark:bg-navy-800 rounded-xl shadow-lg border border-navy-200 dark:border-navy-700 overflow-hidden z-50"
+                      className="absolute end-0 mt-2 w-56 bg-white dark:bg-navy-800 rounded-xl shadow-lg border border-navy-200 dark:border-navy-700 overflow-hidden z-50"
                     >
                       {/* User Info */}
                       <div className="px-4 py-3 border-b border-navy-200 dark:border-navy-700">
@@ -224,7 +225,7 @@ export const Navbar: React.FC = () => {
                           <button
                             key={item.name}
                             onClick={() => handleNavClick(item.route, item.params)}
-                            className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-navy-600 dark:text-navy-300 hover:bg-navy-50 dark:hover:bg-navy-700 transition-colors duration-150"
+                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-navy-600 dark:text-navy-300 hover:bg-navy-50 dark:hover:bg-navy-700 transition-colors duration-150"
                           >
                             <item.icon className="w-4 h-4" />
                             <span>{item.name}</span>
@@ -236,10 +237,10 @@ export const Navbar: React.FC = () => {
                       <div className="border-t border-navy-200 dark:border-navy-700 py-2">
                         <button
                           onClick={handleLogout}
-                          className="w-full flex items-center space-x-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-150"
+                          className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-150"
                         >
-                          <LogOut className="w-4 h-4" />
-                          <span>Logout</span>
+                          <LogOut className="w-4 h-4 rtl:rotate-180" />
+                          <span>{t('navbar.logout')}</span>
                         </button>
                       </div>
                     </motion.div>
@@ -255,27 +256,27 @@ export const Navbar: React.FC = () => {
                     currentRoute === 'login' ? 'text-emerald-600 dark:text-emerald-400' : ''
                   }`}
                 >
-                  Sign In
+                  {t('navbar.signIn')}
                 </button>
                 <button
                   onClick={() => navigate('register')}
                   className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors duration-200"
                 >
-                  Get Started
+                  {t('navbar.getStarted')}
                 </button>
               </>
             )}
           </div>
 
           {/* Mobile menu button */}
-          <div className="flex items-center space-x-2 md:hidden">
+          <div className="flex items-center gap-2 md:hidden">
             <ThemeToggle />
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsOpen(!isOpen)}
               className="p-2 rounded-lg text-navy-600 dark:text-navy-300 hover:bg-navy-100 dark:hover:bg-navy-800 transition-colors duration-200"
               aria-expanded={isOpen}
-              aria-label="Toggle mobile menu"
+              aria-label={t('navbar.toggleMenu')}
             >
               {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </motion.button>
@@ -299,7 +300,7 @@ export const Navbar: React.FC = () => {
                     key={item.name}
                     onClick={() => handleNavClick(item.route, 'params' in item ? (item as any).params : undefined)}
                     whileTap={{ scale: 0.98 }}
-                    className={`block w-full text-left px-4 py-2 text-navy-600 dark:text-navy-300 hover:bg-navy-100 dark:hover:bg-navy-800 rounded-lg transition-colors duration-200 text-sm font-medium ${
+                    className={`block w-full text-start px-4 py-2 text-navy-600 dark:text-navy-300 hover:bg-navy-100 dark:hover:bg-navy-800 rounded-lg transition-colors duration-200 text-sm font-medium ${
                       currentRoute === item.route && !('params' in item) ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : ''
                     }`}
                   >
@@ -316,7 +317,7 @@ export const Navbar: React.FC = () => {
                     /* Authenticated Mobile Menu */
                     <>
                       {/* User Info */}
-                      <div className="flex items-center space-x-3 py-2 mb-2">
+                      <div className="flex items-center gap-3 py-2 mb-2">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center text-white text-sm font-semibold">
                           {getUserInitials()}
                         </div>
@@ -335,7 +336,7 @@ export const Navbar: React.FC = () => {
                         <button
                           key={item.name}
                           onClick={() => handleNavClick(item.route, item.params)}
-                          className="flex items-center space-x-3 p-2 text-sm text-navy-600 dark:text-navy-300 hover:bg-navy-100 dark:hover:bg-navy-800 rounded-lg transition-colors duration-200"
+                          className="flex items-center gap-3 p-2 text-sm text-navy-600 dark:text-navy-300 hover:bg-navy-100 dark:hover:bg-navy-800 rounded-lg transition-colors duration-200"
                         >
                           <item.icon className="w-4 h-4" />
                           <span>{item.name}</span>
@@ -345,10 +346,10 @@ export const Navbar: React.FC = () => {
                       {/* Logout */}
                       <button
                         onClick={handleLogout}
-                        className="flex items-center space-x-3 p-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200 mt-2 border-t border-navy-200 dark:border-navy-700 pt-4"
+                        className="flex items-center gap-3 p-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200 mt-2 border-t border-navy-200 dark:border-navy-700 pt-4"
                       >
-                        <LogOut className="w-4 h-4" />
-                        <span>Logout</span>
+                        <LogOut className="w-4 h-4 rtl:rotate-180" />
+                        <span>{t('navbar.logout')}</span>
                       </button>
                     </>
                   ) : (
@@ -356,17 +357,17 @@ export const Navbar: React.FC = () => {
                     <>
                       <button
                         onClick={() => handleNavClick('login')}
-                        className={`text-navy-600 dark:text-navy-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium text-sm p-2 text-left transition-colors duration-200 ${
+                        className={`text-navy-600 dark:text-navy-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium text-sm p-2 text-start transition-colors duration-200 ${
                           currentRoute === 'login' ? 'text-emerald-600 dark:text-emerald-400' : ''
                         }`}
                       >
-                        Sign In
+                        {t('navbar.signIn')}
                       </button>
                       <button
                         onClick={() => handleNavClick('register')}
                         className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors duration-200"
                       >
-                        Get Started
+                        {t('navbar.getStarted')}
                       </button>
                     </>
                   )}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { 
   Shield, 
   Lock, 
@@ -58,6 +59,14 @@ interface TwoFactorSetup {
 
 export function PaymentSecurity({ className }: PaymentSecurityProps) {
   const { state, dispatch } = usePayment();
+  const { t, i18n } = useTranslation('payments');
+  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
+  // Rule / alert copy is kept in state as English defaults; render via keys by id.
+  const ruleText = (rule: SecurityRule, field: 'title' | 'description') =>
+    t(`security.rules.${rule.id}.${field}`, { defaultValue: rule[field] });
+  const alertText = (alert: SecurityAlert, field: 'title' | 'description') =>
+    t(`security.alerts.${alert.id}.${field}`, { defaultValue: alert[field] });
+  const methodLabel = (m: string) => t(`security.methods.${m}.label`, { defaultValue: m });
   const [activeTab, setActiveTab] = useState<'overview' | 'rules' | '2fa' | 'alerts' | 'compliance'>('overview');
   const [twoFactorSetup, setTwoFactorSetup] = useState<TwoFactorSetup>({
     isEnabled: false,
@@ -201,12 +210,12 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
       <Card className="p-6 bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold text-emerald-900">Security Score</h3>
-            <p className="text-sm text-emerald-700">Your account security rating</p>
+            <h3 className="text-lg font-semibold text-emerald-900">{t('security.score')}</h3>
+            <p className="text-sm text-emerald-700">{t('security.scoreSubtitle')}</p>
           </div>
-          <div className="text-right">
+          <div className="text-end">
             <div className="text-3xl font-bold text-emerald-900">{securityScore}</div>
-            <div className="text-sm text-emerald-700">out of 100</div>
+            <div className="text-sm text-emerald-700">{t('security.outOf100')}</div>
           </div>
         </div>
         
@@ -240,11 +249,11 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
               }`} />
             </div>
             <div>
-              <div className="font-medium text-gray-900">Two-Factor Auth</div>
+              <div className="font-medium text-gray-900">{t('security.twoFactorShort')}</div>
               <div className={`text-sm ${
                 twoFactorSetup.isEnabled ? 'text-emerald-600' : 'text-red-600'
               }`}>
-                {twoFactorSetup.isEnabled ? 'Enabled' : 'Disabled'}
+                {twoFactorSetup.isEnabled ? t('security.enabled') : t('security.disabled')}
               </div>
             </div>
           </div>
@@ -256,12 +265,12 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
               <CreditCard className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <div className="font-medium text-gray-900">Payment Limits</div>
+              <div className="font-medium text-gray-900">{t('security.paymentLimits')}</div>
               <div className="text-sm text-gray-600">
-                {formatCurrency(
-                  securityRules.find(r => r.id === 'daily_limit')?.value as number || 0, 
+                {t('security.perDay', { amount: formatCurrency(
+                  securityRules.find(r => r.id === 'daily_limit')?.value as number || 0,
                   'USD'
-                )} daily
+                ) })}
               </div>
             </div>
           </div>
@@ -273,9 +282,9 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
               <AlertTriangle className="h-5 w-5 text-yellow-600" />
             </div>
             <div>
-              <div className="font-medium text-gray-900">Active Alerts</div>
+              <div className="font-medium text-gray-900">{t('security.activeAlerts')}</div>
               <div className="text-sm text-gray-600">
-                {securityAlerts.filter(a => !a.resolved).length} unresolved
+                {t('security.unresolved', { count: securityAlerts.filter(a => !a.resolved).length })}
               </div>
             </div>
           </div>
@@ -284,7 +293,7 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
 
       {/* Recent Activity */}
       <Card className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Security Activity</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('security.recentActivity')}</h3>
         <div className="space-y-3">
           {securityAlerts.slice(0, 3).map((alert) => (
             <div key={alert.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -299,12 +308,12 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
                   }`} />
                 </div>
                 <div>
-                  <div className="font-medium text-gray-900">{alert.title}</div>
-                  <div className="text-sm text-gray-600">{alert.description}</div>
+                  <div className="font-medium text-gray-900">{alertText(alert, 'title')}</div>
+                  <div className="text-sm text-gray-600">{alertText(alert, 'description')}</div>
                 </div>
               </div>
               <div className="text-xs text-gray-500">
-                {alert.timestamp.toRelativeTimeString?.() || alert.timestamp.toLocaleString()}
+                {alert.timestamp.toRelativeTimeString?.() || alert.timestamp.toLocaleString(dateLocale)}
               </div>
             </div>
           ))}
@@ -316,8 +325,8 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
   const renderSecurityRules = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Security Rules</h3>
-        <p className="text-gray-600">Configure security policies for your account</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('security.rulesTitle')}</h3>
+        <p className="text-gray-600">{t('security.rulesSubtitle')}</p>
       </div>
 
       <div className="space-y-4">
@@ -326,16 +335,16 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
             <div className="flex items-start justify-between">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h4 className="font-semibold text-gray-900">{rule.title}</h4>
+                  <h4 className="font-semibold text-gray-900">{ruleText(rule, 'title')}</h4>
                   <span className={`px-2 py-1 text-xs rounded-full ${
                     rule.severity === 'high' ? 'bg-red-100 text-red-800' :
                     rule.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
                     'bg-blue-100 text-blue-800'
                   }`}>
-                    {rule.severity}
+                    {t(`security.severity.${rule.severity}`)}
                   </span>
                 </div>
-                <p className="text-gray-600 mb-4">{rule.description}</p>
+                <p className="text-gray-600 mb-4">{ruleText(rule, 'description')}</p>
                 
                 {rule.type === 'limit' && typeof rule.value === 'number' && (
                   <div className="flex items-center gap-3">
@@ -364,13 +373,14 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => toggleSecurityRule(rule.id)}
+                  aria-label={ruleText(rule, 'title')}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     rule.enabled ? 'bg-emerald-500' : 'bg-gray-300'
                   }`}
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      rule.enabled ? 'translate-x-6' : 'translate-x-1'
+                      rule.enabled ? 'translate-x-6 rtl:-translate-x-6' : 'translate-x-1 rtl:-translate-x-1'
                     }`}
                   />
                 </button>
@@ -401,10 +411,11 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
           >
             <Card className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Setup 2FA</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{t('security.setup2fa')}</h3>
                 <button
                   onClick={() => setShowSetup2FA(false)}
                   className="p-2 hover:bg-gray-100 rounded-lg"
+                  aria-label={t('multiWallet.close')}
                 >
                   <X className="h-5 w-5 text-gray-500" />
                 </button>
@@ -412,18 +423,18 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
 
               {setup2FAStep === 'method' && (
                 <div className="space-y-4">
-                  <p className="text-gray-600">Choose your preferred 2FA method:</p>
+                  <p className="text-gray-600">{t('security.chooseMethod')}</p>
                   
                   <div className="space-y-3">
                     {[
-                      { value: 'sms', label: 'SMS', icon: Smartphone, description: 'Receive codes via text message' },
-                      { value: 'email', label: 'Email', icon: Globe, description: 'Receive codes via email' },
-                      { value: 'authenticator', label: 'Authenticator App', icon: Key, description: 'Use Google Authenticator or similar' }
+                      { value: 'sms', label: t('security.methods.sms.label'), icon: Smartphone, description: t('security.methods.sms.desc') },
+                      { value: 'email', label: t('security.methods.email.label'), icon: Globe, description: t('security.methods.email.desc') },
+                      { value: 'authenticator', label: t('security.methods.authenticator.label'), icon: Key, description: t('security.methods.authenticator.desc') }
                     ].map((method) => (
                       <button
                         key={method.value}
                         onClick={() => setTwoFactorSetup(prev => ({ ...prev, method: method.value as any }))}
-                        className={`w-full p-4 border rounded-lg text-left transition-all ${
+                        className={`w-full p-4 border rounded-lg text-start transition-all ${
                           twoFactorSetup.method === method.value
                             ? 'border-emerald-500 bg-emerald-50'
                             : 'border-gray-200 hover:border-gray-300'
@@ -446,7 +457,7 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
                     onClick={() => setSetup2FAStep('verify')}
                     className="w-full bg-emerald-600 hover:bg-emerald-700"
                   >
-                    Continue
+                    {t('security.continue')}
                   </Button>
                 </div>
               )}
@@ -454,13 +465,13 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
               {setup2FAStep === 'verify' && (
                 <div className="space-y-4">
                   <p className="text-gray-600">
-                    Enter the verification code sent to your {twoFactorSetup.method}:
+                    {t('security.enterCode', { method: methodLabel(twoFactorSetup.method) })}
                   </p>
                   
                   <Input
                     value={verificationCode}
                     onChange={(e) => setVerificationCode(e.target.value)}
-                    placeholder="Enter 6-digit code"
+                    placeholder={t('security.codePlaceholder')}
                     maxLength={6}
                     className="text-center text-lg font-mono"
                   />
@@ -471,14 +482,14 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
                       onClick={() => setSetup2FAStep('method')}
                       className="flex-1"
                     >
-                      Back
+                      {t('security.back')}
                     </Button>
                     <Button
                       onClick={() => setSetup2FAStep('backup')}
                       disabled={verificationCode.length !== 6}
                       className="flex-1 bg-emerald-600 hover:bg-emerald-700"
                     >
-                      Verify
+                      {t('security.verify')}
                     </Button>
                   </div>
                 </div>
@@ -487,9 +498,9 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
               {setup2FAStep === 'backup' && (
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold text-gray-900 mb-2">Backup Codes</h4>
+                    <h4 className="font-semibold text-gray-900 mb-2">{t('security.backupCodes')}</h4>
                     <p className="text-sm text-gray-600 mb-4">
-                      Save these codes in a secure place. You can use them to access your account if you lose your device.
+                      {t('security.backupCodesBody')}
                     </p>
                   </div>
                   
@@ -507,13 +518,13 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
                       onClick={() => setSetup2FAStep('verify')}
                       className="flex-1"
                     >
-                      Back
+                      {t('security.back')}
                     </Button>
                     <Button
                       onClick={setup2FA}
                       className="flex-1 bg-emerald-600 hover:bg-emerald-700"
                     >
-                      Complete Setup
+                      {t('security.completeSetup')}
                     </Button>
                   </div>
                 </div>
@@ -528,8 +539,8 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
   const renderAlerts = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Security Alerts</h3>
-        <p className="text-gray-600">Monitor and manage security notifications</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('security.alertsTitle')}</h3>
+        <p className="text-gray-600">{t('security.alertsSubtitle')}</p>
       </div>
 
       <div className="space-y-4">
@@ -548,14 +559,14 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-semibold text-gray-900">{alert.title}</h4>
+                    <h4 className="font-semibold text-gray-900">{alertText(alert, 'title')}</h4>
                     {alert.resolved && (
                       <CheckCircle className="h-4 w-4 text-emerald-500" />
                     )}
                   </div>
-                  <p className="text-gray-600 mb-2">{alert.description}</p>
+                  <p className="text-gray-600 mb-2">{alertText(alert, 'description')}</p>
                   <div className="text-xs text-gray-500">
-                    {alert.timestamp.toLocaleString()}
+                    {alert.timestamp.toLocaleString(dateLocale)}
                   </div>
                 </div>
               </div>
@@ -566,7 +577,7 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
                   onClick={() => resolveAlert(alert.id)}
                   variant="outline"
                 >
-                  Resolve
+                  {t('security.resolve')}
                 </Button>
               )}
             </div>
@@ -579,31 +590,31 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
   const renderCompliance = () => (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Compliance & Verification</h3>
-        <p className="text-gray-600">Account verification and regulatory compliance status</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('security.complianceTitle')}</h3>
+        <p className="text-gray-600">{t('security.complianceSubtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="p-6">
           <div className="flex items-center gap-3 mb-4">
             <UserCheck className="h-6 w-6 text-emerald-600" />
-            <h4 className="font-semibold text-gray-900">Identity Verification</h4>
+            <h4 className="font-semibold text-gray-900">{t('security.identity')}</h4>
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Email Verified</span>
+              <span className="text-sm text-gray-600">{t('security.emailVerified')}</span>
               <CheckCircle className="h-4 w-4 text-emerald-500" />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Phone Verified</span>
+              <span className="text-sm text-gray-600">{t('security.phoneVerified')}</span>
               <CheckCircle className="h-4 w-4 text-emerald-500" />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">ID Document</span>
+              <span className="text-sm text-gray-600">{t('security.idDocument')}</span>
               <CheckCircle className="h-4 w-4 text-emerald-500" />
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Address Proof</span>
+              <span className="text-sm text-gray-600">{t('security.addressProof')}</span>
               <Clock className="h-4 w-4 text-yellow-500" />
             </div>
           </div>
@@ -612,20 +623,20 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
         <Card className="p-6">
           <div className="flex items-center gap-3 mb-4">
             <Ban className="h-6 w-6 text-blue-600" />
-            <h4 className="font-semibold text-gray-900">AML/KYC Status</h4>
+            <h4 className="font-semibold text-gray-900">{t('security.amlStatus')}</h4>
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Risk Assessment</span>
-              <span className="text-sm font-medium text-emerald-600">Low Risk</span>
+              <span className="text-sm text-gray-600">{t('security.riskAssessment')}</span>
+              <span className="text-sm font-medium text-emerald-600">{t('security.lowRisk')}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Transaction Limit</span>
-              <span className="text-sm font-medium text-gray-900">$50,000/day</span>
+              <span className="text-sm text-gray-600">{t('security.txLimit')}</span>
+              <span className="text-sm font-medium text-gray-900">{t('security.perDay', { amount: '$50,000' })}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Last Review</span>
-              <span className="text-sm text-gray-600">30 days ago</span>
+              <span className="text-sm text-gray-600">{t('security.lastReview')}</span>
+              <span className="text-sm text-gray-600">{t('time.daysAgo', { count: 30 })}</span>
             </div>
           </div>
         </Card>
@@ -635,18 +646,18 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
         <div className="flex items-start gap-3">
           <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
           <div>
-            <h4 className="font-semibold text-blue-900 mb-2">Regulatory Compliance</h4>
+            <h4 className="font-semibold text-blue-900 mb-2">{t('security.regulatory')}</h4>
             <p className="text-sm text-blue-800 mb-4">
-              Your account complies with applicable financial regulations including AML, KYC, and data protection laws.
+              {t('security.regulatoryBody')}
             </p>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-blue-600" />
-                <span>GDPR Compliant</span>
+                <span>{t('security.gdpr')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-blue-600" />
-                <span>PCI DSS Certified</span>
+                <span>{t('security.pci')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-blue-600" />
@@ -664,19 +675,19 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
   );
 
   const tabs = [
-    { key: 'overview', label: 'Overview', icon: Shield },
-    { key: 'rules', label: 'Security Rules', icon: Settings },
-    { key: '2fa', label: 'Two-Factor Auth', icon: Lock },
-    { key: 'alerts', label: 'Security Alerts', icon: AlertTriangle },
-    { key: 'compliance', label: 'Compliance', icon: UserCheck }
+    { key: 'overview', label: t('security.tabs.overview'), icon: Shield },
+    { key: 'rules', label: t('security.tabs.rules'), icon: Settings },
+    { key: '2fa', label: t('security.tabs.twoFactor'), icon: Lock },
+    { key: 'alerts', label: t('security.tabs.alerts'), icon: AlertTriangle },
+    { key: 'compliance', label: t('security.tabs.compliance'), icon: UserCheck }
   ];
 
   return (
     <div className={className}>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Payment Security</h2>
-          <p className="text-gray-600">Manage your account security and compliance settings</p>
+          <h2 className="text-2xl font-bold text-gray-900">{t('security.title')}</h2>
+          <p className="text-gray-600">{t('security.subtitle')}</p>
         </div>
       </div>
 
@@ -714,15 +725,15 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
             <Card className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Two-Factor Authentication</h3>
-                  <p className="text-gray-600">Add an extra layer of security to your account</p>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('security.twoFactorTitle')}</h3>
+                  <p className="text-gray-600">{t('security.twoFactorSubtitle')}</p>
                 </div>
                 <Button
                   onClick={() => setShowSetup2FA(true)}
                   disabled={twoFactorSetup.isEnabled}
                   className={twoFactorSetup.isEnabled ? 'bg-emerald-600' : 'bg-blue-600 hover:bg-blue-700'}
                 >
-                  {twoFactorSetup.isEnabled ? 'Enabled' : 'Setup 2FA'}
+                  {twoFactorSetup.isEnabled ? t('security.enabled') : t('security.setup2fa')}
                 </Button>
               </div>
               
@@ -730,10 +741,10 @@ export function PaymentSecurity({ className }: PaymentSecurityProps) {
                 <div className="mt-4 p-4 bg-emerald-50 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <CheckCircle className="h-5 w-5 text-emerald-600" />
-                    <span className="font-medium text-emerald-900">2FA is active</span>
+                    <span className="font-medium text-emerald-900">{t('security.twoFactorActive')}</span>
                   </div>
                   <p className="text-sm text-emerald-700">
-                    Using {twoFactorSetup.method} as primary method
+                    {t('security.usingMethod', { method: methodLabel(twoFactorSetup.method) })}
                   </p>
                 </div>
               )}

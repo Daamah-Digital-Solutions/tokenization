@@ -36,6 +36,7 @@ import { StatsCard, Card } from '../../design-system';
 import { Text } from '../../design-system/typography/Text';
 import { Button } from '../../ui/Button';
 import { cn } from '../../../utils/cn';
+import { useTranslation } from 'react-i18next';
 
 interface CollaborativeInvestmentsProps {
   className?: string;
@@ -47,6 +48,7 @@ type SortField = 'amount' | 'progress' | 'deadline' | 'roi';
 export const CollaborativeInvestments: React.FC<CollaborativeInvestmentsProps> = ({
   className
 }) => {
+  const { t } = useTranslation('dashboard');
   const [activeTab, setActiveTab] = useState<TabType>('available');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedInvestment, setSelectedInvestment] = useState<string | null>(null);
@@ -144,15 +146,15 @@ export const CollaborativeInvestments: React.FC<CollaborativeInvestmentsProps> =
     const days = Math.floor(milliseconds / (1000 * 60 * 60 * 24));
     const hours = Math.floor((milliseconds % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     
-    if (days > 0) return `${days}d ${hours}h`;
-    if (hours > 0) return `${hours}h`;
-    return 'Ending soon';
+    if (days > 0) return t('collab.timeLeftDaysHours', { days, hours });
+    if (hours > 0) return t('collab.timeLeftHours', { hours });
+    return t('collab.endingSoon');
   };
 
   const tabs = [
-    { id: 'available', label: 'Available', count: extendedInvestments.filter(inv => inv.status === 'open').length },
-    { id: 'joined', label: 'Joined', count: Math.floor(extendedInvestments.length * 0.3) },
-    { id: 'completed', label: 'Completed', count: extendedInvestments.filter(inv => inv.status === 'completed').length },
+    { id: 'available', label: t('collab.tabs.available'), count: extendedInvestments.filter(inv => inv.status === 'open').length },
+    { id: 'joined', label: t('collab.tabs.joined'), count: Math.floor(extendedInvestments.length * 0.3) },
+    { id: 'completed', label: t('collab.tabs.completed'), count: extendedInvestments.filter(inv => inv.status === 'completed').length },
   ] as const;
 
   if (isLoading) {
@@ -178,21 +180,21 @@ export const CollaborativeInvestments: React.FC<CollaborativeInvestmentsProps> =
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <Text variant="h3" weight="semibold" className="mb-2">
-            Co-Ownership Pools
+            {t('collab.title')}
           </Text>
           <Text variant="body" color="muted">
-            Join forces with other owners to access premium properties
+            {t('collab.subtitle')}
           </Text>
         </div>
 
         <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" onClick={() => refetch()}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
+            <RefreshCw className="w-4 h-4 me-2" />
+            {t('collab.refresh')}
           </Button>
           <Button variant="primary" size="sm">
-            <Plus className="w-4 h-4 mr-2" />
-            Create Group
+            <Plus className="w-4 h-4 me-2" />
+            {t('collab.createGroup')}
           </Button>
         </div>
       </div>
@@ -200,25 +202,25 @@ export const CollaborativeInvestments: React.FC<CollaborativeInvestmentsProps> =
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatsCard
-          title="Available Opportunities"
+          title={t('collab.stats.available')}
           value={extendedInvestments.filter(inv => inv.status === 'open').length}
-          subtitle="Open for purchase"
+          subtitle={t('collab.stats.availableSub')}
           icon={Target}
           variant="gradient"
           animated={true}
         />
         <StatsCard
-          title="Active Collaborations"
+          title={t('collab.stats.active')}
           value={Math.floor(extendedInvestments.length * 0.3)}
-          subtitle="You're participating in"
+          subtitle={t('collab.stats.activeSub')}
           icon={Users}
           variant="accent"
           animated={true}
         />
         <StatsCard
-          title="Average Group Size"
+          title={t('collab.stats.avgSize')}
           value={Math.floor(extendedInvestments.reduce((acc, inv) => acc + inv.investors.length, 0) / Math.max(extendedInvestments.length, 1))}
-          subtitle="Owners per group"
+          subtitle={t('collab.stats.avgSizeSub')}
           icon={Activity}
           animated={true}
         />
@@ -255,13 +257,13 @@ export const CollaborativeInvestments: React.FC<CollaborativeInvestmentsProps> =
         {/* Search and Sort */}
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+            <Search className="w-4 h-4 absolute start-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search properties..."
+              placeholder={t('collab.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="ps-10 pe-4 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
@@ -270,10 +272,10 @@ export const CollaborativeInvestments: React.FC<CollaborativeInvestmentsProps> =
             onChange={(e) => setSortField(e.target.value as SortField)}
             className="px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
           >
-            <option value="amount">Total Amount</option>
-            <option value="progress">Progress</option>
-            <option value="deadline">Deadline</option>
-            <option value="roi">Expected ROI</option>
+            <option value="amount">{t('collab.sort.amount')}</option>
+            <option value="progress">{t('collab.sort.progress')}</option>
+            <option value="deadline">{t('collab.sort.deadline')}</option>
+            <option value="roi">{t('collab.sort.roi')}</option>
           </select>
         </div>
       </div>
@@ -288,16 +290,16 @@ export const CollaborativeInvestments: React.FC<CollaborativeInvestmentsProps> =
           >
             <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
             <Text variant="h3" weight="semibold" className="mb-2">
-              No co-ownership pools found
+              {t('collab.emptyTitle')}
             </Text>
             <Text variant="body" color="muted" className="mb-4">
               {searchTerm
-                ? 'Try adjusting your search terms'
-                : 'New group ownership opportunities will appear here'}
+                ? t('collab.emptySearch')
+                : t('collab.emptyText')}
             </Text>
             <Button variant="primary">
-              <Plus className="w-4 h-4 mr-2" />
-              Create First Group
+              <Plus className="w-4 h-4 me-2" />
+              {t('collab.createFirstGroup')}
             </Button>
           </motion.div>
         ) : (
@@ -330,6 +332,7 @@ const CollaborativeInvestmentCard: React.FC<{
   isJoining: boolean;
   activeTab: TabType;
 }> = ({ investment, onJoin, isJoining, activeTab }) => {
+  const { t } = useTranslation('dashboard');
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinAmount, setJoinAmount] = useState(investment.minimumContribution);
 
@@ -348,7 +351,7 @@ const CollaborativeInvestmentCard: React.FC<{
           </div>
           
           {/* Status Badge */}
-          <div className="absolute top-3 left-3">
+          <div className="absolute top-3 start-3">
             <div className={cn(
               'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
               investment.status === 'open'
@@ -357,17 +360,17 @@ const CollaborativeInvestmentCard: React.FC<{
                 ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
                 : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
             )}>
-              {investment.status === 'open' && <Clock className="w-3 h-3 mr-1" />}
-              {investment.status === 'completed' && <CheckCircle className="w-3 h-3 mr-1" />}
-              {investment.status.toUpperCase()}
+              {investment.status === 'open' && <Clock className="w-3 h-3 me-1" />}
+              {investment.status === 'completed' && <CheckCircle className="w-3 h-3 me-1" />}
+              {t(`status.${investment.status}`, { defaultValue: investment.status.toUpperCase() })}
             </div>
           </div>
 
           {/* Time Left */}
           {investment.status === 'open' && (
-            <div className="absolute top-3 right-3">
+            <div className="absolute top-3 end-3">
               <div className="bg-white/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium text-slate-800">
-                <Clock className="w-3 h-3 inline mr-1" />
+                <Clock className="w-3 h-3 inline me-1" />
                 {formatTimeLeft(investment.metrics.timeLeft)}
               </div>
             </div>
@@ -382,17 +385,17 @@ const CollaborativeInvestmentCard: React.FC<{
                 {investment.propertyName}
               </Text>
               <div className="flex items-center text-slate-500 dark:text-slate-400 text-sm mb-2">
-                <MapPin className="w-4 h-4 mr-1" />
+                <MapPin className="w-4 h-4 me-1" />
                 {investment.property.location}
               </div>
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center text-emerald-600">
-                  <TrendingUp className="w-4 h-4 mr-1" />
-                  {investment.property.expectedROI.toFixed(1)}% ROI
+                  <TrendingUp className="w-4 h-4 me-1" />
+                  {t('collab.roi', { value: investment.property.expectedROI.toFixed(1) })}
                 </div>
                 <div className="flex items-center text-slate-500">
-                  <Users className="w-4 h-4 mr-1" />
-                  {investment.investors.length} owners
+                  <Users className="w-4 h-4 me-1" />
+                  {t('collab.ownersCount', { count: investment.investors.length })}
                 </div>
               </div>
             </div>
@@ -409,11 +412,11 @@ const CollaborativeInvestmentCard: React.FC<{
               </Text>
               <div className="flex items-center gap-2 text-sm">
                 <div className="flex items-center text-yellow-500">
-                  <Star className="w-3 h-3 mr-1" />
+                  <Star className="w-3 h-3 me-1" />
                   {investment.leadInvestor.rating.toFixed(1)}
                 </div>
                 <Text variant="caption" color="muted">
-                  {investment.leadInvestor.completedDeals} deals
+                  {t('collab.dealsCount', { count: investment.leadInvestor.completedDeals })}
                 </Text>
               </div>
             </div>
@@ -427,7 +430,7 @@ const CollaborativeInvestmentCard: React.FC<{
           <div className="mb-4">
             <div className="flex justify-between items-center mb-2">
               <Text variant="body" weight="semibold">
-                Progress
+                {t('collab.progress')}
               </Text>
               <Text variant="body" weight="semibold" className="text-emerald-600">
                 {investment.metrics.completion.toFixed(1)}%
@@ -441,10 +444,10 @@ const CollaborativeInvestmentCard: React.FC<{
             </div>
             <div className="flex justify-between text-sm">
               <Text variant="caption" color="muted">
-                ${investment.currentAmount.toLocaleString()} raised
+                {t('collab.raised', { amount: `$${investment.currentAmount.toLocaleString()}` })}
               </Text>
               <Text variant="caption" color="muted">
-                Goal: ${investment.totalAmount.toLocaleString()}
+                {t('collab.goal', { amount: `$${investment.totalAmount.toLocaleString()}` })}
               </Text>
             </div>
           </div>
@@ -456,7 +459,7 @@ const CollaborativeInvestmentCard: React.FC<{
                 ${investment.minimumContribution.toLocaleString()}
               </Text>
               <Text variant="caption" color="muted">
-                Min. Purchase
+                {t('collab.minPurchase')}
               </Text>
             </div>
             <div className="text-center p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
@@ -464,7 +467,7 @@ const CollaborativeInvestmentCard: React.FC<{
                 ${investment.metrics.averageInvestment.toLocaleString()}
               </Text>
               <Text variant="caption" color="muted">
-                Avg. Purchase
+                {t('collab.avgPurchase')}
               </Text>
             </div>
           </div>
@@ -480,11 +483,11 @@ const CollaborativeInvestmentCard: React.FC<{
                   disabled={isJoining}
                 >
                   {isJoining ? (
-                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    <RefreshCw className="w-4 h-4 me-2 animate-spin" />
                   ) : (
-                    <Plus className="w-4 h-4 mr-2" />
+                    <Plus className="w-4 h-4 me-2" />
                   )}
-                  Join Group
+                  {t('collab.joinGroup')}
                 </Button>
                 <Button variant="outline">
                   <Eye className="w-4 h-4" />
@@ -495,8 +498,8 @@ const CollaborativeInvestmentCard: React.FC<{
             {activeTab === 'joined' && (
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1">
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Group Chat ({investment.chat.messageCount})
+                  <MessageSquare className="w-4 h-4 me-2" />
+                  {t('collab.groupChat', { count: investment.chat.messageCount })}
                 </Button>
                 <Button variant="outline">
                   <Share2 className="w-4 h-4" />
@@ -508,14 +511,14 @@ const CollaborativeInvestmentCard: React.FC<{
               <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
                 <div>
                   <Text variant="body" weight="semibold" className="text-emerald-600">
-                    Purchase Complete
+                    {t('collab.purchaseComplete')}
                   </Text>
                   <Text variant="caption" color="muted">
-                    Property fully funded
+                    {t('collab.fullyFunded')}
                   </Text>
                 </div>
                 <Button variant="outline" size="sm">
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                 </Button>
               </div>
             )}
@@ -529,7 +532,7 @@ const CollaborativeInvestmentCard: React.FC<{
                   key={index}
                   className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
                 >
-                  <Zap className="w-3 h-3 mr-1" />
+                  <Zap className="w-3 h-3 me-1" />
                   {feature}
                 </span>
               ))}
@@ -555,13 +558,13 @@ const CollaborativeInvestmentCard: React.FC<{
                 onClick={(e) => e.stopPropagation()}
               >
                 <Text variant="h3" weight="semibold" className="mb-4">
-                  Join Co-Ownership Group
+                  {t('collab.joinTitle')}
                 </Text>
 
                 <div className="space-y-4">
                   <div>
                     <Text variant="body" weight="medium" className="mb-2">
-                      Purchase Amount
+                      {t('collab.purchaseAmount')}
                     </Text>
                     <input
                       type="number"
@@ -569,16 +572,16 @@ const CollaborativeInvestmentCard: React.FC<{
                       onChange={(e) => setJoinAmount(Number(e.target.value))}
                       min={investment.minimumContribution}
                       className="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
-                      placeholder={`Min. $${investment.minimumContribution.toLocaleString()}`}
+                      placeholder={t('collab.minPlaceholder', { amount: `$${investment.minimumContribution.toLocaleString()}` })}
                     />
                     <Text variant="caption" color="muted" className="mt-1">
-                      Minimum: ${investment.minimumContribution.toLocaleString()}
+                      {t('collab.minimum', { amount: `$${investment.minimumContribution.toLocaleString()}` })}
                     </Text>
                   </div>
                   
                   <div className="bg-slate-50 dark:bg-slate-700 p-3 rounded-lg">
                     <div className="flex justify-between items-center">
-                      <Text variant="body" color="muted">Your ownership:</Text>
+                      <Text variant="body" color="muted">{t('collab.yourOwnership')}</Text>
                       <Text variant="body" weight="semibold">
                         {((joinAmount / investment.property.totalValue) * 100).toFixed(2)}%
                       </Text>
@@ -592,7 +595,7 @@ const CollaborativeInvestmentCard: React.FC<{
                     className="flex-1"
                     onClick={() => setShowJoinModal(false)}
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </Button>
                   <Button
                     variant="primary"
@@ -603,7 +606,7 @@ const CollaborativeInvestmentCard: React.FC<{
                     }}
                     disabled={joinAmount < investment.minimumContribution || isJoining}
                   >
-                    {isJoining ? 'Joining...' : 'Join Group'}
+                    {isJoining ? t('collab.joining') : t('collab.joinGroup')}
                   </Button>
                 </div>
               </motion.div>

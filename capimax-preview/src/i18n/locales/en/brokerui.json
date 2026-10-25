@@ -1,0 +1,774 @@
+{
+  "appForm": {
+    "errSubmit": "Failed to submit application",
+    "errFullName": "Full name must be at least 3 characters",
+    "errEmail": "Please enter a valid email address",
+    "errPhone": "Please enter a valid phone number (min 10 digits)",
+    "errSpecialization": "Please select your specialization",
+    "errYears": "Years of experience cannot be negative",
+    "errLinkedin": "Please enter a valid LinkedIn URL",
+    "errUrl": "Please enter a valid URL",
+    "errMotivation": "Please provide at least 100 characters explaining your motivation",
+    "errClients": "Expected clients cannot be negative",
+    "stepPersonal": "Personal Info",
+    "stepProfessional": "Professional Info",
+    "stepMotivation": "Motivation & Goals",
+    "personalTitle": "Personal Information",
+    "fullName": "Full Name *",
+    "fullNamePh": "John Doe",
+    "email": "Email Address *",
+    "phone": "Phone Number *",
+    "company": "Company Name (Optional)",
+    "companyPh": "ABC Realty Group",
+    "professionalTitle": "Professional Information",
+    "specialization": "Specialization *",
+    "selectSpecialization": "Select your specialization...",
+    "spec": {
+      "residential": "Residential Properties",
+      "commercial": "Commercial Properties",
+      "industrial": "Industrial Properties",
+      "mixedUse": "Mixed-Use Developments",
+      "land": "Land & Development",
+      "luxury": "Luxury Real Estate",
+      "investment": "Investment Properties",
+      "management": "Property Management",
+      "general": "General Real Estate"
+    },
+    "years": "Years of Experience *",
+    "license": "License Number (Optional)",
+    "licenseHint": "If you have a real estate license, please provide the number",
+    "linkedin": "LinkedIn Profile (Optional)",
+    "portfolio": "Portfolio Website (Optional)",
+    "motivationTitle": "Motivation & Goals",
+    "motivation": "Why do you want to become a broker on our platform? *",
+    "motivationPh": "Tell us about your motivation, experience, and how you can help clients buy tokenized real estate...",
+    "minChars": "{{value}} / 100 minimum",
+    "targetMarket": "Target Market (Optional)",
+    "targetMarketPh": "e.g., High-net-worth individuals, International buyers",
+    "targetMarketHint": "Describe your target client demographic",
+    "expectedClients": "Expected Clients in First Year (Optional)",
+    "agreeTitle": "By submitting this application, you agree to:",
+    "agree1": "Follow our broker code of conduct and ethical guidelines",
+    "agree2": "Provide accurate and honest information to all clients",
+    "agree3": "Comply with all applicable real estate and securities regulations",
+    "agree4": "Maintain active communication with referred clients",
+    "agree5": "Accept our commission structure and payment terms",
+    "successTitle": "Application Submitted Successfully!",
+    "successThanks": "Thank you for applying to become a broker on our platform.",
+    "successReview": "We will review your application and contact you within 3-5 business days.",
+    "applicationId": "Application ID:",
+    "goDashboard": "Go to Dashboard",
+    "checkStatus": "Check Application Status",
+    "title": "Broker Application",
+    "subtitle": "Join our network of professional real estate brokers and earn competitive commissions",
+    "back": "Back",
+    "nextStep": "Next Step",
+    "submitting": "Submitting...",
+    "submit": "Submit Application"
+  },
+  "application": {
+    "steps": {
+      "personal": "Personal Information",
+      "personalDesc": "Basic contact details",
+      "professional": "Professional Credentials",
+      "professionalDesc": "Experience and qualifications",
+      "agreements": "Agreements & Submission",
+      "agreementsDesc": "Terms and final review"
+    },
+    "err": {
+      "firstName": "First name is required",
+      "lastName": "Last name is required",
+      "email": "Email is required",
+      "emailInvalid": "Email is invalid",
+      "phone": "Phone number is required",
+      "country": "Country is required",
+      "cityAddress": "City/Address is required",
+      "experience": "Experience level is required",
+      "strategy": "Referral strategy is required",
+      "terms": "You must accept the terms"
+    },
+    "submittedMetaTitle": "Application Submitted - Capimax Broker Program",
+    "successTitle": "Application Submitted Successfully!",
+    "successDesc": "Thank you for your interest in joining the Capimax Broker Partner Program. We have received your application and will review it within 2-3 business days.",
+    "nextTitle": "What happens next?",
+    "next1": "Our team will review your application",
+    "next2": "You'll receive an email notification with our decision",
+    "next3": "If approved, we'll provide your broker account credentials",
+    "backHome": "Back to Home",
+    "learnMore": "Learn More About Our Program",
+    "metaTitle": "Broker Application - Capimax Partner Program",
+    "metaDescription": "Join the Capimax Broker Partner Program. Submit your application to become a certified real estate tokenization broker.",
+    "title": "Broker Partner Application",
+    "subtitle": "Join our elite network of real estate tokenization brokers and unlock new opportunities",
+    "personalDesc": "Please provide your basic contact details",
+    "firstName": "First Name *",
+    "firstNamePh": "John",
+    "lastName": "Last Name *",
+    "lastNamePh": "Doe",
+    "email": "Email Address *",
+    "phone": "Phone Number *",
+    "country": "Country of Residence *",
+    "countryPh": "United States",
+    "cityAddress": "City / Address *",
+    "cityAddressPh": "New York, NY 10001\n123 Main Street",
+    "professionalDesc": "Tell us about your experience and qualifications",
+    "license": "Real Estate License Number",
+    "licensePh": "Optional - Enter your license number if applicable",
+    "licenseHint": "If you don't have a license yet, that's okay! We provide training.",
+    "years": "Years of Experience *",
+    "selectExperience": "Select your experience level",
+    "yearsRange": "{{value}} Years",
+    "company": "Current Brokerage/Company Name",
+    "companyPh": "Optional - Current employer or brokerage",
+    "strategy": "How do you plan to refer clients? *",
+    "strategyPh": "Describe your strategy for referring clients to our tokenization platform. Include your network, marketing methods, and target audience.",
+    "documents": "Supporting Documents",
+    "documentsHint": "Upload your license, company registration, or other relevant documents",
+    "chooseFiles": "Choose Files",
+    "formats": "Accepted formats: PDF, DOC, DOCX, JPG, PNG (Max 10MB)",
+    "reviewTitle": "Review & Submit",
+    "reviewDesc": "Please review your information and accept our terms",
+    "summary": "Application Summary",
+    "nameLabel": "Name:",
+    "emailLabel": "Email:",
+    "experienceLabel": "Experience:",
+    "countryLabel": "Country:",
+    "termsTitle": "Broker Program Terms & Conditions",
+    "termsIntro": "By applying to become a Capimax Broker Partner, you agree to:",
+    "terms1": "Maintain professional standards in all client interactions",
+    "terms2": "Follow all applicable real estate and financial regulations",
+    "terms3": "Provide accurate information about our tokenization platform",
+    "terms4": "Complete required training and certification programs",
+    "terms5": "Maintain confidentiality of client and company information",
+    "terms6": "Comply with our commission structure and payment terms",
+    "terms7": "Report all transactions and referrals accurately",
+    "termsAccept": "I have read and agree to the Broker Program Terms & Conditions *",
+    "previous": "Previous",
+    "next": "Next",
+    "submitting": "Submitting...",
+    "submit": "Submit Application"
+  },
+  "calc": {
+    "title": "Commission Calculator",
+    "showMonthly": "Show Monthly Projection",
+    "showSingle": "Show Single Transaction",
+    "currentTier": "Current Tier",
+    "baseRate": "Base Rate",
+    "totalVolume": "Total Volume",
+    "payoutSchedule": "Payout Schedule",
+    "payout": {
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "per_transaction": "Per transaction"
+    },
+    "purchaseDetails": "Purchase Details",
+    "purchaseAmount": "Purchase Amount",
+    "propertyType": "Property Type",
+    "standard": "Standard Property",
+    "construction": "Construction Property (+{{value}}%)",
+    "premium": "Premium Property (+{{value}}%)",
+    "types": {
+      "standard": "Standard",
+      "construction": "Construction",
+      "premium": "Premium"
+    },
+    "additionalReferrals": "Additional Referrals This Month",
+    "plusPerReferral": "+{{value}}% per referral",
+    "breakdown": "Commission Breakdown",
+    "baseCommission": "Base Commission ({{value}}%)",
+    "bonusCommission": "Bonus Commission ({{value}}%)",
+    "totalCommission": "Total Commission ({{value}}%)",
+    "yearlyProjection": "Yearly Projection",
+    "nextTier": "Next Tier: {{name}}",
+    "rate": "{{value}}% rate",
+    "moreVolume": "${{value}} more volume needed",
+    "structure": "Commission Structure",
+    "baseTiers": "Base Commission Tiers",
+    "requirements": "Requirements:",
+    "specialRates": "Special Rates & Bonuses",
+    "constructionProps": "Construction Properties",
+    "premiumProps": "Premium Properties",
+    "referralBonus": "Referral Bonus",
+    "perReferral": "{{value}}% per referral",
+    "teamOverride": "Team Override",
+    "minPayout": "Minimum Payout:",
+    "payoutScheduleLabel": "Payout Schedule:",
+    "recalculate": "Recalculate",
+    "copyText": "Commission Calculation:\nPurchase: ${{amount}}\nProperty Type: {{type}}\nTotal Rate: {{rate}}%\nTotal Commission: ${{total}}",
+    "copyResults": "Copy Results"
+  },
+  "dash": {
+    "errorTitle": "Error Loading Dashboard",
+    "errorDesc": "Failed to load broker dashboard data. Please try again.",
+    "tabs": {
+      "overview": "Overview",
+      "commissions": "Commissions",
+      "referrals": "Referrals",
+      "marketing": "Marketing",
+      "analytics": "Analytics"
+    },
+    "totalEarned": "Total Earned",
+    "allTimeEarnings": "All-time earnings",
+    "pendingCommission": "Pending Commission",
+    "awaitingPayout": "Awaiting payout",
+    "totalReferrals": "Total Referrals",
+    "successful": "{{value}} successful",
+    "conversionRate": "Conversion Rate",
+    "referralToPurchase": "Referral to purchase",
+    "commissionSummary": "Commission Summary",
+    "pending": "Pending",
+    "paidOut": "Paid Out",
+    "thisMonth": "This Month",
+    "lastMonth": "Last Month",
+    "recentCommissions": "Recent Commissions",
+    "viewAll": "View All",
+    "propertyPurchase": "Property Purchase",
+    "owner": "Owner",
+    "status": {
+      "paid": "Paid",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled",
+      "invested": "Owner",
+      "registered": "Registered",
+      "active": "Active",
+      "inactive": "Inactive",
+      "suspended": "Suspended",
+      "expired": "Expired",
+      "completed": "Completed"
+    },
+    "recentReferrals": "Recent Referrals",
+    "newReferral": "New Referral",
+    "code": "Code: {{code}}",
+    "title": "Broker Dashboard",
+    "welcome": "Welcome back, {{name}}",
+    "broker": "Broker",
+    "commissionRate": "Commission Rate",
+    "statusLabel": "Status:",
+    "yearsExperience": "{{value}} years experience"
+  },
+  "lp": {
+    "required": "Required",
+    "invalidEmail": "Invalid email",
+    "selectOne": "Select at least one",
+    "mustAcknowledge": "Must acknowledge",
+    "mustAgree": "Must agree",
+    "errSubmit": "Failed to submit application",
+    "submittedTitle": "Application Submitted",
+    "submittedDesc": "Thank you for your application. Our team will review your submission and contact you within 5-7 business days.",
+    "entityInfo": "Entity Information",
+    "legalName": "Legal Entity Name *",
+    "legalNamePh": "Company Name Ltd.",
+    "entityType": "Entity Type *",
+    "entity": {
+      "company": "Company",
+      "fund": "Investment Fund",
+      "professional_individual": "Professional Individual"
+    },
+    "country": "Country *",
+    "countryPh": "United Arab Emirates",
+    "jurisdiction": "Jurisdiction *",
+    "jurisdictionPh": "DIFC, Dubai",
+    "registrationNumber": "Registration Number *",
+    "website": "Website (Optional)",
+    "contactInfo": "Contact Information",
+    "contactName": "Contact Person Name *",
+    "contactNamePh": "John Smith",
+    "position": "Position / Title *",
+    "positionPh": "Chief Investment Officer",
+    "officialEmail": "Official Email *",
+    "phone": "Phone Number *",
+    "financialInfo": "Financial Information",
+    "liquidity": "Approximate Liquidity Available (USD) *",
+    "avgTxSize": "Average Transaction Size (USD) *",
+    "currencies": "Preferred Currencies *",
+    "currency": {
+      "USD": "USD",
+      "EUR": "EUR",
+      "CRYPTO": "CRYPTO",
+      "OTHER": "OTHER"
+    },
+    "operatingPolicy": "Operating Policy",
+    "targetAssets": "Target Asset Types",
+    "readyProps": "Ready / Completed Properties",
+    "underConstruction": "Properties Under Construction",
+    "portfolios": "Property Portfolios",
+    "discountRate": "Expected Discount Rate (%) *",
+    "maxPerTx": "Max Per Transaction (USD) *",
+    "maxPerMonth": "Max Per Month (USD) *",
+    "acknowledgments": "Acknowledgments",
+    "ackIntro": "Please read and acknowledge the following statements carefully before submitting your application.",
+    "ack1": "I acknowledge that the liquidity provider operates as an <strong>independent third party</strong> and is not affiliated with, endorsed by, or representing Capimax RT or any SPV.",
+    "ack2": "I understand that as a liquidity provider, I am <strong>not obligated to guarantee exits</strong>, buy all requests, maintain fixed pricing, or provide permanent liquidity.",
+    "ack3": "I agree to comply with all platform terms, conditions, and applicable regulations, and to undergo the KYB (Know Your Business) verification process.",
+    "stepOf": "Step {{step}} of {{total}}",
+    "percentComplete": "{{value}}% Complete",
+    "cancel": "Cancel",
+    "previous": "Previous",
+    "next": "Next",
+    "submitting": "Submitting...",
+    "submit": "Submit Application"
+  },
+  "lpPage": {
+    "metaTitle": "Liquidity Provider Program | Capimax RT",
+    "metaDescription": "Join the Capimax RT Liquidity Provider program. Provide optional liquidity for owners, set your own terms, and profit from price differences.",
+    "badge": "Liquidity Provider Program",
+    "heroTitle": "Liquidity Provider Program",
+    "brand": "Capimax RT",
+    "heroDesc": "The Liquidity Provider program allows qualified third parties to provide optional and organized liquidity for owners wishing to exit their tokenized real estate ownership, according to terms, pricing, and limits set by the liquidity provider itself.",
+    "noticeTitle": "Important Notice",
+    "noticeDesc": "The liquidity provider is <strong>not a redemption entity</strong>, does not guarantee exit, and does not represent an obligation on the platform or SPV. All exit operations are subject to the liquidity provider's terms and compliance approvals.",
+    "applyNow": "Apply Now",
+    "howTitle": "How It Works",
+    "howDesc": "A simple, transparent process to become a liquidity provider on our platform.",
+    "steps": {
+      "s1": {
+        "title": "Submit Application",
+        "description": "The liquidity provider submits an official application through the platform"
+      },
+      "s2": {
+        "title": "KYB Verification",
+        "description": "Undergoes KYB (Know Your Business) process and operational assessment"
+      },
+      "s3": {
+        "title": "Define Parameters",
+        "description": "Define target assets, liquidity limits, and pricing policy (discount/spread)"
+      },
+      "s4": {
+        "title": "Dashboard Activation",
+        "description": "A dedicated control panel is activated for managing operations"
+      },
+      "s5": {
+        "title": "Receive Requests",
+        "description": "Receive exit requests from owners wishing to sell their units"
+      },
+      "s6": {
+        "title": "Review & Execute",
+        "description": "Approve or reject requests according to your policies and execute purchases"
+      }
+    },
+    "modelTitle": "Business Model",
+    "modelDesc": "Multiple profit opportunities with full operational flexibility.",
+    "profitSources": "Profit Sources",
+    "profit": {
+      "p0": {
+        "title": "Price Difference",
+        "description": "Buy at discount (spread) from owners seeking early exit"
+      },
+      "p1": {
+        "title": "Exit Service Fees",
+        "description": "Charge service fees for processing exit transactions (if applicable)"
+      },
+      "p2": {
+        "title": "Secondary Market Resale",
+        "description": "Resell acquired units in the secondary market at market price"
+      },
+      "p3": {
+        "title": "Hold & Earn Returns",
+        "description": "Temporarily hold units and benefit from dividend distributions"
+      }
+    },
+    "notObligatedTitle": "What You Are NOT Obligated To",
+    "notObligated": {
+      "n0": "Buy all exit requests",
+      "n1": "Maintain fixed pricing",
+      "n2": "Execute within specific timeframes",
+      "n3": "Guarantee permanent liquidity"
+    },
+    "controlNote": "As a liquidity provider, you maintain complete control over your operations, pricing, and decision-making without any obligations to guarantee exits.",
+    "benefitsTitle": "Benefits of Joining",
+    "benefitsDesc": "Comprehensive advantages across operational, financial, and legal dimensions.",
+    "operational": "Operational Benefits",
+    "financial": "Financial Benefits",
+    "legal": "Legal Benefits",
+    "operationalList": {
+      "o0": "Independent control panel",
+      "o1": "Full control over pricing, assets, limits, approvals",
+      "o2": "Real-time reports and analytics"
+    },
+    "financialList": {
+      "f0": "Opportunity to buy units at a discount",
+      "f1": "Ownership portfolio diversification",
+      "f2": "Profit from price differences",
+      "f3": "Complete flexibility in reselling"
+    },
+    "legalList": {
+      "l0": "No redemption obligations",
+      "l1": "Not managing platform funds",
+      "l2": "Working as an independent party",
+      "l3": "Complete clarity in contracts"
+    },
+    "ctaTitle": "Ready to Become a Liquidity Provider?",
+    "ctaDesc": "Join our network of liquidity providers and take advantage of unique opportunities in the tokenized real estate market.",
+    "inquiries": "For inquiries, contact us at"
+  },
+  "materials": {
+    "title": "Marketing Materials",
+    "subtitle": "Download and share professional sales materials",
+    "requestMaterial": "Request Material",
+    "grid": "Grid",
+    "list": "List",
+    "totalMaterials": "Total Materials",
+    "newThisWeek": "New This Week",
+    "totalDownloads": "Total Downloads",
+    "categories": "Categories",
+    "searchPlaceholder": "Search materials...",
+    "allCategories": "All Categories",
+    "allTypes": "All Types",
+    "category": {
+      "general": "General",
+      "property_specific": "Property Specific",
+      "education": "Education",
+      "compliance": "Compliance",
+      "social_media": "Social Media",
+      "email": "Email Templates"
+    },
+    "type": {
+      "pdf": "PDF",
+      "video": "Video",
+      "image": "Image",
+      "presentation": "Presentation",
+      "template": "Template",
+      "link": "Link"
+    },
+    "mostDownloaded": "Most Downloaded",
+    "downloads": "{{value}} downloads",
+    "download": "Download",
+    "recentlyAdded": "Recently Added",
+    "added": "Added {{date}}",
+    "new": "New",
+    "noMaterials": "No Materials Found",
+    "noMaterialsHint": "Try adjusting your filters or search terms",
+    "requestCustom": "Request Custom Material",
+    "customizable": "Customizable",
+    "more": "+{{value}} more",
+    "preview": "Preview",
+    "share": "Share",
+    "customize": "Customize",
+    "updated": "Updated {{date}}",
+    "categoryLabel": "Category",
+    "description": "Description",
+    "descriptionPh": "Describe the material you need...",
+    "cancel": "Cancel",
+    "submitRequest": "Submit Request"
+  },
+  "partnerCard": {
+    "category": {
+      "developer": "Developer",
+      "financial": "Financial",
+      "insurance": "Insurance",
+      "management": "Management"
+    },
+    "logoAlt": "{{name}} logo",
+    "visitWebsite": "Visit Website"
+  },
+  "partnersPage": {
+    "metaTitle": "Our Partners | Capimax RT - Trusted Ecosystem Partners",
+    "metaDescription": "Meet our trusted network of partners including property developers, financial advisors, insurance providers, and property management companies working together to deliver exceptional real estate ownership opportunities.",
+    "badge": "Trusted Ecosystem",
+    "heroTitle1": "Our",
+    "heroTitle2": "Partners",
+    "heroDesc": "We work with industry-leading partners to deliver exceptional real estate ownership opportunities. Our trusted ecosystem ensures quality, transparency, and professional management at every stage.",
+    "tabs": {
+      "all": {
+        "label": "All Partners",
+        "description": "View all our trusted partners"
+      },
+      "developer": {
+        "label": "Developers",
+        "description": "Property development partners"
+      },
+      "financial": {
+        "label": "Financial",
+        "description": "Valuation & financial management"
+      },
+      "insurance": {
+        "label": "Insurance",
+        "description": "Insurance coverage partners"
+      },
+      "management": {
+        "label": "Management",
+        "description": "Property management services"
+      }
+    },
+    "list": {
+      "eliteGate": {
+        "name": "Elite Gate",
+        "description": "A leading real estate development company specializing in premium residential and commercial projects across the region.",
+        "role": "Property Development Partner"
+      },
+      "primeOne": {
+        "name": "Prime One",
+        "description": "Innovative real estate developer focused on sustainable and modern urban living spaces with cutting-edge design.",
+        "role": "Property Development Partner"
+      },
+      "tdh": {
+        "name": "TDH",
+        "description": "Established developer with a strong portfolio of mixed-use developments and landmark residential projects.",
+        "role": "Property Development Partner"
+      },
+      "capimaxDevelopment": {
+        "name": "Capimax Development",
+        "description": "In-house development arm specializing in tokenization-ready properties designed for fractional ownership opportunities.",
+        "role": "In-House Development Partner"
+      },
+      "capimaxFinancial": {
+        "name": "Capimax Financial",
+        "description": "Dedicated financial management entity providing comprehensive ownership management, dividend distribution, and financial reporting services.",
+        "role": "Financial Management & SPV Administration"
+      },
+      "cim": {
+        "name": "CIM Financial Group",
+        "description": "Independent valuation and financial advisory firm providing professional property valuations and market analysis.",
+        "role": "Property Valuation & Advisory"
+      },
+      "assurax": {
+        "name": "Assurax",
+        "description": "Comprehensive insurance solutions provider offering property coverage, liability protection, and ownership safeguards.",
+        "role": "Property & Liability Insurance"
+      },
+      "hcc": {
+        "name": "HCC",
+        "description": "Specialized insurance partner providing tailored coverage solutions for real estate ownership and tokenized assets.",
+        "role": "Specialty Insurance Coverage"
+      },
+      "nova": {
+        "name": "Nova Property",
+        "description": "Professional property management company handling tenant relations, maintenance, rent collection, and day-to-day property operations.",
+        "role": "Property Management Services"
+      }
+    },
+    "noPartners": "No partners found in this category.",
+    "categoriesTitle": "Partner Categories",
+    "categoriesDesc": "Each partner plays a crucial role in our ecosystem, ensuring quality and professionalism at every stage of your ownership journey.",
+    "partnerCount_zero": "{{count}} partners",
+    "partnerCount_one": "{{count}} partner",
+    "partnerCount_two": "{{count}} partners",
+    "partnerCount_few": "{{count}} partners",
+    "partnerCount_many": "{{count}} partners",
+    "partnerCount_other": "{{count}} partners",
+    "ctaTitle": "Interested in Partnering with Us?",
+    "ctaDesc": "If you are a property developer, financial institution, insurance provider, or property management company interested in joining our ecosystem, we would love to hear from you.",
+    "contactUs": "Contact Us",
+    "brokerProgram": "Broker Program",
+    "inquiries": "For partnership inquiries, contact us at"
+  },
+  "perf": {
+    "days": "{{value}} days",
+    "title": "Performance Analytics",
+    "subtitle": "Track your referral performance and conversion metrics",
+    "range": {
+      "7d": "7d",
+      "30d": "30d",
+      "90d": "90d",
+      "1y": "1y"
+    },
+    "growth": "{{value}} growth",
+    "avg": "Avg: {{value}}",
+    "retentionRate": "Retention Rate",
+    "ltv": "LTV: {{value}}",
+    "trends": "Performance Trends",
+    "compare": "Compare metrics",
+    "commission": "Commission",
+    "referrals": "Referrals",
+    "conversions": "Conversions",
+    "dealSize": "Deal Size",
+    "commissionTrend": "Commission Trend",
+    "referralVolume": "Referral Volume",
+    "commissionPerformance": "Commission Performance",
+    "conversionTrends": "Conversion Trends",
+    "avgDealSize": "Average Deal Size",
+    "funnel": "Conversion Funnel",
+    "dropOff": "-{{value}} drop-off",
+    "overallConversion": "Overall Conversion Rate",
+    "sourcePerformance": "Referral Source Performance",
+    "source": "Source",
+    "convRate": "Conv. Rate",
+    "totalValue": "Total Value",
+    "avgValue": "Avg. Value",
+    "roi": "ROI",
+    "rank": "Rank",
+    "insights": "Performance Insights",
+    "topSource": "Top Source",
+    "topSourceDesc": "with {{value}} conversion rate",
+    "growthTitle": "Growth",
+    "growing": "Growing by {{value}} monthly",
+    "declining": "Declining by {{value}} monthly",
+    "opportunity": "Opportunity",
+    "opportunityDesc": "Focus on improving conversion from leads to registered users"
+  },
+  "program": {
+    "contactSoon": "Contact form coming soon! Email us at partners@capimax.com",
+    "metaTitle": "Partner Program | Capimax - Professional Broker Partnership",
+    "metaDescription": "Join the exclusive Capimax Partner Program. Earn premium commissions, access institutional opportunities, and grow your business with cutting-edge real estate technology.",
+    "badge": "Elite Partner Program",
+    "heroTitle1": "Partner with the",
+    "heroTitle2": "Future of Real Estate",
+    "heroDesc": "Join our exclusive network of elite real estate professionals and unlock unprecedented earning potential through institutional-grade tokenized real estate ownership.",
+    "applicationsOpen": "Applications Open",
+    "limitedPositions": "Limited Positions",
+    "applyNow": "Apply Now",
+    "contactSales": "Contact Sales",
+    "stats": {
+      "s0": "Partner Volume",
+      "s1": "Active Partners",
+      "s2": "Avg Commission",
+      "s3": "Client Satisfaction"
+    },
+    "benefitsTitle": "Unmatched Partner Benefits",
+    "benefitsDesc": "Experience the advantages of partnering with the most innovative real estate ownership platform",
+    "benefits": {
+      "b0": {
+        "title": "High Commission Rates",
+        "description": "Earn up to 5% commission on every purchase you refer with industry-leading payout structures.",
+        "highlight": "Up to 5%"
+      },
+      "b1": {
+        "title": "Recurring Revenue",
+        "description": "Continue earning from dividend distributions and secondary market trades for lifetime value.",
+        "highlight": "Lifetime Value"
+      },
+      "b2": {
+        "title": "Performance Bonuses",
+        "description": "Unlock tier-based bonuses as you achieve higher sales volumes and milestone rewards.",
+        "highlight": "Bonus Tiers"
+      },
+      "b3": {
+        "title": "Dedicated Support",
+        "description": "Access to dedicated broker support team, training resources, and 24/7 assistance.",
+        "highlight": "24/7 Support"
+      },
+      "b4": {
+        "title": "Real-Time Analytics",
+        "description": "Track your performance with comprehensive analytics dashboard and reporting tools.",
+        "highlight": "Live Data"
+      },
+      "b5": {
+        "title": "Premium Listings",
+        "description": "Early access to premium property listings, exclusive deals, and institutional opportunities.",
+        "highlight": "Exclusive Access"
+      }
+    },
+    "structureTitle": "Commission Structure",
+    "structureDesc": "Transparent, performance-based commission tiers that reward your success",
+    "tiers": {
+      "t0": {
+        "name": "Bronze",
+        "benefits": {
+          "0": "Standard Commission",
+          "1": "Basic Support",
+          "2": "Monthly Reports"
+        }
+      },
+      "t1": {
+        "name": "Silver",
+        "benefits": {
+          "0": "Enhanced Commission",
+          "1": "Priority Support",
+          "2": "Weekly Reports",
+          "3": "Exclusive Listings"
+        }
+      },
+      "t2": {
+        "name": "Gold",
+        "benefits": {
+          "0": "Premium Commission",
+          "1": "Dedicated Manager",
+          "2": "Real-time Analytics",
+          "3": "Pre-launch Access"
+        }
+      },
+      "t3": {
+        "name": "Platinum",
+        "benefits": {
+          "0": "Maximum Commission",
+          "1": "White-glove Service",
+          "2": "Custom Solutions",
+          "3": "Co-marketing Support"
+        }
+      }
+    },
+    "commissionRate": "Commission Rate",
+    "tierBenefits": "Tier Benefits:",
+    "mostPopular": "Most Popular",
+    "requirementsTitle": "Partner Requirements",
+    "requirementsDesc": "We partner with exceptional professionals who meet our high standards of excellence and integrity",
+    "requirements": {
+      "r0": "Licensed real estate professional or financial advisor",
+      "r1": "Minimum 2 years of sales experience in real estate or finance",
+      "r2": "Strong network of high-net-worth clients and buyers",
+      "r3": "Commitment to Capimax training and certification program",
+      "r4": "Professional references and track record verification"
+    },
+    "readyTitle": "Ready to Partner?",
+    "readyDesc": "Join our exclusive network of elite real estate professionals and start earning premium commissions today.",
+    "startApplication": "Start Application",
+    "secureProcess": "Secure Process",
+    "quickApproval": "Quick Approval",
+    "questions": "Questions? Contact our Partner Team at",
+    "finalTitle": "Transform Your Business Today",
+    "finalDesc": "Join the most sophisticated real estate ownership platform and unlock unprecedented growth opportunities for your practice.",
+    "beginApplication": "Begin Partnership Application",
+    "schedule": "Schedule Consultation",
+    "features": {
+      "f0": "Elite Network Access",
+      "f1": "Global Opportunities",
+      "f2": "Premium Support"
+    }
+  },
+  "referrals": {
+    "title": "Referral Tracker",
+    "exportData": "Export Data",
+    "generateLink": "Generate Link",
+    "totalReferrals": "Total Referrals",
+    "conversionRate": "Conversion Rate",
+    "totalCommission": "Total Commission",
+    "avgPurchase": "Avg Purchase",
+    "allStatus": "All Status",
+    "allTiers": "All Tiers",
+    "status": {
+      "leads": "Leads",
+      "lead": "Lead",
+      "registered": "Registered",
+      "kyc_pending": "KYC Pending",
+      "active": "Active",
+      "owners": "Owners",
+      "invested": "Owner",
+      "inactive": "Inactive"
+    },
+    "tier": {
+      "bronze": "Bronze",
+      "silver": "Silver",
+      "gold": "Gold",
+      "platinum": "Platinum"
+    },
+    "sortJoin": "Sort by Join Date",
+    "sortPurchase": "Sort by Purchase Amount",
+    "sortCommission": "Sort by Commission",
+    "sortActivity": "Sort by Activity",
+    "noReferrals": "No Referrals Found",
+    "noReferralsYet": "You haven't made any referrals yet",
+    "noMatch": "No referrals match the selected filters",
+    "generateReferralLink": "Generate Referral Link",
+    "via": "via {{source}}",
+    "joined": "Joined {{date}}",
+    "purchase": "Purchase",
+    "commission": "Commission",
+    "lastActivity": "Last Activity",
+    "today": "Today",
+    "daysAgo": "{{value}}d ago",
+    "contact": "Contact",
+    "phone": "Phone",
+    "notProvided": "Not provided",
+    "purchaseCount": "Purchase Count",
+    "lifetimeValue": "Lifetime Value",
+    "conversionDate": "Conversion Date",
+    "notConverted": "Not converted",
+    "notes": "Notes",
+    "noNotes": "No notes added yet",
+    "addNotePh": "Add a note...",
+    "addNote": "Add Note",
+    "sendMessage": "Send Message"
+  }
+}

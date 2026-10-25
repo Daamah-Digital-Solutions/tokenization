@@ -13,6 +13,7 @@ import {
 import { Input } from '../design-system/forms/Input';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
+import { useTranslation } from 'react-i18next';
 
 interface TwoFactorAuthProps {
   mode?: 'setup' | 'verify' | 'disable';
@@ -43,22 +44,22 @@ interface MethodConfig {
 const METHODS: MethodConfig[] = [
   {
     id: 'sms',
-    title: 'SMS Verification',
-    description: 'Receive codes via text message',
+    title: 'twoFactor.methods.sms.title',
+    description: 'twoFactor.methods.sms.desc',
     icon: Phone,
     available: true
   },
   {
     id: 'authenticator',
-    title: 'Authenticator App',
-    description: 'Use Google Authenticator or similar app',
+    title: 'twoFactor.methods.authenticator.title',
+    description: 'twoFactor.methods.authenticator.desc',
     icon: Smartphone,
     available: true
   },
   {
     id: 'biometric',
-    title: 'Biometric Authentication',
-    description: 'Use fingerprint or face recognition',
+    title: 'twoFactor.methods.biometric.title',
+    description: 'twoFactor.methods.biometric.desc',
     icon: Fingerprint,
     available: typeof window !== 'undefined' && 'navigator' in window && 'credentials' in navigator
   }
@@ -79,6 +80,7 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
   phoneNumber,
   className
 }) => {
+  const { t } = useTranslation('ui');
   const [selectedMethod, setSelectedMethod] = useState<TwoFAMethod>(method);
   const [verificationCode, setVerificationCode] = useState('');
   const [setupStep, setSetupStep] = useState(0);
@@ -97,12 +99,12 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
     e.preventDefault();
     
     if (!verificationCode.trim()) {
-      setValidationErrors({ code: 'Verification code is required' });
+      setValidationErrors({ code: t('twoFactor.codeRequired') });
       return;
     }
 
     if (verificationCode.length !== 6) {
-      setValidationErrors({ code: 'Code must be 6 digits' });
+      setValidationErrors({ code: t('twoFactor.codeLength') });
       return;
     }
 
@@ -113,13 +115,13 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
   const handleSetupNext = () => {
     if (selectedMethod === 'sms' && setupStep === 0) {
       if (!phoneInput.trim()) {
-        setValidationErrors({ phone: 'Phone number is required' });
+        setValidationErrors({ phone: t('validation.phoneRequired') });
         return;
       }
       onSetup?.(selectedMethod, { phoneNumber: phoneInput });
     } else if (selectedMethod === 'authenticator' && setupStep === 1) {
       if (!verificationCode.trim()) {
-        setValidationErrors({ code: 'Verification code is required' });
+        setValidationErrors({ code: t('twoFactor.codeRequired') });
         return;
       }
       onSetup?.(selectedMethod, { code: verificationCode });
@@ -151,10 +153,10 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
           <Shield className="w-8 h-8 text-emerald-500 dark:text-emerald-400" />
         </div>
         <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
-          Choose Authentication Method
+          {t('twoFactor.chooseTitle')}
         </h3>
         <p className="text-slate-600 dark:text-slate-400">
-          Select how you'd like to secure your account
+          {t('twoFactor.chooseSubtitle')}
         </p>
       </div>
 
@@ -168,7 +170,7 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
               key={method.id}
               onClick={() => handleMethodSelect(method.id)}
               className={cn(
-                'w-full p-4 rounded-xl border-2 text-left transition-all duration-200',
+                'w-full p-4 rounded-xl border-2 text-start transition-all duration-200',
                 'hover:border-emerald-200 dark:hover:border-emerald-800',
                 isSelected
                   ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
@@ -193,10 +195,10 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
                 </div>
                 <div className="flex-1">
                   <h4 className="font-medium text-slate-900 dark:text-white">
-                    {method.title}
+                    {t(method.title)}
                   </h4>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
-                    {method.description}
+                    {t(method.description)}
                   </p>
                 </div>
                 {isSelected && (
@@ -214,7 +216,7 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
         className="w-full mt-6"
         onClick={handleSetupNext}
       >
-        Continue with {METHODS.find(m => m.id === selectedMethod)?.title}
+        {t('twoFactor.continueWith', { method: t(METHODS.find(m => m.id === selectedMethod)?.title || '') })}
       </Button>
     </motion.div>
   );
@@ -230,10 +232,10 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
           <Phone className="w-8 h-8 text-emerald-500 dark:text-emerald-400" />
         </div>
         <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
-          SMS Verification Setup
+          {t('twoFactor.smsSetupTitle')}
         </h3>
         <p className="text-slate-600 dark:text-slate-400">
-          Enter your phone number to receive verification codes
+          {t('twoFactor.smsSetupSubtitle')}
         </p>
       </div>
 
@@ -241,7 +243,7 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
         <div className="space-y-4">
           <Input
             type="tel"
-            label="Phone Number"
+            label={t('fields.phone')}
             placeholder="+1 (555) 123-4567"
             value={phoneInput}
             onChange={(e) => {
@@ -265,7 +267,7 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
             onClick={handleSetupNext}
             isLoading={loading}
           >
-            {loading ? 'Sending Code...' : 'Send Verification Code'}
+            {loading ? t('twoFactor.sendingCode') : t('twoFactor.sendCode')}
           </Button>
         </div>
       )}
@@ -273,14 +275,14 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
       {setupStep === 1 && (
         <div className="space-y-4">
           <p className="text-center text-slate-600 dark:text-slate-400">
-            We've sent a verification code to <strong>{phoneInput}</strong>
+            {t('twoFactor.smsSentTo')} <strong dir="ltr">{phoneInput}</strong>
           </p>
 
           <form onSubmit={handleVerify}>
             <Input
               type="text"
-              label="Verification Code"
-              placeholder="Enter 6-digit code"
+              label={t('twoFactor.codeLabel')}
+              placeholder={t('twoFactor.codePlaceholder')}
               value={verificationCode}
               onChange={(e) => {
                 const value = e.target.value.replace(/\D/g, '').slice(0, 6);
@@ -303,7 +305,7 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
               isLoading={loading}
               disabled={verificationCode.length !== 6}
             >
-              {loading ? 'Verifying...' : 'Verify & Enable SMS 2FA'}
+              {loading ? t('twoFactor.verifying') : t('twoFactor.verifyEnableSms')}
             </Button>
           </form>
         </div>
@@ -322,10 +324,10 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
           <Smartphone className="w-8 h-8 text-emerald-500 dark:text-emerald-400" />
         </div>
         <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
-          Authenticator App Setup
+          {t('twoFactor.appSetupTitle')}
         </h3>
         <p className="text-slate-600 dark:text-slate-400">
-          Set up two-factor authentication using an authenticator app
+          {t('twoFactor.appSetupSubtitle')}
         </p>
       </div>
 
@@ -333,12 +335,12 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
         <div className="space-y-6">
           <div className="text-center">
             <h4 className="font-medium text-slate-900 dark:text-white mb-4">
-              Scan this QR code with your authenticator app
+              {t('twoFactor.scanQr')}
             </h4>
             
             {qrCodeUrl ? (
               <div className="inline-block p-4 bg-white rounded-xl">
-                <img src={qrCodeUrl} alt="QR Code" className="w-48 h-48 mx-auto" />
+                <img src={qrCodeUrl} alt={t('twoFactor.qrAlt')} className="w-48 h-48 mx-auto" />
               </div>
             ) : (
               <div className="w-48 h-48 mx-auto bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center">
@@ -349,7 +351,7 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
 
           <div className="space-y-2">
             <p className="text-sm text-slate-600 dark:text-slate-400 text-center">
-              Can't scan? Enter this key manually:
+              {t('twoFactor.manualKey')}
             </p>
             <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
               <code className="flex-1 text-sm font-mono text-slate-900 dark:text-white">
@@ -371,7 +373,7 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
             className="w-full"
             onClick={() => setSetupStep(1)}
           >
-            I've Added the Account
+            {t('twoFactor.addedAccount')}
           </Button>
         </div>
       )}
@@ -379,14 +381,14 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
       {setupStep === 1 && (
         <div className="space-y-4">
           <p className="text-center text-slate-600 dark:text-slate-400">
-            Enter the 6-digit code from your authenticator app to verify setup
+            {t('twoFactor.enterAppCode')}
           </p>
 
           <form onSubmit={handleVerify}>
             <Input
               type="text"
-              label="Verification Code"
-              placeholder="Enter 6-digit code"
+              label={t('twoFactor.codeLabel')}
+              placeholder={t('twoFactor.codePlaceholder')}
               value={verificationCode}
               onChange={(e) => {
                 const value = e.target.value.replace(/\D/g, '').slice(0, 6);
@@ -409,7 +411,7 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
               isLoading={loading}
               disabled={verificationCode.length !== 6}
             >
-              {loading ? 'Verifying...' : 'Verify & Enable 2FA'}
+              {loading ? t('twoFactor.verifying') : t('twoFactor.verifyEnable')}
             </Button>
           </form>
         </div>
@@ -428,10 +430,10 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
           <Check className="w-10 h-10 text-emerald-500 dark:text-emerald-400" />
         </div>
         <h3 className="text-2xl font-semibold text-slate-900 dark:text-white">
-          Two-Factor Authentication Enabled!
+          {t('twoFactor.enabledTitle')}
         </h3>
         <p className="text-slate-600 dark:text-slate-400">
-          Your account is now protected with two-factor authentication
+          {t('twoFactor.enabledMsg')}
         </p>
       </div>
 
@@ -439,12 +441,12 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
           <div className="flex items-start gap-3 mb-3">
             <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" />
-            <div className="text-left">
+            <div className="text-start">
               <h4 className="font-medium text-amber-800 dark:text-amber-200">
-                Save Your Backup Codes
+                {t('twoFactor.backupTitle')}
               </h4>
               <p className="text-sm text-amber-700 dark:text-amber-300">
-                Store these codes safely. You can use them to access your account if you lose your device.
+                {t('twoFactor.backupMsg')}
               </p>
             </div>
           </div>
@@ -461,8 +463,8 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
             className="mt-3"
             onClick={() => copyToClipboard(backupCodes.join('\n'))}
           >
-            <Copy className="w-4 h-4 mr-2" />
-            Copy All Codes
+            <Copy className="w-4 h-4 me-2" />
+            {t('twoFactor.copyAll')}
           </Button>
         </div>
       )}
@@ -487,17 +489,17 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
               <Shield className="w-8 h-8 text-emerald-500 dark:text-emerald-400" />
             </div>
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
-              Two-Factor Authentication
+              {t('twoFactor.title')}
             </h3>
             <p className="text-slate-600 dark:text-slate-400">
-              Enter the verification code from your {method === 'sms' ? 'phone' : 'authenticator app'}
+              {method === 'sms' ? t('twoFactor.enterFromPhone') : t('twoFactor.enterFromApp')}
             </p>
           </div>
 
           <Input
             type="text"
-            label="Verification Code"
-            placeholder="Enter 6-digit code"
+            label={t('twoFactor.codeLabel')}
+            placeholder={t('twoFactor.codePlaceholder')}
             value={verificationCode}
             onChange={(e) => {
               const value = e.target.value.replace(/\D/g, '').slice(0, 6);
@@ -520,7 +522,7 @@ export const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({
             isLoading={loading}
             disabled={verificationCode.length !== 6}
           >
-            {loading ? 'Verifying...' : 'Verify Code'}
+            {loading ? t('twoFactor.verifying') : t('twoFactor.verifyCode')}
           </Button>
         </motion.form>
       );

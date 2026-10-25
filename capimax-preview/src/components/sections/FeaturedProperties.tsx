@@ -5,6 +5,7 @@ import { Button } from '../ui/Button';
 import { PropertyService } from '../../services/property/PropertyService';
 import type { Property as BackendProperty } from '../../services/api/types';
 import { useRouter } from '../../utils/router';
+import { useTranslation } from 'react-i18next';
 
 // Real estate fallback images by property type
 const FALLBACK_IMAGES = {
@@ -56,6 +57,7 @@ interface Property {
 
 export const FeaturedProperties: React.FC = () => {
   const { navigate } = useRouter();
+  const { t } = useTranslation('ui');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -73,7 +75,9 @@ export const FeaturedProperties: React.FC = () => {
     // one card on desktop too because the cards are sized as a fraction
     // of the scroller width.
     const cardWidth = el.clientWidth * 0.85;
-    el.scrollBy({ left: direction * cardWidth, behavior: 'smooth' });
+    // In RTL the scroll axis is mirrored, so "next" moves towards negative scrollLeft.
+    const isRtl = getComputedStyle(el).direction === 'rtl';
+    el.scrollBy({ left: direction * cardWidth * (isRtl ? -1 : 1), behavior: 'smooth' });
   };
 
   // Load featured properties from backend
@@ -104,7 +108,7 @@ export const FeaturedProperties: React.FC = () => {
       // Ensure we have an array before mapping
       if (!Array.isArray(backendProperties)) {
         console.error('Backend properties is not an array:', backendProperties);
-        throw new Error('Invalid properties data received from backend');
+        throw new Error(t('featured.invalidData'));
       }
 
       // Convert backend properties to frontend format.
@@ -153,7 +157,7 @@ export const FeaturedProperties: React.FC = () => {
       setProperties(frontendProperties);
     } catch (err: any) {
       console.error('Failed to load featured properties:', err);
-      setError(err.message || 'Failed to load featured properties');
+      setError(err.message || t('featured.loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -201,17 +205,17 @@ export const FeaturedProperties: React.FC = () => {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border border-emerald-200/50 dark:border-emerald-500/20 mb-6"
             >
               <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Premium Ownership Opportunities</span>
+              <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{t('featured.badge')}</span>
             </motion.div>
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">
-              Featured Properties
+              {t('featured.title')}
             </h2>
           </div>
 
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-emerald-600" />
-              <p className="text-slate-600 dark:text-gray-400">Loading featured properties...</p>
+              <p className="text-slate-600 dark:text-gray-400">{t('featured.loading')}</p>
             </div>
           </div>
         </div>
@@ -226,12 +230,12 @@ export const FeaturedProperties: React.FC = () => {
         <div className="relative z-10 max-w-7xl mx-auto px-6">
           <div className="text-center">
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">
-              Featured Properties
+              {t('featured.title')}
             </h2>
             <div className="text-center py-16">
               <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
               <Button onClick={loadFeaturedProperties} variant="primary">
-                Try Again
+                {t('featured.tryAgain')}
               </Button>
             </div>
           </div>
@@ -250,7 +254,7 @@ export const FeaturedProperties: React.FC = () => {
             scale: [1, 1.1, 1]
           }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-emerald-400/20 to-green-400/20 dark:from-emerald-500/15 dark:to-green-500/10 rounded-full blur-3xl"
+          className="absolute -top-20 -end-20 w-96 h-96 bg-gradient-to-br from-emerald-400/20 to-green-400/20 dark:from-emerald-500/15 dark:to-green-500/10 rounded-full blur-3xl"
         />
         <motion.div
           animate={{ 
@@ -258,7 +262,7 @@ export const FeaturedProperties: React.FC = () => {
             scale: [1, 1.2, 1]
           }}
           transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute -bottom-20 -left-20 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-pink-400/20 dark:from-purple-500/10 dark:to-pink-500/10 rounded-full blur-3xl"
+          className="absolute -bottom-20 -start-20 w-96 h-96 bg-gradient-to-br from-purple-400/20 to-pink-400/20 dark:from-purple-500/10 dark:to-pink-500/10 rounded-full blur-3xl"
         />
       </div>
       
@@ -280,7 +284,7 @@ export const FeaturedProperties: React.FC = () => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border border-emerald-200/50 dark:border-emerald-500/20 mb-6"
           >
             <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">Premium Ownership Opportunities</span>
+            <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">{t('featured.badge')}</span>
           </motion.div>
 
           <motion.h2
@@ -290,7 +294,7 @@ export const FeaturedProperties: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-white mb-6 leading-tight"
           >
-            Featured Properties
+            {t('featured.title')}
           </motion.h2>
           
           <motion.p
@@ -300,8 +304,7 @@ export const FeaturedProperties: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg text-slate-600 dark:text-gray-400 max-w-2xl mx-auto text-balance"
           >
-            Carefully vetted premium real estate opportunities with verified returns,
-            transparent purchase terms, and institutional-grade due diligence
+            {t('featured.subtitle')}
           </motion.p>
         </motion.div>
 
@@ -323,7 +326,7 @@ export const FeaturedProperties: React.FC = () => {
                   : 'bg-white dark:bg-gray-800 text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-gray-700'
               }`}
             >
-              {category.charAt(0).toUpperCase() + category.slice(1)}
+              {t(`featured.categories.${category}`)}
             </button>
           ))}
         </motion.div>
@@ -342,20 +345,20 @@ export const FeaturedProperties: React.FC = () => {
             <Building className="w-12 h-12 mx-auto text-emerald-500/70 mb-4" />
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
               {selectedCategory === 'all'
-                ? 'New properties coming soon'
-                : `No ${selectedCategory.toLowerCase()} properties yet`}
+                ? t('featured.emptyAllTitle')
+                : t('featured.emptyCategoryTitle', { category: t(`featured.categories.${selectedCategory}`) })}
             </h3>
             <p className="text-slate-600 dark:text-slate-400 mb-6">
               {selectedCategory === 'all'
-                ? 'Our team is finalising the next batch of tokenized properties. Check back shortly or browse the full catalogue.'
-                : 'Try a different category, or browse the full catalogue for all live listings.'}
+                ? t('featured.emptyAllBody')
+                : t('featured.emptyCategoryBody')}
             </p>
             <Button
               variant="primary"
               onClick={() => (window.location.href = '/properties')}
             >
-              Browse all properties
-              <ArrowRight className="ml-2 w-4 h-4" />
+              {t('featured.browseAll')}
+              <ArrowRight className="ms-2 w-4 h-4 rtl:rotate-180" />
             </Button>
           </motion.div>
         ) : (
@@ -368,18 +371,18 @@ export const FeaturedProperties: React.FC = () => {
               <button
                 type="button"
                 onClick={() => scrollByCard(-1)}
-                aria-label="Previous properties"
-                className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-20 w-12 h-12 items-center justify-center rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-slate-700 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                aria-label={t('featured.prev')}
+                className="hidden md:flex absolute start-0 top-1/2 -translate-y-1/2 -translate-x-4 rtl:translate-x-4 z-20 w-12 h-12 items-center justify-center rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-slate-700 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
               </button>
               <button
                 type="button"
                 onClick={() => scrollByCard(1)}
-                aria-label="Next properties"
-                className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-20 w-12 h-12 items-center justify-center rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-slate-700 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                aria-label={t('featured.next')}
+                className="hidden md:flex absolute end-0 top-1/2 -translate-y-1/2 translate-x-4 rtl:-translate-x-4 z-20 w-12 h-12 items-center justify-center rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-slate-700 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
               >
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-5 h-5 rtl:rotate-180" />
               </button>
             </>
           )}
@@ -413,10 +416,10 @@ export const FeaturedProperties: React.FC = () => {
                   <motion.div
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="absolute -top-3 left-6 z-10 px-4 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-bold rounded-full shadow-lg flex items-center gap-1"
+                    className="absolute -top-3 start-6 z-10 px-4 py-1.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-bold rounded-full shadow-lg flex items-center gap-1"
                   >
                     <Award className="w-3 h-3" />
-                    FEATURED
+                    {t('featured.featuredBadge')}
                   </motion.div>
                 )}
 
@@ -435,9 +438,9 @@ export const FeaturedProperties: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-slate-800/20 to-transparent" />
                     
                     {/* Overlay Content */}
-                    <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+                    <div className="absolute top-4 start-4 end-4 flex justify-between items-start">
                       <div className="px-3 py-1.5 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-lg border border-white/20">
-                        <span className="text-xs font-semibold text-slate-800 dark:text-white">{property.type}</span>
+                        <span className="text-xs font-semibold text-slate-800 dark:text-white">{t(`featured.categories.${property.type}`)}</span>
                       </div>
                       <div className="flex items-center gap-1 px-3 py-1.5 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md rounded-lg border border-white/20">
                         <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
@@ -446,7 +449,7 @@ export const FeaturedProperties: React.FC = () => {
                     </div>
 
                     {/* Bottom Overlay */}
-                    <div className="absolute bottom-4 left-4 right-4">
+                    <div className="absolute bottom-4 start-4 end-4">
                       <h3 className="text-xl font-bold text-white mb-1">
                         {property.title}
                       </h3>
@@ -465,20 +468,20 @@ export const FeaturedProperties: React.FC = () => {
                         <div className="text-2xl font-bold text-slate-900 dark:text-white">
                           {property.price}
                         </div>
-                        <div className="text-xs text-slate-500 dark:text-gray-500 mt-1">Total Value</div>
+                        <div className="text-xs text-slate-500 dark:text-gray-500 mt-1">{t('featured.totalValue')}</div>
                       </div>
                       <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-3 rounded-xl">
                         <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                           {property.tokenPrice}
                         </div>
-                        <div className="text-xs text-slate-500 dark:text-gray-500 mt-1">Per Token</div>
+                        <div className="text-xs text-slate-500 dark:text-gray-500 mt-1">{t('featured.perToken')}</div>
                       </div>
                     </div>
 
                     {/* Enhanced Progress Bar */}
                     <div className="mb-6">
                       <div className="flex justify-between text-sm mb-2">
-                        <span className="text-slate-600 dark:text-gray-400">Funding Progress</span>
+                        <span className="text-slate-600 dark:text-gray-400">{t('featured.fundingProgress')}</span>
                         <span className="font-bold text-slate-900 dark:text-white">
                           {Math.round((property.soldTokens / property.totalTokens) * 100)}%
                         </span>
@@ -495,8 +498,8 @@ export const FeaturedProperties: React.FC = () => {
                         </motion.div>
                       </div>
                       <div className="flex justify-between text-xs text-slate-500 dark:text-gray-500 mt-2">
-                        <span>{property.soldTokens.toLocaleString()} sold</span>
-                        <span>{property.totalTokens.toLocaleString()} total</span>
+                        <span>{t('featured.sold', { n: property.soldTokens.toLocaleString() })}</span>
+                        <span>{t('featured.total', { n: property.totalTokens.toLocaleString() })}</span>
                       </div>
                     </div>
 
@@ -505,17 +508,17 @@ export const FeaturedProperties: React.FC = () => {
                       <div className="text-center p-2 bg-slate-50 dark:bg-gray-800 rounded-lg">
                         <Users className="w-4 h-4 mx-auto mb-1 text-slate-600 dark:text-gray-400" />
                         <div className="text-sm font-bold text-slate-900 dark:text-white">{property.investors}</div>
-                        <div className="text-xs text-slate-500 dark:text-gray-500">Owners</div>
+                        <div className="text-xs text-slate-500 dark:text-gray-500">{t('featured.owners')}</div>
                       </div>
                       <div className="text-center p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
                         <TrendingUp className="w-4 h-4 mx-auto mb-1 text-emerald-600 dark:text-emerald-400" />
                         <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{property.expectedReturn}</div>
-                        <div className="text-xs text-slate-500 dark:text-gray-500">Returns</div>
+                        <div className="text-xs text-slate-500 dark:text-gray-500">{t('featured.returns')}</div>
                       </div>
                       <div className="text-center p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
                         <Building className="w-4 h-4 mx-auto mb-1 text-emerald-600 dark:text-emerald-400" />
                         <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{property.yearBuilt}</div>
-                        <div className="text-xs text-slate-500 dark:text-gray-500">Built</div>
+                        <div className="text-xs text-slate-500 dark:text-gray-500">{t('featured.built')}</div>
                       </div>
                     </div>
 
@@ -530,8 +533,8 @@ export const FeaturedProperties: React.FC = () => {
                       onClick={() => navigate('property-detail', { id: property.uuid })}
                       className="w-full bg-gradient-to-r from-emerald-500 to-green-500 active:from-emerald-600 active:to-green-600 text-white font-semibold py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 dark:shadow-emerald-500/20"
                     >
-                      <span>Own Now</span>
-                      <ArrowRight className="w-4 h-4" />
+                      <span>{t('featured.ownNow')}</span>
+                      <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                     </button>
 
                     {/* Static trust line — was an expandable hover footer
@@ -542,11 +545,11 @@ export const FeaturedProperties: React.FC = () => {
                     <div className="mt-4 pt-4 border-t border-slate-200 dark:border-gray-700 space-y-2">
                       <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-gray-400">
                         <Shield className="w-4 h-4 text-green-500" />
-                        <span>Verified &amp; Insured Property</span>
+                        <span>{t('featured.verified')}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-gray-400">
                         <Clock className="w-4 h-4 text-emerald-500" />
-                        <span>Quarterly Dividend Payments</span>
+                        <span>{t('featured.quarterly')}</span>
                       </div>
                     </div>
                   </div>
@@ -585,11 +588,10 @@ export const FeaturedProperties: React.FC = () => {
               </div>
 
               <h3 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-                Discover More Ownership Opportunities
+                {t('featured.ctaTitle')}
               </h3>
               <p className="text-slate-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
-                Access our complete portfolio of 500+ premium properties across 
-                residential, commercial, and hospitality sectors
+                {t('featured.ctaBody')}
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -599,8 +601,8 @@ export const FeaturedProperties: React.FC = () => {
                   className="px-8 py-3 rounded-xl font-semibold shadow-lg shadow-emerald-500/25 dark:shadow-emerald-500/20 transition-all"
                   onClick={() => window.location.href = '/properties'}
                 >
-                  <span>Browse All Properties</span>
-                  <ArrowRight className="ml-2 w-5 h-5" />
+                  <span>{t('featured.browseAllCta')}</span>
+                  <ArrowRight className="ms-2 w-5 h-5 rtl:rotate-180" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -608,8 +610,8 @@ export const FeaturedProperties: React.FC = () => {
                   className="px-8 py-3 rounded-xl font-semibold transition-all"
                   onClick={() => window.location.href = '/properties'}
                 >
-                  <DollarSign className="mr-2 w-5 h-5" />
-                  <span>Purchase Calculator</span>
+                  <DollarSign className="me-2 w-5 h-5" />
+                  <span>{t('featured.calculator')}</span>
                 </Button>
               </div>
             </motion.div>

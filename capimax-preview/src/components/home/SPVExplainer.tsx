@@ -11,34 +11,16 @@ import {
   Layers
 } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { useTranslation } from 'react-i18next';
 
 export const SPVExplainer: React.FC = () => {
+  const { t } = useTranslation('ui');
   const spvBenefits = [
-    {
-      icon: Shield,
-      title: 'Risk Isolation',
-      description: 'Each asset is ring-fenced in its own legal entity',
-    },
-    {
-      icon: Layers,
-      title: 'Prevents Asset Mixing',
-      description: 'Your ownership is separate from other projects',
-    },
-    {
-      icon: Lock,
-      title: 'Protects from Unrelated Debts',
-      description: 'Limited liability protects owners',
-    },
-    {
-      icon: FileText,
-      title: 'Clear Governance',
-      description: 'Defined reporting and financial accounts',
-    },
-    {
-      icon: Repeat,
-      title: 'Exit Flexibility',
-      description: 'Units can be transferred without affecting asset ownership',
-    },
+    { icon: Shield, title: t('spvExplainer.b1.title'), description: t('spvExplainer.b1.desc') },
+    { icon: Layers, title: t('spvExplainer.b2.title'), description: t('spvExplainer.b2.desc') },
+    { icon: Lock, title: t('spvExplainer.b3.title'), description: t('spvExplainer.b3.desc') },
+    { icon: FileText, title: t('spvExplainer.b4.title'), description: t('spvExplainer.b4.desc') },
+    { icon: Repeat, title: t('spvExplainer.b5.title'), description: t('spvExplainer.b5.desc') },
   ];
 
   return (
@@ -55,31 +37,29 @@ export const SPVExplainer: React.FC = () => {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-full border border-blue-200 dark:border-blue-800 mb-6">
               <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
-                Legal Structure
+                {t('spvExplainer.badge')}
               </span>
             </div>
 
             <h2 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6">
-              What is{' '}
+              {t('spvExplainer.titlePrefix')}{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500">
-                SPV
+                {t('spvExplainer.titleHighlight')}
               </span>
-              ?
+              {t('spvExplainer.titleSuffix')}
             </h2>
 
             <p className="text-lg text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
-              SPV (Special Purpose Vehicle) is an independent legal company created specifically
-              to own one property or execute one real estate project.
+              {t('spvExplainer.intro')}
             </p>
 
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-800 mb-8">
               <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-3 flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5" />
-                What Owners Actually Own
+                {t('spvExplainer.ownTitle')}
               </h3>
               <p className="text-blue-800 dark:text-blue-400 text-sm leading-relaxed">
-                Owners hold economic or contractual rights in the SPV, documented by contract
-                and transferable under platform rules.
+                {t('spvExplainer.ownBody')}
               </p>
             </div>
 
@@ -89,8 +69,8 @@ export const SPVExplainer: React.FC = () => {
               className="group"
               onClick={() => window.location.href = '/spv'}
             >
-              Learn More About SPV
-              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              {t('spvExplainer.learnMore')}
+              <ArrowRight className="ms-2 w-4 h-4 rtl:rotate-180 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform" />
             </Button>
           </motion.div>
 
@@ -104,7 +84,7 @@ export const SPVExplainer: React.FC = () => {
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 shadow-xl border border-slate-200 dark:border-slate-800">
               <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                 <Shield className="w-6 h-6 text-emerald-500" />
-                Why Capimax RT Uses SPV
+                {t('spvExplainer.whyTitle')}
               </h3>
 
               <div className="space-y-4">

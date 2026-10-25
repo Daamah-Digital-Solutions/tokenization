@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { constructionStageLabel } from '../utils/constructionStage';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
@@ -55,6 +56,7 @@ import { InstallmentSchedule } from '../components/properties/InstallmentSchedul
 import { PropertyDetailEnhanced } from '../components/properties/PropertyDetailEnhanced';
 import { KYCGate } from '../components/kyc/KYCGate';
 import { ConstructionService } from '../services/construction/ConstructionService';
+import { useTranslation } from 'react-i18next';
 
 // Property data interfaces
 interface PropertyDetailData {
@@ -80,6 +82,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
 }) => {
   const { state } = useAuth();
   const { navigate } = useRouter();
+  const { t } = useTranslation('ui');
   // Read propertyId from prop or fall back to URL query parameter
   const propertyId = propertyIdProp || new URLSearchParams(window.location.search).get('id') || undefined;
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -130,7 +133,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
         documents: documents.status === 'fulfilled' ? documents.value : [],
         milestones: milestones.status === 'fulfilled' ? milestones.value : [],
         loading: false,
-        error: property.status === 'rejected' ? property.reason?.message || 'Failed to load property' : null
+        error: property.status === 'rejected' ? property.reason?.message || t('propertyDetail.loadFailed') : null
       });
       
     } catch (error: any) {
@@ -138,7 +141,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
       setPropertyData(prev => ({
         ...prev,
         loading: false,
-        error: error.message || 'Failed to load property data'
+        error: error.message || t('propertyDetail.loadDataFailed')
       }));
     }
   };
@@ -153,13 +156,13 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
             <div className="w-16 h-16 mx-auto bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mb-4">
               <Info className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
             </div>
-            <Text variant="headingLarge" className="mb-2">No Property Selected</Text>
+            <Text variant="headingLarge" className="mb-2">{t('propertyDetail.noneTitle')}</Text>
             <Text variant="body" color="muted" className="mb-6">
-              Please select a property from the properties page to view its details.
+              {t('propertyDetail.noneBody')}
             </Text>
             <Button variant="primary" onClick={onBack || (() => window.history.back())}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Browse Properties
+              <ArrowLeft className="w-4 h-4 me-2 rtl:rotate-180" />
+              {t('investorCta.browse')}
             </Button>
           </div>
         </Container>
@@ -177,7 +180,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
               <Loader className="w-8 h-8 animate-spin mx-auto mb-4 text-emerald-600" />
-              <Text variant="body" color="muted">Loading property details...</Text>
+              <Text variant="body" color="muted">{t('propertyDetail.loading')}</Text>
             </div>
           </div>
         </Container>
@@ -196,13 +199,13 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
             <div className="w-16 h-16 mx-auto bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
               <Info className="w-8 h-8 text-red-600 dark:text-red-400" />
             </div>
-            <Text variant="headingLarge" className="mb-2">Property Not Found</Text>
+            <Text variant="headingLarge" className="mb-2">{t('propertyDetail.notFoundTitle')}</Text>
             <Text variant="body" color="muted" className="mb-6">
-              {propertyData.error || 'The requested property could not be found.'}
+              {propertyData.error || t('propertyDetail.notFoundBody')}
             </Text>
             <Button variant="primary" onClick={onBack || (() => window.history.back())}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Go Back
+              <ArrowLeft className="w-4 h-4 me-2 rtl:rotate-180" />
+              {t('propertyDetail.goBack')}
             </Button>
           </div>
         </Container>
@@ -225,14 +228,14 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
     propertyId: property.id,
     propertyName: property.title,
     overallProgress: property.construction_progress || 0,
-    currentPhase: property.construction_status_display || 'In Progress',
+    currentPhase: constructionStageLabel(property.construction_status_display) || t('propertyDetail.inProgress'),
     milestones: propertyData.milestones || [],
     lastUpdated: property.updated_at.toISOString(),
     nextInspectionDate: property.expected_completion_date || null,
     developer: {
-      name: property.owner_id ? 'Property Developer' : 'Unknown',
-      contact: 'Contact via platform',
-      projectManager: 'Project Manager'
+      name: property.owner_id ? t('propertyDetail.developer') : t('propertyDetail.unknown'),
+      contact: t('propertyDetail.contactViaPlatform'),
+      projectManager: t('propertyDetail.projectManager')
     },
     timeline: {
       startDate: property.created_at.toISOString().split('T')[0],
@@ -302,8 +305,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
             onClick={onBack}
             className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Properties
+            <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
+            {t('propertyDetail.backToProperties')}
           </Button>
           
           <div className="flex items-center gap-3">
@@ -317,7 +320,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
               )}
             >
               <Heart className={cn("w-4 h-4", isFavorite && "fill-current")} />
-              {isFavorite ? "Saved" : "Save"}
+              {isFavorite ? t('propertyDetail.saved') : t('propertyDetail.save')}
             </Button>
             
             <Button
@@ -326,7 +329,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
               className="flex items-center gap-2"
             >
               <Share2 className="w-4 h-4" />
-              Share
+              {t('propertyDetail.share')}
             </Button>
           </div>
         </div>

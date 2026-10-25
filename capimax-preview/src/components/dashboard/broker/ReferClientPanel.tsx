@@ -9,6 +9,7 @@
 
 import React, { useState } from 'react';
 import { Link2, Copy, Check, UserPlus, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { BrokerService } from '../../../services/broker/BrokerService';
 
 interface ReferClientPanelProps {
@@ -16,6 +17,7 @@ interface ReferClientPanelProps {
 }
 
 export const ReferClientPanel: React.FC<ReferClientPanelProps> = ({ onCreated }) => {
+  const { t } = useTranslation('dashboard');
   const [email, setEmail] = useState('');
   const [link, setLink] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -41,11 +43,11 @@ export const ReferClientPanel: React.FC<ReferClientPanelProps> = ({ onCreated })
           res?.referral_link ||
           (res?.referral_code ? buildLink(res.referral_code) : '');
       }
-      if (!url) throw new Error('Could not create a referral link. Please try again.');
+      if (!url) throw new Error(t('refer.error'));
       setLink(url);
       onCreated?.();
     } catch (e: any) {
-      setError(e?.message || 'Could not create a referral link. Please try again.');
+      setError(e?.message || t('refer.error'));
     } finally {
       setLoading(false);
     }
@@ -66,11 +68,10 @@ export const ReferClientPanel: React.FC<ReferClientPanelProps> = ({ onCreated })
     <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
       <div className="flex items-center gap-2 mb-1">
         <UserPlus className="w-5 h-5 text-emerald-500" />
-        <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">Refer a client</h3>
+        <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">{t('refer.title')}</h3>
       </div>
       <p className="text-sm text-neutral-500 dark:text-slate-400 mb-4">
-        Generate a personal invite link. When someone signs up through it and makes their first
-        purchase, you earn a referral commission.
+        {t('refer.description')}
       </p>
 
       <div className="flex flex-col sm:flex-row gap-2 mb-3">
@@ -78,7 +79,7 @@ export const ReferClientPanel: React.FC<ReferClientPanelProps> = ({ onCreated })
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="Client email (optional)"
+          placeholder={t('refer.emailPlaceholder')}
           className="flex-1 px-3 py-2 rounded-lg border border-neutral-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-neutral-900 dark:text-white"
         />
         <button
@@ -87,7 +88,7 @@ export const ReferClientPanel: React.FC<ReferClientPanelProps> = ({ onCreated })
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 whitespace-nowrap"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
-          Generate link
+          {t('refer.generate')}
         </button>
       </div>
 
@@ -106,7 +107,7 @@ export const ReferClientPanel: React.FC<ReferClientPanelProps> = ({ onCreated })
             className="inline-flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-md bg-slate-900 hover:bg-slate-800 dark:bg-emerald-600 dark:hover:bg-emerald-700 text-white whitespace-nowrap"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            {copied ? 'Copied' : 'Copy'}
+            {copied ? t('refer.copied') : t('refer.copy')}
           </button>
         </div>
       )}

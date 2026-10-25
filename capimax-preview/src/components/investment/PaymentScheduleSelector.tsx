@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '../ui/Button';
+import { useTranslation } from 'react-i18next';
 import type { InstallmentPlan } from './InstallmentInvestment';
 
 export interface PaymentScheduleOption extends InstallmentPlan {
@@ -31,6 +32,9 @@ export const PaymentScheduleSelector: React.FC<PaymentScheduleSelectorProps> = (
   showComparison = true,
   className = ''
 }) => {
+  const { t } = useTranslation('invest');
+  const freqLabel = (f: string) => t(`common.frequency.${f}`, { defaultValue: f.charAt(0).toUpperCase() + f.slice(1) });
+  const releaseLabel = (r: string) => t(`schedule.release.${r}`, { defaultValue: r.charAt(0).toUpperCase() + r.slice(1) });
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [sortBy, setSortBy] = useState<'popular' | 'total_cost' | 'down_payment' | 'apr'>('popular');
 
@@ -87,9 +91,9 @@ export const PaymentScheduleSelector: React.FC<PaymentScheduleSelectorProps> = (
   };
 
   const getBadgeText = (plan: PaymentScheduleOption) => {
-    if (plan.id === mostPopularPlan.id) return 'Most Popular';
-    if (plan.effectiveAPR === Math.min(...availableOptions.map(p => p.effectiveAPR))) return 'Lowest Interest';
-    if (plan.downPaymentPercentage === Math.min(...availableOptions.map(p => p.downPaymentPercentage))) return 'Lowest Down Payment';
+    if (plan.id === mostPopularPlan.id) return t('schedule.badges.mostPopular');
+    if (plan.effectiveAPR === Math.min(...availableOptions.map(p => p.effectiveAPR))) return t('schedule.badges.lowestInterest');
+    if (plan.downPaymentPercentage === Math.min(...availableOptions.map(p => p.downPaymentPercentage))) return t('schedule.badges.lowestDown');
     return '';
   };
 
@@ -100,22 +104,22 @@ export const PaymentScheduleSelector: React.FC<PaymentScheduleSelectorProps> = (
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100">
-              Choose Your Payment Schedule
+              {t('schedule.title')}
             </h2>
             <p className="text-sm text-neutral-600 dark:text-slate-400 mt-1">
-              Purchase Amount: {formatCurrency(investmentAmount)}
+              {t('schedule.purchaseAmount', { amount: formatCurrency(investmentAmount) })}
             </p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
               className="text-sm border border-neutral-200 dark:border-slate-600 rounded-lg px-3 py-1 bg-white dark:bg-slate-700 text-neutral-900 dark:text-slate-100"
             >
-              <option value="popular">Sort by Popularity</option>
-              <option value="total_cost">Sort by Total Cost</option>
-              <option value="down_payment">Sort by Down Payment</option>
-              <option value="apr">Sort by Interest Rate</option>
+              <option value="popular">{t('schedule.sort.popular')}</option>
+              <option value="total_cost">{t('schedule.sort.totalCost')}</option>
+              <option value="down_payment">{t('schedule.sort.downPayment')}</option>
+              <option value="apr">{t('schedule.sort.apr')}</option>
             </select>
             <div className="flex rounded-lg border border-neutral-200 dark:border-slate-600 overflow-hidden">
               <button
@@ -126,7 +130,7 @@ export const PaymentScheduleSelector: React.FC<PaymentScheduleSelectorProps> = (
                     : 'bg-white dark:bg-slate-700 text-neutral-700 dark:text-slate-300'
                 }`}
               >
-                Cards
+                {t('schedule.cards')}
               </button>
               <button
                 onClick={() => setViewMode('table')}
@@ -136,7 +140,7 @@ export const PaymentScheduleSelector: React.FC<PaymentScheduleSelectorProps> = (
                     : 'bg-white dark:bg-slate-700 text-neutral-700 dark:text-slate-300'
                 }`}
               >
-                Compare
+                {t('schedule.compare')}
               </button>
             </div>
           </div>
@@ -165,14 +169,14 @@ export const PaymentScheduleSelector: React.FC<PaymentScheduleSelectorProps> = (
                 >
                   {/* Badge */}
                   {badgeText && (
-                    <div className={`absolute -top-2 -right-2 px-2 py-1 text-xs font-medium rounded-full ${badgeColor}`}>
+                    <div className={`absolute -top-2 -end-2 px-2 py-1 text-xs font-medium rounded-full ${badgeColor}`}>
                       {badgeText}
                     </div>
                   )}
 
                   {/* Plan Header */}
                   <div className="mb-4">
-                    <div className="flex items-center space-x-2 mb-2">
+                    <div className="flex items-center gap-2 mb-2">
                       <input
                         type="radio"
                         checked={isSelected}
@@ -191,33 +195,33 @@ export const PaymentScheduleSelector: React.FC<PaymentScheduleSelectorProps> = (
                   {/* Key Details */}
                   <div className="space-y-3 mb-4">
                     <div className="flex justify-between">
-                      <span className="text-sm text-neutral-500 dark:text-slate-400">Down Payment</span>
+                      <span className="text-sm text-neutral-500 dark:text-slate-400">{t('schedule.downPayment')}</span>
                       <span className="text-sm font-semibold text-neutral-900 dark:text-slate-100">
                         {formatCurrency(details.downPayment)} ({formatPercentage(plan.downPaymentPercentage)})
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm text-neutral-500 dark:text-slate-400">
-                        {plan.paymentFrequency.charAt(0).toUpperCase() + plan.paymentFrequency.slice(1)} Payment
+                        {t('schedule.periodicPayment', { frequency: freqLabel(plan.paymentFrequency) })}
                       </span>
                       <span className="text-sm font-semibold text-neutral-900 dark:text-slate-100">
                         {formatCurrency(details.monthlyPayment)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-neutral-500 dark:text-slate-400">Total Payments</span>
+                      <span className="text-sm text-neutral-500 dark:text-slate-400">{t('schedule.totalPayments')}</span>
                       <span className="text-sm font-semibold text-neutral-900 dark:text-slate-100">
                         {plan.totalPayments}
                       </span>
                     </div>
                     <div className="flex justify-between border-t border-neutral-200 dark:border-slate-700 pt-2">
-                      <span className="text-sm font-medium text-neutral-700 dark:text-slate-300">Total Cost</span>
+                      <span className="text-sm font-medium text-neutral-700 dark:text-slate-300">{t('schedule.totalCost')}</span>
                       <span className="text-sm font-bold text-neutral-900 dark:text-slate-100">
                         {formatCurrency(details.totalCost)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-neutral-500 dark:text-slate-400">APR</span>
+                      <span className="text-sm text-neutral-500 dark:text-slate-400">{t('schedule.apr')}</span>
                       <span className={`text-sm font-medium ${
                         plan.effectiveAPR <= 5 ? 'text-green-600 dark:text-green-400' :
                         plan.effectiveAPR <= 10 ? 'text-yellow-600 dark:text-yellow-400' :
@@ -231,19 +235,19 @@ export const PaymentScheduleSelector: React.FC<PaymentScheduleSelectorProps> = (
                   {/* Token Release Schedule */}
                   <div className="mb-4 p-3 bg-neutral-50 dark:bg-slate-900/50 rounded-lg">
                     <div className="text-xs font-medium text-neutral-700 dark:text-slate-300 mb-1">
-                      Token Release
+                      {t('schedule.tokenRelease')}
                     </div>
                     <div className="text-xs text-neutral-600 dark:text-slate-400">
-                      {plan.tokenReleaseSchedule === 'immediate' && 'All tokens released immediately'}
-                      {plan.tokenReleaseSchedule === 'partial' && 'Tokens released with each payment'}
-                      {plan.tokenReleaseSchedule === 'completion' && 'All tokens released upon completion'}
+                      {plan.tokenReleaseSchedule === 'immediate' && t('schedule.releaseHint.immediate')}
+                      {plan.tokenReleaseSchedule === 'partial' && t('schedule.releaseHint.partial')}
+                      {plan.tokenReleaseSchedule === 'completion' && t('schedule.releaseHint.completion')}
                     </div>
                   </div>
 
                   {/* Suitable For */}
                   <div className="mb-4">
                     <div className="text-xs font-medium text-neutral-700 dark:text-slate-300 mb-2">
-                      Best For:
+                      {t('schedule.bestFor')}
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {plan.suitableFor.map((tag, index) => (
@@ -261,17 +265,17 @@ export const PaymentScheduleSelector: React.FC<PaymentScheduleSelectorProps> = (
                   {plan.benefits && plan.benefits.length > 0 && (
                     <div className="space-y-1">
                       <div className="text-xs font-medium text-green-700 dark:text-green-400">
-                        Benefits:
+                        {t('schedule.benefits')}
                       </div>
                       {plan.benefits.slice(0, 2).map((benefit, index) => (
                         <div key={index} className="text-xs text-neutral-600 dark:text-slate-400 flex items-start">
-                          <span className="text-green-500 mr-1 flex-shrink-0">✓</span>
+                          <span className="text-green-500 me-1 flex-shrink-0">✓</span>
                           {benefit}
                         </div>
                       ))}
                       {plan.benefits.length > 2 && (
                         <div className="text-xs text-primary-600 dark:text-primary-400">
-                          +{plan.benefits.length - 2} more benefits
+                          {t('schedule.moreBenefits', { value: plan.benefits.length - 2 })}
                         </div>
                       )}
                     </div>
@@ -286,13 +290,13 @@ export const PaymentScheduleSelector: React.FC<PaymentScheduleSelectorProps> = (
             <table className="w-full">
               <thead>
                 <tr className="border-b border-neutral-200 dark:border-slate-700">
-                  <th className="text-left py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">Plan</th>
-                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">Down Payment</th>
-                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">Payments</th>
-                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">APR</th>
-                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">Total Cost</th>
-                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">Token Release</th>
-                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">Select</th>
+                  <th className="text-start py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">{t('schedule.table.plan')}</th>
+                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">{t('schedule.downPayment')}</th>
+                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">{t('schedule.table.payments')}</th>
+                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">{t('schedule.apr')}</th>
+                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">{t('schedule.totalCost')}</th>
+                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">{t('schedule.tokenRelease')}</th>
+                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">{t('schedule.table.select')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -331,7 +335,7 @@ export const PaymentScheduleSelector: React.FC<PaymentScheduleSelectorProps> = (
                           {plan.totalPayments} × {formatCurrency(details.monthlyPayment)}
                         </div>
                         <div className="text-sm text-neutral-600 dark:text-slate-400">
-                          {plan.paymentFrequency}
+                          {freqLabel(plan.paymentFrequency)}
                         </div>
                       </td>
                       <td className="py-4 px-4 text-center">
@@ -349,13 +353,13 @@ export const PaymentScheduleSelector: React.FC<PaymentScheduleSelectorProps> = (
                         </div>
                         {details.totalInterest > 0 && (
                           <div className="text-sm text-red-600 dark:text-red-400">
-                            +{formatCurrency(details.totalInterest)} interest
+                            {t('schedule.plusInterest', { amount: formatCurrency(details.totalInterest) })}
                           </div>
                         )}
                       </td>
                       <td className="py-4 px-4 text-center">
                         <div className="text-sm text-neutral-600 dark:text-slate-400">
-                          {plan.tokenReleaseSchedule.charAt(0).toUpperCase() + plan.tokenReleaseSchedule.slice(1)}
+                          {releaseLabel(plan.tokenReleaseSchedule)}
                         </div>
                       </td>
                       <td className="py-4 px-4 text-center">
@@ -378,14 +382,14 @@ export const PaymentScheduleSelector: React.FC<PaymentScheduleSelectorProps> = (
         {onCustomPlan && (
           <div className="mt-6 p-4 border border-dashed border-neutral-300 dark:border-slate-600 rounded-lg text-center">
             <div className="text-neutral-600 dark:text-slate-400 mb-2">
-              Don't see a plan that fits your needs?
+              {t('schedule.customPrompt')}
             </div>
             <Button
               variant="outline"
               onClick={onCustomPlan}
               className="text-sm"
             >
-              Request Custom Payment Plan
+              {t('schedule.customButton')}
             </Button>
           </div>
         )}
@@ -403,33 +407,33 @@ export const PaymentScheduleSelector: React.FC<PaymentScheduleSelectorProps> = (
             return (
               <div>
                 <h3 className="font-medium text-neutral-900 dark:text-slate-100 mb-3">
-                  Selected: {selectedPlan.name}
+                  {t('schedule.selected', { name: selectedPlan.name })}
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div>
-                    <span className="text-neutral-500 dark:text-slate-400">Due Now</span>
+                    <span className="text-neutral-500 dark:text-slate-400">{t('schedule.dueNow')}</span>
                     <div className="font-semibold text-neutral-900 dark:text-slate-100">
                       {formatCurrency(details.downPayment)}
                     </div>
                   </div>
                   <div>
-                    <span className="text-neutral-500 dark:text-slate-400">Then</span>
+                    <span className="text-neutral-500 dark:text-slate-400">{t('schedule.then')}</span>
                     <div className="font-semibold text-neutral-900 dark:text-slate-100">
-                      {plan.totalPayments} payments of {formatCurrency(details.monthlyPayment)}
+                      {t('schedule.paymentsOf', { value: plan.totalPayments, amount: formatCurrency(details.monthlyPayment) })}
                     </div>
                   </div>
                   <div>
-                    <span className="text-neutral-500 dark:text-slate-400">Total Cost</span>
+                    <span className="text-neutral-500 dark:text-slate-400">{t('schedule.totalCost')}</span>
                     <div className="font-semibold text-neutral-900 dark:text-slate-100">
                       {formatCurrency(details.totalCost)}
                     </div>
                   </div>
                   <div>
-                    <span className="text-neutral-500 dark:text-slate-400">Interest</span>
+                    <span className="text-neutral-500 dark:text-slate-400">{t('schedule.interest')}</span>
                     <div className={`font-semibold ${
                       details.totalInterest > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
                     }`}>
-                      {details.totalInterest > 0 ? `+${formatCurrency(details.totalInterest)}` : 'No Interest'}
+                      {details.totalInterest > 0 ? `+${formatCurrency(details.totalInterest)}` : t('schedule.noInterest')}
                     </div>
                   </div>
                 </div>

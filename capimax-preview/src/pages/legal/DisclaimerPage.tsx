@@ -1,12 +1,44 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { LegalPageLayout } from '../../components/legal/LegalPageLayout';
 
 export const DisclaimerPage: React.FC = () => {
+  const { i18n } = useTranslation();
+  const isAr = i18n.language?.startsWith('ar');
   return (
     <LegalPageLayout
-      title="Platform Disclaimer"
-      lastUpdated="January 2026"
+      title={isAr ? 'إخلاء مسؤولية المنصة' : 'Platform Disclaimer'}
+      lastUpdated={isAr ? 'يناير 2026' : 'January 2026'}
     >
+      {isAr ? (
+      <section className="legal-section">
+        <p className="legal-intro">
+          كابي مكس RT منصة قائمة على التقنية، صُمّمت لتسهيل هيكلة فرص التملّك العقاري المرمّز وعرضها وإدارتها من خلال الشركات ذات الغرض الخاص (SPV).
+        </p>
+
+        <h2>لا تقوم كابي مكس RT بما يلي:</h2>
+        <ul>
+          <li>العمل بصفة بنك أو وسيط/متداول في الأوراق المالية أو مستشار مالي أو أمين (وكيل ائتماني) أو جهة حفظ؛</li>
+          <li>تقديم أي مشورة مالية أو قانونية أو ضريبية أو استثمارية؛</li>
+          <li>ضمان العوائد أو السيولة أو الحفاظ على رأس المال.</li>
+        </ul>
+
+        <p>
+          تُقدَّم جميع المعلومات المتاحة على المنصة لأغراض إعلامية فقط، وتستند إلى بيانات مقدّمة من مالكي الأصول والمطوّرين والشركات ذات الغرض الخاص (SPV) ومزوّدي الخدمات من الأطراف الثالثة. ورغم بذل جهود معقولة لضمان دقة هذه المعلومات واكتمالها وحداثتها، لا تقدّم كابي مكس RT أي إقرارات أو ضمانات من أي نوع، صريحة كانت أو ضمنية، بشأن موثوقية هذه المعلومات أو دقتها.
+        </p>
+
+        <h2>يتحمّل الملاك وحدهم مسؤولية:</h2>
+        <ul>
+          <li>إجراء العناية الواجبة المستقلة الخاصة بهم؛</li>
+          <li>استشارة مستشارين مهنيين مرخّصين؛</li>
+          <li>تقييم مدى الملاءمة والمخاطر والآثار القانونية.</li>
+        </ul>
+
+        <p className="legal-emphasis">
+          يُعدّ استخدام المنصة قبولًا لإخلاء المسؤولية هذا ولجميع المستندات القانونية المرتبطة به.
+        </p>
+      </section>
+      ) : (
       <section className="legal-section">
         <p className="legal-intro">
           Capimax RT is a technology-based platform designed to facilitate the structuring, presentation, and administration of tokenized real estate ownership opportunities through Special Purpose Vehicles (SPVs).
@@ -34,6 +66,7 @@ export const DisclaimerPage: React.FC = () => {
           Use of the platform constitutes acceptance of this Disclaimer and all associated legal documents.
         </p>
       </section>
+      )}
     </LegalPageLayout>
   );
 };

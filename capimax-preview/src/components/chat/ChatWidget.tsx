@@ -17,6 +17,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { MessageCircle, X, Send, RefreshCw, Bot } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const WEBHOOK_URL =
   import.meta.env.VITE_CHAT_WEBHOOK_URL ||
@@ -32,11 +33,14 @@ interface ChatMessage {
   role: Role;
   text: string;
   error?: boolean;
+  // Built-in messages are stored with a key so they render in the UI language.
+  i18nKey?: string;
 }
 
 const WELCOME: ChatMessage = {
   id: 'welcome',
   role: 'assistant',
+  i18nKey: 'chat.welcome',
   text: "Hi! I'm the Capimax RT assistant. Ask me anything about our properties, tokenized ownership, or getting started.",
 };
 
@@ -81,6 +85,7 @@ function loadHistory(): ChatMessage[] {
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { t } = useTranslation('shared');
 
   // Pages (e.g. the Support center) open the assistant with
   // window.dispatchEvent(new Event('capimax:open-assistant')).
@@ -118,8 +123,8 @@ export const ChatWidget: React.FC = () => {
   // Focus the input when the panel opens.
   useEffect(() => {
     if (isOpen) {
-      const t = setTimeout(() => inputRef.current?.focus(), 250);
-      return () => clearTimeout(t);
+      const timer = setTimeout(() => inputRef.current?.focus(), 250);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
@@ -160,11 +165,19 @@ export const ChatWidget: React.FC = () => {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const data = await res.json().catch(() => ({}));
-      const reply =
-        (typeof data?.output === 'string' && data.output.trim()) ||
-        "Sorry, I couldn't come up with a reply just now. Please try again.";
+      const reply = (typeof data?.output === 'string' && data.output.trim()) || '';
 
-      setMessages((prev) => [...prev, { id: makeId(), role: 'assistant', text: reply }]);
+      setMessages((prev) => [
+        ...prev,
+        reply
+          ? { id: makeId(), role: 'assistant', text: reply }
+          : {
+              id: makeId(),
+              role: 'assistant',
+              text: "Sorry, I couldn't come up with a reply just now. Please try again.",
+              i18nKey: 'chat.noReply',
+            },
+      ]);
     } catch (_) {
       setMessages((prev) => [
         ...prev,
@@ -172,6 +185,7 @@ export const ChatWidget: React.FC = () => {
           id: makeId(),
           role: 'assistant',
           text: 'Sorry — I had trouble reaching the server. Please check your connection and try again.',
+          i18nKey: 'chat.networkError',
           error: true,
         },
       ]);
@@ -201,11 +215,11 @@ export const ChatWidget: React.FC = () => {
             whileTap={{ scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 260, damping: 20 }}
             onClick={() => setIsOpen(true)}
-            aria-label="Open Capimax RT assistant"
-            className="fixed z-50 right-4 bottom-20 md:right-6 md:bottom-6 flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-xl shadow-emerald-600/30 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-emerald-400/40"
+            aria-label={t('chat.open')}
+            className="fixed z-50 end-4 bottom-20 md:end-6 md:bottom-6 flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-xl shadow-emerald-600/30 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-emerald-400/40"
           >
             <MessageCircle className="w-7 h-7" />
-            <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-white/90 border-2 border-emerald-500" />
+            <span className="absolute -top-0.5 -end-0.5 w-3.5 h-3.5 rounded-full bg-white/90 border-2 border-emerald-500" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -221,9 +235,9 @@ export const ChatWidget: React.FC = () => {
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
             className="fixed z-50 flex flex-col overflow-hidden bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 shadow-2xl
                        inset-x-3 bottom-20 top-16 rounded-2xl
-                       md:inset-auto md:right-6 md:bottom-6 md:top-auto md:w-[384px] md:h-[600px] md:max-h-[80vh]"
+                       md:inset-auto md:end-6 md:bottom-6 md:top-auto md:w-[384px] md:h-[600px] md:max-h-[80vh]"
             role="dialog"
-            aria-label="Capimax RT assistant"
+            aria-label={t('chat.dialogLabel')}
           >
             {/* Header */}
             <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white shrink-0">
@@ -231,23 +245,23 @@ export const ChatWidget: React.FC = () => {
                 <Bot className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold leading-tight">Capimax RT Assistant</p>
+                <p className="font-semibold leading-tight">{t('chat.title')}</p>
                 <p className="text-xs text-emerald-50/90 flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
-                  Online
+                  {t('chat.online')}
                 </p>
               </div>
               <button
                 onClick={startNewChat}
-                aria-label="Start a new chat"
-                title="New chat"
+                aria-label={t('chat.newChatLabel')}
+                title={t('chat.newChat')}
                 className="p-2 rounded-lg hover:bg-white/15 transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                aria-label="Close chat"
+                aria-label={t('chat.closeChat')}
                 className="p-2 rounded-lg hover:bg-white/15 transition-colors"
               >
                 <X className="w-5 h-5" />
@@ -267,13 +281,13 @@ export const ChatWidget: React.FC = () => {
                   <div
                     className={`max-w-[82%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words shadow-sm ${
                       m.role === 'user'
-                        ? 'bg-emerald-600 text-white rounded-br-md'
+                        ? 'bg-emerald-600 text-white rounded-ee-md'
                         : m.error
-                        ? 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300 rounded-bl-md'
-                        : 'bg-white dark:bg-navy-800 text-navy-800 dark:text-slate-100 border border-slate-200 dark:border-navy-700 rounded-bl-md'
+                        ? 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300 rounded-es-md'
+                        : 'bg-white dark:bg-navy-800 text-navy-800 dark:text-slate-100 border border-slate-200 dark:border-navy-700 rounded-es-md'
                     }`}
                   >
-                    {m.text}
+                    {m.i18nKey || m.id === 'welcome' ? t(m.i18nKey || 'chat.welcome') : m.text}
                   </div>
                 </div>
               ))}
@@ -281,7 +295,7 @@ export const ChatWidget: React.FC = () => {
               {/* Typing indicator */}
               {isSending && (
                 <div className="flex justify-start">
-                  <div className="px-4 py-3 rounded-2xl rounded-bl-md bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 shadow-sm">
+                  <div className="px-4 py-3 rounded-2xl rounded-es-md bg-white dark:bg-navy-800 border border-slate-200 dark:border-navy-700 shadow-sm">
                     <span className="flex gap-1">
                       {[0, 1, 2].map((i) => (
                         <span
@@ -305,20 +319,20 @@ export const ChatWidget: React.FC = () => {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={onKeyDown}
                   rows={1}
-                  placeholder="Type your message…"
+                  placeholder={t('chat.placeholder')}
                   className="flex-1 resize-none max-h-32 px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-navy-800 text-navy-800 dark:text-slate-100 placeholder:text-navy-400 border border-transparent focus:border-emerald-400 focus:bg-white dark:focus:bg-navy-800 focus:outline-none focus:ring-2 focus:ring-emerald-400/30 text-sm"
                 />
                 <button
                   onClick={sendMessage}
                   disabled={!hasUnsent || isSending}
-                  aria-label="Send message"
+                  aria-label={t('chat.send')}
                   className="flex items-center justify-center w-11 h-11 rounded-xl bg-emerald-600 text-white shrink-0 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
                 >
-                  <Send className="w-5 h-5" />
+                  <Send className="w-5 h-5 rtl:-scale-x-100" />
                 </button>
               </div>
               <p className="mt-2 text-[11px] text-center text-navy-400 dark:text-navy-500">
-                Powered by Capimax RT AI
+                {t('chat.poweredBy')}
               </p>
             </div>
           </motion.div>

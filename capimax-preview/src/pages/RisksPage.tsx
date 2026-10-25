@@ -1,7 +1,10 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { InfoPageLayout } from '../components/info/InfoPageLayout';
 
 export const RisksPage: React.FC = () => {
+  const { i18n } = useTranslation();
+  const isAr = i18n.language?.startsWith('ar');
   const navigateToPage = (path: string) => {
     window.history.pushState({}, '', path);
     window.dispatchEvent(new PopStateEvent('popstate'));
@@ -10,9 +13,73 @@ export const RisksPage: React.FC = () => {
 
   return (
     <InfoPageLayout
-      title="Ownership Risks & Owner Disclosures"
-      subtitle="Understanding ownership risks and platform commitments"
+      title={isAr ? 'مخاطر التملّك وإفصاحات الملاك' : 'Ownership Risks & Owner Disclosures'}
+      subtitle={isAr ? 'فهم مخاطر التملّك والتزامات المنصة' : 'Understanding ownership risks and platform commitments'}
     >
+      {isAr ? (
+      <section className="info-section">
+        <p className="info-intro">
+          يهدف هذا القسم إلى رفع مستوى الوعي وحماية كلٍّ من الملاك والمنصة من خلال إفصاحات واضحة.
+        </p>
+
+        <h2>الفئات الرئيسية للمخاطر</h2>
+
+        <h3>مخاطر السوق والتقييم</h3>
+        <p>
+          قد تتقلب قيمة الأصول العقارية بسبب الظروف الاقتصادية وأسعار الفائدة والتضخم وديناميكيات العرض والطلب والأحداث الجيوسياسية.
+        </p>
+
+        <h3>مخاطر السيولة</h3>
+        <p>
+          قد تكون وحدات الملكية المرمّزة غير سائلة. ولا تضمن السوق الثانوية وجود تداول نشط أو مشترين. وترتيبات مزوّد السيولة (إن وُجدت) اختيارية ومحدودة وخاضعة لشروط.
+        </p>
+
+        <h3>المخاطر التشغيلية ومخاطر الإدارة</h3>
+        <p>
+          قد تنشأ مخاطر نتيجة أخطاء أو إخفاقات من جانب الشركات ذات الغرض الخاص (SPV) أو مديري العقارات أو شركات التقييم أو شركات التأمين أو مزوّدي خدمات الدفع. وقد تقع أيضًا أعطال تقنية أو حوادث أمن سيبراني أو اختراقات للبيانات.
+        </p>
+
+        <h3>المخاطر التنظيمية والقانونية</h3>
+        <p>
+          قد تؤدي التغييرات في القوانين أو اللوائح أو ممارسات التطبيق إلى تقييد الوصول إلى المنصة، أو التأثير في أهلية الملاك، أو التأثير في مشروعية الطروحات المرمّزة أو هيكلها.
+        </p>
+
+        <h3>مخاطر الطرف المقابل</h3>
+        <p>
+          قد تتعثر الشركات ذات الغرض الخاص (SPV) أو المطوّرون أو مزوّدو الخدمات، أو يصبحون معسرين، أو يخفقون في الوفاء بالتزاماتهم التعاقدية.
+        </p>
+
+        <h3>أحداث القوة القاهرة</h3>
+        <p>
+          قد تؤثر أحداث خارجة عن السيطرة، مثل الكوارث الطبيعية والأوبئة والحروب والإجراءات الحكومية، تأثيرًا جوهريًا في أداء الأصول.
+        </p>
+
+        <div className="info-warning">
+          <strong>تحذير بشأن التملّك:</strong> ينطوي كل تملّك عقاري على مخاطر، بما في ذلك احتمال خسارة جزء من رأس المال المستخدم في الشراء أو كامله. ويجب على الملاك المحتملين مراجعة جميع عوامل المخاطر وفهمها بعناية قبل اتخاذ أي قرار شراء.
+        </div>
+
+        <h2>التزام كابي مكس RT</h2>
+        <ul className="check-list">
+          <li>الإفصاح الكامل عن المخاطر والمعلومات الجوهرية</li>
+          <li>لا وعود ولا ضمانات بشأن الأداء</li>
+          <li>لا تسويق أو إعلان مضلّل</li>
+          <li>توعية الملاك والشفافية</li>
+        </ul>
+
+        <h2>مصادر ذات صلة</h2>
+        <div>
+          <button className="link-button" onClick={() => navigateToPage('/legal/risk-disclosure')}>
+            الإفصاح الكامل عن المخاطر
+          </button>
+          <button className="link-button" onClick={() => navigateToPage('/legal/disclaimer')}>
+            إخلاء مسؤولية المنصة
+          </button>
+          <button className="link-button-outline" onClick={() => navigateToPage('/faq')}>
+            الأسئلة الشائعة
+          </button>
+        </div>
+      </section>
+      ) : (
       <section className="info-section">
         <p className="info-intro">
           This section aims to raise awareness and protect both owners and the platform through clear disclosures.
@@ -75,6 +142,7 @@ export const RisksPage: React.FC = () => {
           </button>
         </div>
       </section>
+      )}
     </InfoPageLayout>
   );
 };

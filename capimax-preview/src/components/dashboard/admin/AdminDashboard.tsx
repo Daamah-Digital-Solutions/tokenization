@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { DashboardStats, ActivityFeed, PerformanceChart, QuickActions } from '../';
 import type { StatItem, ActivityItem, ChartDataPoint, QuickAction } from '../';
 import { useAdminDashboard, useAdminActions } from '../../../hooks/useAdminDashboard';
@@ -7,46 +9,48 @@ import { UserDetailModal, PropertyDetailModal } from './modals';
 import AdminWebSocketManager from './AdminWebSocketManager';
 import { PropertyApprovalDashboard } from '../../admin/PropertyApprovalDashboard';
 
+const dateLocale = (lng?: string) => (lng?.startsWith('ar') ? 'ar-EG' : 'en-US');
+
 // Helper function to convert dashboard stats to StatItem format
-const formatDashboardStats = (stats: any): StatItem[] => {
+const formatDashboardStats = (stats: any, t: TFunction): StatItem[] => {
   if (!stats) return [];
-  
+
   return [
     {
       id: 'total-users',
-      label: 'Total Users',
+      label: t('dashboard.stats.totalUsers'),
       value: stats.totalUsers?.toLocaleString() || '0',
       change: `+${stats.totalUsers - stats.verifiedUsers || 0}`,
       changeType: 'positive' as const,
       icon: '👥',
-      description: 'Registered users'
+      description: t('dashboard.stats.totalUsersDesc')
     },
     {
       id: 'platform-volume',
-      label: 'Platform Volume',
+      label: t('dashboard.stats.platformVolume'),
       value: `$${(stats.platformVolume / 1000000).toFixed(1)}M` || '$0',
       change: `${stats.platformVolumeChange > 0 ? '+' : ''}${stats.platformVolumeChange?.toFixed(1)}%` || '0%',
       changeType: (stats.platformVolumeChange >= 0 ? 'positive' : 'negative') as const,
       icon: '💰',
-      description: 'Total transaction volume'
+      description: t('dashboard.stats.platformVolumeDesc')
     },
     {
       id: 'active-properties',
-      label: 'Active Properties',
+      label: t('dashboard.stats.activeProperties'),
       value: stats.activeProperties?.toLocaleString() || '0',
       change: `+${stats.activeProperties - stats.completedProperties || 0}`,
       changeType: 'positive' as const,
       icon: '🏢',
-      description: 'Properties on platform'
+      description: t('dashboard.stats.activePropertiesDesc')
     },
     {
       id: 'platform-revenue',
-      label: 'Platform Revenue',
+      label: t('dashboard.stats.platformRevenue'),
       value: `$${stats.platformRevenue?.toLocaleString() || '0'}`,
       change: `${stats.revenueChange > 0 ? '+' : ''}${stats.revenueChange?.toFixed(1)}%` || '0%',
       changeType: (stats.revenueChange >= 0 ? 'positive' : 'negative') as const,
       icon: '📈',
-      description: 'Monthly platform fees'
+      description: t('dashboard.stats.platformRevenueDesc')
     }
   ];
 };
@@ -70,7 +74,7 @@ const LoadingSpinner: React.FC<{ size?: 'sm' | 'md' | 'lg' }> = ({ size = 'md' }
     md: 'w-8 h-8',
     lg: 'w-12 h-12'
   };
-  
+
   return (
     <div className="flex items-center justify-center p-4">
       <div className={`animate-spin rounded-full border-2 border-primary-200 border-t-primary-600 ${sizeClasses[size]}`}></div>
@@ -79,30 +83,34 @@ const LoadingSpinner: React.FC<{ size?: 'sm' | 'md' | 'lg' }> = ({ size = 'md' }
 };
 
 // Error display component
-const ErrorDisplay: React.FC<{ error: string; onRetry?: () => void }> = ({ error, onRetry }) => (
-  <div className="flex items-center justify-center p-6">
-    <div className="text-center">
-      <span className="text-2xl mb-2 block">⚠️</span>
-      <p className="text-red-600 dark:text-red-400 mb-3">{error}</p>
-      {onRetry && (
-        <button
-          onClick={onRetry}
-          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-        >
-          Retry
-        </button>
-      )}
+const ErrorDisplay: React.FC<{ error: string; onRetry?: () => void }> = ({ error, onRetry }) => {
+  const { t } = useTranslation('admin');
+  return (
+    <div className="flex items-center justify-center p-6">
+      <div className="text-center">
+        <span className="text-2xl mb-2 block">⚠️</span>
+        <p className="text-red-600 dark:text-red-400 mb-3">{error}</p>
+        {onRetry && (
+          <button
+            onClick={onRetry}
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+          >
+            {t('shared.retry')}
+          </button>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 
-const PlatformMetrics: React.FC<{ metrics: any; isLoading: boolean; error?: string | null; onRetry?: () => void }> = ({ 
-  metrics, 
-  isLoading, 
-  error, 
-  onRetry 
+const PlatformMetrics: React.FC<{ metrics: any; isLoading: boolean; error?: string | null; onRetry?: () => void }> = ({
+  metrics,
+  isLoading,
+  error,
+  onRetry
 }) => {
+  const { t } = useTranslation('admin');
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -133,13 +141,13 @@ const PlatformMetrics: React.FC<{ metrics: any; isLoading: boolean; error?: stri
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <PerformanceChart
         data={metrics?.transactionVolume || []}
-        title="Platform Transaction Volume"
+        title={t('dashboard.charts.transactionVolume')}
         type="area"
         color="#3b82f6"
       />
       <PerformanceChart
         data={metrics?.userGrowth || []}
-        title="User Growth"
+        title={t('dashboard.charts.userGrowth')}
         type="line"
         color="#10b981"
       />
@@ -147,18 +155,19 @@ const PlatformMetrics: React.FC<{ metrics: any; isLoading: boolean; error?: stri
   );
 };
 
-const UserManagement: React.FC<{ 
-  users: AdminUser[] | null; 
-  isLoading: boolean; 
-  error?: string | null; 
+const UserManagement: React.FC<{
+  users: AdminUser[] | null;
+  isLoading: boolean;
+  error?: string | null;
   onRetry?: () => void;
   onUserAction?: (userId: string, action: string) => void;
 }> = ({ users, isLoading, error, onRetry, onUserAction }) => {
+  const { t, i18n } = useTranslation('admin');
   if (isLoading) {
     return (
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">User Management</h3>
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">{t('dashboard.users.title')}</h3>
         </div>
         <LoadingSpinner size="lg" />
       </div>
@@ -169,7 +178,7 @@ const UserManagement: React.FC<{
     return (
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">User Management</h3>
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">{t('dashboard.users.title')}</h3>
         </div>
         <ErrorDisplay error={error} onRetry={onRetry} />
       </div>
@@ -183,14 +192,14 @@ const UserManagement: React.FC<{
       <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            User Management
+            {t('dashboard.users.title')}
           </h3>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <span className="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 text-xs font-medium rounded-full">
-              {pendingKYC} Pending KYC
+              {t('dashboard.users.pendingKyc', { count: pendingKYC })}
             </span>
             <button className="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 transition-colors">
-              View All
+              {t('shared.viewAll')}
             </button>
           </div>
         </div>
@@ -202,14 +211,14 @@ const UserManagement: React.FC<{
               key={user.id}
               className="flex items-center justify-between p-4 bg-neutral-50 dark:bg-slate-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-600 transition-colors"
             >
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center gap-4">
                 <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center">
                   <span className="text-white font-medium text-sm">
                     {user.firstName?.charAt(0) || user.email.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2">
                     <h4 className="font-medium text-neutral-900 dark:text-slate-100">
                       {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email}
                     </h4>
@@ -220,67 +229,67 @@ const UserManagement: React.FC<{
                         ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
                         : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                     }`}>
-                      {user.kycStatus}
+                      {t(`shared.status.${user.kycStatus}`, { defaultValue: user.kycStatus })}
                     </span>
                   </div>
                   <p className="text-sm text-neutral-500 dark:text-slate-400">
-                    {user.email} • {user.role.replace('_', ' ')}
-                    {user.isSuspended && <span className="text-red-500 ml-2">(Suspended)</span>}
+                    {user.email} • {t(`shared.roles.${user.role}`, { defaultValue: user.role.replace('_', ' ') })}
+                    {user.isSuspended && <span className="text-red-500 ms-2">{t('dashboard.users.suspended')}</span>}
                   </p>
                 </div>
               </div>
-              
-              <div className="flex items-center space-x-6 text-sm">
-                <div className="text-right">
-                  <p className="text-neutral-500 dark:text-slate-400">Joined</p>
+
+              <div className="flex items-center gap-6 text-sm">
+                <div className="text-end">
+                  <p className="text-neutral-500 dark:text-slate-400">{t('dashboard.users.joined')}</p>
                   <p className="font-medium text-neutral-900 dark:text-slate-100">
-                    {new Date(user.createdAt).toLocaleDateString()}
+                    {new Date(user.createdAt).toLocaleDateString(dateLocale(i18n.language))}
                   </p>
                 </div>
                 {user.totalInvestment && (
-                  <div className="text-right">
-                    <p className="text-neutral-500 dark:text-slate-400">Total Purchased</p>
+                  <div className="text-end">
+                    <p className="text-neutral-500 dark:text-slate-400">{t('dashboard.users.totalPurchased')}</p>
                     <p className="font-semibold text-green-600 dark:text-green-400">
                       ${user.totalInvestment.toLocaleString()}
                     </p>
                   </div>
                 )}
                 {user.propertiesOwned && (
-                  <div className="text-right">
-                    <p className="text-neutral-500 dark:text-slate-400">Properties</p>
+                  <div className="text-end">
+                    <p className="text-neutral-500 dark:text-slate-400">{t('dashboard.users.properties')}</p>
                     <p className="font-semibold text-neutral-900 dark:text-slate-100">
                       {user.propertiesOwned}
                     </p>
                   </div>
                 )}
-                <div className="flex items-center space-x-2">
-                  <button 
+                <div className="flex items-center gap-2">
+                  <button
                     onClick={() => onUserAction?.(user.id, 'review')}
                     className="px-3 py-1 bg-primary-600 text-white text-xs font-medium rounded hover:bg-primary-700 transition-colors"
                   >
-                    Review
+                    {t('dashboard.users.review')}
                   </button>
                   {user.kycStatus === 'pending' && (
-                    <button 
+                    <button
                       onClick={() => onUserAction?.(user.id, 'verify')}
                       className="px-3 py-1 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700 transition-colors"
                     >
-                      Verify
+                      {t('dashboard.users.verify')}
                     </button>
                   )}
                   {user.isSuspended ? (
-                    <button 
+                    <button
                       onClick={() => onUserAction?.(user.id, 'unsuspend')}
                       className="px-3 py-1 bg-orange-600 text-white text-xs font-medium rounded hover:bg-orange-700 transition-colors"
                     >
-                      Unsuspend
+                      {t('dashboard.users.unsuspend')}
                     </button>
                   ) : (
-                    <button 
+                    <button
                       onClick={() => onUserAction?.(user.id, 'suspend')}
                       className="px-3 py-1 bg-neutral-200 text-neutral-700 dark:bg-slate-600 dark:text-slate-300 text-xs font-medium rounded hover:bg-neutral-300 dark:hover:bg-slate-500 transition-colors"
                     >
-                      Actions
+                      {t('dashboard.users.actions')}
                     </button>
                   )}
                 </div>
@@ -293,18 +302,19 @@ const UserManagement: React.FC<{
   );
 };
 
-const PropertyApproval: React.FC<{ 
-  properties: AdminProperty[] | null; 
-  isLoading: boolean; 
-  error?: string | null; 
+const PropertyApproval: React.FC<{
+  properties: AdminProperty[] | null;
+  isLoading: boolean;
+  error?: string | null;
   onRetry?: () => void;
   onPropertyAction?: (propertyId: string, action: string, reason?: string) => void;
 }> = ({ properties, isLoading, error, onRetry, onPropertyAction }) => {
+  const { t, i18n } = useTranslation('admin');
   if (isLoading) {
     return (
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">Property Approval Queue</h3>
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">{t('dashboard.approval.title')}</h3>
         </div>
         <LoadingSpinner size="lg" />
       </div>
@@ -315,7 +325,7 @@ const PropertyApproval: React.FC<{
     return (
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">Property Approval Queue</h3>
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">{t('dashboard.approval.title')}</h3>
         </div>
         <ErrorDisplay error={error} onRetry={onRetry} />
       </div>
@@ -329,10 +339,10 @@ const PropertyApproval: React.FC<{
       <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-            Property Approval Queue
+            {t('dashboard.approval.title')}
           </h3>
           <span className="px-2 py-1 bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 text-xs font-medium rounded-full">
-            {pendingProperties} Pending Review
+            {t('dashboard.approval.pendingReview', { count: pendingProperties })}
           </span>
         </div>
       </div>
@@ -344,7 +354,7 @@ const PropertyApproval: React.FC<{
               className="p-4 bg-neutral-50 dark:bg-slate-700 rounded-lg hover:bg-neutral-100 dark:hover:bg-slate-600 transition-colors"
             >
               <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
                     <span className="text-lg">🏢</span>
                   </div>
@@ -353,11 +363,11 @@ const PropertyApproval: React.FC<{
                       {property.title}
                     </h4>
                     <p className="text-sm text-neutral-500 dark:text-slate-400">
-                      {property.location} • by {property.ownerName}
+                      {property.location} • {t('dashboard.approval.byOwner', { name: property.ownerName })}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center gap-2">
                   <span className={`px-3 py-1 text-xs font-medium rounded-full ${
                     property.status === 'active'
                       ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
@@ -367,32 +377,32 @@ const PropertyApproval: React.FC<{
                       ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
                       : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                   }`}>
-                    {property.status}
+                    {t(`shared.status.${property.status}`, { defaultValue: property.status })}
                   </span>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                 <div>
-                  <p className="text-neutral-500 dark:text-slate-400">Target Amount</p>
+                  <p className="text-neutral-500 dark:text-slate-400">{t('dashboard.approval.targetAmount')}</p>
                   <p className="font-semibold text-neutral-900 dark:text-slate-100">
                     ${property.targetAmount.toLocaleString()}
                   </p>
                 </div>
                 <div>
-                  <p className="text-neutral-500 dark:text-slate-400">Submitted</p>
+                  <p className="text-neutral-500 dark:text-slate-400">{t('dashboard.approval.submitted')}</p>
                   <p className="font-medium text-neutral-900 dark:text-slate-100">
-                    {new Date(property.createdAt).toLocaleDateString()}
+                    {new Date(property.createdAt).toLocaleDateString(dateLocale(i18n.language))}
                   </p>
                 </div>
                 <div>
-                  <p className="text-neutral-500 dark:text-slate-400">Tokens</p>
+                  <p className="text-neutral-500 dark:text-slate-400">{t('dashboard.approval.shares')}</p>
                   <p className="font-medium text-neutral-900 dark:text-slate-100">
-                    {property.tokensIssued?.toLocaleString() || 'TBD'}
+                    {property.tokensIssued?.toLocaleString() || t('shared.tbd')}
                   </p>
                 </div>
                 <div>
-                  <p className="text-neutral-500 dark:text-slate-400">Funding</p>
+                  <p className="text-neutral-500 dark:text-slate-400">{t('dashboard.approval.funding')}</p>
                   <p className="font-medium text-neutral-900 dark:text-slate-100">
                     {property.fundingProgress}%
                   </p>
@@ -400,29 +410,29 @@ const PropertyApproval: React.FC<{
               </div>
 
               {property.status === 'pending_approval' && (
-                <div className="flex items-center space-x-2">
-                  <button 
+                <div className="flex items-center gap-2">
+                  <button
                     onClick={() => onPropertyAction?.(property.id, 'approve')}
                     className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700 transition-colors"
                   >
-                    Approve
+                    {t('shared.approve')}
                   </button>
-                  <button 
+                  <button
                     onClick={() => {
-                      const reason = prompt('Please provide a rejection reason:');
+                      const reason = prompt(t('dashboard.approval.rejectPrompt'));
                       if (reason) {
                         onPropertyAction?.(property.id, 'reject', reason);
                       }
                     }}
                     className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded hover:bg-red-700 transition-colors"
                   >
-                    Reject
+                    {t('shared.reject')}
                   </button>
-                  <button 
+                  <button
                     onClick={() => onPropertyAction?.(property.id, 'details')}
                     className="px-4 py-2 bg-neutral-200 text-neutral-700 dark:bg-slate-600 dark:text-slate-300 text-sm font-medium rounded hover:bg-neutral-300 dark:hover:bg-slate-500 transition-colors"
                   >
-                    Review Details
+                    {t('dashboard.approval.reviewDetails')}
                   </button>
                 </div>
               )}
@@ -434,17 +444,18 @@ const PropertyApproval: React.FC<{
   );
 };
 
-const TransactionMonitoring: React.FC<{ 
-  transactions: any[] | null; 
-  isLoading: boolean; 
-  error?: string | null; 
+const TransactionMonitoring: React.FC<{
+  transactions: any[] | null;
+  isLoading: boolean;
+  error?: string | null;
   onRetry?: () => void;
 }> = ({ transactions, isLoading, error, onRetry }) => {
+  const { t, i18n } = useTranslation('admin');
   if (isLoading) {
     return (
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">Recent Transactions</h3>
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">{t('dashboard.transactions.title')}</h3>
         </div>
         <LoadingSpinner size="lg" />
       </div>
@@ -455,7 +466,7 @@ const TransactionMonitoring: React.FC<{
     return (
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">Recent Transactions</h3>
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">{t('dashboard.transactions.title')}</h3>
         </div>
         <ErrorDisplay error={error} onRetry={onRetry} />
       </div>
@@ -468,7 +479,7 @@ const TransactionMonitoring: React.FC<{
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
       <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
         <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-          Recent Transactions
+          {t('dashboard.transactions.title')}
         </h3>
       </div>
       <div className="p-6">
@@ -478,7 +489,7 @@ const TransactionMonitoring: React.FC<{
               key={transaction.id}
               className="flex items-center justify-between p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg"
             >
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center">
                   <span className="text-sm">
                     {transaction.type === 'Investment' ? '📈' : transaction.type === 'Withdrawal' ? '📉' : '💰'}
@@ -486,15 +497,15 @@ const TransactionMonitoring: React.FC<{
                 </div>
                 <div>
                   <h4 className="font-medium text-neutral-900 dark:text-slate-100">
-                    {transaction.type} {transaction.propertyTitle ? `- ${transaction.propertyTitle}` : ''}
+                    {t(`shared.txTypes.${String(transaction.type || '').toLowerCase()}`, { defaultValue: transaction.type })} {transaction.propertyTitle ? `- ${transaction.propertyTitle}` : ''}
                   </h4>
                   <p className="text-sm text-neutral-500 dark:text-slate-400">
-                    {transaction.userName || transaction.userEmail} • {new Date(transaction.createdAt).toLocaleString()}
+                    {transaction.userName || transaction.userEmail} • {new Date(transaction.createdAt).toLocaleString(dateLocale(i18n.language))}
                   </p>
                 </div>
               </div>
-              
-              <div className="flex items-center space-x-3">
+
+              <div className="flex items-center gap-3">
                 <span className="font-semibold text-neutral-900 dark:text-slate-100">
                   ${transaction.amount?.toLocaleString() || '0'}
                 </span>
@@ -503,7 +514,7 @@ const TransactionMonitoring: React.FC<{
                     ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                     : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
                 }`}>
-                  {transaction.status}
+                  {t(`shared.status.${transaction.status}`, { defaultValue: transaction.status })}
                 </span>
               </div>
             </div>
@@ -514,17 +525,18 @@ const TransactionMonitoring: React.FC<{
   );
 };
 
-const SystemHealthComponent: React.FC<{ 
-  health: any | null; 
-  isLoading: boolean; 
-  error?: string | null; 
+const SystemHealthComponent: React.FC<{
+  health: any | null;
+  isLoading: boolean;
+  error?: string | null;
   onRetry?: () => void;
 }> = ({ health, isLoading, error, onRetry }) => {
+  const { t } = useTranslation('admin');
   if (isLoading) {
     return (
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">System Health</h3>
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">{t('dashboard.health.title')}</h3>
         </div>
         <LoadingSpinner size="lg" />
       </div>
@@ -535,7 +547,7 @@ const SystemHealthComponent: React.FC<{
     return (
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
         <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
-          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">System Health</h3>
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">{t('dashboard.health.title')}</h3>
         </div>
         <ErrorDisplay error={error} onRetry={onRetry} />
       </div>
@@ -549,41 +561,41 @@ const SystemHealthComponent: React.FC<{
   };
 
   const systemMetrics = health ? [
-    { 
-      label: 'API Response Time', 
-      value: `${health.metrics?.apiResponseTime || 0}ms`, 
-      status: getStatusFromValue(health.metrics?.apiResponseTime || 0, { warning: 200, error: 500 }), 
-      target: '<500ms' 
+    {
+      label: t('dashboard.health.apiResponseTime'),
+      value: `${health.metrics?.apiResponseTime || 0}ms`,
+      status: getStatusFromValue(health.metrics?.apiResponseTime || 0, { warning: 200, error: 500 }),
+      target: '<500ms'
     },
-    { 
-      label: 'System Uptime', 
-      value: `${((health.uptime || 0) / 86400).toFixed(2)} days`, 
-      status: 'excellent', 
-      target: '>99.9%' 
+    {
+      label: t('dashboard.health.uptime'),
+      value: t('dashboard.health.days', { value: ((health.uptime || 0) / 86400).toFixed(2) }),
+      status: 'excellent',
+      target: '>99.9%'
     },
-    { 
-      label: 'Database Response', 
-      value: `${health.metrics?.databaseConnectionTime || 0}ms`, 
-      status: getStatusFromValue(health.metrics?.databaseConnectionTime || 0, { warning: 100, error: 1000 }), 
-      target: '<1s' 
+    {
+      label: t('dashboard.health.databaseResponse'),
+      value: `${health.metrics?.databaseConnectionTime || 0}ms`,
+      status: getStatusFromValue(health.metrics?.databaseConnectionTime || 0, { warning: 100, error: 1000 }),
+      target: '<1s'
     },
-    { 
-      label: 'Active Connections', 
-      value: (health.metrics?.activeConnections || 0).toLocaleString(), 
-      status: getStatusFromValue(health.metrics?.activeConnections || 0, { warning: 1000, error: 2000 }), 
-      target: '<2000' 
+    {
+      label: t('dashboard.health.activeConnections'),
+      value: (health.metrics?.activeConnections || 0).toLocaleString(),
+      status: getStatusFromValue(health.metrics?.activeConnections || 0, { warning: 1000, error: 2000 }),
+      target: '<2000'
     },
-    { 
-      label: 'Error Rate', 
-      value: `${(health.metrics?.errorRate || 0).toFixed(2)}%`, 
-      status: getStatusFromValue(health.metrics?.errorRate || 0, { warning: 0.05, error: 0.1 }), 
-      target: '<0.1%' 
+    {
+      label: t('dashboard.health.errorRate'),
+      value: `${(health.metrics?.errorRate || 0).toFixed(2)}%`,
+      status: getStatusFromValue(health.metrics?.errorRate || 0, { warning: 0.05, error: 0.1 }),
+      target: '<0.1%'
     },
-    { 
-      label: 'Memory Usage', 
-      value: `${(health.metrics?.memoryUsage || 0).toFixed(1)}%`, 
-      status: getStatusFromValue(health.metrics?.memoryUsage || 0, { warning: 70, error: 90 }), 
-      target: '<90%' 
+    {
+      label: t('dashboard.health.memoryUsage'),
+      value: `${(health.metrics?.memoryUsage || 0).toFixed(1)}%`,
+      status: getStatusFromValue(health.metrics?.memoryUsage || 0, { warning: 70, error: 90 }),
+      target: '<90%'
     }
   ] : [];
 
@@ -601,7 +613,7 @@ const SystemHealthComponent: React.FC<{
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
       <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
         <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
-          System Health
+          {t('dashboard.health.title')}
         </h3>
       </div>
       <div className="p-6">
@@ -613,14 +625,14 @@ const SystemHealthComponent: React.FC<{
                   {metric.label}
                 </h4>
                 <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(metric.status)}`}>
-                  {metric.status}
+                  {t(`dashboard.health.levels.${metric.status}`, { defaultValue: metric.status })}
                 </span>
               </div>
               <p className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-1">
                 {metric.value}
               </p>
               <p className="text-xs text-neutral-500 dark:text-slate-400">
-                Target: {metric.target}
+                {t('dashboard.health.target', { value: metric.target })}
               </p>
             </div>
           ))}
@@ -631,6 +643,7 @@ const SystemHealthComponent: React.FC<{
 };
 
 export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView }) => {
+  const { t, i18n } = useTranslation('admin');
   // Modal state management
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [selectedProperty, setSelectedProperty] = useState<AdminProperty | null>(null);
@@ -692,7 +705,7 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
   // Handle user actions
   const handleUserAction = async (userId: string, action: string) => {
     clearActionError();
-    
+
     try {
       switch (action) {
         case 'review':
@@ -707,7 +720,7 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
           await refreshData('users');
           break;
         case 'suspend':
-          const reason = prompt('Please provide suspension reason:');
+          const reason = prompt(t('dashboard.users.suspendPrompt'));
           if (reason) {
             await suspendUser(userId, reason);
             await refreshData('users');
@@ -728,7 +741,7 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
   // Handle property actions
   const handlePropertyAction = async (propertyId: string, action: string, reason?: string) => {
     clearActionError();
-    
+
     try {
       switch (action) {
         case 'approve':
@@ -800,45 +813,45 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
   const mergedAlerts = [...realtimeAlerts, ...systemAlerts].slice(0, 10);
 
   // Convert dashboard stats to StatItem format
-  const formattedStats = formatDashboardStats(mergedStats);
-  
+  const formattedStats = formatDashboardStats(mergedStats, t);
+
   // Convert system alerts to activities
   const systemActivities = formatSystemAlerts(mergedAlerts);
   // Dynamic quick actions based on real data
   const pendingKYC = users?.users?.filter(user => user.kycStatus === 'pending').length || 0;
   const pendingProperties = properties?.properties?.filter(prop => prop.status === 'pending_approval').length || 0;
   const criticalAlerts = mergedAlerts.filter(alert => alert.severity === 'CRITICAL' && alert.status === 'ACTIVE').length;
-  
+
   const quickActions: QuickAction[] = [
     {
       id: 'approve-users',
-      label: 'Review KYC',
+      label: t('dashboard.quick.reviewKyc'),
       icon: '✅',
-      description: `${pendingKYC} pending approvals`,
+      description: t('dashboard.quick.pendingApprovals', { count: pendingKYC }),
       variant: pendingKYC > 0 ? 'warning' : 'default',
       onClick: () => console.log('Navigate to user approvals')
     },
     {
       id: 'review-properties',
-      label: 'Review Properties',
+      label: t('dashboard.quick.reviewProperties'),
       icon: '🏢',
-      description: `${pendingProperties} pending reviews`,
+      description: t('dashboard.quick.pendingReviews', { count: pendingProperties }),
       variant: pendingProperties > 0 ? 'primary' : 'default',
       onClick: () => console.log('Navigate to property reviews')
     },
     {
       id: 'system-alerts',
-      label: 'System Alerts',
+      label: t('dashboard.quick.systemAlerts'),
       icon: '⚠️',
-      description: criticalAlerts > 0 ? `${criticalAlerts} critical alerts` : 'All systems normal',
+      description: criticalAlerts > 0 ? t('dashboard.quick.criticalAlerts', { count: criticalAlerts }) : t('dashboard.quick.allNormal'),
       variant: criticalAlerts > 0 ? 'danger' : 'default',
       onClick: () => console.log('View system alerts')
     },
     {
       id: 'refresh-data',
-      label: 'Refresh Data',
+      label: t('dashboard.quick.refreshData'),
       icon: '🔄',
-      description: 'Update dashboard',
+      description: t('dashboard.quick.updateDashboard'),
       onClick: () => refreshData('all')
     }
   ];
@@ -877,7 +890,7 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
           }}
         />
       )}
-      
+
       {selectedProperty && (
         <PropertyDetailModal
           property={selectedProperty}
@@ -905,8 +918,9 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <p className="text-red-800 dark:text-red-200">{actionError}</p>
-                <button 
+                <button
                   onClick={clearActionError}
+                  aria-label={t('shared.dismiss')}
                   className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
                 >
                   ×
@@ -914,17 +928,17 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
               </div>
             </div>
           )}
-          
-          <DashboardStats 
-            stats={formattedStats} 
+
+          <DashboardStats
+            stats={formattedStats}
             isLoading={loadingStates.stats}
             error={error}
             onRefresh={() => refreshData('stats')}
           />
-          
+
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2">
-              <PlatformMetrics 
+              <PlatformMetrics
                 metrics={platformMetrics}
                 isLoading={loadingStates.metrics}
                 error={error}
@@ -933,18 +947,18 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
             </div>
             <QuickActions actions={quickActions} columns={2} />
           </div>
-          
+
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2">
-              <TransactionMonitoring 
+              <TransactionMonitoring
                 transactions={[]}
                 isLoading={false}
                 error={null}
                 onRetry={() => console.log('Load transactions')}
               />
             </div>
-            <ActivityFeed 
-              activities={systemActivities} 
+            <ActivityFeed
+              activities={systemActivities}
               maxItems={5}
               showViewAll={true}
               onViewAll={() => console.log('View all activities')}
@@ -960,44 +974,44 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <p className="text-red-800 dark:text-red-200">{actionError}</p>
-                <button onClick={clearActionError} className="text-red-600 dark:text-red-400">×</button>
+                <button onClick={clearActionError} aria-label={t('shared.dismiss')} className="text-red-600 dark:text-red-400">×</button>
               </div>
             </div>
           )}
-          
-          <UserManagement 
+
+          <UserManagement
             users={users?.users || null}
             isLoading={loadingStates.users}
             error={error}
             onRetry={() => refreshData('users')}
             onUserAction={handleUserAction}
           />
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
               <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">
-                User Statistics
+                {t('dashboard.userStats.title')}
               </h3>
               <div className="space-y-3">
                 {[
-                  { 
-                    label: 'Total Users', 
-                    value: users?.totalCount?.toLocaleString() || '0', 
+                  {
+                    label: t('dashboard.userStats.totalUsers'),
+                    value: users?.totalCount?.toLocaleString() || '0',
                     change: '+' + (users?.totalCount || 0 - (users?.users?.filter(u => u.kycStatus === 'verified').length || 0))
                   },
-                  { 
-                    label: 'Verified Users', 
-                    value: users?.users?.filter(u => u.kycStatus === 'verified').length?.toLocaleString() || '0', 
+                  {
+                    label: t('dashboard.userStats.verifiedUsers'),
+                    value: users?.users?.filter(u => u.kycStatus === 'verified').length?.toLocaleString() || '0',
                     change: '+' + (users?.users?.filter(u => u.kycStatus === 'verified').length || 0)
                   },
-                  { 
-                    label: 'Pending KYC', 
-                    value: users?.users?.filter(u => u.kycStatus === 'pending').length?.toLocaleString() || '0', 
+                  {
+                    label: t('dashboard.userStats.pendingKyc'),
+                    value: users?.users?.filter(u => u.kycStatus === 'pending').length?.toLocaleString() || '0',
                     change: '+' + (users?.users?.filter(u => u.kycStatus === 'pending').length || 0)
                   },
-                  { 
-                    label: 'Suspended Users', 
-                    value: users?.users?.filter(u => u.isSuspended).length?.toLocaleString() || '0', 
+                  {
+                    label: t('dashboard.userStats.suspendedUsers'),
+                    value: users?.users?.filter(u => u.isSuspended).length?.toLocaleString() || '0',
                     change: '+' + (users?.users?.filter(u => u.isSuspended).length || 0)
                   }
                 ].map((stat) => (
@@ -1005,11 +1019,11 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
                     <span className="text-sm font-medium text-neutral-700 dark:text-slate-300">
                       {stat.label}
                     </span>
-                    <div className="text-right">
+                    <div className="text-end">
                       <span className="text-sm font-semibold text-neutral-900 dark:text-slate-100">
                         {stat.value}
                       </span>
-                      <span className="text-xs text-green-600 dark:text-green-400 ml-2">
+                      <span className="text-xs text-green-600 dark:text-green-400 ms-2">
                         {stat.change}
                       </span>
                     </div>
@@ -1017,10 +1031,10 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
                 ))}
               </div>
             </div>
-            
+
             <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
               <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">
-                User Types
+                {t('dashboard.userTypes.title')}
               </h3>
               <div className="space-y-3">
                 {(() => {
@@ -1028,22 +1042,22 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
                   const investors = users?.users?.filter(u => u.role === 'investor').length || 0;
                   const propertyOwners = users?.users?.filter(u => u.role === 'property_owner').length || 0;
                   const brokers = users?.users?.filter(u => u.role === 'broker').length || 0;
-                  
+
                   return [
                     {
-                      label: 'Owners',
+                      label: t('dashboard.userTypes.owners'),
                       percentage: Math.round((investors / totalUsers) * 100),
                       count: investors
                     },
-                    { 
-                      label: 'Property Owners', 
-                      percentage: Math.round((propertyOwners / totalUsers) * 100), 
-                      count: propertyOwners 
+                    {
+                      label: t('dashboard.userTypes.propertyOwners'),
+                      percentage: Math.round((propertyOwners / totalUsers) * 100),
+                      count: propertyOwners
                     },
-                    { 
-                      label: 'Brokers', 
-                      percentage: Math.round((brokers / totalUsers) * 100), 
-                      count: brokers 
+                    {
+                      label: t('dashboard.userTypes.brokers'),
+                      percentage: Math.round((brokers / totalUsers) * 100),
+                      count: brokers
                     }
                   ];
                 })().map((segment) => (
@@ -1069,18 +1083,18 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
 
             <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
               <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-4">
-                Geographic Distribution
+                {t('dashboard.geo.title')}
               </h3>
               <div className="space-y-2">
                 {[
-                  { region: 'North America', percentage: 45 },
-                  { region: 'Europe', percentage: 28 },
-                  { region: 'Asia', percentage: 18 },
-                  { region: 'Others', percentage: 9 }
+                  { region: 'northAmerica', percentage: 45 },
+                  { region: 'europe', percentage: 28 },
+                  { region: 'asia', percentage: 18 },
+                  { region: 'others', percentage: 9 }
                 ].map((region) => (
                   <div key={region.region} className="flex justify-between">
                     <span className="text-sm text-neutral-600 dark:text-slate-400">
-                      {region.region}
+                      {t(`dashboard.geo.${region.region}`)}
                     </span>
                     <span className="text-sm font-medium text-neutral-900 dark:text-slate-100">
                       {region.percentage}%
@@ -1100,7 +1114,7 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <p className="text-red-800 dark:text-red-200">{actionError}</p>
-                <button onClick={clearActionError} className="text-red-600 dark:text-red-400">×</button>
+                <button onClick={clearActionError} aria-label={t('shared.dismiss')} className="text-red-600 dark:text-red-400">×</button>
               </div>
             </div>
           )}
@@ -1112,13 +1126,13 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
     case 'transactions-admin':
       return (
         <div className="space-y-6">
-          <TransactionMonitoring 
+          <TransactionMonitoring
             transactions={[]}
             isLoading={false}
             error={null}
             onRetry={() => console.log('Load transactions')}
           />
-          <PlatformMetrics 
+          <PlatformMetrics
             metrics={platformMetrics}
             isLoading={loadingStates.metrics}
             error={error}
@@ -1130,7 +1144,7 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
     case 'platform':
       return (
         <div className="space-y-6">
-          <PlatformMetrics 
+          <PlatformMetrics
             metrics={platformMetrics}
             isLoading={loadingStates.metrics}
             error={error}
@@ -1138,25 +1152,25 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
           />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { 
-                label: 'Daily Active Users', 
-                value: dashboardStats?.dailyActiveUsers?.toLocaleString() || '0', 
-                change: '+5.2%' 
+              {
+                label: t('dashboard.platform.dailyActiveUsers'),
+                value: dashboardStats?.dailyActiveUsers?.toLocaleString() || '0',
+                change: '+5.2%'
               },
-              { 
-                label: 'Transaction Volume', 
-                value: `$${((dashboardStats?.monthlyTransactionVolume || 0) / 1000).toFixed(0)}K`, 
-                change: `${dashboardStats?.platformVolumeChange > 0 ? '+' : ''}${dashboardStats?.platformVolumeChange?.toFixed(1)}%` 
+              {
+                label: t('dashboard.platform.transactionVolume'),
+                value: `$${((dashboardStats?.monthlyTransactionVolume || 0) / 1000).toFixed(0)}K`,
+                change: `${dashboardStats?.platformVolumeChange > 0 ? '+' : ''}${dashboardStats?.platformVolumeChange?.toFixed(1)}%`
               },
-              { 
-                label: 'Platform Revenue', 
-                value: `$${((dashboardStats?.platformRevenue || 0) / 1000).toFixed(1)}K`, 
-                change: `${dashboardStats?.revenueChange > 0 ? '+' : ''}${dashboardStats?.revenueChange?.toFixed(1)}%` 
+              {
+                label: t('dashboard.platform.platformRevenue'),
+                value: `$${((dashboardStats?.platformRevenue || 0) / 1000).toFixed(1)}K`,
+                change: `${dashboardStats?.revenueChange > 0 ? '+' : ''}${dashboardStats?.revenueChange?.toFixed(1)}%`
               },
-              { 
-                label: 'Success Rate', 
-                value: `${(dashboardStats?.successRate || 0).toFixed(1)}%`, 
-                change: '+0.1%' 
+              {
+                label: t('dashboard.platform.successRate'),
+                value: `${(dashboardStats?.successRate || 0).toFixed(1)}%`,
+                change: '+0.1%'
               }
             ].map((metric) => (
               <div key={metric.label} className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700">
@@ -1178,17 +1192,17 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
     case 'system':
       return (
         <div className="space-y-6">
-          <SystemHealthComponent 
+          <SystemHealthComponent
             health={systemHealth}
             isLoading={loadingStates.health}
             error={error}
             onRetry={() => refreshData('health')}
           />
-          
+
           {mergedAlerts.length > 0 && (
             <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
               <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
-                <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">Active System Alerts</h3>
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">{t('dashboard.alerts.title')}</h3>
               </div>
               <div className="p-6">
                 <div className="space-y-3">
@@ -1203,28 +1217,28 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
                           <h4 className="font-medium text-neutral-900 dark:text-slate-100">{alert.title}</h4>
                           <p className="text-sm text-neutral-600 dark:text-slate-400 mt-1">{alert.message}</p>
                           <p className="text-xs text-neutral-500 dark:text-slate-500 mt-2">
-                            {new Date(alert.createdAt).toLocaleString()} • {alert.severity} • {alert.source}
+                            {new Date(alert.createdAt).toLocaleString(dateLocale(i18n.language))} • {t(`shared.severity.${alert.severity}`, { defaultValue: alert.severity })} • {alert.source}
                           </p>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-2">
                           {alert.status === 'ACTIVE' && (
                             <>
                               <button
                                 onClick={() => acknowledgeAlert(alert.id)}
                                 className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
                               >
-                                Acknowledge
+                                {t('dashboard.alerts.acknowledge')}
                               </button>
                               <button
                                 onClick={() => {
-                                  const resolution = prompt('Please provide resolution details:');
+                                  const resolution = prompt(t('dashboard.alerts.resolvePrompt'));
                                   if (resolution) {
                                     resolveAlert(alert.id, resolution);
                                   }
                                 }}
                                 className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
                               >
-                                Resolve
+                                {t('dashboard.alerts.resolve')}
                               </button>
                             </>
                           )}
@@ -1244,7 +1258,7 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
         <div className="space-y-6">
           <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">
             <div className="p-6 border-b border-neutral-200 dark:border-slate-700">
-              <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">Financial Management</h3>
+              <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">{t('dashboard.financial.title')}</h3>
             </div>
             <div className="p-6">
               {loadingStates.financial ? (
@@ -1252,25 +1266,25 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
               ) : financialMetrics ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {[
-                    { 
-                      label: 'Total Revenue', 
-                      value: `$${financialMetrics.totalRevenue?.toLocaleString() || '0'}`, 
-                      change: `${financialMetrics.revenueChange > 0 ? '+' : ''}${financialMetrics.revenueChange?.toFixed(1)}%` 
+                    {
+                      label: t('dashboard.financial.totalRevenue'),
+                      value: `$${financialMetrics.totalRevenue?.toLocaleString() || '0'}`,
+                      change: `${financialMetrics.revenueChange > 0 ? '+' : ''}${financialMetrics.revenueChange?.toFixed(1)}%`
                     },
-                    { 
-                      label: 'Monthly Revenue', 
-                      value: `$${financialMetrics.monthlyRevenue?.toLocaleString() || '0'}`, 
-                      change: 'This month' 
+                    {
+                      label: t('dashboard.financial.monthlyRevenue'),
+                      value: `$${financialMetrics.monthlyRevenue?.toLocaleString() || '0'}`,
+                      change: t('dashboard.financial.thisMonth')
                     },
-                    { 
-                      label: 'Pending Withdrawals', 
-                      value: `$${financialMetrics.pendingWithdrawalAmount?.toLocaleString() || '0'}`, 
-                      change: `${financialMetrics.pendingWithdrawals || 0} requests` 
+                    {
+                      label: t('dashboard.financial.pendingWithdrawals'),
+                      value: `$${financialMetrics.pendingWithdrawalAmount?.toLocaleString() || '0'}`,
+                      change: t('dashboard.financial.requests', { count: financialMetrics.pendingWithdrawals || 0 })
                     },
-                    { 
-                      label: 'Total Commissions', 
-                      value: `$${financialMetrics.totalCommissions?.toLocaleString() || '0'}`, 
-                      change: `${financialMetrics.pendingCommissions || 0} pending` 
+                    {
+                      label: t('dashboard.financial.totalCommissions'),
+                      value: `$${financialMetrics.totalCommissions?.toLocaleString() || '0'}`,
+                      change: t('dashboard.financial.pendingCount', { count: financialMetrics.pendingCommissions || 0 })
                     }
                   ].map((metric) => (
                     <div key={metric.label} className="bg-neutral-50 dark:bg-slate-700 rounded-lg p-4">
@@ -1287,7 +1301,7 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
                   ))}
                 </div>
               ) : (
-                <ErrorDisplay error={error || 'Failed to load financial data'} onRetry={() => refreshData('financial')} />
+                <ErrorDisplay error={error || t('dashboard.financial.loadFailed')} onRetry={() => refreshData('financial')} />
               )}
             </div>
           </div>
@@ -1300,10 +1314,10 @@ export const AdminDashboard: React.FC<{ currentView: string }> = ({ currentView 
           <div className="text-center">
             <span className="text-4xl mb-4 block">🚧</span>
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-2">
-              {currentView.replace('-', ' ')} Dashboard
+              {t('dashboard.underDevelopment.title', { name: t(`dashboard.views.${currentView}`, { defaultValue: currentView.replace('-', ' ') }) })}
             </h3>
             <p className="text-neutral-500 dark:text-slate-400">
-              This section is under development
+              {t('dashboard.underDevelopment.body')}
             </p>
           </div>
         </div>

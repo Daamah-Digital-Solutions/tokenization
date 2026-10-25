@@ -1,0 +1,553 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "back": "Back",
+    "continue": "Continue",
+    "close": "Close",
+    "retry": "Try Again",
+    "shareCount_one": "{{count}} share",
+    "shareCount_other": "{{count}} shares",
+    "shares": "Shares",
+    "pricePerShare": "Price per Share",
+    "totalAmount": "Total Amount",
+    "processingFee": "Processing Fee",
+    "platformFee": "Platform Fee",
+    "networkFee": "Network Fee",
+    "total": "Total",
+    "free": "Free",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "frequency": {
+      "Monthly": "Monthly",
+      "Quarterly": "Quarterly",
+      "Semi-annually": "Semi-annual",
+      "Annually": "Annual",
+      "Annual": "Annual",
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "semi_annual": "Semi-annual",
+      "annually": "Annual",
+      "annual": "Annual"
+    }
+  },
+  "flow": {
+    "title": "Buy shares of {{title}}",
+    "steps": {
+      "amount": {
+        "title": "Select Shares",
+        "description": "Choose how many shares to purchase"
+      },
+      "payment": {
+        "title": "Payment Method",
+        "description": "Select how you want to pay"
+      },
+      "process": {
+        "title": "Processing",
+        "description": "Your transaction is being processed"
+      },
+      "confirmation": {
+        "title": "Confirmation",
+        "description": "Your purchase is complete"
+      },
+      "schedule": {
+        "title": "Payment Schedule",
+        "description": "Full payment or installments"
+      }
+    },
+    "errors": {
+      "minTokens": "You must purchase at least 1 share",
+      "maxTokens": "Only {{available}} shares available",
+      "paymentMethod": "Please select a payment method",
+      "installmentsOnly": "This property is sold in installments only.",
+      "minInstallment": "Each installment must be at least {{amount}}. Choose more shares or fewer installments."
+    },
+    "buttons": {
+      "confirmPay": "Confirm & Pay",
+      "confirmPlan": "Confirm installment plan",
+      "chooseSchedule": "Choose Schedule",
+      "choosePayment": "Choose Payment"
+    },
+    "cancelDialog": {
+      "title": "Cancel Purchase?",
+      "body": "Your progress will be lost",
+      "continue": "Continue Purchase",
+      "confirm": "Yes, Cancel"
+    }
+  },
+  "amount": {
+    "title": "Select Number of Shares",
+    "perShare": "{{price}} per share",
+    "numberOfShares": "Number of Shares",
+    "placeholder": "Enter shares",
+    "available": "Available: {{available}} shares",
+    "totalCost": "Total Cost",
+    "quickSelect": "Quick Select",
+    "summary": "Purchase Summary",
+    "showAdvanced": "Show Advanced Details",
+    "hideAdvanced": "Hide Advanced Details",
+    "annualReturn": "Annual Return",
+    "roi": "{{value}}% ROI",
+    "dividend": "{{frequency}} Dividend",
+    "paymentsPerYear": "{{value}} payments/year",
+    "ownershipShare": "Ownership Share",
+    "ofTotalProperty": "of total property",
+    "returnBreakdown": "Return Breakdown",
+    "grossAnnualReturn": "Gross Annual Return:",
+    "managementFee": "Management Fee:",
+    "netAnnualReturn": "Net Annual Return:",
+    "shareDetails": "Share Details",
+    "sharesSelected": "Shares Selected:",
+    "expectedReturnRate": "Expected Return Rate:",
+    "fundingProgress": "Property Funding Progress",
+    "percentComplete": "{{value}}% Complete",
+    "sold": "{{value}} sold",
+    "yourPurchase": "+{{value}} your purchase",
+    "totalShares": "{{value}} total",
+    "riskTitle": "Ownership Risk Disclosure",
+    "riskBody": "Real estate ownership involves risk including potential loss of principal. Past performance does not guarantee future results. Returns are projections based on current market conditions and are not guaranteed."
+  },
+  "paymentMethod": {
+    "amountRequired": "Purchase Amount Required",
+    "amountRequiredHint": "Please select a purchase amount to proceed with payment options",
+    "title": "Choose Payment Method",
+    "subtitle": "Pay {{amount}} for your real estate purchase",
+    "recommended": "Recommended",
+    "popular": "Popular",
+    "discount": "Discount",
+    "fee": "Fee",
+    "processing": "Processing",
+    "selected": "{{name}} selected",
+    "selectedHint": "Click \"Confirm & Pay\" below to proceed",
+    "cryptoGuidanceTitle": "Shares will land in your Capimax RT wallet",
+    "cryptoGuidanceBody": "Your property shares are issued as digital tokens into a Capimax RT-managed wallet tied to your account. You can view the balance and on-chain history from the Portfolio tab any time.",
+    "mintedTo": "Shares will be issued to",
+    "yourWallet": "Your wallet",
+    "platformManaged": "Platform-managed",
+    "securityTitle": "Secure Payment Processing",
+    "securityBody": "All payments are processed through encrypted channels with industry-standard security measures. Your financial information is never stored on our servers.",
+    "methods": {
+      "wallet": {
+        "name": "Capimax RT Wallet",
+        "description": "Use your existing Capimax RT wallet balance for instant purchase",
+        "fee": "Free",
+        "time": "Instant"
+      },
+      "crypto": {
+        "name": "Cryptocurrency",
+        "description": "Pay with Bitcoin, Ethereum, or other cryptocurrencies",
+        "fee": "0.5%",
+        "time": "10-30 minutes"
+      },
+      "fiat": {
+        "name": "Credit/Debit Card",
+        "description": "Pay instantly with Visa, Mastercard, or American Express",
+        "fee": "2.9% + $0.30",
+        "time": "Instant"
+      },
+      "bank": {
+        "name": "Bank Transfer",
+        "description": "Direct transfer from your bank account (ACH/Wire)",
+        "fee": "Free (ACH)",
+        "time": "1-3 business days"
+      },
+      "nova_sukuk": {
+        "name": "Nova Sukuk",
+        "description": "Pay with Nova Sukuk certificate - upload PDF for admin review",
+        "fee": "Free",
+        "time": "1-2 business days"
+      },
+      "pronova": {
+        "name": "Pronova",
+        "description": "Pay with Pronova crypto on BNB Smart Chain - get 5% discount!",
+        "fee": "Free",
+        "time": "5-15 minutes",
+        "discount": "5% OFF"
+      }
+    }
+  },
+  "schedule": {
+    "title": "Choose Your Payment Schedule",
+    "purchaseAmount": "Purchase Amount: {{amount}}",
+    "sort": {
+      "popular": "Sort by Popularity",
+      "totalCost": "Sort by Total Cost",
+      "downPayment": "Sort by Down Payment",
+      "apr": "Sort by Interest Rate"
+    },
+    "cards": "Cards",
+    "compare": "Compare",
+    "badges": {
+      "mostPopular": "Most Popular",
+      "lowestInterest": "Lowest Interest",
+      "lowestDown": "Lowest Down Payment"
+    },
+    "downPayment": "Down Payment",
+    "periodicPayment": "{{frequency}} Payment",
+    "totalPayments": "Total Payments",
+    "totalCost": "Total Cost",
+    "apr": "APR",
+    "tokenRelease": "Share Release",
+    "release": {
+      "immediate": "Immediate",
+      "partial": "Partial",
+      "completion": "On completion"
+    },
+    "releaseHint": {
+      "immediate": "All shares released immediately",
+      "partial": "Shares released with each payment",
+      "completion": "All shares released upon completion"
+    },
+    "bestFor": "Best For:",
+    "benefits": "Benefits:",
+    "moreBenefits": "+{{value}} more benefits",
+    "table": {
+      "plan": "Plan",
+      "payments": "Payments",
+      "select": "Select"
+    },
+    "plusInterest": "+{{amount}} interest",
+    "customPrompt": "Don't see a plan that fits your needs?",
+    "customButton": "Request Custom Payment Plan",
+    "selected": "Selected: {{name}}",
+    "dueNow": "Due Now",
+    "then": "Then",
+    "paymentsOf": "{{value}} payments of {{amount}}",
+    "interest": "Interest",
+    "noInterest": "No Interest"
+  },
+  "processor": {
+    "payment": "Payment",
+    "cta": {
+      "kyc": "Complete identity verification",
+      "support": "Contact support",
+      "reduce": "Reduce purchase amount",
+      "accredited": "Apply for accredited status",
+      "browse": "Browse eligible properties"
+    },
+    "steps": {
+      "validate": {
+        "title": "Validate Purchase",
+        "description": "Verifying availability and limits",
+        "pronovaDescription": "Verifying availability and calculating 5% discount"
+      },
+      "process": {
+        "title": "Process Payment",
+        "description": "Processing {{method}} payment",
+        "cryptoDescription": "Get crypto payment address and await funds"
+      },
+      "tokens": {
+        "title": "Confirm Shares",
+        "description": "Confirming your property shares"
+      },
+      "sukukUpload": {
+        "title": "Upload Sukuk Document",
+        "description": "Submitting PDF for admin review"
+      },
+      "sukukReview": {
+        "title": "Pending Review",
+        "description": "Admin will review and approve your payment"
+      },
+      "pronovaCreate": {
+        "title": "Create Payment",
+        "description": "Setting up Pronova payment with discount"
+      },
+      "pronovaAwait": {
+        "title": "Awaiting Payment",
+        "description": "Send Pronova to platform wallet to complete"
+      }
+    },
+    "eta": {
+      "s10": "10s",
+      "s15": "15s",
+      "s30": "30s",
+      "m5_30": "5-30 min"
+    },
+    "errors": {
+      "failed": "Transaction failed. Please try again or use a different payment method.",
+      "cardCancelled": "Card payment was cancelled. You can try again or pick a different method.",
+      "cryptoCancelled": "Crypto payment was cancelled. You can retry or pick a different method — if you already sent funds they will still credit, but you may need to refresh.",
+      "submissionCancelled": "Submission cancelled. You can retry or pick a different payment method."
+    },
+    "summary": "Transaction Summary",
+    "propertyShares": "Property Shares:",
+    "each": "{{price}} each",
+    "subtotal": "Subtotal:",
+    "methodFee": "{{method}} Fee:",
+    "progress": "Transaction Progress",
+    "changeMethod": "Change Payment Method",
+    "dontClose": "Please don't close this window. Your transaction is being processed securely.",
+    "security": "Your purchase is processed through secure, audited smart contracts. All transactions are recorded on the blockchain."
+  },
+  "confirmation": {
+    "shareText": "I just bought {{value}} property shares in {{title}} through tokenized real estate! 🏢💎",
+    "copy": {
+      "heading": "Purchase Confirmation",
+      "property": "Property",
+      "shares": "Shares Purchased",
+      "totalCost": "Total Cost",
+      "annualReturn": "Expected Annual Return",
+      "transactionId": "Transaction ID"
+    },
+    "success": "Purchase Successful!",
+    "welcome": "Welcome to the future of real estate ownership",
+    "planCreated": "Installment plan created",
+    "planCreatedCount": "Installment plan created — {{value}} monthly payments",
+    "planBody": "Your shares are reserved and released to you as you pay. Your first installment is due now — pay it from the <strong>Installments</strong> section of your dashboard, funded by your wallet.",
+    "yourOwnership": "Your Ownership",
+    "active": "Active",
+    "purchased": "Purchased",
+    "expectedRoi": "Expected Annual ROI",
+    "nextDividend": "Next Dividend:",
+    "deliveredTo": "Shares delivered to",
+    "whatsNext": "What's Next?",
+    "next": {
+      "portfolioTitle": "View Your Portfolio",
+      "portfolioBody": "Your shares are ready. Track performance, manage holdings, and view dividends in your portfolio.",
+      "dividendTitle": "First Dividend Payment",
+      "dividendBody": "Your first quarterly dividend of {{amount}} is expected on {{date}}.",
+      "certificateTitle": "Ownership Certificate",
+      "certificateBody": "A digital certificate of ownership will be sent to your email within 48 hours."
+    },
+    "viewReceipt": "View Receipt",
+    "downloadReceipt": "Download Receipt",
+    "copyDetails": "Copy Details",
+    "email": {
+      "title": "Email Confirmation",
+      "sent": "Confirmation email sent successfully!",
+      "hint": "Send detailed purchase confirmation to your email",
+      "sending": "Sending...",
+      "sentShort": "Sent!",
+      "send": "Send Email"
+    },
+    "share": {
+      "title": "Share Your Purchase",
+      "hint": "Let others know about your smart ownership choice"
+    },
+    "goToPortfolio": "Go to My Portfolio",
+    "returnToProperty": "Return to Property",
+    "congrats": "Congratulations on your purchase!",
+    "congratsBody": "You're now part of the future of real estate ownership"
+  },
+  "receipt": {
+    "brand": "CAPIMAX RT",
+    "tagline": "Real Estate Tokenization Platform",
+    "title": "Purchase Receipt",
+    "confirmed": "Transaction Confirmed",
+    "transactionInfo": "Transaction Information",
+    "dateTime": "Date & Time:",
+    "dateAt": "{{date}} at {{time}}",
+    "paymentMethod": "Payment Method:",
+    "fiat": "Fiat Currency",
+    "status": "Status:",
+    "statusConfirmed": "Confirmed",
+    "ownerInfo": "Owner Information",
+    "ownerId": "Owner ID:",
+    "accountType": "Account Type:",
+    "individual": "Individual",
+    "kycStatus": "Identity Verification:",
+    "verified": "Verified",
+    "propertyDetails": "Property Ownership Details",
+    "noLocation": "Location not available",
+    "propertyType": "Property Type:",
+    "propertyTypes": {
+      "residential": "Residential",
+      "commercial": "Commercial",
+      "industrial": "Industrial",
+      "mixed_use": "Mixed Use",
+      "land": "Land"
+    },
+    "totalValue": "Total Property Value:",
+    "breakdown": "Your Purchase Breakdown",
+    "purchaseAmount": "Purchase Amount:",
+    "projections": "Return Projections",
+    "estPerYear": "Est. {{amount}}/year",
+    "quarterlyDividend": "Quarterly Dividend",
+    "every3Months": "Every 3 months",
+    "nextDividend": "Next Dividend",
+    "expectedDate": "Expected date",
+    "disclaimer": "<strong>Disclaimer:</strong> Projected returns are estimates based on current market conditions and historical performance. Actual returns may vary and are not guaranteed. All real estate ownership carries risk including potential loss of principal.",
+    "badges": "SEC Compliant • Blockchain Secured • Fully Audited",
+    "footer": "This receipt serves as official confirmation of your real estate share purchase. For questions or support, contact us at {{email}}",
+    "mintedTitle": "Shares Minted on Polygon Blockchain",
+    "mintedBody": "Your property shares have been securely minted as digital tokens and recorded on the blockchain.",
+    "addToCalendar": "Add to Calendar",
+    "generatedOn": "Generated on {{date}}"
+  },
+  "installment": {
+    "errors": {
+      "min": "Minimum purchase is {{value}} shares",
+      "max": "Maximum purchase is {{value}} shares",
+      "plan": "Please select an installment plan",
+      "planMin": "This plan requires a minimum purchase of {{amount}}",
+      "planMax": "This plan has a maximum purchase limit of {{amount}}"
+    },
+    "title": "Installment Purchase",
+    "steps": {
+      "amount": "Amount",
+      "plan": "Plan",
+      "payment": "Payment",
+      "review": "Review"
+    },
+    "chooseAmount": "Choose Purchase Amount",
+    "totalPurchase": "Total Purchase",
+    "minShares": "Min: {{value}} shares",
+    "riskLevel": "Risk Level",
+    "risk": {
+      "low": "LOW",
+      "medium": "MEDIUM",
+      "high": "HIGH"
+    },
+    "estYield": "Est. Yield",
+    "status": "Status",
+    "completion": "Completion",
+    "selectPlan": "Select Installment Plan",
+    "installments": "Installments",
+    "downPaymentMethod": "Payment Method for Down Payment",
+    "methods": {
+      "credit_card": {
+        "name": "Credit Card",
+        "description": "Instant processing"
+      },
+      "bank_transfer": {
+        "name": "Bank Transfer",
+        "description": "1-3 business days"
+      },
+      "crypto": {
+        "name": "Cryptocurrency",
+        "description": "USDC, ETH, BTC accepted"
+      },
+      "wire": {
+        "name": "Wire Transfer",
+        "description": "For large amounts"
+      }
+    },
+    "review": "Review Your Purchase",
+    "sharesValue": "{{value}} shares",
+    "breakdown": "Payment Breakdown",
+    "downDueNow": "Down Payment (Due Now)",
+    "installmentsOf": "{{value}} Installments of",
+    "totalWithInterest": "Total with Interest",
+    "terms": "By proceeding, you agree to the terms and conditions of the installment purchase plan. Shares will be reserved upon down payment and released according to the selected plan's schedule.",
+    "firstDue": "First installment payment will be due 30 days after the down payment is processed.",
+    "previous": "Previous",
+    "processing": "Processing...",
+    "complete": "Complete Purchase",
+    "next": "Next"
+  },
+  "reserved": {
+    "title": "Share Reservation Manager",
+    "expiringSoon": "{{value}} expiring soon",
+    "activeReservations": "Active Reservations",
+    "reservedValue": "Reserved Value",
+    "activatedValue": "Activated Value",
+    "readyToActivate": "Ready to Activate",
+    "emptyTitle": "No Share Reservations",
+    "emptyBody": "You don't have any share reservations yet",
+    "sharesAt": "{{value}} shares @ {{price}}",
+    "status": {
+      "active": "ACTIVE",
+      "expired": "EXPIRED",
+      "activated": "ACTIVATED",
+      "cancelled": "CANCELLED"
+    },
+    "daysLeft": "{{value}} days left",
+    "paymentProgress": "Payment Progress",
+    "paymentsCount": "{{paid}}/{{total}} payments",
+    "percentComplete": "{{value}}% complete",
+    "sharesActivated": "{{value}} shares activated",
+    "reserved": "Reserved",
+    "activated": "Activated",
+    "available": "Available",
+    "remainingBalance": "Remaining Balance",
+    "autoActivation": "Auto Activation",
+    "autoActivationHint": "Automatically activate shares when {{value}}% of payments are made",
+    "expiresIn": "Reservation expires in {{value}} day(s)",
+    "nextPaymentDue": "Next payment due: {{date}}",
+    "activateN": "Activate {{value}} Shares",
+    "makePayment": "Make Payment",
+    "extend": "Extend Reservation",
+    "modify": "Modify",
+    "modal": {
+      "activate": "Activate Shares",
+      "modify": "Modify Reservation",
+      "toActivate": "Shares to Activate",
+      "maxAvailable": "Maximum available: {{value}}",
+      "extensionDays": "Extension Period (Days)",
+      "extensionFee": "Extension fee may apply",
+      "newAmount": "New Number of Shares",
+      "additionalPayment": "Additional payment may be required for increases",
+      "confirm": "Confirm"
+    }
+  },
+  "graduated": {
+    "title": "Graduated Ownership Tracker",
+    "subtitle": "Track your progressive ownership and tier benefits",
+    "detailedView": "Detailed View",
+    "overview": "Overview",
+    "activePositions": "Active Positions",
+    "totalPurchased": "Total Purchased",
+    "currentValue": "Current Value",
+    "totalDividends": "Total Dividends",
+    "emptyTitle": "No Ownership Positions",
+    "emptyBody": "Start your graduated ownership journey by making your first purchase",
+    "status": {
+      "active": "ACTIVE",
+      "paused": "PAUSED",
+      "completed": "COMPLETED",
+      "defaulted": "DEFAULTED"
+    },
+    "ownedOf": "{{owned}} of {{total}} shares",
+    "perShare": "({{value}}% ownership per share)",
+    "upgradeAvailable": "Upgrade Available",
+    "paymentProgress": "Payment Progress: {{value}}%",
+    "nextTier": "Next: {{name}} at {{value}}%",
+    "paid": "Paid",
+    "remaining": "Remaining",
+    "dividendRate": "Dividend Rate",
+    "dividendsEarned": "Dividends Earned",
+    "nextMilestone": "Next Milestone: {{name}}",
+    "sharesAt": "{{value}} shares at {{percent}}%",
+    "tierBenefits": "Current Tier Benefits",
+    "benefits": "Benefits",
+    "rights": "Rights & Options",
+    "voting": "Voting Rights",
+    "yes": "Yes",
+    "no": "No",
+    "transfer": "Transfer Rights",
+    "transferRights": {
+      "none": "None",
+      "limited": "Limited",
+      "full": "Full"
+    },
+    "liquidity": "Liquidity Options",
+    "milestoneProgress": "Milestone Progress",
+    "atPayment": "At {{value}}% payment",
+    "upgradeTo": "Upgrade to {{name}}",
+    "viewProjections": "View Projections",
+    "availableTiers": "Available Ownership Tiers",
+    "tierLine": "{{min}}%-{{max}}% • {{ownership}}% ownership • {{dividend}}% dividend"
+  },
+  "wallet": {
+    "connectFailed": "Failed to connect wallet. Please try again.",
+    "connectedTitle": "Wallet Connected",
+    "connected": "Connected",
+    "disconnect": "Disconnect",
+    "address": "Address",
+    "showAddress": "Show full address",
+    "hideAddress": "Hide full address",
+    "balance": "Balance",
+    "connectedTo": "Connected to {{network}}",
+    "title": "Connect Your Wallet",
+    "subtitle": "Choose a wallet to connect and complete your purchase",
+    "notInstalled": "Not installed",
+    "noWallet": "Don't have a wallet?",
+    "learn": "Learn how to set up a crypto wallet",
+    "security": "We never store your private keys or seed phrase. Your wallet remains under your complete control.",
+    "options": {
+      "metamask": "Most popular Ethereum wallet",
+      "walletconnect": "Connect with mobile wallets",
+      "coinbase": "Self-custody wallet by Coinbase",
+      "phantom": "Solana & Ethereum wallet"
+    }
+  }
+}

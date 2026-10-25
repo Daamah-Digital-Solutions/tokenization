@@ -20,6 +20,18 @@ import {
 import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
 import { cn } from '../../utils/cn';
+import { useTranslation } from 'react-i18next';
+
+const LOCATION_KEYS: Record<string, string> = {
+  'New York': 'newYork',
+  California: 'california',
+  Florida: 'florida',
+  Texas: 'texas',
+  Illinois: 'illinois',
+  Washington: 'washington',
+  Nevada: 'nevada',
+  Massachusetts: 'massachusetts',
+};
 
 export interface PropertyStatsData {
   totalProperties: number;
@@ -108,25 +120,32 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
   onTimeRangeChange,
   className
 }) => {
+  const { t } = useTranslation('propui');
   const [activeChart, setActiveChart] = useState<'overview' | 'performance' | 'distribution'>('overview');
+  const locationLabel = (name: string) =>
+    name === 'Other'
+      ? t('stats.other')
+      : LOCATION_KEYS[name]
+        ? t(`filters.locations.${LOCATION_KEYS[name]}`)
+        : name;
 
   const timeRanges = [
-    { value: '7d', label: '7 Days' },
-    { value: '30d', label: '30 Days' },
-    { value: '90d', label: '90 Days' },
-    { value: '1y', label: '1 Year' },
-    { value: 'all', label: 'All Time' }
+    { value: '7d', label: t('stats.range.7d') },
+    { value: '30d', label: t('stats.range.30d') },
+    { value: '90d', label: t('stats.range.90d') },
+    { value: '1y', label: t('stats.range.1y') },
+    { value: 'all', label: t('stats.range.all') }
   ] as const;
 
   const formatCurrency = (value: number) => {
     if (value >= 1000000000) {
-      return `$${(value / 1000000000).toFixed(2)}B`;
+      return t('units.billion', { v: (value / 1000000000).toFixed(2) });
     }
     if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(1)}M`;
+      return t('units.million', { v: (value / 1000000).toFixed(1) });
     }
     if (value >= 1000) {
-      return `$${(value / 1000).toFixed(0)}K`;
+      return t('units.thousand', { v: (value / 1000).toFixed(0) });
     }
     return `$${value}`;
   };
@@ -194,10 +213,10 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Property Analytics
+            {t('stats.title')}
           </h2>
           <Text variant="body" color="muted">
-            Comprehensive insights into your property portfolio
+            {t('stats.subtitle')}
           </Text>
         </div>
         
@@ -223,33 +242,33 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
           icon={Building}
-          title="Total Properties"
+          title={t('stats.totalProperties')}
           value={data.totalProperties}
-          change="+12 this month"
+          change={t('stats.thisMonth', { value: '+12' })}
           changeType="increase"
           color="emerald"
         />
         <StatCard
           icon={DollarSign}
-          title="Total Value"
-          value={data.totalValue}
-          change="+8.5% vs last month"
+          title={t('stats.totalValue')}
+          value={formatCurrency(data.totalValue)}
+          change={t('stats.vsLastMonth', { value: '+8.5%' })}
           changeType="increase"
           color="blue"
         />
         <StatCard
           icon={TrendingUp}
-          title="Average Return"
+          title={t('stats.averageReturn')}
           value={`${data.averageReturn}%`}
-          change="+1.2% vs last month"
+          change={t('stats.vsLastMonth', { value: '+1.2%' })}
           changeType="increase"
           color="purple"
         />
         <StatCard
           icon={Users}
-          title="Total Owners"
+          title={t('stats.totalOwners')}
           value={data.totalInvestors.toLocaleString()}
-          change="+567 this month"
+          change={t('stats.thisMonth', { value: '+567' })}
           changeType="increase"
           color="orange"
         />
@@ -258,11 +277,11 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
       {/* Chart Tabs */}
       <Card>
         <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="flex space-x-8 px-6">
+          <nav className="flex gap-8 px-6">
             {[
-              { id: 'overview', label: 'Overview', icon: BarChart3 },
-              { id: 'performance', label: 'Performance', icon: LineChart },
-              { id: 'distribution', label: 'Distribution', icon: PieChart }
+              { id: 'overview', label: t('stats.tabs.overview'), icon: BarChart3 },
+              { id: 'performance', label: t('stats.tabs.performance'), icon: LineChart },
+              { id: 'distribution', label: t('stats.tabs.distribution'), icon: PieChart }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -286,7 +305,7 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Additional Key Metrics */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Key Performance Indicators</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('stats.kpis')}</h3>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                     <div className="flex items-center gap-3">
@@ -294,14 +313,14 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
                         <Target className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-white">Funded Properties</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">Successfully funded</div>
+                        <div className="font-medium text-gray-900 dark:text-white">{t('stats.fundedProperties')}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">{t('stats.successfullyFunded')}</div>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <div className="text-xl font-bold text-gray-900 dark:text-white">{data.fundedProperties}</div>
                       <div className="text-sm text-emerald-600 dark:text-emerald-400">
-                        {Math.round((data.fundedProperties / data.totalProperties) * 100)}% success rate
+                        {t('stats.successRate', { percent: Math.round((data.fundedProperties / data.totalProperties) * 100) })}
                       </div>
                     </div>
                   </div>
@@ -312,13 +331,13 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
                         <Award className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
                       </div>
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-white">Average Rating</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">Property quality score</div>
+                        <div className="font-medium text-gray-900 dark:text-white">{t('stats.averageRating')}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">{t('stats.qualityScore')}</div>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-end">
                       <div className="text-xl font-bold text-gray-900 dark:text-white">{data.averageRating}/5.0</div>
-                      <div className="text-sm text-yellow-600 dark:text-yellow-400">Excellent</div>
+                      <div className="text-sm text-yellow-600 dark:text-yellow-400">{t('stats.excellent')}</div>
                     </div>
                   </div>
                 </div>
@@ -326,7 +345,7 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
 
               {/* Top Performers */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Top Performing Properties</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('stats.topPerformers')}</h3>
                 <div className="space-y-3">
                   {data.topPerformers.slice(0, 5).map((property, index) => (
                     <motion.div
@@ -346,14 +365,14 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
                           {property.name}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {property.funded}% funded • {property.investors} owners
+                          {t('stats.fundedOwners', { funded: property.funded, owners: property.investors })}
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-end">
                         <div className="font-bold text-emerald-600 dark:text-emerald-400">
                           {property.return}%
                         </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">return</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{t('stats.return')}</div>
                       </div>
                     </motion.div>
                   ))}
@@ -364,7 +383,7 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
 
           {activeChart === 'performance' && (
             <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Monthly Performance Trends</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('stats.monthlyTrends')}</h3>
               
               {/* Simplified Chart Visualization */}
               <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
@@ -382,13 +401,13 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
                         }}
                       />
                       <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                        {month.month}
+                        {t(`stats.months.${month.month}`, { defaultValue: month.month })}
                       </div>
                     </div>
                   ))}
                 </div>
                 <div className="text-center mt-4 text-sm text-gray-600 dark:text-gray-400">
-                  Average Monthly Returns (%)
+                  {t('stats.avgMonthlyReturns')}
                 </div>
               </div>
 
@@ -398,8 +417,8 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
                   <div className="flex items-center gap-3">
                     <TrendingUp className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
                     <div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">Best Month</div>
-                      <div className="font-bold text-emerald-600 dark:text-emerald-400">June - 18.2%</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">{t('stats.bestMonth')}</div>
+                      <div className="font-bold text-emerald-600 dark:text-emerald-400">{t('stats.bestMonthValue', { month: t('stats.monthsLong.Jun'), value: '18.2%' })}</div>
                     </div>
                   </div>
                 </Card>
@@ -408,8 +427,8 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
                   <div className="flex items-center gap-3">
                     <BarChart3 className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                     <div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">Total Ownership</div>
-                      <div className="font-bold text-blue-600 dark:text-blue-400">$1.16B</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">{t('stats.totalOwnership')}</div>
+                      <div className="font-bold text-blue-600 dark:text-blue-400">{t('units.billion', { v: '1.16' })}</div>
                     </div>
                   </div>
                 </Card>
@@ -418,8 +437,8 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
                   <div className="flex items-center gap-3">
                     <Building className="w-8 h-8 text-purple-600 dark:text-purple-400" />
                     <div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">New Properties</div>
-                      <div className="font-bold text-purple-600 dark:text-purple-400">76 this year</div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">{t('stats.newProperties')}</div>
+                      <div className="font-bold text-purple-600 dark:text-purple-400">{t('stats.thisYear', { value: 76 })}</div>
                     </div>
                   </div>
                 </Card>
@@ -431,12 +450,12 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Property Type Distribution */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Property Type Distribution</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('stats.typeDistribution')}</h3>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-4 h-4 bg-emerald-500 rounded-sm" />
-                      <span className="text-gray-700 dark:text-gray-300">Residential</span>
+                      <span className="text-gray-700 dark:text-gray-300">{t('types.residential')}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-gray-900 dark:text-white font-medium">
@@ -456,7 +475,7 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-4 h-4 bg-blue-500 rounded-sm" />
-                      <span className="text-gray-700 dark:text-gray-300">Commercial</span>
+                      <span className="text-gray-700 dark:text-gray-300">{t('types.commercial')}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-gray-900 dark:text-white font-medium">
@@ -476,7 +495,7 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-4 h-4 bg-purple-500 rounded-sm" />
-                      <span className="text-gray-700 dark:text-gray-300">Hospitality</span>
+                      <span className="text-gray-700 dark:text-gray-300">{t('types.hospitality')}</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-gray-900 dark:text-white font-medium">
@@ -495,7 +514,7 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
 
               {/* Location Distribution */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Geographic Distribution</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t('stats.geoDistribution')}</h3>
                 <div className="space-y-3">
                   {data.locationDistribution.map((location, index) => (
                     <motion.div
@@ -508,12 +527,12 @@ export const PropertyStats: React.FC<PropertyStatsProps> = ({
                       <div className="flex items-center gap-3">
                         <MapPin className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                         <span className="font-medium text-gray-900 dark:text-white">
-                          {location.name}
+                          {locationLabel(location.name)}
                         </span>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                          {location.count} properties
+                          {t('map.count', { count: location.count })}
                         </div>
                         <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {location.percentage}%

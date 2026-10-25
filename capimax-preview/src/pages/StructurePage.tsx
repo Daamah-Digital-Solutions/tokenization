@@ -27,6 +27,7 @@ import { Container } from '../components/design-system/layout/Container';
 import { Section } from '../components/design-system/sections/Section';
 import { Heading } from '../components/design-system/typography/Heading';
 import { Text } from '../components/design-system/typography/Text';
+import { useTranslation } from 'react-i18next';
 
 interface AccordionSection {
   id: string;
@@ -36,6 +37,7 @@ interface AccordionSection {
 }
 
 export const StructurePage: React.FC = () => {
+  const { t } = useTranslation('pages');
   const [openSections, setOpenSections] = useState<string[]>(['opening']);
   const [tocOpen, setTocOpen] = useState(false);
   const sectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -65,55 +67,55 @@ export const StructurePage: React.FC = () => {
   const sections: AccordionSection[] = [
     {
       id: 'opening',
-      title: 'Opening Statement & Framework',
+      title: t('structure.opening.title'),
       icon: BookOpen,
       content: (
         <div className="space-y-6">
           <div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Comprehensive Regulatory Guide – CapiMax Real Estate Tokenization Platform
+              {t('structure.opening.t1')}
             </h3>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              CapiMax Real Estate Tokenization Platform represents an integrated technological infrastructure designed to redefine real estate ownership through a digital framework built on blockchain technology and smart contracts, while utilizing the SPV (Special Purpose Vehicle) model as a structured legal framework to safeguard the rights of all stakeholders and enhance transparency and regulatory compliance.
+              {t('structure.opening.t2')}
             </p>
           </div>
 
           <div>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              The platform operates as an advanced technology-driven ecosystem, providing a comprehensive operational and regulatory structure for tokenizing real estate assets and enabling fractional ownership for owners, while ensuring governance, process control, and risk management in accordance with clearly defined and auditable standards.
+              {t('structure.opening.t3')}
             </p>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Technical and Operational Framework
+              {t('structure.opening.t4')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              CapiMax is built upon:
+              {t('structure.opening.t5')}
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Blockchain technology to record tokenized ownership and ensure data immutability.
+                  {t('structure.opening.t6')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Smart contracts to automate issuance, allocation, distribution of returns, and transfer processes.
+                  {t('structure.opening.t7')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  The SPV model to legally segregate assets and link each real estate property to an independent legal entity, ensuring clarity of ownership and obligations.
+                  {t('structure.opening.t8')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  A centralized governance and control infrastructure enabling operational management, compliance oversight, and real-time reporting with full transparency.
+                  {t('structure.opening.t9')}
                 </span>
               </li>
             </ul>
@@ -121,77 +123,77 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Stakeholder Control Tools and Management
+              {t('structure.opening.t10')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              The platform provides advanced dashboards and operational tools tailored to each participant within the ecosystem:
+              {t('structure.opening.t11')}
             </p>
 
             <div className="space-y-4">
               <div>
                 <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
-                  For Property Owners / Developers:
+                  {t('structure.opening.t12')}
                 </h5>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-3">
-                    <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700 dark:text-gray-300">Management of property listing and onboarding</span>
+                    <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.opening.t13')}</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700 dark:text-gray-300">Monitoring subscription levels</span>
+                    <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.opening.t14')}</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700 dark:text-gray-300">Access to performance and return reports</span>
+                    <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.opening.t15')}</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700 dark:text-gray-300">Oversight of distributions and governance mechanisms</span>
+                    <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.opening.t16')}</span>
                   </li>
                 </ul>
               </div>
 
               <div>
                 <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
-                  For Owners:
+                  {t('structure.opening.t17')}
                 </h5>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-3">
-                    <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700 dark:text-gray-300">Monitoring tokenized ownership portfolios</span>
+                    <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.opening.t18')}</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700 dark:text-gray-300">Access to periodic performance and return analytics</span>
+                    <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.opening.t19')}</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700 dark:text-gray-300">Execution of internal buy/sell transactions</span>
+                    <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.opening.t20')}</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700 dark:text-gray-300">Management of exit and reinvestment processes</span>
+                    <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.opening.t21')}</span>
                   </li>
                 </ul>
               </div>
 
               <div>
                 <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
-                  For Administrative and Regulatory Oversight:
+                  {t('structure.opening.t22')}
                 </h5>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-3">
-                    <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700 dark:text-gray-300">Internal compliance and supervisory tools</span>
+                    <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.opening.t23')}</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700 dark:text-gray-300">Financial and operational reporting systems</span>
+                    <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.opening.t24')}</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700 dark:text-gray-300">Digital verification and audit mechanisms</span>
+                    <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.opening.t25')}</span>
                   </li>
                 </ul>
               </div>
@@ -200,43 +202,43 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Internal Secondary Market
+              {t('structure.opening.t26')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              CapiMax provides a regulated internal secondary marketplace, enabling owners to exit or restructure their positions by trading tokenized real estate shares within a secure and controlled environment. This mechanism enhances liquidity and reduces traditional holding periods commonly associated with real estate ownership.
+              {t('structure.opening.t27')}
             </p>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Strategic Objective
+              {t('structure.opening.t28')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              The platform aims to:
+              {t('structure.opening.t29')}
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Transform real estate assets into divisible, tradable digital ownership instruments.
+                  {t('structure.opening.t30')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Increase asset management efficiency through automation and digital governance.
+                  {t('structure.opening.t31')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Expand the global owner base via a structured and transparent technological model.
+                  {t('structure.opening.t32')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Achieve a balanced integration between technological innovation and regulatory compliance.
+                  {t('structure.opening.t33')}
                 </span>
               </li>
             </ul>
@@ -244,7 +246,7 @@ export const StructurePage: React.FC = () => {
 
           <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6">
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              This Regulatory Guide serves as the comprehensive reference for the legal, technical, and operational framework governing the CapiMax Platform. It defines the rules, standards, and procedures that regulate platform operations and all participating stakeholders, ensuring transparency, fairness, and protection of ownership interests.
+              {t('structure.opening.t34')}
             </p>
           </div>
         </div>
@@ -252,34 +254,34 @@ export const StructurePage: React.FC = () => {
     },
     {
       id: 'spv-wyoming',
-      title: 'SPV Company in Wyoming – General Framework',
+      title: t('structure.spvWyoming.title'),
       icon: Building2,
       content: (
         <div className="space-y-6">
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              1. Definition of an SPV (Special Purpose Vehicle)
+              {t('structure.spvWyoming.t1')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              An SPV is an independent legal entity established for a specific and clearly defined purpose. In the Capi Max RT model, this purpose includes:
+              {t('structure.spvWyoming.t2')}
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Owning tokenized assets or the rights associated with them
+                  {t('structure.spvWyoming.t3')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Or holding equity in local companies that legally own real estate assets
+                  {t('structure.spvWyoming.t4')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Or managing the legal relationship between the real estate asset, the smart contract, and the digital token
+                  {t('structure.spvWyoming.t5')}
                 </span>
               </li>
             </ul>
@@ -287,40 +289,40 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              2. Reasons for Choosing the State of Wyoming – United States
+              {t('structure.spvWyoming.t6')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              Wyoming was selected for the following reasons:
+              {t('structure.spvWyoming.t7')}
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Advanced legal recognition of digital assets and smart contracts
+                  {t('structure.spvWyoming.t8')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Strong protection of owner rights
+                  {t('structure.spvWyoming.t9')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Regulatory clarity in dealing with SPVs and blockchain technology
+                  {t('structure.spvWyoming.t10')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  A legal environment supportive of transparency and governance
+                  {t('structure.spvWyoming.t11')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Acceptance of blockchain as a reliable registry for ownership and rights
+                  {t('structure.spvWyoming.t12')}
                 </span>
               </li>
             </ul>
@@ -328,40 +330,40 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              3. Role of the U.S.-Based SPV Company
+              {t('structure.spvWyoming.t13')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              The SPV registered in Wyoming performs the following roles:
+              {t('structure.spvWyoming.t14')}
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Acts as the parent and organizing entity for tokenization
+                  {t('structure.spvWyoming.t15')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Legally anchors and links the smart contract to the company
+                  {t('structure.spvWyoming.t16')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Represents owners legally
+                  {t('structure.spvWyoming.t17')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Links the digital token to the real-world asset
+                  {t('structure.spvWyoming.t18')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Enters into agreements with: The local company owning the property, The developer, The property owner
+                  {t('structure.spvWyoming.t19')}
                 </span>
               </li>
             </ul>
@@ -369,34 +371,34 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              4. Relationship Between: The U.S. SPV, The local company (e.g., in the UAE), The real estate asset
+              {t('structure.spvWyoming.t20')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              The relationship is structured as follows:
+              {t('structure.spvWyoming.t21')}
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  The local company legally owns the property in its jurisdiction
+                  {t('structure.spvWyoming.t22')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  The U.S. SPV: Owns shares in the local company, Or holds documented contractual rights over the property
+                  {t('structure.spvWyoming.t23')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  The smart contract is registered in the name of the SPV
+                  {t('structure.spvWyoming.t24')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  The real estate token represents a real, documented legal right
+                  {t('structure.spvWyoming.t25')}
                 </span>
               </li>
             </ul>
@@ -406,40 +408,40 @@ export const StructurePage: React.FC = () => {
     },
     {
       id: 'legal-structure',
-      title: 'Legal Structure and Agreements',
+      title: t('structure.legalStructure.title'),
       icon: FileText,
       content: (
         <div className="space-y-6">
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              1. Core Agreements
+              {t('structure.legalStructure.t1')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              There is a set of interconnected agreements, including:
+              {t('structure.legalStructure.t2')}
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  An agreement between the SPV and the local company
+                  {t('structure.legalStructure.t3')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  An ownership agreement with the property owner or developer
+                  {t('structure.legalStructure.t4')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  An owner representation agreement
+                  {t('structure.legalStructure.t5')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  A legal linkage between all agreements and the smart contract
+                  {t('structure.legalStructure.t6')}
                 </span>
               </li>
             </ul>
@@ -447,28 +449,28 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              2. Benefits of This Structure
+              {t('structure.legalStructure.t7')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Risk segregation</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.legalStructure.t8')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Owner protection</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.legalStructure.t9')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Prevention of manipulation</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.legalStructure.t10')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Assurance that the token is not fictitious</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.legalStructure.t11')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Legal compliance across multiple jurisdictions</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.legalStructure.t12')}</span>
               </li>
             </ul>
           </div>
@@ -477,58 +479,58 @@ export const StructurePage: React.FC = () => {
     },
     {
       id: 'spv-deep-dive',
-      title: 'Dedicated SPV Section – How It Works',
+      title: t('structure.spvDeepDive.title'),
       icon: Shield,
       content: (
         <div className="space-y-6">
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              1. SPV Advantages
+              {t('structure.spvDeepDive.t1')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Independent legal entity</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t2')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Does not engage in activities beyond the specific asset</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t3')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Protects owners from operational risks</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t4')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Facilitates verification and auditing</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t5')}</span>
               </li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              2. SPV and Decentralization
+              {t('structure.spvDeepDive.t6')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              Decentralization here is functional and controlled:
+              {t('structure.spvDeepDive.t7')}
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Legal management is centralized (via the SPV)
+                  {t('structure.spvDeepDive.t8')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Records and transactions are decentralized (via blockchain)
+                  {t('structure.spvDeepDive.t9')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  No single party has unilateral control over ownership or records
+                  {t('structure.spvDeepDive.t10')}
                 </span>
               </li>
             </ul>
@@ -536,137 +538,137 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              3. How Do We Ensure the Token Represents a Real Asset?
+              {t('structure.spvDeepDive.t11')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Existence of a legally established SPV</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t12')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">A documented ownership agreement</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t13')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Proven ownership or contractual rights</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t14')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">A smart contract linked to the agreement</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t15')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Full transparency on the blockchain</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t16')}</span>
               </li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              4. Owner Rights
+              {t('structure.spvDeepDive.t17')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Fractional ownership rights</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t18')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Right to returns</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t19')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Right to access information</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t20')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Right to exit (liquidity)</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t21')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Protection under U.S. law</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t22')}</span>
               </li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              5. SPV Connection to Smart Contracts and Wallets
+              {t('structure.spvDeepDive.t23')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">The SPV is the token issuer</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t24')}</span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">The smart contract operates under its name</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t25')}</span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">Wallets represent owners</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t26')}</span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">Every transaction is fully traceable</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t27')}</span>
               </li>
             </ul>
           </div>
 
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Question: Is the platform allowed to list and tokenize properties in any country worldwide?
+              {t('structure.spvDeepDive.t28')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
-              <strong>Answer:</strong> Yes, the platform can list properties in different countries, provided full compliance with the local real estate registration laws of each respective jurisdiction.
+              <strong>{t('structure.spvDeepDive.t29')}</strong> {t('structure.spvDeepDive.t30')}
             </p>
 
             <h5 className="font-semibold text-gray-900 dark:text-white mb-3">
-              How Our Model Works
+              {t('structure.spvDeepDive.t31')}
             </h5>
             <div className="space-y-4">
               <div>
                 <h6 className="font-semibold text-gray-900 dark:text-white mb-2">
-                  1. Legal Property Registration
+                  {t('structure.spvDeepDive.t32')}
                 </h6>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                  The property is officially registered in the country where it is physically located, in accordance with the local land registry and property laws. This constitutes the primary legal proof of ownership.
+                  {t('structure.spvDeepDive.t33')}
                 </p>
               </div>
 
               <div>
                 <h6 className="font-semibold text-gray-900 dark:text-white mb-2">
-                  2. Legal Structure (U.S.-Based SPV)
+                  {t('structure.spvDeepDive.t34')}
                 </h6>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                  A Special Purpose Vehicle (SPV) is established in the United States to structure and manage the economic rights associated with the asset. Owner rights are governed under U.S. corporate law and formal shareholder agreements.
+                  {t('structure.spvDeepDive.t35')}
                 </p>
               </div>
 
               <div>
                 <h6 className="font-semibold text-gray-900 dark:text-white mb-2">
-                  3. Tokenization and Smart Contracts (United States)
+                  {t('structure.spvDeepDive.t36')}
                 </h6>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-                  The digital tokens and smart contracts are issued and executed within a regulated legal and technical framework in the United States, ensuring:
+                  {t('structure.spvDeepDive.t37')}
                 </p>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700 dark:text-gray-300">Clear documentation of ownership interests</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t38')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700 dark:text-gray-300">Automated distribution of returns</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t39')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700 dark:text-gray-300">Controlled transfer mechanisms</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t40')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                    <span className="text-gray-700 dark:text-gray-300">Full operational transparency</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.spvDeepDive.t41')}</span>
                   </li>
                 </ul>
               </div>
@@ -674,38 +676,38 @@ export const StructurePage: React.FC = () => {
 
             <div className="mt-6 pt-6 border-t border-blue-200 dark:border-blue-800">
               <h5 className="font-semibold text-gray-900 dark:text-white mb-3">
-                Are Owner Rights Protected?
+                {t('structure.spvDeepDive.t42')}
               </h5>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-                Yes. Protection is structured across three clear layers:
+                {t('structure.spvDeepDive.t43')}
               </p>
               <ul className="space-y-2">
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                   <span className="text-gray-700 dark:text-gray-300">
-                    Formally registered property ownership in the country of the asset
+                    {t('structure.spvDeepDive.t44')}
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                   <span className="text-gray-700 dark:text-gray-300">
-                    A U.S.-based SPV governing owner rights under corporate law
+                    {t('structure.spvDeepDive.t45')}
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                   <span className="text-gray-700 dark:text-gray-300">
-                    Legally binding agreements supported by secure technological infrastructure
+                    {t('structure.spvDeepDive.t46')}
                   </span>
                 </li>
               </ul>
 
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed mt-4">
-                In this model, blockchain serves as an operational and record-keeping layer, while legal protection is grounded in formal property registration and a structured U.S. legal entity.
+                {t('structure.spvDeepDive.t47')}
               </p>
 
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed mt-4">
-                Additionally, the platform currently operates exclusively within jurisdictions that maintain clear regulatory and legal frameworks for real estate ownership and purchase activities.
+                {t('structure.spvDeepDive.t48')}
               </p>
             </div>
           </div>
@@ -714,77 +716,77 @@ export const StructurePage: React.FC = () => {
     },
     {
       id: 'smart-contracts',
-      title: 'Smart Contracts – Features and Regulatory Role',
+      title: t('structure.smartContracts.title'),
       icon: Layers,
       content: (
         <div className="space-y-6">
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              1. What Is a Smart Contract?
+              {t('structure.smartContracts.t1')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              A legal-technical program that:
+              {t('structure.smartContracts.t2')}
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Automatically executes terms</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.smartContracts.t3')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Cannot be manipulated</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.smartContracts.t4')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Is linked to the real-world asset</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.smartContracts.t5')}</span>
               </li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              2. Smart Contract Features
+              {t('structure.smartContracts.t6')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Automated execution</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.smartContracts.t7')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Reduced disputes</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.smartContracts.t8')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">No reliance on intermediaries</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.smartContracts.t9')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Permanent documentation</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.smartContracts.t10')}</span>
               </li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              3. Role of the Smart Contract in:
+              {t('structure.smartContracts.t11')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">Distributing returns</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.smartContracts.t12')}</span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">Recording ownership</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.smartContracts.t13')}</span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">Compliance enforcement</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.smartContracts.t14')}</span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">Managing exit mechanisms</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.smartContracts.t15')}</span>
               </li>
             </ul>
           </div>
@@ -793,52 +795,52 @@ export const StructurePage: React.FC = () => {
     },
     {
       id: 'wallets',
-      title: 'Connection to Owner Wallets',
+      title: t('structure.wallets.title'),
       icon: Wallet,
       content: (
         <div className="space-y-6">
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              1. Role of the Wallet
+              {t('structure.wallets.t1')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Proof of ownership</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.wallets.t2')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Receiving returns</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.wallets.t3')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Executing voting (if applicable)</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.wallets.t4')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Exiting owned properties</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.wallets.t5')}</span>
               </li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              2. Verification
+              {t('structure.wallets.t6')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Every wallet is linked to a KYC-verified identity
+                  {t('structure.wallets.t7')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Every token is traceable</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.wallets.t8')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Ownership cannot be manipulated</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.wallets.t9')}</span>
               </li>
             </ul>
           </div>
@@ -847,38 +849,38 @@ export const StructurePage: React.FC = () => {
     },
     {
       id: 'blockchain',
-      title: 'Blockchain – The Backbone of Transparency',
+      title: t('structure.blockchain.title'),
       icon: LinkIcon,
       content: (
         <div className="space-y-6">
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Blockchain Advantages
+              {t('structure.blockchain.t1')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Immutable ledger</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.blockchain.t2')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Full transparency</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.blockchain.t3')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Fast execution</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.blockchain.t4')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Lower costs</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.blockchain.t5')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Higher liquidity</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.blockchain.t6')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Reduced risks</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.blockchain.t7')}</span>
               </li>
             </ul>
           </div>
@@ -887,104 +889,104 @@ export const StructurePage: React.FC = () => {
     },
     {
       id: 'investment-agreement',
-      title: 'Ownership Agreement with Seller and Developer',
+      title: t('structure.investmentAgreement.title'),
       icon: FileText,
       content: (
         <div className="space-y-6">
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              1. Role of the Agreement
+              {t('structure.investmentAgreement.t1')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">Transfer of rights</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreement.t2')}</span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">Definition of obligations</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreement.t3')}</span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">Owner protection</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.legalStructure.t9')}</span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">Linkage to the smart contract</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreement.t4')}</span>
               </li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              2. Documentation
+              {t('structure.investmentAgreement.t5')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Legally notarized</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreement.t6')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Linked to the smart contract ID</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreement.t7')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Linked to the SPV</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreement.t8')}</span>
               </li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Verification of Ownership Rights
+              {t('structure.investmentAgreement.t9')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Review of the title deed</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreement.t10')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Review of the local company's registry</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreement.t11')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Data reconciliation with the ownership agreement</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreement.t12')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Linking everything to the smart contract</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreement.t13')}</span>
               </li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Protection of Legal Ownership Rights
+              {t('structure.investmentAgreement.t14')}
             </h4>
 
             <div className="space-y-4">
               <div>
                 <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
-                  Protection Mechanisms:
+                  {t('structure.investmentAgreement.t15')}
                 </h5>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 dark:text-gray-300">Legal registration</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreement.t16')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 dark:text-gray-300">Clear termination clauses</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreement.t17')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 dark:text-gray-300">Guarantees</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreement.t18')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 dark:text-gray-300">Digital documentation</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreement.t19')}</span>
                   </li>
                 </ul>
               </div>
@@ -995,122 +997,122 @@ export const StructurePage: React.FC = () => {
     },
     {
       id: 'rights-transfer',
-      title: 'Mechanism for Transferring Rights',
+      title: t('structure.rightsTransfer.title'),
       icon: Scale,
       content: (
         <div className="space-y-6">
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              How Is This Done?
+              {t('structure.rightsTransfer.t1')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">Signing an ownership agreement</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.rightsTransfer.t2')}</span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">The SPV acts as buyer or legal representative</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.rightsTransfer.t3')}</span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">Legal support provided by the platform</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.rightsTransfer.t4')}</span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">Direct linkage to tokenization</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.rightsTransfer.t5')}</span>
               </li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Why Is the Ownership Agreement Necessary?
+              {t('structure.rightsTransfer.t6')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              Without it:
+              {t('structure.rightsTransfer.t7')}
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <X className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">The token has no legal standing</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.rightsTransfer.t8')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <X className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">It is the bridge between the physical asset and the digital representation</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.rightsTransfer.t9')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <X className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Owners are not protected</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.rightsTransfer.t10')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <X className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">The platform is not enforceable</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.rightsTransfer.t11')}</span>
               </li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Relationship Between the Ownership Agreement and the SPV
+              {t('structure.rightsTransfer.t12')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">The SPV is the legal contracting party</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.rightsTransfer.t13')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">The agreement establishes and documents the rights</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.rightsTransfer.t14')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">The smart contract executes those rights</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.rightsTransfer.t15')}</span>
               </li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              How Can the Owner Verify All of This on the Platform?
+              {t('structure.rightsTransfer.t16')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              On each property page, the owner can find:
+              {t('structure.rightsTransfer.t17')}
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">SPV details</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.rightsTransfer.t18')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Incorporation documents</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.rightsTransfer.t19')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">The ownership agreement</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.rightsTransfer.t20')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Smart contract link</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.rightsTransfer.t21')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Token address</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.rightsTransfer.t22')}</span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Blockchain network</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.rightsTransfer.t23')}</span>
               </li>
             </ul>
           </div>
 
           <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6">
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Summary
+              {t('structure.rightsTransfer.t24')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              This model is: <strong>Legal, Regulated, Transparent, Globally scalable</strong>. And it protects the owner, the asset, and the platform.
+              {t('structure.rightsTransfer.t25')} <strong>{t('structure.rightsTransfer.t26')}</strong>{t('structure.rightsTransfer.t27')}
             </p>
           </div>
         </div>
@@ -1118,186 +1120,186 @@ export const StructurePage: React.FC = () => {
     },
     {
       id: 'investment-agreement-deep',
-      title: 'Ownership Agreement – Complete Framework',
+      title: t('structure.investmentAgreementDeep.title'),
       icon: FileText,
       content: (
         <div className="space-y-8">
           <div>
             <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              What Is an Ownership Agreement?
+              {t('structure.investmentAgreementDeep.t1')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              The Ownership Agreement is the core legal document that:
+              {t('structure.investmentAgreementDeep.t2')}
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Transfers ownership rights, usufruct rights, or income rights
+                  {t('structure.investmentAgreementDeep.t3')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  From the property owner or developer
+                  {t('structure.investmentAgreementDeep.t4')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  To the SPV company
+                  {t('structure.investmentAgreementDeep.t5')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  For the benefit of owners represented by real estate tokens
+                  {t('structure.investmentAgreementDeep.t6')}
                 </span>
               </li>
             </ul>
             <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
               <p className="text-amber-900 dark:text-amber-200 font-medium">
-                A real estate token is not legal or valid without a valid and duly documented ownership agreement.
+                {t('structure.investmentAgreementDeep.t7')}
               </p>
             </div>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              What Exactly Does the Agreement Transfer?
+              {t('structure.investmentAgreementDeep.t8')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              Depending on the property model, the agreement transfers one or more of the following:
+              {t('structure.investmentAgreementDeep.t9')}
             </p>
             <div className="grid md:grid-cols-2 gap-3">
               <div className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Full ownership</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t10')}</span>
               </div>
               <div className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Partial (fractional) ownership</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t11')}</span>
               </div>
               <div className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Usufruct rights</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t12')}</span>
               </div>
               <div className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Income rights</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t13')}</span>
               </div>
               <div className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Disposal or sale rights</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t14')}</span>
               </div>
               <div className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Development or operational rights</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t15')}</span>
               </div>
             </div>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Linkage with Autonomous Decentralization
+              {t('structure.investmentAgreementDeep.t16')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              Decentralization here does not mean absence of law. Rather:
+              {t('structure.investmentAgreementDeep.t17')}
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">The law governs the underlying asset</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t18')}</span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">Blockchain governs the registry and execution</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t19')}</span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">The smart contract automatically executes the agreement</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t20')}</span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">Rights cannot be modified without consent or pre-programmed conditions</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t21')}</span>
               </li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              How to Verify Ownership Rights
+              {t('structure.investmentAgreementDeep.t22')}
             </h4>
 
             <div className="space-y-4">
               <div>
                 <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
-                  1. Traditional Legal Verification
+                  {t('structure.investmentAgreementDeep.t23')}
                 </h5>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 dark:text-gray-300">Title Deed</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t24')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 dark:text-gray-300">Land registry records</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t25')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 dark:text-gray-300">Commercial registry of the owning company</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t26')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 dark:text-gray-300">Confirmation of absence of mortgages or disputes</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t27')}</span>
                   </li>
                 </ul>
               </div>
 
               <div>
                 <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
-                  2. Regulatory Verification via the SPV
+                  {t('structure.investmentAgreementDeep.t28')}
                 </h5>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 dark:text-gray-300">Ensuring that the SPV is legally established and registered</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t29')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 dark:text-gray-300">Authorized to act</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t30')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 dark:text-gray-300">A principal party to the agreement</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t31')}</span>
                   </li>
                 </ul>
               </div>
 
               <div>
                 <h5 className="font-semibold text-gray-900 dark:text-white mb-2">
-                  3. Digital Verification (Blockchain Verification)
+                  {t('structure.investmentAgreementDeep.t32')}
                 </h5>
                 <ul className="space-y-2">
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 dark:text-gray-300">Smart contract address</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t33')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 dark:text-gray-300">Number of tokens</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t34')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 dark:text-gray-300">Type of rights represented</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t35')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 dark:text-gray-300">Issuance date</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t36')}</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-700 dark:text-gray-300">Transaction history</span>
+                    <span className="text-gray-700 dark:text-gray-300">{t('structure.investmentAgreementDeep.t37')}</span>
                   </li>
                 </ul>
               </div>
@@ -1306,10 +1308,10 @@ export const StructurePage: React.FC = () => {
 
           <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6">
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Regulatory Summary
+              {t('structure.investmentAgreementDeep.t38')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              This model is: <strong>Legal, Auditable, Protected, Transparent, Regulatory-compliant, Globally scalable</strong>
+              {t('structure.rightsTransfer.t25')} <strong>{t('structure.investmentAgreementDeep.t39')}</strong>
             </p>
           </div>
         </div>
@@ -1317,64 +1319,64 @@ export const StructurePage: React.FC = () => {
     },
     {
       id: 'example-uae',
-      title: 'Example: Real Estate Tokenized Asset – UAE',
+      title: t('structure.exampleUae.title'),
       icon: Globe,
       content: (
         <div className="space-y-6">
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Practical Application: Commercial Property in Dubai Business Bay
+              {t('structure.exampleUae.t1')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              This section demonstrates how the CapiMax regulatory framework applies to a real-world tokenized real estate asset in the United Arab Emirates.
+              {t('structure.exampleUae.t2')}
             </p>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              1. Property Details
+              {t('structure.exampleUae.t3')}
             </h4>
             <div className="grid md:grid-cols-2 gap-4">
               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Location</p>
-                <p className="text-gray-900 dark:text-white font-medium">Dubai Business Bay, UAE</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('structure.exampleUae.t4')}</p>
+                <p className="text-gray-900 dark:text-white font-medium">{t('structure.exampleUae.t5')}</p>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Property Type</p>
-                <p className="text-gray-900 dark:text-white font-medium">Commercial Office Building</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('structure.exampleUae.t6')}</p>
+                <p className="text-gray-900 dark:text-white font-medium">{t('structure.exampleUae.t7')}</p>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Valuation</p>
-                <p className="text-gray-900 dark:text-white font-medium">$10,000,000 USD</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('structure.exampleUae.t8')}</p>
+                <p className="text-gray-900 dark:text-white font-medium">{t('structure.exampleUae.t9')}</p>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Tokenization</p>
-                <p className="text-gray-900 dark:text-white font-medium">1,000,000 tokens</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">{t('structure.exampleUae.t10')}</p>
+                <p className="text-gray-900 dark:text-white font-medium">{t('structure.exampleUae.t11')}</p>
               </div>
             </div>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              2. Legal Structure
+              {t('structure.exampleUae.t12')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Property is registered with Dubai Land Department (DLD) in the name of a UAE-based LLC
+                  {t('structure.exampleUae.t13')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  A Wyoming-based SPV owns 100% equity in the UAE LLC
+                  {t('structure.exampleUae.t14')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  The SPV issues digital tokens representing fractional ownership
+                  {t('structure.exampleUae.t15')}
                 </span>
               </li>
             </ul>
@@ -1382,54 +1384,54 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              3. Ownership Agreement
+              {t('structure.exampleUae.t16')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              A formal ownership agreement is executed between:
+              {t('structure.exampleUae.t17')}
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">The original property owner/developer</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.exampleUae.t18')}</span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">The UAE-based LLC (local holding company)</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.exampleUae.t19')}</span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
-                <span className="text-gray-700 dark:text-gray-300">The Wyoming SPV (owner representative)</span>
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.exampleUae.t20')}</span>
               </li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              4. Smart Contract Implementation
+              {t('structure.exampleUae.t21')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Deployed on Ethereum blockchain
+                  {t('structure.exampleUae.t22')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Linked to SPV company registration
+                  {t('structure.exampleUae.t23')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  References ownership agreement ID
+                  {t('structure.exampleUae.t24')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Automates rental income distribution
+                  {t('structure.exampleUae.t25')}
                 </span>
               </li>
             </ul>
@@ -1437,34 +1439,34 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              5. Owner Rights
+              {t('structure.exampleUae.t26')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              Token holders receive:
+              {t('structure.exampleUae.t27')}
             </p>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Proportional rental income (distributed quarterly)
+                  {t('structure.exampleUae.t28')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Proportional capital appreciation upon sale
+                  {t('structure.exampleUae.t29')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Right to trade tokens on the internal marketplace
+                  {t('structure.exampleUae.t30')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Access to property performance reports
+                  {t('structure.exampleUae.t31')}
                 </span>
               </li>
             </ul>
@@ -1472,31 +1474,31 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              6. Compliance Framework
+              {t('structure.exampleUae.t32')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <Shield className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Full KYC/AML verification for all owners
+                  {t('structure.exampleUae.t33')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <Shield className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Compliance with UAE real estate regulations
+                  {t('structure.exampleUae.t34')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <Shield className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Adherence to U.S. corporate governance standards
+                  {t('structure.exampleUae.t35')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <Shield className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Regular third-party audits
+                  {t('structure.exampleUae.t36')}
                 </span>
               </li>
             </ul>
@@ -1504,63 +1506,63 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              7. Documentation Available to Owners
+              {t('structure.exampleUae.t37')}
             </h4>
             <div className="grid md:grid-cols-2 gap-3">
               <div className="flex items-start gap-3">
                 <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Dubai Land Department Title Deed</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.exampleUae.t38')}</span>
               </div>
               <div className="flex items-start gap-3">
                 <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">UAE LLC Commercial License</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.exampleUae.t39')}</span>
               </div>
               <div className="flex items-start gap-3">
                 <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Wyoming SPV Certificate of Incorporation</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.exampleUae.t40')}</span>
               </div>
               <div className="flex items-start gap-3">
                 <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Ownership Agreement</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.exampleUae.t41')}</span>
               </div>
               <div className="flex items-start gap-3">
                 <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Property Valuation Report</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.exampleUae.t42')}</span>
               </div>
               <div className="flex items-start gap-3">
                 <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Smart Contract Source Code</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.exampleUae.t43')}</span>
               </div>
             </div>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              8. Risk Mitigation
+              {t('structure.exampleUae.t44')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <Lock className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Asset segregation through SPV structure
+                  {t('structure.exampleUae.t45')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <Lock className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Insurance coverage on the property
+                  {t('structure.exampleUae.t46')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <Lock className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Professional property management
+                  {t('structure.exampleUae.t47')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <Lock className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Smart contract security audits
+                  {t('structure.exampleUae.t48')}
                 </span>
               </li>
             </ul>
@@ -1568,49 +1570,49 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              9. Revenue Distribution Process
+              {t('structure.exampleUae.t49')}
             </h4>
             <div className="space-y-3">
               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Step 1</p>
-                <p className="text-gray-900 dark:text-white">Tenants pay rent to UAE LLC bank account</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{t('structure.exampleUae.t50')}</p>
+                <p className="text-gray-900 dark:text-white">{t('structure.exampleUae.t51')}</p>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Step 2</p>
-                <p className="text-gray-900 dark:text-white">Operating expenses and reserves deducted</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{t('structure.exampleUae.t52')}</p>
+                <p className="text-gray-900 dark:text-white">{t('structure.exampleUae.t53')}</p>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Step 3</p>
-                <p className="text-gray-900 dark:text-white">Net income transferred to SPV distribution wallet</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{t('structure.exampleUae.t54')}</p>
+                <p className="text-gray-900 dark:text-white">{t('structure.exampleUae.t55')}</p>
               </div>
               <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Step 4</p>
-                <p className="text-gray-900 dark:text-white">Smart contract automatically distributes to token holders</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{t('structure.exampleUae.t56')}</p>
+                <p className="text-gray-900 dark:text-white">{t('structure.exampleUae.t57')}</p>
               </div>
             </div>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              10. Exit Mechanisms
+              {t('structure.exampleUae.t58')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Sell tokens on internal marketplace
+                  {t('structure.exampleUae.t59')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Participate in property sale vote
+                  {t('structure.exampleUae.t60')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <ArrowRight className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
+                <ArrowRight className="rtl:rotate-180 w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-1" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  Receive proportional proceeds upon sale
+                  {t('structure.exampleUae.t61')}
                 </span>
               </li>
             </ul>
@@ -1618,35 +1620,35 @@ export const StructurePage: React.FC = () => {
 
           <div>
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              11. Transparency and Reporting
+              {t('structure.exampleUae.t62')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-              Owners have access to:
+              {t('structure.exampleUae.t63')}
             </p>
             <div className="grid md:grid-cols-2 gap-3">
               <div className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Monthly financial statements</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.exampleUae.t64')}</span>
               </div>
               <div className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Quarterly performance reports</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.exampleUae.t65')}</span>
               </div>
               <div className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Annual audited financials</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.exampleUae.t66')}</span>
               </div>
               <div className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Real-time blockchain transaction data</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.exampleUae.t67')}</span>
               </div>
               <div className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Property occupancy updates</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.exampleUae.t68')}</span>
               </div>
               <div className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-gray-700 dark:text-gray-300">Market valuation updates</span>
+                <span className="text-gray-700 dark:text-gray-300">{t('structure.exampleUae.t69')}</span>
               </div>
             </div>
           </div>
@@ -1655,171 +1657,171 @@ export const StructurePage: React.FC = () => {
     },
     {
       id: 'real-estate-journey',
-      title: 'Real Estate Journey Model',
+      title: t('structure.realEstateJourney.title'),
       icon: Building2,
       content: (
         <div className="space-y-6">
           <div className="bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6 mb-8">
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              From Physical Asset to Digital Token
+              {t('structure.realEstateJourney.t1')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              This journey outlines the complete lifecycle of a real estate asset on the CapiMax platform, from initial listing to token distribution and ongoing management.
+              {t('structure.realEstateJourney.t2')}
             </p>
           </div>
 
           {[
             {
-              phase: 'Phase 0',
-              title: 'Property Acquisition or Development Initiation',
+              phase: t('structure.realEstateJourney.t3'),
+              title: t('structure.realEstateJourney.t4'),
               items: [
-                'Property owner or developer identifies a suitable asset',
-                'Initial property valuation conducted',
-                'Legal due diligence performed',
-                'Property documentation compiled'
+                t('structure.realEstateJourney.t5'),
+                t('structure.realEstateJourney.t6'),
+                t('structure.realEstateJourney.t7'),
+                t('structure.realEstateJourney.t8')
               ]
             },
             {
-              phase: 'Phase 1',
-              title: 'Platform Onboarding',
+              phase: t('structure.realEstateJourney.t9'),
+              title: t('structure.realEstateJourney.t10'),
               items: [
-                'Owner/developer submits property details to CapiMax',
-                'Platform conducts initial screening',
-                'Property evaluation and feasibility assessment',
-                'Preliminary tokenization structure proposed'
+                t('structure.realEstateJourney.t11'),
+                t('structure.realEstateJourney.t12'),
+                t('structure.realEstateJourney.t13'),
+                t('structure.realEstateJourney.t14')
               ]
             },
             {
-              phase: 'Phase 2',
-              title: 'Legal Structure Formation',
+              phase: t('structure.realEstateJourney.t15'),
+              title: t('structure.realEstateJourney.t16'),
               items: [
-                'Establish local holding company (if required)',
-                'Create Wyoming SPV for the specific property',
-                'Register SPV with appropriate authorities',
-                'Prepare corporate governance documents'
+                t('structure.realEstateJourney.t17'),
+                t('structure.realEstateJourney.t18'),
+                t('structure.realEstateJourney.t19'),
+                t('structure.realEstateJourney.t20')
               ]
             },
             {
-              phase: 'Phase 3',
-              title: 'Ownership Agreement Execution',
+              phase: t('structure.realEstateJourney.t21'),
+              title: t('structure.realEstateJourney.t22'),
               items: [
-                'Draft comprehensive ownership agreement',
-                'Define rights transfer (ownership, usufruct, income)',
-                'Legal review and notarization',
-                'Execute agreement between all parties',
-                'Link agreement to SPV documentation'
+                t('structure.realEstateJourney.t23'),
+                t('structure.realEstateJourney.t24'),
+                t('structure.realEstateJourney.t25'),
+                t('structure.realEstateJourney.t26'),
+                t('structure.realEstateJourney.t27')
               ]
             },
             {
-              phase: 'Phase 4',
-              title: 'Property Verification and Documentation',
+              phase: t('structure.realEstateJourney.t28'),
+              title: t('structure.realEstateJourney.t29'),
               items: [
-                'Verify title deed and ownership',
-                'Confirm absence of liens or encumbrances',
-                'Obtain independent property valuation',
-                'Compile all legal and financial documentation',
-                'Upload documents to secure platform repository'
+                t('structure.realEstateJourney.t30'),
+                t('structure.realEstateJourney.t31'),
+                t('structure.realEstateJourney.t32'),
+                t('structure.realEstateJourney.t33'),
+                t('structure.realEstateJourney.t34')
               ]
             },
             {
-              phase: 'Phase 5',
-              title: 'Smart Contract Development',
+              phase: t('structure.realEstateJourney.t35'),
+              title: t('structure.realEstateJourney.t36'),
               items: [
-                'Design smart contract architecture',
-                'Code smart contract with specific property parameters',
-                'Link smart contract to SPV and ownership agreement',
-                'Conduct internal code review',
-                'Third-party security audit',
-                'Deploy to testnet for verification'
+                t('structure.realEstateJourney.t37'),
+                t('structure.realEstateJourney.t38'),
+                t('structure.realEstateJourney.t39'),
+                t('structure.realEstateJourney.t40'),
+                t('structure.realEstateJourney.t41'),
+                t('structure.realEstateJourney.t42')
               ]
             },
             {
-              phase: 'Phase 6',
-              title: 'Token Economics Design',
+              phase: t('structure.realEstateJourney.t43'),
+              title: t('structure.realEstateJourney.t44'),
               items: [
-                'Determine total token supply',
-                'Set token price based on property valuation',
-                'Define minimum and maximum purchase amounts',
-                'Establish revenue distribution mechanism',
-                'Configure governance rights (if applicable)',
-                'Finalize tokenomics documentation'
+                t('structure.realEstateJourney.t45'),
+                t('structure.realEstateJourney.t46'),
+                t('structure.realEstateJourney.t47'),
+                t('structure.realEstateJourney.t48'),
+                t('structure.realEstateJourney.t49'),
+                t('structure.realEstateJourney.t50')
               ]
             },
             {
-              phase: 'Phase 7',
-              title: 'Regulatory Compliance',
+              phase: t('structure.realEstateJourney.t51'),
+              title: t('structure.realEstateJourney.t52'),
               items: [
-                'Ensure compliance with local real estate laws',
-                'Verify adherence to U.S. securities regulations',
-                'Implement KYC/AML requirements',
-                'Set up compliance monitoring systems',
-                'Obtain necessary regulatory approvals or exemptions'
+                t('structure.realEstateJourney.t53'),
+                t('structure.realEstateJourney.t54'),
+                t('structure.realEstateJourney.t55'),
+                t('structure.realEstateJourney.t56'),
+                t('structure.realEstateJourney.t57')
               ]
             },
             {
-              phase: 'Phase 8',
-              title: 'Smart Contract Deployment',
+              phase: t('structure.realEstateJourney.t58'),
+              title: t('structure.realEstateJourney.t59'),
               items: [
-                'Deploy smart contract to production blockchain',
-                'Verify contract on blockchain explorer',
-                'Test token minting functionality',
-                'Configure administrative controls',
-                'Establish multi-signature wallet protections'
+                t('structure.realEstateJourney.t60'),
+                t('structure.realEstateJourney.t61'),
+                t('structure.realEstateJourney.t62'),
+                t('structure.realEstateJourney.t63'),
+                t('structure.realEstateJourney.t64')
               ]
             },
             {
-              phase: 'Phase 9',
-              title: 'Property Listing on Platform',
+              phase: t('structure.realEstateJourney.t65'),
+              title: t('structure.realEstateJourney.t66'),
               items: [
-                'Create detailed property listing page',
-                'Upload high-quality images and videos',
-                'Publish all legal documentation',
-                'Display SPV details and blockchain links',
-                'Set ownership timeline and targets',
-                'Launch property to owners'
+                t('structure.realEstateJourney.t67'),
+                t('structure.realEstateJourney.t68'),
+                t('structure.realEstateJourney.t69'),
+                t('structure.realEstateJourney.t70'),
+                t('structure.realEstateJourney.t71'),
+                t('structure.realEstateJourney.t72')
               ]
             },
             {
-              phase: 'Phase 10',
-              title: 'Ownership Period',
+              phase: t('structure.realEstateJourney.t73'),
+              title: t('structure.realEstateJourney.t74'),
               items: [
-                'Owners review property details',
-                'Complete KYC verification',
-                'Submit purchase commitments',
-                'Process payments (fiat or crypto)',
-                'Track funding progress against target',
-                'Provide regular updates to potential owners'
+                t('structure.realEstateJourney.t75'),
+                t('structure.realEstateJourney.t76'),
+                t('structure.realEstateJourney.t77'),
+                t('structure.realEstateJourney.t78'),
+                t('structure.realEstateJourney.t79'),
+                t('structure.realEstateJourney.t80')
               ]
             },
             {
-              phase: 'Phase 11',
-              title: 'Token Minting and Distribution',
+              phase: t('structure.realEstateJourney.t81'),
+              title: t('structure.realEstateJourney.t82'),
               items: [
-                'Verify all purchase payments cleared',
-                'Execute smart contract token minting function',
-                'Distribute tokens to owner wallets',
-                'Confirm all token allocations on blockchain',
-                'Send confirmation notifications to owners',
-                'Update property status to "Active"'
+                t('structure.realEstateJourney.t83'),
+                t('structure.realEstateJourney.t84'),
+                t('structure.realEstateJourney.t85'),
+                t('structure.realEstateJourney.t86'),
+                t('structure.realEstateJourney.t87'),
+                t('structure.realEstateJourney.t88')
               ]
             },
             {
-              phase: 'Phase 12',
-              title: 'Ongoing Asset Management',
+              phase: t('structure.realEstateJourney.t89'),
+              title: t('structure.realEstateJourney.t90'),
               items: [
-                'Property management and operations',
-                'Collect rental income or development proceeds',
-                'Automated revenue distribution via smart contract',
-                'Regular financial and performance reporting',
-                'Facilitate secondary market trading',
-                'Property maintenance and value enhancement',
-                'Annual valuations and audits',
-                'Owner communications and governance',
-                'Exit planning and execution when appropriate'
+                t('structure.realEstateJourney.t91'),
+                t('structure.realEstateJourney.t92'),
+                t('structure.realEstateJourney.t93'),
+                t('structure.realEstateJourney.t94'),
+                t('structure.realEstateJourney.t95'),
+                t('structure.realEstateJourney.t96'),
+                t('structure.realEstateJourney.t97'),
+                t('structure.realEstateJourney.t98'),
+                t('structure.realEstateJourney.t99')
               ]
             }
           ].map((phase, index) => (
-            <div key={index} className="border-l-4 border-emerald-500 dark:border-emerald-400 pl-6 pb-6">
+            <div key={index} className="border-s-4 border-emerald-500 dark:border-emerald-400 ps-6 pb-6">
               <div className="flex items-start gap-3 mb-3">
                 <div className="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
                   <span className="text-emerald-700 dark:text-emerald-300 font-bold text-sm">
@@ -1835,7 +1837,7 @@ export const StructurePage: React.FC = () => {
                   </h5>
                 </div>
               </div>
-              <ul className="space-y-2 ml-15">
+              <ul className="space-y-2 ms-15">
                 {phase.items.map((item, itemIndex) => (
                   <li key={itemIndex} className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
@@ -1848,31 +1850,31 @@ export const StructurePage: React.FC = () => {
 
           <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-6 mt-8">
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Value of This Model for Owners
+              {t('structure.realEstateJourney.t100')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  <strong>Complete Transparency:</strong> Every step documented and verifiable
+                  <strong>{t('structure.realEstateJourney.t101')}</strong> {t('structure.realEstateJourney.t102')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  <strong>Legal Protection:</strong> Multi-jurisdictional legal framework
+                  <strong>{t('structure.realEstateJourney.t103')}</strong> {t('structure.realEstateJourney.t104')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  <strong>Automated Operations:</strong> Efficient, error-free execution
+                  <strong>{t('structure.realEstateJourney.t105')}</strong> {t('structure.realEstateJourney.t106')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  <strong>Continuous Oversight:</strong> Ongoing management and reporting
+                  <strong>{t('structure.realEstateJourney.t107')}</strong> {t('structure.realEstateJourney.t108')}
                 </span>
               </li>
             </ul>
@@ -1882,163 +1884,163 @@ export const StructurePage: React.FC = () => {
     },
     {
       id: 'investor-journey',
-      title: 'Owner Journey Model',
+      title: t('structure.investorJourney.title'),
       icon: Users,
       content: (
         <div className="space-y-6">
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mb-8">
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Your Journey as a CapiMax Owner
+              {t('structure.investorJourney.t1')}
             </h4>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-              From registration to returns, this journey outlines the complete owner experience on the CapiMax platform, ensuring clarity and confidence at every step.
+              {t('structure.investorJourney.t2')}
             </p>
           </div>
 
           {[
             {
-              phase: 'Phase 1',
-              title: 'Discovery and Registration',
+              phase: t('structure.realEstateJourney.t9'),
+              title: t('structure.investorJourney.t3'),
               items: [
-                'Discover CapiMax platform and real estate tokenization opportunities',
-                'Review platform features and available properties',
-                'Create account with email and secure password',
-                'Agree to Terms of Service and Privacy Policy',
-                'Verify email address'
+                t('structure.investorJourney.t4'),
+                t('structure.investorJourney.t5'),
+                t('structure.investorJourney.t6'),
+                t('structure.investorJourney.t7'),
+                t('structure.investorJourney.t8')
               ]
             },
             {
-              phase: 'Phase 2',
-              title: 'KYC Verification',
+              phase: t('structure.realEstateJourney.t15'),
+              title: t('structure.investorJourney.t9'),
               items: [
-                'Submit identity verification documents',
-                'Provide proof of address',
-                'Complete KYC questionnaire',
-                'Await verification (typically 24-48 hours)',
-                'Receive KYC approval notification'
+                t('structure.investorJourney.t10'),
+                t('structure.investorJourney.t11'),
+                t('structure.investorJourney.t12'),
+                t('structure.investorJourney.t13'),
+                t('structure.investorJourney.t14')
               ]
             },
             {
-              phase: 'Phase 3',
-              title: 'Property Exploration',
+              phase: t('structure.realEstateJourney.t21'),
+              title: t('structure.investorJourney.t15'),
               items: [
-                'Browse available tokenized properties',
-                'Filter by location, type, expected returns, status',
-                'Review detailed property information',
-                'Examine legal documentation (title deeds, agreements, SPV details)',
-                'Analyze financial projections and risk factors'
+                t('structure.investorJourney.t16'),
+                t('structure.investorJourney.t17'),
+                t('structure.investorJourney.t18'),
+                t('structure.investorJourney.t19'),
+                t('structure.investorJourney.t20')
               ]
             },
             {
-              phase: 'Phase 4',
-              title: 'Due Diligence',
+              phase: t('structure.realEstateJourney.t28'),
+              title: t('structure.investorJourney.t21'),
               items: [
-                'Review SPV incorporation documents',
-                'Verify smart contract address on blockchain',
-                'Study ownership agreement terms',
-                'Examine property valuation reports',
-                'Understand tokenomics and distribution mechanisms',
-                'Assess exit options and liquidity'
+                t('structure.investorJourney.t22'),
+                t('structure.investorJourney.t23'),
+                t('structure.investorJourney.t24'),
+                t('structure.investorJourney.t25'),
+                t('structure.investorJourney.t26'),
+                t('structure.investorJourney.t27')
               ]
             },
             {
-              phase: 'Phase 5',
-              title: 'Ownership Decision',
+              phase: t('structure.realEstateJourney.t35'),
+              title: t('structure.investorJourney.t28'),
               items: [
-                'Select property for purchase',
-                'Determine purchase amount',
-                'Use ownership calculator to project returns',
-                'Review terms and conditions specific to the property',
-                'Confirm understanding of risks'
+                t('structure.investorJourney.t29'),
+                t('structure.investorJourney.t30'),
+                t('structure.investorJourney.t31'),
+                t('structure.investorJourney.t32'),
+                t('structure.investorJourney.t33')
               ]
             },
             {
-              phase: 'Phase 6',
-              title: 'Wallet Setup (if using crypto)',
+              phase: t('structure.realEstateJourney.t43'),
+              title: t('structure.investorJourney.t34'),
               items: [
-                'Connect compatible Web3 wallet (MetaMask, WalletConnect, etc.)',
-                'Verify wallet connection',
-                'Ensure sufficient funds for purchase and gas fees',
-                'Link wallet to CapiMax account for future transactions'
+                t('structure.investorJourney.t35'),
+                t('structure.investorJourney.t36'),
+                t('structure.investorJourney.t37'),
+                t('structure.investorJourney.t38')
               ]
             },
             {
-              phase: 'Phase 7',
-              title: 'Purchase Execution',
+              phase: t('structure.realEstateJourney.t51'),
+              title: t('structure.investorJourney.t39'),
               items: [
-                'Select payment method (bank transfer, card, crypto)',
-                'Enter purchase amount',
-                'Review transaction summary and fees',
-                'Confirm purchase commitment',
-                'Complete payment authorization'
+                t('structure.investorJourney.t40'),
+                t('structure.investorJourney.t41'),
+                t('structure.investorJourney.t42'),
+                t('structure.investorJourney.t43'),
+                t('structure.investorJourney.t44')
               ]
             },
             {
-              phase: 'Phase 8',
-              title: 'Payment Processing',
+              phase: t('structure.realEstateJourney.t58'),
+              title: t('structure.investorJourney.t45'),
               items: [
-                'Payment verification in progress',
-                'Transaction confirmation received',
-                'Purchase recorded in user dashboard',
-                'Funds held in escrow until tokenization completes',
-                'Email confirmation sent with transaction details'
+                t('structure.investorJourney.t46'),
+                t('structure.investorJourney.t47'),
+                t('structure.investorJourney.t48'),
+                t('structure.investorJourney.t49'),
+                t('structure.investorJourney.t50')
               ]
             },
             {
-              phase: 'Phase 9',
-              title: 'Token Allocation',
+              phase: t('structure.realEstateJourney.t65'),
+              title: t('structure.investorJourney.t51'),
               items: [
-                'Property funding target reached',
-                'Smart contract executes token minting',
-                'Tokens automatically allocated to owner wallet',
-                'Blockchain transaction confirmation',
-                'Notification of successful token distribution'
+                t('structure.investorJourney.t52'),
+                t('structure.investorJourney.t53'),
+                t('structure.investorJourney.t54'),
+                t('structure.investorJourney.t55'),
+                t('structure.investorJourney.t56')
               ]
             },
             {
-              phase: 'Phase 10',
-              title: 'Portfolio Management',
+              phase: t('structure.realEstateJourney.t73'),
+              title: t('structure.investorJourney.t57'),
               items: [
-                'View token holdings in dashboard',
-                'Monitor property performance metrics',
-                'Track portfolio value and returns',
-                'Access property documents and reports',
-                'Receive notifications of property updates'
+                t('structure.investorJourney.t58'),
+                t('structure.investorJourney.t59'),
+                t('structure.investorJourney.t60'),
+                t('structure.investorJourney.t61'),
+                t('structure.investorJourney.t62')
               ]
             },
             {
-              phase: 'Phase 11',
-              title: 'Revenue Distribution',
+              phase: t('structure.realEstateJourney.t81'),
+              title: t('structure.investorJourney.t63'),
               items: [
-                'Property generates rental income or development returns',
-                'Smart contract automatically calculates distributions',
-                'Proportional revenue sent to owner wallet',
-                'Distribution notification with detailed breakdown',
-                'View distribution history and tax documentation'
+                t('structure.investorJourney.t64'),
+                t('structure.investorJourney.t65'),
+                t('structure.investorJourney.t66'),
+                t('structure.investorJourney.t67'),
+                t('structure.investorJourney.t68')
               ]
             },
             {
-              phase: 'Phase 12',
-              title: 'Secondary Market Trading (Optional)',
+              phase: t('structure.realEstateJourney.t89'),
+              title: t('structure.investorJourney.t69'),
               items: [
-                'List tokens for sale on internal marketplace',
-                'Set asking price and quantity',
-                'Review buyer offers',
-                'Execute sale transaction',
-                'Receive proceeds in chosen currency',
-                'Updated portfolio automatically'
+                t('structure.investorJourney.t70'),
+                t('structure.investorJourney.t71'),
+                t('structure.investorJourney.t72'),
+                t('structure.investorJourney.t73'),
+                t('structure.investorJourney.t74'),
+                t('structure.investorJourney.t75')
               ]
             },
             {
-              phase: 'Phase 13',
-              title: 'Exit and Repurchase',
+              phase: t('structure.investorJourney.t76'),
+              title: t('structure.investorJourney.t77'),
               items: [
-                'Participate in property sale governance vote (if applicable)',
-                'Receive proportional proceeds from property sale',
-                'Review final distribution and capital gains',
-                'Download tax documents and transaction history',
-                'Option to purchase new properties',
-                'Withdraw funds or maintain balance for future purchases'
+                t('structure.investorJourney.t78'),
+                t('structure.investorJourney.t79'),
+                t('structure.investorJourney.t80'),
+                t('structure.investorJourney.t81'),
+                t('structure.investorJourney.t82'),
+                t('structure.investorJourney.t83')
               ]
             }
           ].map((phase, index) => (
@@ -2058,7 +2060,7 @@ export const StructurePage: React.FC = () => {
                   </h5>
                 </div>
               </div>
-              <ul className="space-y-2 ml-15">
+              <ul className="space-y-2 ms-15">
                 {phase.items.map((item, itemIndex) => (
                   <li key={itemIndex} className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
@@ -2071,43 +2073,43 @@ export const StructurePage: React.FC = () => {
 
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6 mt-8">
             <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-              Value Added for the Owner
+              {t('structure.investorJourney.t84')}
             </h4>
             <ul className="space-y-2">
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  <strong>Accessibility:</strong> Own premium real estate with lower capital requirements
+                  <strong>{t('structure.investorJourney.t85')}</strong> {t('structure.investorJourney.t86')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  <strong>Liquidity:</strong> Exit ownership through secondary market trading
+                  <strong>{t('structure.investorJourney.t87')}</strong> {t('structure.investorJourney.t88')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  <strong>Transparency:</strong> Full visibility into property performance and legal structure
+                  <strong>{t('structure.investorJourney.t89')}</strong> {t('structure.investorJourney.t90')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  <strong>Automation:</strong> Seamless revenue distribution without manual processes
+                  <strong>{t('structure.investorJourney.t91')}</strong> {t('structure.investorJourney.t92')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  <strong>Diversification:</strong> Build a diversified real estate portfolio across geographies and asset types
+                  <strong>{t('structure.investorJourney.t93')}</strong> {t('structure.investorJourney.t94')}
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  <strong>Legal Protection:</strong> Robust regulatory framework protecting owner rights
+                  <strong>{t('structure.realEstateJourney.t103')}</strong> {t('structure.investorJourney.t95')}
                 </span>
               </li>
             </ul>
@@ -2120,10 +2122,10 @@ export const StructurePage: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>Regulatory Structure | CapiMax RT</title>
+        <title>{t('structure.ui.metaTitle')}</title>
         <meta
           name="description"
-          content="Comprehensive regulatory guide for the CapiMax Real Estate Tokenization Platform. Learn about our SPV structure, legal framework, and owner protections."
+          content={t('structure.ui.metaDescription')}
         />
       </Helmet>
 
@@ -2142,7 +2144,7 @@ export const StructurePage: React.FC = () => {
                 opacity: [0.1, 0.2, 0.1]
               }}
               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="absolute top-20 right-20 w-72 h-72 bg-gradient-to-r from-emerald-400/10 to-green-400/10 dark:from-emerald-500/20 dark:to-green-500/20 rounded-full blur-3xl"
+              className="absolute top-20 end-20 w-72 h-72 bg-gradient-to-r from-emerald-400/10 to-green-400/10 dark:from-emerald-500/20 dark:to-green-500/20 rounded-full blur-3xl"
             />
             <motion.div
               animate={{
@@ -2151,7 +2153,7 @@ export const StructurePage: React.FC = () => {
                 opacity: [0.1, 0.15, 0.1]
               }}
               transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-              className="absolute bottom-20 left-20 w-96 h-96 bg-gradient-to-r from-blue-400/10 to-purple-400/10 dark:from-blue-500/15 dark:to-purple-500/15 rounded-full blur-3xl"
+              className="absolute bottom-20 start-20 w-96 h-96 bg-gradient-to-r from-blue-400/10 to-purple-400/10 dark:from-blue-500/15 dark:to-purple-500/15 rounded-full blur-3xl"
             />
 
             {/* Floating particles */}
@@ -2192,7 +2194,7 @@ export const StructurePage: React.FC = () => {
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-emerald-200/50 dark:border-emerald-500/30 shadow-xl"
                 >
                   <Shield className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
-                  <span className="text-sm font-semibold text-slate-700 dark:text-gray-200">Regulatory Framework</span>
+                  <span className="text-sm font-semibold text-slate-700 dark:text-gray-200">{t('structure.ui.badge')}</span>
                 </motion.div>
 
                 <motion.h1
@@ -2201,9 +2203,9 @@ export const StructurePage: React.FC = () => {
                   transition={{ duration: 0.8, delay: 0.2 }}
                   className="text-5xl lg:text-6xl font-bold leading-tight tracking-tight text-slate-800 dark:text-white"
                 >
-                  Comprehensive{' '}
+                  {t('structure.ui.titleLead')}{' '}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 dark:from-emerald-400 dark:via-green-400 dark:to-teal-400">
-                    Regulatory Guide
+                    {t('structure.ui.titleHighlight')}
                   </span>
                 </motion.h1>
 
@@ -2213,7 +2215,7 @@ export const StructurePage: React.FC = () => {
                   transition={{ duration: 0.8, delay: 0.4 }}
                   className="text-xl lg:text-2xl leading-relaxed text-slate-600 dark:text-gray-300 max-w-3xl mx-auto font-light"
                 >
-                  CapiMax RT - Real Estate Tokenization Platform and Fractional Ownership
+                  {t('structure.ui.heroText')}
                 </motion.p>
               </div>
             </Container>
@@ -2233,7 +2235,7 @@ export const StructurePage: React.FC = () => {
               >
                 <div className="sticky top-24 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 uppercase tracking-wider">
-                    Contents
+                    {t('structure.ui.contents')}
                   </h3>
                   <nav className="space-y-2">
                     {sections.map((section, index) => {
@@ -2244,7 +2246,7 @@ export const StructurePage: React.FC = () => {
                         <button
                           key={section.id}
                           onClick={() => scrollToSection(section.id)}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${
+                          className={`w-full text-start px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${
                             isOpen
                               ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium'
                               : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -2267,7 +2269,7 @@ export const StructurePage: React.FC = () => {
                 >
                   <span className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-white">
                     <Menu className="w-4 h-4" />
-                    Table of Contents
+                    {t('structure.ui.tocToggle')}
                   </span>
                   <ChevronDown
                     className={`w-5 h-5 text-gray-400 transition-transform ${tocOpen ? 'rotate-180' : ''}`}
@@ -2291,7 +2293,7 @@ export const StructurePage: React.FC = () => {
                             <button
                               key={section.id}
                               onClick={() => scrollToSection(section.id)}
-                              className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${
+                              className={`w-full text-start px-3 py-2 rounded-lg text-sm transition-colors flex items-center gap-2 ${
                                 isOpen
                                   ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 font-medium'
                                   : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -2327,7 +2329,7 @@ export const StructurePage: React.FC = () => {
                     >
                       <button
                         onClick={() => toggleSection(section.id)}
-                        className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                        className="w-full flex items-center justify-between px-6 py-4 text-start hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                       >
                         <div className="flex items-center gap-3">
                           <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
@@ -2378,7 +2380,7 @@ export const StructurePage: React.FC = () => {
               className="space-y-6"
             >
               <Heading level="h2" size="4xl" align="center" className="text-white">
-                Ready to Own Tokenized Real Estate?
+                {t('structure.ui.ctaTitle')}
               </Heading>
               <Text
                 variant="bodyLarge"
@@ -2386,7 +2388,7 @@ export const StructurePage: React.FC = () => {
                 className="max-w-2xl mx-auto text-white/90"
                 as="p"
               >
-                Join CapiMax and access premium real estate opportunities with full regulatory protection and transparency.
+                {t('structure.ui.ctaText')}
               </Text>
             </motion.div>
 
@@ -2395,15 +2397,15 @@ export const StructurePage: React.FC = () => {
                 href="/register"
                 className="inline-flex items-center justify-center bg-white text-slate-900 hover:bg-slate-100 px-10 py-4 text-lg font-semibold rounded-2xl transition-colors duration-300"
               >
-                Get Started Now
-                <ArrowUpRight className="ml-3 w-5 h-5" />
+                {t('structure.ui.ctaStart')}
+                <ArrowUpRight className="ms-3 w-5 h-5 rtl:-scale-x-100" />
               </a>
               <a
                 href="/properties"
                 className="inline-flex items-center justify-center border border-white/30 text-white hover:bg-white/10 px-10 py-4 text-lg font-semibold rounded-2xl transition-colors duration-300"
               >
-                Explore Properties
-                <Building2 className="ml-3 w-5 h-5" />
+                {t('structure.ui.ctaExplore')}
+                <Building2 className="ms-3 w-5 h-5" />
               </a>
             </div>
           </div>

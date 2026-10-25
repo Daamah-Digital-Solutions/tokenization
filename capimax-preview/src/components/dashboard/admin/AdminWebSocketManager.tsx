@@ -1,4 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { webSocketService, NotificationService } from '../../../services';
 import type { SystemAlert } from '../../../services';
 
@@ -21,6 +22,8 @@ export const AdminWebSocketManager: React.FC<AdminWebSocketManagerProps> = ({
   onFinancialUpdate,
   children
 }) => {
+  const { t } = useTranslation('admin');
+
   // Handle dashboard statistics updates
   const handleStatsUpdate = useCallback((data: any) => {
     console.log('Admin: Received stats update', data);
@@ -51,7 +54,7 @@ export const AdminWebSocketManager: React.FC<AdminWebSocketManagerProps> = ({
     
     // Show browser notification for critical alerts
     if (alert.severity === 'CRITICAL' && 'Notification' in window && Notification.permission === 'granted') {
-      new Notification(`Critical System Alert: ${alert.title}`, {
+      new Notification(t('ws.criticalAlert', { title: alert.title }), {
         body: alert.message,
         icon: '/favicon.ico',
         tag: alert.id
@@ -61,7 +64,7 @@ export const AdminWebSocketManager: React.FC<AdminWebSocketManagerProps> = ({
     if (onSystemAlert) {
       onSystemAlert(alert);
     }
-  }, [onSystemAlert]);
+  }, [onSystemAlert, t]);
 
   // Handle transaction updates
   const handleTransactionUpdate = useCallback((data: any) => {
@@ -171,8 +174,8 @@ export const AdminWebSocketManager: React.FC<AdminWebSocketManagerProps> = ({
             id: notification.id || Date.now().toString(),
             type: 'SYSTEM_ERROR',
             severity: 'HIGH' as const,
-            title: 'System Error Detected',
-            message: notification.message || 'An error occurred in the system',
+            title: t('ws.systemErrorTitle'),
+            message: notification.message || t('ws.systemErrorMessage'),
             source: 'SYSTEM',
             status: 'ACTIVE' as const,
             createdAt: new Date().toISOString()
@@ -186,7 +189,7 @@ export const AdminWebSocketManager: React.FC<AdminWebSocketManagerProps> = ({
     return () => {
       NotificationService.unsubscribe(handleGeneralNotification);
     };
-  }, [handleUserUpdate, handlePropertyUpdate, handleTransactionUpdate, handleFinancialUpdate, handleSystemAlert]);
+  }, [handleUserUpdate, handlePropertyUpdate, handleTransactionUpdate, handleFinancialUpdate, handleSystemAlert, t]);
 
   return <>{children}</>;
 };

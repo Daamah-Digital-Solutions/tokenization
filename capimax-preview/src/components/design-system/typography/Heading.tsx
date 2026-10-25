@@ -56,9 +56,9 @@ const colorStyles: Record<HeadingColor, string> = {
 };
 
 const alignStyles: Record<HeadingAlign, string> = {
-  left: 'text-left',
+  left: 'text-start',
   center: 'text-center',
-  right: 'text-right',
+  right: 'text-end',
 };
 
 export const Heading: React.FC<HeadingProps> = ({

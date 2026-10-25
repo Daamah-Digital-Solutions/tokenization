@@ -35,6 +35,7 @@ import {
   Search,
   Plus,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useRouter } from '../../../utils/router';
 import { useAuth } from '../../../contexts/AuthContext';
 import { CreateListingModal } from '../../marketplace/CreateListingModal';
@@ -67,6 +68,7 @@ const HoldingCard: React.FC<{
   onView: (h: PropertyHolding) => void;
   onSell: (h: PropertyHolding) => void;
 }> = ({ holding, onView, onSell }) => {
+  const { t } = useTranslation('dashboard');
   // Track image-load failures so a 404 or wrong-type src falls back to
   // the Building2 placeholder instead of leaving the alt text exposed
   // over the banner gradient.
@@ -102,11 +104,11 @@ const HoldingCard: React.FC<{
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
-        <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 bg-white/90 dark:bg-slate-900/90 rounded-md text-xs font-semibold text-slate-700 dark:text-slate-200">
+        <div className="absolute top-3 start-3 flex items-center gap-1.5 px-2.5 py-1 bg-white/90 dark:bg-slate-900/90 rounded-md text-xs font-semibold text-slate-700 dark:text-slate-200">
           <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-          Owned
+          {t('myProps.owned')}
         </div>
-        <div className="absolute bottom-3 left-3 right-3 text-white">
+        <div className="absolute bottom-3 start-3 end-3 text-white">
           <h3 className="text-lg font-bold leading-tight line-clamp-1">{holding.name}</h3>
           <div className="flex items-center gap-1 text-xs text-white/90 mt-0.5">
             <MapPin className="w-3 h-3" />
@@ -122,11 +124,11 @@ const HoldingCard: React.FC<{
               <Coins className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">Tokens Owned</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400">{t('myProps.sharesOwned')}</div>
               <div className="text-base font-bold text-slate-900 dark:text-white">
                 {holding.tokens.toLocaleString()}
                 {holding.totalTokens > 0 && (
-                  <span className="text-xs font-normal text-slate-500 dark:text-slate-400 ml-1">
+                  <span className="text-xs font-normal text-slate-500 dark:text-slate-400 ms-1">
                     / {holding.totalTokens.toLocaleString()}
                   </span>
                 )}
@@ -134,8 +136,8 @@ const HoldingCard: React.FC<{
             </div>
           </div>
           {holding.totalTokens > 0 && (
-            <div className="text-right">
-              <div className="text-xs text-slate-500 dark:text-slate-400">Share</div>
+            <div className="text-end">
+              <div className="text-xs text-slate-500 dark:text-slate-400">{t('myProps.ownershipShare')}</div>
               <div className="text-base font-bold text-slate-900 dark:text-white">
                 {ownershipPct < 0.01 ? '<0.01' : ownershipPct.toFixed(2)}%
               </div>
@@ -153,11 +155,13 @@ const HoldingCard: React.FC<{
               <Tag className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               <div>
                 <div className="text-xs text-amber-700 dark:text-amber-300 font-medium">
-                  Locked in active listings
+                  {t('myProps.lockedInListings')}
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-400">
-                  {holding.tokensReserved.toLocaleString()} listed ·{' '}
-                  {holding.tokensAvailable.toLocaleString()} available to sell
+                  {t('myProps.listedAvailable', {
+                    listed: holding.tokensReserved.toLocaleString(),
+                    available: holding.tokensAvailable.toLocaleString(),
+                  })}
                 </div>
               </div>
             </div>
@@ -166,13 +170,13 @@ const HoldingCard: React.FC<{
 
         <div className="grid grid-cols-2 gap-3">
           <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
-            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Purchase Value</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{t('myProps.purchaseValue')}</div>
             <div className="text-lg font-bold text-slate-900 dark:text-white">
               {formatCurrency(holding.purchaseValue)}
             </div>
           </div>
           <div className={`p-3 ${trendBg} rounded-xl`}>
-            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Current Value</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">{t('myProps.currentValue')}</div>
             <div className={`text-lg font-bold ${trendClass}`}>
               {formatCurrency(holding.currentValue)}
             </div>
@@ -186,11 +190,11 @@ const HoldingCard: React.FC<{
               {isProfit ? '+' : ''}
               {holding.change.toFixed(2)}%
             </span>
-            <span className="text-slate-500 dark:text-slate-400">since purchase</span>
+            <span className="text-slate-500 dark:text-slate-400">{t('myProps.sincePurchase')}</span>
           </div>
           {holding.yield > 0 && (
             <div className="text-slate-500 dark:text-slate-400">
-              Yield{' '}
+              {t('myProps.yield')}{' '}
               <span className="font-semibold text-slate-700 dark:text-slate-200">
                 {holding.yield.toFixed(1)}%
               </span>
@@ -205,7 +209,7 @@ const HoldingCard: React.FC<{
             className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
           >
             <Eye className="w-4 h-4" />
-            View Details
+            {t('myProps.viewDetails')}
           </button>
           {/* Sell button disables when every owned token is already
               reserved on the marketplace — listing more would either
@@ -220,12 +224,12 @@ const HoldingCard: React.FC<{
             className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold transition-colors disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-slate-700 dark:disabled:text-slate-500 disabled:cursor-not-allowed"
             title={
               holding.tokensAvailable <= 0
-                ? 'All of your tokens are already listed for sale'
-                : 'Create a sell listing on the secondary market'
+                ? t('myProps.allListedTitle')
+                : t('myProps.sellTitle')
             }
           >
             <Tag className="w-4 h-4" />
-            {holding.tokensAvailable <= 0 ? 'Fully Listed' : 'Sell on Market'}
+            {holding.tokensAvailable <= 0 ? t('myProps.fullyListed') : t('myProps.sellOnMarket')}
           </button>
         </div>
       </div>
@@ -234,6 +238,7 @@ const HoldingCard: React.FC<{
 };
 
 export const MyProperties: React.FC = () => {
+  const { t } = useTranslation('dashboard');
   const { navigate } = useRouter();
   const { state: authState } = useAuth();
   const queryClient = useQueryClient();
@@ -438,7 +443,7 @@ export const MyProperties: React.FC = () => {
   if (error) {
     return (
       <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl p-6 text-red-700 dark:text-red-300">
-        <p className="font-semibold mb-1">Couldn't load your properties</p>
+        <p className="font-semibold mb-1">{t('myProps.loadError')}</p>
         <p className="text-sm">{error}</p>
       </div>
     );
@@ -451,12 +456,10 @@ export const MyProperties: React.FC = () => {
           <Building2 className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
         </div>
         <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-          You don't own any properties yet
+          {t('myProps.emptyTitle')}
         </h3>
         <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-6">
-          Browse our tokenized listings and become a co-owner in a few
-          minutes. Every property you buy will appear here with live
-          valuation, your share, and a one-tap resale option.
+          {t('myProps.emptyText')}
         </p>
         <button
           type="button"
@@ -464,7 +467,7 @@ export const MyProperties: React.FC = () => {
           className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-colors"
         >
           <Plus className="w-5 h-5" />
-          Browse Properties
+          {t('myProps.browseProperties')}
         </button>
       </div>
     );
@@ -476,11 +479,10 @@ export const MyProperties: React.FC = () => {
         <div className="flex items-start justify-between mb-5">
           <div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-              My Properties
+              {t('myProps.title')}
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              {totals.count} {totals.count === 1 ? 'property' : 'properties'}{' '}
-              owned across the platform
+              {t('myProps.ownedCount', { count: totals.count })}
             </p>
           </div>
           <button
@@ -489,31 +491,31 @@ export const MyProperties: React.FC = () => {
             className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            Buy More
+            {t('myProps.buyMore')}
           </button>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="p-3 bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
-            <div className="text-xs text-slate-500 dark:text-slate-400">Properties</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">{t('myProps.properties')}</div>
             <div className="text-xl font-bold text-slate-900 dark:text-white mt-1">
               {totals.count}
             </div>
           </div>
           <div className="p-3 bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
-            <div className="text-xs text-slate-500 dark:text-slate-400">Total Purchased</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">{t('myProps.totalPurchased')}</div>
             <div className="text-xl font-bold text-slate-900 dark:text-white mt-1">
               {formatCurrency(totals.invested)}
             </div>
           </div>
           <div className="p-3 bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
-            <div className="text-xs text-slate-500 dark:text-slate-400">Current Value</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">{t('myProps.currentValue')}</div>
             <div className="text-xl font-bold text-slate-900 dark:text-white mt-1">
               {formatCurrency(totals.current)}
             </div>
           </div>
           <div className="p-3 bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
-            <div className="text-xs text-slate-500 dark:text-slate-400">Overall Change</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">{t('myProps.overallChange')}</div>
             <div
               className={`text-xl font-bold mt-1 ${
                 totals.change >= 0
@@ -530,21 +532,21 @@ export const MyProperties: React.FC = () => {
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search by name or location…"
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+            placeholder={t('myProps.searchPlaceholder')}
+            className="w-full ps-10 pe-4 py-2.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
           />
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
           {(
             [
-              { key: 'all', label: `All (${holdings.length})` },
-              { key: 'profitable', label: 'Profitable' },
-              { key: 'underperforming', label: 'Underperforming' },
+              { key: 'all', label: t('myProps.filterAll', { count: holdings.length }) },
+              { key: 'profitable', label: t('myProps.filterProfitable') },
+              { key: 'underperforming', label: t('myProps.filterUnderperforming') },
             ] as { key: FilterMode; label: string }[]
           ).map(f => (
             <button
@@ -566,8 +568,7 @@ export const MyProperties: React.FC = () => {
       {filtered.length === 0 ? (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-10 text-center">
           <p className="text-slate-500 dark:text-slate-400">
-            No properties match your filters. Try clearing the search or
-            switching to "All".
+            {t('myProps.noMatch')}
           </p>
         </div>
       ) : (

@@ -16,6 +16,7 @@ import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
 import type { InvestmentProperty, InvestmentData } from './types';
 import { cn } from '../../utils/cn';
+import { useTranslation } from 'react-i18next';
 
 interface AmountSelectorProps {
   property: InvestmentProperty;
@@ -32,6 +33,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
   onUpdate,
   errors
 }) => {
+  const { t } = useTranslation('invest');
   const [customTokens, setCustomTokens] = useState(investmentData.tokens.toString());
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -99,12 +101,12 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
       <div>
         <div className="flex items-center justify-between mb-4">
           <Text variant="h3" weight="semibold">
-            Select Number of Tokens
+            {t('amount.title')}
           </Text>
           <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
             <DollarSign className="w-4 h-4" />
             <Text variant="bodySmall" weight="medium">
-              ${property.tokenPrice.toLocaleString()} per token
+              {t('amount.perShare', { price: `$${property.tokenPrice.toLocaleString()}` })}
             </Text>
           </div>
         </div>
@@ -114,10 +116,10 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Number of Tokens
+                {t('amount.numberOfShares')}
               </label>
               <div className="relative">
-                <Coins className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Coins className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="number"
                   value={customTokens}
@@ -126,14 +128,14 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
                   max={availableTokens}
                   step={1}
                   className={cn(
-                    "w-full pl-12 pr-16 py-4 text-xl font-semibold border rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 transition-colors",
+                    "w-full ps-12 pe-16 py-4 text-xl font-semibold border rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 transition-colors",
                     errors.tokens
                       ? "border-red-500 focus:ring-red-500"
                       : "border-gray-300 dark:border-gray-600 focus:ring-emerald-500 focus:border-emerald-500"
                   )}
-                  placeholder="Enter tokens"
+                  placeholder={t('amount.placeholder')}
                 />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                <div className="absolute end-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -163,14 +165,14 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
               )}
 
               <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                Available: {availableTokens.toLocaleString()} tokens
+                {t('amount.available', { available: availableTokens.toLocaleString() })}
               </div>
             </div>
 
             {/* Total Cost Calculation */}
             <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-4 rounded-xl text-center min-w-[140px]">
               <Text variant="bodySmall" color="muted" className="mb-1">
-                Total Cost
+                {t('amount.totalCost')}
               </Text>
               <Text variant="h2" className="text-emerald-600 dark:text-emerald-400">
                 ${investmentData.amount.toLocaleString()}
@@ -185,7 +187,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
         {/* Preset Token Buttons */}
         <div>
           <Text variant="bodyLarge" weight="medium" className="mb-3">
-            Quick Select
+            {t('amount.quickSelect')}
           </Text>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
             {presetTokenCounts.map((count) => (
@@ -197,7 +199,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
                 disabled={count > availableTokens}
                 className="text-center"
               >
-                {count} {count === 1 ? 'token' : 'tokens'}
+                {t('common.shareCount', { count })}
               </Button>
             ))}
           </div>
@@ -209,7 +211,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
         <div className="flex items-center justify-between mb-4">
           <Text variant="h3" weight="semibold" className="flex items-center gap-2">
             <Calculator className="w-5 h-5 text-emerald-600" />
-            Purchase Summary
+            {t('amount.summary')}
           </Text>
           <Button
             variant="ghost"
@@ -217,7 +219,7 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
             onClick={() => setShowAdvanced(!showAdvanced)}
             className="text-gray-600 dark:text-gray-400"
           >
-            {showAdvanced ? 'Hide' : 'Show'} Advanced Details
+            {showAdvanced ? t('amount.hideAdvanced') : t('amount.showAdvanced')}
           </Button>
         </div>
 
@@ -226,13 +228,13 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
           <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-4 rounded-xl">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="w-4 h-4 text-emerald-600" />
-              <Text variant="bodySmall" color="muted">Annual Return</Text>
+              <Text variant="bodySmall" color="muted">{t('amount.annualReturn')}</Text>
             </div>
             <Text variant="h2" className="text-emerald-600 dark:text-emerald-400">
               ${returns.netAnnualReturn.toLocaleString()}
             </Text>
             <Text variant="bodySmall" color="muted">
-              {returns.roi.toFixed(1)}% ROI
+              {t('amount.roi', { value: returns.roi.toFixed(1) })}
             </Text>
           </div>
 
@@ -240,13 +242,13 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
           <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-xl">
             <div className="flex items-center gap-2 mb-2">
               <PieChart className="w-4 h-4 text-blue-600" />
-              <Text variant="bodySmall" color="muted">{property.investment.dividendFrequency} Dividend</Text>
+              <Text variant="bodySmall" color="muted">{t('amount.dividend', { frequency: t(`common.frequency.${property.investment.dividendFrequency}`, { defaultValue: property.investment.dividendFrequency }) })}</Text>
             </div>
             <Text variant="h2" className="text-blue-600 dark:text-blue-400">
               ${returns.dividendPerPayment.toLocaleString()}
             </Text>
             <Text variant="bodySmall" color="muted">
-              {returns.paymentsPerYear} payments/year
+              {t('amount.paymentsPerYear', { value: returns.paymentsPerYear })}
             </Text>
           </div>
 
@@ -254,13 +256,13 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
           <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-xl">
             <div className="flex items-center gap-2 mb-2">
               <Target className="w-4 h-4 text-purple-600" />
-              <Text variant="bodySmall" color="muted">Ownership Share</Text>
+              <Text variant="bodySmall" color="muted">{t('amount.ownershipShare')}</Text>
             </div>
             <Text variant="h2" className="text-purple-600 dark:text-purple-400">
               {((investmentData.tokens / property.totalTokens) * 100).toFixed(3)}%
             </Text>
             <Text variant="bodySmall" color="muted">
-              of total property
+              {t('amount.ofTotalProperty')}
             </Text>
           </div>
         </div>
@@ -276,19 +278,19 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Text variant="bodyLarge" weight="semibold" className="mb-3">
-                  Return Breakdown
+                  {t('amount.returnBreakdown')}
                 </Text>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Gross Annual Return:</span>
+                    <span className="text-gray-600 dark:text-gray-400">{t('amount.grossAnnualReturn')}</span>
                     <span className="font-medium">${returns.grossAnnualReturn.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Management Fee:</span>
+                    <span className="text-gray-600 dark:text-gray-400">{t('amount.managementFee')}</span>
                     <span className="font-medium text-red-600">-${returns.managementFeeAmount.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between border-t pt-2">
-                    <span className="text-gray-900 dark:text-white font-medium">Net Annual Return:</span>
+                    <span className="text-gray-900 dark:text-white font-medium">{t('amount.netAnnualReturn')}</span>
                     <span className="font-semibold text-emerald-600">${returns.netAnnualReturn.toLocaleString()}</span>
                   </div>
                 </div>
@@ -296,23 +298,23 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
 
               <div>
                 <Text variant="bodyLarge" weight="semibold" className="mb-3">
-                  Token Details
+                  {t('amount.shareDetails')}
                 </Text>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Token Price:</span>
+                    <span className="text-gray-600 dark:text-gray-400">{t('common.pricePerShare')}:</span>
                     <span className="font-medium">${property.tokenPrice.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Tokens Selected:</span>
+                    <span className="text-gray-600 dark:text-gray-400">{t('amount.sharesSelected')}</span>
                     <span className="font-medium">{investmentData.tokens.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-400">Expected Return Rate:</span>
+                    <span className="text-gray-600 dark:text-gray-400">{t('amount.expectedReturnRate')}</span>
                     <span className="font-medium">{property.investment.avgAnnualReturn}%</span>
                   </div>
                   <div className="flex justify-between border-t pt-2">
-                    <span className="text-gray-900 dark:text-white font-medium">Total Cost:</span>
+                    <span className="text-gray-900 dark:text-white font-medium">{t('amount.totalCost')}:</span>
                     <span className="font-semibold text-gray-900 dark:text-white">${investmentData.amount.toLocaleString()}</span>
                   </div>
                 </div>
@@ -322,9 +324,9 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
             {/* Funding Progress */}
             <div className="mt-6">
               <div className="flex justify-between items-center mb-2">
-                <Text variant="bodyLarge" weight="semibold">Property Funding Progress</Text>
+                <Text variant="bodyLarge" weight="semibold">{t('amount.fundingProgress')}</Text>
                 <Text variant="bodyLarge" className="text-emerald-600 dark:text-emerald-400">
-                  {fundingPercentage}% Complete
+                  {t('amount.percentComplete', { value: fundingPercentage })}
                 </Text>
               </div>
 
@@ -342,9 +344,9 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
               </div>
 
               <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
-                <span>{property.soldTokens.toLocaleString()} sold</span>
-                <span>+{investmentData.tokens.toLocaleString()} your purchase</span>
-                <span>{property.totalTokens.toLocaleString()} total</span>
+                <span>{t('amount.sold', { value: property.soldTokens.toLocaleString() })}</span>
+                <span>{t('amount.yourPurchase', { value: investmentData.tokens.toLocaleString() })}</span>
+                <span>{t('amount.totalShares', { value: property.totalTokens.toLocaleString() })}</span>
               </div>
             </div>
           </motion.div>
@@ -357,11 +359,10 @@ export const AmountSelector: React.FC<AmountSelectorProps> = ({
           <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
             <Text variant="bodySmall" weight="semibold" className="text-amber-800 dark:text-amber-200 mb-1">
-              Ownership Risk Disclosure
+              {t('amount.riskTitle')}
             </Text>
             <Text variant="bodySmall" className="text-amber-700 dark:text-amber-300 leading-relaxed">
-              Real estate ownership involves risk including potential loss of principal. Past performance does not guarantee future results.
-              Returns are projections based on current market conditions and are not guaranteed.
+              {t('amount.riskBody')}
             </Text>
           </div>
         </div>

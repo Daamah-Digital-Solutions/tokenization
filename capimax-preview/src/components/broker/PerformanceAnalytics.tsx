@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PerformanceChart, type ChartDataPoint } from '../dashboard/PerformanceChart';
+import { useTranslation } from 'react-i18next';
 
 export interface PerformanceMetrics {
   totalReferrals: number;
@@ -55,12 +56,13 @@ export const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
   onTimeRangeChange,
   className = ''
 }) => {
+  const { t } = useTranslation('brokerui');
   const [selectedMetric, setSelectedMetric] = useState<'referrals' | 'conversions' | 'commission' | 'dealSize'>('commission');
   const [compareMode, setCompareMode] = useState<boolean>(false);
 
   const formatCurrency = (amount: number) => `$${amount.toLocaleString()}`;
   const formatPercentage = (percentage: number) => `${percentage.toFixed(1)}%`;
-  const formatDays = (days: number) => `${days} days`;
+  const formatDays = (days: number) => t('perf.days', { value: days });
 
   const getMetricColor = (value: number, isPositive: boolean = true) => {
     if (isPositive) {
@@ -87,13 +89,13 @@ export const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-semibold text-neutral-900 dark:text-slate-100">
-              Performance Analytics
+              {t('perf.title')}
             </h2>
             <p className="text-sm text-neutral-600 dark:text-slate-400 mt-1">
-              Track your referral performance and conversion metrics
+              {t('perf.subtitle')}
             </p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center gap-3">
             <div className="flex rounded-lg border border-neutral-200 dark:border-slate-600 overflow-hidden">
               {(['7d', '30d', '90d', '1y'] as const).map((range) => (
                 <button
@@ -105,7 +107,7 @@ export const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
                       : 'bg-white dark:bg-slate-700 text-neutral-700 dark:text-slate-300'
                   }`}
                 >
-                  {range}
+                  {t(`perf.range.${range}`)}
                 </button>
               ))}
             </div>
@@ -118,9 +120,9 @@ export const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
             <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
               {metrics.totalReferrals}
             </div>
-            <div className="text-sm text-blue-800 dark:text-blue-300 mb-1">Total Referrals</div>
+            <div className="text-sm text-blue-800 dark:text-blue-300 mb-1">{t('referrals.totalReferrals')}</div>
             <div className={`text-xs font-medium ${getMetricColor(metrics.monthlyGrowthRate)}`}>
-              {metrics.monthlyGrowthRate > 0 ? '+' : ''}{formatPercentage(metrics.monthlyGrowthRate)} growth
+              {metrics.monthlyGrowthRate > 0 ? '+' : ''}{t('perf.growth', { value: formatPercentage(metrics.monthlyGrowthRate) })}
             </div>
           </div>
 
@@ -128,9 +130,9 @@ export const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
             <div className="text-2xl font-bold text-green-600 dark:text-green-400">
               {formatPercentage(metrics.conversionRate)}
             </div>
-            <div className="text-sm text-green-800 dark:text-green-300 mb-1">Conversion Rate</div>
+            <div className="text-sm text-green-800 dark:text-green-300 mb-1">{t('referrals.conversionRate')}</div>
             <div className="text-xs text-neutral-500 dark:text-slate-400">
-              Avg: {formatDays(metrics.averageTimeToConversion)}
+              {t('perf.avg', { value: formatDays(metrics.averageTimeToConversion) })}
             </div>
           </div>
 
@@ -138,9 +140,9 @@ export const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
             <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
               {formatCurrency(metrics.totalCommission)}
             </div>
-            <div className="text-sm text-purple-800 dark:text-purple-300 mb-1">Total Commission</div>
+            <div className="text-sm text-purple-800 dark:text-purple-300 mb-1">{t('referrals.totalCommission')}</div>
             <div className="text-xs text-neutral-500 dark:text-slate-400">
-              Avg: {formatCurrency(metrics.averageDealSize)}
+              {t('perf.avg', { value: formatCurrency(metrics.averageDealSize) })}
             </div>
           </div>
 
@@ -148,9 +150,9 @@ export const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
             <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
               {formatPercentage(metrics.clientRetentionRate)}
             </div>
-            <div className="text-sm text-orange-800 dark:text-orange-300 mb-1">Retention Rate</div>
+            <div className="text-sm text-orange-800 dark:text-orange-300 mb-1">{t('perf.retentionRate')}</div>
             <div className="text-xs text-neutral-500 dark:text-slate-400">
-              LTV: {formatCurrency(metrics.lifetimeValue)}
+              {t('perf.ltv', { value: formatCurrency(metrics.lifetimeValue) })}
             </div>
           </div>
         </div>
@@ -161,27 +163,27 @@ export const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
         <div>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100">
-              Performance Trends
+              {t('perf.trends')}
             </h3>
-            <div className="flex items-center space-x-4">
-              <label className="flex items-center space-x-2">
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={compareMode}
                   onChange={(e) => setCompareMode(e.target.checked)}
                   className="rounded"
                 />
-                <span className="text-sm text-neutral-600 dark:text-slate-400">Compare metrics</span>
+                <span className="text-sm text-neutral-600 dark:text-slate-400">{t('perf.compare')}</span>
               </label>
               <select
                 value={selectedMetric}
                 onChange={(e) => setSelectedMetric(e.target.value as any)}
                 className="text-sm border border-neutral-200 dark:border-slate-600 rounded-lg px-3 py-1 bg-white dark:bg-slate-700 text-neutral-900 dark:text-slate-100"
               >
-                <option value="commission">Commission</option>
-                <option value="referrals">Referrals</option>
-                <option value="conversions">Conversions</option>
-                <option value="dealSize">Deal Size</option>
+                <option value="commission">{t('perf.commission')}</option>
+                <option value="referrals">{t('perf.referrals')}</option>
+                <option value="conversions">{t('perf.conversions')}</option>
+                <option value="dealSize">{t('perf.dealSize')}</option>
               </select>
             </div>
           </div>
@@ -190,13 +192,13 @@ export const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <PerformanceChart
                 data={timeSeriesData.commission}
-                title="Commission Trend"
+                title={t('perf.commissionTrend')}
                 type="area"
                 color="#10b981"
               />
               <PerformanceChart
                 data={timeSeriesData.referrals}
-                title="Referral Volume"
+                title={t('perf.referralVolume')}
                 type="line"
                 color="#3b82f6"
               />
@@ -205,10 +207,10 @@ export const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
             <PerformanceChart
               data={timeSeriesData[selectedMetric]}
               title={
-                selectedMetric === 'commission' ? 'Commission Performance' :
-                selectedMetric === 'referrals' ? 'Referral Volume' :
-                selectedMetric === 'conversions' ? 'Conversion Trends' :
-                'Average Deal Size'
+                selectedMetric === 'commission' ? t('perf.commissionPerformance') :
+                selectedMetric === 'referrals' ? t('perf.referralVolume') :
+                selectedMetric === 'conversions' ? t('perf.conversionTrends') :
+                t('perf.avgDealSize')
               }
               type="area"
               color={
@@ -224,7 +226,7 @@ export const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
         {/* Conversion Funnel */}
         <div>
           <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100 mb-4">
-            Conversion Funnel
+            {t('perf.funnel')}
           </h3>
           <div className="space-y-3">
             {funnelData.map((stage, index) => {
@@ -239,13 +241,13 @@ export const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
                     <span className="text-sm font-medium text-neutral-900 dark:text-slate-100">
                       {stage.stage}
                     </span>
-                    <div className="flex items-center space-x-4 text-sm">
+                    <div className="flex items-center gap-4 text-sm">
                       <span className="text-neutral-600 dark:text-slate-400">
                         {stage.count.toLocaleString()} ({formatPercentage(stage.rate)})
                       </span>
                       {index > 0 && dropOffRate > 0 && (
                         <span className="text-red-600 dark:text-red-400">
-                          -{formatPercentage(dropOffRate)} drop-off
+                          {t('perf.dropOff', { value: formatPercentage(dropOffRate) })}
                         </span>
                       )}
                     </div>
@@ -275,7 +277,7 @@ export const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
                 {formatPercentage(overallConversionRate)}
               </div>
               <div className="text-sm text-green-800 dark:text-green-300">
-                Overall Conversion Rate
+                {t('perf.overallConversion')}
               </div>
             </div>
           </div>
@@ -284,20 +286,20 @@ export const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
         {/* Source Performance */}
         <div>
           <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100 mb-4">
-            Referral Source Performance
+            {t('perf.sourcePerformance')}
           </h3>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-neutral-200 dark:border-slate-700">
-                  <th className="text-left py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">Source</th>
-                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">Referrals</th>
-                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">Conversions</th>
-                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">Conv. Rate</th>
-                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">Total Value</th>
-                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">Avg. Value</th>
-                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">ROI</th>
-                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">Rank</th>
+                  <th className="text-start py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">{t('perf.source')}</th>
+                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">{t('perf.referrals')}</th>
+                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">{t('perf.conversions')}</th>
+                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">{t('perf.convRate')}</th>
+                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">{t('perf.totalValue')}</th>
+                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">{t('perf.avgValue')}</th>
+                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">{t('perf.roi')}</th>
+                  <th className="text-center py-3 px-4 font-medium text-neutral-900 dark:text-slate-100">{t('perf.rank')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -337,7 +339,7 @@ export const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
                       </span>
                     </td>
                     <td className="py-3 px-4 text-center">
-                      <div className="flex items-center justify-center space-x-1">
+                      <div className="flex items-center justify-center gap-1">
                         <span className="text-sm font-medium text-neutral-900 dark:text-slate-100">
                           #{getSourceRank(source, 'value')}
                         </span>
@@ -359,39 +361,39 @@ export const PerformanceAnalytics: React.FC<PerformanceAnalyticsProps> = ({
         {/* Performance Insights */}
         <div>
           <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100 mb-4">
-            Performance Insights
+            {t('perf.insights')}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Best Performing Source */}
             <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-              <div className="flex items-center space-x-2 mb-2">
+              <div className="flex items-center gap-2 mb-2">
                 <span className="text-green-600 dark:text-green-400">🏆</span>
-                <h4 className="font-medium text-green-800 dark:text-green-300">Top Source</h4>
+                <h4 className="font-medium text-green-800 dark:text-green-300">{t('perf.topSource')}</h4>
               </div>
               <div className="text-sm text-green-700 dark:text-green-400">
-                <strong>{sourceData[0]?.source}</strong> with {formatPercentage(sourceData[0]?.conversionRate || 0)} conversion rate
+                <strong>{sourceData[0]?.source}</strong> {t('perf.topSourceDesc', { value: formatPercentage(sourceData[0]?.conversionRate || 0) })}
               </div>
             </div>
 
             {/* Growth Trend */}
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-              <div className="flex items-center space-x-2 mb-2">
+              <div className="flex items-center gap-2 mb-2">
                 <span className="text-blue-600 dark:text-blue-400">📈</span>
-                <h4 className="font-medium text-blue-800 dark:text-blue-300">Growth</h4>
+                <h4 className="font-medium text-blue-800 dark:text-blue-300">{t('perf.growthTitle')}</h4>
               </div>
               <div className="text-sm text-blue-700 dark:text-blue-400">
-                {metrics.monthlyGrowthRate > 0 ? 'Growing' : 'Declining'} by {formatPercentage(Math.abs(metrics.monthlyGrowthRate))} monthly
+                {metrics.monthlyGrowthRate > 0 ? t('perf.growing', { value: formatPercentage(Math.abs(metrics.monthlyGrowthRate)) }) : t('perf.declining', { value: formatPercentage(Math.abs(metrics.monthlyGrowthRate)) })}
               </div>
             </div>
 
             {/* Optimization Opportunity */}
             <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-              <div className="flex items-center space-x-2 mb-2">
+              <div className="flex items-center gap-2 mb-2">
                 <span className="text-yellow-600 dark:text-yellow-400">💡</span>
-                <h4 className="font-medium text-yellow-800 dark:text-yellow-300">Opportunity</h4>
+                <h4 className="font-medium text-yellow-800 dark:text-yellow-300">{t('perf.opportunity')}</h4>
               </div>
               <div className="text-sm text-yellow-700 dark:text-yellow-400">
-                Focus on improving conversion from leads to registered users
+                {t('perf.opportunityDesc')}
               </div>
             </div>
           </div>

@@ -4,6 +4,7 @@ import { Grid3X3, List, Map, Search, MapPin, Star, TrendingUp, Users, Building, 
 import { PropertyCard } from '../design-system/cards/PropertyCard';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
+import { useTranslation } from 'react-i18next';
 import { PropertyFilterOptions } from '../../services/api/types';
 import type { Property } from '../../services/api/types';
 import { PropertyService } from '../../services/property/PropertyService';
@@ -42,6 +43,7 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
   onFiltersChange,
   autoLoad = true
 }) => {
+  const { t } = useTranslation('propui');
   const [hoveredProperty, setHoveredProperty] = useState<string | null>(null);
   const [properties, setProperties] = useState<PropertyGridItem[]>(initialProperties || []);
   const [internalLoading, setInternalLoading] = useState(false);
@@ -187,13 +189,13 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
         <Search className="w-8 h-8 text-gray-400" />
       </div>
       <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-        No Properties Found
+        {t('grid.emptyTitle')}
       </h3>
       <p className="text-gray-600 dark:text-gray-400 mb-6">
-        Try adjusting your filters or search terms to find more properties
+        {t('grid.emptyBody')}
       </p>
       <Button variant="primary" size="md">
-        Browse All Properties
+        {t('grid.browseAll')}
       </Button>
     </motion.div>
   );
@@ -212,10 +214,10 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {properties.length} Properties Found
+            {t('grid.found', { count: properties.length })}
           </h2>
           <div className="hidden md:flex text-gray-600 dark:text-gray-400 text-sm">
-            Showing premium ownership opportunities
+            {t('grid.showing')}
           </div>
         </div>
         
@@ -230,7 +232,7 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
             )}
           >
             <Grid3X3 className="w-4 h-4" />
-            <span className="hidden sm:inline text-sm">Grid</span>
+            <span className="hidden sm:inline text-sm">{t('grid.grid')}</span>
           </button>
           <button
             onClick={() => onViewModeChange('list')}
@@ -242,7 +244,7 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
             )}
           >
             <List className="w-4 h-4" />
-            <span className="hidden sm:inline text-sm">List</span>
+            <span className="hidden sm:inline text-sm">{t('grid.list')}</span>
           </button>
           <button
             onClick={() => onViewModeChange('map')}
@@ -254,7 +256,7 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
             )}
           >
             <Map className="w-4 h-4" />
-            <span className="hidden sm:inline text-sm">Map</span>
+            <span className="hidden sm:inline text-sm">{t('grid.map')}</span>
           </button>
         </div>
       </div>
@@ -321,11 +323,11 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
                       onError={handleImageFallback}
                     />
                     {property.featured && (
-                      <div className="absolute -top-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-bold px-2 py-1 rounded-full">
-                        FEATURED
+                      <div className="absolute -top-2 -end-2 bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-bold px-2 py-1 rounded-full">
+                        {t('grid.featured')}
                       </div>
                     )}
-                    <div className="absolute bottom-2 right-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-lg px-2 py-1">
+                    <div className="absolute bottom-2 end-2 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-lg px-2 py-1">
                       <div className="flex items-center gap-1">
                         <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
                         <span className="text-xs font-semibold text-gray-800 dark:text-white">
@@ -346,12 +348,12 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
                           <span>{property.city}{property.address ? ', ' + property.address : ''}</span>
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-end">
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {property.property_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          {t(`types.${property.property_type}`, { defaultValue: property.property_type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) })}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {property.year_built ? `Built ${property.year_built}` : 'Year N/A'}
+                          {property.year_built ? t('grid.built', { year: property.year_built }) : t('grid.yearNA')}
                         </div>
                       </div>
                     </div>
@@ -360,7 +362,7 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
                       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
                         <div className="flex items-center gap-2 mb-1">
                           <DollarSign className="w-4 h-4 text-gray-500" />
-                          <span className="text-xs text-gray-500">Total Value</span>
+                          <span className="text-xs text-gray-500">{t('grid.totalValue')}</span>
                         </div>
                         <div className="font-bold text-gray-900 dark:text-white">
                           {new Intl.NumberFormat('en-US', {
@@ -374,7 +376,7 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
                       <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3">
                         <div className="flex items-center gap-2 mb-1">
                           <DollarSign className="w-4 h-4 text-emerald-600" />
-                          <span className="text-xs text-gray-500">Token Price</span>
+                          <span className="text-xs text-gray-500">{t('grid.sharePrice')}</span>
                         </div>
                         <div className="font-bold text-emerald-600 dark:text-emerald-400">
                           {new Intl.NumberFormat('en-US', {
@@ -388,16 +390,16 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
                       <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3">
                         <div className="flex items-center gap-2 mb-1">
                           <TrendingUp className="w-4 h-4 text-emerald-600" />
-                          <span className="text-xs text-gray-500">Returns</span>
+                          <span className="text-xs text-gray-500">{t('grid.returns')}</span>
                         </div>
                         <div className="font-bold text-emerald-600 dark:text-emerald-400">
-                          {property.expected_return ? `${property.expected_return.toFixed(1)}%` : 'TBD'}
+                          {property.expected_return ? `${property.expected_return.toFixed(1)}%` : t('grid.tbd')}
                         </div>
                       </div>
                       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
                         <div className="flex items-center gap-2 mb-1">
                           <Users className="w-4 h-4 text-gray-500" />
-                          <span className="text-xs text-gray-500">Owners</span>
+                          <span className="text-xs text-gray-500">{t('grid.owners')}</span>
                         </div>
                         <div className="font-bold text-gray-900 dark:text-white">{property.investor_count}</div>
                       </div>
@@ -407,12 +409,12 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
                       <div className="flex items-center gap-4">
                         <div className="text-sm text-gray-600 dark:text-gray-400">
                           <span className="font-semibold">
-                            {Math.round((property.tokens_sold / property.total_tokens) * 100)}% funded
+                            {t('grid.funded', { percent: Math.round((property.tokens_sold / property.total_tokens) * 100) })}
                           </span>
                         </div>
                         <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 max-w-32">
                           <div 
-                            className="bg-gradient-to-r from-emerald-500 to-green-500 h-2 rounded-full transition-all duration-500"
+                            className="bg-gradient-to-r rtl:bg-gradient-to-l from-emerald-500 to-green-500 h-2 rounded-full transition-all duration-500"
                             style={{ width: `${(property.tokens_sold / property.total_tokens) * 100}%` }}
                           />
                         </div>
@@ -426,8 +428,8 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
                           handlePropertyClick(property);
                         }}
                       >
-                        <span>View Details</span>
-                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        <span>{t('grid.viewDetails')}</span>
+                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1 transition-transform" />
                       </Button>
                     </div>
                   </div>
@@ -451,10 +453,10 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
                 <Map className="w-8 h-8 text-gray-400" />
               </div>
               <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
-                Interactive Map Coming Soon
+                {t('grid.mapSoonTitle')}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-8">
-                Explore properties on an interactive map with location-based filtering and detailed property markers.
+                {t('grid.mapSoonBody')}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button
@@ -462,14 +464,14 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
                   size="md"
                   onClick={() => onViewModeChange('grid')}
                 >
-                  View Grid Instead
+                  {t('grid.viewGrid')}
                 </Button>
                 <Button
                   variant="ghost"
                   size="md"
                   onClick={() => onViewModeChange('list')}
                 >
-                  View List Instead
+                  {t('grid.viewList')}
                 </Button>
               </div>
             </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ExternalLink, Building2, Landmark, Shield, Home } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export type PartnerCategory = 'developer' | 'financial' | 'insurance' | 'management';
 
@@ -48,6 +49,7 @@ export const PartnerCard: React.FC<PartnerCardProps> = ({
   role,
   website
 }) => {
+  const { t } = useTranslation('brokerui');
   const config = categoryConfig[category];
   const IconComponent = config.icon;
 
@@ -60,10 +62,10 @@ export const PartnerCard: React.FC<PartnerCardProps> = ({
       className="group relative bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden hover:shadow-xl hover:border-emerald-300 dark:hover:border-emerald-600 transition-all duration-300"
     >
       {/* Category Badge */}
-      <div className="absolute top-4 right-4 z-10">
+      <div className="absolute top-4 end-4 z-10">
         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${config.bgColor} ${config.color}`}>
           <IconComponent className="w-3 h-3" />
-          {config.label}
+          {t(`partnerCard.category.${category}`, { defaultValue: config.label })}
         </span>
       </div>
 
@@ -72,7 +74,7 @@ export const PartnerCard: React.FC<PartnerCardProps> = ({
         <div className="mb-6">
           {logo ? (
             <div className="w-16 h-16 rounded-xl bg-slate-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
-              <img src={logo} alt={`${name} logo`} className="w-full h-full object-contain p-2" />
+              <img src={logo} alt={t('partnerCard.logoAlt', { name })} className="w-full h-full object-contain p-2" />
             </div>
           ) : (
             <div className={`w-16 h-16 rounded-xl ${config.bgColor} flex items-center justify-center`}>
@@ -105,7 +107,7 @@ export const PartnerCard: React.FC<PartnerCardProps> = ({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
             >
-              Visit Website
+              {t('partnerCard.visitWebsite')}
               <ExternalLink className="w-4 h-4" />
             </a>
           </div>

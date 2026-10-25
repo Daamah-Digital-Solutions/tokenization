@@ -1,12 +1,97 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { InfoPageLayout } from '../components/info/InfoPageLayout';
 
 export const HowItWorksPage: React.FC = () => {
+  const { i18n } = useTranslation();
+  const isAr = (i18n.language || 'en').startsWith('ar');
+
   const navigateToPage = (path: string) => {
     window.history.pushState({}, '', path);
     window.dispatchEvent(new PopStateEvent('popstate'));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  if (isAr) {
+    return (
+      <InfoPageLayout
+        title="كيف تعمل كابي مكس RT"
+        subtitle="فهم الإطار التشغيلي للمنصة"
+      >
+        <section className="info-section">
+          <p className="info-intro">
+            يوضّح هذا القسم، بأسلوب واضح ومنظّم، كيف تعمل كابي مكس RT بوصفها منصة تقنية، ويغطي دورة الحياة الكاملة للأصل العقاري المرمَّز للملّاك، وبائعي العقارات / المطوّرين، والشركاء الاستراتيجيين والتشغيليين.
+          </p>
+
+          <h2>نظرة عامة على المنصة</h2>
+          <p>
+            تعمل كابي مكس RT كبنية تحتية رقمية تربط الأصول العقارية والشركات ذات الغرض الخاص (SPV) والملّاك ومقدّمي الخدمات ضمن إطار تشغيلي منظّم وملتزم وشفّاف.
+          </p>
+          <p>
+            لا تبيع المنصة العقارات، ولا تدير العقارات المملوكة، ولا تقدّم خدمات مالية. بل إنها:
+          </p>
+          <ul>
+            <li>تتيح هيكلة الأصول من خلال الشركات ذات الغرض الخاص (SPV)</li>
+            <li>تيسّر التوثيق والإفصاحات وإعداد التقارير</li>
+            <li>تنظّم وصول الملّاك ومشاركتهم</li>
+            <li>تدعم آليات خروج منظّمة</li>
+          </ul>
+
+          <h2>نموذج التشغيل خطوة بخطوة</h2>
+
+          <ol>
+            <li>
+              <span className="step-title">تقديم الأصل (البائع / المطوّر)</span>
+              تقديم طلب إدراج عبر المنصة. إدخال تفاصيل الأصل ومعلومات الملكية وأهداف التملّك. رفع المستندات الأولية الخاصة بالملكية والمشروع.
+            </li>
+            <li>
+              <span className="step-title">المراجعة والفحص الأولي</span>
+              مراجعة أولية للمواد المقدَّمة. تقييم أهلية الإدراج على المنصة. طلب مستندات إضافية عند الحاجة. قرار أولي بالقبول أو الرفض.
+            </li>
+            <li>
+              <span className="step-title">تأسيس الشركة ذات الغرض الخاص (SPV) وهيكلتها</span>
+              تأسيس شركة ذات غرض خاص (SPV) مخصّصة للأصل. الربط القانوني بين الشركة ذات الغرض الخاص والأصل محل الاستثمار. إعداد اتفاقيات التشغيل والإدارة والملكية.
+            </li>
+            <li>
+              <span className="step-title">التقييم والتأمين</span>
+              تقييم مستقل من قِبل جهات خارجية مؤهّلة. ترتيب التغطية التأمينية حيثما ينطبق ذلك. رفع التقارير والوثائق إلى غرفة البيانات.
+            </li>
+            <li>
+              <span className="step-title">طرح الملكية</span>
+              تحديد سعر الوحدة والحد الأدنى للشراء وحجم الطرح. نشر صفحة طرح الأصل. فتح باب الاكتتاب أمام الملّاك الموثَّقين والمؤهَّلين.
+            </li>
+            <li>
+              <span className="step-title">العمليات بعد الشراء</span>
+              إدارة مستمرة للأصل والشركة ذات الغرض الخاص. تقارير تشغيلية ومالية دورية. توزيع الدخل (إن وُجد) وفقًا للسياسات المعلنة.
+            </li>
+            <li>
+              <span className="step-title">آليات الخروج</span>
+              البيع من خلال السوق الثانوية. خروج اختياري عبر مزوّد السيولة (وفقًا للشروط ومدى التوفّر). بيع الأصل وتصفية الشركة ذات الغرض الخاص حيثما ينطبق ذلك.
+            </li>
+          </ol>
+
+          <h2>موارد ذات صلة</h2>
+          <div>
+            <button className="link-button" onClick={() => navigateToPage('/tokenization')}>
+              ما هو الترميز
+            </button>
+            <button className="link-button" onClick={() => navigateToPage('/spv')}>
+              ما هي الشركة ذات الغرض الخاص (SPV)
+            </button>
+            <button className="link-button-outline" onClick={() => navigateToPage('/risks')}>
+              عرض الإفصاحات عن المخاطر
+            </button>
+            <button className="link-button-outline" onClick={() => navigateToPage('/secondary-market')}>
+              السوق الثانوية
+            </button>
+            <button className="link-button-outline" onClick={() => navigateToPage('/investor-guide')}>
+              دليل الشريك المالك
+            </button>
+          </div>
+        </section>
+      </InfoPageLayout>
+    );
+  }
 
   return (
     <InfoPageLayout

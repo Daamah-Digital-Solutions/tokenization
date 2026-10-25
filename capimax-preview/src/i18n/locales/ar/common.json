@@ -102,5 +102,22 @@
   "charts": {
     "current": "الحالي",
     "change": "التغيّر"
+  },
+  "pageLoader": {
+    "title": "جارٍ التحميل…",
+    "wait": "يرجى الانتظار لحظة…",
+    "redirecting": "جارٍ تحويلك إلى تسجيل الدخول…"
+  },
+  "constructionStage": {
+    "complete": "اكتمل الإنشاء",
+    "nearly": "قارب على الاكتمال",
+    "half": "اكتمل نصفه",
+    "progress": "جارٍ التنفيذ",
+    "started": "بدأ حديثًا"
+  },
+  "txDescription": {
+    "investmentIn": "استثمار في {{property}}",
+    "dividendFrom": "توزيع أرباح من {{property}}",
+    "withdrawalFrom": "سحب من {{property}}"
   }
 }

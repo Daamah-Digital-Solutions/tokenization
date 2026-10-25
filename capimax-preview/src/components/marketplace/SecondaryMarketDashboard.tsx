@@ -36,6 +36,7 @@ import { Text } from '../design-system/typography/Text';
 import { BuyOrderModal } from './BuyOrderModal';
 import { CreateListingModal } from './CreateListingModal';
 import { useRouter } from '../../utils/router';
+import { useTranslation } from 'react-i18next';
 
 interface SecondaryMarketDashboardProps {
   className?: string;
@@ -48,6 +49,7 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
 }) => {
   const { user } = useAuth();
   const { navigate } = useRouter();
+  const { t } = useTranslation('market');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -139,35 +141,35 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
   const totalPages = Math.ceil(totalCount / 20);
 
   const tabs = [
-    { id: 'sell', label: 'Sell Orders', icon: ArrowUpDown, description: 'Tokens for sale' },
-    { id: 'buy', label: 'Buy Orders', icon: ShoppingCart, description: 'Buying requests' },
-    { id: 'all', label: 'All Listings', icon: List, description: 'All market activity' }
+    { id: 'sell', label: t('smd.tabSell'), icon: ArrowUpDown, description: t('smd.tabSellDesc') },
+    { id: 'buy', label: t('smd.tabBuy'), icon: ShoppingCart, description: t('smd.tabBuyDesc') },
+    { id: 'all', label: t('smd.tabAll'), icon: List, description: t('smd.tabAllDesc') }
   ];
 
   const stats = [
     {
-      label: 'Active Listings',
+      label: t('smd.statActiveListings'),
       value: marketStats?.total_listings || 0,
       icon: Activity,
       change: '+12%',
       changeType: 'positive' as const
     },
     {
-      label: '24h Volume',
+      label: t('smd.stat24hVolume'),
       value: `$${(marketStats?.total_volume_24h || 0).toLocaleString()}`,
       icon: BarChart3,
       change: '+8.2%',
       changeType: 'positive' as const
     },
     {
-      label: 'Avg Price/Token',
+      label: t('smd.statAvgPrice'),
       value: `$${(marketStats?.average_price_per_token || 0).toFixed(2)}`,
       icon: DollarSign,
       change: '+2.1%',
       changeType: 'positive' as const
     },
     {
-      label: 'Active Traders',
+      label: t('smd.statActiveTraders'),
       value: marketStats?.active_traders || 0,
       icon: Users,
       change: marketStats?.active_traders ? `${marketStats.active_traders}` : '0',
@@ -182,10 +184,10 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Secondary Market
+              {t('smd.title')}
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Trade property tokens with instant settlement
+              {t('smd.subtitle')}
             </p>
           </div>
           <div className="flex gap-3">
@@ -195,14 +197,14 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
               className="flex items-center gap-2"
             >
               <RefreshCw className="w-4 h-4" />
-              Refresh
+              {t('common.refresh')}
             </Button>
             <Button
               onClick={handleCreateListing}
               className="flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
-              Create Listing
+              {t('smd.createListing')}
             </Button>
           </div>
         </div>
@@ -241,13 +243,13 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
           {/* Search Bar */}
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
                 type="text"
-                placeholder="Search by property name, location, or seller..."
+                placeholder={t('smd.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="ps-10"
               />
             </div>
           </div>
@@ -260,7 +262,7 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
               className="flex items-center gap-2"
             >
               <Filter className="w-4 h-4" />
-              Filters
+              {t('smd.filters')}
             </Button>
 
             <div className="flex border rounded-lg dark:border-gray-600">
@@ -268,7 +270,7 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('grid')}
-                className="rounded-r-none"
+                className="rounded-e-none"
               >
                 <Grid3X3 className="w-4 h-4" />
               </Button>
@@ -276,7 +278,7 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('list')}
-                className="rounded-l-none"
+                className="rounded-s-none"
               >
                 <List className="w-4 h-4" />
               </Button>
@@ -285,7 +287,7 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mb-6">
+        <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mb-6">
           {tabs.map(({ id, label, icon: Icon, description }) => (
             <button
               key={id}
@@ -301,7 +303,7 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
               )}
             >
               <Icon className="w-4 h-4" />
-              <div className="text-left">
+              <div className="text-start">
                 <div className="font-semibold">{label}</div>
                 <div className="text-xs opacity-75">{description}</div>
               </div>
@@ -322,11 +324,11 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
                 exit={{ opacity: 0, height: 0 }}
                 className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6"
               >
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Filters</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-4">{t('smd.filters')}</h3>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Property Type
+                      {t('smd.propertyType')}
                     </label>
                     <select
                       className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -336,20 +338,20 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
                         property_type: e.target.value || undefined
                       })}
                     >
-                      <option value="">All Types</option>
-                      <option value="residential">Residential</option>
-                      <option value="commercial">Commercial</option>
-                      <option value="industrial">Industrial</option>
+                      <option value="">{t('smd.allTypes')}</option>
+                      <option value="residential">{t('propertyTypes.residential')}</option>
+                      <option value="commercial">{t('propertyTypes.commercial')}</option>
+                      <option value="industrial">{t('propertyTypes.industrial')}</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Price Range
+                      {t('smd.priceRange')}
                     </label>
                     <div className="grid grid-cols-2 gap-2">
                       <Input
                         type="number"
-                        placeholder="Min"
+                        placeholder={t('smd.min')}
                         value={filters.min_price || ''}
                         onChange={(e) => handleFiltersChange({
                           ...filters,
@@ -358,7 +360,7 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
                       />
                       <Input
                         type="number"
-                        placeholder="Max"
+                        placeholder={t('smd.max')}
                         value={filters.max_price || ''}
                         onChange={(e) => handleFiltersChange({
                           ...filters,
@@ -369,7 +371,7 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Sort By
+                      {t('smd.sortBy')}
                     </label>
                     <select
                       className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -379,12 +381,12 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
                         sort_by: e.target.value as any
                       })}
                     >
-                      <option value="created_desc">Newest First</option>
-                      <option value="created_asc">Oldest First</option>
-                      <option value="price_asc">Price: Low to High</option>
-                      <option value="price_desc">Price: High to Low</option>
-                      <option value="tokens_asc">Tokens: Low to High</option>
-                      <option value="tokens_desc">Tokens: High to Low</option>
+                      <option value="created_desc">{t('sort.newest')}</option>
+                      <option value="created_asc">{t('sort.oldest')}</option>
+                      <option value="price_asc">{t('sort.priceAsc')}</option>
+                      <option value="price_desc">{t('sort.priceDesc')}</option>
+                      <option value="tokens_asc">{t('sort.tokensAsc')}</option>
+                      <option value="tokens_desc">{t('sort.tokensDesc')}</option>
                     </select>
                   </div>
                 </div>
@@ -394,27 +396,27 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
 
           {/* Market Info */}
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 sticky top-6">
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Market Status</h3>
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-4">{t('smd.marketStatus')}</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-gray-600 dark:text-gray-400 text-sm">Market Status</span>
+                <span className="text-gray-600 dark:text-gray-400 text-sm">{t('smd.marketStatus')}</span>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-green-600 dark:text-green-400 text-sm font-medium">Open</span>
+                  <span className="text-green-600 dark:text-green-400 text-sm font-medium">{t('smd.open')}</span>
                 </div>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400 text-sm">Total Listings</span>
+                <span className="text-gray-600 dark:text-gray-400 text-sm">{t('smd.totalListings')}</span>
                 <span className="font-medium text-gray-900 dark:text-white">{totalCount}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400 text-sm">Active Sell Orders</span>
+                <span className="text-gray-600 dark:text-gray-400 text-sm">{t('smd.activeSellOrders')}</span>
                 <span className="font-medium text-gray-900 dark:text-white">
                   {listings.filter(l => l.listing_type === 'sell' && l.status === 'active').length}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400 text-sm">Active Buy Orders</span>
+                <span className="text-gray-600 dark:text-gray-400 text-sm">{t('smd.activeBuyOrders')}</span>
                 <span className="font-medium text-gray-900 dark:text-white">
                   {listings.filter(l => l.listing_type === 'buy' && l.status === 'active').length}
                 </span>
@@ -429,11 +431,11 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {totalCount.toLocaleString()} {selectedTab === 'all' ? 'Listings' : selectedTab === 'sell' ? 'Sell Orders' : 'Buy Orders'}
+                {totalCount.toLocaleString()} {selectedTab === 'all' ? t('smd.listings') : selectedTab === 'sell' ? t('smd.tabSell') : t('smd.tabBuy')}
               </h2>
               {searchQuery && (
                 <Badge variant="secondary">
-                  Results for "{searchQuery}"
+                  {t('smd.resultsFor', { query: searchQuery })}
                 </Badge>
               )}
             </div>
@@ -455,9 +457,9 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
           {error && (
             <div className="text-center py-12">
               <div className="text-red-600 dark:text-red-400 mb-4">
-                Failed to load marketplace listings
+                {t('smd.loadError')}
               </div>
-              <Button onClick={() => refetch()}>Try Again</Button>
+              <Button onClick={() => refetch()}>{t('smd.tryAgain')}</Button>
             </div>
           )}
 
@@ -465,7 +467,7 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
           {!isLoading && !error && listings.length === 0 && (
             <div className="text-center py-12">
               <div className="text-gray-500 dark:text-gray-400 mb-4">
-                No listings found matching your criteria
+                {t('smd.noResults')}
               </div>
               <Button
                 variant="outline"
@@ -475,7 +477,7 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
                   setSelectedTab('sell');
                 }}
               >
-                Clear Filters
+                {t('smd.clearFilters')}
               </Button>
             </div>
           )}
@@ -513,17 +515,17 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
                     disabled={currentPage <= 1}
                     onClick={() => setCurrentPage(prev => prev - 1)}
                   >
-                    Previous
+                    {t('smd.previous')}
                   </Button>
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Page {currentPage} of {totalPages}
+                    {t('smd.pageOf', { page: currentPage, total: totalPages })}
                   </span>
                   <Button
                     variant="outline"
                     disabled={currentPage >= totalPages}
                     onClick={() => setCurrentPage(prev => prev + 1)}
                   >
-                    Next
+                    {t('smd.next')}
                   </Button>
                 </div>
               )}
@@ -573,6 +575,8 @@ const ListingCard: React.FC<ListingCardProps> = ({
   onViewDetails,
   currentUser
 }) => {
+  const { t, i18n } = useTranslation('market');
+  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
   const isOwnListing = currentUser?.id === listing.seller.id;
   const fillPercentage = ((listing.tokens_offered - listing.tokens_remaining) / listing.tokens_offered) * 100;
   const expiresAt = new Date(listing.expires_at);
@@ -634,25 +638,25 @@ const ListingCard: React.FC<ListingCardProps> = ({
             </div>
           );
         })()}
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-3 start-3">
           <Badge
             className={cn("text-xs font-medium px-2 py-1", typeColors[listing.listing_type])}
           >
-            {listing.listing_type === 'sell' ? 'For Sale' : 'Want to Buy'}
+            {listing.listing_type === 'sell' ? t('smd.forSale') : t('smd.wantToBuy')}
           </Badge>
         </div>
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 end-3">
           <Badge
             className={cn("text-xs font-medium px-2 py-1", statusColors[listing.status])}
           >
-            {listing.status.replace('_', ' ')}
+            {t(`status.${listing.status}`, { defaultValue: listing.status.replace('_', ' ') })}
           </Badge>
         </div>
         {isExpiringSoon && listing.status === 'active' && (
-          <div className="absolute bottom-3 right-3">
+          <div className="absolute bottom-3 end-3">
             <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400 text-xs">
-              <Timer className="w-3 h-3 mr-1" />
-              Expires Soon
+              <Timer className="w-3 h-3 me-1" />
+              {t('smd.expiresSoon')}
             </Badge>
           </div>
         )}
@@ -667,21 +671,21 @@ const ListingCard: React.FC<ListingCardProps> = ({
               {listing.property_listing.title}
             </h3>
             <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-              <MapPin className="w-4 h-4 mr-1" />
+              <MapPin className="w-4 h-4 me-1" />
               {listing.property_listing.city}
             </div>
           </div>
 
           {/* Seller Info */}
           <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
-            <Users className="w-4 h-4 mr-2" />
-            {isOwnListing ? 'Your Listing' : `Seller: ${listing.seller.full_name}`}
+            <Users className="w-4 h-4 me-2" />
+            {isOwnListing ? t('smd.yourListing') : t('smd.seller', { name: listing.seller.full_name })}
           </div>
 
           {/* Token Info */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-gray-400">Tokens Available</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{t('smd.tokensAvailable')}</span>
               <span className="font-semibold text-gray-900 dark:text-white">
                 {listing.tokens_remaining.toLocaleString()} / {listing.tokens_offered.toLocaleString()}
               </span>
@@ -699,22 +703,22 @@ const ListingCard: React.FC<ListingCardProps> = ({
           {/* Pricing */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-gray-400">Price per Token</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{t('smd.pricePerToken')}</span>
               <span className="font-bold text-xl text-gray-900 dark:text-white">
                 ${parseFloat(listing.price_per_token).toFixed(2)}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-gray-400">Total Value</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{t('smd.totalValue')}</span>
               <span className="font-semibold text-gray-900 dark:text-white">
                 ${parseFloat(listing.total_price).toLocaleString()}
               </span>
             </div>
             {listing.minimum_order_size > 1 && (
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Min. Order</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">{t('smd.minOrder')}</span>
                 <span className="text-sm text-gray-900 dark:text-white">
-                  {listing.minimum_order_size} tokens
+                  {t('smd.nTokens', { value: listing.minimum_order_size })}
                 </span>
               </div>
             )}
@@ -731,8 +735,8 @@ const ListingCard: React.FC<ListingCardProps> = ({
                 className="flex-1"
                 size="sm"
               >
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                Buy Tokens
+                <ShoppingCart className="w-4 h-4 me-2" />
+                {t('smd.buyTokens')}
               </Button>
             )}
             <Button
@@ -743,15 +747,15 @@ const ListingCard: React.FC<ListingCardProps> = ({
               }}
               size="sm"
             >
-              <Eye className="w-4 h-4 mr-2" />
-              Details
+              <Eye className="w-4 h-4 me-2" />
+              {t('smd.details')}
             </Button>
           </div>
 
           {/* Expiry info */}
           <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
-            <Clock className="w-3 h-3 mr-1" />
-            Expires {expiresAt.toLocaleDateString()}
+            <Clock className="w-3 h-3 me-1" />
+            {t('smd.expires', { date: expiresAt.toLocaleDateString(dateLocale) })}
           </div>
         </div>
       </div>

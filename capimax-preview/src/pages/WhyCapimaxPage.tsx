@@ -49,251 +49,182 @@ import { Section } from '../components/design-system/sections/Section';
 import { Heading } from '../components/design-system/typography/Heading';
 import { Text } from '../components/design-system/typography/Text';
 import { Card } from '../components/design-system/cards/Card';
+import { useTranslation } from 'react-i18next';
 
 const features = [
   {
     number: 1,
     icon: Building2,
-    title: 'Deep Real Estate Experience',
-    description: 'Our team has decades of combined experience as property owners, developers, and buyers, allowing for precise understanding of asset valuation, market timing, and risk factors.',
     color: 'from-blue-500 to-cyan-500'
   },
   {
     number: 2,
     icon: TrendingUp,
-    title: 'Ownership and Financial Expertise',
-    description: 'Expertise in structured finance, fund management, and capital allocation ensures proper modeling of returns, risk-adjusted ownership strategies, and efficient allocation of owner capital.',
     color: 'from-emerald-500 to-green-500'
   },
   {
     number: 3,
     icon: Target,
-    title: 'Development Knowledge',
-    description: 'Hands-on experience in property development, from planning to delivery, allows accurate forecasting of timelines, cost management, and value appreciation potential.',
     color: 'from-purple-500 to-pink-500'
   },
   {
     number: 4,
     icon: Handshake,
-    title: 'Broker and Market Understanding',
-    description: 'Understanding the intermediary role and market dynamics helps bridge gaps between developers, sellers, and buyers, ensuring smoother transactions.',
     color: 'from-orange-500 to-red-500'
   },
   {
     number: 5,
     icon: Lightbulb,
-    title: 'Insight into Ownership Challenges',
-    description: 'We have firsthand knowledge of operational and exit challenges, including owner withdrawals, illiquidity, maintenance costs, and market volatility.',
     color: 'from-indigo-500 to-blue-500'
   },
   {
     number: 6,
     icon: Home,
-    title: 'Familiarity with Property Types',
-    description: 'In-depth knowledge of income-generating, development, and installment-based properties enables diversified ownership solutions for various risk appetites.',
     color: 'from-teal-500 to-cyan-500'
   },
   {
     number: 7,
     icon: Award,
-    title: 'Innovative Ownership Models',
-    description: 'We created new ownership models combining installment-based property acquisition and phased development rounds to mirror real-world property processes.',
     color: 'from-pink-500 to-rose-500'
   },
   {
     number: 8,
     icon: Globe,
-    title: 'Global Market Analysis',
-    description: 'Our studies included global platforms such as Lofty, Relic, and local models like Stake and SmartCrowd, highlighting international best practices and potential improvements.',
     color: 'from-yellow-500 to-orange-500'
   },
   {
     number: 9,
     icon: BarChart3,
-    title: 'Competitive Benchmarking',
-    description: 'Detailed competitor analysis identified gaps in transparency, liquidity, and owner control, which Capy Max RT addresses.',
     color: 'from-violet-500 to-purple-500'
   },
   {
     number: 10,
     icon: TrendingDown,
-    title: 'Exit Strategy Optimization',
-    description: 'Designed flexible exit options for owners, including secondary markets, buybacks, or redistribution of ownership, ensuring liquidity and strategic exits.',
     color: 'from-red-500 to-orange-500'
   },
   {
     number: 11,
     icon: DollarSign,
-    title: 'Transparent Revenue Streams',
-    description: 'Revenue for the platform derives from tokenization fees, listing fees, subscription fees, owner purchase fees, annual platform fees, exit fees, and profit sharing, including secondary market transactions and liquidity provider arrangements.',
     color: 'from-green-500 to-emerald-500'
   },
   {
     number: 12,
     icon: MapPin,
-    title: 'Diverse Property Offerings',
-    description: 'The platform supports various property types and locations, including income-generating, under-construction, and development properties, allowing portfolio diversification.',
     color: 'from-blue-500 to-indigo-500'
   },
   {
     number: 13,
     icon: Landmark,
-    title: 'Global SPV Framework',
-    description: 'All purchases are structured through Special Purpose Vehicles (SPVs), enabling global compliance, legal separation of assets, and expansion opportunities.',
     color: 'from-cyan-500 to-blue-500'
   },
   {
     number: 14,
     icon: Users,
-    title: 'Multiple Stakeholder Integration',
-    description: 'The platform connects owners, property sellers, developers, intermediaries, liquidity providers, and partners, allowing smooth coordination and accountability.',
     color: 'from-purple-500 to-indigo-500'
   },
   {
     number: 15,
     icon: BarChart3,
-    title: 'Owner Dashboards',
-    description: 'All stakeholders have access to dashboards that enable monitoring, management, transparency, and control of their assets and transactions.',
     color: 'from-emerald-500 to-teal-500'
   },
   {
     number: 16,
     icon: RefreshCcw,
-    title: 'Reinvestment Mechanism',
-    description: 'Owners can automatically reinvest their yields into the platform, compounding returns and maximizing portfolio growth.',
     color: 'from-orange-500 to-yellow-500'
   },
   {
     number: 17,
     icon: ShoppingCart,
-    title: 'Secondary Market Integration',
-    description: 'Secondary market functionality allows owners to trade their property tokens, providing liquidity and flexible exit strategies.',
     color: 'from-pink-500 to-purple-500'
   },
   {
     number: 18,
     icon: Layers,
-    title: 'Structured Development Rounds',
-    description: 'Phased development and installment models replicate real-life property ownership cycles, offering clear growth and price appreciation patterns.',
     color: 'from-blue-500 to-cyan-500'
   },
   {
     number: 19,
     icon: Shield,
-    title: 'Diversified Risk Management',
-    description: 'Risk is mitigated through multi-country and multi-property portfolios, professional property appraisal, thorough due diligence, and diversified asset types.',
     color: 'from-red-500 to-pink-500'
   },
   {
     number: 20,
     icon: LineChart,
-    title: 'Annual Revenue Accumulation',
-    description: 'Platform revenues are cumulative: for example, 2027 revenues include income from properties listed in 2027 plus recurring fees, exit fees, and profits from prior years, compounding financial growth over time.',
     color: 'from-green-500 to-teal-500'
   },
   {
     number: 21,
     icon: Wallet,
-    title: 'Digital and Crypto Payments',
-    description: 'The platform supports traditional, digital, and crypto payment options, ensuring accessibility and convenience for global owners.',
     color: 'from-indigo-500 to-purple-500'
   },
   {
     number: 22,
     icon: FileCheck,
-    title: 'Transparency and Open Data',
-    description: 'Full disclosure of property performance, revenues, and ownership documentation ensures informed decision-making.',
     color: 'from-cyan-500 to-blue-500'
   },
   {
     number: 23,
     icon: BookOpen,
-    title: 'Educational and Guidance Tools',
-    description: 'The platform provides owners with explanations, guides, and analytics, reducing ambiguity and increasing confidence in decision-making.',
     color: 'from-yellow-500 to-orange-500'
   },
   {
     number: 24,
     icon: Heart,
-    title: 'Family Ownership Feature',
-    description: 'Owners can allocate yields to family members, link their bank accounts, and manage shared returns, increasing loyalty and engagement.',
     color: 'from-rose-500 to-pink-500'
   },
   {
     number: 25,
     icon: Globe,
-    title: 'Global Access',
-    description: 'The platform is designed to operate internationally, providing ownership opportunities beyond local markets and spreading risks.',
     color: 'from-teal-500 to-cyan-500'
   },
   {
     number: 26,
     icon: CreditCard,
-    title: 'Flexible Payment Plans',
-    description: 'Installment models allow smaller buyers to enter the market and gradually acquire tokenized ownership.',
     color: 'from-violet-500 to-indigo-500'
   },
   {
     number: 27,
     icon: PieChart,
-    title: 'Market-Based Development Rounds',
-    description: 'Ownership rounds mirror real property development stages, with clearly defined pricing and release schedules for phased access.',
     color: 'from-orange-500 to-red-500'
   },
   {
     number: 28,
     icon: Landmark,
-    title: 'Actual Property Backing',
-    description: 'All tokenized purchases are backed by real, legally documented properties, ensuring tangible asset value.',
     color: 'from-emerald-500 to-green-500'
   },
   {
     number: 29,
     icon: FileText,
-    title: 'Reporting and Analytics',
-    description: 'Comprehensive reports and open data provide visibility into portfolio performance, asset conditions, and revenue streams.',
     color: 'from-blue-500 to-indigo-500'
   },
   {
     number: 30,
     icon: UserCheck,
-    title: 'Owner Protection',
-    description: 'Legal, contractual, and technological safeguards protect owners\' rights, including blockchain immutability and SPV structures.',
     color: 'from-purple-500 to-pink-500'
   },
   {
     number: 31,
     icon: Code,
-    title: 'Smart Contract Automation',
-    description: 'Smart contracts ensure automated revenue distribution, compliance checks, and secure token transfers.',
     color: 'from-cyan-500 to-blue-500'
   },
   {
     number: 32,
     icon: Coins,
-    title: 'Integrated Liquidity Providers',
-    description: 'Liquidity providers enhance market stability and enable smoother secondary transactions.',
     color: 'from-green-500 to-emerald-500'
   },
   {
     number: 33,
     icon: Briefcase,
-    title: 'Intermediary Support',
-    description: 'The platform integrates brokers and intermediaries to attract property sellers and buyers while facilitating transactions.',
     color: 'from-orange-500 to-yellow-500'
   },
   {
     number: 34,
     icon: Lock,
-    title: 'Eliminating Final Sale Pressure',
-    description: 'Revenue accumulation replaces the need for forced property liquidation, ensuring consistent returns and long-term asset appreciation.',
     color: 'from-red-500 to-pink-500'
   },
   {
     number: 35,
     icon: Zap,
-    title: 'Continuous Innovation',
-    description: 'The platform continuously evolves to add new property types, ownership models, and services, maintaining leadership in tokenized real estate innovation.',
     color: 'from-indigo-500 to-violet-500'
   }
 ];
@@ -302,41 +233,35 @@ const additionalFeatures = [
   {
     number: 36,
     icon: Settings,
-    title: 'Dedicated Dashboards for All Stakeholders',
-    description: 'The platform provides dedicated dashboards for each stakeholder, including developers, liquidity providers, brokers, and partners. These dashboards enable full transparency, control, and freedom of operation, including property listing, document uploads, tracking, analytics, revenue collection, and withdrawals. Each stakeholder has a complete interface tailored to their role and responsibilities.',
     color: 'from-blue-500 to-cyan-500'
   },
   {
     number: 37,
     icon: Activity,
-    title: 'Competitor Analysis and Expansion Planning',
-    description: 'Capy Max RT has conducted extensive competitor analysis and developed strategic expansion plans. The platform continuously updates its products and services annually, ensuring relevance, competitiveness, and innovation.',
     color: 'from-emerald-500 to-green-500'
   },
   {
     number: 38,
     icon: Sparkles,
-    title: 'Annual Feature and Service Enhancements',
-    description: 'The platform retains additional services and features that are introduced each year, refreshing the platform\'s functionality, user experience, and ownership offerings. This ensures that Capy Max RT evolves dynamically with market needs.',
     color: 'from-purple-500 to-pink-500'
   },
   {
     number: 39,
     icon: Globe,
-    title: 'Global Expansion Roadmap',
-    description: 'Capy Max RT has a structured global expansion strategy, enabling the platform to scale operations and provide ownership opportunities in international markets in subsequent phases.',
     color: 'from-orange-500 to-red-500'
   }
 ];
 
 export const WhyCapimaxPage: React.FC = () => {
+  const { t } = useTranslation('pages');
+
   return (
     <>
       <Helmet>
-        <title>Why Capimax RT | Capimax - Real Estate Tokenization Platform</title>
+        <title>{t('why.metaTitle')}</title>
         <meta
           name="description"
-          content="Discover why Capimax RT is the leading real estate tokenization platform. Learn about our 39 unique features, global expertise, and innovative ownership models that set us apart."
+          content={t('why.metaDescription')}
         />
         <meta name="keywords" content="why capimax, real estate tokenization advantages, real estate ownership platform, blockchain real estate, tokenized real estate benefits" />
       </Helmet>
@@ -356,7 +281,7 @@ export const WhyCapimaxPage: React.FC = () => {
                   opacity: [0.1, 0.2, 0.1]
                 }}
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="absolute top-20 right-20 w-72 h-72 bg-gradient-to-r from-emerald-400/10 to-green-400/10 dark:from-emerald-500/20 dark:to-green-500/20 rounded-full blur-3xl"
+                className="absolute top-20 end-20 w-72 h-72 bg-gradient-to-r from-emerald-400/10 to-green-400/10 dark:from-emerald-500/20 dark:to-green-500/20 rounded-full blur-3xl"
               />
               <motion.div
                 animate={{
@@ -365,7 +290,7 @@ export const WhyCapimaxPage: React.FC = () => {
                   opacity: [0.1, 0.15, 0.1]
                 }}
                 transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-                className="absolute bottom-20 left-20 w-96 h-96 bg-gradient-to-r from-blue-400/10 to-purple-400/10 dark:from-blue-500/15 dark:to-purple-500/15 rounded-full blur-3xl"
+                className="absolute bottom-20 start-20 w-96 h-96 bg-gradient-to-r from-blue-400/10 to-purple-400/10 dark:from-blue-500/15 dark:to-purple-500/15 rounded-full blur-3xl"
               />
 
               {/* Floating particles */}
@@ -406,7 +331,7 @@ export const WhyCapimaxPage: React.FC = () => {
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-emerald-200/50 dark:border-emerald-500/30 shadow-xl"
                   >
                     <Award className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
-                    <span className="text-sm font-semibold text-slate-700 dark:text-gray-200">39 Unique Features & Advantages</span>
+                    <span className="text-sm font-semibold text-slate-700 dark:text-gray-200">{t('why.badge')}</span>
                   </motion.div>
 
                   <motion.h1
@@ -415,9 +340,9 @@ export const WhyCapimaxPage: React.FC = () => {
                     transition={{ duration: 0.8, delay: 0.2 }}
                     className="text-5xl lg:text-6xl font-bold leading-tight tracking-tight text-slate-800 dark:text-white"
                   >
-                    Why{' '}
+                    {t('why.titleLead')}{' '}
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 dark:from-emerald-400 dark:via-green-400 dark:to-teal-400">
-                      Capimax RT
+                      {t('why.titleHighlight')}
                     </span>
                   </motion.h1>
 
@@ -427,7 +352,7 @@ export const WhyCapimaxPage: React.FC = () => {
                     transition={{ duration: 0.8, delay: 0.4 }}
                     className="text-xl lg:text-2xl leading-relaxed text-slate-600 dark:text-gray-300 max-w-3xl mx-auto font-light"
                   >
-                    Discover the expertise, innovation, and comprehensive approach that makes Capimax RT the leading real estate tokenization platform.
+                    {t('why.heroText')}
                   </motion.p>
                 </div>
               </Container>
@@ -443,27 +368,27 @@ export const WhyCapimaxPage: React.FC = () => {
                 transition={{ duration: 0.8 }}
               >
                 <Text variant="bodyLarge" color="secondary" as="p" className="leading-relaxed mb-6">
-                  CapiMax RT represents the result of extensive cumulative expertise across the real estate, finance, ownership, and development sectors. The founding team has operated as property owners, developers, and buyers, gaining direct practical insight into the real-world challenges of property ownership, including risk management, exit strategies, return optimization, asset valuation, and owner relations.
+                  {t('why.intro1')}
                 </Text>
 
                 <Text variant="bodyLarge" color="secondary" as="p" className="leading-relaxed mb-6">
-                  Capi Max RT is owned by Capimax Global Group, which holds 12 companies operating across multiple international jurisdictions, including the United States, the United Kingdom, and the United Arab Emirates. The group operates in more than 72 business activities spanning ownership, real estate development, virtual assets, tokenization, ownership funds, and financial and technology services.
+                  {t('why.intro2')}
                 </Text>
 
                 <Text variant="bodyLarge" color="secondary" as="p" className="leading-relaxed mb-6">
-                  This institutional scale and diversified operational footprint provide the platform with integrated expertise across technical, legal, financial, real estate, ownership, and technological disciplines, enabling comprehensive management of the platform from all operational, regulatory, and strategic perspectives.
+                  {t('why.intro3')}
                 </Text>
 
                 <Text variant="bodyLarge" color="secondary" as="p" className="leading-relaxed mb-6">
-                  In addition, the team conducted extensive studies of both local and global markets, analyzing the strengths, weaknesses, and opportunities within traditional and tokenized real estate ownership models. Competitors were carefully examined to identify gaps and areas for improvement.
+                  {t('why.intro4')}
                 </Text>
 
                 <Text variant="bodyLarge" color="secondary" as="p" className="leading-relaxed mb-6">
-                  This accumulated knowledge, combined with market research, owner behavior studies, and operational experience, enabled the team to design Capy Max RT as a comprehensive solution that addresses real challenges faced by owners, property sellers, and developers. The platform emphasizes transparency, flexibility, governance, and strategic growth.
+                  {t('why.intro5')}
                 </Text>
 
                 <Text variant="bodyLarge" color="secondary" as="p" className="leading-relaxed font-semibold">
-                  The following 35 features represent the innovations and advantages directly derived from our accumulated expertise and market understanding:
+                  {t('why.introLead')}
                 </Text>
               </motion.div>
             </div>
@@ -504,11 +429,11 @@ export const WhyCapimaxPage: React.FC = () => {
                         </div>
 
                         <Heading level="h3" size="lg" className="group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-300">
-                          {feature.title}
+                          {t(`why.features.${feature.number}.title`)}
                         </Heading>
 
                         <Text variant="body" color="secondary" as="p" className="leading-relaxed">
-                          {feature.description}
+                          {t(`why.features.${feature.number}.description`)}
                         </Text>
                       </div>
                     </Card>
@@ -534,7 +459,7 @@ export const WhyCapimaxPage: React.FC = () => {
                 <div className="relative flex justify-center">
                   <div className="px-6 py-3 bg-white dark:bg-slate-900 border-2 border-emerald-500/30 rounded-full">
                     <Text variant="body" className="font-semibold text-emerald-600 dark:text-emerald-400">
-                      Additional Strategic Features
+                      {t('why.additionalTitle')}
                     </Text>
                   </div>
                 </div>
@@ -577,11 +502,11 @@ export const WhyCapimaxPage: React.FC = () => {
                         </div>
 
                         <Heading level="h3" size="xl" className="group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors duration-300">
-                          {feature.title}
+                          {t(`why.features.${feature.number}.title`)}
                         </Heading>
 
                         <Text variant="body" color="secondary" as="p" className="leading-relaxed">
-                          {feature.description}
+                          {t(`why.features.${feature.number}.description`)}
                         </Text>
                       </div>
                     </Card>
@@ -611,10 +536,10 @@ export const WhyCapimaxPage: React.FC = () => {
                       <CheckCircle className="w-10 h-10 text-white" />
                     </div>
                     <Heading level="h2" size="3xl">
-                      The Capimax RT Advantage
+                      {t('why.advantageTitle')}
                     </Heading>
                     <Text variant="bodyLarge" color="secondary" as="p" className="max-w-3xl mx-auto leading-relaxed">
-                      These 39 features represent our commitment to creating the most comprehensive, transparent, and owner-friendly real estate tokenization platform. Every feature is designed to address real challenges and deliver tangible value to all stakeholders.
+                      {t('why.advantageText')}
                     </Text>
                   </div>
                 </Card>
@@ -631,7 +556,7 @@ export const WhyCapimaxPage: React.FC = () => {
                 className="space-y-6"
               >
                 <Heading level="h2" size="4xl" align="center" className="text-white">
-                  Experience the Capimax RT Difference
+                  {t('why.ctaTitle')}
                 </Heading>
                 <Text
                   variant="bodyLarge"
@@ -639,7 +564,7 @@ export const WhyCapimaxPage: React.FC = () => {
                   className="max-w-2xl mx-auto text-white/90"
                   as="p"
                 >
-                  Join a platform built on decades of expertise, powered by innovation, and designed for your success. Start owning tokenized real estate today.
+                  {t('why.ctaText')}
                 </Text>
               </motion.div>
 
@@ -648,15 +573,15 @@ export const WhyCapimaxPage: React.FC = () => {
                   href="/register"
                   className="inline-flex items-center justify-center bg-white text-slate-900 hover:bg-slate-100 px-10 py-4 text-lg font-semibold rounded-2xl transition-colors duration-300"
                 >
-                  Get Started Now
-                  <ArrowUpRight className="ml-3 w-5 h-5" />
+                  {t('why.ctaStart')}
+                  <ArrowUpRight className="ms-3 w-5 h-5 rtl:-scale-x-100" />
                 </a>
                 <a
                   href="/properties"
                   className="inline-flex items-center justify-center border border-white/30 text-white hover:bg-white/10 px-10 py-4 text-lg font-semibold rounded-2xl transition-colors duration-300"
                 >
-                  Explore Properties
-                  <Building2 className="ml-3 w-5 h-5" />
+                  {t('why.ctaExplore')}
+                  <Building2 className="ms-3 w-5 h-5" />
                 </a>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, TrendingUp, TrendingDown, Plus, ArrowUpRight, ArrowDownLeft, RefreshCw, AlertCircle, X } from 'lucide-react';
 import { usePayment } from '../../contexts/PaymentContext';
 import { formatCurrency, getCurrencyInfo } from '../../utils/currencyConverter';
@@ -17,6 +18,7 @@ interface WalletBalanceProps {
 
 export function WalletBalance({ className, showActions = true, compact = false }: WalletBalanceProps) {
   const { state, getTotalUSDBalance, openPaymentModal } = usePayment();
+  const { t } = useTranslation('payments');
   const [showBalances, setShowBalances] = React.useState(true);
   const [showPortfolioGrowth, setShowPortfolioGrowth] = React.useState(true);
   const [walletModal, setWalletModal] = React.useState<'deposit' | 'withdraw' | null>(null);
@@ -45,17 +47,19 @@ export function WalletBalance({ className, showActions = true, compact = false }
   const growthAmount = growth?.return_amount || 0;
   const isPositiveGrowth = growthPercentage >= 0;
   const growthTrend = getGrowthTrend(growthPercentage);
-  const periodLabel = getGrowthPeriodLabel(growth?.period || 'month');
+  const growthPeriod = growth?.period || 'month';
+  const periodLabel = t(`walletBalance.period.${growthPeriod}`, { defaultValue: getGrowthPeriodLabel(growthPeriod) });
 
   return (
     <div className={className}>
       {!compact && (
         <Card className="p-6 bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">Total Portfolio Value</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('walletBalance.totalValue')}</h2>
             <button
               onClick={() => setShowBalances(!showBalances)}
               className="p-2 hover:bg-emerald-100 rounded-lg transition-colors"
+              aria-label={showBalances ? t('walletBalance.hideBalances') : t('walletBalance.showBalances')}
             >
               {showBalances ? (
                 <Eye className="h-5 w-5 text-emerald-600" />
@@ -81,12 +85,12 @@ export function WalletBalance({ className, showActions = true, compact = false }
               {analyticsError ? (
                 <>
                   <AlertCircle className="h-4 w-4 text-orange-500" />
-                  <span className="text-sm text-orange-600 font-medium">Unable to load growth data</span>
+                  <span className="text-sm text-orange-600 font-medium">{t('walletBalance.growthError')}</span>
                   <button
                     onClick={refetchGrowth}
-                    className="text-sm text-orange-600 hover:text-orange-700 underline ml-1"
+                    className="text-sm text-orange-600 hover:text-orange-700 underline ms-1"
                   >
-                    Retry
+                    {t('walletBalance.retry')}
                   </button>
                 </>
               ) : showPortfolioGrowth && growth ? (
@@ -107,7 +111,7 @@ export function WalletBalance({ className, showActions = true, compact = false }
                   </span>
                   <span className="text-sm text-gray-500">{periodLabel}</span>
                   {showBalances && growthAmount !== 0 && (
-                    <span className={`text-xs ml-1 ${
+                    <span className={`text-xs ms-1 ${
                       isPositiveGrowth ? 'text-emerald-500' : 'text-red-500'
                     }`}>
                       ({isPositiveGrowth ? '+' : ''}{formatCurrency(growthAmount, 'USD')})
@@ -117,7 +121,7 @@ export function WalletBalance({ className, showActions = true, compact = false }
               ) : (
                 <>
                   <TrendingUp className="h-4 w-4 text-gray-400" />
-                  <span className="text-sm text-gray-400 font-medium">Growth data loading...</span>
+                  <span className="text-sm text-gray-400 font-medium">{t('walletBalance.growthLoading')}</span>
                 </>
               )}
 
@@ -125,8 +129,8 @@ export function WalletBalance({ className, showActions = true, compact = false }
               {!analyticsError && (
                 <button
                   onClick={() => setShowPortfolioGrowth(!showPortfolioGrowth)}
-                  className="ml-2 p-1 hover:bg-emerald-100 rounded transition-colors"
-                  title={showPortfolioGrowth ? 'Hide growth data' : 'Show growth data'}
+                  className="ms-2 p-1 hover:bg-emerald-100 rounded transition-colors"
+                  title={showPortfolioGrowth ? t('walletBalance.hideGrowth') : t('walletBalance.showGrowth')}
                 >
                   {showPortfolioGrowth ? (
                     <Eye className="h-3 w-3 text-emerald-600" />
@@ -145,7 +149,7 @@ export function WalletBalance({ className, showActions = true, compact = false }
                 className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700"
               >
                 <Plus className="h-4 w-4" />
-                Add Funds
+                {t('walletBalance.addFunds')}
               </Button>
               <Button
                 variant="outline"
@@ -153,7 +157,7 @@ export function WalletBalance({ className, showActions = true, compact = false }
                 onClick={() => setWalletModal('withdraw')}
               >
                 <ArrowUpRight className="h-4 w-4" />
-                Withdraw
+                {t('walletBalance.withdraw')}
               </Button>
               {analyticsError && (
                 <Button
@@ -164,7 +168,7 @@ export function WalletBalance({ className, showActions = true, compact = false }
                   disabled={isAnalyticsLoading}
                 >
                   <RefreshCw className={`h-3 w-3 ${isAnalyticsLoading ? 'animate-spin' : ''}`} />
-                  Refresh
+                  {t('walletBalance.refresh')}
                 </Button>
               )}
             </div>
@@ -176,7 +180,7 @@ export function WalletBalance({ className, showActions = true, compact = false }
       <div className={`space-y-3 ${!compact ? 'mt-6' : ''}`}>
         <div className="flex items-center justify-between">
           <h3 className={`${compact ? 'text-sm' : 'text-base'} font-medium text-gray-900`}>
-            Currency Balances
+            {t('walletBalance.currencyBalances')}
           </h3>
           {compact && showActions && (
             <Button
@@ -191,13 +195,13 @@ export function WalletBalance({ className, showActions = true, compact = false }
 
         {!hasBalances ? (
           <Card className="p-4 text-center">
-            <div className="text-gray-500 mb-2">No balances available</div>
+            <div className="text-gray-500 mb-2">{t('walletBalance.noBalances')}</div>
             <Button
               size="sm"
               onClick={openPaymentModal}
               className="bg-emerald-600 hover:bg-emerald-700"
             >
-              Add Your First Funds
+              {t('walletBalance.addFirstFunds')}
             </Button>
           </Card>
         ) : (
@@ -232,7 +236,7 @@ export function WalletBalance({ className, showActions = true, compact = false }
                           <div className="text-sm text-gray-500">
                             {currencyInfo.code}
                             {currencyInfo.network && (
-                              <span className="ml-2 px-1.5 py-0.5 bg-gray-100 rounded text-xs">
+                              <span className="ms-2 px-1.5 py-0.5 bg-gray-100 rounded text-xs">
                                 {currencyInfo.network}
                               </span>
                             )}
@@ -240,7 +244,7 @@ export function WalletBalance({ className, showActions = true, compact = false }
                         </div>
                       </div>
 
-                      <div className="text-right">
+                      <div className="text-end">
                         <div className="font-semibold text-gray-900">
                           {showBalances 
                             ? formatCurrency(balance.balance, balance.currency)
@@ -254,7 +258,7 @@ export function WalletBalance({ className, showActions = true, compact = false }
                         )}
                         {balance.locked && balance.locked > 0 && (
                           <div className="text-xs text-orange-600">
-                            {formatCurrency(balance.locked, balance.currency)} locked
+                            {t('walletBalance.locked', { amount: formatCurrency(balance.locked, balance.currency) })}
                           </div>
                         )}
                       </div>
@@ -269,7 +273,7 @@ export function WalletBalance({ className, showActions = true, compact = false }
                           onClick={() => setWalletModal('deposit')}
                         >
                           <ArrowDownLeft className="h-3 w-3" />
-                          Deposit
+                          {t('walletBalance.deposit')}
                         </Button>
                         <Button
                           size="sm"
@@ -279,7 +283,7 @@ export function WalletBalance({ className, showActions = true, compact = false }
                           onClick={() => setWalletModal('withdraw')}
                         >
                           <ArrowUpRight className="h-3 w-3" />
-                          Withdraw
+                          {t('walletBalance.withdraw')}
                         </Button>
                       </div>
                     )}
@@ -303,7 +307,7 @@ export function WalletBalance({ className, showActions = true, compact = false }
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-orange-500" />
                 <span className="text-sm font-medium text-orange-800">
-                  Portfolio analytics temporarily unavailable
+                  {t('walletBalance.analyticsUnavailable')}
                 </span>
               </div>
               <Button
@@ -313,7 +317,7 @@ export function WalletBalance({ className, showActions = true, compact = false }
                 className="text-xs border-orange-200 text-orange-700 hover:bg-orange-100"
                 disabled={isAnalyticsLoading}
               >
-                {isAnalyticsLoading ? 'Retrying...' : 'Retry'}
+                {isAnalyticsLoading ? t('walletBalance.retrying') : t('walletBalance.retry')}
               </Button>
             </div>
           </Card>
@@ -331,7 +335,7 @@ export function WalletBalance({ className, showActions = true, compact = false }
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
               <span className="text-sm font-medium text-yellow-800">
-                {state.pendingTransactions.length} transaction{state.pendingTransactions.length > 1 ? 's' : ''} pending
+                {t('walletBalance.pendingTx', { count: state.pendingTransactions.length })}
               </span>
             </div>
           </Card>
@@ -357,13 +361,13 @@ export function WalletBalance({ className, showActions = true, compact = false }
             >
               <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-slate-700">
                 <h3 className="text-lg font-semibold">
-                  {walletModal === 'deposit' ? 'Add Funds' : 'Withdraw Funds'}
+                  {walletModal === 'deposit' ? t('walletBalance.addFunds') : t('walletBalance.withdrawFunds')}
                 </h3>
                 <button onClick={() => setWalletModal(null)} className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded">
                   <X className="h-5 w-5" />
                 </button>
               </div>
-              <React.Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+              <React.Suspense fallback={<div className="p-8 text-center">{t('walletBalance.loading')}</div>}>
                 <DepositWithdrawLazy
                   mode={walletModal}
                   onClose={() => setWalletModal(null)}

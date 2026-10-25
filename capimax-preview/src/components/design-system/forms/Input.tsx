@@ -1,4 +1,5 @@
 import React, { forwardRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '../../../utils/cn';
 import { AlertCircle, Check, Eye, EyeOff } from 'lucide-react';
 
@@ -54,6 +55,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
   className,
   ...props
 }, ref) => {
+  const { t } = useTranslation('shared');
   const [showPassword, setShowPassword] = React.useState(false);
   const [isFocused, setIsFocused] = React.useState(false);
   
@@ -77,7 +79,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
       <div className="relative">
         {/* Left Icon */}
         {leftIcon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
+          <div className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
             {leftIcon}
           </div>
         )}
@@ -108,8 +110,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
             disabled && 'opacity-60 cursor-not-allowed',
             
             // Icon padding adjustments
-            leftIcon && 'pl-10',
-            (rightIcon || showPasswordToggle || actualState === 'error' || actualState === 'success') && 'pr-10',
+            leftIcon && 'ps-10',
+            (rightIcon || showPasswordToggle || actualState === 'error' || actualState === 'success') && 'pe-10',
             
             // Focus styles
             isFocused && !disabled && 'shadow-lg shadow-emerald-500/10',
@@ -120,7 +122,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
         />
 
         {/* Right Icons */}
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+        <div className="absolute end-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
           {/* State Icons */}
           {actualState === 'error' && (
             <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400" />
@@ -134,6 +136,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(({
             <button
               type="button"
               onClick={handlePasswordToggle}
+              aria-label={showPassword ? t('forms.hidePassword') : t('forms.showPassword')}
               className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
             >
               {showPassword ? (

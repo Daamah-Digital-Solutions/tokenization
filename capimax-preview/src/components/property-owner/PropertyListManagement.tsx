@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { PropertyService } from '../../services';
 import PropertyOwnerService from '../../services/property-owner/PropertyOwnerService';
@@ -7,39 +8,40 @@ import { Link } from 'react-router-dom';
 
 type PropertyStatus = 'draft' | 'pending_approval' | 'approved' | 'active' | 'tokenized' | 'delisted';
 
+// `label` values are i18n keys in the `ownerui` namespace, resolved at render time.
 const STATUS_CONFIG: Record<PropertyStatus, { label: string; color: string; bgColor: string; icon: string }> = {
   draft: {
-    label: 'Draft',
+    label: 'list.status.draft',
     color: 'text-neutral-600 dark:text-slate-400',
     bgColor: 'bg-neutral-100 dark:bg-slate-700',
     icon: '✏️',
   },
   pending_approval: {
-    label: 'Pending Approval',
+    label: 'list.status.pending_approval',
     color: 'text-yellow-700 dark:text-yellow-400',
     bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
     icon: '⏳',
   },
   approved: {
-    label: 'Approved',
+    label: 'list.status.approved',
     color: 'text-green-700 dark:text-green-400',
     bgColor: 'bg-green-100 dark:bg-green-900/30',
     icon: '✅',
   },
   active: {
-    label: 'Active',
+    label: 'list.status.active',
     color: 'text-blue-700 dark:text-blue-400',
     bgColor: 'bg-blue-100 dark:bg-blue-900/30',
     icon: '🚀',
   },
   tokenized: {
-    label: 'Tokenized',
+    label: 'list.status.tokenized',
     color: 'text-purple-700 dark:text-purple-400',
     bgColor: 'bg-purple-100 dark:bg-purple-900/30',
     icon: '🪙',
   },
   delisted: {
-    label: 'Delisted',
+    label: 'list.status.delisted',
     color: 'text-red-700 dark:text-red-400',
     bgColor: 'bg-red-100 dark:bg-red-900/30',
     icon: '❌',
@@ -47,6 +49,7 @@ const STATUS_CONFIG: Record<PropertyStatus, { label: string; color: string; bgCo
 };
 
 export const PropertyListManagement: React.FC = () => {
+  const { t, i18n } = useTranslation('ownerui');
   const queryClient = useQueryClient();
   const [selectedStatus, setSelectedStatus] = useState<PropertyStatus | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -66,10 +69,10 @@ export const PropertyListManagement: React.FC = () => {
     mutationFn: (propertyId: string) => PropertyService.submitPropertyForApproval(propertyId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['properties', 'owner'] });
-      alert('Property submitted for approval successfully!');
+      alert(t('list.alerts.submitted'));
     },
     onError: (error: any) => {
-      alert(`Failed to submit property: ${error.message}`);
+      alert(t('list.alerts.submitFailed', { message: error.message }));
     },
   });
 
@@ -93,7 +96,7 @@ export const PropertyListManagement: React.FC = () => {
   };
 
   const formatDate = (date: string): string => {
-    return new Date(date).toLocaleDateString('en-US', {
+    return new Date(date).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -103,9 +106,9 @@ export const PropertyListManagement: React.FC = () => {
   const getStatusBadge = (status: PropertyStatus) => {
     const config = STATUS_CONFIG[status] || STATUS_CONFIG.draft;
     return (
-      <span className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-medium ${config.bgColor} ${config.color}`}>
+      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${config.bgColor} ${config.color}`}>
         <span>{config.icon}</span>
-        <span>{config.label}</span>
+        <span>{t(config.label)}</span>
       </span>
     );
   };
@@ -141,13 +144,13 @@ export const PropertyListManagement: React.FC = () => {
     return (
       <div className="max-w-7xl mx-auto p-6">
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6">
-          <h3 className="text-red-800 dark:text-red-200 font-medium mb-2">Error Loading Properties</h3>
-          <p className="text-red-600 dark:text-red-300 text-sm mb-4">Failed to load your properties. Please try again.</p>
+          <h3 className="text-red-800 dark:text-red-200 font-medium mb-2">{t('list.errorTitle')}</h3>
+          <p className="text-red-600 dark:text-red-300 text-sm mb-4">{t('list.errorBody')}</p>
           <button
             onClick={() => refetch()}
             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
-            Retry
+            {t('shared.retry')}
           </button>
         </div>
       </div>
@@ -159,19 +162,19 @@ export const PropertyListManagement: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-neutral-900 dark:text-slate-100">My Properties</h1>
+          <h1 className="text-3xl font-bold text-neutral-900 dark:text-slate-100">{t('dashboard.myProperties.title')}</h1>
           <p className="text-neutral-600 dark:text-slate-400 mt-1">
-            Manage and track your tokenized properties
+            {t('list.subtitle')}
           </p>
         </div>
         <Link
           to="/property-owner/create-property"
-          className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium flex items-center space-x-2"
+          className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium flex items-center gap-2"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          <span>Create New Property</span>
+          <span>{t('createForm.title')}</span>
         </Link>
       </div>
 
@@ -179,13 +182,13 @@ export const PropertyListManagement: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {(['all', 'draft', 'pending_approval', 'active'] as const).map((status) => {
           const count = status === 'all' ? properties.length : properties.filter((p: Property) => p.status === status).length;
-          const config = status === 'all' ? { label: 'All Properties', icon: '🏢', bgColor: 'bg-neutral-50 dark:bg-slate-800' } : STATUS_CONFIG[status];
+          const config = status === 'all' ? { label: 'list.allProperties', icon: '🏢', bgColor: 'bg-neutral-50 dark:bg-slate-800' } : STATUS_CONFIG[status];
 
           return (
             <button
               key={status}
               onClick={() => setSelectedStatus(status)}
-              className={`p-4 rounded-xl border-2 transition-all text-left ${
+              className={`p-4 rounded-xl border-2 transition-all text-start ${
                 selectedStatus === status
                   ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
                   : 'border-neutral-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-primary-300'
@@ -195,7 +198,7 @@ export const PropertyListManagement: React.FC = () => {
                 <span className="text-2xl">{config.icon}</span>
                 <span className="text-2xl font-bold text-neutral-900 dark:text-slate-100">{count}</span>
               </div>
-              <p className="text-sm font-medium text-neutral-600 dark:text-slate-400">{config.label}</p>
+              <p className="text-sm font-medium text-neutral-600 dark:text-slate-400">{t(config.label)}</p>
             </button>
           );
         })}
@@ -203,17 +206,17 @@ export const PropertyListManagement: React.FC = () => {
 
       {/* Search and Filters */}
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700 p-4">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-4">
           <div className="flex-1 relative">
-            <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="absolute start-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
               type="text"
-              placeholder="Search properties by title, city, or address..."
+              placeholder={t('list.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-neutral-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-700 dark:text-slate-100"
+              className="w-full ps-10 pe-4 py-2 border border-neutral-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-700 dark:text-slate-100"
             />
           </div>
         </div>
@@ -224,19 +227,19 @@ export const PropertyListManagement: React.FC = () => {
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700 p-12 text-center">
           <span className="text-6xl mb-4 block">🏢</span>
           <h3 className="text-xl font-semibold text-neutral-900 dark:text-slate-100 mb-2">
-            {searchTerm || selectedStatus !== 'all' ? 'No Properties Found' : 'No Properties Yet'}
+            {searchTerm || selectedStatus !== 'all' ? t('list.noneFound') : t('dashboard.portfolio.emptyTitle')}
           </h3>
           <p className="text-neutral-600 dark:text-slate-400 mb-6">
             {searchTerm || selectedStatus !== 'all'
-              ? 'Try adjusting your filters or search term'
-              : 'Start by creating your first property listing'}
+              ? t('list.adjustFilters')
+              : t('list.startCreating')}
           </p>
           {!searchTerm && selectedStatus === 'all' && (
             <Link
               to="/property-owner/create-property"
               className="inline-block px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
             >
-              Create Your First Property
+              {t('list.createFirst')}
             </Link>
           )}
         </div>
@@ -249,7 +252,7 @@ export const PropertyListManagement: React.FC = () => {
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
+                  <div className="flex items-center gap-3 mb-2">
                     <h3 className="text-xl font-semibold text-neutral-900 dark:text-slate-100">
                       {property.title}
                     </h3>
@@ -259,7 +262,7 @@ export const PropertyListManagement: React.FC = () => {
                     📍 {property.address || `${property.city}, ${property.country}`}
                   </p>
                   <p className="text-xs text-neutral-500 dark:text-slate-500 mt-1">
-                    Created: {formatDate(property.created_at)} • Updated: {formatDate(property.updated_at)}
+                    {t('list.created', { date: formatDate(property.created_at) })} • {t('list.updated', { date: formatDate(property.updated_at) })}
                   </p>
                 </div>
               </div>
@@ -267,26 +270,26 @@ export const PropertyListManagement: React.FC = () => {
               {/* Property Stats */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
                 <div>
-                  <p className="text-xs text-neutral-500 dark:text-slate-400 mb-1">Total Value</p>
+                  <p className="text-xs text-neutral-500 dark:text-slate-400 mb-1">{t('dashboard.portfolio.totalValue')}</p>
                   <p className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
                     {formatCurrency(property.total_value)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-neutral-500 dark:text-slate-400 mb-1">Token Price</p>
+                  <p className="text-xs text-neutral-500 dark:text-slate-400 mb-1">{t('list.sharePrice')}</p>
                   <p className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
                     ${property.token_price}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-neutral-500 dark:text-slate-400 mb-1">Tokens</p>
+                  <p className="text-xs text-neutral-500 dark:text-slate-400 mb-1">{t('list.shares')}</p>
                   <p className="text-lg font-semibold text-neutral-900 dark:text-slate-100">
                     {property.tokens_sold?.toLocaleString() || 0} / {property.total_tokens?.toLocaleString()}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-neutral-500 dark:text-slate-400 mb-1">Funding</p>
-                  <div className="flex items-center space-x-2">
+                  <p className="text-xs text-neutral-500 dark:text-slate-400 mb-1">{t('dashboard.portfolio.funding')}</p>
+                  <div className="flex items-center gap-2">
                     <div className="flex-1 bg-neutral-200 dark:bg-slate-600 rounded-full h-2">
                       <div
                         className="bg-primary-500 h-2 rounded-full transition-all"
@@ -299,7 +302,7 @@ export const PropertyListManagement: React.FC = () => {
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs text-neutral-500 dark:text-slate-400 mb-1">Expected Return</p>
+                  <p className="text-xs text-neutral-500 dark:text-slate-400 mb-1">{t('list.expectedReturn')}</p>
                   <p className="text-lg font-semibold text-green-600 dark:text-green-400">
                     {property.expected_return}%
                   </p>
@@ -307,56 +310,56 @@ export const PropertyListManagement: React.FC = () => {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center space-x-3 pt-4 border-t border-neutral-200 dark:border-slate-700">
+              <div className="flex items-center gap-3 pt-4 border-t border-neutral-200 dark:border-slate-700">
                 <Link
                   to={`/properties/${property.id}`}
-                  className="px-4 py-2 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 flex items-center space-x-1"
+                  className="px-4 py-2 text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 flex items-center gap-1"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
-                  <span>View Details</span>
+                  <span>{t('list.viewDetails')}</span>
                 </Link>
 
                 {canEdit(property) && (
                   <Link
                     to={`/property-owner/edit-property/${property.id}`}
-                    className="px-4 py-2 text-sm font-medium text-neutral-700 dark:text-slate-300 hover:text-neutral-900 dark:hover:text-slate-100 flex items-center space-x-1"
+                    className="px-4 py-2 text-sm font-medium text-neutral-700 dark:text-slate-300 hover:text-neutral-900 dark:hover:text-slate-100 flex items-center gap-1"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
-                    <span>Edit</span>
+                    <span>{t('list.edit')}</span>
                   </Link>
                 )}
 
                 <Link
                   to={`/property-owner/manage-property/${property.id}`}
-                  className="px-4 py-2 text-sm font-medium text-neutral-700 dark:text-slate-300 hover:text-neutral-900 dark:hover:text-slate-100 flex items-center space-x-1"
+                  className="px-4 py-2 text-sm font-medium text-neutral-700 dark:text-slate-300 hover:text-neutral-900 dark:hover:text-slate-100 flex items-center gap-1"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  <span>Manage Media</span>
+                  <span>{t('list.manageMedia')}</span>
                 </Link>
 
                 {canSubmitForApproval(property) && (
                   <button
                     onClick={() => submitForApprovalMutation.mutate(property.id)}
                     disabled={submitForApprovalMutation.isPending}
-                    className="ml-auto px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-neutral-400 disabled:cursor-not-allowed transition-colors"
+                    className="ms-auto px-4 py-2 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-neutral-400 disabled:cursor-not-allowed transition-colors"
                   >
-                    {submitForApprovalMutation.isPending ? 'Submitting...' : 'Submit for Approval'}
+                    {submitForApprovalMutation.isPending ? t('list.submitting') : t('approvalStatus.submit')}
                   </button>
                 )}
 
                 {property.status === 'pending_approval' && (
                   <Link
                     to={`/property-owner/approval-status/${property.id}`}
-                    className="ml-auto px-4 py-2 text-sm font-medium bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                    className="ms-auto px-4 py-2 text-sm font-medium bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
                   >
-                    Check Approval Status
+                    {t('list.checkStatus')}
                   </Link>
                 )}
               </div>

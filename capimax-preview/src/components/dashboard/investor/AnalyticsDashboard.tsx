@@ -46,6 +46,7 @@ import { Text } from '../../design-system/typography/Text';
 import { Button } from '../../ui/Button';
 import { cn } from '../../../utils/cn';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 interface AnalyticsDashboardProps {
   analyticsData: AnalyticsData | undefined;
@@ -82,6 +83,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
   className
 }) => {
   const { theme } = useTheme();
+  const { t } = useTranslation('dashboard');
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('month');
   const [activeChart, setActiveChart] = useState<ChartType>('performance');
 
@@ -100,7 +102,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     // Return real summary as a single data point if we have portfolio data
     if (portfolio) {
       return [{
-        date: 'Current',
+        date: t('analytics.current'),
         portfolioValue: portfolio.total_value || 0,
         invested: portfolio.total_invested || 0,
         return: (portfolio.total_value || 0) - (portfolio.total_invested || 0),
@@ -110,7 +112,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       }];
     }
     return [];
-  }, [selectedPeriod, periodData, portfolio]);
+  }, [selectedPeriod, periodData, portfolio, t]);
 
   const allocationData = useMemo(() => {
     if (!portfolio?.asset_allocation || portfolio.asset_allocation.length === 0) {
@@ -118,13 +120,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     }
     
     return portfolio.asset_allocation.map(allocation => ({
-      name: allocation.property_type.replace('_', ' ').toUpperCase(),
+      name: t(`propertyTypes.${allocation.property_type}`, { defaultValue: allocation.property_type.replace('_', ' ').toUpperCase() }),
       value: allocation.percentage,
       amount: allocation.value,
       count: allocation.properties_count,
       type: allocation.property_type,
     }));
-  }, [portfolio?.asset_allocation]);
+  }, [portfolio?.asset_allocation, t]);
 
   const incomeData = useMemo(() => {
     if (periodData?.income && periodData.income.length > 0) {
@@ -200,7 +202,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           <p className="font-medium text-slate-900 dark:text-white mb-2">{label}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {`${entry.dataKey}: ${typeof entry.value === 'number' ? 
+              {`${t(`analytics.series.${entry.dataKey}`, { defaultValue: entry.name || entry.dataKey })}: ${typeof entry.value === 'number' ? 
                 entry.dataKey.includes('roi') || entry.dataKey.includes('Percentage') ? 
                 formatPercentage(entry.value) : formatCurrency(entry.value) : entry.value}`}
             </p>
@@ -230,10 +232,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <Text variant="h3" weight="semibold" className="mb-2">
-            Portfolio Analytics
+            {t('analytics.title')}
           </Text>
           <Text variant="body" color="muted">
-            Comprehensive analysis of your portfolio performance and market trends
+            {t('analytics.subtitle')}
           </Text>
         </div>
 
@@ -241,10 +243,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           {/* Time Period Selector */}
           <div className="flex rounded-lg border border-slate-200 dark:border-slate-700 p-1">
             {[
-              { value: 'day', label: '7D' },
-              { value: 'week', label: '4W' },
-              { value: 'month', label: '12M' },
-              { value: 'year', label: '5Y' },
+              { value: 'day', label: t('analytics.periods.day') },
+              { value: 'week', label: t('analytics.periods.week') },
+              { value: 'month', label: t('analytics.periods.month') },
+              { value: 'year', label: t('analytics.periods.year') },
             ].map(({ value, label }) => (
               <button
                 key={value}
@@ -266,8 +268,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </Button>
 
           <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={exporting}>
-            <Download className="w-4 h-4 mr-2" />
-            {exporting ? 'Preparing…' : 'Export PDF'}
+            <Download className="w-4 h-4 me-2" />
+            {exporting ? t('analytics.preparing') : t('analytics.exportPdf')}
           </Button>
         </div>
       </div>
@@ -275,7 +277,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       {/* Key Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
-          title="Total Return"
+          title={t('overview.totalReturn')}
           value={formatPercentage(portfolio?.return_percentage ?? 0)}
           changeType={(portfolio?.return_percentage ?? 0) >= 0 ? 'positive' : 'negative'}
           icon={TrendingUp}
@@ -283,24 +285,24 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           animated={true}
         />
         <StatsCard
-          title="Monthly Income"
+          title={t('overview.stats.monthlyIncome')}
           value={formatCurrency(portfolio?.monthly_dividends ?? 0)}
-          subtitle="Dividend income"
+          subtitle={t('analytics.dividendIncome')}
           icon={DollarSign}
           variant="accent"
           animated={true}
         />
         <StatsCard
-          title="Sharpe Ratio"
+          title={t('analytics.sharpeRatio')}
           value={riskMetrics.sharpeRatio.toFixed(2)}
-          subtitle="Risk-adjusted return"
+          subtitle={t('analytics.riskAdjusted')}
           icon={Target}
           animated={true}
         />
         <StatsCard
-          title="Volatility"
+          title={t('analytics.volatility')}
           value={formatPercentage(riskMetrics.volatility)}
-          subtitle="Portfolio risk measure"
+          subtitle={t('analytics.riskMeasure')}
           icon={Activity}
           animated={true}
         />
@@ -308,12 +310,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
       {/* Chart Navigation */}
       <div className="border-b border-slate-200 dark:border-slate-700">
-        <nav className="flex space-x-8" aria-label="Chart tabs">
+        <nav className="flex gap-8" aria-label={t('analytics.chartTabs')}>
           {[
-            { id: 'performance', label: 'Performance', icon: BarChart3 },
-            { id: 'allocation', label: 'Asset Allocation', icon: PieChartIcon },
-            { id: 'income', label: 'Income Analysis', icon: DollarSign },
-            { id: 'comparison', label: 'Market Comparison', icon: TrendingUp },
+            { id: 'performance', label: t('analytics.tabs.performance'), icon: BarChart3 },
+            { id: 'allocation', label: t('invDash.assetAllocation'), icon: PieChartIcon },
+            { id: 'income', label: t('analytics.tabs.income'), icon: DollarSign },
+            { id: 'comparison', label: t('analytics.tabs.comparison'), icon: TrendingUp },
           ].map((tab) => {
             const isActive = activeChart === tab.id;
             return (
@@ -327,7 +329,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
                 )}
               >
-                <tab.icon className="mr-2 w-5 h-5" />
+                <tab.icon className="me-2 w-5 h-5" />
                 {tab.label}
               </button>
             );
@@ -348,16 +350,16 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             <Card className="lg:col-span-2 p-6">
               <div className="flex items-center justify-between mb-6">
                 <Text variant="h4" weight="semibold">
-                  Portfolio Performance
+                  {t('analytics.portfolioPerformance')}
                 </Text>
                 <div className="flex items-center gap-4 text-sm">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-emerald-500 rounded-full" />
-                    <span>Portfolio Value</span>
+                    <span>{t('invDash.stats.portfolioValue')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-blue-500 rounded-full" />
-                    <span>Owned Amount</span>
+                    <span>{t('analytics.ownedAmount')}</span>
                   </div>
                 </div>
               </div>
@@ -398,7 +400,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             {/* ROI Trend */}
             <Card className="p-6">
               <Text variant="h4" weight="semibold" className="mb-6">
-                ROI Trend
+                {t('analytics.roiTrend')}
               </Text>
               <ResponsiveContainer width="100%" height={350}>
                 <LineChart data={performanceData}>
@@ -433,7 +435,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             {/* Asset Allocation Pie Chart */}
             <Card className="p-6">
               <Text variant="h4" weight="semibold" className="mb-6">
-                Asset Allocation by Property Type
+                {t('analytics.allocationByType')}
               </Text>
               <ResponsiveContainer width="100%" height={350}>
                 <PieChart>
@@ -463,15 +465,15 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             {/* Geographic Distribution */}
             <Card className="p-6">
               <Text variant="h4" weight="semibold" className="mb-6">
-                Geographic Distribution
+                {t('analytics.geoDistribution')}
               </Text>
               <div className="space-y-4">
                 {[
-                  { city: 'New York', value: 35, amount: 45000 },
-                  { city: 'Los Angeles', value: 25, amount: 32000 },
-                  { city: 'Chicago', value: 20, amount: 25000 },
-                  { city: 'Miami', value: 15, amount: 18000 },
-                  { city: 'Others', value: 5, amount: 6500 },
+                  { city: t('analytics.cities.newYork'), value: 35, amount: 45000 },
+                  { city: t('analytics.cities.losAngeles'), value: 25, amount: 32000 },
+                  { city: t('analytics.cities.chicago'), value: 20, amount: 25000 },
+                  { city: t('analytics.cities.miami'), value: 15, amount: 18000 },
+                  { city: t('analytics.cities.others'), value: 5, amount: 6500 },
                 ].map((location) => (
                   <div key={location.city} className="space-y-2">
                     <div className="flex justify-between items-center">
@@ -481,7 +483,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                           {location.city}
                         </Text>
                       </div>
-                      <div className="text-right">
+                      <div className="text-end">
                         <Text variant="body" weight="semibold">
                           {location.value}%
                         </Text>
@@ -508,7 +510,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             {/* Income vs Expenses */}
             <Card className="lg:col-span-2 p-6">
               <Text variant="h4" weight="semibold" className="mb-6">
-                Monthly Income Analysis
+                {t('analytics.monthlyIncomeAnalysis')}
               </Text>
               <ResponsiveContainer width="100%" height={350}>
                 <ComposedChart data={incomeData}>
@@ -525,9 +527,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                   />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
-                  <Bar dataKey="income" fill={COLORS.success} name="Gross Income" />
-                  <Bar dataKey="expenses" fill={COLORS.danger} name="Expenses" />
-                  <Line type="monotone" dataKey="net" stroke={COLORS.primary} strokeWidth={3} name="Net Income" />
+                  <Bar dataKey="income" fill={COLORS.success} name={t('analytics.series.income')} />
+                  <Bar dataKey="expenses" fill={COLORS.danger} name={t('analytics.series.expenses')} />
+                  <Line type="monotone" dataKey="net" stroke={COLORS.primary} strokeWidth={3} name={t('analytics.series.net')} />
                 </ComposedChart>
               </ResponsiveContainer>
             </Card>
@@ -535,12 +537,12 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             {/* Income Breakdown */}
             <Card className="p-6">
               <Text variant="h4" weight="semibold" className="mb-6">
-                Income Breakdown
+                {t('analytics.incomeBreakdown')}
               </Text>
               <div className="space-y-4">
                 <div className="flex justify-between items-center p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
                   <Text variant="body" weight="medium">
-                    Rental Dividends
+                    {t('analytics.rentalDividends')}
                   </Text>
                   <Text variant="body" weight="semibold" className="text-emerald-600">
                     $2,280
@@ -548,7 +550,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 </div>
                 <div className="flex justify-between items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <Text variant="body" weight="medium">
-                    Capital Appreciation
+                    {t('analytics.capitalAppreciation')}
                   </Text>
                   <Text variant="body" weight="semibold" className="text-blue-600">
                     $420
@@ -556,7 +558,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 </div>
                 <div className="flex justify-between items-center p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
                   <Text variant="body" weight="medium">
-                    Bonus Dividends
+                    {t('analytics.bonusDividends')}
                   </Text>
                   <Text variant="body" weight="semibold" className="text-yellow-600">
                     $150
@@ -565,7 +567,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 <div className="pt-3 border-t border-slate-200 dark:border-slate-700">
                   <div className="flex justify-between items-center">
                     <Text variant="body" weight="semibold">
-                      Total Monthly
+                      {t('analytics.totalMonthly')}
                     </Text>
                     <Text variant="body" weight="bold" className="text-emerald-600">
                       $2,850
@@ -582,7 +584,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             {/* Market Comparison Chart */}
             <Card className="p-6">
               <Text variant="h4" weight="semibold" className="mb-6">
-                Portfolio vs Market Performance
+                {t('analytics.vsMarket')}
               </Text>
               <ResponsiveContainer width="100%" height={350}>
                 <LineChart data={performanceData}>
@@ -604,7 +606,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     dataKey="portfolioValue"
                     stroke={COLORS.primary}
                     strokeWidth={3}
-                    name="Your Portfolio"
+                    name={t('analytics.series.portfolioValue')}
                     dot={{ fill: COLORS.primary, strokeWidth: 2, r: 4 }}
                   />
                   <Line
@@ -613,7 +615,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                     stroke={COLORS.neutral}
                     strokeWidth={2}
                     strokeDasharray="5 5"
-                    name="Market Average"
+                    name={t('analytics.series.marketAverage')}
                     dot={{ fill: COLORS.neutral, strokeWidth: 2, r: 3 }}
                   />
                 </LineChart>
@@ -624,21 +626,21 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <Card className="p-6">
                 <Text variant="h4" weight="semibold" className="mb-4">
-                  Risk Metrics
+                  {t('analytics.riskMetrics')}
                 </Text>
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <Text variant="body" color="muted">Volatility</Text>
+                    <Text variant="body" color="muted">{t('analytics.volatility')}</Text>
                     <Text variant="body" weight="semibold">{formatPercentage(riskMetrics.volatility)}</Text>
                   </div>
                   <div className="flex justify-between">
-                    <Text variant="body" color="muted">Max Drawdown</Text>
+                    <Text variant="body" color="muted">{t('analytics.maxDrawdown')}</Text>
                     <Text variant="body" weight="semibold" className="text-red-600">
                       {formatPercentage(riskMetrics.maxDrawdown)}
                     </Text>
                   </div>
                   <div className="flex justify-between">
-                    <Text variant="body" color="muted">VaR (95%)</Text>
+                    <Text variant="body" color="muted">{t('analytics.var95')}</Text>
                     <Text variant="body" weight="semibold">{formatPercentage(riskMetrics.var95)}</Text>
                   </div>
                 </div>
@@ -646,23 +648,23 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
               <Card className="p-6">
                 <Text variant="h4" weight="semibold" className="mb-4">
-                  Performance Ratios
+                  {t('analytics.performanceRatios')}
                 </Text>
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <Text variant="body" color="muted">Sharpe Ratio</Text>
+                    <Text variant="body" color="muted">{t('analytics.sharpeRatio')}</Text>
                     <Text variant="body" weight="semibold" className="text-emerald-600">
                       {riskMetrics.sharpeRatio.toFixed(2)}
                     </Text>
                   </div>
                   <div className="flex justify-between">
-                    <Text variant="body" color="muted">Alpha</Text>
+                    <Text variant="body" color="muted">{t('analytics.alpha')}</Text>
                     <Text variant="body" weight="semibold" className="text-emerald-600">
                       {formatPercentage(riskMetrics.alpha)}
                     </Text>
                   </div>
                   <div className="flex justify-between">
-                    <Text variant="body" color="muted">Beta</Text>
+                    <Text variant="body" color="muted">{t('analytics.beta')}</Text>
                     <Text variant="body" weight="semibold">{riskMetrics.beta.toFixed(2)}</Text>
                   </div>
                 </div>
@@ -670,22 +672,22 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
               <Card className="p-6">
                 <Text variant="h4" weight="semibold" className="mb-4">
-                  Market Position
+                  {t('analytics.marketPosition')}
                 </Text>
                 <div className="space-y-4">
                   <div className="text-center">
                     <Text variant="h2" weight="bold" className="text-emerald-600">
-                      Top 15%
+                      {t('analytics.top15')}
                     </Text>
                     <Text variant="body" color="muted">
-                      Performance Rank
+                      {t('analytics.performanceRank')}
                     </Text>
                   </div>
                   <div className="flex items-center justify-between pt-4 border-t">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-emerald-600" />
                       <Text variant="body" weight="medium">
-                        Outperforming market by 3.2%
+                        {t('analytics.outperforming')}
                       </Text>
                     </div>
                   </div>

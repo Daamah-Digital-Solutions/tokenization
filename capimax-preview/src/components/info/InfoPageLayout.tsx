@@ -15,6 +15,7 @@ import {
   X,
   ChevronRight
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Navbar } from '../layout/Navbar';
 import { Footer } from '../layout/Footer';
 
@@ -50,6 +51,7 @@ export const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({
 }) => {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { t } = useTranslation('shared');
   const currentPath = window.location.pathname;
 
   useEffect(() => {
@@ -85,7 +87,7 @@ export const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({
               className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             >
               {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              <span className="font-medium">Learn More</span>
+              <span className="font-medium">{t('info.learnMore')}</span>
             </button>
           </div>
 
@@ -100,7 +102,7 @@ export const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({
               >
                 <div className="sticky top-24 space-y-1 bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-700">
                   <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-3 pb-3 mb-2 border-b border-slate-200 dark:border-slate-700">
-                    Learn About Capimax RT
+                    {t('info.sidebarTitle')}
                   </h3>
                   <nav className="space-y-1">
                     {infoNavItems.map((item) => {
@@ -114,7 +116,7 @@ export const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({
                             navigateToPage(item.path);
                             setSidebarOpen(false);
                           }}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 group ${
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-start transition-all duration-200 group ${
                             isActive
                               ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-medium'
                               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-900 dark:hover:text-slate-200'
@@ -123,9 +125,9 @@ export const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({
                           <Icon className={`w-4 h-4 flex-shrink-0 ${
                             isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300'
                           }`} />
-                          <span className="text-sm truncate">{item.title}</span>
+                          <span className="text-sm truncate">{t(`info.nav.${item.id}`, { defaultValue: item.title })}</span>
                           {isActive && (
-                            <ChevronRight className="w-4 h-4 ml-auto text-emerald-500 dark:text-emerald-400" />
+                            <ChevronRight className="w-4 h-4 ms-auto text-emerald-500 dark:text-emerald-400 rtl:rotate-180" />
                           )}
                         </button>
                       );
@@ -173,8 +175,8 @@ export const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={scrollToTop}
-            className="fixed bottom-8 right-8 p-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full shadow-lg transition-colors z-50"
-            aria-label="Back to top"
+            className="fixed bottom-8 end-8 p-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full shadow-lg transition-colors z-50"
+            aria-label={t('common.backToTop')}
           >
             <ArrowUp className="w-5 h-5" />
           </motion.button>
@@ -205,8 +207,10 @@ export const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({
           margin-bottom: 1.5rem;
           padding: 1rem 1.25rem;
           background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
-          border-left: 4px solid #10b981;
-          border-radius: 0 0.5rem 0.5rem 0;
+          border-inline-start: 4px solid #10b981;
+          border-radius: 0;
+          border-start-end-radius: 0.5rem;
+          border-end-end-radius: 0.5rem;
         }
 
         .dark .info-content .info-intro {
@@ -216,8 +220,10 @@ export const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({
         .info-content .info-highlight {
           padding: 1rem 1.25rem;
           background: #eff6ff;
-          border-left: 4px solid #3b82f6;
-          border-radius: 0 0.5rem 0.5rem 0;
+          border-inline-start: 4px solid #3b82f6;
+          border-radius: 0;
+          border-start-end-radius: 0.5rem;
+          border-end-end-radius: 0.5rem;
           margin: 1.5rem 0;
         }
 
@@ -229,8 +235,10 @@ export const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({
           font-weight: 500;
           padding: 1rem 1.25rem;
           background: #fef3c7;
-          border-left: 4px solid #f59e0b;
-          border-radius: 0 0.5rem 0.5rem 0;
+          border-inline-start: 4px solid #f59e0b;
+          border-radius: 0;
+          border-start-end-radius: 0.5rem;
+          border-end-end-radius: 0.5rem;
           margin: 1.5rem 0;
         }
 
@@ -271,13 +279,13 @@ export const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({
 
         .info-content ul {
           margin: 1rem 0 1.5rem 0;
-          padding-left: 0;
+          padding-inline-start: 0;
           list-style: none;
         }
 
         .info-content ul li {
           position: relative;
-          padding-left: 1.75rem;
+          padding-inline-start: 1.75rem;
           margin-bottom: 0.75rem;
           line-height: 1.6;
         }
@@ -285,7 +293,7 @@ export const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({
         .info-content ul li::before {
           content: '';
           position: absolute;
-          left: 0;
+          inset-inline-start: 0;
           top: 0.55rem;
           width: 8px;
           height: 8px;
@@ -295,14 +303,14 @@ export const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({
 
         .info-content ol {
           margin: 1rem 0 1.5rem 0;
-          padding-left: 0;
+          padding-inline-start: 0;
           list-style: none;
           counter-reset: step-counter;
         }
 
         .info-content ol li {
           position: relative;
-          padding-left: 2.5rem;
+          padding-inline-start: 2.5rem;
           margin-bottom: 1rem;
           line-height: 1.6;
           counter-increment: step-counter;
@@ -311,7 +319,7 @@ export const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({
         .info-content ol li::before {
           content: counter(step-counter);
           position: absolute;
-          left: 0;
+          inset-inline-start: 0;
           top: 0;
           width: 1.75rem;
           height: 1.75rem;
@@ -371,7 +379,7 @@ export const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({
           cursor: pointer;
           border: none;
           margin-top: 1rem;
-          margin-right: 0.5rem;
+          margin-inline-end: 0.5rem;
         }
 
         .info-content .link-button:hover {
@@ -391,7 +399,7 @@ export const InfoPageLayout: React.FC<InfoPageLayoutProps> = ({
           transition: all 0.2s;
           cursor: pointer;
           margin-top: 1rem;
-          margin-right: 0.5rem;
+          margin-inline-end: 0.5rem;
         }
 
         .info-content .link-button-outline:hover {

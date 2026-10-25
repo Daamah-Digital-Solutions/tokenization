@@ -14,21 +14,23 @@ import {
   MapPin
 } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { useTranslation } from 'react-i18next';
 
 export const TokenizationExplainer: React.FC = () => {
+  const { t } = useTranslation('ui');
   const enablesItems = [
-    { icon: LayoutGrid, text: 'Dividing ownership into small units' },
-    { icon: Home, text: 'Lowering the minimum entry threshold' },
-    { icon: Users, text: 'Expanding the owner base' },
-    { icon: FileCheck, text: 'Improving transparency' },
-    { icon: Building2, text: 'Facilitating organized trading' },
+    { icon: LayoutGrid, text: t('tokenExplainer.enables1') },
+    { icon: Home, text: t('tokenExplainer.enables2') },
+    { icon: Users, text: t('tokenExplainer.enables3') },
+    { icon: FileCheck, text: t('tokenExplainer.enables4') },
+    { icon: Building2, text: t('tokenExplainer.enables5') },
   ];
 
   const doesNotMeanItems = [
-    'Does not guarantee profits',
-    'Does not mean instant liquidity',
-    'Does not mean direct ownership in the land registry',
-    'Does not eliminate ownership risks',
+    t('tokenExplainer.not1'),
+    t('tokenExplainer.not2'),
+    t('tokenExplainer.not3'),
+    t('tokenExplainer.not4'),
   ];
 
   return (
@@ -45,20 +47,18 @@ export const TokenizationExplainer: React.FC = () => {
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-full border border-emerald-200 dark:border-emerald-800 mb-6">
             <Building2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
-              Understanding Tokenization
+              {t('tokenExplainer.badge')}
             </span>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6">
-            What is{' '}
+            {t('tokenExplainer.titlePrefix')}{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500">
-              Tokenization
+              {t('tokenExplainer.titleHighlight')}
             </span>
-            ?
+            {t('tokenExplainer.titleSuffix')}
           </h2>
           <p className="text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed">
-            Tokenization is a modern method of converting economic rights associated with
-            real estate into digital ownership units, enabling multiple co-owners to
-            participate in a single asset instead of owning it entirely.
+            {t('tokenExplainer.intro')}
           </p>
         </motion.div>
 
@@ -77,7 +77,7 @@ export const TokenizationExplainer: React.FC = () => {
                 <Check className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-                What Tokenization Enables
+                {t('tokenExplainer.enablesTitle')}
               </h3>
             </div>
             <div className="space-y-4">
@@ -114,7 +114,7 @@ export const TokenizationExplainer: React.FC = () => {
                 <X className="w-6 h-6 text-white" />
               </div>
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-                What Tokenization Does NOT Mean
+                {t('tokenExplainer.notTitle')}
               </h3>
             </div>
             <div className="space-y-4">
@@ -153,8 +153,8 @@ export const TokenizationExplainer: React.FC = () => {
             className="group"
             onClick={() => window.location.href = '/tokenization'}
           >
-            Learn More About Tokenization
-            <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            {t('tokenExplainer.learnMore')}
+            <ArrowRight className="ms-2 w-4 h-4 rtl:rotate-180 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform" />
           </Button>
         </motion.div>
       </div>

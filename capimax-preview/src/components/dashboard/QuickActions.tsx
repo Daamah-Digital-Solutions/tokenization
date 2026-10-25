@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export interface QuickAction {
   id: string;
@@ -19,10 +20,11 @@ interface QuickActionsProps {
 
 export const QuickActions: React.FC<QuickActionsProps> = ({
   actions,
-  title = 'Quick Actions',
+  title,
   columns = 4,
   className = ''
 }) => {
+  const { t } = useTranslation('dashboard');
   const getVariantStyles = (variant: QuickAction['variant'] = 'secondary') => {
     switch (variant) {
       case 'primary':
@@ -52,7 +54,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
   return (
     <div className={`bg-white dark:bg-slate-800 rounded-xl p-6 border border-neutral-200 dark:border-slate-700 ${className}`}>
       <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100 mb-6">
-        {title}
+        {title ?? t('quickActions.title')}
       </h3>
       
       <div className={`grid ${getGridCols(columns)} gap-4`}>

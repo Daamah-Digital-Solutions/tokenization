@@ -6,11 +6,13 @@ import { Input } from '../components/design-system/forms/Input';
 import { Button } from '../components/ui/Button';
 import { useRouter } from '../utils/router';
 import { AuthService } from '../services/auth/AuthService';
+import { useTranslation } from 'react-i18next';
 
 interface PasswordResetPageProps {}
 
 export const PasswordResetPage: React.FC<PasswordResetPageProps> = () => {
   const { navigate } = useRouter();
+  const { t } = useTranslation('ui');
   const [token, setToken] = useState<string | null>(null);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -29,7 +31,7 @@ export const PasswordResetPage: React.FC<PasswordResetPageProps> = () => {
       setToken(resetToken);
       setTokenValid(true);
     } else {
-      setError('Invalid or missing reset token. Please request a new password reset.');
+      setError(t('newPassword.missingToken'));
       setTokenValid(false);
     }
   }, []);
@@ -38,17 +40,17 @@ export const PasswordResetPage: React.FC<PasswordResetPageProps> = () => {
     const errors: Record<string, string> = {};
 
     if (!password) {
-      errors.password = 'New password is required';
+      errors.password = t('newPassword.required');
     } else if (password.length < 8) {
-      errors.password = 'Password must be at least 8 characters';
+      errors.password = t('validation.passwordMin8');
     } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      errors.password = 'Password must contain uppercase, lowercase, and number';
+      errors.password = t('validation.passwordComplexity');
     }
 
     if (!confirmPassword) {
-      errors.confirmPassword = 'Please confirm your password';
+      errors.confirmPassword = t('validation.confirmRequired');
     } else if (password !== confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
+      errors.confirmPassword = t('validation.passwordMismatch');
     }
 
     setValidationErrors(errors);
@@ -76,7 +78,7 @@ export const PasswordResetPage: React.FC<PasswordResetPageProps> = () => {
       console.log('✅ Password reset successful');
     } catch (error: any) {
       console.error('❌ Password reset failed:', error);
-      const errorMessage = error?.message || 'Failed to reset password. Please try again or request a new reset link.';
+      const errorMessage = error?.message || t('newPassword.failed');
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -91,13 +93,13 @@ export const PasswordResetPage: React.FC<PasswordResetPageProps> = () => {
   if (tokenValid === null) {
     return (
       <AuthLayout
-        title="Reset Password"
-        subtitle="Creating secure access to your account"
+        title={t('passwordResetPage.layoutTitle')}
+        subtitle={t('newPassword.layoutSubtitle')}
       >
         <div className="w-full max-w-md mx-auto bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-8">
           <div className="text-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto"></div>
-            <p className="text-slate-600 dark:text-slate-300">Validating reset link...</p>
+            <p className="text-slate-600 dark:text-slate-300">{t('newPassword.validating')}</p>
           </div>
         </div>
       </AuthLayout>
@@ -108,8 +110,8 @@ export const PasswordResetPage: React.FC<PasswordResetPageProps> = () => {
   if (tokenValid === false) {
     return (
       <AuthLayout
-        title="Reset Password"
-        subtitle="Creating secure access to your account"
+        title={t('passwordResetPage.layoutTitle')}
+        subtitle={t('newPassword.layoutSubtitle')}
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -126,10 +128,10 @@ export const PasswordResetPage: React.FC<PasswordResetPageProps> = () => {
 
           <div className="text-center space-y-4">
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-              Invalid Reset Link
+              {t('newPassword.invalidTitle')}
             </h2>
             <p className="text-slate-600 dark:text-slate-400">
-              The password reset link is invalid or has expired. Please request a new one.
+              {t('newPassword.invalidMsg')}
             </p>
           </div>
 
@@ -139,7 +141,7 @@ export const PasswordResetPage: React.FC<PasswordResetPageProps> = () => {
             className="w-full"
             onClick={handleBackToLogin}
           >
-            Back to Sign In
+            {t('recovery.backToSignIn')}
           </Button>
         </motion.div>
       </AuthLayout>
@@ -150,8 +152,8 @@ export const PasswordResetPage: React.FC<PasswordResetPageProps> = () => {
   if (success) {
     return (
       <AuthLayout
-        title="Password Reset Successful"
-        subtitle="You can now sign in with your new password"
+        title={t('passwordResetPage.successLayoutTitle')}
+        subtitle={t('newPassword.successLayoutSubtitle')}
       >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -163,10 +165,10 @@ export const PasswordResetPage: React.FC<PasswordResetPageProps> = () => {
               <Check className="w-10 h-10 text-emerald-500 dark:text-emerald-400" />
             </div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-              Password Reset Successfully!
+              {t('passwordResetPage.successTitle')}
             </h2>
             <p className="text-slate-600 dark:text-slate-400">
-              Your password has been updated. You can now sign in with your new password.
+              {t('newPassword.successMsg')}
             </p>
           </div>
 
@@ -176,7 +178,7 @@ export const PasswordResetPage: React.FC<PasswordResetPageProps> = () => {
             className="w-full"
             onClick={handleBackToLogin}
           >
-            Continue to Sign In
+            {t('newPassword.continueSignIn')}
           </Button>
         </motion.div>
       </AuthLayout>
@@ -186,8 +188,8 @@ export const PasswordResetPage: React.FC<PasswordResetPageProps> = () => {
   // Show password reset form
   return (
     <AuthLayout
-      title="Reset Your Password"
-      subtitle="Enter your new password to regain access to your account"
+      title={t('passwordResetPage.formLayoutTitle')}
+      subtitle={t('newPassword.formLayoutSubtitle')}
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -214,18 +216,18 @@ export const PasswordResetPage: React.FC<PasswordResetPageProps> = () => {
               <Lock className="w-8 h-8 text-emerald-500 dark:text-emerald-400" />
             </div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-              Create New Password
+              {t('newPassword.formTitle')}
             </h2>
             <p className="text-slate-600 dark:text-slate-400">
-              Enter your new password below
+              {t('newPassword.formSubtitle')}
             </p>
           </div>
 
           <div className="space-y-5">
             <Input
               type="password"
-              label="New Password"
-              placeholder="Enter new password"
+              label={t('newPassword.newLabel')}
+              placeholder={t('newPassword.newPlaceholder')}
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
@@ -239,15 +241,15 @@ export const PasswordResetPage: React.FC<PasswordResetPageProps> = () => {
               leftIcon={<Lock className="w-5 h-5" />}
               showPasswordToggle
               errorMessage={validationErrors.password}
-              helperText="Must be 8+ characters with uppercase, lowercase, and number"
+              helperText={t('register.passwordHelper')}
               size="lg"
               required
             />
 
             <Input
               type="password"
-              label="Confirm New Password"
-              placeholder="Confirm new password"
+              label={t('newPassword.confirmLabel')}
+              placeholder={t('newPassword.confirmPlaceholder')}
               value={confirmPassword}
               onChange={(e) => {
                 setConfirmPassword(e.target.value);
@@ -274,7 +276,7 @@ export const PasswordResetPage: React.FC<PasswordResetPageProps> = () => {
             isLoading={loading}
             disabled={loading}
           >
-            {loading ? 'Resetting Password...' : 'Reset Password'}
+            {loading ? t('passwordResetPage.resetting') : t('passwordResetPage.reset')}
           </Button>
         </form>
 
@@ -284,8 +286,8 @@ export const PasswordResetPage: React.FC<PasswordResetPageProps> = () => {
             onClick={handleBackToLogin}
             className="inline-flex items-center gap-2 text-sm text-emerald-500 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-300 font-medium transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Sign In
+            <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
+            {t('recovery.backToSignIn')}
           </button>
         </div>
       </motion.div>

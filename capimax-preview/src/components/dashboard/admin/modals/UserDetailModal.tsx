@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { adminService, type AdminUser, type UserActivity, type AdminNote } from '../../../../services';
 import { useAdminActions } from '../../../../hooks/useAdminDashboard';
 
@@ -17,6 +18,8 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
   onClose,
   onUserUpdated
 }) => {
+  const { t, i18n } = useTranslation('admin');
+  const locale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
   const [activeTab, setActiveTab] = useState<TabType>('profile');
   const [userActivity, setUserActivity] = useState<UserActivity[]>([]);
   const [userNotes, setUserNotes] = useState<AdminNote[]>([]);
@@ -60,15 +63,15 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
       setUserActivity(activity);
       setUserNotes(notes);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load user data');
+      setError(err instanceof Error ? err.message : t('users.modal.loadFailed'));
     } finally {
       setLoading(false);
     }
   };
 
   const handleSuspendUser = async () => {
-    const reason = prompt('Please provide suspension reason:');
-    const durationStr = prompt('Duration in days (optional):');
+    const reason = prompt(t('dashboard.users.suspendPrompt'));
+    const durationStr = prompt(t('users.modal.durationPrompt'));
     const duration = durationStr ? parseInt(durationStr) : undefined;
 
     if (reason) {
@@ -78,13 +81,13 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
   };
 
   const handleUnsuspendUser = async () => {
-    const notes = prompt('Notes (optional):');
+    const notes = prompt(t('users.modal.notesPrompt'));
     await unsuspendUser(user.id, notes || undefined);
     onUserUpdated();
   };
 
   const handleVerifyUser = async () => {
-    const notes = prompt('Verification notes (optional):');
+    const notes = prompt(t('users.modal.verifyPrompt'));
     await verifyUser(user.id, notes || undefined);
     onUserUpdated();
   };
@@ -116,18 +119,18 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
       await adminService.updateUser(user.id, updates);
       onUserUpdated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update user');
+      setError(err instanceof Error ? err.message : t('users.modal.updateFailed'));
     }
   };
 
   if (!isOpen) return null;
 
   const tabs = [
-    { id: 'profile', label: 'Profile', icon: '👤' },
-    { id: 'activity', label: 'Activity', icon: '📝' },
-    { id: 'investments', label: 'Properties', icon: '💰' },
-    { id: 'transactions', label: 'Transactions', icon: '🔄' },
-    { id: 'notes', label: 'Admin Notes', icon: '📋' }
+    { id: 'profile', label: t('users.tabs.profile'), icon: '👤' },
+    { id: 'activity', label: t('users.tabs.activity'), icon: '📝' },
+    { id: 'investments', label: t('users.tabs.properties'), icon: '💰' },
+    { id: 'transactions', label: t('users.tabs.transactions'), icon: '🔄' },
+    { id: 'notes', label: t('users.notes.title'), icon: '📋' }
   ];
 
   return (
@@ -141,7 +144,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
         <div className="relative bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-slate-700">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center">
                 <span className="text-white font-medium">
                   {user.firstName?.charAt(0) || user.email.charAt(0).toUpperCase()}
@@ -152,13 +155,14 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email}
                 </h2>
                 <p className="text-sm text-neutral-500 dark:text-slate-400">
-                  {user.email} • {user.role.replace('_', ' ')}
-                  {user.isSuspended && <span className="text-red-500 ml-2">(Suspended)</span>}
+                  {user.email} • {t(`shared.roles.${user.role}`, { defaultValue: user.role.replace('_', ' ') })}
+                  {user.isSuspended && <span className="text-red-500 ms-2">{t('dashboard.users.suspended')}</span>}
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
+              aria-label={t('shared.close')}
               className="p-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-slate-300 transition-colors"
             >
               <span className="text-xl">×</span>
@@ -167,14 +171,14 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
 
           {/* Action Buttons */}
           <div className="px-6 py-4 border-b border-neutral-200 dark:border-slate-700 bg-neutral-50 dark:bg-slate-700">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center gap-3">
               {user.kycStatus === 'pending' && (
                 <button
                   onClick={handleVerifyUser}
                   disabled={actionLoading}
                   className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors disabled:opacity-50"
                 >
-                  Verify KYC
+                  {t('users.actions.verifyKyc')}
                 </button>
               )}
               
@@ -184,7 +188,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   disabled={actionLoading}
                   className="px-3 py-1 bg-orange-600 text-white text-sm rounded hover:bg-orange-700 transition-colors disabled:opacity-50"
                 >
-                  Unsuspend
+                  {t('dashboard.users.unsuspend')}
                 </button>
               ) : (
                 <button
@@ -192,7 +196,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   disabled={actionLoading}
                   className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors disabled:opacity-50"
                 >
-                  Suspend
+                  {t('users.actions.suspendShort')}
                 </button>
               )}
 
@@ -201,10 +205,10 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 onChange={(e) => handleUpdateUser({ role: e.target.value as AdminUser['role'] })}
                 className="px-3 py-1 text-sm border border-neutral-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-neutral-900 dark:text-slate-100"
               >
-                <option value="investor">Owner</option>
-                <option value="property_owner">Property Owner</option>
-                <option value="broker">Broker</option>
-                <option value="admin">Admin</option>
+                <option value="investor">{t('shared.roles.investor')}</option>
+                <option value="property_owner">{t('shared.roles.property_owner')}</option>
+                <option value="broker">{t('shared.roles.broker')}</option>
+                <option value="admin">{t('shared.roles.admin')}</option>
               </select>
 
               <select
@@ -212,9 +216,9 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 onChange={(e) => handleUpdateUser({ kycStatus: e.target.value as AdminUser['kycStatus'] })}
                 className="px-3 py-1 text-sm border border-neutral-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-neutral-900 dark:text-slate-100"
               >
-                <option value="pending">Pending</option>
-                <option value="verified">Verified</option>
-                <option value="rejected">Rejected</option>
+                <option value="pending">{t('shared.status.pending')}</option>
+                <option value="verified">{t('shared.status.verified')}</option>
+                <option value="rejected">{t('shared.status.rejected')}</option>
               </select>
             </div>
 
@@ -227,7 +231,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
 
           {/* Tabs */}
           <div className="px-6 border-b border-neutral-200 dark:border-slate-700">
-            <nav className="flex space-x-6">
+            <nav className="flex gap-6">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -238,7 +242,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                       : 'border-transparent text-neutral-500 dark:text-slate-400 hover:text-neutral-700 dark:hover:text-slate-300'
                   }`}
                 >
-                  <span className="mr-2">{tab.icon}</span>
+                  <span className="me-2">{tab.icon}</span>
                   {tab.label}
                 </button>
               ))}
@@ -258,7 +262,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                   onClick={loadUserData}
                   className="mt-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
                 >
-                  Retry
+                  {t('shared.retry')}
                 </button>
               </div>
             ) : (
@@ -268,23 +272,23 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100 mb-4">
-                          Personal Information
+                          {t('users.modal.personalInfo')}
                         </h3>
                         <div className="space-y-3">
                           <div>
-                            <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">Email</label>
+                            <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">{t('users.fields.email')}</label>
                             <p className="text-neutral-900 dark:text-slate-100">{user.email}</p>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">Phone</label>
-                            <p className="text-neutral-900 dark:text-slate-100">{user.phoneNumber || 'Not provided'}</p>
+                            <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">{t('users.fields.phone')}</label>
+                            <p className="text-neutral-900 dark:text-slate-100">{user.phoneNumber || t('users.modal.notProvided')}</p>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">Address</label>
+                            <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">{t('users.fields.address')}</label>
                             <p className="text-neutral-900 dark:text-slate-100">
                               {user.address 
                                 ? `${user.address.street}, ${user.address.city}, ${user.address.country} ${user.address.zipCode}`
-                                : 'Not provided'
+                                : t('users.modal.notProvided')
                               }
                             </p>
                           </div>
@@ -293,12 +297,12 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                       
                       <div>
                         <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100 mb-4">
-                          Account Status
+                          {t('users.fields.accountStatus')}
                         </h3>
                         <div className="space-y-3">
                           <div>
-                            <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">KYC Status</label>
-                            <div className="flex items-center space-x-2">
+                            <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">{t('users.fields.kycStatus')}</label>
+                            <div className="flex items-center gap-2">
                               <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                                 user.kycStatus === 'verified'
                                   ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
@@ -306,26 +310,26 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                                   ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
                                   : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                               }`}>
-                                {user.kycStatus}
+                                {t(`shared.status.${user.kycStatus}`, { defaultValue: user.kycStatus })}
                               </span>
                             </div>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">Account Status</label>
+                            <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">{t('users.fields.accountStatus')}</label>
                             <p className="text-neutral-900 dark:text-slate-100">
-                              {user.isActive ? 'Active' : 'Inactive'}
+                              {user.isActive ? t('shared.status.active') : t('shared.status.inactive')}
                             </p>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">Member Since</label>
+                            <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">{t('users.modal.memberSince')}</label>
                             <p className="text-neutral-900 dark:text-slate-100">
-                              {new Date(user.createdAt).toLocaleDateString()}
+                              {new Date(user.createdAt).toLocaleDateString(locale)}
                             </p>
                           </div>
                           <div>
-                            <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">Last Login</label>
+                            <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">{t('users.fields.lastLogin')}</label>
                             <p className="text-neutral-900 dark:text-slate-100">
-                              {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Never'}
+                              {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString(locale) : t('users.modal.never')}
                             </p>
                           </div>
                         </div>
@@ -337,12 +341,12 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 {activeTab === 'activity' && (
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100">
-                      Recent Activity
+                      {t('users.modal.recentActivity')}
                     </h3>
                     {userActivity.length > 0 ? (
                       <div className="space-y-3">
                         {userActivity.map((activity) => (
-                          <div key={activity.id} className="flex items-start space-x-3 p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg">
+                          <div key={activity.id} className="flex items-start gap-3 p-3 bg-neutral-50 dark:bg-slate-700 rounded-lg">
                             <div className="w-2 h-2 bg-primary-500 rounded-full mt-2 flex-shrink-0"></div>
                             <div className="flex-1">
                               <p className="text-sm font-medium text-neutral-900 dark:text-slate-100">
@@ -352,14 +356,14 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                                 {activity.description}
                               </p>
                               <p className="text-xs text-neutral-500 dark:text-slate-500 mt-2">
-                                {new Date(activity.timestamp).toLocaleString()}
+                                {new Date(activity.timestamp).toLocaleString(locale)}
                               </p>
                             </div>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-neutral-500 dark:text-slate-400">No activity recorded</p>
+                      <p className="text-neutral-500 dark:text-slate-400">{t('users.modal.noActivity')}</p>
                     )}
                   </div>
                 )}
@@ -367,11 +371,11 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 {activeTab === 'investments' && (
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100">
-                      Property Portfolio
+                      {t('users.modal.propertyPortfolio')}
                     </h3>
                     <div className="text-center text-neutral-500 dark:text-slate-400">
-                      <p>Property data will be loaded here</p>
-                      <p className="text-sm mt-1">Feature coming soon</p>
+                      <p>{t('users.modal.propertyDataSoon')}</p>
+                      <p className="text-sm mt-1">{t('users.modal.comingSoon')}</p>
                     </div>
                   </div>
                 )}
@@ -379,11 +383,11 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 {activeTab === 'transactions' && (
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100">
-                      Transaction History
+                      {t('users.modal.transactionHistory')}
                     </h3>
                     <div className="text-center text-neutral-500 dark:text-slate-400">
-                      <p>Transaction data will be loaded here</p>
-                      <p className="text-sm mt-1">Feature coming soon</p>
+                      <p>{t('users.modal.transactionDataSoon')}</p>
+                      <p className="text-sm mt-1">{t('users.modal.comingSoon')}</p>
                     </div>
                   </div>
                 )}
@@ -391,48 +395,48 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                 {activeTab === 'notes' && (
                   <div className="space-y-6">
                     <h3 className="text-lg font-medium text-neutral-900 dark:text-slate-100">
-                      Admin Notes
+                      {t('users.notes.title')}
                     </h3>
                     
                     {/* Add New Note */}
                     <div className="bg-neutral-50 dark:bg-slate-700 p-4 rounded-lg">
-                      <h4 className="font-medium text-neutral-900 dark:text-slate-100 mb-3">Add New Note</h4>
+                      <h4 className="font-medium text-neutral-900 dark:text-slate-100 mb-3">{t('users.notes.addNew')}</h4>
                       <div className="space-y-3">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <input
                             type="text"
-                            placeholder="Note title (optional)"
+                            placeholder={t('users.notes.titlePlaceholder')}
                             value={newNote.title}
                             onChange={(e) => setNewNote(prev => ({ ...prev, title: e.target.value }))}
                             className="px-3 py-2 border border-neutral-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-neutral-900 dark:text-slate-100"
                           />
-                          <div className="flex space-x-2">
+                          <div className="flex gap-2">
                             <select
                               value={newNote.noteType}
                               onChange={(e) => setNewNote(prev => ({ ...prev, noteType: e.target.value as AdminNote['noteType'] }))}
                               className="flex-1 px-3 py-2 border border-neutral-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-neutral-900 dark:text-slate-100"
                             >
-                              <option value="GENERAL">General</option>
-                              <option value="COMPLIANCE">Compliance</option>
-                              <option value="RISK_ASSESSMENT">Risk Assessment</option>
-                              <option value="SUPPORT">Support</option>
-                              <option value="INVESTIGATION">Investigation</option>
-                              <option value="WARNING">Warning</option>
+                              <option value="GENERAL">{t('users.noteTypes.GENERAL')}</option>
+                              <option value="COMPLIANCE">{t('users.noteTypes.COMPLIANCE')}</option>
+                              <option value="RISK_ASSESSMENT">{t('users.noteTypes.RISK_ASSESSMENT')}</option>
+                              <option value="SUPPORT">{t('users.noteTypes.SUPPORT')}</option>
+                              <option value="INVESTIGATION">{t('users.noteTypes.INVESTIGATION')}</option>
+                              <option value="WARNING">{t('users.noteTypes.WARNING')}</option>
                             </select>
                             <select
                               value={newNote.priority}
                               onChange={(e) => setNewNote(prev => ({ ...prev, priority: e.target.value as AdminNote['priority'] }))}
                               className="flex-1 px-3 py-2 border border-neutral-300 dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-neutral-900 dark:text-slate-100"
                             >
-                              <option value="LOW">Low</option>
-                              <option value="MEDIUM">Medium</option>
-                              <option value="HIGH">High</option>
-                              <option value="URGENT">Urgent</option>
+                              <option value="LOW">{t('users.priority.LOW')}</option>
+                              <option value="MEDIUM">{t('users.priority.MEDIUM')}</option>
+                              <option value="HIGH">{t('users.priority.HIGH')}</option>
+                              <option value="URGENT">{t('users.priority.URGENT')}</option>
                             </select>
                           </div>
                         </div>
                         <textarea
-                          placeholder="Enter note content..."
+                          placeholder={t('users.notes.placeholder')}
                           value={newNote.content}
                           onChange={(e) => setNewNote(prev => ({ ...prev, content: e.target.value }))}
                           rows={3}
@@ -444,16 +448,16 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                               type="checkbox"
                               checked={newNote.isConfidential}
                               onChange={(e) => setNewNote(prev => ({ ...prev, isConfidential: e.target.checked }))}
-                              className="mr-2"
+                              className="me-2"
                             />
-                            <span className="text-sm text-neutral-700 dark:text-slate-300">Confidential Note</span>
+                            <span className="text-sm text-neutral-700 dark:text-slate-300">{t('users.notes.confidentialLabel')}</span>
                           </label>
                           <button
                             onClick={handleAddNote}
                             disabled={!newNote.content.trim() || actionLoading}
                             className="px-4 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 transition-colors disabled:opacity-50"
                           >
-                            Add Note
+                            {t('users.notes.add')}
                           </button>
                         </div>
                       </div>
@@ -465,7 +469,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                         userNotes.map((note) => (
                           <div key={note.id} className="border border-neutral-200 dark:border-slate-600 rounded-lg p-4">
                             <div className="flex items-start justify-between mb-2">
-                              <div className="flex items-center space-x-2">
+                              <div className="flex items-center gap-2">
                                 {note.title && (
                                   <h5 className="font-medium text-neutral-900 dark:text-slate-100">{note.title}</h5>
                                 )}
@@ -475,29 +479,29 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
                                   note.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
                                   'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
                                 }`}>
-                                  {note.priority}
+                                  {t(`users.priority.${note.priority}`, { defaultValue: note.priority })}
                                 </span>
                                 <span className="px-2 py-1 text-xs bg-neutral-100 text-neutral-700 dark:bg-slate-600 dark:text-slate-300 rounded-full">
-                                  {note.noteType}
+                                  {t(`users.noteTypes.${note.noteType}`, { defaultValue: note.noteType })}
                                 </span>
                                 {note.isConfidential && (
                                   <span className="px-2 py-1 text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 rounded-full">
-                                    CONFIDENTIAL
+                                    {t('users.notes.confidential')}
                                   </span>
                                 )}
                               </div>
                             </div>
                             <p className="text-neutral-700 dark:text-slate-300 mb-3">{note.content}</p>
                             <div className="text-xs text-neutral-500 dark:text-slate-500">
-                              Added by {note.adminName} on {new Date(note.createdAt).toLocaleDateString()}
+                              {t('users.notes.addedBy', { name: note.adminName, date: new Date(note.createdAt).toLocaleDateString(locale) })}
                               {note.updatedAt !== note.createdAt && (
-                                <span> • Updated {new Date(note.updatedAt).toLocaleDateString()}</span>
+                                <span> • {t('users.notes.updated', { date: new Date(note.updatedAt).toLocaleDateString(locale) })}</span>
                               )}
                             </div>
                           </div>
                         ))
                       ) : (
-                        <p className="text-neutral-500 dark:text-slate-400">No notes added yet</p>
+                        <p className="text-neutral-500 dark:text-slate-400">{t('users.notes.none')}</p>
                       )}
                     </div>
                   </div>

@@ -14,6 +14,7 @@ import { Input } from '../design-system/forms/Input';
 import { Badge } from '../ui/Badge';
 import { cn } from '../../utils/cn';
 import type { MarketplaceFilters as FilterType } from '../../services/marketplace/MarketplaceService';
+import { useTranslation } from 'react-i18next';
 
 interface MarketplaceFiltersProps {
   filters: FilterType;
@@ -26,14 +27,15 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
   onFiltersChange,
   className
 }) => {
+  const { t } = useTranslation('market');
   const [localFilters, setLocalFilters] = useState<FilterType>(filters);
 
   const propertyTypes = [
-    { value: 'residential', label: 'Residential', icon: Home },
-    { value: 'commercial', label: 'Commercial', icon: Home },
-    { value: 'industrial', label: 'Industrial', icon: Home },
-    { value: 'mixed_use', label: 'Mixed Use', icon: Home },
-    { value: 'land', label: 'Land', icon: Home }
+    { value: 'residential', label: t('propertyTypes.residential'), icon: Home },
+    { value: 'commercial', label: t('propertyTypes.commercial'), icon: Home },
+    { value: 'industrial', label: t('propertyTypes.industrial'), icon: Home },
+    { value: 'mixed_use', label: t('propertyTypes.mixed_use'), icon: Home },
+    { value: 'land', label: t('propertyTypes.land'), icon: Home }
   ];
 
   const popularLocations = [
@@ -87,7 +89,7 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Filter className="w-5 h-5 text-blue-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('smd.filters')}</h3>
           {activeFiltersCount > 0 && (
             <Badge variant="secondary" className="text-xs">
               {activeFiltersCount}
@@ -100,7 +102,7 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
           onClick={clearFilters}
           className="text-gray-500 hover:text-gray-700"
         >
-          Clear All
+          {t('filters.clearAll')}
         </Button>
       </div>
 
@@ -108,7 +110,7 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
         {/* Property Type */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            Property Type
+            {t('smd.propertyType')}
           </label>
           <div className="flex flex-wrap gap-2">
             {propertyTypes.map(({ value, label, icon: Icon }) => (
@@ -135,17 +137,17 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
         {/* Location */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            Location
+            {t('filters.location')}
           </label>
           <div className="space-y-3">
             <div className="relative">
-              <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <MapPin className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 type="text"
-                placeholder="Enter city, state, or region"
+                placeholder={t('filters.locationPlaceholder')}
                 value={localFilters.location || ''}
                 onChange={(e) => handleLocalFilterChange('location', e.target.value || undefined)}
-                className="pl-9"
+                className="ps-9"
               />
             </div>
             <div className="flex flex-wrap gap-2">
@@ -173,14 +175,14 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
         {/* Price Range */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            <DollarSign className="inline w-4 h-4 mr-1" />
-            Price per Token Range
+            <DollarSign className="inline w-4 h-4 me-1" />
+            {t('filters.priceRange')}
           </label>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Input
                 type="number"
-                placeholder="Min price"
+                placeholder={t('filters.minPrice')}
                 value={localFilters.min_price || ''}
                 onChange={(e) => {
                   const value = e.target.value ? parseFloat(e.target.value) : undefined;
@@ -193,7 +195,7 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
             <div>
               <Input
                 type="number"
-                placeholder="Max price"
+                placeholder={t('filters.maxPrice')}
                 value={localFilters.max_price || ''}
                 onChange={(e) => {
                   const value = e.target.value ? parseFloat(e.target.value) : undefined;
@@ -209,14 +211,14 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
         {/* Token Quantity Range */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            <Coins className="inline w-4 h-4 mr-1" />
-            Token Quantity Range
+            <Coins className="inline w-4 h-4 me-1" />
+            {t('filters.tokenRange')}
           </label>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Input
                 type="number"
-                placeholder="Min tokens"
+                placeholder={t('filters.minTokens')}
                 value={localFilters.min_tokens || ''}
                 onChange={(e) => {
                   const value = e.target.value ? parseInt(e.target.value) : undefined;
@@ -228,7 +230,7 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
             <div>
               <Input
                 type="number"
-                placeholder="Max tokens"
+                placeholder={t('filters.maxTokens')}
                 value={localFilters.max_tokens || ''}
                 onChange={(e) => {
                   const value = e.target.value ? parseInt(e.target.value) : undefined;
@@ -243,14 +245,14 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
         {/* Listing Status */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            Listing Status
+            {t('filters.listingStatus')}
           </label>
           <div className="space-y-2">
             {[
-              { value: 'ACTIVE', label: 'Active', color: 'green' },
-              { value: 'SOLD', label: 'Sold', color: 'gray' },
-              { value: 'EXPIRED', label: 'Expired', color: 'orange' },
-              { value: 'CANCELLED', label: 'Cancelled', color: 'red' }
+              { value: 'ACTIVE', label: t('status.active'), color: 'green' },
+              { value: 'SOLD', label: t('status.sold'), color: 'gray' },
+              { value: 'EXPIRED', label: t('status.expired'), color: 'orange' },
+              { value: 'CANCELLED', label: t('status.cancelled'), color: 'red' }
             ].map(({ value, label, color }) => (
               <label key={value} className="flex items-center">
                 <input
@@ -259,7 +261,7 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
                   onChange={(e) => {
                     handleLocalFilterChange('status', e.target.checked ? value : undefined);
                   }}
-                  className="mr-2 rounded"
+                  className="me-2 rounded"
                 />
                 <Badge
                   variant="secondary"
@@ -281,7 +283,7 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
         {/* Quick Filters */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            Quick Filters
+            {t('filters.quickFilters')}
           </label>
           <div className="space-y-2">
             <button
@@ -297,7 +299,7 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
                   : "bg-gray-50 text-gray-700 hover:bg-gray-100"
               )}
             >
-              <span>Auctions Only</span>
+              <span>{t('filters.auctionsOnly')}</span>
               <Calendar className="w-4 h-4" />
             </button>
             <button
@@ -313,7 +315,7 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
                   : "bg-gray-50 text-gray-700 hover:bg-gray-100"
               )}
             >
-              <span>Buy Now Only</span>
+              <span>{t('filters.buyNowOnly')}</span>
               <DollarSign className="w-4 h-4" />
             </button>
           </div>
@@ -327,7 +329,7 @@ export const MarketplaceFilters: React.FC<MarketplaceFiltersProps> = ({
           className="w-full"
           disabled={JSON.stringify(filters) === JSON.stringify(localFilters)}
         >
-          Apply Filters {activeFiltersCount > 0 && `(${activeFiltersCount})`}
+          {t('filters.apply')} {activeFiltersCount > 0 && `(${activeFiltersCount})`}
         </Button>
       </div>
     </motion.div>

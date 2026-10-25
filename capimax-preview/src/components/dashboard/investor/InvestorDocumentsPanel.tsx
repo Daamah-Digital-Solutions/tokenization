@@ -19,20 +19,22 @@ import {
   type InvestorPropertyDocuments,
   type InvestorDocument,
 } from '../../../services/documents/DocumentService';
+import { useTranslation } from 'react-i18next';
 import { useUser } from '../../../contexts/AuthContext';
 import { downloadOwnershipCertificatePdf } from '../../../utils/ownershipCertificatePdf';
 import { downloadReceiptPdf } from '../../../utils/receiptPdf';
 
+// Values are i18n keys in the `dashboard` namespace (docsPanel.types.*).
 const DOC_TYPE_LABEL: Record<string, string> = {
-  ownership: 'Ownership & Title',
-  valuation: 'Valuation Report',
-  insurance: 'Insurance Policy',
-  spv: 'SPV Documents',
-  management: 'Property Management',
-  financial: 'Financial Report',
-  legal: 'Legal Document',
-  technical: 'Technical Document',
-  other: 'Document',
+  ownership: 'docsPanel.types.ownership',
+  valuation: 'docsPanel.types.valuation',
+  insurance: 'docsPanel.types.insurance',
+  spv: 'docsPanel.types.spv',
+  management: 'docsPanel.types.management',
+  financial: 'docsPanel.types.financial',
+  legal: 'docsPanel.types.legal',
+  technical: 'docsPanel.types.technical',
+  other: 'docsPanel.types.other',
 };
 
 function iconFor(doc: InvestorDocument) {
@@ -50,6 +52,7 @@ function certificateNumber(propertyId: string, userId?: string): string {
 }
 
 export const InvestorDocumentsPanel: React.FC = () => {
+  const { t } = useTranslation('dashboard');
   const user = useUser() as any;
   const [groups, setGroups] = useState<InvestorPropertyDocuments[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,7 +64,7 @@ export const InvestorDocumentsPanel: React.FC = () => {
     setError(null);
     DocumentService.getInvestorDocuments()
       .then((res) => setGroups(res?.properties || []))
-      .catch(() => setError('Could not load your documents. Please try again.'))
+      .catch(() => setError(t('docsPanel.loadError')))
       .finally(() => setLoading(false));
   };
 
@@ -74,7 +77,7 @@ export const InvestorDocumentsPanel: React.FC = () => {
     user?.name ||
     [user?.first_name, user?.last_name].filter(Boolean).join(' ') ||
     user?.email ||
-    'Investor';
+    t('docsPanel.holderFallback');
 
   const downloadCertificate = async (g: InvestorPropertyDocuments, docId: string) => {
     const certNo = certificateNumber(g.property.id, user?.id);
@@ -105,7 +108,7 @@ export const InvestorDocumentsPanel: React.FC = () => {
         qrPayload,
       });
     } catch (_) {
-      setError('Could not generate the certificate. Please try again.');
+      setError(t('docsPanel.certError'));
     } finally {
       setBusyDoc(null);
     }
@@ -138,7 +141,7 @@ export const InvestorDocumentsPanel: React.FC = () => {
         owner: { name: investorName },
       });
     } catch (_) {
-      setError('Could not generate the receipt. Please try again.');
+      setError(t('docsPanel.receiptError'));
     } finally {
       setBusyDoc(null);
     }
@@ -153,7 +156,7 @@ export const InvestorDocumentsPanel: React.FC = () => {
     return (
       <div className="py-16 text-center text-slate-500 dark:text-slate-400">
         <RefreshCw className="w-6 h-6 mx-auto mb-3 animate-spin" />
-        Loading your documents…
+        {t('docsPanel.loading')}
       </div>
     );
   }
@@ -164,16 +167,16 @@ export const InvestorDocumentsPanel: React.FC = () => {
         <div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <FolderOpen className="w-5 h-5 text-emerald-600" />
-            Document Center
+            {t('docsPanel.title')}
           </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Your ownership certificates and property documents, organised per property.
+            {t('docsPanel.subtitle')}
           </p>
         </div>
         <button
           onClick={load}
           className="p-2 rounded-lg text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-          title="Refresh"
+          title={t('docsPanel.refresh')}
         >
           <RefreshCw className="w-4 h-4" />
         </button>
@@ -188,10 +191,9 @@ export const InvestorDocumentsPanel: React.FC = () => {
       {groups.length === 0 ? (
         <div className="py-16 text-center border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">
           <Building2 className="w-10 h-10 mx-auto mb-3 text-slate-400" />
-          <p className="text-slate-600 dark:text-slate-300 font-medium">No documents yet</p>
+          <p className="text-slate-600 dark:text-slate-300 font-medium">{t('docsPanel.emptyTitle')}</p>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Once you own tokens in a property, your ownership certificate and its
-            documents will appear here — one section per property.
+            {t('docsPanel.emptyText')}
           </p>
         </div>
       ) : (
@@ -222,9 +224,9 @@ export const InvestorDocumentsPanel: React.FC = () => {
                     {g.property.location}
                   </p>
                   <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1 text-xs text-slate-600 dark:text-slate-300">
-                    <span><strong>{g.holdings.token_amount.toLocaleString()}</strong> tokens</span>
-                    <span><strong>{(parseFloat(g.holdings.ownership_percentage) || 0).toFixed(4)}%</strong> ownership</span>
-                    <span>${(parseFloat(g.holdings.total_invested) || 0).toLocaleString()} invested</span>
+                    <span><strong>{g.holdings.token_amount.toLocaleString()}</strong> {t('docsPanel.shares')}</span>
+                    <span><strong>{(parseFloat(g.holdings.ownership_percentage) || 0).toFixed(4)}%</strong> {t('docsPanel.ownership')}</span>
+                    <span>{t('docsPanel.invested', { amount: `$${(parseFloat(g.holdings.total_invested) || 0).toLocaleString()}` })}</span>
                   </div>
                 </div>
               </div>
@@ -249,7 +251,7 @@ export const InvestorDocumentsPanel: React.FC = () => {
                           {doc.name}
                         </p>
                         <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                          {doc.description || DOC_TYPE_LABEL[doc.document_type] || 'Document'}
+                          {doc.description || t(DOC_TYPE_LABEL[doc.document_type] || 'docsPanel.types.other')}
                         </p>
                       </div>
                       {isGenerated ? (
@@ -263,7 +265,7 @@ export const InvestorDocumentsPanel: React.FC = () => {
                           }`}
                         >
                           <Download className="w-4 h-4" />
-                          {busyDoc === doc.id ? 'Generating…' : 'Download PDF'}
+                          {busyDoc === doc.id ? t('docsPanel.generating') : t('docsPanel.downloadPdf')}
                         </button>
                       ) : doc.download_url ? (
                         <a
@@ -273,10 +275,10 @@ export const InvestorDocumentsPanel: React.FC = () => {
                           className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-sm font-medium px-3 py-1.5 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shrink-0"
                         >
                           <Download className="w-4 h-4" />
-                          Download
+                          {t('docsPanel.download')}
                         </a>
                       ) : (
-                        <span className="text-xs text-slate-400 shrink-0">Unavailable</span>
+                        <span className="text-xs text-slate-400 shrink-0">{t('docsPanel.unavailable')}</span>
                       )}
                     </li>
                   );

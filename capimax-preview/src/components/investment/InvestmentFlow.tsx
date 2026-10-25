@@ -24,34 +24,36 @@ import { TransactionConfirmation } from './TransactionConfirmation';
 import { cn } from '../../utils/cn';
 import type { InvestmentProperty, InvestmentData, InvestmentFlowProps } from './types';
 import { buildSchedule } from '../../utils/paymentPlan';
+import { useTranslation } from 'react-i18next';
 
 // The static step list is the upfront-payment path. The schedule step is
 // inserted dynamically right after "amount" when the property is under
 // construction AND its owner explicitly enabled installments. Computed at
 // each render against the live property prop in ``buildSteps`` below.
+// ``title``/``description`` hold i18n keys in the ``invest`` namespace.
 const baseSteps = [
   {
     id: 'amount',
-    title: 'Select Tokens',
-    description: 'Choose how many tokens to purchase',
+    title: 'flow.steps.amount.title',
+    description: 'flow.steps.amount.description',
     icon: Coins
   },
   {
     id: 'payment',
-    title: 'Payment Method',
-    description: 'Select how you want to pay',
+    title: 'flow.steps.payment.title',
+    description: 'flow.steps.payment.description',
     icon: CreditCard
   },
   {
     id: 'process',
-    title: 'Processing',
-    description: 'Your transaction is being processed',
+    title: 'flow.steps.process.title',
+    description: 'flow.steps.process.description',
     icon: Wallet
   },
   {
     id: 'confirmation',
-    title: 'Confirmation',
-    description: 'Your purchase is complete',
+    title: 'flow.steps.confirmation.title',
+    description: 'flow.steps.confirmation.description',
     icon: CheckCircle
   }
 ];
@@ -72,8 +74,8 @@ function buildSteps(property: InvestmentProperty, isInstallmentPurchase: boolean
     baseSteps[0],
     {
       id: 'schedule',
-      title: 'Payment Schedule',
-      description: 'Full payment or installments',
+      title: 'flow.steps.schedule.title',
+      description: 'flow.steps.schedule.description',
       icon: Calendar
     },
     ...rest,
@@ -90,6 +92,7 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
   initialMethod,
   initialInstallments
 }) => {
+  const { t } = useTranslation('invest');
   // If tokens were pre-selected from sidebar, start on Step 1 (payment) instead of Step 0
   const startStep = (initialTokens && initialTokens > 1) ? 1 : 0;
   const startTokens = initialTokens || 1;
@@ -151,19 +154,19 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
 
     if (id === 'amount') {
       if (investmentData.tokens < 1) {
-        newErrors.tokens = 'You must purchase at least 1 token';
+        newErrors.tokens = t('flow.errors.minTokens');
       }
       if (investmentData.tokens > availableTokens) {
-        newErrors.tokens = `Only ${availableTokens.toLocaleString()} tokens available`;
+        newErrors.tokens = t('flow.errors.maxTokens', { available: availableTokens.toLocaleString() });
       }
     } else if (id === 'payment') {
       if (!investmentData.paymentMethod) {
-        newErrors.paymentMethod = 'Please select a payment method';
+        newErrors.paymentMethod = t('flow.errors.paymentMethod');
       }
     } else if (id === 'schedule') {
       // Installments-only properties can't be bought upfront.
       if (property.paymentPlan?.allows_cash === false && !investmentData.is_installment_purchase) {
-        newErrors.schedule = 'This property is sold in installments only.';
+        newErrors.schedule = t('flow.errors.installmentsOnly');
       }
       if (investmentData.is_installment_purchase && property.paymentPlan) {
         const plan = property.paymentPlan;
@@ -175,7 +178,7 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
         const per = rows.find((r) => r.kind === 'installment')?.amount || 0;
         const minimum = Number(plan.minimum_installment) || 100;
         if (per < minimum) {
-          newErrors.schedule = `Each installment must be at least $${minimum}. Choose more shares or fewer installments.`;
+          newErrors.schedule = t('flow.errors.minInstallment', { amount: `$${minimum}` });
         }
       }
     }
@@ -278,10 +281,10 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    Buy shares of {property.title}
+                    {t('flow.title', { title: property.title })}
                   </h2>
                   <Text variant="body" color="muted" className="mt-1">
-                    {currentStepData.description}
+                    {t(currentStepData.description)}
                   </Text>
                 </div>
                 {/* Hide close button during processing */}
@@ -317,7 +320,7 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                             <step.icon className="w-5 h-5" />
                           )}
                         </div>
-                        <div className="ml-3 hidden sm:block">
+                        <div className="ms-3 hidden sm:block">
                           <Text
                             variant="bodySmall"
                             weight="semibold"
@@ -325,7 +328,7 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                               index <= currentStep ? "text-gray-900 dark:text-white" : "text-gray-500"
                             )}
                           >
-                            {step.title}
+                            {t(step.title)}
                           </Text>
                         </div>
                       </div>
@@ -417,15 +420,15 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                     onClick={currentStep === 0 ? handleCloseAttempt : handlePrevious}
                     className="flex items-center gap-2"
                   >
-                    <ArrowLeft className="w-4 h-4" />
-                    {currentStep === 0 ? 'Cancel' : 'Back'}
+                    <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
+                    {currentStep === 0 ? t('common.cancel') : t('common.back')}
                   </Button>
 
                   <div className="flex items-center gap-4">
                     {/* Summary chip */}
-                    <div className="text-right hidden sm:block">
+                    <div className="text-end hidden sm:block">
                       <Text variant="bodySmall" color="muted">
-                        {investmentData.tokens} {investmentData.tokens === 1 ? 'token' : 'tokens'}
+                        {t('common.shareCount', { count: investmentData.tokens })}
                       </Text>
                       <Text variant="bodyLarge" weight="semibold">
                         ${investmentData.amount.toLocaleString()}
@@ -439,13 +442,13 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                       className="flex items-center gap-2"
                     >
                       {stepId === 'payment'
-                        ? 'Confirm & Pay'
+                        ? t('flow.buttons.confirmPay')
                         : stepId === 'schedule' && investmentData.is_installment_purchase
-                          ? 'Confirm installment plan'
+                          ? t('flow.buttons.confirmPlan')
                         : steps[currentStep + 1]?.id === 'schedule'
-                          ? 'Choose Schedule'
-                          : 'Choose Payment'}
-                      <ArrowRight className="w-4 h-4" />
+                          ? t('flow.buttons.chooseSchedule')
+                          : t('flow.buttons.choosePayment')}
+                      <ArrowRight className="w-4 h-4 rtl:rotate-180" />
                     </Button>
                   </div>
                 </div>
@@ -473,8 +476,8 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                       <AlertTriangle className="w-5 h-5 text-amber-600" />
                     </div>
                     <div>
-                      <Text variant="bodyLarge" weight="semibold">Cancel Purchase?</Text>
-                      <Text variant="bodySmall" color="muted">Your progress will be lost</Text>
+                      <Text variant="bodyLarge" weight="semibold">{t('flow.cancelDialog.title')}</Text>
+                      <Text variant="bodySmall" color="muted">{t('flow.cancelDialog.body')}</Text>
                     </div>
                   </div>
                   <div className="flex gap-3">
@@ -484,7 +487,7 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                       onClick={() => setShowCloseConfirm(false)}
                       className="flex-1"
                     >
-                      Continue Purchase
+                      {t('flow.cancelDialog.continue')}
                     </Button>
                     <Button
                       variant="ghost"
@@ -492,7 +495,7 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                       onClick={handleClose}
                       className="flex-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                     >
-                      Yes, Cancel
+                      {t('flow.cancelDialog.confirm')}
                     </Button>
                   </div>
                 </motion.div>

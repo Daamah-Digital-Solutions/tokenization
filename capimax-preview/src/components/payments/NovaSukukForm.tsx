@@ -15,6 +15,7 @@
 
 import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation, Trans } from 'react-i18next';
 import {
   ScrollText,
   Upload,
@@ -49,6 +50,7 @@ export function NovaSukukForm({
   onCancel,
   className,
 }: NovaSukukFormProps) {
+  const { t } = useTranslation('payments');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<'collect' | 'submitting' | 'done'>('collect');
   const [referenceNumber, setReferenceNumber] = useState('');
@@ -61,11 +63,11 @@ export function NovaSukukForm({
       return;
     }
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      setErrorMessage('Upload a PDF or image (JPG / PNG).');
+      setErrorMessage(t('nova.errors.fileType'));
       return;
     }
     if (file.size > MAX_FILE_BYTES) {
-      setErrorMessage('File too large (max 10MB).');
+      setErrorMessage(t('shared.fileTooLarge'));
       return;
     }
     setErrorMessage(null);
@@ -74,11 +76,11 @@ export function NovaSukukForm({
 
   const handleSubmit = async () => {
     if (!sukukPdf) {
-      setErrorMessage('Please upload the signed Sukuk document.');
+      setErrorMessage(t('nova.errors.fileRequired'));
       return;
     }
     if (!referenceNumber.trim()) {
-      setErrorMessage('Sukuk reference number is required.');
+      setErrorMessage(t('nova.errors.referenceRequired'));
       return;
     }
     setErrorMessage(null);
@@ -93,7 +95,7 @@ export function NovaSukukForm({
       });
       const investmentId = result?.investment_id;
       if (!investmentId) {
-        throw new Error('Submission accepted but no investment was returned.');
+        throw new Error(t('shared.noInvestmentReturned'));
       }
       setStep('done');
       onSubmitted?.(investmentId);
@@ -101,7 +103,7 @@ export function NovaSukukForm({
       const apiMessage =
         caught?.response?.data?.error?.message ||
         caught?.message ||
-        'Failed to submit Nova Sukuk payment.';
+        t('nova.errors.submitFailed');
       setErrorMessage(apiMessage);
       setStep('collect');
     }
@@ -112,24 +114,28 @@ export function NovaSukukForm({
       <div className="text-center">
         <ScrollText className="mx-auto w-10 h-10 text-indigo-500" />
         <h3 className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
-          Nova Sukuk — submit document
+          {t('nova.title')}
         </h3>
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-          Upload your signed Sukuk certificate of <strong>${amount.toFixed(2)}</strong>
-          {' '}for admin review. Tokens are minted once the document is approved.
+          <Trans
+            t={t}
+            i18nKey="nova.intro"
+            values={{ amount: `$${amount.toFixed(2)}` }}
+            components={{ b: <strong /> }}
+          />
         </p>
       </div>
 
       <Input
-        label="Sukuk reference number"
+        label={t('nova.referenceLabel')}
         value={referenceNumber}
         onChange={(e) => setReferenceNumber(e.target.value)}
-        placeholder="Reference printed on the certificate"
+        placeholder={t('nova.referencePlaceholder')}
       />
 
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Sukuk document (PDF / image)
+          {t('nova.documentLabel')}
         </label>
         <input
           ref={fileInputRef}
@@ -154,8 +160,8 @@ export function NovaSukukForm({
           ) : (
             <div className="flex flex-col items-center gap-1 text-sm text-gray-600 dark:text-gray-300">
               <Upload className="w-5 h-5 text-gray-400" />
-              Click to upload PDF or image
-              <span className="text-xs text-gray-400">Max 10MB</span>
+              {t('nova.uploadPrompt')}
+              <span className="text-xs text-gray-400">{t('shared.max10mb')}</span>
             </div>
           )}
         </button>
@@ -172,14 +178,14 @@ export function NovaSukukForm({
 
       <div className="flex gap-3">
         <Button variant="outline" onClick={onCancel} className="flex-1">
-          Cancel
+          {t('shared.cancel')}
         </Button>
         <Button
           onClick={handleSubmit}
           className="flex-1 bg-indigo-600 hover:bg-indigo-700"
           disabled={!sukukPdf || !referenceNumber.trim()}
         >
-          Submit for review
+          {t('shared.submitForReview')}
         </Button>
       </div>
     </div>
@@ -189,7 +195,7 @@ export function NovaSukukForm({
     <div className="text-center space-y-4 py-6">
       <Loader2 className="w-10 h-10 mx-auto animate-spin text-indigo-500" />
       <p className="text-sm text-gray-600 dark:text-gray-300">
-        Uploading your Sukuk document…
+        {t('nova.uploading')}
       </p>
     </div>
   );
@@ -200,12 +206,10 @@ export function NovaSukukForm({
         <CheckCircle className="w-8 h-8 text-emerald-600" />
       </div>
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-        Submitted for review
+        {t('shared.submittedForReview')}
       </h3>
       <p className="text-sm text-gray-600 dark:text-gray-300">
-        Your Sukuk document is in the admin queue. Tokens will mint once the
-        document is approved — you&apos;ll get a notification + email when
-        that happens.
+        {t('nova.doneBody')}
       </p>
     </div>
   );

@@ -1,0 +1,490 @@
+{
+  "shared": {
+    "retry": "Retry",
+    "viewAll": "View All",
+    "tbd": "TBD",
+    "approve": "Approve",
+    "reject": "Reject",
+    "dismiss": "Dismiss",
+    "cancel": "Cancel",
+    "close": "Close",
+    "save": "Save",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "status": {
+      "pending": "Pending",
+      "verified": "Verified",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "active": "Active",
+      "inactive": "Inactive",
+      "pending_approval": "Pending approval",
+      "under_review": "Under review",
+      "requires_changes": "Changes requested",
+      "completed": "Completed",
+      "failed": "Failed",
+      "processing": "Processing",
+      "cancelled": "Cancelled",
+      "suspended": "Suspended",
+      "draft": "Draft",
+      "funded": "Funded",
+      "sold_out": "Sold out",
+      "delisted": "Delisted",
+      "not_started": "Not started",
+      "refunded": "Refunded",
+      "not_submitted": "Not submitted",
+      "expired": "Expired"
+    },
+    "roles": {
+      "investor": "Owner",
+      "property_owner": "Property owner",
+      "broker": "Broker",
+      "admin": "Admin",
+      "liquidity_provider": "Liquidity provider",
+      "developer": "Developer"
+    },
+    "txTypes": {
+      "investment": "Purchase",
+      "withdrawal": "Withdrawal",
+      "deposit": "Deposit",
+      "dividend": "Dividend",
+      "commission": "Commission",
+      "refund": "Refund",
+      "fee": "Fee",
+      "transfer": "Transfer",
+      "payment": "Payment"
+    },
+    "severity": {
+      "CRITICAL": "Critical",
+      "HIGH": "High",
+      "MEDIUM": "Medium",
+      "LOW": "Low"
+    },
+    "refresh": "Refresh",
+    "actions": "Actions",
+    "viewDetails": "View Details",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{page}} of {{pages}}",
+    "propertyTypes": {
+      "residential": "Residential",
+      "commercial": "Commercial",
+      "industrial": "Industrial",
+      "mixed_use": "Mixed use",
+      "land": "Land",
+      "retail": "Retail",
+      "office": "Office",
+      "hospitality": "Hospitality"
+    }
+  },
+  "ws": {
+    "criticalAlert": "Critical System Alert: {{title}}",
+    "systemErrorTitle": "System Error Detected",
+    "systemErrorMessage": "An error occurred in the system"
+  },
+  "dashboard": {
+    "stats": {
+      "totalUsers": "Total Users",
+      "totalUsersDesc": "Registered users",
+      "platformVolume": "Platform Volume",
+      "platformVolumeDesc": "Total transaction volume",
+      "activeProperties": "Active Properties",
+      "activePropertiesDesc": "Properties on platform",
+      "platformRevenue": "Platform Revenue",
+      "platformRevenueDesc": "Monthly platform fees"
+    },
+    "charts": {
+      "transactionVolume": "Platform Transaction Volume",
+      "userGrowth": "User Growth"
+    },
+    "users": {
+      "title": "User Management",
+      "pendingKyc": "{{count}} Pending KYC",
+      "suspended": "(Suspended)",
+      "joined": "Joined",
+      "totalPurchased": "Total Purchased",
+      "properties": "Properties",
+      "review": "Review",
+      "verify": "Verify",
+      "unsuspend": "Unsuspend",
+      "actions": "Actions",
+      "suspendPrompt": "Please provide suspension reason:"
+    },
+    "approval": {
+      "title": "Property Approval Queue",
+      "pendingReview": "{{count}} Pending Review",
+      "byOwner": "by {{name}}",
+      "targetAmount": "Target Amount",
+      "submitted": "Submitted",
+      "shares": "Shares",
+      "funding": "Funding",
+      "rejectPrompt": "Please provide a rejection reason:",
+      "reviewDetails": "Review Details"
+    },
+    "transactions": {
+      "title": "Recent Transactions"
+    },
+    "health": {
+      "title": "System Health",
+      "apiResponseTime": "API Response Time",
+      "uptime": "System Uptime",
+      "days": "{{value}} days",
+      "databaseResponse": "Database Response",
+      "activeConnections": "Active Connections",
+      "errorRate": "Error Rate",
+      "memoryUsage": "Memory Usage",
+      "target": "Target: {{value}}",
+      "levels": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "warning": "Warning",
+        "error": "Error"
+      }
+    },
+    "quick": {
+      "reviewKyc": "Review KYC",
+      "pendingApprovals": "{{count}} pending approvals",
+      "reviewProperties": "Review Properties",
+      "pendingReviews": "{{count}} pending reviews",
+      "systemAlerts": "System Alerts",
+      "criticalAlerts": "{{count}} critical alerts",
+      "allNormal": "All systems normal",
+      "refreshData": "Refresh Data",
+      "updateDashboard": "Update dashboard"
+    },
+    "userStats": {
+      "title": "User Statistics",
+      "totalUsers": "Total Users",
+      "verifiedUsers": "Verified Users",
+      "pendingKyc": "Pending KYC",
+      "suspendedUsers": "Suspended Users"
+    },
+    "userTypes": {
+      "title": "User Types",
+      "owners": "Owners",
+      "propertyOwners": "Property Owners",
+      "brokers": "Brokers"
+    },
+    "geo": {
+      "title": "Geographic Distribution",
+      "northAmerica": "North America",
+      "europe": "Europe",
+      "asia": "Asia",
+      "others": "Others"
+    },
+    "platform": {
+      "dailyActiveUsers": "Daily Active Users",
+      "transactionVolume": "Transaction Volume",
+      "platformRevenue": "Platform Revenue",
+      "successRate": "Success Rate"
+    },
+    "alerts": {
+      "title": "Active System Alerts",
+      "acknowledge": "Acknowledge",
+      "resolve": "Resolve",
+      "resolvePrompt": "Please provide resolution details:"
+    },
+    "financial": {
+      "title": "Financial Management",
+      "totalRevenue": "Total Revenue",
+      "monthlyRevenue": "Monthly Revenue",
+      "thisMonth": "This month",
+      "pendingWithdrawals": "Pending Withdrawals",
+      "requests": "{{count}} requests",
+      "totalCommissions": "Total Commissions",
+      "pendingCount": "{{count}} pending",
+      "loadFailed": "Failed to load financial data"
+    },
+    "underDevelopment": {
+      "title": "{{name}} Dashboard",
+      "body": "This section is under development"
+    },
+    "views": {
+      "overview": "Overview",
+      "users": "Users",
+      "properties-admin": "Properties",
+      "transactions-admin": "Transactions",
+      "platform": "Platform",
+      "system": "System",
+      "financial": "Financial",
+      "settings": "Settings",
+      "reports": "Reports"
+    }
+  },
+  "transactions": {
+    "title": "Transaction Management",
+    "subtitle": "Monitor transactions, manage withdrawals, and view financial metrics",
+    "exportCsv": "Export CSV",
+    "loadFailed": "Failed to load transactions",
+    "listTitle": "Transaction List ({{count}} total)",
+    "empty": "No transactions found",
+    "stats": {
+      "count": "Transaction Count",
+      "average": "Avg: {{amount}}"
+    },
+    "filters": {
+      "type": "Transaction Type",
+      "allTypes": "All Types",
+      "allStatuses": "All Statuses",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "perPage": "Results Per Page"
+    },
+    "fields": {
+      "date": "Date",
+      "type": "Type",
+      "user": "User",
+      "amount": "Amount",
+      "fee": "Fee",
+      "status": "Status",
+      "paymentMethod": "Payment Method"
+    },
+    "pagination": {
+      "showing": "Showing {{from}} to {{to}} of {{total}} transactions"
+    },
+    "detail": {
+      "title": "Transaction Details",
+      "id": "ID: {{id}}...",
+      "userInfo": "User Information",
+      "userName": "User Name",
+      "userEmail": "User Email",
+      "userId": "User ID",
+      "propertyInfo": "Property Information",
+      "propertyTitle": "Property Title",
+      "propertyId": "Property ID",
+      "paymentDetails": "Payment Details",
+      "paymentReference": "Payment Reference",
+      "createdAt": "Created At",
+      "processedAt": "Processed At",
+      "blockchainInfo": "Blockchain Information",
+      "txHash": "Transaction Hash",
+      "blockNumber": "Block Number",
+      "gasFee": "Gas Fee",
+      "failureReason": "Failure Reason",
+      "metadata": "Additional Metadata"
+    },
+    "withdrawals": {
+      "title": "Withdrawal Requests",
+      "titleCount": "Withdrawal Requests ({{count}})",
+      "approvePrompt": "Add approval notes (optional):",
+      "rejectPrompt": "Please provide rejection reason:",
+      "netAmount": "Net Amount",
+      "requested": "Requested",
+      "bankDetails": "Bank Details",
+      "bankName": "Bank Name",
+      "accountHolder": "Account Holder",
+      "accountNumber": "Account Number",
+      "routingNumber": "Routing Number",
+      "empty": "No pending withdrawal requests"
+    }
+  },
+  "users": {
+    "subtitle": "Manage users, verify KYC, and monitor user activity",
+    "loadFailed": "Failed to load users",
+    "listTitle": "User List ({{count}} total)",
+    "pagination": {
+      "showing": "Showing {{from}} to {{to}} of {{total}} users"
+    },
+    "tabs": {
+      "overview": "Overview",
+      "profile": "Profile",
+      "activity": "Activity",
+      "notes": "Notes",
+      "properties": "Properties",
+      "transactions": "Transactions"
+    },
+    "fields": {
+      "accountStatus": "Account Status",
+      "kycStatus": "KYC Status",
+      "totalOwned": "Total Owned",
+      "propertiesOwned": "Properties Owned",
+      "userDetails": "User Details",
+      "email": "Email",
+      "phone": "Phone",
+      "accountCreated": "Account Created",
+      "lastLogin": "Last Login",
+      "address": "Address",
+      "role": "Role"
+    },
+    "suspension": {
+      "title": "Account Suspended",
+      "reason": "Reason: {{reason}}",
+      "until": "Suspended until: {{date}}"
+    },
+    "actions": {
+      "verifyKyc": "Verify KYC",
+      "unsuspend": "Unsuspend User",
+      "suspend": "Suspend User",
+      "suspendShort": "Suspend"
+    },
+    "activityCategories": {
+      "AUTH": "Sign-in",
+      "INVESTMENT": "Purchase",
+      "PAYMENT": "Payment",
+      "KYC": "Identity verification",
+      "PROFILE": "Profile",
+      "SECURITY": "Security",
+      "SYSTEM": "System"
+    },
+    "empty": {
+      "activity": "No activity found",
+      "notes": "No notes found",
+      "users": "No users found",
+      "propertyHistory": "Property history will be loaded here",
+      "transactionHistory": "Transaction history will be loaded here"
+    },
+    "notes": {
+      "title": "Admin Notes",
+      "add": "Add Note",
+      "addNew": "Add New Note",
+      "save": "Save Note",
+      "placeholder": "Enter note content...",
+      "titlePlaceholder": "Note title (optional)",
+      "by": "By: {{name}}",
+      "confidentialLabel": "Confidential Note",
+      "confidential": "CONFIDENTIAL",
+      "addedBy": "Added by {{name}} on {{date}}",
+      "updated": "Updated {{date}}",
+      "none": "No notes added yet"
+    },
+    "noteTypes": {
+      "GENERAL": "General",
+      "COMPLIANCE": "Compliance",
+      "RISK_ASSESSMENT": "Risk Assessment",
+      "SUPPORT": "Support",
+      "INVESTIGATION": "Investigation",
+      "WARNING": "Warning"
+    },
+    "priority": {
+      "LOW": "Low",
+      "MEDIUM": "Medium",
+      "HIGH": "High",
+      "URGENT": "Urgent"
+    },
+    "filters": {
+      "search": "Search",
+      "searchPlaceholder": "Search by name or email...",
+      "allRoles": "All Roles",
+      "sortBy": "Sort By",
+      "sort": {
+        "createdAt": "Date Created",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "email": "Email"
+      }
+    },
+    "modal": {
+      "loadFailed": "Failed to load user data",
+      "updateFailed": "Failed to update user",
+      "durationPrompt": "Duration in days (optional):",
+      "notesPrompt": "Notes (optional):",
+      "verifyPrompt": "Verification notes (optional):",
+      "personalInfo": "Personal Information",
+      "notProvided": "Not provided",
+      "memberSince": "Member Since",
+      "never": "Never",
+      "recentActivity": "Recent Activity",
+      "noActivity": "No activity recorded",
+      "propertyPortfolio": "Property Portfolio",
+      "propertyDataSoon": "Property data will be loaded here",
+      "transactionHistory": "Transaction History",
+      "transactionDataSoon": "Transaction data will be loaded here",
+      "comingSoon": "Feature coming soon"
+    }
+  },
+  "propertyModal": {
+    "approveConfirm": "Are you sure you want to approve this property?",
+    "reasonRequired": "Please provide a rejection reason",
+    "approve": "Approve Property",
+    "reject": "Reject Property",
+    "rejectionReason": "Rejection Reason",
+    "rejectionPlaceholder": "Please provide a detailed reason for rejection...",
+    "confirmRejection": "Confirm Rejection",
+    "tabs": {
+      "overview": "Overview",
+      "documents": "Documents",
+      "owners": "Owners",
+      "financial": "Financial",
+      "history": "History"
+    },
+    "propertyDetails": "Property Details",
+    "financialInfo": "Financial Information",
+    "ownerInfo": "Owner Information",
+    "timeline": "Timeline",
+    "fields": {
+      "title": "Title",
+      "description": "Description",
+      "location": "Location",
+      "propertyType": "Property Type",
+      "raisedAmount": "Raised Amount",
+      "minPurchase": "Minimum Purchase",
+      "expectedReturn": "Expected Return",
+      "annually": "{{value}}% annually",
+      "fundingProgress": "Funding Progress",
+      "name": "Name",
+      "ownerId": "Owner ID",
+      "approvedAt": "Approved",
+      "fundingDeadline": "Funding Deadline",
+      "sharesIssued": "Shares Issued"
+    },
+    "documents": "Property Documents",
+    "documentN": "Document {{n}}",
+    "viewDocument": "View Document",
+    "noDocuments": "No documents uploaded",
+    "images": "Property Images",
+    "imageAlt": "Property image {{n}}",
+    "noImages": "No images uploaded",
+    "ownersTotal": "{{count}} Total",
+    "ownersSoon": "Detailed owner information will be displayed here",
+    "financialOverview": "Financial Overview",
+    "financialSoon": "Detailed financial analytics and charts will be displayed here",
+    "history": "Property History",
+    "historySoon": "Property transaction and activity history will be displayed here"
+  },
+  "approval": {
+    "title": "Property Approval Dashboard",
+    "subtitle": "Review and manage property submissions for tokenization",
+    "searchPlaceholder": "Search by property title or owner...",
+    "empty": "No properties found matching your criteria",
+    "reviewer": "Reviewer: {{name}}",
+    "reviewNotesLabel": "Review Notes:",
+    "requiredChangesLabel": "Required Changes:",
+    "filters": {
+      "pending": "Pending",
+      "under_review": "Under Review",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "requires_changes": "Needs Changes",
+      "all": "All"
+    },
+    "stats": {
+      "pendingReview": "Pending Review",
+      "overdue": "{{count}} overdue",
+      "underReview": "Under Review",
+      "underReviewSub": "Currently being reviewed",
+      "approvedThisMonth": "Approved This Month",
+      "approvedSub": "Ready for tokenization",
+      "avgReviewTime": "Avg Review Time",
+      "daysShort": "{{value}}d",
+      "avgSub": "Days to complete"
+    },
+    "modal": {
+      "title": "Property Approval Review",
+      "totalValue": "Total Value",
+      "sharePrice": "Share Price",
+      "perShare": "{{price}} per share",
+      "totalShares": "Total Shares",
+      "sharesCount": "{{value}} shares",
+      "dateAtTime": "{{date}} at {{time}}",
+      "documents": "Submitted Documents",
+      "download": "Download",
+      "reviewDecision": "Review & Decision",
+      "reviewNotes": "Review Notes",
+      "reviewNotesPlaceholder": "Add your review comments...",
+      "requiredChanges": "Required Changes",
+      "rejectPlaceholder": "Explain why this property is being rejected...",
+      "changesPlaceholder": "Specify what changes are needed...",
+      "requestChanges": "Request Changes"
+    }
+  }
+}

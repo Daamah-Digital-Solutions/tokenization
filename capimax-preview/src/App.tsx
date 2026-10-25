@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import React, { Suspense, ComponentType } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -136,17 +137,22 @@ const OwnersGuidePage = lazyWithRetry(() => import('./pages/OwnersGuidePage').th
 const TechnologyPage = lazyWithRetry(() => import('./pages/TechnologyPage').then(m => ({ default: m.TechnologyPage })));
 
 // Loading fallback component
-const PageLoader: React.FC<{ message?: string }> = ({ message = 'Loading page...' }) => (
-  <main id="main-content" tabIndex={-1} className="focus:outline-none">
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-900">
-      <div className="text-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-        <p className="text-slate-600 dark:text-slate-300 font-medium">{message}</p>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Please wait a moment...</p>
+// The per-route `message` props are English developer notes; the loader
+// shows one translated text in the visitor's language (client round 3, #10).
+const PageLoader: React.FC<{ message?: string }> = () => {
+  const { t } = useTranslation('common');
+  return (
+    <main id="main-content" tabIndex={-1} className="focus:outline-none">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-900">
+        <div className="text-center p-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
+          <p className="text-slate-600 dark:text-slate-300 font-medium">{t('pageLoader.title')}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">{t('pageLoader.wait')}</p>
+        </div>
       </div>
-    </div>
-  </main>
-);
+    </main>
+  );
+};
 
 // Error fallback for lazy loading failures
 const LazyLoadError: React.FC<{ error?: Error; retry?: () => void }> = ({ error, retry }) => (
@@ -225,6 +231,7 @@ const NotFoundPage: React.FC = () => {
 const ProtectedRoute: React.FC<{ children: React.ReactNode; fallback?: React.ReactNode }> = ({ children, fallback }) => {
   const { state: authState } = useAuth();
   const { navigate } = useRouter();
+  const { t } = useTranslation('common');
 
   // Show loading while checking auth
   if (authState.isLoading) {
@@ -240,7 +247,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; fallback?: React.Rea
         <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-900">
           <div className="text-center p-8">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-            <p className="text-slate-600 dark:text-slate-300 font-medium">Redirecting to login...</p>
+            <p className="text-slate-600 dark:text-slate-300 font-medium">{t('pageLoader.redirecting')}</p>
           </div>
         </div>
       </main>

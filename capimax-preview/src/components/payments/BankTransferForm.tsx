@@ -16,6 +16,7 @@
 
 import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation, Trans } from 'react-i18next';
 import {
   Building2,
   Upload,
@@ -54,6 +55,7 @@ export function BankTransferForm({
   onCancel,
   className,
 }: BankTransferFormProps) {
+  const { t } = useTranslation('payments');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<'collect' | 'submitting' | 'done'>('collect');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -73,11 +75,11 @@ export function BankTransferForm({
       return;
     }
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      setErrorMessage('Upload a JPG/PNG/WEBP image or a PDF.');
+      setErrorMessage(t('bankForm.errors.fileType'));
       return;
     }
     if (file.size > MAX_FILE_BYTES) {
-      setErrorMessage('File too large (max 10MB).');
+      setErrorMessage(t('shared.fileTooLarge'));
       return;
     }
     setErrorMessage(null);
@@ -85,10 +87,10 @@ export function BankTransferForm({
   };
 
   const validate = (): string | null => {
-    if (!accountHolderName.trim()) return 'Account holder name is required.';
-    if (!bankName.trim()) return 'Bank name is required.';
-    if (!accountNumber.trim()) return 'Account number is required.';
-    if (!proof) return 'Please upload proof of the transfer.';
+    if (!accountHolderName.trim()) return t('bankForm.errors.holderRequired');
+    if (!bankName.trim()) return t('bankForm.errors.bankRequired');
+    if (!accountNumber.trim()) return t('bankForm.errors.accountRequired');
+    if (!proof) return t('bankForm.errors.proofRequired');
     return null;
   };
 
@@ -117,7 +119,7 @@ export function BankTransferForm({
       const investmentId = result?.investment_id;
       const ref = result?.transfer_reference;
       if (!investmentId) {
-        throw new Error('Submission accepted but no investment was returned.');
+        throw new Error(t('shared.noInvestmentReturned'));
       }
       setTransferReference(ref ?? null);
       setStep('done');
@@ -126,7 +128,7 @@ export function BankTransferForm({
       const apiMessage =
         caught?.response?.data?.error?.message ||
         caught?.message ||
-        'Failed to submit bank transfer.';
+        t('bankForm.errors.submitFailed');
       setErrorMessage(apiMessage);
       setStep('collect');
     }
@@ -137,57 +139,60 @@ export function BankTransferForm({
       <div className="text-center">
         <Building2 className="mx-auto w-10 h-10 text-blue-500" />
         <h3 className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
-          Bank transfer — submit proof
+          {t('bankForm.title')}
         </h3>
         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-          Send <strong>${amount.toFixed(2)}</strong> from your bank and upload
-          a screenshot or PDF receipt. An admin will verify and release your
-          tokens once the funds arrive (typically 1–3 business days).
+          <Trans
+            t={t}
+            i18nKey="bankForm.intro"
+            values={{ amount: `$${amount.toFixed(2)}` }}
+            components={{ b: <strong /> }}
+          />
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Input
-          label="Account holder name"
+          label={t('bankForm.fields.holderName')}
           value={accountHolderName}
           onChange={(e) => setAccountHolderName(e.target.value)}
-          placeholder="As it appears on the account"
+          placeholder={t('bankForm.placeholders.holderName')}
         />
         <Input
-          label="Bank name"
+          label={t('bankForm.fields.bankName')}
           value={bankName}
           onChange={(e) => setBankName(e.target.value)}
-          placeholder="e.g. HSBC"
+          placeholder={t('bankForm.placeholders.bankName')}
         />
         <Input
-          label="Account number / IBAN"
+          label={t('bankForm.fields.accountNumber')}
           value={accountNumber}
           onChange={(e) => setAccountNumber(e.target.value)}
-          placeholder="Sending account"
+          placeholder={t('bankForm.placeholders.accountNumber')}
         />
         <Input
-          label="Routing / sort code"
+          label={t('bankForm.fields.routing')}
           value={routingNumber}
           onChange={(e) => setRoutingNumber(e.target.value)}
-          placeholder="Optional"
+          placeholder={t('bankForm.placeholders.optional')}
         />
         <Input
-          label="SWIFT / BIC"
+          label={t('bankForm.fields.swift')}
           value={swiftCode}
           onChange={(e) => setSwiftCode(e.target.value)}
-          placeholder="For international wires"
+          placeholder={t('bankForm.placeholders.swift')}
         />
         <Input
-          label="Reference / memo"
+          label={t('bankForm.fields.reference')}
           value={referenceNote}
           onChange={(e) => setReferenceNote(e.target.value)}
-          placeholder="Optional note for the admin"
+          placeholder={t('bankForm.placeholders.reference')}
         />
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-          Proof of transfer
+          {t('bankForm.proofLabel')}
         </label>
         <input
           ref={fileInputRef}
@@ -212,8 +217,8 @@ export function BankTransferForm({
           ) : (
             <div className="flex flex-col items-center gap-1 text-sm text-gray-600 dark:text-gray-300">
               <Upload className="w-5 h-5 text-gray-400" />
-              Click to upload JPG, PNG or PDF
-              <span className="text-xs text-gray-400">Max 10MB</span>
+              {t('bankForm.uploadPrompt')}
+              <span className="text-xs text-gray-400">{t('shared.max10mb')}</span>
             </div>
           )}
         </button>
@@ -230,14 +235,14 @@ export function BankTransferForm({
 
       <div className="flex gap-3">
         <Button variant="outline" onClick={onCancel} className="flex-1">
-          Cancel
+          {t('shared.cancel')}
         </Button>
         <Button
           onClick={handleSubmit}
           className="flex-1 bg-emerald-600 hover:bg-emerald-700"
           disabled={!proof}
         >
-          Submit for review
+          {t('shared.submitForReview')}
         </Button>
       </div>
     </div>
@@ -247,7 +252,7 @@ export function BankTransferForm({
     <div className="text-center space-y-4 py-6">
       <Loader2 className="w-10 h-10 mx-auto animate-spin text-blue-500" />
       <p className="text-sm text-gray-600 dark:text-gray-300">
-        Uploading your proof of transfer…
+        {t('bankForm.uploading')}
       </p>
     </div>
   );
@@ -258,16 +263,14 @@ export function BankTransferForm({
         <CheckCircle className="w-8 h-8 text-emerald-600" />
       </div>
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-        Submitted for review
+        {t('shared.submittedForReview')}
       </h3>
       <p className="text-sm text-gray-600 dark:text-gray-300">
-        Your tokens are reserved. An admin will release them once the funds
-        arrive on our end. You&apos;ll get a notification + email when that
-        happens.
+        {t('bankForm.doneBody')}
       </p>
       {transferReference && (
         <Card className="p-3 bg-gray-50 dark:bg-gray-800/40 text-sm">
-          Include this reference on your wire memo:&nbsp;
+          {t('bankForm.includeReference')}&nbsp;
           <span className="font-mono font-semibold">{transferReference}</span>
         </Card>
       )}

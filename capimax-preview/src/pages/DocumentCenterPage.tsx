@@ -7,12 +7,15 @@ import { Container } from '../components/design-system/layout/Container';
 import { Section } from '../components/design-system/sections/Section';
 import { DocumentService, type Document } from '../services/documents/DocumentService';
 import { useRouter } from '../utils/router';
+import { useTranslation } from 'react-i18next';
 
 export const DocumentCenterPage: React.FC = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { navigate } = useRouter();
+  const { t, i18n } = useTranslation('pages');
+  const isAr = (i18n.language || 'en').startsWith('ar');
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -22,7 +25,7 @@ export const DocumentCenterPage: React.FC = () => {
         setDocuments(data);
         setError(null);
       } catch (err: any) {
-        setError(err.message || 'Failed to load documents');
+        setError(err.message || t('documentCenter.loadFailed'));
       } finally {
         setLoading(false);
       }
@@ -46,7 +49,7 @@ export const DocumentCenterPage: React.FC = () => {
                 opacity: [0.1, 0.2, 0.1]
               }}
               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="absolute top-20 right-20 w-72 h-72 bg-gradient-to-r from-emerald-400/10 to-green-400/10 dark:from-emerald-500/20 dark:to-green-500/20 rounded-full blur-3xl"
+              className="absolute top-20 end-20 w-72 h-72 bg-gradient-to-r from-emerald-400/10 to-green-400/10 dark:from-emerald-500/20 dark:to-green-500/20 rounded-full blur-3xl"
             />
             <motion.div
               animate={{
@@ -55,7 +58,7 @@ export const DocumentCenterPage: React.FC = () => {
                 opacity: [0.1, 0.15, 0.1]
               }}
               transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-              className="absolute bottom-20 left-20 w-96 h-96 bg-gradient-to-r from-blue-400/10 to-purple-400/10 dark:from-blue-500/15 dark:to-purple-500/15 rounded-full blur-3xl"
+              className="absolute bottom-20 start-20 w-96 h-96 bg-gradient-to-r from-blue-400/10 to-purple-400/10 dark:from-blue-500/15 dark:to-purple-500/15 rounded-full blur-3xl"
             />
 
             {/* Floating particles */}
@@ -96,7 +99,7 @@ export const DocumentCenterPage: React.FC = () => {
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-emerald-200/50 dark:border-emerald-500/30 shadow-xl"
                 >
                   <FileText className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
-                  <span className="text-sm font-semibold text-slate-700 dark:text-gray-200">Official Platform Documents</span>
+                  <span className="text-sm font-semibold text-slate-700 dark:text-gray-200">{t('documentCenter.badge')}</span>
                 </motion.div>
 
                 <motion.h1
@@ -105,9 +108,9 @@ export const DocumentCenterPage: React.FC = () => {
                   transition={{ duration: 0.8, delay: 0.2 }}
                   className="text-5xl lg:text-6xl font-bold leading-tight tracking-tight text-slate-800 dark:text-white"
                 >
-                  Document{' '}
+                  {t('documentCenter.titleLead')}{' '}
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-green-500 to-teal-500 dark:from-emerald-400 dark:via-green-400 dark:to-teal-400">
-                    Center
+                    {t('documentCenter.titleHighlight')}
                   </span>
                 </motion.h1>
 
@@ -117,7 +120,7 @@ export const DocumentCenterPage: React.FC = () => {
                   transition={{ duration: 0.8, delay: 0.3 }}
                   className="text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto"
                 >
-                  Access important documents, reports, and resources related to the Capimax tokenization platform. All files are available for download.
+                  {t('documentCenter.subtitle')}
                 </motion.p>
               </div>
             </Container>
@@ -130,20 +133,20 @@ export const DocumentCenterPage: React.FC = () => {
             {loading ? (
               <div className="flex flex-col items-center justify-center py-20">
                 <Loader2 className="w-10 h-10 text-emerald-500 animate-spin mb-4" />
-                <p className="text-slate-600 dark:text-slate-300 font-medium">Loading documents...</p>
+                <p className="text-slate-600 dark:text-slate-300 font-medium">{t('documentCenter.loading')}</p>
               </div>
             ) : error ? (
               <div className="flex flex-col items-center justify-center py-20">
                 <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
                   <AlertCircle className="w-8 h-8 text-red-500" />
                 </div>
-                <p className="text-slate-700 dark:text-slate-200 font-semibold text-lg mb-2">Failed to load documents</p>
+                <p className="text-slate-700 dark:text-slate-200 font-semibold text-lg mb-2">{t('documentCenter.loadFailed')}</p>
                 <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">{error}</p>
                 <button
                   onClick={() => window.location.reload()}
                   className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors"
                 >
-                  Try Again
+                  {t('documentCenter.tryAgain')}
                 </button>
               </div>
             ) : documents.length === 0 ? (
@@ -151,9 +154,9 @@ export const DocumentCenterPage: React.FC = () => {
                 <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6">
                   <FolderOpen className="w-10 h-10 text-slate-400 dark:text-slate-500" />
                 </div>
-                <p className="text-slate-700 dark:text-slate-200 font-semibold text-xl mb-2">No documents yet</p>
+                <p className="text-slate-700 dark:text-slate-200 font-semibold text-xl mb-2">{t('documentCenter.emptyTitle')}</p>
                 <p className="text-slate-500 dark:text-slate-400 text-sm">
-                  Documents will appear here once they are published.
+                  {t('documentCenter.emptyText')}
                 </p>
               </div>
             ) : (
@@ -175,7 +178,7 @@ export const DocumentCenterPage: React.FC = () => {
                           {doc.title}
                         </h3>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {new Date(doc.created_at).toLocaleDateString('en-US', {
+                          {new Date(doc.created_at).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric'
@@ -190,7 +193,7 @@ export const DocumentCenterPage: React.FC = () => {
                       className="mt-4 flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 rounded-lg text-sm font-medium transition-colors"
                     >
                       <Download className="w-4 h-4" />
-                      Download
+                      {t('documentCenter.download')}
                     </a>
                   </motion.div>
                 ))}
@@ -210,7 +213,7 @@ export const DocumentCenterPage: React.FC = () => {
                 transition={{ duration: 0.6 }}
                 className="text-3xl lg:text-4xl font-bold text-white mb-4"
               >
-                Ready to Start Owning?
+                {t('documentCenter.ctaTitle')}
               </motion.h2>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
@@ -219,7 +222,7 @@ export const DocumentCenterPage: React.FC = () => {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="text-lg text-slate-300 mb-8 max-w-2xl mx-auto"
               >
-                Explore tokenized real estate opportunities and build your portfolio with Capimax.
+                {t('documentCenter.ctaText')}
               </motion.p>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -232,13 +235,13 @@ export const DocumentCenterPage: React.FC = () => {
                   onClick={() => navigate('properties')}
                   className="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg transition-colors"
                 >
-                  Browse Properties
+                  {t('documentCenter.browseProperties')}
                 </button>
                 <button
                   onClick={() => navigate('register')}
                   className="px-8 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg border border-white/20 transition-colors"
                 >
-                  Create Account
+                  {t('documentCenter.createAccount')}
                 </button>
               </motion.div>
             </div>

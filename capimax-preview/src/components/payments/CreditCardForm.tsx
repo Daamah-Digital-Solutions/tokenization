@@ -24,6 +24,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import {
   CreditCard,
   Shield,
@@ -101,9 +102,12 @@ const CARD_ELEMENT_OPTIONS: StripeCardElementOptions = {
 export function CreditCardForm(props: CreditCardFormProps) {
   // `getStripe()` is memoised, so this won't re-load Stripe on re-render.
   const stripePromise = React.useMemo(() => getStripe(), []);
+  // Stripe's own card fields follow the site language.
+  const { i18n } = useTranslation();
+  const locale = i18n.language?.startsWith('ar') ? 'ar' : 'en';
 
   return (
-    <Elements stripe={stripePromise}>
+    <Elements stripe={stripePromise} options={{ locale }} key={locale}>
       <CreditCardFormInner {...props} />
     </Elements>
   );
@@ -125,6 +129,7 @@ function CreditCardFormInner({
   const elements = useElements();
   const { addTransaction, setError, clearError } = usePayment();
   const { error: showError } = useNotifications();
+  const { t } = useTranslation('payments');
 
   const [step, setStep] = useState<'details' | 'billing' | 'processing' | 'complete'>('details');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -156,11 +161,11 @@ function CreditCardFormInner({
 
   const validateBillingAddress = (): boolean => {
     const errors: Partial<BillingAddress> = {};
-    if (!billingAddress.street.trim()) errors.street = 'Street address is required';
-    if (!billingAddress.city.trim()) errors.city = 'City is required';
-    if (!billingAddress.state.trim()) errors.state = 'State is required';
-    if (!billingAddress.zipCode.trim()) errors.zipCode = 'ZIP code is required';
-    if (!billingAddress.country) errors.country = 'Country is required';
+    if (!billingAddress.street.trim()) errors.street = t('card.errors.streetRequired');
+    if (!billingAddress.city.trim()) errors.city = t('card.errors.cityRequired');
+    if (!billingAddress.state.trim()) errors.state = t('card.errors.stateRequired');
+    if (!billingAddress.zipCode.trim()) errors.zipCode = t('card.errors.zipRequired');
+    if (!billingAddress.country) errors.country = t('card.errors.countryRequired');
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -183,13 +188,11 @@ function CreditCardFormInner({
 
     try {
       if (!stripe || !elements) {
-        throw new Error(
-          'Stripe.js has not finished loading yet. Please try again in a moment.'
-        );
+        throw new Error(t('card.errors.stripeLoading'));
       }
       const cardElement = elements.getElement(CardElement);
       if (!cardElement) {
-        throw new Error('Card input is not ready. Please refresh and try again.');
+        throw new Error(t('card.errors.cardNotReady'));
       }
 
       // 1. Ask the backend for a Stripe PaymentIntent.
@@ -228,12 +231,10 @@ function CreditCardFormInner({
       );
 
       if (stripeError) {
-        throw new Error(stripeError.message || 'Card declined');
+        throw new Error(stripeError.message || t('card.errors.declined'));
       }
       if (!paymentIntent || paymentIntent.status !== 'succeeded') {
-        throw new Error(
-          `Payment is in status "${paymentIntent?.status}". Please try again or contact support.`
-        );
+        throw new Error(t('card.errors.badStatus', { status: paymentIntent?.status }));
       }
 
       // 3. Tell the backend to finalize. The webhook will ALSO fire, but in
@@ -274,7 +275,7 @@ function CreditCardFormInner({
           brand: (paymentIntent.payment_method as any)?.card?.brand ?? undefined,
         },
         timestamp: new Date(),
-        description: `Purchase payment of ${formatCurrency(amount, 'USD')}`,
+        description: t('card.txDescription', { amount: formatCurrency(amount, 'USD') }),
         fee: amount * 0.029,
       });
 
@@ -282,8 +283,8 @@ function CreditCardFormInner({
       setStep('complete');
       onPaymentComplete?.(intent.payment_intent_id);
     } catch (err: any) {
-      showError('Payment Failed', err.message || 'Payment processing failed. Please try again.');
-      setError(err.message || 'Payment processing failed');
+      showError(t('card.errors.toastTitle'), err.message || t('card.errors.processingRetry'));
+      setError(err.message || t('card.errors.processing'));
       setStep('details');
     } finally {
       setIsProcessing(false);
@@ -297,18 +298,18 @@ function CreditCardFormInner({
   const renderCardDetails = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Card Payment</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('card.title')}</h3>
         <p className="text-sm text-gray-600">
-          Pay {formatCurrency(amount, 'USD')} with your credit or debit card
+          {t('card.subtitle', { amount: formatCurrency(amount, 'USD') })}
         </p>
       </div>
 
       <div className="space-y-4">
         <Input
-          label="Cardholder Name"
+          label={t('card.holderName')}
           value={holderName}
           onChange={(e) => setHolderName(e.target.value)}
-          placeholder="As shown on the card"
+          placeholder={t('card.holderPlaceholder')}
           error={validationErrors.holderName}
         />
 
@@ -316,7 +317,7 @@ function CreditCardFormInner({
             Stripe — our origin never reads the values. */}
         <div>
           <label className="block text-xs font-medium text-gray-700 mb-1">
-            Card details
+            {t('card.cardDetails')}
           </label>
           <div className="rounded border border-gray-300 px-3 py-3">
             <CardElement
@@ -338,7 +339,7 @@ function CreditCardFormInner({
             className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
           />
           <label htmlFor="saveCard" className="text-sm text-gray-700">
-            Save this card for future payments
+            {t('card.saveCard')}
           </label>
         </div>
       </div>
@@ -347,9 +348,9 @@ function CreditCardFormInner({
         <div className="flex items-start gap-2">
           <Shield className="h-4 w-4 text-blue-600 mt-0.5" />
           <div className="text-sm text-blue-800">
-            <div className="font-medium mb-1">PCI-DSS Secure</div>
+            <div className="font-medium mb-1">{t('card.pciTitle')}</div>
             <div>
-              Card data is collected by Stripe inside an isolated iframe. CapimaxRT never sees your card number, CVC, or expiry.
+              {t('card.pciBody')}
             </div>
           </div>
         </div>
@@ -357,24 +358,24 @@ function CreditCardFormInner({
 
       <div className="flex gap-3">
         <Button variant="outline" onClick={onCancel} className="flex-1">
-          Cancel
+          {t('shared.cancel')}
         </Button>
         <Button
           disabled={!cardElementComplete || !holderName.trim()}
           onClick={() => {
             if (!cardElementComplete) {
-              setCardElementError('Please complete your card details.');
+              setCardElementError(t('card.errors.completeCard'));
               return;
             }
             if (!holderName.trim()) {
-              setValidationErrors(prev => ({ ...prev, holderName: 'Required' }));
+              setValidationErrors(prev => ({ ...prev, holderName: t('card.errors.required') }));
               return;
             }
             setStep('billing');
           }}
           className="flex-1 bg-emerald-600 hover:bg-emerald-700"
         >
-          Continue
+          {t('card.continue')}
         </Button>
       </div>
     </div>
@@ -387,30 +388,30 @@ function CreditCardFormInner({
   const renderBillingAddress = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Billing Address</h3>
-        <p className="text-sm text-gray-600">Enter your billing address for verification</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('card.billingTitle')}</h3>
+        <p className="text-sm text-gray-600">{t('card.billingSubtitle')}</p>
       </div>
 
       <div className="space-y-4">
         <Input
-          label="Street Address"
+          label={t('card.street')}
           value={billingAddress.street}
           onChange={(e) => handleBillingAddressChange('street', e.target.value)}
-          placeholder="123 Main Street"
+          placeholder={t('card.streetPlaceholder')}
           error={validationErrors.street}
           icon={<MapPin className="h-4 w-4 text-gray-400" />}
         />
 
         <div className="grid grid-cols-2 gap-3">
           <Input
-            label="City"
+            label={t('card.city')}
             value={billingAddress.city}
             onChange={(e) => handleBillingAddressChange('city', e.target.value)}
-            placeholder="New York"
+            placeholder={t('card.cityPlaceholder')}
             error={validationErrors.city}
           />
           <Input
-            label="State"
+            label={t('card.state')}
             value={billingAddress.state}
             onChange={(e) => handleBillingAddressChange('state', e.target.value)}
             placeholder="NY"
@@ -420,14 +421,14 @@ function CreditCardFormInner({
 
         <div className="grid grid-cols-2 gap-3">
           <Input
-            label="ZIP Code"
+            label={t('card.zip')}
             value={billingAddress.zipCode}
             onChange={(e) => handleBillingAddressChange('zipCode', e.target.value)}
             placeholder="10001"
             error={validationErrors.zipCode}
           />
           <Select
-            label="Country"
+            label={t('card.country')}
             value={billingAddress.country}
             onChange={(value) => handleBillingAddressChange('country', value)}
             options={COUNTRIES}
@@ -439,15 +440,15 @@ function CreditCardFormInner({
       <Card className="p-4 bg-gray-50">
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span>Subtotal:</span>
+            <span>{t('card.subtotal')}</span>
             <span>{formatCurrency(amount, 'USD')}</span>
           </div>
           <div className="flex justify-between">
-            <span>Processing Fee (2.9%):</span>
+            <span>{t('card.processingFeePct', { pct: '2.9' })}</span>
             <span>{formatCurrency(amount * 0.029, 'USD')}</span>
           </div>
           <div className="flex justify-between font-semibold border-t pt-2">
-            <span>Total:</span>
+            <span>{t('depositWithdraw.totalColon')}</span>
             <span>{formatCurrency(amount + (amount * 0.029), 'USD')}</span>
           </div>
         </div>
@@ -455,7 +456,7 @@ function CreditCardFormInner({
 
       <div className="flex gap-3">
         <Button variant="outline" onClick={() => setStep('details')} className="flex-1">
-          Back
+          {t('card.back')}
         </Button>
         <Button
           onClick={() => {
@@ -465,7 +466,7 @@ function CreditCardFormInner({
           }}
           className="flex-1 bg-emerald-600 hover:bg-emerald-700"
         >
-          Complete Payment
+          {t('card.completePayment')}
         </Button>
       </div>
     </div>
@@ -481,13 +482,13 @@ function CreditCardFormInner({
         <CreditCard className="h-8 w-8 text-emerald-600 animate-pulse" />
       </div>
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Processing Payment</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('card.processingTitle')}</h3>
         <p className="text-sm text-gray-600">
-          Please wait while we confirm your card payment with Stripe
+          {t('card.processingBody')}
         </p>
       </div>
       <div className="text-xs text-gray-500">
-        Do not close this window or refresh the page
+        {t('card.doNotClose')}
       </div>
     </div>
   );
@@ -502,30 +503,30 @@ function CreditCardFormInner({
         <CheckCircle className="h-8 w-8 text-emerald-600" />
       </div>
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Payment Successful</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('card.successTitle')}</h3>
         <p className="text-sm text-gray-600">
-          Your card payment has been processed successfully
+          {t('card.successBody')}
         </p>
       </div>
       {paymentId && (
-        <Card className="p-4 bg-emerald-50 border-emerald-200 text-left">
+        <Card className="p-4 bg-emerald-50 border-emerald-200 text-start">
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span>Payment ID:</span>
+              <span>{t('card.paymentId')}</span>
               <span className="font-mono text-xs">{paymentId}</span>
             </div>
             <div className="flex justify-between">
-              <span>Amount:</span>
+              <span>{t('depositWithdraw.amountColon')}</span>
               <span>{formatCurrency(amount, 'USD')}</span>
             </div>
           </div>
         </Card>
       )}
       <div className="text-xs text-gray-500">
-        A receipt has been sent to your email address
+        {t('card.receiptSent')}
       </div>
       <Button onClick={onCancel} className="w-full bg-emerald-600 hover:bg-emerald-700">
-        Done
+        {t('card.done')}
       </Button>
     </div>
   );
@@ -571,14 +572,14 @@ function CreditCardFormInner({
           handlePayment();
         }}
         type="warning"
-        title="Confirm Payment"
-        message="Are you sure you want to proceed with this payment? This action cannot be undone."
-        confirmText={isProcessing ? 'Processing…' : 'Confirm Payment'}
-        cancelText="Cancel"
+        title={t('card.confirmTitle')}
+        message={t('card.confirmMessage')}
+        confirmText={isProcessing ? t('card.processing') : t('card.confirmTitle')}
+        cancelText={t('shared.cancel')}
         details={[
-          { label: 'Amount', value: formatCurrency(amount, 'USD') },
-          { label: 'Processing Fee', value: formatCurrency(amount * 0.029, 'USD') },
-          { label: 'Total', value: formatCurrency(amount + (amount * 0.029), 'USD') },
+          { label: t('card.amount'), value: formatCurrency(amount, 'USD') },
+          { label: t('card.processingFee'), value: formatCurrency(amount * 0.029, 'USD') },
+          { label: t('card.total'), value: formatCurrency(amount + (amount * 0.029), 'USD') },
         ]}
       />
     </div>

@@ -1,34 +1,18 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Star } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const Testimonials: React.FC = () => {
-  const testimonials = [
-    {
-      id: 1,
-      name: "Michael Chen",
-      title: "Portfolio Manager",
-      company: "Blackstone Group",
-      rating: 5,
-      quote: "The platform's institutional-grade infrastructure and transparent process gave us confidence to deploy significant capital. Returns exceeded expectations."
-    },
-    {
-      id: 2,
-      name: "Sarah Williams",
-      title: "Investment Director",
-      company: "Family Office",
-      rating: 5,
-      quote: "Sophisticated approach to real estate tokenization with thorough due diligence and regulatory compliance that gives us peace of mind."
-    },
-    {
-      id: 3,
-      name: "David Rodriguez",
-      title: "Fund Manager",
-      company: "Sovereign Wealth",
-      rating: 5,
-      quote: "Delivers the highest standards of security and compliance while providing access to premium opportunities through traditional channels."
-    }
-  ];
+  const { t } = useTranslation('ui');
+  const testimonials = [1, 2, 3].map((n) => ({
+    id: n,
+    name: t(`testimonials.t${n}.name`),
+    title: t(`testimonials.t${n}.title`),
+    company: t(`testimonials.t${n}.company`),
+    rating: 5,
+    quote: t(`testimonials.t${n}.quote`)
+  }));
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -73,7 +57,7 @@ export const Testimonials: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-3xl md:text-4xl lg:text-5xl font-semibold text-navy-900 dark:text-white mb-4 leading-tight"
           >
-            Trusted by Professionals
+            {t('testimonials.title')}
           </motion.h2>
           
           <motion.p
@@ -83,7 +67,7 @@ export const Testimonials: React.FC = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg text-navy-600 dark:text-navy-200 max-w-2xl mx-auto text-balance"
           >
-            See what real estate professionals say about our platform
+            {t('testimonials.subtitle')}
           </motion.p>
         </motion.div>
 
@@ -117,7 +101,7 @@ export const Testimonials: React.FC = () => {
 
                 {/* Quote */}
                 <blockquote className="text-navy-700 dark:text-navy-200 leading-relaxed mb-6 text-sm">
-                  "{testimonial.quote}"
+                  {t('testimonials.quoteWrap', { quote: testimonial.quote })}
                 </blockquote>
 
                 {/* Author Info */}

@@ -26,6 +26,7 @@ import { PropertyService } from '../../services/property/PropertyService';
 import { InvestmentService } from '../../services/investment/InvestmentService';
 import { useUser } from '../../contexts/AuthContext';
 import { PROPERTY_PLACEHOLDER, handleImageFallback } from '../../utils/imageFallback';
+import { useTranslation } from 'react-i18next';
 
 interface CreateListingModalProps {
   isOpen: boolean;
@@ -53,6 +54,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
   // tokens. Use the `useUser()` helper instead — it pulls
   // `state.user` for us.
   const user = useUser();
+  const { t } = useTranslation('market');
   const [step, setStep] = useState<'select' | 'details' | 'confirm' | 'processing' | 'success'>('select');
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [listingData, setListingData] = useState<Partial<CreateListingRequest>>({
@@ -101,27 +103,27 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
     const newErrors: Record<string, string> = {};
 
     if (!selectedProperty) {
-      newErrors.property = 'Please select a property';
+      newErrors.property = t('create.errSelectProperty');
     }
 
     if (!listingData.tokens_offered || listingData.tokens_offered < 1) {
-      newErrors.tokens_offered = 'Tokens offered must be at least 1';
+      newErrors.tokens_offered = t('create.errTokensMin');
     }
 
     if (selectedProperty && listingData.tokens_offered! > selectedProperty.tokens_owned) {
-      newErrors.tokens_offered = `You can only sell up to ${selectedProperty.tokens_owned} tokens`;
+      newErrors.tokens_offered = t('create.errSellUpTo', { value: selectedProperty.tokens_owned });
     }
 
     if (!listingData.price_per_token || parseFloat(listingData.price_per_token) <= 0) {
-      newErrors.price_per_token = 'Please enter a valid price per token';
+      newErrors.price_per_token = t('create.errValidPrice');
     }
 
     if (listingData.minimum_order_size! < 1) {
-      newErrors.minimum_order_size = 'Minimum order size must be at least 1';
+      newErrors.minimum_order_size = t('create.errMinOrder');
     }
 
     if (listingData.minimum_order_size! > listingData.tokens_offered!) {
-      newErrors.minimum_order_size = 'Minimum order size cannot exceed tokens offered';
+      newErrors.minimum_order_size = t('create.errMinExceeds');
     }
 
     setErrors(newErrors);
@@ -200,7 +202,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
       }
     } catch (error: any) {
       console.error('Listing creation failed:', error);
-      setErrors({ general: error.message || 'Failed to create listing. Please try again.' });
+      setErrors({ general: error.message || t('create.errCreate') });
       setStep('confirm');
     } finally {
       setIsSubmitting(false);
@@ -244,10 +246,10 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                   </div>
                   <div>
                     <Heading level="h3" size="xl">
-                      Create Sell Listing
+                      {t('create.title')}
                     </Heading>
                     <Text variant="bodySmall" color="secondary">
-                      List your property tokens for sale
+                      {t('create.subtitle')}
                     </Text>
                   </div>
                 </div>
@@ -268,9 +270,9 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
             <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900/50">
               <div className="flex items-center justify-between">
                 {[
-                  { id: 'select', label: 'Select Property' },
-                  { id: 'details', label: 'Listing Details' },
-                  { id: 'confirm', label: 'Confirm' }
+                  { id: 'select', label: t('create.stepSelect') },
+                  { id: 'details', label: t('create.stepDetails') },
+                  { id: 'confirm', label: t('create.stepConfirm') }
                 ].map((stepItem, index) => (
                   <div key={stepItem.id} className="flex items-center">
                     <div className={cn(
@@ -282,7 +284,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                       {index + 1}
                     </div>
                     <span className={cn(
-                      "ml-2 text-sm font-medium",
+                      "ms-2 text-sm font-medium",
                       step === stepItem.id || (['processing', 'success'].includes(step) && index < 3)
                         ? "text-blue-600 dark:text-blue-400"
                         : "text-gray-600 dark:text-gray-400"
@@ -291,7 +293,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                     </span>
                     {index < 2 && (
                       <div className={cn(
-                        "w-12 h-0.5 ml-4",
+                        "w-12 h-0.5 ms-4",
                         (['processing', 'success'].includes(step) && index < 2) ||
                         (step === 'confirm' && index < 2) ||
                         (step === 'details' && index < 1)
@@ -310,10 +312,10 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                 <div className="space-y-6">
                   <div>
                     <Heading level="h4" size="lg" className="mb-2">
-                      Select Property to Sell
+                      {t('create.selectTitle')}
                     </Heading>
                     <Text variant="body" color="secondary">
-                      Choose from properties you own tokens in
+                      {t('create.selectSubtitle')}
                     </Text>
                   </div>
 
@@ -350,11 +352,11 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                                   {investment.property.title}
                                 </h4>
                                 <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
-                                  <MapPin className="w-4 h-4 mr-1" />
+                                  <MapPin className="w-4 h-4 me-1" />
                                   {investment.property.city}
                                 </div>
                                 <div className="flex justify-between text-sm">
-                                  <span className="text-gray-600 dark:text-gray-400">Your Tokens:</span>
+                                  <span className="text-gray-600 dark:text-gray-400">{t('create.yourTokens')}</span>
                                   <span className="font-semibold text-gray-900 dark:text-white">
                                     {investment.tokens_owned}
                                   </span>
@@ -371,10 +373,10 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                     <Card variant="outline" className="p-8 text-center">
                       <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                       <Heading level="h4" size="lg" className="mb-2">
-                        No Properties Found
+                        {t('create.noProperties')}
                       </Heading>
                       <Text variant="body" color="secondary">
-                        You don't own tokens in any properties yet. Purchase some tokens first to create sell listings.
+                        {t('create.noPropertiesDesc')}
                       </Text>
                     </Card>
                   )}
@@ -401,18 +403,18 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                           {selectedProperty.property.title}
                         </h4>
                         <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
-                          <MapPin className="w-4 h-4 mr-1" />
+                          <MapPin className="w-4 h-4 me-1" />
                           {selectedProperty.property.city}
                         </div>
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
-                            <span className="text-gray-600 dark:text-gray-400">Your Tokens:</span>
+                            <span className="text-gray-600 dark:text-gray-400">{t('create.yourTokens')}</span>
                             <div className="font-semibold text-gray-900 dark:text-white">
                               {selectedProperty.tokens_owned}
                             </div>
                           </div>
                           <div>
-                            <span className="text-gray-600 dark:text-gray-400">Current Price:</span>
+                            <span className="text-gray-600 dark:text-gray-400">{t('create.currentPrice')}</span>
                             <div className="font-semibold text-gray-900 dark:text-white">
                               ${selectedProperty.property.current_token_price || '100.00'}
                             </div>
@@ -427,7 +429,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                     {/* Tokens to Sell */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Tokens to Sell
+                        {t('create.tokensToSell')}
                       </label>
                       <Input
                         type="number"
@@ -444,14 +446,14 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                         <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.tokens_offered}</p>
                       )}
                       <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        Maximum: {selectedProperty.tokens_owned} tokens
+                        {t('create.maximum', { value: selectedProperty.tokens_owned })}
                       </p>
                     </div>
 
                     {/* Price per Token */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Price per Token ($)
+                        {t('create.pricePerTokenUsd')}
                       </label>
                       <Input
                         type="number"
@@ -467,14 +469,14 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                         <p className="text-red-600 dark:text-red-400 text-sm mt-1">{errors.price_per_token}</p>
                       )}
                       <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        Suggested: ${selectedProperty.property.current_token_price || '100.00'}
+                        {t('create.suggested', { price: selectedProperty.property.current_token_price || '100.00' })}
                       </p>
                     </div>
 
                     {/* Minimum Order Size */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Minimum Order Size
+                        {t('create.minOrderSize')}
                       </label>
                       <Input
                         type="number"
@@ -495,13 +497,13 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                     {/* Total Value Display */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Total Value
+                        {t('create.totalValue')}
                       </label>
                       <div className="text-2xl font-bold text-gray-900 dark:text-white">
                         ${totalValue.toFixed(2)}
                       </div>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {listingData.tokens_offered} tokens × ${parseFloat(listingData.price_per_token || '0').toFixed(2)}
+                        {t('create.tokensTimesPrice', { tokens: listingData.tokens_offered, price: parseFloat(listingData.price_per_token || '0').toFixed(2) })}
                       </p>
                     </div>
                   </div>
@@ -510,9 +512,9 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-white">Accept Partial Fills</div>
+                        <div className="font-medium text-gray-900 dark:text-white">{t('create.acceptPartial')}</div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          Allow buyers to purchase part of your listing
+                          {t('create.acceptPartialDesc')}
                         </div>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -531,9 +533,9 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
 
                     <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-white">Auto-extend Listing</div>
+                        <div className="font-medium text-gray-900 dark:text-white">{t('create.autoExtend')}</div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                          Automatically extend listing when it expires
+                          {t('create.autoExtendDesc')}
                         </div>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -554,7 +556,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                   {/* Notes */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Notes (Optional)
+                      {t('create.notesOptional')}
                     </label>
                     <textarea
                       value={listingData.notes}
@@ -562,7 +564,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                         ...prev,
                         notes: e.target.value
                       }))}
-                      placeholder="Add any additional notes about your listing..."
+                      placeholder={t('create.notesPlaceholder')}
                       className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
                       rows={3}
                     />
@@ -570,10 +572,10 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
 
                   <div className="flex gap-3">
                     <Button variant="outline" onClick={() => setStep('select')} className="flex-1">
-                      Back
+                      {t('common.back')}
                     </Button>
                     <Button onClick={handleContinue} className="flex-1">
-                      Continue
+                      {t('common.continue')}
                     </Button>
                   </div>
                 </div>
@@ -586,10 +588,10 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                       <Calculator className="w-8 h-8 text-green-600 dark:text-green-400" />
                     </div>
                     <Heading level="h4" size="lg" className="mb-2">
-                      Confirm Your Listing
+                      {t('create.confirmTitle')}
                     </Heading>
                     <Text variant="body" color="secondary">
-                      Please review your listing details before submitting
+                      {t('create.confirmSubtitle')}
                     </Text>
                   </div>
 
@@ -607,7 +609,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                           {selectedProperty.property.title}
                         </h4>
                         <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                          <MapPin className="w-4 h-4 mr-1" />
+                          <MapPin className="w-4 h-4 me-1" />
                           {selectedProperty.property.city}
                         </div>
                       </div>
@@ -615,32 +617,32 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
 
                     <div className="space-y-4">
                       <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Tokens for Sale</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('create.tokensForSale')}</span>
                         <span className="font-semibold text-gray-900 dark:text-white">
                           {listingData.tokens_offered?.toLocaleString()}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Price per Token</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('create.pricePerToken')}</span>
                         <span className="font-semibold text-gray-900 dark:text-white">
                           ${parseFloat(listingData.price_per_token || '0').toFixed(2)}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">Minimum Order Size</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('create.minOrderSize')}</span>
                         <span className="font-semibold text-gray-900 dark:text-white">
-                          {listingData.minimum_order_size} tokens
+                          {t('create.nTokens', { value: listingData.minimum_order_size })}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600 dark:text-gray-400">Partial Fills</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('create.partialFills')}</span>
                         <Badge variant={listingData.accepts_partial_fills ? 'accent' : 'secondary'}>
-                          {listingData.accepts_partial_fills ? 'Allowed' : 'Not Allowed'}
+                          {listingData.accepts_partial_fills ? t('create.allowed') : t('create.notAllowed')}
                         </Badge>
                       </div>
                       <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                         <div className="flex justify-between text-lg">
-                          <span className="font-semibold text-gray-900 dark:text-white">Total Value</span>
+                          <span className="font-semibold text-gray-900 dark:text-white">{t('create.totalValue')}</span>
                           <span className="font-bold text-gray-900 dark:text-white">
                             ${totalValue.toFixed(2)}
                           </span>
@@ -652,15 +654,15 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                   {/* Important Notes */}
                   <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                     <div className="flex">
-                      <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-3 mt-0.5 flex-shrink-0" />
+                      <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 me-3 mt-0.5 flex-shrink-0" />
                       <div className="text-sm">
                         <p className="font-medium text-yellow-800 dark:text-yellow-200 mb-1">
-                          Important Notes:
+                          {t('create.importantNotes')}
                         </p>
                         <ul className="text-yellow-700 dark:text-yellow-300 space-y-1">
-                          <li>• Your tokens will be locked while the listing is active</li>
-                          <li>• Listing expires in 7 days (can be extended)</li>
-                          <li>• You can cancel the listing at any time if no orders are pending</li>
+                          <li>• {t('create.note1')}</li>
+                          <li>• {t('create.note2')}</li>
+                          <li>• {t('create.note3')}</li>
                         </ul>
                       </div>
                     </div>
@@ -669,7 +671,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                   {errors.general && (
                     <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                       <div className="flex">
-                        <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mr-3 mt-0.5 flex-shrink-0" />
+                        <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 me-3 mt-0.5 flex-shrink-0" />
                         <p className="text-sm text-red-700 dark:text-red-300">{errors.general}</p>
                       </div>
                     </div>
@@ -677,10 +679,10 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
 
                   <div className="flex gap-3">
                     <Button variant="outline" onClick={() => setStep('details')} className="flex-1">
-                      Back
+                      {t('common.back')}
                     </Button>
                     <Button onClick={handleSubmitListing} disabled={isSubmitting} className="flex-1">
-                      {isSubmitting ? 'Creating...' : 'Create Listing'}
+                      {isSubmitting ? t('create.creating') : t('create.createListing')}
                     </Button>
                   </div>
                 </div>
@@ -692,10 +694,10 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                     <Timer className="w-8 h-8 text-green-600 dark:text-green-400 animate-spin" />
                   </div>
                   <Heading level="h4" size="lg" className="mb-2">
-                    Creating Your Listing
+                    {t('create.processingTitle')}
                   </Heading>
                   <Text variant="body" color="secondary">
-                    Please wait while we create your sell listing...
+                    {t('create.processingDesc')}
                   </Text>
                 </div>
               )}
@@ -710,13 +712,13 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                     <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
                   </motion.div>
                   <Heading level="h4" size="lg" className="mb-2">
-                    Listing Created Successfully!
+                    {t('create.successTitle')}
                   </Heading>
                   <Text variant="body" color="secondary" className="mb-4">
-                    Your sell listing has been created and is now live on the marketplace.
+                    {t('create.successDesc')}
                   </Text>
                   <Text variant="bodySmall" color="secondary">
-                    Redirecting you back to the marketplace...
+                    {t('create.redirecting')}
                   </Text>
                 </div>
               )}

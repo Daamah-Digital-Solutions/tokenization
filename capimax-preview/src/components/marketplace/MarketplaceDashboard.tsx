@@ -25,6 +25,7 @@ import { cn } from '../../utils/cn';
 import { PropertyService } from '../../services/property/PropertyService';
 import { useRouter } from '../../utils/router';
 import type { Property, PropertyFilterOptions } from '../../services/api/types';
+import { useTranslation } from 'react-i18next';
 
 interface MarketplaceDashboardProps {
   className?: string;
@@ -38,6 +39,7 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
   showActivity = true
 }) => {
   const { navigate } = useRouter();
+  const { t } = useTranslation('market');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -113,9 +115,9 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
   const totalPages = propertiesData?.pagination.pages || 1;
 
   const tabs = [
-    { id: 'approved', label: 'Available Properties', icon: Grid3X3 },
-    { id: 'featured', label: 'Featured', icon: Zap },
-    { id: 'all', label: 'All Properties', icon: List }
+    { id: 'approved', label: t('mdash.tabAvailable'), icon: Grid3X3 },
+    { id: 'featured', label: t('mdash.tabFeatured'), icon: Zap },
+    { id: 'all', label: t('mdash.tabAll'), icon: List }
   ];
 
   return (
@@ -125,10 +127,10 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Property Marketplace
+              {t('mdash.title')}
             </h1>
             <p className="text-gray-600">
-              Own tokenized real estate properties
+              {t('mdash.subtitle')}
             </p>
           </div>
           <Button
@@ -137,7 +139,7 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
             className="flex items-center gap-2"
           >
             <RefreshCw className="w-4 h-4" />
-            Refresh
+            {t('common.refresh')}
           </Button>
         </div>
 
@@ -146,7 +148,7 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white rounded-xl p-6 shadow-sm border">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-gray-500 text-sm">Total Properties</span>
+                <span className="text-gray-500 text-sm">{t('mdash.totalProperties')}</span>
                 <TrendingUp className="w-4 h-4 text-green-500" />
               </div>
               <span className="text-2xl font-bold text-gray-900">{totalCount}</span>
@@ -159,13 +161,13 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
           {/* Search Bar */}
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute start-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
                 type="text"
-                placeholder="Search properties by title, location, or description..."
+                placeholder={t('mdash.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="ps-10"
               />
             </div>
           </div>
@@ -178,7 +180,7 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
               className="flex items-center gap-2"
             >
               <Filter className="w-4 h-4" />
-              Filters
+              {t('smd.filters')}
             </Button>
 
             <div className="flex border rounded-lg">
@@ -186,7 +188,7 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
                 variant={viewMode === 'grid' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('grid')}
-                className="rounded-r-none"
+                className="rounded-e-none"
               >
                 <Grid3X3 className="w-4 h-4" />
               </Button>
@@ -194,7 +196,7 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('list')}
-                className="rounded-l-none"
+                className="rounded-s-none"
               >
                 <List className="w-4 h-4" />
               </Button>
@@ -203,7 +205,7 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-1 bg-gray-100 rounded-lg p-1 mb-6">
+        <div className="flex gap-1 bg-gray-100 rounded-lg p-1 mb-6">
           {tabs.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -232,11 +234,11 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
           <AnimatePresence>
             {showFilters && (
               <div className="bg-white rounded-xl p-6 shadow-sm border mb-6">
-                <h3 className="font-semibold text-gray-900 mb-4">Filters</h3>
+                <h3 className="font-semibold text-gray-900 mb-4">{t('smd.filters')}</h3>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Property Type
+                      {t('smd.propertyType')}
                     </label>
                     <select
                       className="w-full border rounded-lg px-3 py-2 text-sm"
@@ -246,15 +248,15 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
                         property_type: e.target.value || undefined
                       })}
                     >
-                      <option value="">All Types</option>
-                      <option value="residential">Residential</option>
-                      <option value="commercial">Commercial</option>
-                      <option value="industrial">Industrial</option>
+                      <option value="">{t('smd.allTypes')}</option>
+                      <option value="residential">{t('propertyTypes.residential')}</option>
+                      <option value="commercial">{t('propertyTypes.commercial')}</option>
+                      <option value="industrial">{t('propertyTypes.industrial')}</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Status
+                      {t('mdash.status')}
                     </label>
                     <select
                       className="w-full border rounded-lg px-3 py-2 text-sm"
@@ -264,9 +266,9 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
                         status: e.target.value as any
                       })}
                     >
-                      <option value="approved">Available to Buy</option>
-                      <option value="under_review">Under Review</option>
-                      <option value="draft">Draft</option>
+                      <option value="approved">{t('mdash.availableToBuy')}</option>
+                      <option value="under_review">{t('mdash.underReview')}</option>
+                      <option value="draft">{t('mdash.draft')}</option>
                     </select>
                   </div>
                 </div>
@@ -277,14 +279,14 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
           {/* Property Stats */}
           {!showActivity && (
             <div className="bg-white rounded-xl p-6 shadow-sm border sticky top-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Market Overview</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">{t('mdash.marketOverview')}</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 text-sm">Total Properties</span>
+                  <span className="text-gray-600 text-sm">{t('mdash.totalProperties')}</span>
                   <span className="font-medium">{totalCount}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 text-sm">Available to Buy</span>
+                  <span className="text-gray-600 text-sm">{t('mdash.availableToBuy')}</span>
                   <span className="font-medium">{properties.filter(p => p.status === 'approved').length}</span>
                 </div>
               </div>
@@ -298,11 +300,11 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <h2 className="text-lg font-semibold text-gray-900">
-                {totalCount.toLocaleString()} Properties
+                {t('mdash.nProperties', { value: totalCount.toLocaleString() })}
               </h2>
               {searchQuery && (
                 <Badge variant="secondary">
-                  Results for "{searchQuery}"
+                  {t('smd.resultsFor', { query: searchQuery })}
                 </Badge>
               )}
             </div>
@@ -316,12 +318,12 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
               })}
               className="border rounded-lg px-3 py-2 text-sm"
             >
-              <option value="created_at">Newest First</option>
-              <option value="-created_at">Oldest First</option>
-              <option value="-total_value">Price: High to Low</option>
-              <option value="total_value">Price: Low to High</option>
-              <option value="-total_tokens">Most Tokens</option>
-              <option value="total_tokens">Fewest Tokens</option>
+              <option value="created_at">{t('sort.newest')}</option>
+              <option value="-created_at">{t('sort.oldest')}</option>
+              <option value="-total_value">{t('sort.priceDesc')}</option>
+              <option value="total_value">{t('sort.priceAsc')}</option>
+              <option value="-total_tokens">{t('mdash.mostTokens')}</option>
+              <option value="total_tokens">{t('mdash.fewestTokens')}</option>
             </select>
           </div>
 
@@ -341,9 +343,9 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
           {error && (
             <div className="text-center py-12">
               <div className="text-red-600 mb-4">
-                Failed to load marketplace listings
+                {t('smd.loadError')}
               </div>
-              <Button onClick={() => refetch()}>Try Again</Button>
+              <Button onClick={() => refetch()}>{t('smd.tryAgain')}</Button>
             </div>
           )}
 
@@ -351,7 +353,7 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
           {!isLoading && !error && properties.length === 0 && (
             <div className="text-center py-12">
               <div className="text-gray-500 mb-4">
-                No properties found matching your criteria
+                {t('mdash.noResults')}
               </div>
               <Button
                 variant="outline"
@@ -361,7 +363,7 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
                   setSelectedTab('approved');
                 }}
               >
-                Clear Filters
+                {t('smd.clearFilters')}
               </Button>
             </div>
           )}
@@ -400,17 +402,17 @@ export const MarketplaceDashboard: React.FC<MarketplaceDashboardProps> = ({
                     disabled={currentPage <= 1}
                     onClick={() => setCurrentPage(prev => prev - 1)}
                   >
-                    Previous
+                    {t('smd.previous')}
                   </Button>
                   <span className="text-sm text-gray-600">
-                    Page {currentPage} of {totalPages}
+                    {t('smd.pageOf', { page: currentPage, total: totalPages })}
                   </span>
                   <Button
                     variant="outline"
                     disabled={currentPage >= totalPages}
                     onClick={() => setCurrentPage(prev => prev + 1)}
                   >
-                    Next
+                    {t('smd.next')}
                   </Button>
                 </div>
               )}

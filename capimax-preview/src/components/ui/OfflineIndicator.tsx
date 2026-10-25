@@ -273,21 +273,22 @@ export const ConnectionQualityIndicator: React.FC<{
   size?: 'sm' | 'md' | 'lg';
 }> = ({ showLabel = false, size = 'md' }) => {
   const { isOnline, effectiveType, downlink } = useNetwork();
+  const { t } = useTranslation('ui');
 
   const getQualityInfo = () => {
     if (!isOnline) {
-      return { color: 'text-red-500', bars: 0, label: 'Offline' };
+      return { color: 'text-red-500', bars: 0, label: t('connection.offline') };
     }
 
     // Determine connection quality based on effective type and downlink
     if (effectiveType === '4g' || (downlink && downlink > 10)) {
-      return { color: 'text-emerald-500', bars: 4, label: 'Excellent' };
+      return { color: 'text-emerald-500', bars: 4, label: t('connection.excellent') };
     } else if (effectiveType === '3g' || (downlink && downlink > 1.5)) {
-      return { color: 'text-yellow-500', bars: 3, label: 'Good' };
+      return { color: 'text-yellow-500', bars: 3, label: t('connection.good') };
     } else if (effectiveType === '2g' || (downlink && downlink > 0.5)) {
-      return { color: 'text-orange-500', bars: 2, label: 'Fair' };
+      return { color: 'text-orange-500', bars: 2, label: t('connection.fair') };
     } else {
-      return { color: 'text-red-500', bars: 1, label: 'Poor' };
+      return { color: 'text-red-500', bars: 1, label: t('connection.poor') };
     }
   };
 
@@ -383,6 +384,7 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
 // Hook for handling offline-first functionality
 export const useOfflineFirst = () => {
   const { isOnline } = useNetwork();
+  const { t } = useTranslation('ui');
 
   const withOfflineHandling = async <T,>(
     onlineOperation: () => Promise<T>,
@@ -406,7 +408,7 @@ export const useOfflineFirst = () => {
       if (offlineOperation) {
         return await Promise.resolve(offlineOperation());
       } else {
-        throw new Error(options.fallbackMessage || 'This action requires an internet connection');
+        throw new Error(options.fallbackMessage || t('connection.requiresInternet'));
       }
     }
   };

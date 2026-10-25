@@ -31,9 +31,9 @@ const sizeStyles: Record<SectionHeaderSize, {
 };
 
 const alignStyles: Record<SectionHeaderAlign, string> = {
-  left: 'text-left items-start',
+  left: 'text-start items-start',
   center: 'text-center items-center',
-  right: 'text-right items-end',
+  right: 'text-end items-end',
 };
 
 export const SectionHeader: React.FC<SectionHeaderProps> = ({

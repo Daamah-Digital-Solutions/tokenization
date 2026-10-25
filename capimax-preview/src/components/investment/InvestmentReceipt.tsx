@@ -20,6 +20,7 @@ import { Text } from '../design-system/typography/Text';
 import type { InvestmentProperty, InvestmentData } from './types';
 import { cn } from '../../utils/cn';
 import { downloadReceiptPdf } from '../../utils/receiptPdf';
+import { useTranslation, Trans } from 'react-i18next';
 
 interface InvestmentReceiptProps {
   property: InvestmentProperty;
@@ -42,6 +43,8 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
   onDownload,
   className
 }) => {
+  const { t, i18n } = useTranslation('invest');
+  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
   const currentDate = new Date();
   const nextDividendDate = new Date();
   nextDividendDate.setMonth(nextDividendDate.getMonth() + 3);
@@ -106,8 +109,8 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
           onClick={onClose}
           className="flex items-center gap-2"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back
+          <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
+          {t('common.back')}
         </Button>
         
         <Button
@@ -117,7 +120,7 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
           className="flex items-center gap-2"
         >
           <Download className="w-4 h-4" />
-          Download Receipt
+          {t('confirmation.downloadReceipt')}
         </Button>
       </div>
 
@@ -134,12 +137,12 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
               <div className="p-3 bg-gradient-to-br from-emerald-500 to-green-600 text-white rounded-xl">
                 <Building className="w-8 h-8" />
               </div>
-              <div className="text-left">
+              <div className="text-start">
                 <Text variant="h2" weight="bold" className="text-gray-900 dark:text-white">
-                  CAPIMAX
+                  {t('receipt.brand')}
                 </Text>
                 <Text variant="body" color="muted">
-                  Real Estate Tokenization Platform
+                  {t('receipt.tagline')}
                 </Text>
               </div>
             </div>
@@ -147,14 +150,14 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
             <div className="flex items-center justify-center gap-2 mb-2">
               <Receipt className="w-5 h-5 text-emerald-600" />
               <Text variant="h3" weight="semibold" className="text-emerald-600">
-                Purchase Receipt
+                {t('receipt.title')}
               </Text>
             </div>
             
             <div className="flex items-center justify-center gap-2 text-emerald-600">
               <CheckCircle className="w-4 h-4" />
               <Text variant="body" weight="medium">
-                Transaction Confirmed
+                {t('receipt.confirmed')}
               </Text>
             </div>
           </div>
@@ -164,35 +167,35 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
             <div>
               <Text variant="h4" weight="semibold" className="mb-4 flex items-center gap-2">
                 <Hash className="w-5 h-5 text-gray-500" />
-                Transaction Information
+                {t('receipt.transactionInfo')}
               </Text>
               
               <div className="space-y-3">
                 <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-                  <Text variant="body" color="muted">Transaction ID:</Text>
+                  <Text variant="body" color="muted">{t('confirmation.copy.transactionId')}:</Text>
                   <Text variant="body" weight="medium" className="font-mono">{transactionId}</Text>
                 </div>
                 
                 <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-                  <Text variant="body" color="muted">Date & Time:</Text>
+                  <Text variant="body" color="muted">{t('receipt.dateTime')}</Text>
                   <Text variant="body" weight="medium">
-                    {currentDate.toLocaleDateString()} at {currentDate.toLocaleTimeString()}
+                    {t('receipt.dateAt', { date: currentDate.toLocaleDateString(dateLocale), time: currentDate.toLocaleTimeString(dateLocale) })}
                   </Text>
                 </div>
                 
                 <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-                  <Text variant="body" color="muted">Payment Method:</Text>
+                  <Text variant="body" color="muted">{t('receipt.paymentMethod')}</Text>
                   <Text variant="body" weight="medium" className="capitalize">
-                    {investmentData.paymentMethod === 'crypto' ? 'Cryptocurrency' : 'Fiat Currency'}
+                    {investmentData.paymentMethod === 'crypto' ? t('paymentMethod.methods.crypto.name') : t('receipt.fiat')}
                   </Text>
                 </div>
                 
                 <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-                  <Text variant="body" color="muted">Status:</Text>
+                  <Text variant="body" color="muted">{t('receipt.status')}</Text>
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
                     <Text variant="body" weight="medium" className="text-emerald-600">
-                      Confirmed
+                      {t('receipt.statusConfirmed')}
                     </Text>
                   </div>
                 </div>
@@ -202,28 +205,28 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
             <div>
               <Text variant="h4" weight="semibold" className="mb-4 flex items-center gap-2">
                 <User className="w-5 h-5 text-gray-500" />
-                Owner Information
+                {t('receipt.ownerInfo')}
               </Text>
 
               <div className="space-y-3">
                 <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-                  <Text variant="body" color="muted">Owner ID:</Text>
+                  <Text variant="body" color="muted">{t('receipt.ownerId')}</Text>
                   <Text variant="body" weight="medium" className="font-mono">
                     USR-{transactionId.replace(/[^a-zA-Z0-9]/g, '').slice(-8).toUpperCase() || 'PENDING'}
                   </Text>
                 </div>
                 
                 <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-                  <Text variant="body" color="muted">Account Type:</Text>
-                  <Text variant="body" weight="medium">Individual</Text>
+                  <Text variant="body" color="muted">{t('receipt.accountType')}</Text>
+                  <Text variant="body" weight="medium">{t('receipt.individual')}</Text>
                 </div>
                 
                 <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-800">
-                  <Text variant="body" color="muted">KYC Status:</Text>
+                  <Text variant="body" color="muted">{t('receipt.kycStatus')}</Text>
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-4 h-4 text-emerald-500" />
                     <Text variant="body" weight="medium" className="text-emerald-600">
-                      Verified
+                      {t('receipt.verified')}
                     </Text>
                   </div>
                 </div>
@@ -235,7 +238,7 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
           <div>
             <Text variant="h4" weight="semibold" className="mb-4 flex items-center gap-2">
               <Building className="w-5 h-5 text-gray-500" />
-              Property Ownership Details
+              {t('receipt.propertyDetails')}
             </Text>
             
             <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-6 rounded-xl">
@@ -246,19 +249,19 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
                   </Text>
                   <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400 mb-4">
                     <MapPin className="w-4 h-4" />
-                    <Text variant="body">{property.location || 'Location not available'}</Text>
+                    <Text variant="body">{property.location || t('receipt.noLocation')}</Text>
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <Text variant="body" color="muted">Property Type:</Text>
-                      <Text variant="body" weight="medium">{property.propertyType ? property.propertyType.charAt(0).toUpperCase() + property.propertyType.slice(1) : 'Residential'}</Text>
+                      <Text variant="body" color="muted">{t('receipt.propertyType')}</Text>
+                      <Text variant="body" weight="medium">{property.propertyType ? t(`receipt.propertyTypes.${property.propertyType}`, { defaultValue: property.propertyType.charAt(0).toUpperCase() + property.propertyType.slice(1) }) : t('receipt.propertyTypes.residential')}</Text>
                     </div>
                     <div className="flex justify-between">
-                      <Text variant="body" color="muted">Token Price:</Text>
+                      <Text variant="body" color="muted">{t('common.pricePerShare')}:</Text>
                       <Text variant="body" weight="medium">${property.tokenPrice.toLocaleString()}</Text>
                     </div>
                     <div className="flex justify-between">
-                      <Text variant="body" color="muted">Total Property Value:</Text>
+                      <Text variant="body" color="muted">{t('receipt.totalValue')}</Text>
                       <Text variant="body" weight="medium">${(property.totalValue || 0).toLocaleString()}</Text>
                     </div>
                   </div>
@@ -266,29 +269,29 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
                 
                 <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
                   <Text variant="bodyLarge" weight="semibold" className="mb-3">
-                    Your Purchase Breakdown
+                    {t('receipt.breakdown')}
                   </Text>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <Text variant="body" color="muted">Purchase Amount:</Text>
+                      <Text variant="body" color="muted">{t('receipt.purchaseAmount')}</Text>
                       <Text variant="body" weight="semibold" className="text-emerald-600">
                         ${investmentData.amount.toLocaleString()}
                       </Text>
                     </div>
                     <div className="flex justify-between">
-                      <Text variant="body" color="muted">Tokens Purchased:</Text>
+                      <Text variant="body" color="muted">{t('confirmation.copy.shares')}:</Text>
                       <Text variant="body" weight="semibold">
                         {investmentData.tokens.toLocaleString()}
                       </Text>
                     </div>
                     <div className="flex justify-between">
-                      <Text variant="body" color="muted">Token Price:</Text>
+                      <Text variant="body" color="muted">{t('common.pricePerShare')}:</Text>
                       <Text variant="body" weight="medium">
                         ${property.tokenPrice.toLocaleString()}
                       </Text>
                     </div>
                     <div className="flex justify-between pt-2 border-t">
-                      <Text variant="body" color="muted">Ownership Share:</Text>
+                      <Text variant="body" color="muted">{t('amount.ownershipShare')}:</Text>
                       <Text variant="body" weight="bold" className="text-purple-600">
                         {ownershipPercentage.toFixed(4)}%
                       </Text>
@@ -303,45 +306,44 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
           <div>
             <Text variant="h4" weight="semibold" className="mb-4 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-gray-500" />
-              Return Projections
+              {t('receipt.projections')}
             </Text>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl text-center">
-                <Text variant="bodySmall" color="muted" className="mb-1">Annual Return</Text>
+                <Text variant="bodySmall" color="muted" className="mb-1">{t('amount.annualReturn')}</Text>
                 <Text variant="h3" className="text-blue-600 dark:text-blue-400 mb-1">
-                  {returns.totalROI.toFixed(1)}% ROI
+                  {t('amount.roi', { value: returns.totalROI.toFixed(1) })}
                 </Text>
                 <Text variant="bodySmall" className="text-blue-700 dark:text-blue-300">
-                  Est. ${returns.netAnnualReturn.toLocaleString()}/year
+                  {t('receipt.estPerYear', { amount: `$${returns.netAnnualReturn.toLocaleString()}` })}
                 </Text>
               </div>
               
               <div className="bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-xl text-center">
-                <Text variant="bodySmall" color="muted" className="mb-1">Quarterly Dividend</Text>
+                <Text variant="bodySmall" color="muted" className="mb-1">{t('receipt.quarterlyDividend')}</Text>
                 <Text variant="h3" className="text-emerald-600 dark:text-emerald-400 mb-1">
                   ${returns.quarterlyDividend.toLocaleString()}
                 </Text>
                 <Text variant="bodySmall" className="text-emerald-700 dark:text-emerald-300">
-                  Every 3 months
+                  {t('receipt.every3Months')}
                 </Text>
               </div>
               
               <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-xl text-center">
-                <Text variant="bodySmall" color="muted" className="mb-1">Next Dividend</Text>
+                <Text variant="bodySmall" color="muted" className="mb-1">{t('receipt.nextDividend')}</Text>
                 <Text variant="h3" className="text-purple-600 dark:text-purple-400 mb-1">
-                  {nextDividendDate.toLocaleDateString()}
+                  {nextDividendDate.toLocaleDateString(dateLocale)}
                 </Text>
                 <Text variant="bodySmall" className="text-purple-700 dark:text-purple-300">
-                  Expected date
+                  {t('receipt.expectedDate')}
                 </Text>
               </div>
             </div>
 
             <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
               <Text variant="bodySmall" className="text-amber-800 dark:text-amber-200">
-                <strong>Disclaimer:</strong> Projected returns are estimates based on current market conditions and historical performance.
-                Actual returns may vary and are not guaranteed. All real estate ownership carries risk including potential loss of principal.
+                <Trans t={t} i18nKey="receipt.disclaimer" components={{ strong: <strong /> }} />
               </Text>
             </div>
           </div>
@@ -351,13 +353,12 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
             <div className="flex items-center justify-center gap-2 mb-3">
               <Shield className="w-4 h-4 text-emerald-600" />
               <Text variant="bodySmall" weight="medium" className="text-emerald-600">
-                SEC Compliant • Blockchain Secured • Fully Audited
+                {t('receipt.badges')}
               </Text>
             </div>
             
             <Text variant="bodySmall" color="muted" className="mb-2">
-              This receipt serves as official confirmation of your real estate token purchase.
-              For questions or support, contact us at support@capimax.com
+              {t('receipt.footer', { email: 'support@capimax.com' })}
             </Text>
             
             {/* Blockchain Verification Section */}
@@ -366,11 +367,11 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <CheckCircle className="w-5 h-5 text-emerald-600" />
                   <Text variant="body" weight="semibold" className="text-emerald-700 dark:text-emerald-300">
-                    Tokens Minted on Polygon Blockchain
+                    {t('receipt.mintedTitle')}
                   </Text>
                 </div>
                 <Text variant="bodySmall" color="muted" className="text-center mb-3">
-                  Your property tokens have been securely minted and recorded on the blockchain.
+                  {t('receipt.mintedBody')}
                 </Text>
                 <div className="flex justify-center">
                   <BlockchainLink
@@ -399,13 +400,13 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
                 size="sm"
                 className="text-gray-600 dark:text-gray-400"
               >
-                <Calendar className="w-4 h-4 mr-2" />
-                Add to Calendar
+                <Calendar className="w-4 h-4 me-2" />
+                {t('receipt.addToCalendar')}
               </Button>
             </div>
 
             <Text variant="bodySmall" color="muted" className="mt-4">
-              Generated on {currentDate.toLocaleString()}
+              {t('receipt.generatedOn', { date: currentDate.toLocaleString(dateLocale) })}
               {blockchainHash && (
                 <span> • TX: {blockchainHash.slice(0, 10)}...{blockchainHash.slice(-6)}</span>
               )}

@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { TrendingUp, TrendingDown, BarChart3, RefreshCw, AlertCircle } from 'lucide-react';
 import { usePortfolioAnalytics } from '../../hooks/usePortfolioAnalytics';
 import { Card } from '../ui/Card';
@@ -27,6 +28,7 @@ export const PortfolioGrowthDisplay = ({
     getGrowthTrend,
     getGrowthPeriodLabel
   } = usePortfolioAnalytics({ period });
+  const { t } = useTranslation('shared');
 
   if (error) {
     return (
@@ -36,10 +38,10 @@ export const PortfolioGrowthDisplay = ({
             <AlertCircle className="h-5 w-5 text-orange-500" />
             <div>
               <h3 className="text-sm font-medium text-orange-800">
-                Portfolio Growth Unavailable
+                {t('analytics.unavailableTitle')}
               </h3>
               <p className="text-xs text-orange-600 mt-1">
-                Unable to load portfolio performance data
+                {t('analytics.unavailableDesc')}
               </p>
             </div>
           </div>
@@ -53,7 +55,7 @@ export const PortfolioGrowthDisplay = ({
             {isLoading ? (
               <RefreshCw className="h-4 w-4 animate-spin" />
             ) : (
-              'Retry'
+              t('common.retry')
             )}
           </Button>
         </div>
@@ -68,7 +70,9 @@ export const PortfolioGrowthDisplay = ({
 
   const isPositiveGrowth = growthPercentage >= 0;
   const growthTrend = getGrowthTrend(growthPercentage);
-  const periodLabel = getGrowthPeriodLabel(period);
+  const periodLabel = ['week', 'month', 'quarter', 'year'].includes(period)
+    ? t(`analytics.period.${period}`)
+    : t('analytics.period.default');
 
   const trendIcon = isPositiveGrowth ? TrendingUp : TrendingDown;
   const TrendIcon = trendIcon;
@@ -94,7 +98,7 @@ export const PortfolioGrowthDisplay = ({
           <TrendIcon className={`h-4 w-4 ${trendColor}`} />
         )}
         <span className={`text-sm font-medium ${trendColor}`}>
-          {isLoading ? 'Loading...' : formatGrowthPercentage(growthPercentage)}
+          {isLoading ? t('common.loading') : formatGrowthPercentage(growthPercentage)}
         </span>
         <span className="text-sm text-gray-500">{periodLabel}</span>
       </div>
@@ -107,7 +111,7 @@ export const PortfolioGrowthDisplay = ({
         <div className="flex items-center gap-2">
           <BarChart3 className={`h-5 w-5 ${trendColor}`} />
           <h3 className="text-lg font-semibold text-gray-900">
-            Portfolio Performance
+            {t('analytics.title')}
           </h3>
         </div>
         {isLoading && (
@@ -134,10 +138,12 @@ export const PortfolioGrowthDisplay = ({
             </div>
             {showDetails && growthAmount !== 0 && !isLoading && (
               <div className={`text-sm ${trendColor} mt-1`}>
-                {isPositiveGrowth ? '+' : ''}${Math.abs(growthAmount).toLocaleString('en-US', {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2
-                })} {isPositiveGrowth ? 'gain' : 'loss'}
+                {t(isPositiveGrowth ? 'analytics.gain' : 'analytics.loss', {
+                  amount: `${isPositiveGrowth ? '+' : ''}$${Math.abs(growthAmount).toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })}`
+                })}
               </div>
             )}
           </div>
@@ -153,7 +159,7 @@ export const PortfolioGrowthDisplay = ({
           >
             <div>
               <p className="text-xs text-gray-500 uppercase tracking-wide">
-                Current Value
+                {t('analytics.currentValue')}
               </p>
               <p className="text-lg font-semibold text-gray-900">
                 ${currentValue.toLocaleString('en-US', {
@@ -164,7 +170,7 @@ export const PortfolioGrowthDisplay = ({
             </div>
             <div>
               <p className="text-xs text-gray-500 uppercase tracking-wide">
-                Purchased Amount
+                {t('analytics.purchasedAmount')}
               </p>
               <p className="text-lg font-semibold text-gray-900">
                 ${investedAmount.toLocaleString('en-US', {
@@ -189,7 +195,7 @@ export const PortfolioGrowthDisplay = ({
                 <div className="h-3 bg-gray-200 rounded w-24 mx-auto"></div>
               </div>
               <p className="text-sm text-gray-500 mt-3">
-                Loading portfolio performance...
+                {t('analytics.loadingPerformance')}
               </p>
             </div>
           </motion.div>

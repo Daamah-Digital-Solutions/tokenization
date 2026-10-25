@@ -24,6 +24,7 @@ import { apiClient } from '../services/api/ApiClient';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/design-system/cards/Card';
 import { cn } from '../utils/cn';
+import { useTranslation } from 'react-i18next';
 
 interface RoleData {
   role: UserRole;
@@ -43,42 +44,42 @@ interface RolePermissions {
 
 const ROLE_INFO = {
   [UserRole.INVESTOR]: {
-    label: 'Co-Owner',
-    description: 'Own tokenized real estate properties and earn returns',
+    label: 'roleMgmt.roles.investor.label',
+    description: 'roleMgmt.roles.investor.desc',
     icon: Briefcase,
     color: 'emerald',
     features: [
-      'Browse and buy properties',
-      'Track portfolio performance',
-      'Receive dividend payments',
-      'Access ownership analytics',
-      'Participate in property voting'
+      'roleMgmt.roles.investor.f1',
+      'roleMgmt.roles.investor.f2',
+      'roleMgmt.roles.investor.f3',
+      'roleMgmt.roles.investor.f4',
+      'roleMgmt.roles.investor.f5'
     ]
   },
   [UserRole.PROPERTY_OWNER]: {
-    label: 'Property Owner',
-    description: 'List your properties for tokenization and raise capital',
+    label: 'roleMgmt.roles.owner.label',
+    description: 'roleMgmt.roles.owner.desc',
     icon: Building,
     color: 'blue',
     features: [
-      'List properties for tokenization',
-      'Set ownership terms',
-      'Track buyer interest',
-      'Manage property documents',
-      'Distribute dividends to co-owners'
+      'roleMgmt.roles.owner.f1',
+      'roleMgmt.roles.owner.f2',
+      'roleMgmt.roles.owner.f3',
+      'roleMgmt.roles.owner.f4',
+      'roleMgmt.roles.owner.f5'
     ]
   },
   [UserRole.ADMIN]: {
-    label: 'Administrator',
-    description: 'Full platform administration and management access',
+    label: 'roleMgmt.roles.admin.label',
+    description: 'roleMgmt.roles.admin.desc',
     icon: Shield,
     color: 'purple',
     features: [
-      'Manage all users and roles',
-      'Approve property listings',
-      'Monitor platform activity',
-      'Access system settings',
-      'Generate platform reports'
+      'roleMgmt.roles.admin.f1',
+      'roleMgmt.roles.admin.f2',
+      'roleMgmt.roles.admin.f3',
+      'roleMgmt.roles.admin.f4',
+      'roleMgmt.roles.admin.f5'
     ]
   }
 };
@@ -86,6 +87,9 @@ const ROLE_INFO = {
 export const RoleManagementPage: React.FC = () => {
   const { navigate } = useRouter();
   const user = useUser();
+  const { t, i18n } = useTranslation('ui');
+  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
+  const humanize = (key: string) => key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   const [userRoles, setUserRoles] = useState<RoleData[]>([]);
   const [availableRoles, setAvailableRoles] = useState<UserRole[]>([]);
   const [permissions, setPermissions] = useState<RolePermissions | null>(null);
@@ -108,7 +112,7 @@ export const RoleManagementPage: React.FC = () => {
       setAvailableRoles(response.available_roles || []);
     } catch (error) {
       console.error('Failed to fetch user roles:', error);
-      setError('Failed to load role information');
+      setError(t('roleMgmt.loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -130,19 +134,19 @@ export const RoleManagementPage: React.FC = () => {
 
     try {
       await apiClient.post('/auth/roles/add/', { role });
-      setSuccess(`Successfully added ${ROLE_INFO[role].label} role`);
+      setSuccess(t('roleMgmt.added', { role: t(ROLE_INFO[role].label) }));
       await fetchUserRoles();
       await fetchPermissions();
       setSelectedRole(null);
     } catch (error: any) {
-      setError(error.message || 'Failed to add role');
+      setError(error.message || t('roleMgmt.addFailed'));
     } finally {
       setIsAddingRole(false);
     }
   };
 
   const handleRemoveRole = async (role: UserRole) => {
-    if (!confirm(`Are you sure you want to remove the ${ROLE_INFO[role].label} role?`)) {
+    if (!confirm(t('roleMgmt.confirmRemove', { role: t(ROLE_INFO[role].label) }))) {
       return;
     }
 
@@ -151,11 +155,11 @@ export const RoleManagementPage: React.FC = () => {
 
     try {
       await apiClient.delete(`/auth/roles/remove/${role}/`);
-      setSuccess(`Successfully removed ${ROLE_INFO[role].label} role`);
+      setSuccess(t('roleMgmt.removed', { role: t(ROLE_INFO[role].label) }));
       await fetchUserRoles();
       await fetchPermissions();
     } catch (error: any) {
-      setError(error.message || 'Failed to remove role');
+      setError(error.message || t('roleMgmt.removeFailed'));
     }
   };
 
@@ -165,10 +169,10 @@ export const RoleManagementPage: React.FC = () => {
 
     try {
       await apiClient.post('/auth/roles/set-primary/', { role });
-      setSuccess(`${ROLE_INFO[role].label} is now your primary role`);
+      setSuccess(t('roleMgmt.primarySet', { role: t(ROLE_INFO[role].label) }));
       await fetchUserRoles();
     } catch (error: any) {
-      setError(error.message || 'Failed to set primary role');
+      setError(error.message || t('roleMgmt.primaryFailed'));
     }
   };
 
@@ -195,12 +199,12 @@ export const RoleManagementPage: React.FC = () => {
                 onClick={() => navigate('dashboard')}
                 className="flex items-center gap-2"
               >
-                <ArrowLeft className="w-4 h-4" />
-                Back to Dashboard
+                <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
+                {t('roleMgmt.backToDashboard')}
               </Button>
               <div className="h-6 w-px bg-slate-200 dark:bg-slate-700" />
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-                Role Management
+                {t('roleMgmt.title')}
               </h1>
             </div>
           </div>
@@ -221,7 +225,7 @@ export const RoleManagementPage: React.FC = () => {
               <span className="text-red-700 dark:text-red-300">{error}</span>
               <button
                 onClick={() => setError(null)}
-                className="ml-auto text-red-500 hover:text-red-600"
+                className="ms-auto text-red-500 hover:text-red-600"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -239,7 +243,7 @@ export const RoleManagementPage: React.FC = () => {
               <span className="text-emerald-700 dark:text-emerald-300">{success}</span>
               <button
                 onClick={() => setSuccess(null)}
-                className="ml-auto text-emerald-500 hover:text-emerald-600"
+                className="ms-auto text-emerald-500 hover:text-emerald-600"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -252,7 +256,7 @@ export const RoleManagementPage: React.FC = () => {
           <div className="lg:col-span-2 space-y-6">
             <Card className="p-6">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                Your Current Roles
+                {t('roleMgmt.currentRoles')}
               </h2>
 
               {isLoading ? (
@@ -292,19 +296,19 @@ export const RoleManagementPage: React.FC = () => {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
                                 <h3 className="font-medium text-slate-900 dark:text-white">
-                                  {roleInfo.label}
+                                  {t(roleInfo.label)}
                                 </h3>
                                 {roleData.is_primary && (
                                   <span className="text-xs px-2 py-0.5 bg-emerald-500 text-white rounded-full">
-                                    Primary
+                                    {t('roleMgmt.primary')}
                                   </span>
                                 )}
                               </div>
                               <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                                {roleInfo.description}
+                                {t(roleInfo.description)}
                               </p>
                               <div className="text-xs text-slate-500 dark:text-slate-500">
-                                Added on {new Date(roleData.assigned_at).toLocaleDateString()}
+                                {t('roleMgmt.addedOn', { date: new Date(roleData.assigned_at).toLocaleDateString(dateLocale) })}
                               </div>
                             </div>
                           </div>
@@ -317,7 +321,7 @@ export const RoleManagementPage: React.FC = () => {
                                 onClick={() => handleSetPrimary(roleData.role)}
                                 className="text-xs"
                               >
-                                Set as Primary
+                                {t('roleMgmt.setPrimary')}
                               </Button>
                             )}
                             {userRoles.length > 1 && !roleData.is_primary && (
@@ -351,7 +355,7 @@ export const RoleManagementPage: React.FC = () => {
                       )}
                     >
                       <Plus className="w-5 h-5" />
-                      <span className="font-medium">Add Another Role</span>
+                      <span className="font-medium">{t('roleMgmt.addAnother')}</span>
                     </button>
                   )}
                 </div>
@@ -362,14 +366,14 @@ export const RoleManagementPage: React.FC = () => {
             {permissions && (
               <Card className="p-6">
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  Your Permissions
+                  {t('roleMgmt.permissions')}
                 </h2>
 
                 <div className="space-y-4">
                   {/* Capabilities */}
                   <div>
                     <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      Current Capabilities
+                      {t('roleMgmt.capabilitiesTitle')}
                     </h3>
                     <div className="grid grid-cols-2 gap-2">
                       {Object.entries(permissions.capabilities).map(([key, value]) => (
@@ -385,7 +389,7 @@ export const RoleManagementPage: React.FC = () => {
                           <span className={cn(
                             value ? 'text-slate-700 dark:text-slate-300' : 'text-slate-400 dark:text-slate-500'
                           )}>
-                            {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                            {t(`roleMgmt.capabilities.${key}`, { defaultValue: humanize(key) })}
                           </span>
                         </div>
                       ))}
@@ -396,7 +400,7 @@ export const RoleManagementPage: React.FC = () => {
                   {Object.entries(permissions.requirements).some(([_, v]) => v) && (
                     <div>
                       <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                        Action Required
+                        {t('roleMgmt.actionRequired')}
                       </h3>
                       <div className="space-y-2">
                         {Object.entries(permissions.requirements)
@@ -408,7 +412,7 @@ export const RoleManagementPage: React.FC = () => {
                             >
                               <AlertCircle className="w-4 h-4" />
                               <span>
-                                {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                {t(`roleMgmt.requirements.${key}`, { defaultValue: humanize(key) })}
                               </span>
                             </div>
                           ))}
@@ -432,7 +436,7 @@ export const RoleManagementPage: React.FC = () => {
                 >
                   <Card className="p-6">
                     <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                      Add Role
+                      {t('roleMgmt.addRole')}
                     </h3>
 
                     <div className="space-y-4">
@@ -462,10 +466,10 @@ export const RoleManagementPage: React.FC = () => {
                               </div>
                               <div>
                                 <h4 className="font-medium text-slate-900 dark:text-white">
-                                  {roleInfo.label}
+                                  {t(roleInfo.label)}
                                 </h4>
                                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                                  {roleInfo.description}
+                                  {t(roleInfo.description)}
                                 </p>
                               </div>
                             </div>
@@ -474,7 +478,7 @@ export const RoleManagementPage: React.FC = () => {
                               {roleInfo.features.slice(0, 3).map((feature, idx) => (
                                 <div key={idx} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
                                   <Check className="w-3 h-3 text-emerald-500" />
-                                  <span>{feature}</span>
+                                  <span>{t(feature)}</span>
                                 </div>
                               ))}
                             </div>
@@ -488,7 +492,7 @@ export const RoleManagementPage: React.FC = () => {
                                 disabled={isAddingRole}
                                 className="flex-1"
                               >
-                                Add This Role
+                                {t('roleMgmt.addThis')}
                               </Button>
                               <Button
                                 size="sm"
@@ -496,7 +500,7 @@ export const RoleManagementPage: React.FC = () => {
                                 onClick={() => setSelectedRole(null)}
                                 disabled={isAddingRole}
                               >
-                                Cancel
+                                {t('actions.cancel')}
                               </Button>
                             </div>
                           </div>
@@ -513,36 +517,35 @@ export const RoleManagementPage: React.FC = () => {
               <div className="flex items-center gap-2 mb-4">
                 <Info className="w-5 h-5 text-blue-500" />
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  About Roles
+                  {t('roleMgmt.aboutTitle')}
                 </h3>
               </div>
 
               <div className="space-y-4 text-sm text-slate-600 dark:text-slate-400">
                 <p>
-                  Roles determine what you can do on the platform. You can have multiple roles
-                  and switch between them as needed.
+                  {t('roleMgmt.aboutBody')}
                 </p>
 
                 <div className="space-y-2">
                   <div className="flex items-start gap-2">
-                    <ChevronRight className="w-4 h-4 mt-0.5 text-slate-400" />
+                    <ChevronRight className="w-4 h-4 mt-0.5 text-slate-400 rtl:rotate-180" />
                     <span>
-                      <strong className="text-slate-700 dark:text-slate-300">Primary Role:</strong> Your
-                      default dashboard view
+                      <strong className="text-slate-700 dark:text-slate-300">{t('roleMgmt.primaryRoleLabel')}</strong>{' '}
+                      {t('roleMgmt.primaryRoleText')}
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <ChevronRight className="w-4 h-4 mt-0.5 text-slate-400" />
+                    <ChevronRight className="w-4 h-4 mt-0.5 text-slate-400 rtl:rotate-180" />
                     <span>
-                      <strong className="text-slate-700 dark:text-slate-300">Multiple Roles:</strong> Access
-                      different features without separate accounts
+                      <strong className="text-slate-700 dark:text-slate-300">{t('roleMgmt.multipleLabel')}</strong>{' '}
+                      {t('roleMgmt.multipleText')}
                     </span>
                   </div>
                   <div className="flex items-start gap-2">
-                    <ChevronRight className="w-4 h-4 mt-0.5 text-slate-400" />
+                    <ChevronRight className="w-4 h-4 mt-0.5 text-slate-400 rtl:rotate-180" />
                     <span>
-                      <strong className="text-slate-700 dark:text-slate-300">Role Switching:</strong> Change
-                      active role from dashboard anytime
+                      <strong className="text-slate-700 dark:text-slate-300">{t('roleMgmt.switchingLabel')}</strong>{' '}
+                      {t('roleMgmt.switchingText')}
                     </span>
                   </div>
                 </div>
@@ -552,10 +555,10 @@ export const RoleManagementPage: React.FC = () => {
             {/* Help Card */}
             <Card className="p-6 bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-emerald-900/20 dark:to-blue-900/20 border-0">
               <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
-                Need Help?
+                {t('roleMgmt.helpTitle')}
               </h3>
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                Contact our support team if you need assistance with role management.
+                {t('roleMgmt.helpBody')}
               </p>
               <Button
                 size="sm"
@@ -563,7 +566,7 @@ export const RoleManagementPage: React.FC = () => {
                 className="w-full"
                 onClick={() => window.location.href = 'mailto:support@capimax.com'}
               >
-                Contact Support
+                {t('roleMgmt.contactSupport')}
               </Button>
             </Card>
           </div>

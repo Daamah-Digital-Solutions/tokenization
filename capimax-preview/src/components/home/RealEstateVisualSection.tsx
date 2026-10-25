@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Globe, Building2, Home, MapPin, TrendingUp, Shield } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { useTranslation } from 'react-i18next';
 
 // Real estate images for visual sections
 const REAL_ESTATE_IMAGES = {
@@ -14,6 +15,7 @@ interface VisualSectionProps {
 }
 
 export const RealEstateVisualSection: React.FC<VisualSectionProps> = ({ variant }) => {
+  const { t } = useTranslation('ui');
   const ref = React.useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -25,34 +27,35 @@ export const RealEstateVisualSection: React.FC<VisualSectionProps> = ({ variant 
 
   const content = {
     global: {
-      title: 'Own Global Real Estate',
-      subtitle: 'Access Premium Properties Worldwide',
-      description: 'Diversify your portfolio across international markets with institutional-grade real estate ownership.',
+      titleParts: [t('visual.global.titleBefore'), t('visual.global.titleHighlight'), t('visual.global.titleAfter')],
+      subtitle: t('visual.global.subtitle'),
+      description: t('visual.global.description'),
       icon: Globe,
       image: REAL_ESTATE_IMAGES.global,
       stats: [
-        { value: '25+', label: 'Countries', icon: MapPin },
-        { value: '500+', label: 'Properties', icon: Building2 },
-        { value: '15%', label: 'Avg. Returns', icon: TrendingUp },
+        { value: '25+', label: t('visual.global.statCountries'), icon: MapPin },
+        { value: '500+', label: t('visual.global.statProperties'), icon: Building2 },
+        { value: '15%', label: t('visual.global.statReturns'), icon: TrendingUp },
       ],
-      cta: { text: 'View Properties', href: '/properties' },
+      cta: { text: t('visual.global.cta'), href: '/properties' },
     },
     institutional: {
-      title: 'Institutional-Grade Property Assets',
-      subtitle: 'Premium Real Estate Ownership',
-      description: 'Access the same quality ownership opportunities traditionally reserved for institutional buyers.',
+      titleParts: [t('visual.institutional.titleBefore'), t('visual.institutional.titleHighlight'), t('visual.institutional.titleAfter')],
+      subtitle: t('visual.institutional.subtitle'),
+      description: t('visual.institutional.description'),
       icon: Building2,
       image: REAL_ESTATE_IMAGES.institutional,
       stats: [
-        { value: '$1M+', label: 'Min. Asset Value', icon: Shield },
-        { value: '100%', label: 'Vetted', icon: Shield },
-        { value: 'SPV', label: 'Protected', icon: Home },
+        { value: '$1M+', label: t('visual.institutional.statMinValue'), icon: Shield },
+        { value: '100%', label: t('visual.institutional.statVetted'), icon: Shield },
+        { value: 'SPV', label: t('visual.institutional.statProtected'), icon: Home },
       ],
-      cta: { text: 'Learn More', href: '/how-it-works' },
+      cta: { text: t('visual.institutional.cta'), href: '/how-it-works' },
     },
   };
 
-  const { title, subtitle, description, icon: Icon, image, stats, cta } = content[variant];
+  const { titleParts, subtitle, description, icon: Icon, image, stats, cta } = content[variant];
+  const title = titleParts.filter(Boolean).join(' ');
 
   return (
     <section ref={ref} className="relative py-32 overflow-hidden">
@@ -66,7 +69,7 @@ export const RealEstateVisualSection: React.FC<VisualSectionProps> = ({ variant 
       </motion.div>
 
       {/* Dark overlay for text readability */}
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/85 to-slate-900/75" />
+      <div className="absolute inset-0 bg-gradient-to-r rtl:bg-gradient-to-l from-slate-900/95 via-slate-900/85 to-slate-900/75" />
       <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-slate-900/60" />
 
       {/* Subtle pattern overlay */}
@@ -96,15 +99,9 @@ export const RealEstateVisualSection: React.FC<VisualSectionProps> = ({ variant 
 
               {/* Title */}
               <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
-                {title.split(' ').map((word, i) => (
-                  <span key={i}>
-                    {i === 2 ? (
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">{word} </span>
-                    ) : (
-                      `${word} `
-                    )}
-                  </span>
-                ))}
+                {titleParts[0] && `${titleParts[0]} `}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">{titleParts[1]} </span>
+                {titleParts[2]}
               </h2>
 
               {/* Description */}
@@ -126,7 +123,7 @@ export const RealEstateVisualSection: React.FC<VisualSectionProps> = ({ variant 
                   onClick={() => window.location.href = cta.href}
                 >
                   {cta.text}
-                  <TrendingUp className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <TrendingUp className="ms-2 w-5 h-5 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform" />
                 </Button>
               </motion.div>
 
@@ -136,7 +133,7 @@ export const RealEstateVisualSection: React.FC<VisualSectionProps> = ({ variant 
                 whileInView={{ scaleX: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.8, delay: 0.3 }}
-                className="w-32 h-1 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full origin-left"
+                className="w-32 h-1 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full origin-left rtl:origin-right"
               />
             </motion.div>
           </div>
@@ -175,7 +172,7 @@ export const RealEstateVisualSection: React.FC<VisualSectionProps> = ({ variant 
       </div>
 
       {/* Floating decorative elements */}
-      <div className="absolute bottom-10 right-10 hidden xl:block">
+      <div className="absolute bottom-10 end-10 hidden xl:block">
         <motion.div
           animate={{ y: [-10, 10, -10], rotate: [0, 5, 0] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
@@ -187,7 +184,7 @@ export const RealEstateVisualSection: React.FC<VisualSectionProps> = ({ variant 
         </motion.div>
       </div>
 
-      <div className="absolute top-20 right-1/4 hidden xl:block">
+      <div className="absolute top-20 end-1/4 hidden xl:block">
         <motion.div
           animate={{ y: [10, -10, 10], rotate: [0, -5, 0] }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}

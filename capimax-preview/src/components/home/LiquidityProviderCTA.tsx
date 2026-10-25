@@ -10,29 +10,15 @@ import {
   Users
 } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { useTranslation } from 'react-i18next';
 
 export const LiquidityProviderCTA: React.FC = () => {
+  const { t } = useTranslation('ui');
   const highlights = [
-    {
-      icon: Percent,
-      label: 'Competitive Returns',
-      value: 'Market-based yields',
-    },
-    {
-      icon: Shield,
-      label: 'Risk Management',
-      value: 'Diversified portfolio',
-    },
-    {
-      icon: Clock,
-      label: 'Flexible Terms',
-      value: 'Various commitment periods',
-    },
-    {
-      icon: Users,
-      label: 'Verified Platform',
-      value: 'Regulated operations',
-    },
+    { icon: Percent, label: t('lpCta.h1.label'), value: t('lpCta.h1.value') },
+    { icon: Shield, label: t('lpCta.h2.label'), value: t('lpCta.h2.value') },
+    { icon: Clock, label: t('lpCta.h3.label'), value: t('lpCta.h3.value') },
+    { icon: Users, label: t('lpCta.h4.label'), value: t('lpCta.h4.value') },
   ];
 
   return (
@@ -45,7 +31,7 @@ export const LiquidityProviderCTA: React.FC = () => {
             opacity: [0.1, 0.2, 0.1],
           }}
           transition={{ duration: 8, repeat: Infinity }}
-          className="absolute top-20 left-20 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"
+          className="absolute top-20 start-20 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"
         />
         <motion.div
           animate={{
@@ -53,7 +39,7 @@ export const LiquidityProviderCTA: React.FC = () => {
             opacity: [0.1, 0.15, 0.1],
           }}
           transition={{ duration: 10, repeat: Infinity }}
-          className="absolute bottom-20 right-20 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl"
+          className="absolute bottom-20 end-20 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl"
         />
       </div>
 
@@ -69,20 +55,19 @@ export const LiquidityProviderCTA: React.FC = () => {
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500/20 backdrop-blur-sm rounded-full border border-blue-400/30 mb-6">
               <Droplets className="w-4 h-4 text-blue-400" />
               <span className="text-sm font-medium text-blue-300">
-                Liquidity Program
+                {t('lpCta.badge')}
               </span>
             </div>
 
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Become a{' '}
+              {t('lpCta.titlePrefix')}{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">
-                Liquidity Provider
+                {t('lpCta.titleHighlight')}
               </span>
             </h2>
 
             <p className="text-lg text-slate-300 mb-8 leading-relaxed">
-              Support the platform ecosystem by providing liquidity to the secondary market.
-              Earn competitive returns while helping owners access exit opportunities.
+              {t('lpCta.subtitle')}
             </p>
 
             <div className="grid grid-cols-2 gap-4 mb-8">
@@ -109,8 +94,8 @@ export const LiquidityProviderCTA: React.FC = () => {
                 className="bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-600 hover:to-emerald-600 border-0"
                 onClick={() => window.location.href = '/liquidity-provider'}
               >
-                Apply Now
-                <ArrowRight className="ml-2 w-4 h-4" />
+                {t('lpCta.apply')}
+                <ArrowRight className="ms-2 w-4 h-4 rtl:rotate-180" />
               </Button>
               <Button
                 variant="outline"
@@ -118,7 +103,7 @@ export const LiquidityProviderCTA: React.FC = () => {
                 className="border-white/30 text-white hover:bg-white/10"
                 onClick={() => window.location.href = '/liquidity-provider'}
               >
-                Learn More
+                {t('lpCta.learnMore')}
               </Button>
             </div>
           </motion.div>
@@ -136,18 +121,18 @@ export const LiquidityProviderCTA: React.FC = () => {
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">LP Program Benefits</h3>
-                  <p className="text-sm text-slate-400">For qualified participants</p>
+                  <h3 className="text-xl font-bold text-white">{t('lpCta.benefitsTitle')}</h3>
+                  <p className="text-sm text-slate-400">{t('lpCta.benefitsSubtitle')}</p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 {[
-                  'Priority access to ownership opportunities',
-                  'Reduced platform fees',
-                  'Dedicated account management',
-                  'Advanced reporting and analytics',
-                  'Early access to new features',
+                  t('lpCta.benefit1'),
+                  t('lpCta.benefit2'),
+                  t('lpCta.benefit3'),
+                  t('lpCta.benefit4'),
+                  t('lpCta.benefit5'),
                 ].map((benefit, index) => (
                   <motion.div
                     key={index}
@@ -165,8 +150,7 @@ export const LiquidityProviderCTA: React.FC = () => {
 
               <div className="mt-6 pt-6 border-t border-white/10">
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Liquidity provider program is subject to qualification requirements and terms.
-                  Returns are not guaranteed and past performance does not indicate future results.
+                  {t('lpCta.disclaimer')}
                 </p>
               </div>
             </div>

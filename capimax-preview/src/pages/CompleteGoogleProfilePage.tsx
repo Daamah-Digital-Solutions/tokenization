@@ -18,7 +18,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from '../utils/router';
 import { AuthService, GoogleProfileCompletionData } from '../services/auth/AuthService';
 import { UserRole } from '../services/api/types';
-import { COUNTRIES } from '../utils/countries';
+import { getLocalizedCountries } from '../utils/countries';
+import { useTranslation } from 'react-i18next';
 
 interface GoogleUserData {
   email: string;
@@ -32,14 +33,15 @@ interface ValidationErrors {
 }
 
 const USER_TYPES = [
-  { value: UserRole.INVESTOR, label: 'Owner - I want to buy real estate' },
-  { value: UserRole.PROPERTY_OWNER, label: 'Property Owner - I want to tokenize my property' }
+  { value: UserRole.INVESTOR, label: 'register.roles.owner.title', desc: 'register.roles.owner.desc' },
+  { value: UserRole.PROPERTY_OWNER, label: 'register.roles.propertyOwner.title', desc: 'register.roles.propertyOwner.desc' }
 ];
 
 // Countries list now comes from `utils/countries.ts` (full ISO-3166 set).
 
 export const CompleteGoogleProfilePage: React.FC = () => {
   const { setUser } = useAuth();
+  const { t, i18n } = useTranslation('ui');
   const { navigate } = useRouter();
 
   const [googleUserData, setGoogleUserData] = useState<GoogleUserData | null>(null);
@@ -79,27 +81,27 @@ export const CompleteGoogleProfilePage: React.FC = () => {
     const errors: ValidationErrors = {};
 
     if (!formData.phoneNumber.trim()) {
-      errors.phoneNumber = 'Phone number is required';
+      errors.phoneNumber = t('validation.phoneRequired');
     }
 
     if (!formData.country) {
-      errors.country = 'Country is required';
+      errors.country = t('validation.countryRequired');
     }
 
     if (!formData.city.trim()) {
-      errors.city = 'City is required';
+      errors.city = t('validation.cityRequired');
     }
 
     if (formData.userRoles.length === 0) {
-      errors.userRoles = 'Please select at least one role';
+      errors.userRoles = t('validation.roleRequired');
     }
 
     if (!formData.agreeToTerms) {
-      errors.agreeToTerms = 'You must agree to the Terms and Conditions';
+      errors.agreeToTerms = t('validation.termsRequired');
     }
 
     if (!formData.agreeToPrivacy) {
-      errors.agreeToPrivacy = 'You must agree to the Privacy Policy';
+      errors.agreeToPrivacy = t('validation.privacyRequired');
     }
 
     setValidationErrors(errors);
@@ -142,7 +144,7 @@ export const CompleteGoogleProfilePage: React.FC = () => {
       navigate('dashboard');
     } catch (err: any) {
       console.error('Profile completion failed:', err);
-      setError(err.message || 'Failed to complete profile. Please try again.');
+      setError(err.message || t('googleProfile.failed'));
     } finally {
       setIsLoading(false);
     }
@@ -188,10 +190,10 @@ export const CompleteGoogleProfilePage: React.FC = () => {
                 <User className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
               </div>
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
-                Complete Your Profile
+                {t('googleProfile.title')}
               </h2>
               <p className="text-slate-600 dark:text-slate-400">
-                Welcome, {googleUserData.first_name}! Please complete your profile to continue.
+                {t('googleProfile.welcome', { name: googleUserData.first_name })}
               </p>
             </div>
 
@@ -208,10 +210,10 @@ export const CompleteGoogleProfilePage: React.FC = () => {
                   {googleUserData.email}
                 </p>
               </div>
-              <div className="ml-auto">
+              <div className="ms-auto">
                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs font-medium rounded-full">
                   <Check className="w-3 h-3" />
-                  Verified
+                  {t('googleProfile.verified')}
                 </span>
               </div>
             </div>
@@ -234,13 +236,13 @@ export const CompleteGoogleProfilePage: React.FC = () => {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                   <Phone className="w-5 h-5 text-emerald-500" />
-                  Contact Information
+                  {t('googleProfile.contact')}
                 </h3>
 
                 <Input
                   type="tel"
-                  label="Phone Number"
-                  placeholder="Enter your phone number"
+                  label={t('fields.phone')}
+                  placeholder={t('fields.phonePlaceholder')}
                   value={formData.phoneNumber}
                   onChange={handleInputChange('phoneNumber')}
                   leftIcon={<Phone className="w-5 h-5" />}
@@ -251,7 +253,7 @@ export const CompleteGoogleProfilePage: React.FC = () => {
 
                 <Input
                   type="date"
-                  label="Date of Birth (Optional)"
+                  label={t('googleProfile.dob')}
                   value={formData.dateOfBirth}
                   onChange={handleInputChange('dateOfBirth')}
                   errorMessage={validationErrors.dateOfBirth}
@@ -263,13 +265,13 @@ export const CompleteGoogleProfilePage: React.FC = () => {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                   <Globe className="w-5 h-5 text-emerald-500" />
-                  Location
+                  {t('register.steps.location')}
                 </h3>
 
                 <Select
-                  label="Country"
-                  placeholder="Select your country"
-                  options={COUNTRIES}
+                  label={t('fields.country')}
+                  placeholder={t('fields.countryPlaceholder')}
+                  options={getLocalizedCountries(i18n.language)}
                   value={formData.country}
                   onChange={(e) => setFormData(prev => ({ ...prev, country: e.target.value }))}
                   errorMessage={validationErrors.country}
@@ -277,8 +279,8 @@ export const CompleteGoogleProfilePage: React.FC = () => {
                 />
 
                 <Input
-                  label="City"
-                  placeholder="Enter your city"
+                  label={t('fields.city')}
+                  placeholder={t('fields.cityPlaceholder')}
                   value={formData.city}
                   onChange={handleInputChange('city')}
                   errorMessage={validationErrors.city}
@@ -291,7 +293,7 @@ export const CompleteGoogleProfilePage: React.FC = () => {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                   <Shield className="w-5 h-5 text-emerald-500" />
-                  Select Your Role(s)
+                  {t('register.selectRoles')}
                 </h3>
 
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg space-y-3">
@@ -319,10 +321,10 @@ export const CompleteGoogleProfilePage: React.FC = () => {
                       />
                       <div className="flex-1">
                         <div className="font-medium text-slate-700 dark:text-slate-200">
-                          {roleType.label.split(' - ')[0]}
+                          {t(roleType.label)}
                         </div>
                         <div className="text-sm text-slate-500 dark:text-slate-400">
-                          {roleType.label.split(' - ')[1]}
+                          {t(roleType.desc)}
                         </div>
                       </div>
                     </label>
@@ -332,7 +334,7 @@ export const CompleteGoogleProfilePage: React.FC = () => {
                   <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
                     <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <span className="text-sm text-emerald-700 dark:text-emerald-300">
-                      You can switch between roles anytime from your dashboard
+                      {t('register.switchRoles')}
                     </span>
                   </div>
                 )}
@@ -348,7 +350,7 @@ export const CompleteGoogleProfilePage: React.FC = () => {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                   <Building className="w-5 h-5 text-emerald-500" />
-                  Terms & Agreements
+                  {t('googleProfile.terms')}
                 </h3>
 
                 <div className="space-y-4">
@@ -361,11 +363,11 @@ export const CompleteGoogleProfilePage: React.FC = () => {
                       className="w-5 h-5 mt-0.5 text-emerald-500 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded focus:ring-emerald-500 focus:ring-2"
                     />
                     <label htmlFor="terms" className="text-sm text-slate-600 dark:text-slate-400">
-                      I agree to the{' '}
+                      {t('register.agreePrefix')}{' '}
                       <a href="/terms" className="text-emerald-500 hover:text-emerald-600 dark:text-emerald-400">
-                        Terms and Conditions
+                        {t('register.terms')}
                       </a>{' '}
-                      and understand the risks involved in real estate tokenization
+                      {t('register.termsSuffix')}
                     </label>
                   </div>
                   {validationErrors.agreeToTerms && (
@@ -384,11 +386,11 @@ export const CompleteGoogleProfilePage: React.FC = () => {
                       className="w-5 h-5 mt-0.5 text-emerald-500 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded focus:ring-emerald-500 focus:ring-2"
                     />
                     <label htmlFor="privacy" className="text-sm text-slate-600 dark:text-slate-400">
-                      I agree to the{' '}
+                      {t('register.agreePrefix')}{' '}
                       <a href="/privacy" className="text-emerald-500 hover:text-emerald-600 dark:text-emerald-400">
-                        Privacy Policy
+                        {t('register.privacy')}
                       </a>{' '}
-                      and consent to the processing of my personal data
+                      {t('register.privacySuffix')}
                     </label>
                   </div>
                   {validationErrors.agreeToPrivacy && (
@@ -407,7 +409,7 @@ export const CompleteGoogleProfilePage: React.FC = () => {
                       className="w-5 h-5 mt-0.5 text-emerald-500 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded focus:ring-emerald-500 focus:ring-2"
                     />
                     <label htmlFor="marketing" className="text-sm text-slate-600 dark:text-slate-400">
-                      I would like to receive marketing communications and ownership opportunities (optional)
+                      {t('register.marketing')}
                     </label>
                   </div>
                 </div>
@@ -422,7 +424,7 @@ export const CompleteGoogleProfilePage: React.FC = () => {
                 isLoading={isLoading}
                 disabled={isLoading}
               >
-                {isLoading ? 'Completing Profile...' : 'Complete Profile & Continue'}
+                {isLoading ? t('googleProfile.completing') : t('googleProfile.complete')}
               </Button>
             </form>
           </motion.div>
