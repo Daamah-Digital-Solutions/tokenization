@@ -1,1085 +1,640 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-  FileText,
-  Camera,
-  MapPin,
   Shield,
+  User,
+  FileText,
+  MapPin,
+  Camera,
   Check,
   AlertTriangle,
   Clock,
-  Users,
   ChevronLeft,
   ChevronRight,
-  User,
-  Calendar
+  Calendar,
+  Loader2,
 } from 'lucide-react';
-import { DocumentUpload, type UploadedFile } from './DocumentUpload';
-import { LivenessVerification, type LivenessResult } from './LivenessVerification';
+import { DocumentUpload } from './DocumentUpload';
+import { LivenessVerification } from './LivenessVerification';
+import { kycErrorMessage } from './kycErrors';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
-import { useAuth } from '../../contexts/AuthContext';
-import { COUNTRIES } from '../../utils/countries';
+import { getLocalizedCountries, localizedCountryName } from '../../utils/countries';
+import {
+  KYCService,
+  type KYCDocumentType,
+  type KYCGroupKey,
+  type KYCServerDocument,
+  type KYCStatusPayload,
+} from '../../services/user/KYCService';
 
-interface KYCWizardProps {
-  onComplete?: (data: KYCData) => void;
-  onStepChange?: (step: number) => void;
-  initialStep?: number;
-  userType?: 'investor' | 'property_owner' | 'broker';
-  className?: string;
-}
+/**
+ * KYC wizard driven by the SERVER's state (client round 3, items 5–7).
+ *
+ * The old wizard kept everything in local state: re-opening the page showed
+ * empty slots, uploading again hit "Document of type X already exists",
+ * "Remove" never reached the server, the selfie was never uploaded and the
+ * submit error was a generic "Failed to submit". Now every step reads the
+ * documents and completion status from /kyc/status/, uploads replace on the
+ * server, and the user resumes exactly where they stopped.
+ */
 
+/** Legacy type kept for the components barrel export. */
 export interface KYCData {
-  personalInfo: {
-    firstName: string;
-    lastName: string;
-    dateOfBirth: string;
-    nationality: string;
-    residencyCountry: string;
-  };
-  documents: {
-    passport?: UploadedFile;
-    nationalId?: UploadedFile;
-    utilityBill?: UploadedFile;
-    bankStatement?: UploadedFile;
-  };
-  liveness: LivenessResult | null;
   verificationStatus: 'pending' | 'processing' | 'approved' | 'rejected';
   submittedAt: Date;
 }
 
-type KYCStep = 'intro' | 'personal-info' | 'identity-docs' | 'address-docs' | 'liveness' | 'review' | 'complete';
-
-interface StepConfig {
-  id: KYCStep;
-  title: string;
-  description: string;
-  icon: React.ComponentType<any>;
-  required: boolean;
+interface KYCWizardProps {
+  status: KYCStatusPayload;
+  /** Reload /kyc/status/ and return the fresh payload. */
+  onRefresh: () => Promise<KYCStatusPayload | null>;
+  onSubmitted: (payload: KYCStatusPayload | null) => void;
+  className?: string;
 }
 
-const STEPS: StepConfig[] = [
-  {
-    id: 'intro',
-    title: 'Introduction',
-    description: 'KYC requirements overview',
-    icon: Shield,
-    required: true
-  },
-  {
-    id: 'personal-info',
-    title: 'Personal Information',
-    description: 'Date of birth & nationality',
-    icon: User,
-    required: true
-  },
-  {
-    id: 'identity-docs',
-    title: 'Identity Verification',
-    description: 'Upload government-issued ID',
-    icon: FileText,
-    required: true
-  },
-  {
-    id: 'address-docs',
-    title: 'Address Verification',
-    description: 'Proof of residence (optional)',
-    icon: MapPin,
-    required: false
-  },
-  {
-    id: 'liveness',
-    title: 'Liveness Check',
-    description: 'Live selfie verification',
-    icon: Camera,
-    required: true
-  },
-  {
-    id: 'review',
-    title: 'Review & Submit',
-    description: 'Final verification review',
-    icon: Check,
-    required: true
-  }
+type StepId = 'intro' | 'personal' | 'identity' | 'address' | 'selfie' | 'review';
+
+const STEPS: Array<{ id: StepId; icon: React.ComponentType<any> }> = [
+  { id: 'intro', icon: Shield },
+  { id: 'personal', icon: User },
+  { id: 'identity', icon: FileText },
+  { id: 'address', icon: MapPin },
+  { id: 'selfie', icon: Camera },
+  { id: 'review', icon: Check },
 ];
 
-const DOCUMENT_REQUIREMENTS = {
-  investor: {
-    identity: ['Passport', 'National ID', 'Driver License'],
-    address: ['Utility Bill', 'Bank Statement', 'Government Letter'],
-    additional: []
-  },
-  property_owner: {
-    identity: ['Passport', 'National ID'],
-    address: ['Utility Bill', 'Bank Statement'],
-    additional: ['Business Registration', 'Tax Documents']
-  },
-  broker: {
-    identity: ['Passport', 'National ID'],
-    address: ['Utility Bill', 'Bank Statement'],
-    additional: ['Professional License', 'Certification']
+const IDENTITY_TYPES: KYCDocumentType[] = ['passport', 'national_id', 'driving_license'];
+const ADDRESS_TYPES: KYCDocumentType[] = ['utility_bill', 'bank_statement', 'proof_of_address'];
+const READY_STATES = ['uploaded', 'approved'];
+
+const groupState = (status: KYCStatusPayload, key: KYCGroupKey) =>
+  status.completion_status.groups.find((g) => g.key === key)?.state ??
+  status.completion_status.optional_groups.find((g) => g.key === key)?.state ??
+  'missing';
+
+const initialStep = (status: KYCStatusPayload): number => {
+  const cs = status.completion_status;
+  const index = (id: StepId) => STEPS.findIndex((s) => s.id === id);
+  if (cs.missing_personal_info.length) {
+    return status.documents.length ? index('personal') : index('intro');
   }
+  if (!READY_STATES.includes(groupState(status, 'identity'))) return index('identity');
+  if (!READY_STATES.includes(groupState(status, 'selfie'))) return index('selfie');
+  return index('review');
 };
 
-export const KYCWizard: React.FC<KYCWizardProps> = ({
-  onComplete,
-  onStepChange,
-  initialStep = 0,
-  userType = 'investor',
-  className
-}) => {
-  const { state: authState } = useAuth();
-  const user = authState.user;
-  const [currentStep, setCurrentStep] = useState(initialStep);
-  const [kycData, setKYCData] = useState<Partial<KYCData>>({
-    personalInfo: {
-      firstName: user?.first_name || '',
-      lastName: user?.last_name || '',
-      dateOfBirth: '',
-      nationality: '',
-      residencyCountry: user?.country || ''
-    },
-    documents: {},
-    liveness: null,
-    verificationStatus: 'pending'
-  });
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [personalInfoErrors, setPersonalInfoErrors] = useState<Record<string, string>>({});
+const ageOn = (iso: string) => {
+  const today = new Date();
+  const birth = new Date(iso);
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+};
 
-  const currentStepConfig = STEPS[currentStep];
-  const requirements = DOCUMENT_REQUIREMENTS[userType];
+export const KYCWizard: React.FC<KYCWizardProps> = ({ status, onRefresh, onSubmitted, className }) => {
+  const { t, i18n } = useTranslation('kyc');
+  const lang = i18n.language || 'en';
+  const countries = useMemo(() => getLocalizedCountries(lang), [lang]);
 
-  const handleNext = () => {
-    // Run validation that mutates state ONLY when the user actually clicks
-    // Next. canProceedToNext is called during render to enable/disable the
-    // button — if it triggered setState, every render queued another render
-    // and React's "Too many re-renders" guard kicked in.
-    if (STEPS[currentStep].id === 'personal-info') {
-      if (!validatePersonalInfo()) return;
-    }
-    if (currentStep < STEPS.length - 1) {
-      const newStep = currentStep + 1;
-      setCurrentStep(newStep);
-      onStepChange?.(newStep);
-    }
-  };
+  const [step, setStep] = useState(() => initialStep(status));
+  const [personal, setPersonal] = useState({ dob: '', nationality: '', residency: '' });
+  const [personalErrors, setPersonalErrors] = useState<Record<string, string>>({});
+  const [savingPersonal, setSavingPersonal] = useState(false);
+  const [uploading, setUploading] = useState<Record<string, boolean>>({});
+  const [docErrors, setDocErrors] = useState<Record<string, string | null>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<{ message: string; steps: string[] } | null>(null);
 
-  const handleBack = () => {
-    if (currentStep > 0) {
-      const newStep = currentStep - 1;
-      setCurrentStep(newStep);
-      onStepChange?.(newStep);
-    }
-  };
+  const docs = useMemo(() => {
+    const map: Partial<Record<KYCDocumentType, KYCServerDocument>> = {};
+    status.documents.forEach((d) => {
+      map[d.document_type] = d;
+    });
+    return map;
+  }, [status.documents]);
 
-  /**
-   * Upload a KYC document to the real backend.
-   *
-   * Previously this used setTimeout + Math.random() to fake approval/rejection.
-   * That created the dangerous illusion of KYC working without sending any
-   * actual document to the compliance pipeline.
-   *
-   * Now: POST /kyc/documents/upload/ with multipart form data. The document
-   * starts in `pending` status server-side; the UI shows it as `processing`
-   * until an admin or automated check transitions it. Polling for status is
-   * out of scope for this method — the review step refreshes /kyc/status/.
-   */
-  const handleDocumentUpload = async (documentType: string, file: File) => {
-    setLoading(true);
+  const [identityType, setIdentityType] = useState<KYCDocumentType>(
+    () => IDENTITY_TYPES.find((type) => docs[type]) || 'passport',
+  );
+  const [addressType, setAddressType] = useState<KYCDocumentType>(
+    () => ADDRESS_TYPES.find((type) => docs[type]) || 'utility_bill',
+  );
 
-    // Optimistic UI: show the file immediately in "processing" state.
-    const optimisticFile: UploadedFile = {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      url: URL.createObjectURL(file),
-      uploadDate: new Date(),
-      status: 'processing',
-    };
-    setKYCData(prev => ({
-      ...prev,
-      documents: { ...prev.documents, [documentType]: optimisticFile },
-    }));
-
-    try {
-      const { KYCService } = await import('../../services/user/KYCService');
-
-      // Map UI-side document keys to backend DocumentType choices.
-      const documentTypeMap: Record<string, string> = {
-        passport: 'passport',
-        nationalId: 'national_id',
-        utilityBill: 'utility_bill',
-        bankStatement: 'bank_statement',
-      };
-      const backendDocType = documentTypeMap[documentType] || documentType;
-
-      const uploaded = await KYCService.uploadDocument({
-        file,
-        document_type: backendDocType as any,
-      });
-
-      // Reflect the backend's status verbatim. The backend uses lowercase
-      // strings ('pending', 'approved', 'rejected', etc.). If the type is
-      // unknown, fall back to 'processing' so the UI doesn't lie about it.
-      const backendStatus = (uploaded as any)?.status || 'processing';
-      setKYCData(prev => ({
-        ...prev,
-        documents: {
-          ...prev.documents,
-          [documentType]: {
-            ...optimisticFile,
-            status: backendStatus === 'approved' ? 'approved'
-                  : backendStatus === 'rejected' ? 'rejected'
-                  : 'processing',
-            rejectionReason: (uploaded as any)?.rejection_reason || undefined,
-          },
-        },
-      }));
-    } catch (apiError: any) {
-      console.error('KYC document upload failed:', apiError);
-      // Surface the failure as a transport 'error' (amber, retry) — NOT a
-      // compliance 'rejected' (red). The old code showed every failed upload
-      // as "Rejected", which made users think their document was refused even
-      // though nothing had been reviewed (client edit #9b).
-      setKYCData(prev => ({
-        ...prev,
-        documents: {
-          ...prev.documents,
-          [documentType]: {
-            ...optimisticFile,
-            status: 'error',
-            rejectionReason:
-              apiError?.message || 'Upload failed. Please try again.',
-          },
-        },
-      }));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDocumentRemove = (documentType: string) => {
-    setKYCData(prev => ({
-      ...prev,
-      documents: {
-        ...prev.documents,
-        [documentType]: undefined
-      }
-    }));
-  };
-
-  const handleLivenessComplete = (result: LivenessResult) => {
-    setKYCData(prev => ({
-      ...prev,
-      liveness: result
-    }));
-  };
-
-  const handleSubmit = async () => {
-    setLoading(true);
-
-    try {
-      // 1. Save personal info (including DOB) to /kyc/personal-info/. If this
-      //    fails we MUST abort the submission — proceeding with stale DOB
-      //    creates a compliance hole. The earlier version of this code logged
-      //    the error and continued, which is exactly what the audit flagged.
-      const personalInfo = kycData.personalInfo;
-      if (personalInfo?.dateOfBirth) {
-        const { apiClient } = await import('../../services/api/ApiClient');
-        await apiClient.patch('/kyc/personal-info/', {
-          date_of_birth: personalInfo.dateOfBirth,
-          nationality: personalInfo.nationality,
-          residency_country: personalInfo.residencyCountry,
+  // Pre-fill personal info from the server.
+  useEffect(() => {
+    let alive = true;
+    KYCService.getPersonalInfo()
+      .then((info) => {
+        if (!alive) return;
+        setPersonal({
+          dob: info.date_of_birth || '',
+          nationality: info.nationality || '',
+          residency: info.country || '',
         });
+      })
+      .catch(() => {
+        /* fields stay empty; the user fills them in */
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const currentId = STEPS[step].id;
+  const fmtDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(lang.startsWith('ar') ? 'ar' : 'en', {
+      year: 'numeric', month: 'long', day: 'numeric',
+    });
+
+  // ---------------------------------------------------------------- actions
+  const upload = async (type: KYCDocumentType, file: File, sameGroup: KYCDocumentType[] = []) => {
+    setUploading((u) => ({ ...u, [type]: true }));
+    setDocErrors((e) => ({ ...e, [type]: null }));
+    try {
+      await KYCService.uploadDocument(type, file);
+      // Keep ONE document per group on file: drop superseded, non-approved
+      // siblings (e.g. a rejected passport after uploading a national ID).
+      for (const sibling of sameGroup) {
+        const old = docs[sibling];
+        if (sibling !== type && old && old.status !== 'approved') {
+          await KYCService.deleteDocument(old.id).catch(() => undefined);
+        }
       }
-
-      // 2. Submit the KYC profile for review. The backend transitions
-      //    status PENDING → IN_REVIEW and queues the compliance workflow.
-      const { KYCService } = await import('../../services/user/KYCService');
-      await KYCService.submitForReview();
-
-      const completeData: KYCData = {
-        personalInfo: {
-          firstName: user?.first_name || personalInfo?.firstName || '',
-          lastName: user?.last_name || personalInfo?.lastName || '',
-          dateOfBirth: personalInfo?.dateOfBirth || '',
-          nationality: personalInfo?.nationality || '',
-          residencyCountry: personalInfo?.residencyCountry || ''
-        },
-        documents: kycData.documents || {},
-        liveness: kycData.liveness || null,
-        verificationStatus: 'processing',
-        submittedAt: new Date()
-      };
-
-      onComplete?.(completeData);
-      setCurrentStep(STEPS.length);
-
-    } catch (error) {
-      setErrors({ submit: 'Failed to submit KYC data. Please try again.' });
+      await onRefresh();
+    } catch (err) {
+      setDocErrors((e) => ({ ...e, [type]: kycErrorMessage(t, err, lang) }));
+      throw err;
     } finally {
-      setLoading(false);
+      setUploading((u) => ({ ...u, [type]: false }));
     }
   };
 
-  const validatePersonalInfo = (): boolean => {
+  const remove = async (doc: KYCServerDocument) => {
+    setDocErrors((e) => ({ ...e, [doc.document_type]: null }));
+    try {
+      await KYCService.deleteDocument(doc.id);
+      await onRefresh();
+    } catch (err) {
+      setDocErrors((e) => ({ ...e, [doc.document_type]: kycErrorMessage(t, err, lang) }));
+    }
+  };
+
+  const validatePersonal = () => {
     const errors: Record<string, string> = {};
-    const info = kycData.personalInfo;
-
-    if (!info?.dateOfBirth) {
-      errors.dateOfBirth = 'Date of birth is required';
-    } else {
-      // Validate age is at least 18
-      const today = new Date();
-      const birthDate = new Date(info.dateOfBirth);
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      if (age < 18) {
-        errors.dateOfBirth = 'You must be at least 18 years old to use this platform';
-      }
-      if (birthDate > today) {
-        errors.dateOfBirth = 'Date of birth cannot be in the future';
-      }
-    }
-
-    if (!info?.nationality?.trim()) {
-      errors.nationality = 'Nationality is required';
-    }
-
-    if (!info?.residencyCountry?.trim()) {
-      errors.residencyCountry = 'Country of residence is required';
-    }
-
-    setPersonalInfoErrors(errors);
+    if (!personal.dob) errors.dob = t('wizard.personal.errors.dobRequired');
+    else if (new Date(personal.dob) > new Date()) errors.dob = t('wizard.personal.errors.dobFuture');
+    else if (ageOn(personal.dob) < 18) errors.dob = t('wizard.personal.errors.dobUnderage');
+    if (!personal.nationality) errors.nationality = t('wizard.personal.errors.nationalityRequired');
+    if (!personal.residency) errors.residency = t('wizard.personal.errors.residencyRequired');
+    setPersonalErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
-  /**
-   * Pure check used during render to decide whether the Next button is
-   * enabled. Must NOT call setState (was previously calling
-   * validatePersonalInfo which set personalInfoErrors → infinite loop).
-   * The mutating validator runs inside handleNext when the user clicks.
-   */
-  const canProceedToNext = (): boolean => {
-    // A document only counts toward completion if it actually uploaded — a
-    // failed transport ('error') or a compliance 'rejected' must NOT unlock
-    // Next (client edit #9b: previously any file object, even a failed one,
-    // let the user advance).
-    const docUsable = (doc?: UploadedFile): boolean =>
-      !!doc && doc.status !== 'error' && doc.status !== 'rejected';
-
-    switch (STEPS[currentStep].id) {
-      case 'intro':
-        return true;
-      case 'personal-info': {
-        const info = kycData.personalInfo;
-        return !!(info?.dateOfBirth && info?.nationality?.trim() && info?.residencyCountry?.trim());
+  const goNext = async () => {
+    if (currentId === 'personal') {
+      if (!validatePersonal()) return;
+      setSavingPersonal(true);
+      try {
+        await KYCService.savePersonalInfo({
+          date_of_birth: personal.dob,
+          nationality: personal.nationality,
+          residency_country: personal.residency,
+        });
+        await onRefresh();
+      } catch (err) {
+        setPersonalErrors({ form: kycErrorMessage(t, err, lang) || t('wizard.personal.errors.saveFailed') });
+        return;
+      } finally {
+        setSavingPersonal(false);
       }
-      case 'identity-docs':
-        return docUsable(kycData.documents?.passport) || docUsable(kycData.documents?.nationalId);
-      case 'address-docs':
-        // Optional step (client #9a) — never blocks progress. Any proof of
-        // address the user does upload is still saved and used.
-        return true;
-      case 'liveness':
-        return !!kycData.liveness;
-      case 'review':
-        return true;
+    }
+    setStep((s) => Math.min(s + 1, STEPS.length - 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const goBack = () => {
+    setStep((s) => Math.max(s - 1, 0));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const submit = async () => {
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const payload = await KYCService.submitForReview();
+      onSubmitted(payload);
+    } catch (err: any) {
+      const nextSteps: Array<{ step: string; title: string }> =
+        err?.details?.completion_status?.next_steps || [];
+      setSubmitError({
+        message: kycErrorMessage(t, err, lang),
+        steps: nextSteps
+          .filter((s) => s.step !== 'submit')
+          .map((s) => t(`steps.${s.step}`, { defaultValue: s.title })),
+      });
+      await onRefresh();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const canProceed = (): boolean => {
+    switch (currentId) {
+      case 'personal':
+        return !!(personal.dob && personal.nationality && personal.residency) && !savingPersonal;
+      case 'identity':
+        return READY_STATES.includes(groupState(status, 'identity'));
+      case 'selfie':
+        return READY_STATES.includes(groupState(status, 'selfie'));
       default:
         return true;
     }
   };
 
-  const renderProgressBar = () => (
-    <div className="flex items-center justify-between mb-8">
-      {STEPS.map((step, index) => {
-        const isActive = index === currentStep;
-        const isCompleted = index < currentStep;
-        const StepIcon = step.icon;
-
-        return (
-          <div key={step.id} className="flex items-center">
-            <div
-              className={cn(
-                'flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-200',
-                isActive && 'border-emerald-500 bg-emerald-500 text-white',
-                isCompleted && 'border-emerald-500 bg-emerald-500 text-white',
-                !isActive && !isCompleted && 'border-slate-300 dark:border-slate-600 text-slate-400 dark:text-slate-500'
-              )}
-            >
-              {isCompleted ? (
-                <Check className="w-5 h-5" />
-              ) : (
-                <StepIcon className="w-5 h-5" />
-              )}
-            </div>
-            
-            {index < STEPS.length - 1 && (
-              <div
-                className={cn(
-                  'w-16 h-0.5 ml-2 transition-all duration-200',
-                  isCompleted ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700'
-                )}
-              />
-            )}
-          </div>
-        );
-      })}
+  // ---------------------------------------------------------------- pieces
+  const typeSelector = (types: KYCDocumentType[], value: KYCDocumentType, onChange: (v: KYCDocumentType) => void) => (
+    <div role="radiogroup" className="flex flex-wrap gap-2">
+      {types.map((type) => (
+        <button
+          key={type}
+          type="button"
+          role="radio"
+          aria-checked={value === type}
+          onClick={() => onChange(type)}
+          className={cn(
+            'px-3.5 py-2 rounded-lg text-sm font-medium border transition-colors',
+            value === type
+              ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
+              : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:border-emerald-400',
+          )}
+        >
+          {t(`docTypes.${type}`)}
+          {docs[type] && <Check className="inline w-3.5 h-3.5 ms-1.5" />}
+        </button>
+      ))}
     </div>
   );
 
-  const renderIntroStep = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="space-y-6"
-    >
-      <div className="text-center space-y-4">
-        <div className="w-20 h-20 mx-auto bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center">
-          <Shield className="w-10 h-10 text-emerald-500 dark:text-emerald-400" />
-        </div>
-        
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-            Identity Verification Required
-          </h2>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">
-            To comply with regulations and protect our platform, we need to verify your identity.
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-6">
-        <div className="flex items-start gap-3">
-          <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400 mt-0.5" />
-          <div>
-            <h3 className="font-semibold text-amber-800 dark:text-amber-200">
-              Important Information
-            </h3>
-            <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-              This process typically takes 5-10 minutes and requires access to your camera and valid identification documents.
-              Your information is encrypted and securely stored.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <h3 className="font-semibold text-slate-900 dark:text-white">
-          What you'll need:
-        </h3>
-        
-        <div className="space-y-3">
-          <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-            <FileText className="w-5 h-5 text-emerald-500" />
-            <div>
-              <p className="font-medium text-slate-900 dark:text-white">
-                Government-issued ID
-              </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                {requirements.identity.join(', ')}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-            <MapPin className="w-5 h-5 text-emerald-500" />
-            <div>
-              <p className="font-medium text-slate-900 dark:text-white">
-                Proof of Address
-              </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                {requirements.address.join(', ')} (issued within 3 months)
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-            <Camera className="w-5 h-5 text-emerald-500" />
-            <div>
-              <p className="font-medium text-slate-900 dark:text-white">
-                Live Selfie
-              </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Real-time photo to verify your identity
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4">
-        <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-2">
-          <Clock className="w-4 h-4" />
-          Processing Time
-        </div>
-        <p className="text-sm text-slate-700 dark:text-slate-300">
-          Most verifications are processed within 24 hours. You'll receive email updates on your status.
-        </p>
-      </div>
-    </motion.div>
+  const stepHeader = (title: string, desc?: string) => (
+    <div className="text-center mb-6">
+      <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">{title}</h2>
+      {desc && <p className="text-slate-600 dark:text-slate-400 mt-2 max-w-xl mx-auto">{desc}</p>}
+    </div>
   );
 
-  const renderPersonalInfoStep = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="space-y-6"
-    >
-      <div className="text-center space-y-4">
-        <div className="w-20 h-20 mx-auto bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center">
-          <User className="w-10 h-10 text-emerald-500 dark:text-emerald-400" />
-        </div>
+  const selectClass = (hasError?: string) =>
+    cn(
+      'w-full px-4 py-3 rounded-xl border bg-white dark:bg-slate-800 text-slate-900 dark:text-white',
+      'focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent',
+      hasError ? 'border-red-300 dark:border-red-600' : 'border-slate-300 dark:border-slate-600',
+    );
 
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-            Personal Information
-          </h2>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">
-            Please provide your date of birth and nationality for verification
-          </p>
-        </div>
-      </div>
+  const fieldError = (msg?: string) =>
+    msg ? (
+      <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1 mt-1">
+        <AlertTriangle className="w-4 h-4" />
+        {msg}
+      </p>
+    ) : null;
 
-      <div className="max-w-md mx-auto space-y-6">
-        {/* Date of Birth */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Date of Birth <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <input
-              type="date"
-              value={kycData.personalInfo?.dateOfBirth || ''}
-              onChange={(e) => {
-                setKYCData(prev => ({
-                  ...prev,
-                  personalInfo: {
-                    ...prev.personalInfo!,
-                    dateOfBirth: e.target.value
-                  }
-                }));
-                if (personalInfoErrors.dateOfBirth) {
-                  setPersonalInfoErrors(prev => ({ ...prev, dateOfBirth: '' }));
-                }
-              }}
-              className={cn(
-                'w-full pl-10 pr-4 py-3 rounded-xl border bg-white dark:bg-slate-800 text-slate-900 dark:text-white',
-                'focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent',
-                'transition-all duration-200',
-                personalInfoErrors.dateOfBirth
-                  ? 'border-red-300 dark:border-red-600'
-                  : 'border-slate-300 dark:border-slate-600'
+  const renderStep = () => {
+    switch (currentId) {
+      case 'intro':
+        return (
+          <div className="space-y-6">
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center">
+                <Shield className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+              </div>
+            </div>
+            {stepHeader(t('wizard.intro.title'), t('wizard.intro.desc'))}
+            <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
+              <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-800 dark:text-amber-200">{t('wizard.intro.timeNote')}</p>
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-3">{t('wizard.intro.needTitle')}</h3>
+              <div className="space-y-3">
+                {[
+                  { icon: FileText, title: t('wizard.intro.needId'), desc: t('wizard.intro.needIdDesc') },
+                  { icon: Camera, title: t('wizard.intro.needSelfie'), desc: t('wizard.intro.needSelfieDesc') },
+                  { icon: MapPin, title: t('wizard.intro.needAddress'), desc: t('wizard.intro.needAddressDesc') },
+                ].map(({ icon: Icon, title, desc }) => (
+                  <div key={title} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                    <Icon className="w-5 h-5 text-emerald-500 shrink-0" />
+                    <div>
+                      <p className="font-medium text-slate-900 dark:text-white">{title}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-400">{t('wizard.intro.processing')}</p>
+          </div>
+        );
+
+      case 'personal':
+        return (
+          <div>
+            {stepHeader(t('wizard.personal.title'), t('wizard.personal.desc'))}
+            <div className="max-w-md mx-auto space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                  {t('wizard.personal.dob')} <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="date"
+                    value={personal.dob}
+                    max={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => {
+                      setPersonal((p) => ({ ...p, dob: e.target.value }));
+                      setPersonalErrors((er) => ({ ...er, dob: '' }));
+                    }}
+                    className={cn(selectClass(personalErrors.dob), 'ps-10')}
+                  />
+                </div>
+                {fieldError(personalErrors.dob)}
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('wizard.personal.dobHint')}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                  {t('wizard.personal.nationality')} <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={personal.nationality}
+                  onChange={(e) => {
+                    setPersonal((p) => ({ ...p, nationality: e.target.value }));
+                    setPersonalErrors((er) => ({ ...er, nationality: '' }));
+                  }}
+                  className={selectClass(personalErrors.nationality)}
+                >
+                  <option value="">{t('wizard.personal.nationalityPlaceholder')}</option>
+                  {countries.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+                {fieldError(personalErrors.nationality)}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                  {t('wizard.personal.residency')} <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={personal.residency}
+                  onChange={(e) => {
+                    setPersonal((p) => ({ ...p, residency: e.target.value }));
+                    setPersonalErrors((er) => ({ ...er, residency: '' }));
+                  }}
+                  className={selectClass(personalErrors.residency)}
+                >
+                  <option value="">{t('wizard.personal.residencyPlaceholder')}</option>
+                  {countries.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+                {fieldError(personalErrors.residency)}
+              </div>
+              {personalErrors.form && (
+                <div role="alert" className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-sm text-red-700 dark:text-red-300">
+                  {personalErrors.form}
+                </div>
               )}
-              max={new Date().toISOString().split('T')[0]}
+              <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <Shield className="w-4 h-4 shrink-0" />
+                {t('wizard.personal.privacy')}
+              </p>
+            </div>
+          </div>
+        );
+
+      case 'identity': {
+        const descKey = identityType === 'passport' ? 'passportDesc' : identityType === 'national_id' ? 'nationalIdDesc' : 'drivingDesc';
+        return (
+          <div>
+            {stepHeader(t('wizard.identity.title'), t('wizard.identity.desc'))}
+            <div className="max-w-xl mx-auto space-y-4">
+              {typeSelector(IDENTITY_TYPES, identityType, setIdentityType)}
+              <DocumentUpload
+                key={identityType}
+                title={t(`docTypes.${identityType}`)}
+                description={t(`wizard.identity.${descKey}`)}
+                requirements={[t('wizard.identity.req1'), t('wizard.identity.req2'), t('wizard.identity.req3'), t('wizard.identity.req4')]}
+                document={docs[identityType]}
+                uploading={!!uploading[identityType]}
+                error={docErrors[identityType]}
+                onUpload={(file) => upload(identityType, file, IDENTITY_TYPES).catch(() => undefined)}
+                onRemove={docs[identityType] ? () => remove(docs[identityType] as KYCServerDocument) : undefined}
+              />
+            </div>
+          </div>
+        );
+      }
+
+      case 'address': {
+        const available = ADDRESS_TYPES.filter((type) => type !== 'proof_of_address' || docs[type]);
+        return (
+          <div>
+            {stepHeader(t('wizard.address.title'), t('wizard.address.desc'))}
+            <div className="max-w-xl mx-auto space-y-4">
+              {typeSelector(available, addressType, setAddressType)}
+              <DocumentUpload
+                key={addressType}
+                title={t(`docTypes.${addressType}`)}
+                description={addressType === 'bank_statement' ? t('wizard.address.bankDesc') : t('wizard.address.utilityDesc')}
+                requirements={[t('wizard.address.req1'), t('wizard.address.req2'), t('wizard.address.req3')]}
+                document={docs[addressType]}
+                uploading={!!uploading[addressType]}
+                error={docErrors[addressType]}
+                onUpload={(file) => upload(addressType, file, ADDRESS_TYPES).catch(() => undefined)}
+                onRemove={docs[addressType] ? () => remove(docs[addressType] as KYCServerDocument) : undefined}
+              />
+            </div>
+          </div>
+        );
+      }
+
+      case 'selfie': {
+        const selfie = docs.selfie;
+        const rejected = selfie && ['rejected', 'resubmission_required', 'expired'].includes(selfie.status);
+        return (
+          <div>
+            {stepHeader(t('wizard.selfie.title'), t('wizard.selfie.desc'))}
+            {rejected && selfie?.rejection_reason && (
+              <div className="max-w-lg mx-auto mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-sm text-red-700 dark:text-red-300">
+                <strong>{t('upload.rejectedReason')}</strong> {selfie.rejection_reason}
+              </div>
+            )}
+            <LivenessVerification
+              key={selfie?.id || 'new'}
+              existingSelfieUrl={selfie && !rejected ? selfie.file_url : null}
+              onCaptured={(file) => upload('selfie', file)}
             />
           </div>
-          {personalInfoErrors.dateOfBirth && (
-            <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-              <AlertTriangle className="w-4 h-4" />
-              {personalInfoErrors.dateOfBirth}
-            </p>
-          )}
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            You must be at least 18 years old to buy property on this platform
-          </p>
-        </div>
+        );
+      }
 
-        {/* Nationality */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Nationality <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={kycData.personalInfo?.nationality || ''}
-            onChange={(e) => {
-              setKYCData(prev => ({
-                ...prev,
-                personalInfo: {
-                  ...prev.personalInfo!,
-                  nationality: e.target.value
-                }
-              }));
-              if (personalInfoErrors.nationality) {
-                setPersonalInfoErrors(prev => ({ ...prev, nationality: '' }));
-              }
-            }}
-            className={cn(
-              'w-full px-4 py-3 rounded-xl border bg-white dark:bg-slate-800 text-slate-900 dark:text-white',
-              'focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent',
-              'transition-all duration-200',
-              personalInfoErrors.nationality
-                ? 'border-red-300 dark:border-red-600'
-                : 'border-slate-300 dark:border-slate-600'
-            )}
-          >
-            <option value="">Select your nationality</option>
-            {COUNTRIES.map((c) => (
-              <option key={c.value} value={c.value}>{c.label}</option>
-            ))}
-          </select>
-          {personalInfoErrors.nationality && (
-            <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-              <AlertTriangle className="w-4 h-4" />
-              {personalInfoErrors.nationality}
-            </p>
-          )}
-        </div>
-
-        {/* Country of Residence */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Country of Residence <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={kycData.personalInfo?.residencyCountry || ''}
-            onChange={(e) => {
-              setKYCData(prev => ({
-                ...prev,
-                personalInfo: {
-                  ...prev.personalInfo!,
-                  residencyCountry: e.target.value
-                }
-              }));
-              if (personalInfoErrors.residencyCountry) {
-                setPersonalInfoErrors(prev => ({ ...prev, residencyCountry: '' }));
-              }
-            }}
-            className={cn(
-              'w-full px-4 py-3 rounded-xl border bg-white dark:bg-slate-800 text-slate-900 dark:text-white',
-              'focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent',
-              'transition-all duration-200',
-              personalInfoErrors.residencyCountry
-                ? 'border-red-300 dark:border-red-600'
-                : 'border-slate-300 dark:border-slate-600'
-            )}
-          >
-            <option value="">Select your country of residence</option>
-            {COUNTRIES.map((c) => (
-              <option key={c.value} value={c.value}>{c.label}</option>
-            ))}
-          </select>
-          {personalInfoErrors.residencyCountry && (
-            <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
-              <AlertTriangle className="w-4 h-4" />
-              {personalInfoErrors.residencyCountry}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 max-w-md mx-auto">
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          <Shield className="w-4 h-4 inline mr-1" />
-          Your personal information is encrypted and securely stored in compliance with data protection regulations.
-        </p>
-      </div>
-    </motion.div>
-  );
-
-  const renderIdentityDocsStep = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="space-y-8"
-    >
-      <div className="text-center">
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-          Upload Identity Documents
-        </h2>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">
-          Please upload a clear photo of your government-issued identification
-        </p>
-      </div>
-
-      <div className="space-y-6">
-        <DocumentUpload
-          documentType="passport"
-          title="Passport"
-          description="Upload a clear photo of your passport (preferred)"
-          requirements={[
-            'Full document must be visible',
-            'All text must be readable',
-            'No glare or shadows',
-            'Valid and not expired'
-          ]}
-          onUpload={(file) => handleDocumentUpload('passport', file)}
-          onRemove={() => handleDocumentRemove('passport')}
-          uploadedFile={kycData.documents?.passport}
-          loading={loading}
-          error={errors.passport}
-        />
-
-        <div className="text-center">
-          <span className="px-4 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-sm rounded-full">
-            OR
-          </span>
-        </div>
-
-        <DocumentUpload
-          documentType="id"
-          title="National ID / Driver License"
-          description="Upload front and back of your national ID or driver license"
-          requirements={[
-            'Both sides clearly visible',
-            'All text must be readable',
-            'Valid and not expired',
-            'Government-issued only'
-          ]}
-          onUpload={(file) => handleDocumentUpload('nationalId', file)}
-          onRemove={() => handleDocumentRemove('nationalId')}
-          uploadedFile={kycData.documents?.nationalId}
-          loading={loading}
-          error={errors.nationalId}
-        />
-      </div>
-    </motion.div>
-  );
-
-  const renderAddressDocsStep = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="space-y-8"
-    >
-      <div className="text-center">
-        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
-          Verify Your Address <span className="text-slate-400 font-normal text-base">(optional)</span>
-        </h2>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">
-          Optionally upload a document showing your current residential address.
-          You can skip this step and continue — add it later if needed.
-        </p>
-      </div>
-
-      <div className="space-y-6">
-        <DocumentUpload
-          documentType="utility_bill"
-          title="Utility Bill"
-          description="Recent utility bill (electricity, water, gas, internet)"
-          requirements={[
-            'Issued within the last 3 months',
-            'Your name and address visible',
-            'Official company letterhead',
-            'All text clearly readable'
-          ]}
-          acceptedFormats={['image/jpeg', 'image/png', 'application/pdf']}
-          onUpload={(file) => handleDocumentUpload('utilityBill', file)}
-          onRemove={() => handleDocumentRemove('utilityBill')}
-          uploadedFile={kycData.documents?.utilityBill}
-          loading={loading}
-          error={errors.utilityBill}
-        />
-
-        <div className="text-center">
-          <span className="px-4 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-sm rounded-full">
-            OR
-          </span>
-        </div>
-
-        <DocumentUpload
-          documentType="bank_statement"
-          title="Bank Statement"
-          description="Recent bank statement showing your address"
-          requirements={[
-            'Issued within the last 3 months',
-            'Your name and address visible',
-            'Official bank letterhead',
-            'Account details can be redacted'
-          ]}
-          acceptedFormats={['image/jpeg', 'image/png', 'application/pdf']}
-          onUpload={(file) => handleDocumentUpload('bankStatement', file)}
-          onRemove={() => handleDocumentRemove('bankStatement')}
-          uploadedFile={kycData.documents?.bankStatement}
-          loading={loading}
-          error={errors.bankStatement}
-        />
-      </div>
-    </motion.div>
-  );
-
-  const renderLivenessStep = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-    >
-      <LivenessVerification
-        onComplete={handleLivenessComplete}
-        onContinue={handleNext}
-        loading={loading}
-        error={errors.liveness}
-      />
-    </motion.div>
-  );
-
-  const renderReviewStep = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="space-y-6"
-    >
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-          Review Your Information
-        </h2>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">
-          Please review all uploaded documents before submission
-        </p>
-      </div>
-
-      <div className="space-y-6">
-        {/* Personal Information */}
-        <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-6">
-          <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <User className="w-5 h-5" />
-            Personal Information
-          </h3>
-          <div className="space-y-3">
-            {kycData.personalInfo?.dateOfBirth && (
-              <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
-                <Check className="w-5 h-5 text-emerald-500" />
-                <span className="text-sm font-medium">
-                  Date of Birth: {new Date(kycData.personalInfo.dateOfBirth).toLocaleDateString()}
-                </span>
-              </div>
-            )}
-            {kycData.personalInfo?.nationality && (
-              <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
-                <Check className="w-5 h-5 text-emerald-500" />
-                <span className="text-sm font-medium">
-                  Nationality: {kycData.personalInfo.nationality}
-                </span>
-              </div>
-            )}
-            {kycData.personalInfo?.residencyCountry && (
-              <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
-                <Check className="w-5 h-5 text-emerald-500" />
-                <span className="text-sm font-medium">
-                  Country of Residence: {kycData.personalInfo.residencyCountry}
-                </span>
-              </div>
-            )}
+      case 'review': {
+        const groups = status.completion_status.groups;
+        const optional = status.completion_status.optional_groups;
+        const docFor = (types: KYCDocumentType[]) => types.map((type) => docs[type]).find(Boolean);
+        const row = (label: string, value: string, ok: boolean) => (
+          <div className="flex items-center justify-between gap-3 py-2.5 border-b last:border-0 border-slate-100 dark:border-slate-800">
+            <span className="text-sm text-slate-600 dark:text-slate-400">{label}</span>
+            <span className={cn('text-sm font-medium text-end', ok ? 'text-slate-900 dark:text-white' : 'text-amber-600')}>
+              {value}
+            </span>
           </div>
-        </div>
+        );
+        return (
+          <div>
+            {stepHeader(t('wizard.review.title'), t('wizard.review.desc'))}
+            <div className="max-w-xl mx-auto space-y-5">
+              <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-4">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  {t('wizard.review.personal')}
+                </h3>
+                {row(t('wizard.review.dob'), personal.dob ? fmtDate(personal.dob) : t('wizard.review.missing'), !!personal.dob)}
+                {row(t('wizard.review.nationality'), personal.nationality ? localizedCountryName(personal.nationality, lang) : t('wizard.review.missing'), !!personal.nationality)}
+                {row(t('wizard.review.residency'), personal.residency ? localizedCountryName(personal.residency, lang) : t('wizard.review.missing'), !!personal.residency)}
+              </div>
+              <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-4">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  {t('wizard.review.documents')}
+                </h3>
+                {[...groups, ...optional].map((g) => {
+                  const doc = docFor(g.types);
+                  const isOptional = optional.includes(g);
+                  const value = doc ? `${t(`docTypes.${doc.document_type}`)} · ${t(`docStatus.${doc.status}`)}` : isOptional ? t('wizard.review.optional') : t('wizard.review.missing');
+                  return (
+                    <React.Fragment key={g.key}>
+                      {row(t(`groups.${g.key}`), value, READY_STATES.includes(g.state) || isOptional)}
+                    </React.Fragment>
+                  );
+                })}
+              </div>
 
-        {/* Identity Documents */}
-        <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-6">
-          <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            Identity Verification
-          </h3>
-          <div className="space-y-3">
-            {kycData.documents?.passport && (
-              <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
-                <Check className="w-5 h-5 text-emerald-500" />
-                <span className="text-sm font-medium">Passport uploaded</span>
-              </div>
-            )}
-            {kycData.documents?.nationalId && (
-              <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
-                <Check className="w-5 h-5 text-emerald-500" />
-                <span className="text-sm font-medium">National ID uploaded</span>
-              </div>
-            )}
-          </div>
-        </div>
+              {submitError && (
+                <div role="alert" className="p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                  <p className="text-sm font-medium text-red-700 dark:text-red-300 flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                    {submitError.message}
+                  </p>
+                  {submitError.steps.length > 0 && (
+                    <ul className="mt-2 ms-6 list-disc text-sm text-red-700 dark:text-red-300 space-y-1">
+                      {submitError.steps.map((s) => <li key={s}>{s}</li>)}
+                    </ul>
+                  )}
+                </div>
+              )}
 
-        {/* Address Documents */}
-        <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-6">
-          <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <MapPin className="w-5 h-5" />
-            Address Verification
-          </h3>
-          <div className="space-y-3">
-            {kycData.documents?.utilityBill && (
-              <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
-                <Check className="w-5 h-5 text-emerald-500" />
-                <span className="text-sm font-medium">Utility bill uploaded</span>
-              </div>
-            )}
-            {kycData.documents?.bankStatement && (
-              <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
-                <Check className="w-5 h-5 text-emerald-500" />
-                <span className="text-sm font-medium">Bank statement uploaded</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Liveness Verification */}
-        <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-6">
-          <h3 className="font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-            <Camera className="w-5 h-5" />
-            Liveness Verification
-          </h3>
-          {kycData.liveness ? (
-            <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
-              <Check className="w-5 h-5 text-emerald-500" />
-              <span className="text-sm font-medium">
-                Live selfie captured (Confidence: {(kycData.liveness.livenessScore * 100).toFixed(1)}%)
-              </span>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t('wizard.review.consent')}</p>
+              <Button
+                variant="primary"
+                size="lg"
+                className="w-full"
+                onClick={submit}
+                disabled={submitting || !status.completion_status.can_submit}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                    {t('wizard.review.submitting')}
+                  </>
+                ) : (
+                  t('wizard.review.submit')
+                )}
+              </Button>
+              {!status.completion_status.can_submit && !submitError && (
+                <ul className="text-sm text-amber-700 dark:text-amber-300 list-disc ms-5 space-y-1">
+                  {status.completion_status.next_steps
+                    .filter((s) => s.step !== 'submit')
+                    .map((s) => (
+                      <li key={s.step}>{t(`steps.${s.step}`, { defaultValue: s.title })}</li>
+                    ))}
+                </ul>
+              )}
             </div>
-          ) : (
-            <div className="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-              <AlertTriangle className="w-5 h-5 text-amber-500" />
-              <span className="text-sm font-medium">Liveness verification not completed</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {errors.submit && (
-        <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
-          <AlertTriangle className="w-5 h-5 text-red-500 dark:text-red-400" />
-          <span className="text-sm text-red-600 dark:text-red-400">
-            {errors.submit}
-          </span>
-        </div>
-      )}
-
-      <Button
-        onClick={handleSubmit}
-        variant="primary"
-        size="lg"
-        className="w-full"
-        isLoading={loading}
-        disabled={loading}
-      >
-        {loading ? 'Submitting KYC...' : 'Submit for Review'}
-      </Button>
-    </motion.div>
-  );
-
-  const renderCompleteStep = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="text-center space-y-6"
-    >
-      <div className="w-20 h-20 mx-auto bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center">
-        <Check className="w-10 h-10 text-emerald-500 dark:text-emerald-400" />
-      </div>
-      
-      <div>
-        <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
-          KYC Submitted Successfully!
-        </h2>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">
-          Your identity verification has been submitted for review
-        </p>
-      </div>
-
-      <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-6">
-        <h3 className="font-semibold text-emerald-800 dark:text-emerald-200 mb-2">
-          What's Next?
-        </h3>
-        <ul className="text-sm text-emerald-700 dark:text-emerald-300 space-y-2 text-left">
-          <li className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            Review process typically takes 24-48 hours
-          </li>
-          <li className="flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            Our compliance team will verify your documents
-          </li>
-          <li className="flex items-center gap-2">
-            <Shield className="w-4 h-4" />
-            You'll receive email updates on your verification status
-          </li>
-        </ul>
-      </div>
-
-      <Button
-        onClick={() => console.log('Navigate to dashboard')}
-        variant="primary"
-        size="lg"
-        className="w-full"
-      >
-        Continue to Dashboard
-      </Button>
-    </motion.div>
-  );
-
-  const renderCurrentStep = () => {
-    switch (STEPS[currentStep]?.id) {
-      case 'intro':
-        return renderIntroStep();
-      case 'personal-info':
-        return renderPersonalInfoStep();
-      case 'identity-docs':
-        return renderIdentityDocsStep();
-      case 'address-docs':
-        return renderAddressDocsStep();
-      case 'liveness':
-        return renderLivenessStep();
-      case 'review':
-        return renderReviewStep();
-      default:
-        return renderCompleteStep();
+          </div>
+        );
+      }
     }
   };
 
+  const BackIcon = lang.startsWith('ar') ? ChevronRight : ChevronLeft;
+  const NextIcon = lang.startsWith('ar') ? ChevronLeft : ChevronRight;
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className={cn('w-full max-w-4xl mx-auto bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-8', className)}
-    >
-      {/* Progress Bar */}
-      {currentStep < STEPS.length && renderProgressBar()}
+    <div className={cn('w-full max-w-4xl mx-auto bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-5 sm:p-8', className)}>
+      {/* Step indicator */}
+      <ol className="flex items-center justify-between gap-1 mb-8 overflow-x-auto pb-1">
+        {STEPS.map((s, i) => {
+          const Icon = s.icon;
+          const done = i < step;
+          const active = i === step;
+          return (
+            <li key={s.id} className="flex items-center flex-1 last:flex-none min-w-0">
+              <button
+                type="button"
+                onClick={() => i < step && setStep(i)}
+                disabled={i >= step}
+                className="flex flex-col items-center gap-1 shrink-0"
+                aria-current={active ? 'step' : undefined}
+              >
+                <span
+                  className={cn(
+                    'w-9 h-9 rounded-full border-2 flex items-center justify-center transition-colors',
+                    active || done ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-300 dark:border-slate-600 text-slate-400',
+                  )}
+                >
+                  {done ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
+                </span>
+                <span className={cn('text-[11px] leading-tight text-center', active ? 'text-emerald-700 dark:text-emerald-400 font-medium' : 'text-slate-500 hidden sm:block')}>
+                  {t(`wizard.steps.${s.id}`)}
+                </span>
+              </button>
+              {i < STEPS.length - 1 && (
+                <span className={cn('flex-1 h-0.5 mx-1.5 rounded', done ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-700')} />
+              )}
+            </li>
+          );
+        })}
+      </ol>
 
-      {/* Step Content */}
-      <div className="min-h-[600px]">
-        <AnimatePresence mode="wait">
-          {renderCurrentStep()}
-        </AnimatePresence>
-      </div>
+      <div className="min-h-[360px]">{renderStep()}</div>
 
-      {/* Navigation */}
-      {currentStep < STEPS.length && currentStepConfig.id !== 'liveness' && (
-        <div className="flex items-center justify-between pt-8 mt-8 border-t border-slate-200 dark:border-slate-700">
-          <Button
-            variant="ghost"
-            size="lg"
-            onClick={handleBack}
-            disabled={currentStep === 0}
-            className={cn(
-              'flex items-center gap-2',
-              currentStep === 0 && 'invisible'
-            )}
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back
+      {currentId !== 'review' && (
+        <div className="flex items-center justify-between gap-3 pt-6 mt-6 border-t border-slate-200 dark:border-slate-700">
+          <Button variant="ghost" onClick={goBack} className={cn('flex items-center gap-1', step === 0 && 'invisible')}>
+            <BackIcon className="w-4 h-4" />
+            {t('wizard.back')}
           </Button>
-
-          <div className="text-sm text-slate-500 dark:text-slate-400">
-            Step {currentStep + 1} of {STEPS.length}
-          </div>
-
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={handleNext}
-            disabled={!canProceedToNext() || currentStepConfig.id === 'review'}
-            className="flex items-center gap-2"
-          >
-            Next
-            <ChevronRight className="w-4 h-4" />
+          <span className="text-sm text-slate-500 dark:text-slate-400">
+            {t('wizard.stepOf', { current: step + 1, total: STEPS.length })}
+          </span>
+          <Button variant="primary" onClick={goNext} disabled={!canProceed()} className="flex items-center gap-1">
+            {savingPersonal && <Loader2 className="w-4 h-4 animate-spin" />}
+            {currentId === 'address' && !docs[addressType] ? t('wizard.skip') : t('wizard.next')}
+            <NextIcon className="w-4 h-4" />
           </Button>
         </div>
       )}
-    </motion.div>
+      {currentId === 'review' && (
+        <div className="flex pt-6 mt-6 border-t border-slate-200 dark:border-slate-700">
+          <Button variant="ghost" onClick={goBack} className="flex items-center gap-1">
+            <BackIcon className="w-4 h-4" />
+            {t('wizard.back')}
+          </Button>
+        </div>
+      )}
+    </div>
   );
 };
+
+export default KYCWizard;

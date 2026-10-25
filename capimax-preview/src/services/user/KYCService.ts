@@ -1,52 +1,113 @@
 import { apiClient } from '../api/ApiClient';
-import type {
-  KYCDocument,
-  KYCDocumentUploadData,
-  DocumentType,
-  DocumentStatus,
-  KYCStatus
-} from '../api/types';
 
 /**
- * KYCService — wraps the backend `kyc/` app.
+ * KYCService — wraps the backend `kyc/` app (capimax_backend/kyc/urls.py).
  *
- * Real routes (see capimax_backend/kyc/urls.py):
- *   /kyc/status/                       — current profile + completion %
- *   /kyc/submit/                       — submit for review
- *   /kyc/documents/                    — list, create
- *   /kyc/documents/upload/             — dedicated upload action
- *   /kyc/documents/<id>/               — retrieve/delete
- *   /kyc/documents/<id>/{approve,reject,ocr}/
- *   /kyc/biometric/{start,complete}/   — liveness flow (session-based, not single-shot)
- *   /kyc/compliance/run/               — trigger compliance checks
- *   /kyc/personal-info/                — DOB + address collection
- *   /kyc/requirements/                 — global requirements (no country param)
- *   /kyc/analytics/                    — aggregate metrics (admin)
+ *   GET    /kyc/status/                 — full status: profile, documents, next steps
+ *   GET    /kyc/personal-info/          — DOB / nationality / residency
+ *   PATCH  /kyc/personal-info/
+ *   POST   /kyc/documents/upload/       — upload OR replace a document of a type
+ *   DELETE /kyc/documents/<id>/
+ *   GET    /kyc/documents/<id>/file/    — authenticated file download
+ *   POST   /kyc/submit/                 — submit for review
+ *   GET    /kyc/config/                 — 'internal' wizard or 'sumsub' WebSDK
+ *   POST   /kyc/sumsub/access-token/    — Sumsub WebSDK token
  *
- * Methods in this class that have no backend route throw with a clear
- * message rather than silently 404 — see each method's doc comment.
+ * Errors come back as ApiError with a stable `code` (KYC_UNDER_REVIEW,
+ * KYC_INCOMPLETE, …) that the UI translates.
  */
-const KYC_NOT_IMPLEMENTED = (method: string, hint?: string): never => {
-  const detail = hint ? ` ${hint}` : '';
-  throw new Error(`KYCService.${method} is not implemented on the backend.${detail}`);
-};
 
-export interface KYCStatusResponse {
-  overall_status: KYCStatus;
-  documents: KYCDocument[];
-  required_documents: DocumentType[];
-  optional_documents: DocumentType[];
-  completion_percentage: number;
-  next_steps: string[];
-  estimated_review_time: string;
+export type KYCProfileStatus = 'pending' | 'in_review' | 'approved' | 'rejected' | 'expired';
+
+export type KYCDocumentType =
+  | 'passport'
+  | 'national_id'
+  | 'driving_license'
+  | 'utility_bill'
+  | 'bank_statement'
+  | 'proof_of_address'
+  | 'selfie'
+  | 'video_verification';
+
+export type KYCDocumentStatus =
+  | 'pending'
+  | 'in_review'
+  | 'approved'
+  | 'rejected'
+  | 'expired'
+  | 'resubmission_required';
+
+export type KYCGroupKey = 'identity' | 'selfie' | 'address' | 'video';
+
+export interface KYCServerDocument {
+  id: string;
+  document_type: KYCDocumentType;
+  status: KYCDocumentStatus;
+  file_name: string;
+  file_size: number;
+  file_url: string | null;
+  rejection_reason: string;
+  created_at: string;
+  reviewed_at: string | null;
 }
 
+export interface KYCGroupState {
+  key: KYCGroupKey;
+  types: KYCDocumentType[];
+  state: 'missing' | 'rejected' | 'uploaded' | 'approved';
+  rejection_reasons: Array<{ document_type: KYCDocumentType; reason: string }>;
+}
+
+export interface KYCNextStep {
+  step: string;
+  title: string;
+  description: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
+export interface KYCCompletionStatus {
+  can_submit: boolean;
+  is_complete: boolean;
+  completion_percentage: number;
+  groups: KYCGroupState[];
+  optional_groups: KYCGroupState[];
+  missing_groups: KYCGroupKey[];
+  rejected_groups: KYCGroupKey[];
+  missing_personal_info: Array<'date_of_birth' | 'residency_country'>;
+  next_steps: KYCNextStep[];
+}
+
+export interface KYCStatusPayload {
+  status: KYCProfileStatus;
+  verification_level: 'basic' | 'enhanced' | 'premium';
+  submitted_at: string | null;
+  reviewed_at: string | null;
+  rejection_reason: string;
+  nationality: string;
+  investment_limit: string | null;
+  expires_at: string | null;
+  is_verified: boolean;
+  documents: KYCServerDocument[];
+  completion_status: KYCCompletionStatus;
+  public_notes: Array<{ note: string; note_type: string; created_at: string }>;
+  provider: 'internal' | 'sumsub';
+}
+
+export interface KYCPersonalInfo {
+  date_of_birth: string | null;
+  country: string;
+  nationality: string;
+  first_name: string;
+  last_name: string;
+}
+
+/** Kept for the services barrel export (older callers). */
+export type KYCStatusResponse = KYCStatusPayload;
 export interface LivenessCheckData {
   selfie_image: File;
   challenge_type: 'blink' | 'smile' | 'turn_head';
   challenge_response: string;
 }
-
 export interface AddressVerificationData {
   document: File;
   address_line_1: string;
@@ -57,268 +118,88 @@ export interface AddressVerificationData {
   country: string;
 }
 
-export class KYCService {
-  /**
-   * Get KYC status and documents
-   */
-  static async getKYCStatus(): Promise<KYCStatusResponse> {
-    try {
-      return await apiClient.get<KYCStatusResponse>('/kyc/status/');
-    } catch (error) {
-      console.error('Failed to get KYC status:', error);
-      throw error;
-    }
-  }
+/**
+ * What the user should see, derived from the profile status + documents.
+ * 'action_required' = the profile is back in PENDING because a reviewer
+ * flagged documents (as opposed to a user who simply hasn't submitted yet).
+ */
+export type KYCUiState =
+  | 'not_started'
+  | 'pending'
+  | 'action_required'
+  | 'in_review'
+  | 'approved'
+  | 'rejected'
+  | 'expired';
 
-  /**
-   * Upload KYC document
-   */
-  static async uploadDocument(uploadData: KYCDocumentUploadData): Promise<KYCDocument> {
-    try {
-      const formData = new FormData();
-      formData.append('document', uploadData.file);
-      formData.append('document_type', uploadData.document_type);
-      
-      if (uploadData.metadata) {
-        formData.append('metadata', JSON.stringify(uploadData.metadata));
+export const deriveKYCUiState = (payload: KYCStatusPayload | null): KYCUiState => {
+  if (!payload) return 'not_started';
+  switch (payload.status) {
+    case 'approved':
+      return 'approved';
+    case 'in_review':
+      return 'in_review';
+    case 'rejected':
+      return 'rejected';
+    case 'expired':
+      return 'expired';
+    default:
+      if (payload.completion_status?.rejected_groups?.length || payload.rejection_reason) {
+        return 'action_required';
       }
+      return payload.documents?.length ? 'pending' : 'not_started';
+  }
+};
 
-      // Backend endpoint: POST /kyc/documents/upload/ — dedicated upload route
-      return await apiClient.uploadFile<KYCDocument>('/kyc/documents/upload/', formData);
-    } catch (error) {
-      console.error('Failed to upload KYC document:', error);
-      throw error;
-    }
+export class KYCService {
+  static getStatus(): Promise<KYCStatusPayload> {
+    return apiClient.get<KYCStatusPayload>('/kyc/status/');
   }
 
-  /**
-   * Get all user's KYC documents
-   */
-  static async getDocuments(): Promise<KYCDocument[]> {
-    try {
-      return await apiClient.get<KYCDocument[]>('/kyc/documents/');
-    } catch (error) {
-      console.error('Failed to get KYC documents:', error);
-      throw error;
-    }
+  /** @deprecated use getStatus() */
+  static getKYCStatus(): Promise<KYCStatusPayload> {
+    return KYCService.getStatus();
   }
 
-  /**
-   * Get specific KYC document
-   */
-  static async getDocument(documentId: string): Promise<KYCDocument> {
-    try {
-      return await apiClient.get<KYCDocument>(`/kyc/documents/${documentId}/`);
-    } catch (error) {
-      console.error('Failed to get KYC document:', error);
-      throw error;
-    }
+  static getPersonalInfo(): Promise<KYCPersonalInfo> {
+    return apiClient.get<KYCPersonalInfo>('/kyc/personal-info/');
   }
 
-  /**
-   * Delete KYC document
-   */
-  static async deleteDocument(documentId: string): Promise<{ message: string }> {
-    try {
-      return await apiClient.delete(`/kyc/documents/${documentId}/`);
-    } catch (error) {
-      console.error('Failed to delete KYC document:', error);
-      throw error;
-    }
+  static savePersonalInfo(data: {
+    date_of_birth: string;
+    nationality: string;
+    residency_country: string;
+  }): Promise<unknown> {
+    return apiClient.patch('/kyc/personal-info/', data);
   }
 
-  /**
-   * Replace KYC document.
-   *
-   * Backend has no `replace` action — to replace, delete the existing
-   * document and upload a new one with `uploadDocument`. Doing this here
-   * silently would create two side effects (delete + upload) with no
-   * atomicity, so we throw and require callers to be explicit.
-   */
-  static async replaceDocument(_documentId: string, _newFile: File): Promise<KYCDocument> {
-    return KYC_NOT_IMPLEMENTED(
-      'replaceDocument',
-      'Delete the old document first, then call uploadDocument with the new file.'
-    );
+  /** Upload a document; a second upload of the same type replaces the first. */
+  static uploadDocument(documentType: KYCDocumentType, file: File): Promise<KYCServerDocument> {
+    const formData = new FormData();
+    formData.append('document', file);
+    formData.append('document_type', documentType);
+    formData.append('file_name', file.name);
+    return apiClient.uploadFile<KYCServerDocument>('/kyc/documents/upload/', formData);
   }
 
-  /**
-   * Submit KYC for review
-   */
-  static async submitForReview(): Promise<{ 
-    message: string; 
-    submission_id: string; 
-    estimated_review_time: string; 
-  }> {
-    try {
-      return await apiClient.post('/kyc/submit/');
-    } catch (error) {
-      console.error('Failed to submit KYC for review:', error);
-      throw error;
-    }
+  static deleteDocument(documentId: string): Promise<unknown> {
+    return apiClient.delete(`/kyc/documents/${documentId}/`);
   }
 
-  /**
-   * Perform liveness check.
-   *
-   * Backend uses a two-step biometric session (`/kyc/biometric/start/` +
-   * `/complete/`), not a single-shot endpoint. Callers should wire those
-   * directly via the BiometricVerificationViewSet — a single-call wrapper
-   * would lose the session id that `start` returns and `complete` needs.
-   */
-  static async performLivenessCheck(_data: LivenessCheckData): Promise<{
-    success: boolean;
-    confidence_score: number;
-    session_id: string;
-  }> {
-    return KYC_NOT_IMPLEMENTED(
-      'performLivenessCheck',
-      'Use the two-step /kyc/biometric/start/ then /kyc/biometric/complete/ flow.'
-    );
+  /** Submit for review. Resolves with the refreshed status payload. */
+  static async submitForReview(): Promise<KYCStatusPayload | null> {
+    const result: any = await apiClient.post('/kyc/submit/');
+    // ApiClient unwraps `{success, data}` envelopes; tolerate either shape.
+    return (result && result.status ? result : result?.data) ?? null;
   }
 
-  /**
-   * Verify address with document.
-   *
-   * No dedicated endpoint — address verification is part of the document
-   * compliance run (`/kyc/compliance/run/`) and uses the address from
-   * the personal-info payload (`/kyc/personal-info/`).
-   */
-  static async verifyAddress(_data: AddressVerificationData): Promise<{
-    success: boolean;
-    extracted_address: {
-      line_1: string;
-      line_2?: string;
-      city: string;
-      state?: string;
-      postal_code: string;
-      country: string;
-    };
-    confidence_score: number;
-  }> {
-    return KYC_NOT_IMPLEMENTED(
-      'verifyAddress',
-      'Update personal info, upload proof-of-address document, and run compliance.'
-    );
+  static getConfig(): Promise<{ provider: 'internal' | 'sumsub' }> {
+    return apiClient.get('/kyc/config/');
   }
 
-  /**
-   * Get document requirements.
-   *
-   * Backend exposes a single `/kyc/requirements/` endpoint — there is no
-   * per-country variant. The `country` argument is accepted for forward
-   * compatibility but is currently ignored.
-   */
-  static async getDocumentRequirements(_country?: string): Promise<{
-    required_documents: DocumentType[];
-    optional_documents: DocumentType[];
-    country_specific_requirements: string[];
-    supported_document_formats: string[];
-  }> {
-    try {
-      return await apiClient.get('/kyc/requirements/');
-    } catch (error) {
-      console.error('Failed to get document requirements:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Pre-validate document before upload.
-   *
-   * No backend endpoint. Validation happens server-side after upload via
-   * OCR (`/kyc/documents/<id>/ocr/`) and compliance run.
-   */
-  static async validateDocument(_file: File, _documentType: DocumentType): Promise<{
-    valid: boolean;
-    issues: string[];
-    suggestions: string[];
-    file_quality_score: number;
-  }> {
-    return KYC_NOT_IMPLEMENTED(
-      'validateDocument',
-      'Upload the document and check the OCR/compliance result.'
-    );
-  }
-
-  /**
-   * Get KYC review history.
-   *
-   * No endpoint surfaces a per-user review log. Admins see this via
-   * `/kyc/<id>/audit/`, which is admin-scoped.
-   */
-  static async getReviewHistory(): Promise<Array<{
-    id: string;
-    submitted_at: Date;
-    reviewed_at?: Date;
-    status: DocumentStatus;
-    reviewer_comments?: string;
-    documents_reviewed: string[];
-    next_steps?: string[];
-  }>> {
-    return KYC_NOT_IMPLEMENTED('getReviewHistory');
-  }
-
-  /**
-   * Appeal KYC rejection. Phantom — no backend endpoint.
-   */
-  static async appealRejection(
-    _rejectionId: string,
-    _appealReason: string,
-    _additionalDocuments?: File[]
-  ): Promise<{
-    appeal_id: string;
-    message: string;
-    estimated_review_time: string;
-  }> {
-    return KYC_NOT_IMPLEMENTED('appealRejection');
-  }
-
-  /**
-   * Request expedited review. Phantom — no backend endpoint.
-   */
-  static async requestExpeditedReview(): Promise<{
-    message: string;
-    additional_fee: number;
-    currency: string;
-    estimated_review_time: string;
-    payment_required: boolean;
-  }> {
-    return KYC_NOT_IMPLEMENTED('requestExpeditedReview');
-  }
-
-  /**
-   * Get supported countries for KYC. Phantom — no backend endpoint.
-   */
-  static async getSupportedCountries(): Promise<Array<{
-    code: string;
-    name: string;
-    supported_documents: DocumentType[];
-    processing_time_days: number;
-    additional_requirements?: string[];
-  }>> {
-    return KYC_NOT_IMPLEMENTED('getSupportedCountries');
-  }
-
-  /**
-   * Check investment eligibility.
-   *
-   * No dedicated endpoint. The compliance gate runs server-side at
-   * investment-creation time and returns structured errors — front-end
-   * gating should call `getKYCStatus()` and inspect `overall_status`
-   * instead of pre-checking.
-   */
-  static async checkInvestmentEligibility(): Promise<{
-    eligible: boolean;
-    kyc_required: boolean;
-    missing_documents: DocumentType[];
-    max_investment_amount?: number;
-    restrictions?: string[];
-  }> {
-    return KYC_NOT_IMPLEMENTED(
-      'checkInvestmentEligibility',
-      'Check getKYCStatus().overall_status === "approved" instead.'
-    );
+  static async getSumsubToken(): Promise<string> {
+    const result = await apiClient.post<{ token: string }>('/kyc/sumsub/access-token/');
+    return result.token;
   }
 }
 

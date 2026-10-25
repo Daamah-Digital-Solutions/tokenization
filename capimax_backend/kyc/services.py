@@ -28,48 +28,61 @@ logger = logging.getLogger(__name__)
 class KYCService:
     """Service class for KYC operations and business logic."""
     
+    # Any ONE government ID satisfies the identity requirement. The old rules
+    # demanded a *passport* specifically while the wizard offers "Passport OR
+    # National ID / Driver License", so users who uploaded a national ID could
+    # never submit.
+    IDENTITY_TYPES = [
+        DocumentType.PASSPORT, DocumentType.NATIONAL_ID, DocumentType.DRIVING_LICENSE,
+    ]
+    ADDRESS_TYPES = [
+        DocumentType.PROOF_OF_ADDRESS, DocumentType.UTILITY_BILL, DocumentType.BANK_STATEMENT,
+    ]
+    # A document in one of these states counts as "provided".
+    ACTIVE_DOCUMENT_STATUSES = [
+        DocumentStatus.PENDING, DocumentStatus.IN_REVIEW, DocumentStatus.APPROVED,
+    ]
+    NEEDS_REPLACEMENT_STATUSES = [
+        DocumentStatus.REJECTED, DocumentStatus.RESUBMISSION_REQUIRED, DocumentStatus.EXPIRED,
+    ]
+    SUBMITTABLE_PROFILE_STATUSES = [
+        KYCStatus.PENDING, KYCStatus.REJECTED, KYCStatus.EXPIRED,
+    ]
+
     @staticmethod
     def get_verification_requirements(level: str) -> Dict:
-        """Get document and verification requirements for a KYC level."""
+        """Get document and verification requirements for a KYC level.
+
+        ``required_groups`` is the source of truth: each group is satisfied by
+        ANY one of its document types. ``required_documents`` is kept (flattened
+        to each group's first type) for older callers.
+        """
+        identity = {'key': 'identity', 'types': list(KYCService.IDENTITY_TYPES)}
+        selfie = {'key': 'selfie', 'types': [DocumentType.SELFIE]}
+        address = {'key': 'address', 'types': list(KYCService.ADDRESS_TYPES)}
+        video = {'key': 'video', 'types': [DocumentType.VIDEO_VERIFICATION]}
+
         requirements = {
             VerificationLevel.BASIC: {
-                'required_documents': [
-                    DocumentType.PASSPORT
-                ],
-                # Proof of address is OPTIONAL for basic verification (client #9a:
-                # "the required KYC documents are too many — make some optional,
-                # e.g. the bank statement"). Identity + AML still gate basic level.
-                'optional_documents': [
-                    DocumentType.PROOF_OF_ADDRESS,
-                    DocumentType.SELFIE,
-                ],
+                # Proof of address is OPTIONAL for basic verification (client #9a).
+                'required_groups': [identity, selfie],
+                'optional_groups': [address],
                 'biometric_required': False,
                 'compliance_checks': ['aml'],
                 'investment_limit': Decimal('10000.00'),
                 'processing_time_days': 1
             },
             VerificationLevel.ENHANCED: {
-                'required_documents': [
-                    DocumentType.PASSPORT,
-                    DocumentType.PROOF_OF_ADDRESS,
-                    DocumentType.BANK_STATEMENT,
-                    DocumentType.SELFIE
-                ],
-                'optional_documents': [DocumentType.VIDEO_VERIFICATION],
+                'required_groups': [identity, selfie, address],
+                'optional_groups': [video],
                 'biometric_required': True,
                 'compliance_checks': ['aml', 'sanctions', 'pep'],
                 'investment_limit': Decimal('50000.00'),
                 'processing_time_days': 3
             },
             VerificationLevel.PREMIUM: {
-                'required_documents': [
-                    DocumentType.PASSPORT,
-                    DocumentType.PROOF_OF_ADDRESS,
-                    DocumentType.BANK_STATEMENT,
-                    DocumentType.SELFIE,
-                    DocumentType.VIDEO_VERIFICATION
-                ],
-                'optional_documents': [],
+                'required_groups': [identity, selfie, address, video],
+                'optional_groups': [],
                 'biometric_required': True,
                 'compliance_checks': [
                     'aml', 'sanctions', 'pep', 'adverse_media', 'watchlist'
@@ -78,153 +91,208 @@ class KYCService:
                 'processing_time_days': 7
             }
         }
-        
-        return requirements.get(level, requirements[VerificationLevel.BASIC])
-    
+
+        req = dict(requirements.get(level, requirements[VerificationLevel.BASIC]))
+        req['required_documents'] = [g['types'][0] for g in req['required_groups']]
+        req['optional_documents'] = [t for g in req['optional_groups'] for t in g['types']]
+        return req
+
+    @staticmethod
+    def _group_state(group: Dict, docs_by_type: Dict) -> Dict:
+        """Summarise one requirement group: missing / rejected / uploaded / approved."""
+        group_docs = [docs_by_type[t] for t in group['types'] if t in docs_by_type]
+        approved = [d for d in group_docs if d.status == DocumentStatus.APPROVED]
+        active = [d for d in group_docs if d.status in KYCService.ACTIVE_DOCUMENT_STATUSES]
+        rejected = [d for d in group_docs if d.status in KYCService.NEEDS_REPLACEMENT_STATUSES]
+        if approved:
+            state = 'approved'
+        elif active:
+            state = 'uploaded'
+        elif rejected:
+            state = 'rejected'
+        else:
+            state = 'missing'
+        return {
+            'key': group['key'],
+            'types': list(group['types']),
+            'state': state,
+            'rejection_reasons': [
+                {'document_type': d.document_type, 'reason': d.rejection_reason}
+                for d in rejected if d.rejection_reason
+            ],
+        }
+
     @staticmethod
     def check_completion_status(kyc_profile: KYCProfile) -> Dict:
-        """Check KYC completion status and missing requirements."""
+        """
+        Where the user stands and what they must do next.
+
+        Submission needs every required group to be *uploaded* (and personal
+        info filled in). The old check also demanded that documents were
+        already admin-APPROVED and that an AML check had already come back
+        clear — but both only happen *after* submission, so no first-time user
+        could ever submit (the "document problem" with no explanation).
+        """
         requirements = KYCService.get_verification_requirements(
             kyc_profile.verification_level
         )
-        
-        # Check document completion
-        uploaded_documents = set(
-            kyc_profile.documents.values_list('document_type', flat=True)
+        docs_by_type = {d.document_type: d for d in kyc_profile.documents.all()}
+        groups = [KYCService._group_state(g, docs_by_type)
+                  for g in requirements['required_groups']]
+        optional = [KYCService._group_state(g, docs_by_type)
+                    for g in requirements['optional_groups']]
+
+        user = kyc_profile.user
+        missing_personal_info = []
+        if not user.date_of_birth:
+            missing_personal_info.append('date_of_birth')
+        if not user.country:
+            missing_personal_info.append('residency_country')
+
+        missing_groups = [g['key'] for g in groups if g['state'] == 'missing']
+        rejected_groups = [g['key'] for g in groups if g['state'] == 'rejected']
+        documents_ready = all(g['state'] in ('uploaded', 'approved') for g in groups)
+        all_approved = all(g['state'] == 'approved' for g in groups)
+
+        can_submit = (
+            kyc_profile.status in KYCService.SUBMITTABLE_PROFILE_STATUSES
+            and documents_ready
+            and not missing_personal_info
         )
-        required_documents = set(requirements['required_documents'])
-        missing_documents = required_documents - uploaded_documents
-        
-        # Check approved documents
-        approved_documents = set(
-            kyc_profile.documents.filter(
-                status=DocumentStatus.APPROVED
-            ).values_list('document_type', flat=True)
-        )
-        pending_approval = required_documents - approved_documents
-        
-        # Check biometric verification
-        biometric_complete = True
-        if requirements['biometric_required']:
-            biometric = getattr(kyc_profile, 'biometric', None)
-            biometric_complete = (
-                biometric and 
-                biometric.status == 'completed' and
-                biometric.liveness_score and
-                biometric.face_match_score
-            )
-        
-        # Check compliance
-        compliance_checks = requirements['compliance_checks']
-        completed_checks = set(
-            kyc_profile.user.compliance_checks.filter(
-                result='clear'
-            ).values_list('check_type', flat=True)
-        )
-        missing_compliance = set(compliance_checks) - completed_checks
-        
-        # Overall completion status
-        is_complete = (
-            len(missing_documents) == 0 and
-            len(pending_approval) == 0 and
-            biometric_complete and
-            len(missing_compliance) == 0
-        )
-        
+
+        # Kept for older callers: required types with no usable document.
+        missing_documents = [
+            g['types'][0] for g in groups if g['state'] in ('missing', 'rejected')
+        ]
+
         return {
-            'is_complete': is_complete,
+            'can_submit': can_submit,
+            # "complete" = everything required has been approved by a reviewer.
+            'is_complete': all_approved and kyc_profile.status == KYCStatus.APPROVED,
             'completion_percentage': KYCService._calculate_completion_percentage(
-                requirements, uploaded_documents, approved_documents,
-                biometric_complete, completed_checks
+                kyc_profile, groups, missing_personal_info
             ),
-            'missing_documents': list(missing_documents),
-            'pending_approval': list(pending_approval),
+            'groups': groups,
+            'optional_groups': optional,
+            'missing_groups': missing_groups,
+            'rejected_groups': rejected_groups,
+            'missing_personal_info': missing_personal_info,
+            'missing_documents': missing_documents,
+            'pending_approval': [g['key'] for g in groups if g['state'] == 'uploaded'],
             'biometric_required': requirements['biometric_required'],
-            'biometric_complete': biometric_complete,
-            'missing_compliance': list(missing_compliance),
             'next_steps': KYCService._generate_next_steps(
-                missing_documents, pending_approval, biometric_complete,
-                missing_compliance, requirements
-            )
+                kyc_profile, groups, missing_personal_info, can_submit
+            ),
         }
-    
+
     @staticmethod
-    def _calculate_completion_percentage(requirements, uploaded, approved, 
-                                       biometric_complete, compliance_checks):
-        """Calculate completion percentage for KYC process."""
-        total_weight = 0
-        completed_weight = 0
-        
-        # Document weight (50%)
-        required_docs = len(requirements['required_documents'])
-        if required_docs > 0:
-            total_weight += 50
-            completed_weight += (len(approved) / required_docs) * 50
-        
-        # Biometric weight (25% if required)
-        if requirements['biometric_required']:
-            total_weight += 25
-            if biometric_complete:
-                completed_weight += 25
-        
-        # Compliance weight (25%)
-        required_compliance = len(requirements['compliance_checks'])
-        if required_compliance > 0:
-            total_weight += 25
-            completed_weight += (len(compliance_checks) / required_compliance) * 25
-        
-        return round(completed_weight, 1) if total_weight > 0 else 0
-    
+    def _calculate_completion_percentage(kyc_profile, groups, missing_personal_info):
+        """Personal info 20% · documents 60% · submitted 10% · approved 10%."""
+        score = 0.0
+        if not missing_personal_info:
+            score += 20
+        if groups:
+            done = sum(1 for g in groups if g['state'] in ('uploaded', 'approved'))
+            score += 60 * done / len(groups)
+        if kyc_profile.status in (KYCStatus.IN_REVIEW, KYCStatus.APPROVED):
+            score += 10
+        if kyc_profile.status == KYCStatus.APPROVED:
+            score += 10
+        return round(score, 1)
+
     @staticmethod
-    def _generate_next_steps(missing_docs, pending_approval, biometric_complete,
-                           missing_compliance, requirements):
-        """Generate next steps for KYC completion."""
+    def _generate_next_steps(kyc_profile, groups, missing_personal_info, can_submit):
+        """
+        Ordered next steps. ``step`` is a stable code the frontend translates;
+        ``title``/``description`` are English fallbacks for API consumers.
+        """
         steps = []
-        
-        if missing_docs:
-            steps.append({
-                'step': 'upload_documents',
-                'title': 'Upload Required Documents',
-                'description': f'Upload missing documents: {", ".join(missing_docs)}',
-                'priority': 'high'
-            })
-        
-        if pending_approval:
-            steps.append({
+        status = kyc_profile.status
+
+        if status == KYCStatus.APPROVED:
+            return [{
+                'step': 'approved',
+                'title': 'Verification complete',
+                'description': 'Your identity is verified.',
+                'priority': 'low',
+            }]
+        if status == KYCStatus.IN_REVIEW:
+            return [{
                 'step': 'await_review',
-                'title': 'Document Review in Progress',
-                'description': 'Your documents are being reviewed by our team.',
-                'priority': 'medium'
-            })
-        
-        if requirements['biometric_required'] and not biometric_complete:
+                'title': 'Review in progress',
+                'description': 'Our compliance team is reviewing your documents.',
+                'priority': 'medium',
+            }]
+
+        if missing_personal_info:
             steps.append({
-                'step': 'complete_biometric',
-                'title': 'Complete Biometric Verification',
-                'description': 'Complete liveness detection and face verification.',
-                'priority': 'high'
+                'step': 'complete_personal_info',
+                'title': 'Complete your personal information',
+                'description': 'Add your date of birth, nationality and country of residence.',
+                'priority': 'high',
             })
-        
-        if missing_compliance:
+        for g in groups:
+            if g['state'] == 'rejected':
+                steps.append({
+                    'step': f"replace_{g['key']}",
+                    'title': f"Re-upload your {g['key']} document",
+                    'description': '; '.join(r['reason'] for r in g['rejection_reasons'])
+                    or 'The previous document could not be accepted.',
+                    'priority': 'high',
+                })
+            elif g['state'] == 'missing':
+                steps.append({
+                    'step': f"upload_{g['key']}",
+                    'title': f"Upload your {g['key']} document",
+                    'description': '',
+                    'priority': 'high',
+                })
+        if can_submit:
             steps.append({
-                'step': 'compliance_check',
-                'title': 'Compliance Screening',
-                'description': 'Compliance checks are being processed automatically.',
-                'priority': 'low'
+                'step': 'submit',
+                'title': 'Submit for review',
+                'description': 'Everything required is uploaded. Submit your verification.',
+                'priority': 'high',
             })
-        
         return steps
-    
+
+    @staticmethod
+    def can_modify_document(kyc_profile: KYCProfile, document_type: str):
+        """
+        Whether the user may upload / replace / delete a document of this type.
+
+        Returns ``(ok, error_code, message)``.
+        """
+        if kyc_profile.status == KYCStatus.IN_REVIEW:
+            return (False, 'KYC_UNDER_REVIEW',
+                    'Your verification is under review. Documents can be changed '
+                    'if our team asks you to update them.')
+        if kyc_profile.status == KYCStatus.APPROVED:
+            return (False, 'KYC_ALREADY_APPROVED',
+                    'Your identity is already verified.')
+        existing = kyc_profile.documents.filter(document_type=document_type).first()
+        if (existing and existing.status == DocumentStatus.APPROVED
+                and kyc_profile.status != KYCStatus.REJECTED):
+            return (False, 'KYC_DOCUMENT_APPROVED',
+                    'This document has already been approved and does not need '
+                    'to be replaced.')
+        return (True, None, None)
+
     @staticmethod
     def submit_for_review(kyc_profile: KYCProfile, user: User) -> bool:
         """Submit KYC profile for admin review."""
         completion_status = KYCService.check_completion_status(kyc_profile)
-        
-        if not completion_status['is_complete']:
+
+        if not completion_status['can_submit']:
             return False
-        
+
+        kyc_profile.documents.filter(status=DocumentStatus.PENDING).update(
+            status=DocumentStatus.IN_REVIEW
+        )
+        kyc_profile.rejection_reason = ''
+        kyc_profile.save(update_fields=['rejection_reason', 'updated_at'])
         kyc_profile.submit_for_review()
-        
+
         # Log audit trail
         KYCAuditLog.objects.create(
             kyc_profile=kyc_profile,
@@ -235,9 +303,32 @@ class KYCService:
                 'verification_level': kyc_profile.verification_level
             }
         )
-        
+
+        KYCService._notify_reviewers(kyc_profile)
         return True
-    
+
+    @staticmethod
+    def _notify_reviewers(kyc_profile: KYCProfile) -> None:
+        """In-app heads-up to staff that a KYC is waiting for review."""
+        try:
+            from notifications.services import NotificationService
+            reviewers = User.objects.filter(is_staff=True, is_active=True)[:20]
+            for reviewer in reviewers:
+                NotificationService.create_notification(
+                    user=reviewer,
+                    title='New KYC submission',
+                    message=f'{kyc_profile.user.get_full_name() or kyc_profile.user.email} '
+                            f'submitted identity verification for review.',
+                    notification_type='kyc',
+                    priority='medium',
+                    action_url=f'/admin/kyc/kycprofile/{kyc_profile.pk}/change/',
+                    action_label='Review',
+                    send_real_time=True,
+                    send_email=False,
+                )
+        except Exception:
+            logger.warning('Could not notify reviewers of KYC submission', exc_info=True)
+
     @staticmethod
     def calculate_risk_score(kyc_profile: KYCProfile) -> int:
         """Calculate automated risk score for KYC profile."""
@@ -346,9 +437,9 @@ class ComplianceService:
         from .providers import get_compliance_provider
         provider = get_compliance_provider()
 
-        kyc = getattr(user, 'kyc_profile', None)
-        country = getattr(kyc, 'country_of_residence', None) if kyc else None
-        dob = getattr(kyc, 'date_of_birth', None) if kyc else None
+        # Residency country and DOB live on User (KYCProfile has neither field).
+        country = getattr(user, 'country', None) or None
+        dob = getattr(user, 'date_of_birth', None)
 
         result = provider.screen(
             full_name=user.get_full_name() or user.email,
@@ -480,8 +571,8 @@ class BiometricService:
         liveness_threshold = 70
         face_match_threshold = 80
         
-        if (biometric.liveness_score >= liveness_threshold and 
-            biometric.face_match_score >= face_match_threshold):
+        if ((biometric.liveness_score or 0) >= liveness_threshold and
+            (biometric.face_match_score or 0) >= face_match_threshold):
             biometric.status = 'completed'
         else:
             biometric.status = 'failed'

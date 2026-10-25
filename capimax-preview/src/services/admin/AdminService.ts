@@ -406,8 +406,10 @@ export class AdminService {
     return NOT_IMPLEMENTED('unsuspendUser');
   }
 
-  async forceVerifyUser(_userId: string, _notes?: string): Promise<void> {
-    return NOT_IMPLEMENTED('forceVerifyUser', '/kyc/admin/approve/<id>/');
+  async forceVerifyUser(userId: string, notes?: string): Promise<void> {
+    // Approves the user's KYC profile (by USER id) — sends the approval
+    // email + notification and approves the pending documents.
+    await apiClient.post(`/kyc/admin/users/${userId}/approve/`, { notes });
   }
 
   async getUserInvestments(_userId: string, _page: number = 1, _limit: number = 20): Promise<any> {
@@ -558,7 +560,12 @@ export class AdminService {
       // The backend exposes per-document approve/reject actions rather
       // than a single review endpoint with a status field.
       const action = status === 'verified' ? 'approve' : 'reject';
-      await apiClient.post(`/kyc/documents/${documentId}/${action}/`, { notes });
+      // The reject action requires `rejection_reason`; sending `notes`
+      // made every rejection from this panel fail with HTTP 400.
+      await apiClient.post(`/kyc/documents/${documentId}/${action}/`,
+        action === 'reject'
+          ? { rejection_reason: notes || 'The document could not be accepted. Please upload a clear, valid copy.' }
+          : { notes });
     } catch (error) {
       console.error('Failed to review KYC document:', error);
       throw new ApiError('KYC_REVIEW_FAILED', 'Failed to review KYC document');

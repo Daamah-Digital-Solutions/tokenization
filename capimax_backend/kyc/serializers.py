@@ -37,14 +37,19 @@ class KYCProfileSerializer(serializers.ModelSerializer):
         fields = [
             'user', 'user_details', 'status', 'verification_level',
             'submitted_at', 'reviewed_at', 'reviewed_by', 'rejection_reason',
-            'notes', 'risk_score', 'investment_limit', 'expires_at',
+            'nationality', 'verification_provider',
+            'risk_score', 'investment_limit', 'expires_at',
             'last_updated_documents', 'created_at', 'updated_at',
             'is_verified', 'is_expired', 'days_until_expiry',
             'document_count', 'pending_documents', 'compliance_status'
         ]
+        # Everything here is decided by the platform, not the user. `status`
+        # used to be writable, so a user could POST their own profile approved.
         read_only_fields = [
-            'user', 'submitted_at', 'reviewed_at', 'reviewed_by',
-            'investment_limit', 'expires_at', 'created_at', 'updated_at'
+            'user', 'status', 'verification_level', 'submitted_at',
+            'reviewed_at', 'reviewed_by', 'rejection_reason', 'risk_score',
+            'verification_provider', 'investment_limit', 'expires_at',
+            'created_at', 'updated_at'
         ]
     
     def get_is_verified(self, obj):
@@ -140,18 +145,24 @@ class KYCDocumentSerializer(serializers.ModelSerializer):
             'verification_checks', 'metadata', 'created_at', 'updated_at',
             'file_url', 'is_expired', 'reviewer_name'
         ]
+        # `status` / `rejection_reason` used to be writable, so a user could
+        # PATCH their own document to "approved". Review state only changes
+        # through the admin approve / reject / resubmission actions.
         read_only_fields = [
-            'id', 'kyc_profile', 'file_size', 'file_hash', 'reviewed_by',
-            'reviewed_at', 'ocr_data', 'verification_checks', 'created_at',
-            'updated_at'
+            'id', 'kyc_profile', 'status', 'file_path', 'file_size', 'file_hash',
+            'reviewed_by', 'reviewed_at', 'rejection_reason', 'ocr_data',
+            'verification_checks', 'metadata', 'created_at', 'updated_at'
         ]
     
     def get_file_url(self, obj):
-        """Get secure file URL."""
+        """
+        Authenticated download URL (owner or reviewer only). Identity files
+        must not be served as public /media/ links.
+        """
         if obj.file_path:
+            path = f'/api/v1/kyc/documents/{obj.id}/file/'
             request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.file_path.url)
+            return request.build_absolute_uri(path) if request else path
         return None
     
     def get_is_expired(self, obj):
@@ -245,27 +256,23 @@ class KYCDocumentUploadSerializer(serializers.ModelSerializer):
             )
     
     def validate_document_type(self, value):
-        """Validate document type."""
+        """
+        Enforce the replace rules (under review / already approved).
+
+        A second upload of the same type now REPLACES the previous file (see
+        create()). It used to fail with "Document of type X already exists.
+        Please delete the existing one first." — and the wizard had no way to
+        delete, so users were stuck.
+        """
         request = self.context.get('request')
-        if not request:
-            return value
-        
-        user = request.user
-        kyc_profile = getattr(user, 'kyc_profile', None)
-        
+        kyc_profile = getattr(getattr(request, 'user', None), 'kyc_profile', None) if request else None
         if kyc_profile:
-            # Check if document type already exists (excluding current instance)
-            existing = kyc_profile.documents.filter(document_type=value)
-            if self.instance:
-                existing = existing.exclude(pk=self.instance.pk)
-            
-            if existing.exists():
-                raise serializers.ValidationError(
-                    f"Document of type {value} already exists. Please delete the existing one first."
-                )
-        
+            from .services import KYCService
+            ok, _code, message = KYCService.can_modify_document(kyc_profile, value)
+            if not ok:
+                raise serializers.ValidationError(message)
         return value
-    
+
     def validate_expiry_date(self, value):
         """Validate document expiry date."""
         if value and value <= timezone.now().date():
@@ -316,6 +323,22 @@ class KYCDocumentUploadSerializer(serializers.ModelSerializer):
 
         file_bytes = validated_data.pop('_file_bytes')
         file_name = validated_data.get('file_name')
+
+        # Replace any previous document of this type (one per type per
+        # profile). The file is removed too so storage doesn't accumulate.
+        for previous in kyc_profile.documents.filter(
+            document_type=validated_data.get('document_type')
+        ):
+            KYCAuditLog.objects.create(
+                kyc_profile=kyc_profile,
+                action=f"Document Replaced: {previous.get_document_type_display()}",
+                actor=user,
+                details={'previous_document_id': str(previous.id),
+                         'previous_status': previous.status},
+            )
+            if previous.file_path:
+                previous.file_path.delete(save=False)
+            previous.delete()
 
         # Create the stored file from the resolved bytes.
         file_content = ContentFile(file_bytes, name=file_name)
@@ -536,6 +559,9 @@ class DocumentTypeRequirementSerializer(serializers.Serializer):
     compliance_checks_required = serializers.ListField(
         child=serializers.CharField()
     )
+    # Each group is satisfied by ANY one of its `types`.
+    required_groups = serializers.ListField(child=serializers.DictField(), required=False)
+    optional_groups = serializers.ListField(child=serializers.DictField(), required=False)
     investment_limit = serializers.DecimalField(max_digits=12, decimal_places=2)
 
 
@@ -601,56 +627,32 @@ class KYCPersonalInfoSerializer(serializers.Serializer):
             user.country = validated_data['residency_country']
 
         user.save()
+
+        # Nationality has no column on User — it is kept on the KYC profile.
+        if validated_data.get('nationality'):
+            profile = getattr(user, 'kyc_profile', None)
+            if profile is not None:
+                profile.nationality = validated_data['nationality']
+                profile.save(update_fields=['nationality', 'updated_at'])
         return user
 
 
 # Utility function for getting document requirements
 def get_document_requirements(verification_level):
-    """Get document requirements for specific verification level."""
-    requirements = {
-        VerificationLevel.BASIC: {
-            'required_documents': [
-                DocumentType.PASSPORT
-            ],
-            # Proof of address is OPTIONAL for basic verification (client #9a).
-            # Keep this in sync with KYCService.get_verification_requirements.
-            'optional_documents': [
-                DocumentType.PROOF_OF_ADDRESS,
-                DocumentType.SELFIE
-            ],
-            'biometric_required': False,
-            'compliance_checks_required': ['aml'],
-            'investment_limit': 10000
-        },
-        VerificationLevel.ENHANCED: {
-            'required_documents': [
-                DocumentType.PASSPORT,
-                DocumentType.PROOF_OF_ADDRESS,
-                DocumentType.BANK_STATEMENT,
-                DocumentType.SELFIE
-            ],
-            'optional_documents': [
-                DocumentType.VIDEO_VERIFICATION
-            ],
-            'biometric_required': True,
-            'compliance_checks_required': ['aml', 'sanctions', 'pep'],
-            'investment_limit': 50000
-        },
-        VerificationLevel.PREMIUM: {
-            'required_documents': [
-                DocumentType.PASSPORT,
-                DocumentType.PROOF_OF_ADDRESS,
-                DocumentType.BANK_STATEMENT,
-                DocumentType.SELFIE,
-                DocumentType.VIDEO_VERIFICATION
-            ],
-            'optional_documents': [],
-            'biometric_required': True,
-            'compliance_checks_required': [
-                'aml', 'sanctions', 'pep', 'adverse_media', 'watchlist'
-            ],
-            'investment_limit': 500000
-        }
+    """Get document requirements for specific verification level.
+
+    Delegates to KYCService so the API, the wizard and the submit check can
+    never drift apart again (they did: the API said "passport" while the
+    wizard accepted a national ID).
+    """
+    from .services import KYCService
+    req = KYCService.get_verification_requirements(verification_level)
+    return {
+        'required_documents': req['required_documents'],
+        'optional_documents': req['optional_documents'],
+        'required_groups': req['required_groups'],
+        'optional_groups': req['optional_groups'],
+        'biometric_required': req['biometric_required'],
+        'compliance_checks_required': req['compliance_checks'],
+        'investment_limit': int(req['investment_limit']),
     }
-    
-    return requirements.get(verification_level, requirements[VerificationLevel.BASIC])

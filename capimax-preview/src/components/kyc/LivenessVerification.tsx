@@ -1,35 +1,22 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Camera, 
-  RotateCcw, 
-  Check, 
-  AlertCircle,
-  Eye,
-  Smile,
-  RotateCw,
-  Square,
-  Play,
-  StopCircle,
-  Download
-} from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Camera, Check, AlertCircle, RotateCcw, Upload, Loader2, Sun, Glasses, Smartphone } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
 
-interface LivenessVerificationProps {
-  onCapture?: (imageData: string) => void;
-  onComplete?: (result: LivenessResult) => void;
-  /**
-   * Called when the user taps "Continue" on the success screen. The wizard
-   * hides its own Back/Next footer on the liveness step, so without this the
-   * user was stranded after a successful capture (the button was a
-   * console.log stub — client edit #9c).
-   */
-  onContinue?: () => void;
-  loading?: boolean;
-  error?: string;
-  className?: string;
-}
+/**
+ * Live selfie capture for KYC (client round 3, item 4).
+ *
+ * Why it was broken: the old component attached the camera stream to
+ * `videoRef.current` *before* the <video> element was rendered (it only
+ * mounted on the next step), so the preview stayed blank, the "selfie" was a
+ * 0x0 image, the result was a Math.random() score, and nothing was uploaded.
+ *
+ * Now: the stream is attached in an effect once the <video> is mounted, the
+ * user sees a live mirrored preview, takes a photo, checks it, and the photo
+ * is uploaded as the `selfie` KYC document for the reviewer. Every camera
+ * failure has a clear message, and phones can fall back to the native camera.
+ */
 
 export interface LivenessResult {
   selfieUrl: string;
@@ -43,536 +30,377 @@ export interface LivenessResult {
   };
 }
 
-type VerificationStep = 'instructions' | 'camera-setup' | 'capture' | 'processing' | 'complete';
-type LivenessInstruction = 'center-face' | 'look-straight' | 'smile' | 'blink' | 'turn-left' | 'turn-right' | 'complete';
+interface LivenessVerificationProps {
+  /** Upload the captured selfie. Rejecting keeps the photo so the user can retry. */
+  onCaptured: (file: File) => Promise<void>;
+  /** A selfie already stored on the server (shown instead of the intro). */
+  existingSelfieUrl?: string | null;
+  className?: string;
+}
 
-const INSTRUCTIONS = {
-  'center-face': {
-    title: 'Center your face',
-    description: 'Position your face in the center of the frame',
-    icon: Square,
-    duration: 3000
-  },
-  'look-straight': {
-    title: 'Look straight ahead',
-    description: 'Look directly at the camera',
-    icon: Eye,
-    duration: 2000
-  },
-  'smile': {
-    title: 'Smile naturally',
-    description: 'Give us a natural smile',
-    icon: Smile,
-    duration: 3000
-  },
-  'blink': {
-    title: 'Blink slowly',
-    description: 'Blink your eyes slowly and naturally',
-    icon: Eye,
-    duration: 2000
-  },
-  'turn-left': {
-    title: 'Turn head slightly left',
-    description: 'Slowly turn your head to the left',
-    icon: RotateCcw,
-    duration: 3000
-  },
-  'turn-right': {
-    title: 'Turn head slightly right',
-    description: 'Slowly turn your head to the right',
-    icon: RotateCw,
-    duration: 3000
-  },
-  'complete': {
-    title: 'Perfect!',
-    description: 'Liveness verification complete',
-    icon: Check,
-    duration: 1000
+type Phase = 'intro' | 'requesting' | 'live' | 'captured' | 'uploading' | 'done';
+type CameraError = 'permission' | 'notFound' | 'inUse' | 'insecure' | 'unsupported' | 'generic' | 'noFrame' | 'uploadFailed';
+
+const COUNTDOWN_SECONDS = 3;
+
+const mapCameraError = (err: any): CameraError => {
+  switch (err?.name) {
+    case 'NotAllowedError':
+    case 'PermissionDeniedError':
+    case 'SecurityError':
+      return 'permission';
+    case 'NotFoundError':
+    case 'DevicesNotFoundError':
+    case 'OverconstrainedError':
+      return 'notFound';
+    case 'NotReadableError':
+    case 'TrackStartError':
+    case 'AbortError':
+      return 'inUse';
+    default:
+      return 'generic';
   }
 };
 
 export const LivenessVerification: React.FC<LivenessVerificationProps> = ({
-  onCapture,
-  onComplete,
-  onContinue,
-  loading = false,
-  error,
-  className
+  onCaptured,
+  existingSelfieUrl,
+  className,
 }) => {
-  const [currentStep, setCurrentStep] = useState<VerificationStep>('instructions');
-  const [currentInstruction, setCurrentInstruction] = useState<LivenessInstruction>('center-face');
-  const [instructionIndex, setInstructionIndex] = useState(0);
-  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [progress, setProgress] = useState(0);
-  
+  const { t } = useTranslation('kyc');
+  const [phase, setPhase] = useState<Phase>(existingSelfieUrl ? 'done' : 'intro');
+  const [error, setError] = useState<CameraError | null>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [capturedFile, setCapturedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const recordedChunksRef = useRef<Blob[]>([]);
-
-  const instructionSequence: LivenessInstruction[] = [
-    'center-face',
-    'look-straight', 
-    'smile',
-    'blink',
-    'turn-left',
-    'turn-right',
-    'complete'
-  ];
-
-  useEffect(() => {
-    return () => {
-      // Cleanup camera stream when component unmounts
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, [cameraStream]);
-
-  const startCamera = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: 'user'
-        },
-        audio: false
-      });
-
-      setCameraStream(stream);
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-
-      setCurrentStep('camera-setup');
-    } catch (err) {
-      console.error('Camera access error:', err);
-    }
-  }, []);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const timerRef = useRef<number | null>(null);
 
   const stopCamera = useCallback(() => {
-    if (cameraStream) {
-      cameraStream.getTracks().forEach(track => track.stop());
-      setCameraStream(null);
-    }
-    
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-  }, [cameraStream]);
-
-  const startLivenessVerification = useCallback(() => {
-    setCurrentStep('capture');
-    setIsRecording(true);
-    setInstructionIndex(0);
-    setCurrentInstruction(instructionSequence[0]);
-    
-    // Start recording video for liveness analysis
-    if (cameraStream && videoRef.current) {
-      mediaRecorderRef.current = new MediaRecorder(cameraStream);
-      recordedChunksRef.current = [];
-      
-      mediaRecorderRef.current.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          recordedChunksRef.current.push(event.data);
-        }
-      };
-      
-      mediaRecorderRef.current.start();
-    }
-
-    // Progress through instructions
-    let progressInterval = setInterval(() => {
-      setProgress(prev => {
-        const newProgress = prev + (100 / instructionSequence.length / 10);
-        return Math.min(newProgress, 100);
-      });
-    }, 100);
-
-    // Instruction progression
-    let currentIndex = 0;
-    const progressThroughInstructions = () => {
-      if (currentIndex < instructionSequence.length) {
-        const instruction = instructionSequence[currentIndex];
-        setCurrentInstruction(instruction);
-        setInstructionIndex(currentIndex);
-        
-        setTimeout(() => {
-          currentIndex++;
-          if (currentIndex < instructionSequence.length) {
-            progressThroughInstructions();
-          } else {
-            // Complete verification
-            clearInterval(progressInterval);
-            setIsRecording(false);
-            captureFinalImage();
-          }
-        }, INSTRUCTIONS[instruction].duration);
-      }
-    };
-
-    progressThroughInstructions();
-  }, [cameraStream, instructionSequence]);
-
-  const captureFinalImage = useCallback(() => {
-    if (videoRef.current && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const video = videoRef.current;
-      const context = canvas.getContext('2d');
-      
-      if (context) {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        const imageData = canvas.toDataURL('image/jpeg', 0.8);
-        setCapturedImage(imageData);
-        onCapture?.(imageData);
-        
-        // Stop recording
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-          mediaRecorderRef.current.stop();
-        }
-        
-        setCurrentStep('processing');
-        
-        // Simulate processing
-        setTimeout(() => {
-          const result: LivenessResult = {
-            selfieUrl: imageData,
-            livenessScore: Math.random() * 0.2 + 0.8, // 80-100% confidence
-            detectedFace: true,
-            timestamp: new Date(),
-            metadata: {
-              deviceType: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop',
-              imageQuality: Math.random() * 0.3 + 0.7, // 70-100% quality
-              lightingConditions: 'good'
-            }
-          };
-          
-          onComplete?.(result);
-          setCurrentStep('complete');
-        }, 2000);
-      }
-    }
-  }, [onCapture, onComplete]);
-
-  const retryVerification = useCallback(() => {
-    setCapturedImage(null);
-    setProgress(0);
-    setCurrentInstruction('center-face');
-    setInstructionIndex(0);
-    setCurrentStep('camera-setup');
+    setStream((current) => {
+      current?.getTracks().forEach((track) => track.stop());
+      return null;
+    });
+    if (videoRef.current) videoRef.current.srcObject = null;
   }, []);
 
-  const renderInstructions = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="text-center space-y-6"
-    >
-      <div className="w-20 h-20 mx-auto bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center">
-        <Camera className="w-10 h-10 text-emerald-500 dark:text-emerald-400" />
-      </div>
-      
-      <div>
-        <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-          Liveness Verification
-        </h3>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">
-          We need to verify that you are a real person by taking a live selfie
-        </p>
-      </div>
+  // Attach the stream once the <video> exists (it only mounts in the 'live' phase).
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !stream) return;
+    video.srcObject = stream;
+    const play = () => {
+      video.play().catch(() => {
+        /* autoplay is allowed for muted inline video; ignore transient errors */
+      });
+    };
+    video.onloadedmetadata = play;
+    play();
+    return () => {
+      video.onloadedmetadata = null;
+    };
+  }, [stream, phase]);
 
-      <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-6 text-left">
-        <h4 className="font-semibold text-slate-900 dark:text-white mb-4">
-          Before we start:
-        </h4>
-        <ul className="space-y-3">
-          <li className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-            <Check className="w-4 h-4 text-emerald-500" />
-            Ensure good lighting on your face
-          </li>
-          <li className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-            <Check className="w-4 h-4 text-emerald-500" />
-            Look directly at the camera
-          </li>
-          <li className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-            <Check className="w-4 h-4 text-emerald-500" />
-            Remove sunglasses and hats
-          </li>
-          <li className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-            <Check className="w-4 h-4 text-emerald-500" />
-            Follow the on-screen instructions
-          </li>
-        </ul>
-      </div>
+  // Release the camera and timers when leaving the page.
+  useEffect(() => () => {
+    if (timerRef.current) window.clearInterval(timerRef.current);
+    stopCamera();
+  }, [stopCamera]);
 
-      <Button
-        onClick={startCamera}
-        variant="primary"
-        size="lg"
-        className="w-full"
-      >
-        <Camera className="w-5 h-5 mr-2" />
-        Start Verification
-      </Button>
-    </motion.div>
-  );
+  useEffect(() => () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
 
-  const renderCameraSetup = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
-    >
-      <div className="text-center">
-        <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
-          Position Yourself
-        </h3>
-        <p className="text-slate-600 dark:text-slate-400 mt-1">
-          Make sure your face is clearly visible and well-lit
-        </p>
-      </div>
+  const startCamera = useCallback(async () => {
+    setError(null);
+    if (typeof window !== 'undefined' && window.isSecureContext === false) {
+      setError('insecure');
+      return;
+    }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError('unsupported');
+      return;
+    }
+    setPhase('requesting');
+    try {
+      let media: MediaStream;
+      try {
+        media = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false,
+        });
+      } catch (first: any) {
+        // Some devices reject the ideal constraints — retry with any camera.
+        if (first?.name !== 'OverconstrainedError') throw first;
+        media = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      }
+      setStream(media);
+      setPhase('live');
+    } catch (err) {
+      setError(mapCameraError(err));
+      setPhase('intro');
+    }
+  }, []);
 
-      <div className="relative rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
-        <video
-          ref={videoRef}
-          autoPlay
-          muted
-          playsInline
-          // Mirror the live preview so it feels like a natural selfie. The
-          // captured still (canvas/img) is left un-mirrored = the true image.
-          className="w-full h-80 object-cover -scale-x-100"
-        />
-        
-        {/* Face Detection Overlay */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-64 h-80 border-4 border-emerald-400 rounded-2xl border-dashed opacity-60" />
-        </div>
-      </div>
+  const acceptFile = useCallback((file: File) => {
+    setPreviewUrl((old) => {
+      if (old) URL.revokeObjectURL(old);
+      return URL.createObjectURL(file);
+    });
+    setCapturedFile(file);
+    setPhase('captured');
+  }, []);
 
-      <div className="flex gap-3">
-        <Button
-          onClick={stopCamera}
-          variant="ghost"
-          className="flex-1"
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={startLivenessVerification}
-          variant="primary"
-          className="flex-1"
-          disabled={!cameraStream}
-        >
-          <Play className="w-4 h-4 mr-2" />
-          Start Verification
-        </Button>
-      </div>
-    </motion.div>
-  );
-
-  const renderCapture = () => {
-    const CurrentIcon = INSTRUCTIONS[currentInstruction].icon;
-    
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-6"
-      >
-        {/* Progress Bar */}
-        <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
-          <motion.div
-            className="bg-emerald-500 h-2 rounded-full"
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.5 }}
-          />
-        </div>
-
-        {/* Current Instruction */}
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 mx-auto bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center">
-            <CurrentIcon className="w-8 h-8 text-emerald-500 dark:text-emerald-400" />
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
-              {INSTRUCTIONS[currentInstruction].title}
-            </h3>
-            <p className="text-slate-600 dark:text-slate-400">
-              {INSTRUCTIONS[currentInstruction].description}
-            </p>
-          </div>
-        </div>
-
-        {/* Video Feed */}
-        <div className="relative rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800">
-          <video
-            ref={videoRef}
-            autoPlay
-            muted
-            playsInline
-            className="w-full h-80 object-cover"
-          />
-          
-          {/* Recording Indicator */}
-          {isRecording && (
-            <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm">
-              <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-              Recording
-            </div>
-          )}
-
-          {/* Face Detection Overlay */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className={cn(
-              'w-64 h-80 border-4 rounded-2xl transition-colors duration-300',
-              currentInstruction === 'center-face' 
-                ? 'border-emerald-400 border-solid' 
-                : 'border-emerald-400/30 border-dashed'
-            )} />
-          </div>
-        </div>
-
-        {/* Instruction Progress */}
-        <div className="text-center">
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Step {instructionIndex + 1} of {instructionSequence.length}
-          </p>
-        </div>
-      </motion.div>
+  const grabFrame = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || !video.videoWidth || !video.videoHeight) {
+      setError('noFrame');
+      return;
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      setError('generic');
+      return;
+    }
+    // The preview is mirrored for comfort; the stored photo is the true image.
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          setError('noFrame');
+          return;
+        }
+        stopCamera();
+        acceptFile(new File([blob], `selfie-${Date.now()}.jpg`, { type: 'image/jpeg' }));
+      },
+      'image/jpeg',
+      0.92,
     );
+  }, [stopCamera, acceptFile]);
+
+  const startCountdown = useCallback(() => {
+    setError(null);
+    let remaining = COUNTDOWN_SECONDS;
+    setCountdown(remaining);
+    timerRef.current = window.setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        if (timerRef.current) window.clearInterval(timerRef.current);
+        timerRef.current = null;
+        setCountdown(null);
+        grabFrame();
+      } else {
+        setCountdown(remaining);
+      }
+    }, 1000);
+  }, [grabFrame]);
+
+  const cancelLive = useCallback(() => {
+    if (timerRef.current) window.clearInterval(timerRef.current);
+    timerRef.current = null;
+    setCountdown(null);
+    stopCamera();
+    setPhase(existingSelfieUrl ? 'done' : 'intro');
+  }, [existingSelfieUrl, stopCamera]);
+
+  const retake = useCallback(() => {
+    setCapturedFile(null);
+    setError(null);
+    startCamera();
+  }, [startCamera]);
+
+  const confirmPhoto = useCallback(async () => {
+    if (!capturedFile) return;
+    setError(null);
+    setPhase('uploading');
+    try {
+      await onCaptured(capturedFile);
+      setPhase('done');
+    } catch {
+      setError('uploadFailed');
+      setPhase('captured');
+    }
+  }, [capturedFile, onCaptured]);
+
+  const onFileChosen = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (file) {
+      stopCamera();
+      acceptFile(file);
+    }
   };
 
-  const renderProcessing = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="text-center space-y-6"
-    >
-      {/* Show the just-captured selfie (with a spinner overlay) so the user
-          can SEE their photo was taken. Previously they went straight from the
-          live video to a bare spinner and couldn't tell it had worked —
-          client edit #9c. */}
-      {capturedImage ? (
-        <div className="flex justify-center">
-          <div className="relative w-40 h-40 rounded-xl overflow-hidden border-2 border-blue-200 dark:border-blue-800">
-            <img
-              src={capturedImage}
-              alt="Your captured selfie"
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-              <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin" />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="w-20 h-20 mx-auto bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      )}
-
-      <div>
-        <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
-          Processing Verification
-        </h3>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">
-          Analyzing your liveness data to ensure security...
-        </p>
-      </div>
-    </motion.div>
-  );
-
-  const renderComplete = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="text-center space-y-6"
-    >
-      <div className="w-20 h-20 mx-auto bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center">
-        <Check className="w-10 h-10 text-emerald-500 dark:text-emerald-400" />
-      </div>
-      
-      <div>
-        <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-          Verification Complete!
-        </h3>
-        <p className="text-slate-600 dark:text-slate-400 mt-2">
-          Your liveness verification was successful
-        </p>
-      </div>
-
-      {capturedImage && (
-        <div className="flex justify-center">
-          <div className="w-32 h-32 rounded-xl overflow-hidden border-2 border-emerald-200 dark:border-emerald-800">
-            <img 
-              src={capturedImage} 
-              alt="Captured selfie"
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </div>
-      )}
-
-      <div className="flex gap-3">
-        <Button
-          onClick={retryVerification}
-          variant="ghost"
-          className="flex-1"
-        >
-          <RotateCcw className="w-4 h-4 mr-2" />
-          Retake
-        </Button>
-        <Button
-          onClick={() => onContinue?.()}
-          variant="primary"
-          className="flex-1"
-        >
-          Continue
-        </Button>
-      </div>
-    </motion.div>
+  const fallback = (
+    <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 p-4 text-center">
+      <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{t('camera.fallbackTitle')}</p>
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('camera.fallbackDesc')}</p>
+      <Button variant="ghost" size="sm" className="mt-3" onClick={() => fileInputRef.current?.click()}>
+        <Upload className="w-4 h-4 me-2" />
+        {t('camera.fallbackButton')}
+      </Button>
+    </div>
   );
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className={cn('w-full max-w-md mx-auto bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-8', className)}
-    >
-      {/* Error Message */}
+    <div className={cn('w-full max-w-lg mx-auto space-y-5', className)}>
+      {/* Native camera / gallery fallback (opens the front camera on phones). */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        capture="user"
+        className="hidden"
+        onChange={onFileChosen}
+      />
+
       {error && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl mb-6"
-        >
-          <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400" />
-          <span className="text-sm text-red-600 dark:text-red-400">
-            {error}
-          </span>
-        </motion.div>
+        <div role="alert" className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+          <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+          <p className="text-sm text-red-700 dark:text-red-300">{t(`camera.errors.${error}`)}</p>
+        </div>
       )}
 
-      {/* Hidden Canvas for Image Capture */}
-      <canvas ref={canvasRef} className="hidden" />
+      {(phase === 'intro' || phase === 'requesting') && (
+        <div className="space-y-5">
+          <div className="text-center">
+            <div className="w-16 h-16 mx-auto bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center">
+              <Camera className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <h3 className="mt-3 text-lg font-semibold text-slate-900 dark:text-white">{t('camera.introTitle')}</h3>
+          </div>
+          <ul className="space-y-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
+            {[
+              { icon: Sun, text: t('camera.tip1') },
+              { icon: Glasses, text: t('camera.tip2') },
+              { icon: Smartphone, text: t('camera.tip3') },
+            ].map(({ icon: Icon, text }) => (
+              <li key={text} className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
+                <Icon className="w-4 h-4 text-emerald-500 shrink-0" />
+                {text}
+              </li>
+            ))}
+          </ul>
+          {phase === 'requesting' ? (
+            <div className="flex items-center justify-center gap-2 text-sm text-slate-600 dark:text-slate-300 py-3">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              {t('camera.requesting')}
+            </div>
+          ) : (
+            <Button variant="primary" size="lg" className="w-full" onClick={startCamera}>
+              <Camera className="w-5 h-5 me-2" />
+              {error ? t('camera.retry') : t('camera.start')}
+            </Button>
+          )}
+          {fallback}
+        </div>
+      )}
 
-      {/* Step Content */}
-      <AnimatePresence mode="wait">
-        {currentStep === 'instructions' && renderInstructions()}
-        {currentStep === 'camera-setup' && renderCameraSetup()}
-        {currentStep === 'capture' && renderCapture()}
-        {currentStep === 'processing' && renderProcessing()}
-        {currentStep === 'complete' && renderComplete()}
-      </AnimatePresence>
-    </motion.div>
+      {phase === 'live' && (
+        <div className="space-y-4">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('camera.liveTitle')}</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{t('camera.liveHint')}</p>
+          </div>
+          <div className="relative mx-auto w-full max-w-sm aspect-[3/4] rounded-2xl overflow-hidden bg-slate-900">
+            <video
+              ref={videoRef}
+              autoPlay
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover -scale-x-100"
+            />
+            {/* Face guide */}
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div className="w-[62%] h-[70%] rounded-[50%] border-4 border-emerald-400/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)]" />
+            </div>
+            <div className="absolute top-3 start-3 flex items-center gap-1.5 bg-red-500 text-white text-xs font-medium px-2.5 py-1 rounded-full">
+              <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+              {t('camera.live')}
+            </div>
+            {countdown !== null && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-7xl font-bold text-white drop-shadow-lg">{countdown}</span>
+              </div>
+            )}
+          </div>
+          {countdown !== null && (
+            <p className="text-center text-sm text-slate-600 dark:text-slate-300">
+              {t('camera.countdown', { seconds: countdown })}
+            </p>
+          )}
+          <div className="flex gap-3">
+            <Button variant="ghost" className="flex-1" onClick={cancelLive}>
+              {t('camera.cancel')}
+            </Button>
+            <Button variant="primary" className="flex-1" onClick={startCountdown} disabled={countdown !== null}>
+              <Camera className="w-4 h-4 me-2" />
+              {t('camera.capture')}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {(phase === 'captured' || phase === 'uploading') && previewUrl && (
+        <div className="space-y-4">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('camera.capturedTitle')}</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{t('camera.capturedHint')}</p>
+          </div>
+          <div className="relative mx-auto w-full max-w-sm aspect-[3/4] rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800">
+            <img src={previewUrl} alt={t('docTypes.selfie')} className="absolute inset-0 w-full h-full object-cover" />
+            {phase === 'uploading' && (
+              <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center gap-2 text-white">
+                <Loader2 className="w-8 h-8 animate-spin" />
+                <span className="text-sm">{t('camera.uploading')}</span>
+              </div>
+            )}
+          </div>
+          <div className="flex gap-3">
+            <Button variant="ghost" className="flex-1" onClick={retake} disabled={phase === 'uploading'}>
+              <RotateCcw className="w-4 h-4 me-2" />
+              {t('camera.retake')}
+            </Button>
+            <Button variant="primary" className="flex-1" onClick={confirmPhoto} disabled={phase === 'uploading'}>
+              <Check className="w-4 h-4 me-2" />
+              {t('camera.usePhoto')}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {phase === 'done' && (
+        <div className="space-y-4 text-center">
+          <div className="relative mx-auto w-40 aspect-[3/4] rounded-xl overflow-hidden border-2 border-emerald-300 dark:border-emerald-700 bg-slate-100 dark:bg-slate-800">
+            {(previewUrl || existingSelfieUrl) && (
+              <img
+                src={previewUrl || existingSelfieUrl || ''}
+                alt={t('docTypes.selfie')}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            )}
+            <span className="absolute bottom-2 end-2 w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center">
+              <Check className="w-4 h-4" />
+            </span>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('camera.uploadedTitle')}</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{t('camera.uploadedHint')}</p>
+          </div>
+          <Button variant="ghost" onClick={retake}>
+            <RotateCcw className="w-4 h-4 me-2" />
+            {t('camera.retake')}
+          </Button>
+        </div>
+      )}
+    </div>
   );
 };
+
+export default LivenessVerification;

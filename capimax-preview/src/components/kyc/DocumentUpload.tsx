@@ -1,428 +1,288 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Upload, 
-  FileText, 
-  Check, 
-  X, 
-  AlertCircle, 
-  Camera, 
-  Scan,
-  FileImage,
-  Eye,
-  RotateCcw,
-  Download
-} from 'lucide-react';
+import React, { useCallback, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Upload, FileText, Check, X, AlertCircle, Eye, RotateCcw, Loader2, Clock, Lock } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
+import type { KYCDocumentStatus, KYCServerDocument } from '../../services/user/KYCService';
 
-interface DocumentUploadProps {
-  documentType: 'passport' | 'id' | 'utility_bill' | 'bank_statement' | 'selfie';
-  title: string;
-  description: string;
-  requirements: string[];
-  maxFileSize?: number; // in MB
-  acceptedFormats?: string[];
-  onUpload?: (file: File) => void;
-  onRemove?: () => void;
-  loading?: boolean;
-  error?: string;
-  uploadedFile?: UploadedFile;
-  className?: string;
-}
+/**
+ * One KYC document slot. The status shown is the SERVER's status for the
+ * stored document (client round 3, item 5): the old card showed an
+ * optimistic "Processing" that looked like acceptance even when the upload
+ * had failed or the document was later rejected.
+ */
 
+/** Legacy shape kept for the components barrel export. */
 export interface UploadedFile {
   name: string;
   size: number;
   type: string;
   url?: string;
   uploadDate: Date;
-  // 'rejected' = a compliance verdict from a reviewer (red).
-  // 'error'    = the upload itself failed to reach the server (amber, retry) —
-  //              kept distinct so a network/validation failure is never shown
-  //              as a scary compliance "Rejected" (client edit #9b).
   status: 'pending' | 'processing' | 'approved' | 'rejected' | 'error';
   rejectionReason?: string;
 }
 
-const DOCUMENT_ICONS = {
-  passport: FileText,
-  id: FileText,
-  utility_bill: FileText,
-  bank_statement: FileText,
-  selfie: Camera
+interface DocumentUploadProps {
+  title: string;
+  description: string;
+  requirements?: string[];
+  document?: KYCServerDocument;
+  uploading?: boolean;
+  /** Upload/transport error for this slot (already translated). */
+  error?: string | null;
+  /** Under review / approved — no changes allowed. */
+  locked?: boolean;
+  maxFileSizeMb?: number;
+  acceptedFormats?: string[];
+  onUpload: (file: File) => void;
+  onRemove?: () => void;
+  className?: string;
+}
+
+const DEFAULT_FORMATS = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+
+const STATUS_STYLE: Record<KYCDocumentStatus, string> = {
+  pending: 'text-blue-700 bg-blue-100 dark:text-blue-300 dark:bg-blue-900/30',
+  in_review: 'text-blue-700 bg-blue-100 dark:text-blue-300 dark:bg-blue-900/30',
+  approved: 'text-emerald-700 bg-emerald-100 dark:text-emerald-300 dark:bg-emerald-900/30',
+  rejected: 'text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-900/30',
+  resubmission_required: 'text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-900/30',
+  expired: 'text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/30',
 };
 
-const DOCUMENT_COLORS = {
-  passport: 'text-blue-500 dark:text-blue-400',
-  id: 'text-green-500 dark:text-green-400',
-  utility_bill: 'text-orange-500 dark:text-orange-400',
-  bank_statement: 'text-purple-500 dark:text-purple-400',
-  selfie: 'text-pink-500 dark:text-pink-400'
-};
+const NEEDS_REPLACEMENT: KYCDocumentStatus[] = ['rejected', 'resubmission_required', 'expired'];
+
+const isImageName = (name?: string) => !!name && /\.(jpe?g|png|webp|gif)$/i.test(name);
 
 export const DocumentUpload: React.FC<DocumentUploadProps> = ({
-  documentType,
   title,
   description,
-  requirements,
-  maxFileSize = 10,
-  acceptedFormats = ['image/jpeg', 'image/png', 'application/pdf'],
+  requirements = [],
+  document,
+  uploading = false,
+  error,
+  locked = false,
+  maxFileSizeMb = 10,
+  acceptedFormats = DEFAULT_FORMATS,
   onUpload,
   onRemove,
-  loading = false,
-  error,
-  uploadedFile,
-  className
+  className,
 }) => {
+  const { t, i18n } = useTranslation('kyc');
   const [isDragOver, setIsDragOver] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const Icon = DOCUMENT_ICONS[documentType];
-  const iconColor = DOCUMENT_COLORS[documentType];
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [localPreview, setLocalPreview] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const validateFile = (file: File): string | null => {
-    if (!acceptedFormats.includes(file.type)) {
-      return `Please upload a file in one of these formats: ${acceptedFormats.join(', ')}`;
-    }
-    
-    if (file.size > maxFileSize * 1024 * 1024) {
-      return `File size must be less than ${maxFileSize}MB`;
-    }
-    
-    return null;
+  const formatsLabel = acceptedFormats
+    .map((f) => (f === 'application/pdf' ? 'PDF' : f.split('/')[1].toUpperCase()))
+    .join(', ');
+
+  const handleFile = useCallback(
+    (file: File) => {
+      setLocalError(null);
+      if (!acceptedFormats.includes(file.type)) {
+        setLocalError(t('upload.invalidType', { formats: formatsLabel }));
+        return;
+      }
+      if (file.size > maxFileSizeMb * 1024 * 1024) {
+        setLocalError(t('upload.tooLarge', { size: maxFileSizeMb }));
+        return;
+      }
+      setLocalPreview((old) => {
+        if (old) URL.revokeObjectURL(old);
+        return file.type.startsWith('image/') ? URL.createObjectURL(file) : null;
+      });
+      onUpload(file);
+    },
+    [acceptedFormats, formatsLabel, maxFileSizeMb, onUpload, t],
+  );
+
+  const openPicker = () => {
+    if (!locked && !uploading) inputRef.current?.click();
   };
 
-  const handleFileSelect = useCallback((file: File) => {
-    const validationError = validateFile(file);
-    if (validationError) {
-      console.error(validationError);
-      return;
-    }
-
-    // Create preview for images
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => setPreviewUrl(e.target?.result as string);
-      reader.readAsDataURL(file);
-    }
-
-    onUpload?.(file);
-  }, [maxFileSize, acceptedFormats, onUpload]);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      handleFileSelect(files[0]);
-    }
-  }, [handleFileSelect]);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-  }, []);
-
-  const handleFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      handleFileSelect(files[0]);
-    }
-  }, [handleFileSelect]);
-
-  const handleRemove = () => {
-    setPreviewUrl(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-    onRemove?.();
-  };
-
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const getStatusColor = (status: UploadedFile['status']) => {
-    switch (status) {
-      case 'pending':
-        return 'text-amber-500 bg-amber-100 dark:bg-amber-900/20';
-      case 'processing':
-        return 'text-blue-500 bg-blue-100 dark:bg-blue-900/20';
-      case 'approved':
-        return 'text-emerald-500 bg-emerald-100 dark:bg-emerald-900/20';
-      case 'rejected':
-        return 'text-red-500 bg-red-100 dark:bg-red-900/20';
-      case 'error':
-        // Transport/network failure — a soft amber "try again", NOT a red
-        // compliance rejection (client edit #9b).
-        return 'text-amber-600 bg-amber-100 dark:bg-amber-900/20';
-      default:
-        return 'text-slate-500 bg-slate-100 dark:bg-slate-800';
-    }
-  };
-
-  const getStatusIcon = (status: UploadedFile['status']) => {
-    switch (status) {
-      case 'pending':
-        return <Upload className="w-4 h-4" />;
-      case 'processing':
-        return <Scan className="w-4 h-4" />;
-      case 'approved':
-        return <Check className="w-4 h-4" />;
-      case 'rejected':
-        return <X className="w-4 h-4" />;
-      case 'error':
-        return <AlertCircle className="w-4 h-4" />;
-      default:
-        return <Upload className="w-4 h-4" />;
-    }
-  };
-
-  const getStatusText = (status: UploadedFile['status']) => {
-    switch (status) {
-      case 'pending':
-        return 'Pending review';
-      case 'processing':
-        return 'Processing';
-      case 'approved':
-        return 'Approved';
-      case 'rejected':
-        return 'Rejected';
-      case 'error':
-        return 'Upload failed — retry';
-      default:
-        return status;
-    }
-  };
+  const shownError = localError || error;
+  const needsReplacement = document && NEEDS_REPLACEMENT.includes(document.status);
+  const canChange = !locked && !uploading && document?.status !== 'approved';
+  const previewSrc = localPreview || (document && isImageName(document.file_name) ? document.file_url : null);
+  const dateFmt = (iso: string) =>
+    new Date(iso).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar' : 'en', {
+      year: 'numeric', month: 'short', day: 'numeric',
+    });
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className={cn('space-y-4', className)}
-    >
-      {/* Header */}
-      <div className="flex items-start gap-4">
-        <div className={cn('p-3 rounded-xl bg-slate-100 dark:bg-slate-800', iconColor)}>
-          <Icon className="w-6 h-6" />
+    <div className={cn('space-y-3', className)}>
+      <div className="flex items-start gap-3">
+        <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400">
+          <FileText className="w-5 h-5" />
         </div>
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-            {title}
-          </h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-            {description}
-          </p>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base font-semibold text-slate-900 dark:text-white">{title}</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">{description}</p>
         </div>
       </div>
 
-      {/* Requirements */}
-      <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4">
-        <h4 className="text-sm font-medium text-slate-900 dark:text-white mb-2">
-          Document Requirements:
-        </h4>
-        <ul className="space-y-1">
-          {requirements.map((requirement, index) => (
-            <li key={index} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-              <Check className="w-3 h-3 text-emerald-500" />
-              {requirement}
+      {requirements.length > 0 && !document && (
+        <ul className="grid sm:grid-cols-2 gap-x-4 gap-y-1 bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3">
+          {requirements.map((r) => (
+            <li key={r} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+              <Check className="w-3 h-3 text-emerald-500 shrink-0" />
+              {r}
             </li>
           ))}
         </ul>
-      </div>
-
-      {/* Error Message */}
-      {error && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl"
-        >
-          <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400" />
-          <span className="text-sm text-red-600 dark:text-red-400">
-            {error}
-          </span>
-        </motion.div>
       )}
 
-      {/* Upload Area or File Display */}
-      <AnimatePresence mode="wait">
-        {uploadedFile ? (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="border-2 border-slate-200 dark:border-slate-700 rounded-xl p-6"
-          >
-            <div className="flex items-start gap-4">
-              {/* File Icon/Preview */}
-              <div className="flex-shrink-0">
-                {previewUrl || uploadedFile.url ? (
-                  <div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800">
-                    <img 
-                      src={previewUrl || uploadedFile.url} 
-                      alt="Document preview"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center">
-                    <FileImage className="w-8 h-8 text-slate-400" />
-                  </div>
-                )}
-              </div>
+      {shownError && (
+        <div role="alert" className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
+          <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          <p className="text-sm text-amber-800 dark:text-amber-300">
+            <strong>{t('upload.errorTitle')}</strong> {shownError}
+          </p>
+        </div>
+      )}
 
-              {/* File Details */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <h4 className="font-medium text-slate-900 dark:text-white truncate">
-                      {uploadedFile.name}
-                    </h4>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {formatFileSize(uploadedFile.size)} • {uploadedFile.type}
-                    </p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500">
-                      Uploaded on {uploadedFile.uploadDate.toLocaleDateString()}
-                    </p>
-                  </div>
-
-                  {/* Status Badge */}
-                  <div className={cn(
-                    'px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5',
-                    getStatusColor(uploadedFile.status)
-                  )}>
-                    {getStatusIcon(uploadedFile.status)}
-                    {getStatusText(uploadedFile.status)}
-                  </div>
-                </div>
-
-                {/* Rejection Reason — a compliance verdict from a reviewer */}
-                {uploadedFile.status === 'rejected' && uploadedFile.rejectionReason && (
-                  <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                    <p className="text-sm text-red-600 dark:text-red-400">
-                      <strong>Rejection Reason:</strong> {uploadedFile.rejectionReason}
-                    </p>
-                  </div>
-                )}
-
-                {/* Upload error — the file never reached the server; not a verdict */}
-                {uploadedFile.status === 'error' && (
-                  <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                    <p className="text-sm text-amber-700 dark:text-amber-400">
-                      <strong>Couldn't upload this file.</strong>{' '}
-                      {uploadedFile.rejectionReason || 'Please check your connection and try again.'}
-                    </p>
-                  </div>
-                )}
-
-                {/* Actions */}
-                <div className="flex items-center gap-2 mt-4">
-                  {uploadedFile.url && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => window.open(uploadedFile.url, '_blank')}
-                      className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
-                    >
-                      <Eye className="w-4 h-4 mr-1" />
-                      View
-                    </Button>
-                  )}
-                  
-                  {(uploadedFile.status === 'rejected' || uploadedFile.status === 'error') && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="text-blue-600 hover:text-blue-700 dark:text-blue-400"
-                    >
-                      <RotateCcw className="w-4 h-4 mr-1" />
-                      Reupload
-                    </Button>
-                  )}
-                  
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleRemove}
-                    className="text-red-600 hover:text-red-700 dark:text-red-400"
-                  >
-                    <X className="w-4 h-4 mr-1" />
-                    Remove
-                  </Button>
-                </div>
-              </div>
+      {document || uploading ? (
+        <div
+          className={cn(
+            'border-2 rounded-xl p-4',
+            needsReplacement ? 'border-red-200 dark:border-red-900' : 'border-slate-200 dark:border-slate-700',
+          )}
+        >
+          <div className="flex items-start gap-3">
+            <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+              {previewSrc ? (
+                <img src={previewSrc} alt={title} className="w-full h-full object-cover" />
+              ) : (
+                <FileText className="w-7 h-7 text-slate-400" />
+              )}
             </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className={cn(
-              'border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 cursor-pointer',
-              isDragOver
-                ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'
-                : 'border-slate-300 dark:border-slate-600 hover:border-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10'
-            )}
-            onClick={() => fileInputRef.current?.click()}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-          >
-            <div className="space-y-4">
-              <div className="w-16 h-16 mx-auto bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
-                <Upload className={cn(
-                  'w-8 h-8 transition-colors',
-                  isDragOver ? 'text-emerald-500' : 'text-slate-400'
-                )} />
-              </div>
-              
-              <div>
-                <h4 className="text-lg font-medium text-slate-900 dark:text-white">
-                  {isDragOver ? 'Drop your file here' : 'Upload Document'}
-                </h4>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  Drag and drop your file here, or click to browse
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="font-medium text-sm text-slate-900 dark:text-white truncate max-w-[14rem]">
+                  {document?.file_name || '—'}
                 </p>
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
-                  Max file size: {maxFileSize}MB • Supported: {acceptedFormats.map(f => f.split('/')[1].toUpperCase()).join(', ')}
-                </p>
+                {uploading ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-slate-700 bg-slate-100 dark:text-slate-200 dark:bg-slate-800">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    {t('docStatus.uploading')}
+                  </span>
+                ) : document ? (
+                  <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium', STATUS_STYLE[document.status])}>
+                    {document.status === 'approved' ? (
+                      <Check className="w-3.5 h-3.5" />
+                    ) : needsReplacement ? (
+                      <X className="w-3.5 h-3.5" />
+                    ) : (
+                      <Clock className="w-3.5 h-3.5" />
+                    )}
+                    {t(`docStatus.${document.status}`)}
+                  </span>
+                ) : null}
               </div>
+              {document && (
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {t('upload.uploadedOn', { date: dateFmt(document.created_at) })}
+                </p>
+              )}
 
-              {loading && (
-                <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400">
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  <span className="text-sm font-medium">Uploading...</span>
+              {needsReplacement && document?.rejection_reason && (
+                <div className="mt-2 p-2.5 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                  <p className="text-sm text-red-700 dark:text-red-300">
+                    <strong>{t('upload.rejectedReason')}</strong> {document.rejection_reason}
+                  </p>
+                </div>
+              )}
+
+              {!uploading && document && (
+                <div className="flex flex-wrap items-center gap-1 mt-2">
+                  {document.file_url && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.open(document.file_url as string, '_blank', 'noopener')}
+                      className="text-emerald-700 dark:text-emerald-400"
+                    >
+                      <Eye className="w-4 h-4 me-1" />
+                      {t('upload.view')}
+                    </Button>
+                  )}
+                  {canChange && (
+                    <Button variant="ghost" size="sm" onClick={openPicker} className="text-blue-700 dark:text-blue-400">
+                      <RotateCcw className="w-4 h-4 me-1" />
+                      {t('upload.replace')}
+                    </Button>
+                  )}
+                  {canChange && onRemove && (
+                    <Button variant="ghost" size="sm" onClick={onRemove} className="text-red-600 dark:text-red-400">
+                      <X className="w-4 h-4 me-1" />
+                      {t('upload.remove')}
+                    </Button>
+                  )}
+                  {locked && document.status !== 'approved' && (
+                    <span className="inline-flex items-center gap-1 text-xs text-slate-500">
+                      <Lock className="w-3.5 h-3.5" />
+                      {t('upload.locked')}
+                    </span>
+                  )}
                 </div>
               )}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      ) : (
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={openPicker}
+          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && openPicker()}
+          onDrop={(e) => {
+            e.preventDefault();
+            setIsDragOver(false);
+            const file = e.dataTransfer.files?.[0];
+            if (file) handleFile(file);
+          }}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragOver(true);
+          }}
+          onDragLeave={() => setIsDragOver(false)}
+          className={cn(
+            'border-2 border-dashed rounded-xl p-6 text-center transition-colors',
+            locked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
+            isDragOver
+              ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'
+              : 'border-slate-300 dark:border-slate-600 hover:border-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10',
+          )}
+        >
+          <div className="w-12 h-12 mx-auto bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
+            <Upload className={cn('w-6 h-6', isDragOver ? 'text-emerald-500' : 'text-slate-400')} />
+          </div>
+          <p className="mt-3 font-medium text-slate-900 dark:text-white">
+            {isDragOver ? t('upload.dropHere') : t('upload.dropTitle')}
+          </p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{t('upload.dropHint')}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
+            {t('upload.formats', { size: maxFileSizeMb, formats: formatsLabel })}
+          </p>
+        </div>
+      )}
 
-      {/* Hidden File Input */}
       <input
-        ref={fileInputRef}
+        ref={inputRef}
         type="file"
         accept={acceptedFormats.join(',')}
-        onChange={handleFileInputChange}
         className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = '';
+          if (file) handleFile(file);
+        }}
       />
-    </motion.div>
+    </div>
   );
 };
+
+export default DocumentUpload;

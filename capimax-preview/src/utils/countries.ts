@@ -273,3 +273,32 @@ export function countryName(code: string | null | undefined): string {
   if (!code) return '';
   return COUNTRY_NAMES[code] || code;
 }
+
+/**
+ * Country list with names in the UI language (Arabic names via
+ * Intl.DisplayNames; values stay ISO codes). Falls back to English.
+ */
+export function getLocalizedCountries(language: string | undefined): typeof COUNTRIES {
+  if (!language || !language.startsWith('ar')) return COUNTRIES;
+  try {
+    const names = new Intl.DisplayNames(['ar'], { type: 'region' });
+    return COUNTRIES
+      .map((c) => ({ ...c, label: names.of(c.value) || c.label }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'ar'));
+  } catch {
+    return COUNTRIES;
+  }
+}
+
+/** Display name for an ISO code in the UI language. */
+export function localizedCountryName(code: string | null | undefined, language: string | undefined): string {
+  if (!code) return '';
+  if (language && language.startsWith('ar')) {
+    try {
+      return new Intl.DisplayNames(['ar'], { type: 'region' }).of(code) || countryName(code);
+    } catch {
+      /* fall through */
+    }
+  }
+  return countryName(code);
+}

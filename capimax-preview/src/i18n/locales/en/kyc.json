@@ -1,0 +1,305 @@
+{
+  "page": {
+    "title": "Identity Verification",
+    "subtitle": "Verify your identity once to unlock investing, deposits and withdrawals on Capimax RT.",
+    "breadcrumbDashboard": "Dashboard",
+    "loading": "Loading your verification status…",
+    "loadError": "We couldn't load your verification status.",
+    "retry": "Try again",
+    "backToDashboard": "Back to dashboard"
+  },
+  "status": {
+    "label": "Verification status",
+    "not_started": "Not started",
+    "pending": "Not submitted yet",
+    "action_required": "Action required",
+    "in_review": "Under review",
+    "approved": "Verified",
+    "rejected": "Not approved",
+    "expired": "Expired",
+    "desc": {
+      "not_started": "You haven't started identity verification yet. It takes about 5 minutes.",
+      "pending": "Complete the remaining steps below and submit your verification.",
+      "action_required": "Our team asked you to update some documents. Replace them below and submit again.",
+      "in_review": "Your documents were submitted and our compliance team is reviewing them. This usually takes 24–48 hours.",
+      "approved": "Your identity is verified. You have full access to the platform.",
+      "rejected": "Your verification was not approved. Read the reason below, upload new documents and submit again.",
+      "expired": "Your verification has expired. Please verify your identity again."
+    },
+    "progress": "{{percent}}% complete",
+    "reasonTitle": "Reason from our review team",
+    "notesTitle": "Messages from the review team",
+    "submittedOn": "Submitted on {{date}}",
+    "reviewedOn": "Reviewed on {{date}}",
+    "limit": "Ownership limit: {{amount}}",
+    "expiresOn": "Valid until {{date}}"
+  },
+  "steps": {
+    "title": "What you need to do",
+    "complete_personal_info": "Add your date of birth, nationality and country of residence",
+    "upload_identity": "Upload a government-issued ID (passport, national ID or driver's license)",
+    "upload_selfie": "Take a live selfie with your camera",
+    "upload_address": "Upload a proof of address",
+    "upload_video": "Record a short verification video",
+    "replace_identity": "Replace your ID document",
+    "replace_selfie": "Retake your selfie",
+    "replace_address": "Replace your proof of address",
+    "replace_video": "Re-record your verification video",
+    "submit": "Submit your verification for review",
+    "await_review": "Wait for our team to review your documents (24–48 hours)",
+    "approved": "Verification complete"
+  },
+  "groups": {
+    "identity": "Identity document",
+    "selfie": "Live selfie",
+    "address": "Proof of address",
+    "video": "Verification video"
+  },
+  "docTypes": {
+    "passport": "Passport",
+    "national_id": "National ID",
+    "driving_license": "Driver's license",
+    "utility_bill": "Utility bill",
+    "bank_statement": "Bank statement",
+    "proof_of_address": "Proof of address",
+    "selfie": "Live selfie",
+    "video_verification": "Verification video"
+  },
+  "docStatus": {
+    "pending": "Uploaded — awaiting review",
+    "in_review": "Under review",
+    "approved": "Approved",
+    "rejected": "Needs replacement",
+    "resubmission_required": "Needs replacement",
+    "expired": "Expired",
+    "error": "Upload failed",
+    "uploading": "Uploading…"
+  },
+  "upload": {
+    "requirements": "Requirements",
+    "dropTitle": "Upload document",
+    "dropHere": "Drop your file here",
+    "dropHint": "Drag and drop a file here, or tap to choose one",
+    "formats": "Max {{size}}MB · {{formats}}",
+    "view": "View",
+    "replace": "Replace",
+    "remove": "Remove",
+    "retry": "Try again",
+    "uploadedOn": "Uploaded on {{date}}",
+    "rejectedReason": "Why it needs replacing:",
+    "errorTitle": "This file was not uploaded.",
+    "locked": "This document can't be changed while it is under review or already approved.",
+    "invalidType": "This file type isn't supported. Please upload {{formats}}.",
+    "tooLarge": "This file is larger than {{size}}MB. Please upload a smaller file."
+  },
+  "wizard": {
+    "stepOf": "Step {{current}} of {{total}}",
+    "back": "Back",
+    "next": "Next",
+    "skip": "Skip for now",
+    "steps": {
+      "intro": "Overview",
+      "personal": "Personal info",
+      "identity": "ID document",
+      "address": "Address",
+      "selfie": "Selfie",
+      "review": "Submit"
+    },
+    "intro": {
+      "title": "Let's verify your identity",
+      "desc": "Regulations require us to confirm who you are before you can own property shares. Your data is encrypted and only used for verification.",
+      "timeNote": "It takes about 5 minutes. You'll need your ID and a device with a camera.",
+      "needTitle": "What you'll need",
+      "needId": "A valid government-issued ID",
+      "needIdDesc": "Passport, national ID or driver's license",
+      "needSelfie": "A live selfie",
+      "needSelfieDesc": "Taken with your phone or computer camera",
+      "needAddress": "Proof of address (optional)",
+      "needAddressDesc": "Utility bill or bank statement from the last 3 months",
+      "processing": "Most verifications are reviewed within 24–48 hours. You'll get an email and a notification with the result."
+    },
+    "personal": {
+      "title": "Personal information",
+      "desc": "This must match your identity document.",
+      "dob": "Date of birth",
+      "dobHint": "You must be at least 18 years old.",
+      "nationality": "Nationality",
+      "nationalityPlaceholder": "Select your nationality",
+      "residency": "Country of residence",
+      "residencyPlaceholder": "Select your country of residence",
+      "privacy": "Your personal information is encrypted and stored securely.",
+      "errors": {
+        "dobRequired": "Date of birth is required",
+        "dobUnderage": "You must be at least 18 years old to use this platform",
+        "dobFuture": "Date of birth cannot be in the future",
+        "nationalityRequired": "Nationality is required",
+        "residencyRequired": "Country of residence is required",
+        "saveFailed": "We couldn't save your information. Please try again."
+      }
+    },
+    "identity": {
+      "title": "Upload your ID document",
+      "desc": "Upload ONE of the following. Make sure the whole document is visible and readable.",
+      "or": "or",
+      "passportDesc": "The photo page of your passport",
+      "nationalIdDesc": "Front side of your national ID card (include the back in the same image if possible)",
+      "drivingDesc": "Front side of your driver's license",
+      "req1": "The whole document is visible",
+      "req2": "All text is sharp and readable",
+      "req3": "No glare, shadows or fingers covering it",
+      "req4": "The document is valid and not expired"
+    },
+    "address": {
+      "title": "Proof of address (optional)",
+      "desc": "You can skip this step. Adding it now speeds up higher ownership limits later.",
+      "utilityDesc": "Electricity, water, gas or internet bill",
+      "bankDesc": "Bank statement showing your name and address",
+      "req1": "Issued within the last 3 months",
+      "req2": "Shows your full name and address",
+      "req3": "All text is readable"
+    },
+    "selfie": {
+      "title": "Take a live selfie",
+      "desc": "We compare your selfie with the photo on your ID to confirm it's really you."
+    },
+    "review": {
+      "title": "Review and submit",
+      "desc": "Check everything below, then submit your verification for review.",
+      "personal": "Personal information",
+      "dob": "Date of birth",
+      "nationality": "Nationality",
+      "residency": "Country of residence",
+      "documents": "Documents",
+      "missing": "Not provided",
+      "optional": "Optional",
+      "submit": "Submit for review",
+      "submitting": "Submitting…",
+      "consent": "By submitting, you confirm the information and documents are genuine and belong to you."
+    },
+    "complete": {
+      "title": "Verification submitted",
+      "desc": "Thank you! Our compliance team is reviewing your documents.",
+      "next1": "Review usually takes 24–48 hours",
+      "next2": "You'll receive an email and a notification with the result",
+      "next3": "If anything needs fixing, we'll tell you exactly what to update",
+      "toDashboard": "Go to dashboard"
+    }
+  },
+  "camera": {
+    "introTitle": "Get ready for your selfie",
+    "tip1": "Find a well-lit place and face the light",
+    "tip2": "Remove sunglasses, hats and face masks",
+    "tip3": "Hold the device at eye level and look at the camera",
+    "start": "Turn on camera",
+    "requesting": "Waiting for camera permission… Please tap \"Allow\" if your browser asks.",
+    "liveTitle": "Position your face inside the oval",
+    "liveHint": "Keep still and look straight at the camera.",
+    "live": "Live",
+    "capture": "Take photo",
+    "countdown": "Taking photo in {{seconds}}…",
+    "cancel": "Cancel",
+    "capturedTitle": "Check your photo",
+    "capturedHint": "Make sure your whole face is visible, sharp and well lit.",
+    "retake": "Retake",
+    "usePhoto": "Use this photo",
+    "uploading": "Uploading your selfie…",
+    "uploadedTitle": "Selfie saved",
+    "uploadedHint": "Your selfie was uploaded. You can retake it until you submit.",
+    "fallbackTitle": "Can't use the live camera?",
+    "fallbackDesc": "Take a selfie with your phone's camera app instead.",
+    "fallbackButton": "Take / choose a selfie photo",
+    "errors": {
+      "permission": "Camera access was blocked. Allow camera access in your browser settings (the camera icon in the address bar), then try again.",
+      "notFound": "No camera was found on this device. Use the button below to take a selfie with your phone instead.",
+      "inUse": "Your camera is being used by another app. Close it and try again.",
+      "insecure": "The camera only works on a secure (https) connection.",
+      "unsupported": "This browser doesn't support live camera capture. Use the button below instead.",
+      "generic": "We couldn't start your camera. Try again or take a selfie with your phone instead.",
+      "noFrame": "The camera image wasn't ready yet. Please try again.",
+      "uploadFailed": "Your selfie couldn't be uploaded. Please try again."
+    },
+    "retry": "Try again"
+  },
+  "inReview": {
+    "title": "Your verification is under review",
+    "desc": "You don't need to do anything right now. We'll email you as soon as the review is complete.",
+    "documentsTitle": "Submitted documents"
+  },
+  "approved": {
+    "title": "You're verified",
+    "desc": "You can now own property shares, deposit and withdraw funds."
+  },
+  "sumsub": {
+    "title": "Verify with our identity partner",
+    "desc": "Verification is handled securely by Sumsub. Follow the steps below; it takes about 5 minutes.",
+    "loading": "Loading secure verification…",
+    "error": "The verification service couldn't be loaded. Please try again in a few minutes.",
+    "submitted": "Thank you — your verification was submitted. We'll update your status automatically."
+  },
+  "errors": {
+    "KYC_UNDER_REVIEW": "Your verification is under review, so documents can't be changed right now. If our team needs anything, we'll ask you to update it.",
+    "KYC_ALREADY_APPROVED": "Your identity is already verified.",
+    "KYC_DOCUMENT_APPROVED": "This document has already been approved and doesn't need to be replaced.",
+    "KYC_INCOMPLETE": "Your verification is not complete yet. Please finish the highlighted steps:",
+    "SUMSUB_UNAVAILABLE": "The verification service is temporarily unavailable. Please try again in a few minutes.",
+    "NETWORK_ERROR": "Connection problem. Check your internet and try again.",
+    "generic": "Something went wrong. Please try again."
+  },
+  "banner": {
+    "not_started": {
+      "title": "Verify your identity to start owning property",
+      "desc": "Identity verification (KYC) is required before you can invest, deposit or withdraw. It takes about 5 minutes."
+    },
+    "pending": {
+      "title": "Finish your identity verification",
+      "desc": "You started verification but haven't submitted it yet."
+    },
+    "action_required": {
+      "title": "Action required on your verification",
+      "desc": "Our team asked you to update some documents."
+    },
+    "in_review": {
+      "title": "Your verification is under review",
+      "desc": "We'll notify you by email once it's done (usually within 24–48 hours)."
+    },
+    "rejected": {
+      "title": "Your verification was not approved",
+      "desc": "See the reason and resubmit your documents."
+    },
+    "stepsLabel": "3 quick steps:",
+    "step1": "Personal info",
+    "step2": "ID document",
+    "step3": "Live selfie",
+    "ctaStart": "Verify now",
+    "ctaContinue": "Continue verification",
+    "ctaFix": "Fix documents",
+    "ctaView": "View status"
+  },
+  "gate": {
+    "title": "Identity verification required",
+    "desc": "To {{action}}, you need to verify your identity first. This keeps your account secure and is required by financial regulations.",
+    "start": "Start verification",
+    "pendingTitle": "Verification under review",
+    "pendingDesc": "Your documents are being reviewed. You'll be able to {{action}} as soon as you're verified (usually within 24–48 hours).",
+    "rejectedTitle": "Verification not approved",
+    "rejectedDesc": "Your verification needs attention before you can {{action}}.",
+    "viewStatus": "View verification status",
+    "fixNow": "Fix and resubmit",
+    "actions": {
+      "deposit": "deposit funds",
+      "own": "own property shares",
+      "withdraw": "withdraw funds"
+    }
+  },
+  "info": {
+    "secureTitle": "Secure & compliant",
+    "secureDesc": "Your data is encrypted and handled according to financial-industry standards.",
+    "fastTitle": "Fast review",
+    "fastDesc": "Most verifications are reviewed within 24–48 hours, with email updates.",
+    "supportTitle": "Help when you need it",
+    "supportDesc": "Questions about verification? Our support team and AI assistant are here to help."
+  },
+  "nav": {
+    "identityVerification": "Identity verification"
+  }
+}

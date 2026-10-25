@@ -8,12 +8,14 @@ import enAuth from './locales/en/auth.json';
 import enNavigation from './locales/en/navigation.json';
 import enProperties from './locales/en/properties.json';
 import enLegal from './locales/en/legal.json';
+import enKyc from './locales/en/kyc.json';
 
 import arCommon from './locales/ar/common.json';
 import arAuth from './locales/ar/auth.json';
 import arNavigation from './locales/ar/navigation.json';
 import arProperties from './locales/ar/properties.json';
 import arLegal from './locales/ar/legal.json';
+import arKyc from './locales/ar/kyc.json';
 
 // Define resources
 const resources = {
@@ -23,6 +25,7 @@ const resources = {
     navigation: enNavigation,
     properties: enProperties,
     legal: enLegal,
+    kyc: enKyc,
   },
   ar: {
     common: arCommon,
@@ -30,6 +33,7 @@ const resources = {
     navigation: arNavigation,
     properties: arProperties,
     legal: arLegal,
+    kyc: arKyc,
   },
 };
 
@@ -41,7 +45,7 @@ i18n
     resources,
     fallbackLng: 'en',
     defaultNS: 'common',
-    ns: ['common', 'auth', 'navigation', 'properties', 'legal'],
+    ns: ['common', 'auth', 'navigation', 'properties', 'legal', 'kyc'],
 
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],

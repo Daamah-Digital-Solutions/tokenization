@@ -42,6 +42,7 @@ import { TransactionManager } from './TransactionManager';
 import { CollaborativeInvestments } from './CollaborativeInvestments';
 import { MyProperties } from './MyProperties';
 import { InvestorReports } from './InvestorReports';
+import { KYCStatusSummaryCard } from '../../kyc/KYCStatusSummaryCard';
 import { InstallmentsPanel } from './InstallmentsPanel';
 import { InvestorDocumentsPanel } from './InvestorDocumentsPanel';
 import { WithdrawModal } from '../../wallet/WithdrawModal';
@@ -1173,31 +1174,10 @@ const SettingsContent: React.FC = () => {
               </div>
             </Card>
 
-            {/* KYC Status */}
+            {/* KYC Status — real data (was hard-coded "Identity Verified"
+                for every user; client round 3, #3) */}
             <Card className="p-6">
-              <Text variant="body" weight="semibold" className="mb-4">
-                KYC Verification Status
-              </Text>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
-                      <Check className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                    </div>
-                    <div>
-                      <Text variant="body" weight="medium">Identity Verified</Text>
-                      <Text variant="caption" color="muted">Document verification complete</Text>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <Text variant="caption" color="muted">Verification Level: <span className="font-medium text-emerald-600">Level 2</span></Text>
-                  <Text variant="caption" color="muted">Verified on: {new Date().toLocaleDateString()}</Text>
-                  <Button variant="outline" size="sm" className="w-full" onClick={() => navigate('kyc')}>
-                    View Verification Details
-                  </Button>
-                </div>
-              </div>
+              <KYCStatusSummaryCard />
             </Card>
           </div>
         )}

@@ -257,6 +257,23 @@ KYC_PROVIDERS = {
     },
 }
 
+# KYC adapter selection (kyc/providers/factory.py reads these). They were
+# documented in .env.production.example but never read, so every environment
+# silently ran the mock adapters.
+KYC_DOCUMENT_PROVIDER = os.environ.get('KYC_DOCUMENT_PROVIDER', 'mock')
+KYC_BIOMETRIC_PROVIDER = os.environ.get('KYC_BIOMETRIC_PROVIDER', 'mock')
+KYC_COMPLIANCE_PROVIDER = os.environ.get('KYC_COMPLIANCE_PROVIDER', 'mock')
+KYC_GEOLOCATION_PROVIDER = os.environ.get('KYC_GEOLOCATION_PROVIDER', 'mock')
+
+# Sumsub (hosted identity verification: document + selfie/liveness via the
+# Sumsub WebSDK). Dormant until both keys are set; the platform then switches
+# the KYC page from the in-house flow to Sumsub (see kyc/sumsub.py).
+SUMSUB_APP_TOKEN = os.environ.get('SUMSUB_APP_TOKEN', '')
+SUMSUB_SECRET_KEY = os.environ.get('SUMSUB_SECRET_KEY', '')
+SUMSUB_WEBHOOK_SECRET = os.environ.get('SUMSUB_WEBHOOK_SECRET', '')
+SUMSUB_LEVEL_NAME = os.environ.get('SUMSUB_LEVEL_NAME', 'basic-kyc-level')
+SUMSUB_BASE_URL = os.environ.get('SUMSUB_BASE_URL', 'https://api.sumsub.com')
+
 # Blockchain — top-level vars exposed because Web3Service / blockchain tasks
 # read ``settings.BLOCKCHAIN_PRIVATE_KEY`` directly (same pattern as Stripe).
 # ``DEPLOYER_PRIVATE_KEY`` is the canonical env var (matches contracts/.env),

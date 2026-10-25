@@ -644,32 +644,30 @@ class KYCIntegrationTests(TransactionTestCase):
         }
         response = self.client.post(upload_url, address_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        
+
+        # Upload the live selfie (required for basic verification)
+        selfie_data = {
+            'document_type': DocumentType.SELFIE,
+            'file_name': 'selfie.jpg',
+            'file_data': file_data
+        }
+        response = self.client.post(upload_url, selfie_data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
         # Step 3: Run compliance checks
         compliance_url = reverse('kyc:kyc-compliance-run')
         compliance_data = {'check_types': ['aml']}
         response = self.client.post(compliance_url, compliance_data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
-        # Step 4: Admin approves documents
-        self.admin_client.force_authenticate(user=self.admin_user)
-        
-        documents = KYCDocument.objects.filter(kyc_profile=kyc_profile)
-        for document in documents:
-            approve_url = reverse('kyc:kyc-document-approve', args=[document.id])
-            response = self.admin_client.post(approve_url)
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
-        # Step 5: Submit KYC for review (should work now)
-        self.client.force_authenticate(user=self.user)
+        # Step 4: Submit KYC for review. Documents only need to be UPLOADED -
+        # reviewers approve them after submission (the old flow demanded
+        # pre-approved documents, so nobody could ever submit).
         submit_url = reverse('kyc:kyc-submit')
         response = self.client.post(submit_url)
-        
-        # Should work if all compliance checks passed
-        if ComplianceCheck.objects.filter(user=self.user, result='clear').exists():
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            kyc_profile.refresh_from_db()
-            self.assertEqual(kyc_profile.status, KYCStatus.IN_REVIEW)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        kyc_profile.refresh_from_db()
+        self.assertEqual(kyc_profile.status, KYCStatus.IN_REVIEW)
         
         # Step 6: Admin approves KYC
         self.admin_client.force_authenticate(user=self.admin_user)
@@ -758,3 +756,168 @@ class KYCIntegrationTests(TransactionTestCase):
         if all(check.result == 'clear' for check in kyc_profile.user.compliance_checks.all()):
             self.assertTrue(completion_status['is_complete'])
             self.assertTrue(completion_status['biometric_complete'])
+
+
+class KYCWorkflowFixTests(APITestCase):
+    """Round-3 client fixes: security, replace, resubmission, clear errors."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='kycfix@example.com', password='testpass123',
+            first_name='Kyc', last_name='Fix', role=UserRole.INVESTOR,
+            date_of_birth='1990-01-01', country='EG',
+        )
+        self.admin_user = User.objects.create_user(
+            email='kycadmin@example.com', password='adminpass123',
+            first_name='Admin', last_name='User', role=UserRole.ADMIN,
+        )
+        self.profile = self.user.kyc_profile
+        self.image = base64.b64encode(b'\xFF\xD8\xFF\xE0' + b'img' * 200).decode()
+        self.client.force_authenticate(user=self.user)
+
+    def _upload(self, doc_type, name='file.jpg'):
+        return self.client.post(reverse('kyc:kyc-document-upload'), {
+            'document_type': doc_type, 'file_name': name, 'file_data': self.image,
+        }, format='json')
+
+    def test_user_cannot_approve_own_kyc(self):
+        url = reverse('kyc:kyc-admin-approve', args=[self.profile.pk])
+        response = self.client.post(url, {'status': 'approved',
+                                          'verification_level': 'premium'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.status, KYCStatus.PENDING)
+
+    def test_user_cannot_patch_document_status(self):
+        doc_id = self._upload(DocumentType.PASSPORT).data['id']
+        response = self.client.patch(f'/api/v1/kyc/documents/{doc_id}/',
+                                     {'status': 'approved'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(KYCDocument.objects.get(pk=doc_id).status, DocumentStatus.PENDING)
+
+    def test_upload_returns_document_and_reupload_replaces(self):
+        first = self._upload(DocumentType.PASSPORT, 'a.jpg')
+        self.assertEqual(first.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(first.data['status'], DocumentStatus.PENDING)
+        self.assertIn('/file/', first.data['file_url'])
+        second = self._upload(DocumentType.PASSPORT, 'b.jpg')
+        self.assertEqual(second.status_code, status.HTTP_201_CREATED)
+        docs = KYCDocument.objects.filter(kyc_profile=self.profile,
+                                          document_type=DocumentType.PASSPORT)
+        self.assertEqual(docs.count(), 1)
+        self.assertEqual(docs.first().file_name, 'b.jpg')
+
+    def test_national_id_satisfies_identity_and_submit_works(self):
+        self._upload(DocumentType.NATIONAL_ID)
+        self._upload(DocumentType.SELFIE)
+        response = self.client.post(reverse('kyc:kyc-submit'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.status, KYCStatus.IN_REVIEW)
+
+    def test_incomplete_submit_returns_code_and_steps(self):
+        self._upload(DocumentType.PASSPORT)
+        response = self.client.post(reverse('kyc:kyc-submit'))
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error']['code'], 'KYC_INCOMPLETE')
+        completion = response.data['error']['details']['completion_status']
+        self.assertEqual(completion['missing_groups'], ['selfie'])
+
+    def test_cannot_change_documents_while_in_review(self):
+        self._upload(DocumentType.PASSPORT)
+        self._upload(DocumentType.SELFIE)
+        self.client.post(reverse('kyc:kyc-submit'))
+        response = self._upload(DocumentType.PASSPORT)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['error']['code'], 'KYC_UNDER_REVIEW')
+
+    def test_rejected_document_reopens_profile_for_reupload(self):
+        passport_id = self._upload(DocumentType.PASSPORT).data['id']
+        self._upload(DocumentType.SELFIE)
+        self.client.post(reverse('kyc:kyc-submit'))
+
+        admin = APIClient()
+        admin.force_authenticate(user=self.admin_user)
+        response = admin.post(reverse('kyc:kyc-document-reject', args=[passport_id]),
+                              {'rejection_reason': 'Photo is blurry'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.status, KYCStatus.PENDING)
+        status_data = self.client.get(reverse('kyc:kyc-status')).data
+        self.assertIn('identity', status_data['completion_status']['rejected_groups'])
+
+        # The user can now replace it and resubmit.
+        self.assertEqual(self._upload(DocumentType.PASSPORT, 'clear.jpg').status_code,
+                         status.HTTP_201_CREATED)
+        self.assertEqual(self.client.post(reverse('kyc:kyc-submit')).status_code,
+                         status.HTTP_200_OK)
+
+    def test_profile_approval_approves_documents(self):
+        self._upload(DocumentType.PASSPORT)
+        self._upload(DocumentType.SELFIE)
+        self.client.post(reverse('kyc:kyc-submit'))
+        self.profile.refresh_from_db()
+        self.profile.approve(self.admin_user)
+        self.assertFalse(self.profile.documents.exclude(status=DocumentStatus.APPROVED).exists())
+
+    def test_owner_can_download_file_others_cannot(self):
+        doc_id = self._upload(DocumentType.PASSPORT).data['id']
+        self.assertEqual(self.client.get(f'/api/v1/kyc/documents/{doc_id}/file/').status_code,
+                         status.HTTP_200_OK)
+        stranger = User.objects.create_user(email='other@example.com', password='x12345678',
+                                            role=UserRole.INVESTOR)
+        other = APIClient()
+        other.force_authenticate(user=stranger)
+        self.assertEqual(other.get(f'/api/v1/kyc/documents/{doc_id}/file/').status_code,
+                         status.HTTP_404_NOT_FOUND)
+
+
+class SumsubWebhookTests(APITestCase):
+    """Signed Sumsub webhooks drive the KYC status."""
+
+    def setUp(self):
+        from django.test import override_settings
+        self.user = User.objects.create_user(email='sumsub@example.com', password='x12345678',
+                                             role=UserRole.INVESTOR)
+        self.override = override_settings(SUMSUB_WEBHOOK_SECRET='whsec-test')
+        self.override.enable()
+
+    def tearDown(self):
+        self.override.disable()
+
+    def _post(self, payload, secret='whsec-test'):
+        import hashlib
+        import hmac
+        body = json.dumps(payload).encode()
+        digest = hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+        return self.client.post(reverse('kyc:kyc-sumsub-webhook'), data=body,
+                                content_type='application/json',
+                                HTTP_X_PAYLOAD_DIGEST=digest,
+                                HTTP_X_PAYLOAD_DIGEST_ALG='HMAC_SHA256_HEX')
+
+    def test_bad_signature_rejected(self):
+        response = self._post({'type': 'applicantReviewed'}, secret='wrong')
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_green_review_approves(self):
+        response = self._post({
+            'type': 'applicantReviewed', 'applicantId': 'abc',
+            'externalUserId': f'capimax-rt-{self.user.pk}',
+            'reviewResult': {'reviewAnswer': 'GREEN'},
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        profile = KYCProfile.objects.get(user=self.user)
+        self.assertEqual(profile.status, KYCStatus.APPROVED)
+        self.assertEqual(profile.verification_provider, 'sumsub')
+
+    def test_red_retry_requests_resubmission(self):
+        self._post({
+            'type': 'applicantReviewed', 'applicantId': 'abc',
+            'externalUserId': f'capimax-rt-{self.user.pk}',
+            'reviewResult': {'reviewAnswer': 'RED', 'reviewRejectType': 'RETRY',
+                             'moderationComment': 'Document is expired'},
+        })
+        profile = KYCProfile.objects.get(user=self.user)
+        self.assertEqual(profile.status, KYCStatus.PENDING)
+        self.assertIn('expired', profile.rejection_reason)

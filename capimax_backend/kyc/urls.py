@@ -11,7 +11,9 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     KYCProfileViewSet, KYCDocumentViewSet, BiometricVerificationViewSet,
     ComplianceCheckViewSet, KYCNoteViewSet, KYCAnalyticsView,
-    KYCRequirementsView, KYCBulkActionsView, KYCPersonalInfoView
+    KYCRequirementsView, KYCBulkActionsView, KYCPersonalInfoView,
+    KYCConfigView, SumsubAccessTokenView, SumsubWebhookView,
+    KYCAdminUserApproveView,
 )
 
 # Create main router
@@ -27,6 +29,13 @@ urlpatterns = [
     path('personal-info/',
          KYCPersonalInfoView.as_view(),
          name='kyc-personal-info'),
+
+    # Which flow the KYC page runs (in-house wizard or Sumsub WebSDK)
+    path('config/', KYCConfigView.as_view(), name='kyc-config'),
+
+    # Sumsub (dormant until SUMSUB_APP_TOKEN / SUMSUB_SECRET_KEY are set)
+    path('sumsub/access-token/', SumsubAccessTokenView.as_view(), name='kyc-sumsub-token'),
+    path('sumsub/webhook/', SumsubWebhookView.as_view(), name='kyc-sumsub-webhook'),
 
     # KYC Status and Management Endpoints
     path('status/',
@@ -81,7 +90,11 @@ urlpatterns = [
          KYCProfileViewSet.as_view({'post': 'reject'}), 
          name='kyc-admin-reject'),
     
-    path('admin/pending/', 
+    path('admin/users/<uuid:user_id>/approve/',
+         KYCAdminUserApproveView.as_view(),
+         name='kyc-admin-approve-user'),
+
+    path('admin/pending/',
          KYCProfileViewSet.as_view({'get': 'list'}), 
          name='kyc-admin-pending'),
     

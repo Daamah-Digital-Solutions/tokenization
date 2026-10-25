@@ -46,6 +46,49 @@ from core.utils import get_client_ip
 logger = logging.getLogger(__name__)
 
 
+def kyc_error(code, message, http_status=status.HTTP_400_BAD_REQUEST, details=None):
+    """
+    Error in the platform's standard envelope. The frontend ApiClient reads
+    ``error.message`` / ``error.code``; the old bare ``{'error': '...'}``
+    bodies surfaced to users as an unexplained "HTTP 400 Error".
+    """
+    return Response(
+        {'success': False, 'error': {'code': code, 'message': message,
+                                     'details': details or {}}},
+        status=http_status,
+    )
+
+
+def build_kyc_status_payload(request, kyc_profile):
+    """
+    Everything the KYC page needs in one call: the profile, its documents
+    (with id / status / rejection reason), what is missing, the next steps,
+    reviewer notes meant for the user, and which flow to run.
+    """
+    from .sumsub import sumsub_enabled
+    documents = kyc_profile.documents.all().order_by('-created_at')
+    public_notes = KYCNote.objects.filter(
+        kyc_profile=kyc_profile, is_internal=False
+    ).order_by('-created_at')[:10]
+    requirements = KYCService.get_verification_requirements(kyc_profile.verification_level)
+    return {
+        **KYCProfileSerializer(kyc_profile, context={'request': request}).data,
+        'documents': KYCDocumentSerializer(documents, many=True,
+                                           context={'request': request}).data,
+        'completion_status': KYCService.check_completion_status(kyc_profile),
+        'requirements': {
+            'required_groups': requirements['required_groups'],
+            'optional_groups': requirements['optional_groups'],
+            'processing_time_days': requirements['processing_time_days'],
+        },
+        'public_notes': [
+            {'note': n.note, 'note_type': n.note_type, 'created_at': n.created_at}
+            for n in public_notes
+        ],
+        'provider': 'sumsub' if sumsub_enabled() else 'internal',
+    }
+
+
 class KYCProfileViewSet(ModelViewSet):
     """ViewSet for KYC Profile management."""
     
@@ -70,27 +113,27 @@ class KYCProfileViewSet(ModelViewSet):
             return self.queryset
         return self.queryset.filter(user=self.request.user)
     
+    # Actions only a reviewer may run. This list MUST be checked in
+    # get_permissions: an @action(permission_classes=...) is ignored once
+    # get_permissions is overridden, which previously let any logged-in user
+    # approve their own KYC via /kyc/admin/approve/<own pk>/.
+    ADMIN_ACTIONS = ['list', 'create', 'update', 'partial_update', 'destroy',
+                     'approve', 'reject']
+
     def get_permissions(self):
         """Get permissions based on action."""
-        if self.action in ['list', 'update', 'partial_update', 'destroy']:
+        if self.action in self.ADMIN_ACTIONS:
             permission_classes = [IsAdminUser]
         else:
             permission_classes = [CanManageKYC]
         return [permission() for permission in permission_classes]
-    
+
     @action(detail=False, methods=['get'])
     def current(self, request):
-        """Get current user's KYC profile."""
-        try:
-            kyc_profile = request.user.kyc_profile
-            serializer = self.get_serializer(kyc_profile)
-            return Response(serializer.data)
-        except KYCProfile.DoesNotExist:
-            # Create KYC profile if it doesn't exist
-            kyc_profile = KYCProfile.objects.create(user=request.user)
-            serializer = self.get_serializer(kyc_profile)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
+        """Current user's full KYC status (profile, documents, next steps)."""
+        kyc_profile, _ = KYCProfile.objects.get_or_create(user=request.user)
+        return Response(build_kyc_status_payload(request, kyc_profile))
+
     @action(detail=True, methods=['get'])
     def status(self, request, pk=None):
         """Get detailed KYC status and completion information."""
@@ -119,41 +162,40 @@ class KYCProfileViewSet(ModelViewSet):
         "Expected view … to be called with a URL keyword argument named pk" —
         i.e. KYC could never actually be submitted for review.
         """
-        try:
-            kyc_profile = request.user.kyc_profile
-        except KYCProfile.DoesNotExist:
-            return Response(
-                {'error': 'No KYC profile found. Complete your KYC details first.'},
-                status=status.HTTP_400_BAD_REQUEST
+        kyc_profile, _ = KYCProfile.objects.get_or_create(user=request.user)
+
+        if kyc_profile.status == KYCStatus.IN_REVIEW:
+            return kyc_error('KYC_UNDER_REVIEW',
+                             'Your verification has already been submitted and is under review.')
+        if kyc_profile.status == KYCStatus.APPROVED:
+            return kyc_error('KYC_ALREADY_APPROVED', 'Your identity is already verified.')
+
+        if not KYCService.submit_for_review(kyc_profile, request.user):
+            completion_status = KYCService.check_completion_status(kyc_profile)
+            return kyc_error(
+                'KYC_INCOMPLETE',
+                'Your verification is incomplete: some required information is '
+                'still missing. Please complete the highlighted steps and submit again.',
+                details={'completion_status': completion_status},
             )
 
-        # Check if already submitted or approved
-        if kyc_profile.status in [KYCStatus.IN_REVIEW, KYCStatus.APPROVED]:
-            return Response(
-                {'error': 'KYC is already submitted or approved.'},
-                status=status.HTTP_400_BAD_REQUEST
+        # AML / sanctions screening runs after submission so reviewers see the
+        # result. A provider failure must never block the submission itself.
+        try:
+            ComplianceService.run_compliance_checks(
+                kyc_profile.user,
+                KYCService.get_verification_requirements(
+                    kyc_profile.verification_level)['compliance_checks'],
             )
-        
-        # Attempt to submit
-        success = KYCService.submit_for_review(kyc_profile, request.user)
-        
-        if success:
-            # Run compliance checks
-            ComplianceService.run_compliance_checks(kyc_profile.user)
-            
-            return Response(
-                {'message': 'KYC submitted for review successfully.'},
-                status=status.HTTP_200_OK
-            )
-        else:
-            completion_status = KYCService.check_completion_status(kyc_profile)
-            return Response(
-                {
-                    'error': 'KYC is incomplete and cannot be submitted.',
-                    'completion_status': completion_status
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        except Exception:
+            logger.warning('Compliance checks failed after KYC submit', exc_info=True)
+
+        kyc_profile.refresh_from_db()
+        return Response({
+            'success': True,
+            'message': 'KYC submitted for review successfully.',
+            'data': build_kyc_status_payload(request, kyc_profile),
+        }, status=status.HTTP_200_OK)
     
     @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
     def approve(self, request, pk=None):
@@ -262,6 +304,13 @@ class KYCDocumentViewSet(ModelViewSet):
             return KYCDocumentUploadSerializer
         return KYCDocumentSerializer
 
+    def get_permissions(self):
+        # Users upload / read / delete their own documents; editing a document
+        # record (status, reason...) is a reviewer-only operation.
+        if self.action in ['update', 'partial_update', 'approve', 'reject']:
+            return [IsAdminUser()]
+        return [permissions.IsAuthenticated()]
+
     def get_queryset(self):
         """Filter queryset based on user permissions."""
         if getattr(self, 'swagger_fake_view', False):
@@ -269,7 +318,60 @@ class KYCDocumentViewSet(ModelViewSet):
         if self.request.user.is_staff:
             return self.queryset
         return self.queryset.filter(kyc_profile__user=self.request.user)
-    
+
+    def create(self, request, *args, **kwargs):
+        """
+        Upload (or replace) a document. Responds with the stored document —
+        id, real status, file URL — instead of the write-only upload fields,
+        which left the UI guessing ("Processing" looked like "Accepted").
+        """
+        kyc_profile, _ = KYCProfile.objects.get_or_create(user=request.user)
+        document_type = request.data.get('document_type', '')
+        ok, code, message = KYCService.can_modify_document(kyc_profile, document_type)
+        if not ok:
+            return kyc_error(code, message)
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(
+            KYCDocumentSerializer(serializer.instance, context={'request': request}).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    def destroy(self, request, *args, **kwargs):
+        document = self.get_object()
+        if not request.user.is_staff:
+            ok, code, message = KYCService.can_modify_document(
+                document.kyc_profile, document.document_type)
+            if not ok:
+                return kyc_error(code, message)
+        KYCAuditLog.objects.create(
+            kyc_profile=document.kyc_profile,
+            action=f"Document Deleted: {document.get_document_type_display()}",
+            actor=request.user,
+            details={'document_id': str(document.id), 'status': document.status},
+            ip_address=get_client_ip(request),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+        )
+        if document.file_path:
+            document.file_path.delete(save=False)
+        document.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['get'])
+    def file(self, request, pk=None):
+        """Stream the document file to its owner or a reviewer only."""
+        from django.http import FileResponse, Http404
+        document = self.get_object()  # queryset already scopes to the owner
+        if not document.file_path:
+            raise Http404
+        try:
+            handle = document.file_path.open('rb')
+        except FileNotFoundError:
+            raise Http404
+        return FileResponse(handle, filename=document.file_name or None)
+
     def perform_create(self, serializer):
         """Create document with user's KYC profile."""
         kyc_profile = self.request.user.kyc_profile
@@ -327,8 +429,10 @@ class KYCDocumentViewSet(ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # Model.reject() also returns the profile to PENDING and tells the user
+        # which document to replace and why.
         document.reject(request.user, rejection_reason)
-        
+
         return Response({'message': 'Document rejected.'})
     
     @action(detail=True, methods=['get'])
@@ -681,9 +785,11 @@ class KYCPersonalInfoView(APIView):
     def get(self, request):
         """Get current user's personal info relevant to KYC."""
         user = request.user
+        profile = getattr(user, 'kyc_profile', None)
         return Response({
             'date_of_birth': user.date_of_birth,
             'country': user.country,
+            'nationality': getattr(profile, 'nationality', '') or '',
             'first_name': user.first_name,
             'last_name': user.last_name,
         })
@@ -723,3 +829,95 @@ class KYCPersonalInfoView(APIView):
             })
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class KYCConfigView(APIView):
+    """Which verification flow the KYC page should run."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from .sumsub import sumsub_enabled
+        return Response({'provider': 'sumsub' if sumsub_enabled() else 'internal'})
+
+
+class SumsubAccessTokenView(APIView):
+    """WebSDK access token for the current user (Sumsub flow only)."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        from .sumsub import SumsubError, create_access_token, sumsub_enabled
+        if not sumsub_enabled():
+            return kyc_error('SUMSUB_DISABLED',
+                             'External verification is not enabled on this platform.',
+                             http_status=status.HTTP_404_NOT_FOUND)
+        kyc_profile, _ = KYCProfile.objects.get_or_create(user=request.user)
+        if kyc_profile.status == KYCStatus.APPROVED:
+            return kyc_error('KYC_ALREADY_APPROVED', 'Your identity is already verified.')
+        try:
+            token = create_access_token(request.user)
+        except SumsubError:
+            return kyc_error('SUMSUB_UNAVAILABLE',
+                             'The verification service is temporarily unavailable. '
+                             'Please try again in a few minutes.',
+                             http_status=status.HTTP_502_BAD_GATEWAY)
+        if kyc_profile.verification_provider != 'sumsub':
+            kyc_profile.verification_provider = 'sumsub'
+            kyc_profile.save(update_fields=['verification_provider', 'updated_at'])
+        return Response({'token': token})
+
+
+class SumsubWebhookView(APIView):
+    """
+    Sumsub -> platform status updates. Authenticated by the HMAC digest in
+    X-Payload-Digest (no session / JWT), so it is CSRF-exempt by nature.
+    """
+
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        from .sumsub import parse_webhook_body, process_webhook, verify_webhook_signature
+        raw = request.body
+        if not verify_webhook_signature(
+            raw,
+            request.headers.get('X-Payload-Digest', ''),
+            request.headers.get('X-Payload-Digest-Alg', 'HMAC_SHA256_HEX'),
+        ):
+            logger.warning('Rejected Sumsub webhook with an invalid signature')
+            return Response({'detail': 'invalid signature'}, status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            outcome = process_webhook(parse_webhook_body(raw))
+        except Exception:
+            logger.exception('Sumsub webhook processing failed')
+            return Response({'detail': 'processing error'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response({'ok': True, 'outcome': outcome})
+
+
+class KYCAdminUserApproveView(APIView):
+    """
+    Approve a user's KYC by USER id (the React admin's "Verify KYC" button
+    only knows the user, not the KYC profile pk).
+    """
+
+    permission_classes = [IsAdminUser]
+
+    def post(self, request, user_id):
+        kyc_profile, _ = KYCProfile.objects.get_or_create(user_id=user_id)
+        level = request.data.get('verification_level') or kyc_profile.verification_level
+        if level not in VerificationLevel.values:
+            return kyc_error('INVALID_LEVEL', 'Unknown verification level.')
+        kyc_profile.approve(request.user, level)
+        notes = (request.data.get('notes') or '').strip()
+        if notes:
+            KYCNote.objects.create(kyc_profile=kyc_profile, author=request.user,
+                                   note=notes, note_type='approval')
+        KYCAuditLog.objects.create(
+            kyc_profile=kyc_profile, action='KYC Approved (admin panel)',
+            actor=request.user, details={'verification_level': level},
+            ip_address=get_client_ip(request),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+        )
+        return Response({'message': 'KYC approved successfully.'})

@@ -4,3 +4,7 @@ export { LivenessVerification, type LivenessResult } from './LivenessVerificatio
 export { KYCWizard, type KYCData } from './KYCWizard';
 export { KYCStatusTracker, type DocumentStatus } from './KYCStatusTracker';
 export { KYCGate } from './KYCGate';
+export { SumsubVerification } from './SumsubVerification';
+export { KYCReminderBanner } from './KYCReminderBanner';
+export { KYCStatusSummaryCard } from './KYCStatusSummaryCard';
+export { kycErrorMessage } from './kycErrors';

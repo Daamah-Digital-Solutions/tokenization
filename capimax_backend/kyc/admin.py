@@ -10,11 +10,42 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils import timezone
 from django.contrib import messages
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, FileResponse, Http404
+from django.urls import path
 from .models import (
     KYCProfile, KYCDocument, BiometricVerification,
-    ComplianceCheck, KYCNote, KYCAuditLog
+    ComplianceCheck, KYCNote, KYCAuditLog, KYCStatus, DocumentStatus
 )
+
+DEFAULT_RESUBMISSION_REASON = (
+    "Some documents need to be updated. Please upload clear, valid copies "
+    "and resubmit your verification."
+)
+
+
+def document_file_link(document):
+    """Admin-only link to a KYC file (identity files are not public media)."""
+    if not document.file_path:
+        return '-'
+    url = reverse('admin:kyc_kycdocument_file', args=[document.pk])
+    return format_html('<a href="{}" target="_blank">View document</a>', url)
+
+
+class KYCDocumentInline(admin.TabularInline):
+    """The reviewer sees every document on the profile page itself."""
+    model = KYCDocument
+    extra = 0
+    can_delete = False
+    fields = ('document_type', 'status', 'file_link', 'rejection_reason', 'created_at')
+    readonly_fields = ('document_type', 'status', 'file_link', 'rejection_reason', 'created_at')
+    show_change_link = True
+
+    def file_link(self, obj):
+        return document_file_link(obj)
+    file_link.short_description = 'File'
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(KYCProfile)
@@ -56,6 +87,30 @@ class KYCProfileAdmin(admin.ModelAdmin):
         })
     )
     actions = ['approve_kyc', 'reject_kyc', 'request_resubmission']
+    inlines = [KYCDocumentInline]
+
+    def save_model(self, request, obj, form, change):
+        """
+        Changing the status in the form must run the real workflow (documents,
+        investment limit, expiry, email + in-app notification) instead of just
+        writing the column.
+        """
+        if not change or 'status' not in form.changed_data:
+            return super().save_model(request, obj, form, change)
+        new_status = obj.status
+        reason = (obj.rejection_reason or '').strip()
+        # Persist any other edited fields first, keeping the old status.
+        obj.status = form.initial.get('status', obj.status)
+        super().save_model(request, obj, form, change)
+        if new_status == KYCStatus.APPROVED:
+            obj.approve(request.user)
+        elif new_status == KYCStatus.REJECTED:
+            obj.reject(request.user, reason or 'Your verification could not be approved.')
+        elif new_status == KYCStatus.PENDING:
+            obj.request_resubmission(request.user, reason or DEFAULT_RESUBMISSION_REASON)
+        else:
+            obj.status = new_status
+            obj.save()
 
     def user_info(self, obj):
         """Display user information with link."""
@@ -123,8 +178,18 @@ class KYCProfileAdmin(admin.ModelAdmin):
     reject_kyc.short_description = 'Reject selected KYC profiles'
 
     def request_resubmission(self, request, queryset):
-        """Request document resubmission for selected profiles."""
-        count = queryset.update(status='pending')
+        """
+        Ask the selected users to update their documents. Uses the model
+        method so documents are flagged, the user is emailed + notified, and
+        the wizard re-opens for them. (It used to be a bare
+        queryset.update(status='pending'): no email, documents untouched.)
+        """
+        count = 0
+        for kyc_profile in queryset.exclude(status=KYCStatus.APPROVED):
+            kyc_profile.request_resubmission(
+                request.user, kyc_profile.rejection_reason or DEFAULT_RESUBMISSION_REASON
+            )
+            count += 1
         self.message_user(
             request,
             f'Requested resubmission for {count} KYC profile(s).',
@@ -180,13 +245,50 @@ class KYCDocumentAdmin(admin.ModelAdmin):
     )
     actions = ['approve_documents', 'reject_documents']
 
+    def get_urls(self):
+        custom = [
+            path('<uuid:document_id>/file/',
+                 self.admin_site.admin_view(self.serve_file),
+                 name='kyc_kycdocument_file'),
+        ]
+        return custom + super().get_urls()
+
+    def serve_file(self, request, document_id):
+        document = KYCDocument.objects.filter(pk=document_id).first()
+        if document is None or not document.file_path:
+            raise Http404
+        try:
+            return FileResponse(document.file_path.open('rb'),
+                                filename=document.file_name or None)
+        except FileNotFoundError:
+            raise Http404
+
+    def save_model(self, request, obj, form, change):
+        """Status changes made in the form run the real approve / reject flow."""
+        if not change or 'status' not in form.changed_data:
+            return super().save_model(request, obj, form, change)
+        new_status = obj.status
+        reason = (obj.rejection_reason or '').strip()
+        obj.status = form.initial.get('status', obj.status)
+        super().save_model(request, obj, form, change)
+        if new_status == DocumentStatus.APPROVED:
+            obj.approve(request.user)
+        elif new_status in (DocumentStatus.REJECTED, DocumentStatus.RESUBMISSION_REQUIRED):
+            obj.reject(request.user, reason or 'The document is unclear or not valid.')
+            if new_status == DocumentStatus.RESUBMISSION_REQUIRED:
+                obj.status = new_status
+                obj.save(update_fields=['status', 'updated_at'])
+        else:
+            obj.status = new_status
+            obj.save()
+
     def document_info(self, obj):
         """Display document information with preview link."""
         if obj.file_path:
             return format_html(
-                '<strong>{}</strong><br><a href="{}" target="_blank">View Document</a>',
+                '<strong>{}</strong><br>{}',
                 obj.get_document_type_display(),
-                obj.file_path.url
+                document_file_link(obj),
             )
         return obj.get_document_type_display()
     document_info.short_description = 'Document'

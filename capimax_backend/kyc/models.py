@@ -136,7 +136,36 @@ class KYCProfile(models.Model):
         blank=True,
         help_text="Last time documents were updated"
     )
-    
+
+    nationality = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Nationality declared during KYC (residency lives on User.country)"
+    )
+
+    # External identity-verification provider (Sumsub). 'internal' = the
+    # in-house upload + admin-review flow.
+    verification_provider = models.CharField(
+        max_length=20,
+        default='internal',
+        help_text="Provider that performed the verification: internal or sumsub"
+    )
+    provider_applicant_id = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Applicant id at the external provider"
+    )
+    provider_review_answer = models.CharField(
+        max_length=20,
+        blank=True,
+        help_text="Last review answer from the provider (e.g. GREEN / RED)"
+    )
+    provider_payload = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Last webhook payload received from the provider"
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -187,17 +216,26 @@ class KYCProfile(models.Model):
         self.status = KYCStatus.APPROVED
         self.reviewed_by = reviewed_by_user
         self.reviewed_at = timezone.now()
+        self.rejection_reason = ''
         if verification_level:
             self.verification_level = verification_level
         self.set_investment_limit()
         # Set expiration to 2 years from now
         self.expires_at = timezone.now() + timedelta(days=730)
         self.save()
-        # Email the user (every path — admin + API — goes through here).
-        self._notify_status_email(
+        # The documents the user is looking at must agree with the verdict —
+        # otherwise an approved profile still lists "Under review" documents.
+        self.documents.filter(
+            status__in=[DocumentStatus.PENDING, DocumentStatus.IN_REVIEW]
+        ).update(status=DocumentStatus.APPROVED, reviewed_by=reviewed_by_user,
+                 reviewed_at=timezone.now())
+        # Email + in-app notification (every path — admin + API — goes through here).
+        self._notify_status(
             'approved',
+            'Identity verification approved',
             'Your identity verification has been approved! You now have '
             'full access to all platform features.',
+            notification_type='success',
         )
 
     def reject(self, reviewed_by_user, reason):
@@ -207,30 +245,80 @@ class KYCProfile(models.Model):
         self.reviewed_at = timezone.now()
         self.rejection_reason = reason
         self.save()
-        self._notify_status_email(
+        self._notify_status(
             'rejected',
-            f'Your identity verification was not approved. Reason: {reason}',
+            'Identity verification not approved',
+            f'Your identity verification was not approved. Reason: {reason} '
+            'You can upload new documents and resubmit from the verification page.',
+            notification_type='error',
         )
 
-    def _notify_status_email(self, status, message):
-        """Send the KYC status-change email. Never let a mail failure break
-        the approve/reject transaction."""
+    def request_resubmission(self, reviewed_by_user, reason, documents=None):
+        """
+        Send the profile back to the user to fix specific documents.
+
+        Every non-approved document (or only ``documents`` when given) is
+        flagged ``resubmission_required`` with the reason, and the profile
+        returns to PENDING so the user can replace those files and resubmit.
+        """
+        qs = documents if documents is not None else self.documents.exclude(
+            status=DocumentStatus.APPROVED
+        )
+        now = timezone.now()
+        for doc in qs:
+            doc.status = DocumentStatus.RESUBMISSION_REQUIRED
+            doc.rejection_reason = reason
+            doc.reviewed_by = reviewed_by_user
+            doc.reviewed_at = now
+            doc.save(update_fields=['status', 'rejection_reason', 'reviewed_by',
+                                    'reviewed_at', 'updated_at'])
+        self.status = KYCStatus.PENDING
+        self.reviewed_by = reviewed_by_user
+        self.reviewed_at = now
+        self.rejection_reason = reason
+        self.save()
+        self._notify_status(
+            'rejected',
+            'Action required: update your verification documents',
+            f'Our team reviewed your identity verification and needs you to '
+            f'update some documents. Reason: {reason}',
+            notification_type='warning',
+        )
+
+    def _notify_status(self, status, title, message, notification_type='kyc'):
+        """Email + in-app notification for a KYC status change. Never let a
+        delivery failure break the approve/reject transaction."""
+        import logging
+        log = logging.getLogger(__name__)
+        from django.conf import settings
+        base = (getattr(settings, 'FRONTEND_URL', '') or '').rstrip('/')
         try:
             from core.services.email_service import EmailService
-            from django.conf import settings
-            base = (getattr(settings, 'FRONTEND_URL', '') or '').rstrip('/')
             EmailService.send_kyc_status_update_email(
                 user=self.user,
                 status=status,
                 message=message,
-                dashboard_url=f'{base}/dashboard' if base else '/dashboard',
+                dashboard_url=f'{base}/kyc' if base else '/kyc',
             )
         except Exception:
-            import logging
-            logging.getLogger(__name__).warning(
-                'KYC %s email failed for user %s', status, getattr(self, 'user_id', None),
-                exc_info=True,
+            log.warning('KYC %s email failed for user %s', status,
+                        getattr(self, 'user_id', None), exc_info=True)
+        try:
+            from notifications.services import NotificationService
+            NotificationService.create_notification(
+                user=self.user,
+                title=title,
+                message=message,
+                notification_type=notification_type,
+                priority='high',
+                action_url='/kyc',
+                action_label='Open verification',
+                send_real_time=True,
+                send_email=False,  # the KYC email above is the email channel
             )
+        except Exception:
+            log.warning('KYC %s in-app notification failed for user %s', status,
+                        getattr(self, 'user_id', None), exc_info=True)
 
 
 def kyc_document_upload_path(instance, filename):
@@ -377,13 +465,37 @@ class KYCDocument(models.Model):
         self.save()
         
     def reject(self, reviewed_by_user, reason):
-        """Reject the document with reason."""
+        """
+        Reject the document with reason.
+
+        A rejected document must be replaceable, so a profile that was under
+        review (or approved) returns to PENDING and the user is told which
+        document to re-upload and why. Previously the document was flagged but
+        the profile stayed "In review" forever with no way to fix it.
+        """
         self.status = DocumentStatus.REJECTED
         self.reviewed_by = reviewed_by_user
         self.reviewed_at = timezone.now()
         self.rejection_reason = reason
         self.save()
-        
+
+        profile = self.kyc_profile
+        if profile.status in (KYCStatus.IN_REVIEW, KYCStatus.APPROVED):
+            profile.status = KYCStatus.PENDING
+            profile.reviewed_by = reviewed_by_user
+            profile.reviewed_at = timezone.now()
+            profile.rejection_reason = (
+                f'{self.get_document_type_display()}: {reason}'
+            )
+            profile.save()
+        profile._notify_status(
+            'rejected',
+            'Action required: re-upload a verification document',
+            f'Your {self.get_document_type_display()} could not be accepted. '
+            f'Reason: {reason} Please upload a new copy and resubmit.',
+            notification_type='warning',
+        )
+
     def is_expired(self):
         """Check if document has expired."""
         if not self.expiry_date:

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, User, LogOut, Settings, ChevronDown, LayoutDashboard, Building2, TrendingUp, Users } from 'lucide-react';
+import { Menu, X, User, LogOut, Settings, ChevronDown, LayoutDashboard, Building2, TrendingUp, Users, ShieldCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { LanguageSwitcher } from '../i18n/LanguageSwitcher';
 import { useRouter } from '../../utils/router';
@@ -11,6 +12,7 @@ import CapiMaxLightLogo from '../../assets/tokenization_capi max  tokenization l
 import CapiMaxDarkLogo from '../../assets/tokenization_capi max tokenization uk dark   copy.svg';
 
 export const Navbar: React.FC = () => {
+  const { t: tKyc } = useTranslation('kyc');
   const [isOpen, setIsOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
@@ -99,8 +101,8 @@ export const Navbar: React.FC = () => {
   // Get user initials for avatar
   const getUserInitials = () => {
     if (!user) return 'U';
-    const first = user.firstName?.[0] || '';
-    const last = user.lastName?.[0] || '';
+    const first = user.first_name?.[0] || '';
+    const last = user.last_name?.[0] || '';
     return (first + last).toUpperCase() || 'U';
   };
 
@@ -120,6 +122,11 @@ export const Navbar: React.FC = () => {
       baseItems[0] = { name: 'My Properties', route: 'dashboard', icon: Building2 };
     } else if (user?.role === 'broker') {
       baseItems[0] = { name: 'My Referrals', route: 'dashboard', icon: Users };
+    }
+
+    // Identity verification is always one click away (client round 3, #3).
+    if (user?.role !== 'admin') {
+      baseItems.push({ name: tKyc('nav.identityVerification'), route: 'kyc', icon: ShieldCheck });
     }
 
     return baseItems;
@@ -186,7 +193,7 @@ export const Navbar: React.FC = () => {
                     {getUserInitials()}
                   </div>
                   <span className="text-sm font-medium text-navy-700 dark:text-navy-200 hidden lg:block">
-                    {user?.firstName || 'User'}
+                    {user?.first_name || 'User'}
                   </span>
                   <ChevronDown className={`w-4 h-4 text-navy-500 dark:text-navy-400 transition-transform duration-200 ${profileDropdownOpen ? 'rotate-180' : ''}`} />
                 </motion.button>
@@ -204,7 +211,7 @@ export const Navbar: React.FC = () => {
                       {/* User Info */}
                       <div className="px-4 py-3 border-b border-navy-200 dark:border-navy-700">
                         <p className="text-sm font-semibold text-navy-800 dark:text-navy-100">
-                          {user?.firstName} {user?.lastName}
+                          {user?.first_name} {user?.last_name}
                         </p>
                         <p className="text-xs text-navy-500 dark:text-navy-400 truncate">
                           {user?.email}
@@ -315,7 +322,7 @@ export const Navbar: React.FC = () => {
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-navy-800 dark:text-navy-100">
-                            {user?.firstName} {user?.lastName}
+                            {user?.first_name} {user?.last_name}
                           </p>
                           <p className="text-xs text-navy-500 dark:text-navy-400">
                             {user?.email}

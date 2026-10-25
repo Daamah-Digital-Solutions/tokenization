@@ -8,6 +8,10 @@ import { InvestorControlPanel } from '../components/dashboard/investor/InvestorC
 import { PropertyOwnerDashboard } from '../components/dashboard/property-owner/PropertyOwnerDashboard';
 import { BrokerDashboard } from '../components/dashboard/broker/BrokerDashboard';
 import { RoleSwitcher } from '../components/dashboard/RoleSwitcher';
+import { KYCReminderBanner } from '../components/kyc/KYCReminderBanner';
+import { useTranslation } from 'react-i18next';
+
+const KYC_NAV_ID = 'kyc-verification';
 import CapiMaxLightLogo from '../assets/tokenization_capi max  tokenization light  uk  copy.svg';
 import CapiMaxDarkLogo from '../assets/tokenization_capi max tokenization uk dark   copy.svg';
 
@@ -42,6 +46,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 }) => {
   const { navigate } = useRouter();
   const { theme, toggleTheme } = useTheme();
+  const { t: tKyc } = useTranslation('kyc');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Navigation items based on user role
@@ -110,10 +115,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     }
   };
 
-  const navigationItems = getNavigationItems(user.role);
+  // Identity verification gets a permanent sidebar entry for every non-admin
+  // role (client round 3, #3) — it opens the dedicated /kyc page.
+  const navigationItems = user.role === 'admin'
+    ? getNavigationItems(user.role)
+    : [...getNavigationItems(user.role), { id: KYC_NAV_ID, label: tKyc('nav.identityVerification'), icon: '🛡️' }];
 
   // Handle navigation item click with auto-close for mobile
   const handleNavigationClick = (itemId: string) => {
+    if (itemId === KYC_NAV_ID) {
+      navigate('kyc');
+      return;
+    }
     onViewChange(itemId);
     if (window.innerWidth < 768) {
       setSidebarOpen(false);
@@ -485,6 +498,8 @@ export const DashboardPage: React.FC = () => {
       onViewChange={setCurrentView}
       onRoleSwitch={handleRoleSwitch}
     >
+      {/* KYC call-to-action for every non-admin role until verified (client round 3, #3) */}
+      {(activeRole || user.role) !== 'admin' && <KYCReminderBanner className="mb-6" />}
       <div key={`dashboard-${activeRole}-${currentView}`}>
         {renderDashboardContent()}
       </div>
