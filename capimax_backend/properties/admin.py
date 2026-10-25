@@ -18,7 +18,7 @@ from django.utils.html import format_html
 
 from .models import (
     OwnerMessage, Property, PropertyAnalytics, PropertyApproval, PropertyDocument,
-    PropertyImage, PropertyMarketData, PropertyReview, PropertySubscription,
+    PropertyImage, PropertyMarketData, PropertyPriceTier, PropertyReview, PropertySubscription,
     PropertyUpdate, PropertyValuation, PropertyViewLog,
 )
 from . import workflow
@@ -104,6 +104,15 @@ class OwnerMessageInline(admin.TabularInline):
     verbose_name_plural = 'Messages with the owner (add a row to send a message)'
 
 
+class PropertyPriceTierInline(admin.TabularInline):
+    """Price phases: the share price switches automatically on each start date."""
+    model = PropertyPriceTier
+    extra = 0
+    fields = ['label', 'price_per_token', 'effective_from', 'effective_to', 'notes', 'order']
+    verbose_name = 'Price phase'
+    verbose_name_plural = 'Price phases (share price changes automatically on each start date)'
+
+
 @admin.register(Property)
 class PropertyAdmin(admin.ModelAdmin):
     """Admin interface for Property model."""
@@ -144,8 +153,40 @@ class PropertyAdmin(admin.ModelAdmin):
                 'expected_return', 'rental_yield', 'minimum_investment'
             )
         }),
-        ('Installments', {
-            'fields': ('supports_installments', 'installment_period_months'),
+        ('Purchase methods & payment plan', {
+            'fields': (
+                'purchase_methods', 'installment_down_payment_percent', 'installment_count',
+                'installment_frequency', 'installment_period_months',
+                'installment_first_due_date', 'installment_notes',
+            ),
+            'description': (
+                'Choose how buyers may pay: full cash, installments, or both. The property '
+                'page shows only the allowed methods and the full installment schedule. '
+                'Leave "Installment count" empty to let the buyer choose 3 / 6 / 12 / up to '
+                'the maximum period.'
+            ),
+        }),
+        ('Developer', {
+            'fields': (
+                'developer_name', 'developer_description', 'developer_website',
+                'developer_established_year', 'developer_projects_completed',
+                'developer_contact_email', 'developer_contact_phone',
+            ),
+        }),
+        ('Returns', {
+            'fields': ('expected_appreciation_rate', 'projected_annual_rental_income', 'returns_notes'),
+            'description': 'Expected return and rental yield are in "Financial Details" above.',
+        }),
+        ('Financial study', {
+            'fields': ('financial_study_summary',),
+            'description': 'Upload the study files below as documents of type "Financial" (public).',
+        }),
+        ('Insurance', {
+            'fields': (
+                'insurance_provider', 'insurance_policy_number', 'insurance_coverage',
+                'insurance_coverage_amount', 'insurance_expiry_date',
+            ),
+            'description': 'Upload the policy below as a document of type "Insurance" (public).',
         }),
         ('Construction', {
             'fields': ('expected_completion_date', 'construction_progress'),
@@ -187,7 +228,8 @@ class PropertyAdmin(admin.ModelAdmin):
         }),
     )
 
-    inlines = [PropertyApprovalInline, OwnerMessageInline, PropertyImageInline, PropertyDocumentInline]
+    inlines = [PropertyApprovalInline, OwnerMessageInline, PropertyPriceTierInline,
+               PropertyImageInline, PropertyDocumentInline]
     actions = ['publish_selected', 'unpublish_selected', 'approve_selected']
 
     def get_fieldsets(self, request, obj=None):
@@ -205,8 +247,14 @@ class PropertyAdmin(admin.ModelAdmin):
     def get_inlines(self, request, obj):
         # Review decision + messages need an existing property and owner.
         if obj is None:
-            return [PropertyImageInline, PropertyDocumentInline]
+            return [PropertyPriceTierInline, PropertyImageInline, PropertyDocumentInline]
         return super().get_inlines(request, obj)
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        # A phase that starts today (or already started) applies immediately.
+        from .payment_plan import sync_price_tier
+        sync_price_tier(form.instance)
 
     @admin.display(description='Public', boolean=True)
     def published_badge(self, obj):

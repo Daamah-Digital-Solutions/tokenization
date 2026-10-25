@@ -86,6 +86,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
   const [isFavorite, setIsFavorite] = useState(false);
   const [showInvestmentFlow, setShowInvestmentFlow] = useState(false);
   const [initialTokens, setInitialTokens] = useState<number>(1);
+  const [initialMethod, setInitialMethod] = useState<'cash' | 'installments' | undefined>(undefined);
+  const [initialInstallments, setInitialInstallments] = useState<number | undefined>(undefined);
   
   const [propertyData, setPropertyData] = useState<PropertyDetailData>({
     property: null,
@@ -259,6 +261,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
     installment_period_months: property.installment_period_months,
     property_category: property.property_category,
     expected_completion_date: property.expected_completion_date,
+    paymentPlan: property.listing_details?.payment_plan,
     investment: {
       minInvestment: Number(property.token_price) || 0,
       // DRF returns decimal fields as strings ("12.00"); coerce or the
@@ -336,8 +339,10 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
           documents={propertyData.documents}
           isUnderConstruction={isUnderConstruction}
           constructionProgressData={constructionProgressData}
-          onInvestClick={(tokenCount) => {
+          onInvestClick={(tokenCount, method, installmentCount) => {
             if (tokenCount) setInitialTokens(tokenCount);
+            setInitialMethod(method);
+            setInitialInstallments(installmentCount);
             setShowInvestmentFlow(true);
           }}
           onImageClick={(index) => setCurrentImageIndex(index)}
@@ -357,6 +362,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
             onComplete={handleInvestmentComplete}
             onGoToPortfolio={handleGoToPortfolio}
             initialTokens={initialTokens}
+            initialMethod={initialMethod}
+            initialInstallments={initialInstallments}
           />
         </KYCGate>
       )}

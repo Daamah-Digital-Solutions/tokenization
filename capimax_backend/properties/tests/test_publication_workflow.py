@@ -202,6 +202,10 @@ class AdminAddPropertyTests(TestCase):
             'tokens_sold': '0', 'construction_progress': '0', 'occupancy_rate': '100',
             'address': '1 Admin St', 'city': 'Cairo', 'country': 'EG',
             'offering_type': 'private', 'lockup_months': '12',
+            'purchase_methods': 'both', 'installment_down_payment_percent': '10',
+            'installment_frequency': 'quarterly',
+            'price_tiers-TOTAL_FORMS': '0', 'price_tiers-INITIAL_FORMS': '0',
+            'price_tiers-MIN_NUM_FORMS': '0', 'price_tiers-MAX_NUM_FORMS': '1000',
             'images-TOTAL_FORMS': '0', 'images-INITIAL_FORMS': '0',
             'images-MIN_NUM_FORMS': '0', 'images-MAX_NUM_FORMS': '1000',
             'documents-TOTAL_FORMS': '1', 'documents-INITIAL_FORMS': '0',
@@ -219,6 +223,8 @@ class AdminAddPropertyTests(TestCase):
         self.assertGreater(prop.documents.first().size, 0)
         self.assertEqual(PropertyApproval.objects.get(property=prop).status, 'approved')
         self.assertFalse(prop.is_published)
+        self.assertEqual(prop.purchase_methods, 'both')
+        self.assertTrue(prop.supports_installments)
 
     def test_admin_created_property_is_approved_but_unpublished(self):
         site = AdminSite()

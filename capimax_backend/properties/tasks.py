@@ -524,6 +524,20 @@ def _handle_construction_completion(self, property_id: str) -> Dict[str, Any]:
         }
 
 
+@shared_task
+def sync_property_price_phases() -> Dict[str, Any]:
+    """Apply today's price phase to every property that has phases."""
+    from .payment_plan import sync_price_tier
+    changed = 0
+    for prop in Property.objects.filter(price_tiers__isnull=False).distinct():
+        try:
+            if sync_price_tier(prop):
+                changed += 1
+        except Exception as exc:
+            logger.error(f"Price phase sync failed for property {prop.pk}: {exc}")
+    return {'success': True, 'updated': changed}
+
+
 # Utility task for testing and monitoring
 @shared_task
 def test_installment_processing() -> str:

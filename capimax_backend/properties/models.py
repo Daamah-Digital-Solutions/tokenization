@@ -178,7 +178,84 @@ class Property(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(120)],
         help_text="Maximum installment period in months"
     )
-    
+
+    # --- Purchase methods & payment plan (client round 3, #20 / admin #2) ---
+    PURCHASE_METHOD_CHOICES = [
+        ('cash', 'Full cash payment only'),
+        ('installments', 'Installments only'),
+        ('both', 'Cash or installments'),
+    ]
+    INSTALLMENT_FREQUENCY_CHOICES = [
+        ('monthly', 'Monthly'),
+        ('quarterly', 'Quarterly'),
+        ('semi_annual', 'Every 6 months'),
+        ('annual', 'Annual'),
+    ]
+    purchase_methods = models.CharField(
+        max_length=20,
+        choices=PURCHASE_METHOD_CHOICES,
+        default='cash',
+        help_text="How buyers may pay for this property. The property page "
+                  "shows only the methods allowed here."
+    )
+    installment_down_payment_percent = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00')), MaxValueValidator(Decimal('90.00'))],
+        help_text="Down payment due at purchase, as % of the price (0 = none)"
+    )
+    installment_count = models.PositiveIntegerField(
+        null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(120)],
+        help_text="Number of installments after the down payment. Empty = the "
+                  "buyer chooses (3 / 6 / 12 / up to the maximum period)."
+    )
+    installment_frequency = models.CharField(
+        max_length=20, choices=INSTALLMENT_FREQUENCY_CHOICES, default='monthly',
+        help_text="How often installments are due"
+    )
+    installment_first_due_date = models.DateField(
+        null=True, blank=True,
+        help_text="Optional fixed date of the first installment (e.g. aligned to "
+                  "a construction milestone). Empty = one period after purchase."
+    )
+    installment_notes = models.TextField(
+        blank=True, help_text="Extra payment-plan terms shown on the property page"
+    )
+
+    # --- Developer (admin #2) ---
+    developer_name = models.CharField(max_length=255, blank=True)
+    developer_description = models.TextField(blank=True, help_text="About the developer")
+    developer_website = models.URLField(blank=True)
+    developer_established_year = models.PositiveIntegerField(
+        null=True, blank=True, validators=[MinValueValidator(1800), MaxValueValidator(2100)])
+    developer_projects_completed = models.PositiveIntegerField(null=True, blank=True)
+    developer_contact_email = models.EmailField(blank=True)
+    developer_contact_phone = models.CharField(max_length=50, blank=True)
+
+    # --- Returns (admin #2) ---
+    expected_appreciation_rate = models.DecimalField(
+        max_digits=5, decimal_places=2, null=True, blank=True,
+        validators=[MinValueValidator(Decimal('0.00')), MaxValueValidator(Decimal('100.00'))],
+        help_text="Expected annual increase in the property's value (%)"
+    )
+    projected_annual_rental_income = models.DecimalField(
+        max_digits=14, decimal_places=2, null=True, blank=True,
+        validators=[MinValueValidator(Decimal('0.00'))],
+        help_text="Projected rental income per year (USD)"
+    )
+    returns_notes = models.TextField(blank=True, help_text="How returns are produced / assumptions")
+
+    # --- Financial study (admin #2; files: documents of type 'financial') ---
+    financial_study_summary = models.TextField(blank=True)
+
+    # --- Insurance (admin #2; files: documents of type 'insurance') ---
+    insurance_provider = models.CharField(max_length=255, blank=True)
+    insurance_policy_number = models.CharField(max_length=100, blank=True)
+    insurance_coverage = models.TextField(blank=True, help_text="Scope of the coverage")
+    insurance_coverage_amount = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True,
+        validators=[MinValueValidator(Decimal('0.00'))])
+    insurance_expiry_date = models.DateField(null=True, blank=True)
+
     property_size = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -395,6 +472,15 @@ class Property(models.Model):
         """Check if property is fully funded."""
         return self.tokens_sold >= self.total_tokens
     
+    def save(self, *args, **kwargs):
+        # Keep the legacy flag (read across checkout / plan code) in step
+        # with the admin's purchase-method choice.
+        self.supports_installments = self.purchase_methods in ('installments', 'both')
+        update_fields = kwargs.get('update_fields')
+        if update_fields is not None and 'purchase_methods' in update_fields:
+            kwargs['update_fields'] = list(set(update_fields) | {'supports_installments'})
+        super().save(*args, **kwargs)
+
     @property
     def can_accept_investments(self):
         """Check if property can accept new investments."""
@@ -1439,7 +1525,21 @@ class ConstructionInstallment(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(30)],
         help_text="Grace period for payments before late fees apply"
     )
-    
+
+    # Down payment = payment #1 when > 0 (then `total_installments` counts it).
+    down_payment_amount = models.DecimalField(
+        max_digits=15, decimal_places=2, default=Decimal('0.00'),
+        validators=[MinValueValidator(Decimal('0.00'))],
+        help_text="Down payment due at the start of the plan (0 = none)"
+    )
+    first_installment_date = models.DateField(
+        null=True, blank=True,
+        help_text="Due date of the first regular installment"
+    )
+    start_date = models.DateField(
+        null=True, blank=True, help_text="Date the plan started (first payment due)"
+    )
+
     # Metadata
     notes = models.TextField(
         blank=True,
@@ -1520,6 +1620,41 @@ class ConstructionInstallment(models.Model):
             return self.tokens_pending_release
         return Decimal('0.00')
     
+    # ---------------------------------------------------------------- schedule
+    @property
+    def regular_installments(self) -> int:
+        return self.total_installments - (1 if self.down_payment_amount and self.down_payment_amount > 0 else 0)
+
+    def schedule_rows(self):
+        """Full schedule (down payment + installments) with due dates and amounts."""
+        from .payment_plan import build_schedule
+        start = self.start_date or (self.created_at.date() if self.created_at else None)
+        down_pct = Decimal('0')
+        if self.down_payment_amount and self.total_investment_amount:
+            down_pct = (self.down_payment_amount / self.total_investment_amount) * 100
+        rows = build_schedule(
+            self.total_investment_amount, down_payment_percent=down_pct,
+            count=max(1, self.regular_installments), frequency=self.frequency,
+            start_date=start, first_due_date=self.first_installment_date,
+        )
+        # Use the stored down payment exactly (percent round-trip can drift by a cent).
+        if rows and rows[0]['kind'] == 'down_payment':
+            drift = rows[0]['amount'] - self.down_payment_amount
+            rows[0]['amount'] = self.down_payment_amount
+            rows[-1]['amount'] += drift
+        return rows
+
+    def amount_for_payment(self, number: int) -> Decimal:
+        """Amount of payment #number (1-based)."""
+        rows = self.schedule_rows()
+        if 1 <= number <= len(rows):
+            return rows[number - 1]['amount']
+        return self.installment_amount
+
+    @property
+    def amount_due(self) -> Decimal:
+        return self.amount_for_payment(self.payments_made + 1)
+
     def calculate_tokens_per_payment(self):
         """Calculate tokens to release per payment."""
         if self.graduated_release and self.total_installments > 0:
@@ -1567,8 +1702,9 @@ class ConstructionInstallment(models.Model):
         if not self.can_make_payment():
             return False, "Payment cannot be processed at this time", Decimal('0.00')
         
-        if amount < self.installment_amount:
-            return False, f"Payment amount must be at least ${self.installment_amount}", Decimal('0.00')
+        due = self.amount_due
+        if amount < due:
+            return False, f"Payment amount must be at least ${due}", Decimal('0.00')
         
         # Process the payment
         self.total_amount_paid += Decimal(str(amount))
@@ -1580,8 +1716,13 @@ class ConstructionInstallment(models.Model):
             tokens_to_release = self.next_token_release_amount
             self.tokens_released += int(tokens_to_release)
         
-        # Update next payment date
-        self.next_payment_date = self.calculate_next_payment_date(payment_date)
+        # Next due date comes from the schedule (dates no longer drift with
+        # late or early payments).
+        rows = self.schedule_rows()
+        if self.payments_made < len(rows):
+            self.next_payment_date = rows[self.payments_made]['due_date']
+        else:
+            self.next_payment_date = self.calculate_next_payment_date(payment_date)
         
         # Update status if completed
         if self.is_completed:
@@ -1675,3 +1816,30 @@ class OwnerMessage(models.Model):
 
     def __str__(self):
         return f"{self.subject} → {self.owner.email}"
+
+
+
+class PropertyPriceTier(models.Model):
+    """
+    Price phases (admin note #2: "price tiers and their effective dates").
+    The share price of the phase active today is applied to the property
+    automatically (properties/payment_plan.sync_price_tier).
+    """
+
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='price_tiers')
+    label = models.CharField(max_length=120, help_text="e.g. Launch price, Phase 2")
+    price_per_token = models.DecimalField(
+        max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    effective_from = models.DateField()
+    effective_to = models.DateField(null=True, blank=True)
+    notes = models.CharField(max_length=255, blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = 'properties_price_tier'
+        ordering = ['effective_from', 'order']
+        verbose_name = 'Price phase'
+        verbose_name_plural = 'Price phases'
+
+    def __str__(self):
+        return f"{self.property.title}: {self.label} ({self.price_per_token})"

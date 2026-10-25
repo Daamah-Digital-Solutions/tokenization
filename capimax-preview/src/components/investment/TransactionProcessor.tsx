@@ -280,7 +280,9 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
           property_investment: propertyId,
           token_allocation: investmentData.tokens,
           total_installments: investmentData.total_installments,
-          frequency: 'monthly',
+          // The backend applies the property's plan (frequency, down payment,
+          // fixed count); this is only the buyer's choice of count.
+          frequency: property.paymentPlan?.frequency || 'monthly',
           graduated_release: true,
         });
 

@@ -1,0 +1,192 @@
+{
+  "tab": "Payment plan",
+  "section": {
+    "title": "Payment plan",
+    "subtitle": "How you can pay for this property"
+  },
+  "methods": {
+    "title": "Purchase methods",
+    "cash": "Full payment",
+    "cashHint": "Pay the full price once — your shares are issued on confirmation.",
+    "installments": "Installments",
+    "installmentsHint": "Pay a down payment and the rest in installments — shares are released as you pay.",
+    "available": "Available",
+    "notAvailable": "Not offered",
+    "cashOnly": "This property is sold for full payment only.",
+    "installmentsOnly": "This property is sold in installments only."
+  },
+  "frequency": {
+    "monthly": "Monthly",
+    "quarterly": "Quarterly",
+    "semi_annual": "Every 6 months",
+    "annual": "Annual"
+  },
+  "per": {
+    "monthly": "/ month",
+    "quarterly": "/ quarter",
+    "semi_annual": "/ 6 months",
+    "annual": "/ year"
+  },
+  "calculator": {
+    "shares": "Number of shares",
+    "sharesHint": "{{total}} at {{price}} per share",
+    "maxAvailable": "maximum available",
+    "count": "Number of installments",
+    "countFixed": "{{count}} installments (set for this property)",
+    "countOption": "{{count}} installments",
+    "downPayment": "Down payment",
+    "downPaymentPercent": "{{percent}}% down payment",
+    "noDownPayment": "No down payment",
+    "installment": "Installment",
+    "firstDue": "First installment",
+    "lastDue": "Last installment",
+    "total": "Total price",
+    "summary": "{{count}} payments · {{total}} in total"
+  },
+  "schedule": {
+    "title": "Installment schedule",
+    "subtitle": "Every payment with its due date and amount",
+    "number": "#",
+    "payment": "Payment",
+    "dueDate": "Due date",
+    "amount": "Amount",
+    "percent": "Share",
+    "remaining": "Remaining",
+    "status": "Status",
+    "paidOn": "Paid on {{date}}",
+    "downPayment": "Down payment",
+    "installment": "Installment {{n}}",
+    "download": "Download schedule (PDF)",
+    "preparing": "Preparing…",
+    "estimateNote": "Shown for the number of shares selected. The same terms apply to your plan when you buy in installments.",
+    "minimumWarning": "Each installment must be at least {{amount}}. Choose more shares or fewer installments.",
+    "notes": "Plan terms"
+  },
+  "status": {
+    "paid": "Paid",
+    "due": "Due now",
+    "overdue": "Overdue",
+    "upcoming": "Upcoming",
+    "cancelled": "Cancelled"
+  },
+  "tiers": {
+    "title": "Price phases",
+    "subtitle": "The share price changes automatically on these dates",
+    "current": "Current price",
+    "next": "Next phase",
+    "past": "Ended",
+    "from": "From {{date}}",
+    "until": "until {{date}}",
+    "perShare": "per share",
+    "nextChange": "The share price becomes {{price}} on {{date}} ({{label}})."
+  },
+  "developer": {
+    "title": "Developer",
+    "established": "Established",
+    "projects": "Completed projects",
+    "website": "Website",
+    "contact": "Contact"
+  },
+  "returns": {
+    "title": "Returns",
+    "expectedReturn": "Expected annual return",
+    "rentalYield": "Rental yield",
+    "appreciation": "Expected annual appreciation",
+    "annualRent": "Projected annual rental income",
+    "monthlyRent": "Monthly rental income",
+    "notes": "How the returns are produced"
+  },
+  "financialStudy": {
+    "title": "Financial study",
+    "empty": "The financial study will be published here."
+  },
+  "valuation": {
+    "title": "Valuation",
+    "latest": "Latest valuation",
+    "date": "Valuation date",
+    "method": "Method",
+    "appraiser": "Appraiser",
+    "report": "Valuation report",
+    "history": "Valuation history",
+    "methods": {
+      "comparative": "Comparative market analysis",
+      "income": "Income approach",
+      "cost": "Cost approach",
+      "automated": "Automated valuation"
+    }
+  },
+  "insurance": {
+    "title": "Insurance",
+    "provider": "Insurer",
+    "policy": "Policy number",
+    "coverage": "Coverage",
+    "coverageAmount": "Coverage amount",
+    "expiry": "Valid until"
+  },
+  "documents": {
+    "download": "Download",
+    "files": "Documents"
+  },
+  "buy": {
+    "cash_one": "Buy 1 share — {{total}}",
+    "cash_other": "Buy {{count}} shares — {{total}}",
+    "installments": "Buy in installments — {{amount}} {{per}}",
+    "installmentsFrom": "or in installments from {{amount}} {{per}}",
+    "viewPlan": "See the payment plan"
+  },
+  "checkout": {
+    "title": "How would you like to pay?",
+    "subtitle": "Choose one of the purchase methods offered for this property.",
+    "upfront": "Pay in full",
+    "upfrontHint": "One payment of {{total}}. Your shares are issued once the payment is confirmed.",
+    "installments": "Pay in installments",
+    "installmentsHint": "{{down}} then {{count}} × {{amount}} {{per}}. Your shares are reserved and released as you pay.",
+    "installmentsHintNoDown": "{{count}} × {{amount}} {{per}}. Your shares are reserved and released as you pay.",
+    "firstPayment": "First payment due",
+    "firstPaymentToday": "Today, from your wallet",
+    "perPayment": "Per installment",
+    "totalCommitment": "Total",
+    "walletNote": "Installments are paid from your wallet in Dashboard → Installments.",
+    "completion": "Expected completion: {{date}}.",
+    "mustChooseInstallments": "This property is sold in installments only."
+  },
+  "dashboard": {
+    "title": "Installments",
+    "subtitle": "Your installment plans, the full schedule of each one, and payment.",
+    "addFunds": "Add funds",
+    "loadError": "Couldn't load your installment plans.",
+    "retry": "Try again",
+    "emptyTitle": "No installment plans yet",
+    "emptyBody": "When you buy a property in installments, your plan and its full payment schedule appear here.",
+    "viewProperty": "View property",
+    "progress": "{{paid}}/{{total}} payments · {{percent}}%",
+    "shares": "{{released}}/{{total}} shares released",
+    "dueNow": "Amount due",
+    "remaining": "Remaining",
+    "paid": "Paid so far",
+    "nextDue": "Next due",
+    "completed": "Completed",
+    "fullyPaid": "Fully paid — all shares released",
+    "payNow": "Pay {{amount}} now",
+    "confirmPay": "Pay {{amount}} from your wallet?",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "nextPayment": "Next payment of {{amount}} due {{date}}",
+    "paidSuccess": "Installment paid successfully.",
+    "payFailed": "Payment could not be completed.",
+    "insufficient": "Not enough wallet balance for this installment. Add funds and try again.",
+    "showSchedule": "Show full schedule",
+    "hideSchedule": "Hide schedule",
+    "downloadStatement": "Download statement (PDF)",
+    "receipt": "Receipt",
+    "planStatus": {
+      "pending": "Active",
+      "processing": "Processing",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "refunded": "Refunded",
+      "failed": "Failed",
+      "overdue": "Overdue"
+    }
+  }
+}

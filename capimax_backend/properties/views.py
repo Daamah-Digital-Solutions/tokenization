@@ -299,7 +299,14 @@ class PropertyViewSet(ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         """Retrieve property details and log the view."""
         property_obj = self.get_object()
-        
+
+        # Apply today's price phase (admin-defined) before showing the price.
+        try:
+            from .payment_plan import sync_price_tier
+            sync_price_tier(property_obj)
+        except Exception:
+            logger.warning('Price phase sync failed for %s', property_obj.pk, exc_info=True)
+
         # Log the view for analytics
         self._log_property_view(request, property_obj)
         
@@ -1573,24 +1580,12 @@ class ConstructionInstallmentViewSet(ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        schedule = []
-        current_date = installment.next_payment_date
-        
-        for payment_num in range(installment.payments_made + 1, installment.total_installments + 1):
-            tokens_for_payment = float(installment.tokens_per_payment) if installment.graduated_release else 0
-            if payment_num == installment.total_installments and not installment.graduated_release:
-                tokens_for_payment = float(installment.tokens_pending_release)
-            
-            schedule.append({
-                'payment_number': payment_num,
-                'due_date': current_date,
-                'amount': float(installment.installment_amount),
-                'tokens_to_release': tokens_for_payment,
-                'status': 'pending'
-            })
-            
-            current_date = installment.calculate_next_payment_date(current_date)
-        
+        # The FULL schedule — paid ones with their payment, then due /
+        # overdue / upcoming (it used to list only the remaining payments,
+        # all marked "pending").
+        from .payment_plan import plan_schedule_with_status
+        schedule = plan_schedule_with_status(installment)
+
         return Response({
             'installment_id': str(installment.id),
             'total_payments': installment.total_installments,
@@ -1724,8 +1719,8 @@ class RentalIncomeDistributionViewSet(ModelViewSet):
         from investments.models import Investment
         user_investment = Investment.objects.filter(
             user=request.user,
-            property=property_obj,
-            status='active'
+            property_investment=property_obj,
+            status='completed'
         ).first()
         
         if not user_investment and not request.user.is_staff:
@@ -3303,7 +3298,7 @@ class DataRoomDocumentListView(generics.ListAPIView):
             # Check if user is an investor in this property
             is_investor = Investment.objects.filter(
                 user=user,
-                property=property_obj
+                property_investment=property_obj
             ).exists()
 
             if is_investor:
@@ -3408,7 +3403,7 @@ class DataRoomDocumentDetailView(generics.RetrieveUpdateDestroyAPIView):
             # Investors can access investor_access documents
             is_investor = Investment.objects.filter(
                 user=user,
-                property=property_obj
+                property_investment=property_obj
             ).exists()
 
             if is_investor and obj.investor_access:

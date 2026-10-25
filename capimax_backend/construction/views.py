@@ -63,8 +63,8 @@ class ConstructionMilestoneViewSet(ModelViewSet):
         property_id = self.kwargs.get('property_id')
         if property_id:
             return ConstructionMilestone.objects.filter(
-                property_id=property_id
-            ).select_related('property', 'inspector').prefetch_related(
+                property_obj_id=property_id
+            ).select_related('property_obj', 'inspector').prefetch_related(
                 'updates', 'images', 'documents'
             )
         return ConstructionMilestone.objects.none()
@@ -201,7 +201,7 @@ class MilestoneUpdateCreateView(generics.CreateAPIView):
         try:
             milestone = ConstructionMilestone.objects.get(
                 id=milestone_id,
-                property_id=property_id
+                property_obj_id=property_id
             )
         except ConstructionMilestone.DoesNotExist:
             return Response(
@@ -260,7 +260,7 @@ class MilestoneImageUploadView(APIView):
         try:
             milestone = ConstructionMilestone.objects.get(
                 id=milestone_id,
-                property_id=property_id
+                property_obj_id=property_id
             )
         except ConstructionMilestone.DoesNotExist:
             return Response(
@@ -334,7 +334,7 @@ class MilestoneDocumentUploadView(APIView):
         try:
             milestone = ConstructionMilestone.objects.get(
                 id=milestone_id,
-                property_id=property_id
+                property_obj_id=property_id
             )
         except ConstructionMilestone.DoesNotExist:
             return Response(

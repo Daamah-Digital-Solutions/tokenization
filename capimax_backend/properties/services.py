@@ -233,7 +233,9 @@ class InstallmentProcessingService:
                         'tokens_released': 0,
                     }
 
-                amount = installment.installment_amount
+                # Payment #n of the schedule (the down payment, then equal
+                # installments; the last one absorbs rounding).
+                amount = installment.amount_due
 
                 try:
                     WalletBalance.debit(
@@ -290,13 +292,13 @@ class InstallmentProcessingService:
                 logger.warning(f"Token release failed for installment {installment.id}: {e}")
 
         try:
-            self._send_payment_success_notification(installment, installment.installment_amount)
+            self._send_payment_success_notification(installment, amount)
         except Exception:
             pass
 
         return {
             'success': True,
-            'amount_paid': installment.installment_amount,
+            'amount_paid': amount,
             'tokens_released': int(tokens_released or 0),
             'payment_id': str(payment.id) if payment else None,
         }
@@ -336,12 +338,13 @@ class InstallmentProcessingService:
         try:
             # For wallet balance payments, check if sufficient funds
             if payment_method.method_type == 'wallet':
+                amount_due = installment.amount_due
                 wallet_balance = WalletBalance.objects.filter(
                     user=installment.investor,
                     currency='USD'
                 ).first()
                 
-                if not wallet_balance or wallet_balance.available_balance < installment.installment_amount:
+                if not wallet_balance or wallet_balance.available_balance < amount_due:
                     return {
                         'success': False,
                         'error': 'Insufficient wallet balance',
@@ -349,17 +352,17 @@ class InstallmentProcessingService:
                     }
                 
                 # Deduct from wallet
-                wallet_balance.available_balance -= installment.installment_amount
+                wallet_balance.available_balance -= amount_due
                 wallet_balance.save()
                 
                 # Create payment record
                 payment = Payment.objects.create(
                     user=installment.investor,
-                    amount=installment.installment_amount,
+                    amount=amount_due,
                     currency='USD',
                     payment_method='wallet',
                     status=PaymentStatus.COMPLETED,
-                    net_amount=installment.installment_amount,
+                    net_amount=amount_due,
                     completed_at=timezone.now(),
                     metadata={
                         'installment_id': str(installment.id),
@@ -371,7 +374,7 @@ class InstallmentProcessingService:
                 
                 return {
                     'success': True,
-                    'amount_paid': installment.installment_amount,
+                    'amount_paid': amount_due,
                     'payment_id': str(payment.id),
                     'payment_method': 'wallet'
                 }
@@ -673,7 +676,7 @@ class InstallmentProcessingService:
         Notification.objects.create(
             user=installment.investor,
             title="Payment Reminder",
-            message=f"Your installment payment of ${installment.installment_amount} for {installment.property_investment.title} is due in {days_before} days on {installment.next_payment_date}.",
+            message=f"Your installment payment of ${installment.amount_due} for {installment.property_investment.title} is due in {days_before} days on {installment.next_payment_date}.",
             notification_type=NotificationType.PAYMENT,
             priority=NotificationPriority.MEDIUM,
             content_object=installment,
@@ -706,7 +709,7 @@ class InstallmentProcessingService:
         NotificationService.create_notification(
             user=installment.investor,
             title="Payment Processing Failed",
-            message=f"Your installment payment of ${installment.installment_amount} for {installment.property_investment.title} could not be processed. Reason: {error_message}",
+            message=f"Your installment payment of ${installment.amount_due} for {installment.property_investment.title} could not be processed. Reason: {error_message}",
             notification_type=NotificationType.ERROR,
             priority=NotificationPriority.HIGH,
             content_object=installment,
@@ -721,7 +724,7 @@ class InstallmentProcessingService:
         NotificationService.create_notification(
             user=installment.investor,
             title="Late Payment Notice",
-            message=f"Your installment payment of ${installment.installment_amount} for {installment.property_investment.title} is overdue. Please make your payment as soon as possible to avoid additional fees.",
+            message=f"Your installment payment of ${installment.amount_due} for {installment.property_investment.title} is overdue. Please make your payment as soon as possible to avoid additional fees.",
             notification_type=NotificationType.WARNING,
             priority=NotificationPriority.HIGH,
             content_object=installment,

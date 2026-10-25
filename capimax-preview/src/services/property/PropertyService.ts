@@ -210,6 +210,9 @@ export class PropertyService {
         spv_bank_name: property.spv_bank_name,
         // Real on-chain contract data (client edits #9/#11 — Blockchain tab)
         blockchain: property.blockchain,
+        // Payment plan, price phases, developer, returns, financial study,
+        // valuation, insurance (client round 3, #18 #20, admin note #2)
+        listing_details: property.listing_details,
       };
     } catch (error) {
       console.error('Failed to get property:', error);

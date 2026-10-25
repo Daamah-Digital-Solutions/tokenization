@@ -526,7 +526,8 @@ class InvestmentViewSet(viewsets.ModelViewSet):
 
         try:
             property_obj = Property.objects.get(
-                id=data['property_id'], status__in=['active', 'tokenized'], is_published=True
+                id=data['property_id'], status__in=['active', 'tokenized'], is_published=True,
+                purchase_methods__in=['cash', 'both'],
             )
         except Property.DoesNotExist:
             return Response(create_error_response(
@@ -620,7 +621,8 @@ class InvestmentViewSet(viewsets.ModelViewSet):
 
         try:
             property_obj = Property.objects.get(
-                id=data['property_id'], status__in=['active', 'tokenized'], is_published=True
+                id=data['property_id'], status__in=['active', 'tokenized'], is_published=True,
+                purchase_methods__in=['cash', 'both'],
             )
         except Property.DoesNotExist:
             return Response(create_error_response(
@@ -724,7 +726,8 @@ class InvestmentViewSet(viewsets.ModelViewSet):
 
         try:
             property_obj = Property.objects.get(
-                id=data['property_id'], status__in=['active', 'tokenized'], is_published=True
+                id=data['property_id'], status__in=['active', 'tokenized'], is_published=True,
+                purchase_methods__in=['cash', 'both'],
             )
         except Property.DoesNotExist:
             return Response(create_error_response(

@@ -23,6 +23,7 @@ import { TransactionProcessor } from './TransactionProcessor';
 import { TransactionConfirmation } from './TransactionConfirmation';
 import { cn } from '../../utils/cn';
 import type { InvestmentProperty, InvestmentData, InvestmentFlowProps } from './types';
+import { buildSchedule } from '../../utils/paymentPlan';
 
 // The static step list is the upfront-payment path. The schedule step is
 // inserted dynamically right after "amount" when the property is under
@@ -55,19 +56,27 @@ const baseSteps = [
   }
 ];
 
-function buildSteps(property: InvestmentProperty) {
-  const isInstallmentEligible =
-    !!property.supports_installments && !!property.is_under_construction;
-  if (!isInstallmentEligible) return baseSteps;
+// Whether the admin offers installments for this property (client round 3,
+// #20). Older API responses without a plan fall back to the legacy flag.
+export function offersInstallments(property: InvestmentProperty): boolean {
+  if (property.paymentPlan) return !!property.paymentPlan.allows_installments;
+  return !!property.supports_installments && !!property.is_under_construction;
+}
+
+function buildSteps(property: InvestmentProperty, isInstallmentPurchase: boolean) {
+  if (!offersInstallments(property)) return baseSteps;
+  // An installment purchase charges nothing at checkout (each installment is
+  // paid from the wallet in the dashboard), so it skips the payment step.
+  const rest = isInstallmentPurchase ? baseSteps.slice(2) : baseSteps.slice(1);
   return [
     baseSteps[0],
     {
       id: 'schedule',
       title: 'Payment Schedule',
-      description: 'Upfront or installments',
+      description: 'Full payment or installments',
       icon: Calendar
     },
-    ...baseSteps.slice(1),
+    ...rest,
   ];
 }
 
@@ -77,23 +86,37 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
   onClose,
   onComplete,
   onGoToPortfolio,
-  initialTokens
+  initialTokens,
+  initialMethod,
+  initialInstallments
 }) => {
   // If tokens were pre-selected from sidebar, start on Step 1 (payment) instead of Step 0
   const startStep = (initialTokens && initialTokens > 1) ? 1 : 0;
   const startTokens = initialTokens || 1;
 
   const [currentStep, setCurrentStep] = useState(startStep);
+  // Installments-only properties, or "buy in installments" on the property
+  // page, start on the installment option.
+  const startInstallment =
+    offersInstallments(property) &&
+    (initialMethod === 'installments' || property.paymentPlan?.allows_cash === false);
   const [investmentData, setInvestmentData] = useState<InvestmentData>({
     tokens: startTokens,
     amount: startTokens * property.tokenPrice,
-    paymentMethod: null
+    paymentMethod: startInstallment ? 'wallet' : null,
+    is_installment_purchase: startInstallment || undefined,
+    total_installments: startInstallment
+      ? property.paymentPlan?.installment_count ||
+        initialInstallments ||
+        property.paymentPlan?.count_options?.[property.paymentPlan.count_options.length - 1] ||
+        12
+      : undefined,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
-  const steps = buildSteps(property);
+  const steps = buildSteps(property, !!investmentData.is_installment_purchase);
   const currentStepData = steps[currentStep];
 
   // For the dynamic-step rendering we don't rely on raw indexes — we match
@@ -137,8 +160,25 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
       if (!investmentData.paymentMethod) {
         newErrors.paymentMethod = 'Please select a payment method';
       }
+    } else if (id === 'schedule') {
+      // Installments-only properties can't be bought upfront.
+      if (property.paymentPlan?.allows_cash === false && !investmentData.is_installment_purchase) {
+        newErrors.schedule = 'This property is sold in installments only.';
+      }
+      if (investmentData.is_installment_purchase && property.paymentPlan) {
+        const plan = property.paymentPlan;
+        const rows = buildSchedule(investmentData.amount, {
+          downPaymentPercent: Number(plan.down_payment_percent) || 0,
+          count: plan.installment_count || investmentData.total_installments || 1,
+          frequency: plan.frequency,
+        });
+        const per = rows.find((r) => r.kind === 'installment')?.amount || 0;
+        const minimum = Number(plan.minimum_installment) || 100;
+        if (per < minimum) {
+          newErrors.schedule = `Each installment must be at least $${minimum}. Choose more shares or fewer installments.`;
+        }
+      }
     }
-    // 'schedule' has no blocking validation — "Pay upfront" is the default.
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -328,6 +368,7 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                       property={property}
                       investmentData={investmentData}
                       onUpdate={updateInvestmentData}
+                      error={errors.schedule}
                     />
                   )}
 
@@ -399,6 +440,8 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
                     >
                       {stepId === 'payment'
                         ? 'Confirm & Pay'
+                        : stepId === 'schedule' && investmentData.is_installment_purchase
+                          ? 'Confirm installment plan'
                         : steps[currentStep + 1]?.id === 'schedule'
                           ? 'Choose Schedule'
                           : 'Choose Payment'}

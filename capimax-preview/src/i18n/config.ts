@@ -11,6 +11,7 @@ import enLegal from './locales/en/legal.json';
 import enKyc from './locales/en/kyc.json';
 import enOwner from './locales/en/owner.json';
 import enPartners from './locales/en/partners.json';
+import enPlan from './locales/en/plan.json';
 
 import arCommon from './locales/ar/common.json';
 import arAuth from './locales/ar/auth.json';
@@ -20,6 +21,7 @@ import arLegal from './locales/ar/legal.json';
 import arKyc from './locales/ar/kyc.json';
 import arOwner from './locales/ar/owner.json';
 import arPartners from './locales/ar/partners.json';
+import arPlan from './locales/ar/plan.json';
 
 // Define resources
 const resources = {
@@ -32,6 +34,7 @@ const resources = {
     kyc: enKyc,
     owner: enOwner,
     partners: enPartners,
+    plan: enPlan,
   },
   ar: {
     common: arCommon,
@@ -42,6 +45,7 @@ const resources = {
     kyc: arKyc,
     owner: arOwner,
     partners: arPartners,
+    plan: arPlan,
   },
 };
 
@@ -53,7 +57,7 @@ i18n
     resources,
     fallbackLng: 'en',
     defaultNS: 'common',
-    ns: ['common', 'auth', 'navigation', 'properties', 'legal', 'kyc', 'owner', 'partners'],
+    ns: ['common', 'auth', 'navigation', 'properties', 'legal', 'kyc', 'owner', 'partners', 'plan'],
 
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],

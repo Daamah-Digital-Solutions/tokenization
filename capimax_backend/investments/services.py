@@ -872,6 +872,10 @@ class WalletInvestmentService:
             # Only published listings can be bought (client round 3, #24).
             if not property_obj.is_published:
                 raise InvestmentError("This property is not open for ownership yet.")
+            # Full-price purchases only where the admin allows cash (#20).
+            from properties.payment_plan import allows_cash
+            if not allows_cash(property_obj):
+                raise InvestmentError("This property is sold in installments only.")
 
             # Verify token availability
             available_tokens = property_obj.total_tokens - property_obj.tokens_sold

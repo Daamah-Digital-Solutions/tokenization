@@ -92,6 +92,13 @@ app.conf.beat_schedule = {
         'kwargs': {},
     },
     
+    # Apply admin-defined price phases on their start dates (client round 3, admin note #2)
+    'sync-property-price-phases': {
+        'task': 'properties.tasks.sync_property_price_phases',
+        'schedule': crontab(hour=0, minute=5),
+        'kwargs': {},
+    },
+
     # Monthly rental income distribution — runs on the 1st of every month
     # to align with calendar months (not every 30 days which drifts).
     'distribute-monthly-rental-income': {

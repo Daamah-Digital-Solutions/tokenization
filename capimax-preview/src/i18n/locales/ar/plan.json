@@ -1,0 +1,196 @@
+{
+  "tab": "خطة السداد",
+  "section": {
+    "title": "خطة السداد",
+    "subtitle": "طرق دفع ثمن هذا العقار"
+  },
+  "methods": {
+    "title": "طرق الشراء",
+    "cash": "الدفع الكامل",
+    "cashHint": "ادفع السعر كاملًا مرة واحدة، وتصدر حصصك فور تأكيد الدفع.",
+    "installments": "التقسيط",
+    "installmentsHint": "ادفع مقدمًا ثم الباقي على أقساط، وتُحرَّر حصصك مع كل قسط تسدده.",
+    "available": "متاح",
+    "notAvailable": "غير متاح",
+    "cashOnly": "هذا العقار يُباع بالدفع الكامل فقط.",
+    "installmentsOnly": "هذا العقار يُباع بالتقسيط فقط."
+  },
+  "frequency": {
+    "monthly": "شهري",
+    "quarterly": "ربع سنوي",
+    "semi_annual": "كل 6 أشهر",
+    "annual": "سنوي"
+  },
+  "per": {
+    "monthly": "/ شهريًا",
+    "quarterly": "/ كل ربع سنة",
+    "semi_annual": "/ كل 6 أشهر",
+    "annual": "/ سنويًا"
+  },
+  "calculator": {
+    "shares": "عدد الحصص",
+    "sharesHint": "{{total}} بسعر {{price}} للحصة",
+    "maxAvailable": "الحد الأقصى المتاح",
+    "count": "عدد الأقساط",
+    "countFixed": "{{count}} قسطًا (محدد لهذا العقار)",
+    "countOption": "{{count}} أقساط",
+    "downPayment": "الدفعة المقدمة",
+    "downPaymentPercent": "دفعة مقدمة {{percent}}٪",
+    "noDownPayment": "بدون دفعة مقدمة",
+    "installment": "القسط",
+    "firstDue": "أول قسط",
+    "lastDue": "آخر قسط",
+    "total": "السعر الإجمالي",
+    "summary": "عدد الدفعات: {{count}} · الإجمالي {{total}}"
+  },
+  "schedule": {
+    "title": "جدول الأقساط",
+    "subtitle": "كل دفعة بتاريخ استحقاقها وقيمتها",
+    "number": "#",
+    "payment": "الدفعة",
+    "dueDate": "تاريخ الاستحقاق",
+    "amount": "القيمة",
+    "percent": "النسبة",
+    "remaining": "المتبقي",
+    "status": "الحالة",
+    "paidOn": "سُدِّد في {{date}}",
+    "downPayment": "الدفعة المقدمة",
+    "installment": "القسط {{n}}",
+    "download": "تحميل الجدول (PDF)",
+    "preparing": "جارٍ التجهيز…",
+    "estimateNote": "الجدول محسوب لعدد الحصص المختار، ونفس الشروط تنطبق على خطتك عند الشراء بالتقسيط.",
+    "minimumWarning": "لا يقل القسط الواحد عن {{amount}}. اختر حصصًا أكثر أو عدد أقساط أقل.",
+    "notes": "شروط الخطة"
+  },
+  "status": {
+    "paid": "مدفوع",
+    "due": "مستحق الآن",
+    "overdue": "متأخر",
+    "upcoming": "قادم",
+    "cancelled": "ملغي"
+  },
+  "tiers": {
+    "title": "مراحل السعر",
+    "subtitle": "يتغير سعر الحصة تلقائيًا في هذه التواريخ",
+    "current": "السعر الحالي",
+    "next": "المرحلة التالية",
+    "past": "انتهت",
+    "from": "من {{date}}",
+    "until": "حتى {{date}}",
+    "perShare": "للحصة",
+    "nextChange": "يصبح سعر الحصة {{price}} بتاريخ {{date}} ({{label}})."
+  },
+  "developer": {
+    "title": "المطوّر",
+    "established": "سنة التأسيس",
+    "projects": "المشروعات المنفّذة",
+    "website": "الموقع الإلكتروني",
+    "contact": "التواصل"
+  },
+  "returns": {
+    "title": "العوائد",
+    "expectedReturn": "العائد السنوي المتوقع",
+    "rentalYield": "العائد الإيجاري",
+    "appreciation": "الزيادة السنوية المتوقعة في القيمة",
+    "annualRent": "الدخل الإيجاري السنوي المتوقع",
+    "monthlyRent": "الدخل الإيجاري الشهري",
+    "notes": "مصدر العوائد"
+  },
+  "financialStudy": {
+    "title": "الدراسة المالية",
+    "empty": "ستُنشر الدراسة المالية هنا."
+  },
+  "valuation": {
+    "title": "التقييم",
+    "latest": "آخر تقييم",
+    "date": "تاريخ التقييم",
+    "method": "طريقة التقييم",
+    "appraiser": "المقيّم",
+    "report": "تقرير التقييم",
+    "history": "سجل التقييمات",
+    "methods": {
+      "comparative": "مقارنة بأسعار السوق",
+      "income": "طريقة الدخل",
+      "cost": "طريقة التكلفة",
+      "automated": "تقييم آلي"
+    }
+  },
+  "insurance": {
+    "title": "التأمين",
+    "provider": "شركة التأمين",
+    "policy": "رقم الوثيقة",
+    "coverage": "نطاق التغطية",
+    "coverageAmount": "قيمة التغطية",
+    "expiry": "سارية حتى"
+  },
+  "documents": {
+    "download": "تحميل",
+    "files": "المستندات"
+  },
+  "buy": {
+    "cash_one": "اشترِ حصة واحدة — {{total}}",
+    "cash_two": "اشترِ حصتين — {{total}}",
+    "cash_few": "اشترِ {{count}} حصص — {{total}}",
+    "cash_many": "اشترِ {{count}} حصة — {{total}}",
+    "cash_other": "اشترِ {{count}} حصة — {{total}}",
+    "cash_zero": "اشترِ {{count}} حصة — {{total}}",
+    "installments": "اشترِ بالتقسيط — {{amount}} {{per}}",
+    "installmentsFrom": "أو بالتقسيط بدءًا من {{amount}} {{per}}",
+    "viewPlan": "اعرض خطة السداد"
+  },
+  "checkout": {
+    "title": "كيف تريد الدفع؟",
+    "subtitle": "اختر إحدى طرق الشراء المتاحة لهذا العقار.",
+    "upfront": "الدفع الكامل",
+    "upfrontHint": "دفعة واحدة بقيمة {{total}}، وتصدر حصصك بعد تأكيد الدفع.",
+    "installments": "الدفع بالتقسيط",
+    "installmentsHint": "{{down}} ثم {{count}} × {{amount}} {{per}}. تُحجز حصصك وتُحرَّر مع كل قسط.",
+    "installmentsHintNoDown": "{{count}} × {{amount}} {{per}}. تُحجز حصصك وتُحرَّر مع كل قسط.",
+    "firstPayment": "موعد أول دفعة",
+    "firstPaymentToday": "اليوم، من محفظتك",
+    "perPayment": "قيمة القسط",
+    "totalCommitment": "الإجمالي",
+    "walletNote": "تُسدَّد الأقساط من محفظتك من لوحة التحكم ← الأقساط.",
+    "completion": "موعد التسليم المتوقع: {{date}}.",
+    "mustChooseInstallments": "هذا العقار يُباع بالتقسيط فقط."
+  },
+  "dashboard": {
+    "title": "الأقساط",
+    "subtitle": "خطط التقسيط الخاصة بك، والجدول الكامل لكل خطة، والسداد.",
+    "addFunds": "إضافة رصيد",
+    "loadError": "تعذّر تحميل خطط التقسيط.",
+    "retry": "حاول مرة أخرى",
+    "emptyTitle": "لا توجد خطط تقسيط بعد",
+    "emptyBody": "عند شراء عقار بالتقسيط ستظهر هنا خطتك وجدول السداد الكامل.",
+    "viewProperty": "عرض العقار",
+    "progress": "{{paid}}/{{total}} دفعة · {{percent}}٪",
+    "shares": "تم تحرير {{released}}/{{total}} حصة",
+    "dueNow": "المبلغ المستحق",
+    "remaining": "المتبقي",
+    "paid": "المدفوع حتى الآن",
+    "nextDue": "الاستحقاق القادم",
+    "completed": "مكتمل",
+    "fullyPaid": "تم السداد بالكامل وتحرير كل الحصص",
+    "payNow": "ادفع {{amount}} الآن",
+    "confirmPay": "دفع {{amount}} من محفظتك؟",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "nextPayment": "الدفعة القادمة {{amount}} بتاريخ {{date}}",
+    "paidSuccess": "تم سداد القسط بنجاح.",
+    "payFailed": "تعذّر إتمام الدفع.",
+    "insufficient": "رصيد المحفظة لا يكفي لهذا القسط. أضف رصيدًا ثم حاول مرة أخرى.",
+    "showSchedule": "عرض الجدول الكامل",
+    "hideSchedule": "إخفاء الجدول",
+    "downloadStatement": "تحميل كشف الخطة (PDF)",
+    "receipt": "إيصال",
+    "planStatus": {
+      "pending": "نشطة",
+      "processing": "قيد المعالجة",
+      "completed": "مكتملة",
+      "cancelled": "ملغاة",
+      "refunded": "مستردة",
+      "failed": "فشلت",
+      "overdue": "متأخرة"
+    }
+  }
+}

@@ -328,6 +328,11 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
     # Only documents marked public are embedded for everyone; the owner and
     # staff see all. Investor-only files are served by the Data Room endpoint.
     documents = serializers.SerializerMethodField()
+    # Everything admins configure for the public page (admin note #2, #18, #20)
+    listing_details = serializers.SerializerMethodField()
+
+    def get_listing_details(self, obj):
+        return build_listing_details(obj, self.context.get('request'))
 
     def get_documents(self, obj):
         request = self.context.get('request')
@@ -386,7 +391,7 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
             'owner', 'featured', 'minimum_investment',
             'spv_company_name', 'spv_registration_number',
             'spv_bank_account_number', 'spv_bank_name', 'spv_establishment_date',
-            'images', 'documents', 'updates', 'reviews', 'valuations',
+            'images', 'documents', 'listing_details', 'updates', 'reviews', 'valuations',
             'construction_milestones', 'rental_distributions', 'average_rating', 'total_reviews',
             'total_investment', 'investor_count', 'blockchain', 'created_at', 'updated_at'
         ]
@@ -681,7 +686,20 @@ class ConstructionInstallmentSerializer(serializers.ModelSerializer):
     
     # Investor details
     investor_email = serializers.CharField(source='investor.email', read_only=True)
-    
+
+    # Client round 3, #19: full schedule with per-installment status, the
+    # amount due now, and the property's city/country for the plan card.
+    schedule = serializers.SerializerMethodField()
+    amount_due = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True)
+    property_city = serializers.CharField(source='property_investment.city', read_only=True)
+    property_country = serializers.CharField(source='property_investment.country', read_only=True)
+    token_price = serializers.DecimalField(source='property_investment.token_price', max_digits=10,
+                                           decimal_places=2, read_only=True)
+
+    def get_schedule(self, obj):
+        from .payment_plan import plan_schedule_with_status
+        return plan_schedule_with_status(obj)
+
     class Meta:
         model = ConstructionInstallment
         fields = [
@@ -695,6 +713,8 @@ class ConstructionInstallmentSerializer(serializers.ModelSerializer):
             'completion_percentage', 'tokens_pending_release',
             'is_completed', 'is_active', 'property_title',
             'property_address', 'property_category', 'investor_email',
+            'down_payment_amount', 'first_installment_date', 'start_date',
+            'schedule', 'amount_due', 'property_city', 'property_country', 'token_price',
             'created_at', 'updated_at'
         ]
         read_only_fields = [
@@ -786,8 +806,12 @@ class ConstructionInstallmentCreateSerializer(serializers.ModelSerializer):
         # Without this, DRF's field-level "required" check rejects the create
         # POST with 400 BEFORE validate() runs — which is why installment plans
         # were never created and never appeared on the investor's page.
+        # `total_installments` / `frequency` may be fixed by the property's
+        # plan (client round 3, #20) — then the buyer doesn't choose them.
         extra_kwargs = {
             'total_investment_amount': {'required': False},
+            'total_installments': {'required': False},
+            'frequency': {'required': False},
         }
 
     def validate(self, attrs):
@@ -798,16 +822,12 @@ class ConstructionInstallmentCreateSerializer(serializers.ModelSerializer):
         if not property_obj.is_published:
             raise serializers.ValidationError("This property is not open for ownership yet.")
 
-        # Validate property supports installments
-        if not property_obj.supports_installments:
+        # The admin decides per property whether installments are offered
+        # (client round 3, #20) — any category, not only under construction.
+        from .payment_plan import allows_installments, count_options
+        if not allows_installments(property_obj):
             raise serializers.ValidationError(
-                "This property does not support installment payments"
-            )
-        
-        # Validate property is under construction
-        if not property_obj.is_under_construction:
-            raise serializers.ValidationError(
-                "Installment payments are only available for construction properties"
+                "This property is not offered in installments"
             )
         
         # Validate token allocation
@@ -817,21 +837,43 @@ class ConstructionInstallmentCreateSerializer(serializers.ModelSerializer):
                 f"Token allocation ({token_allocation}) exceeds available tokens ({property_obj.tokens_available})"
             )
         
-        # Calculate investment amount and installment amount
+        # Plan terms come from the property (down payment, count options,
+        # frequency, first due date) so the buyer's plan always matches the
+        # schedule published on the property page.
+        from .payment_plan import build_schedule
         total_investment_amount = property_obj.token_price * token_allocation
-        total_installments = attrs.get('total_installments')
-        installment_amount = total_investment_amount / total_installments
-        
+        options = count_options(property_obj)
+        count = attrs.get('total_installments') or options[-1]
+        if property_obj.installment_count:
+            count = property_obj.installment_count
+        elif count not in options:
+            raise serializers.ValidationError(
+                f"Choose one of the available installment plans: {', '.join(map(str, options))}"
+            )
+        rows = build_schedule(
+            total_investment_amount,
+            down_payment_percent=property_obj.installment_down_payment_percent,
+            count=count,
+            frequency=property_obj.installment_frequency,
+            first_due_date=property_obj.installment_first_due_date,
+        )
+        regular = [r for r in rows if r['kind'] == 'installment']
+        down = rows[0]['amount'] if rows[0]['kind'] == 'down_payment' else Decimal('0.00')
+
         # Validate minimum installment amount (e.g., $100)
         min_installment = Decimal('100.00')
-        if installment_amount < min_installment:
+        if regular[0]['amount'] < min_installment:
             raise serializers.ValidationError(
-                f"Installment amount (${installment_amount:.2f}) is below minimum (${min_installment})"
+                f"Installment amount (${regular[0]['amount']:.2f}) is below minimum (${min_installment})"
             )
-        
+
         attrs['total_investment_amount'] = total_investment_amount
-        attrs['installment_amount'] = installment_amount
-        
+        attrs['installment_amount'] = regular[0]['amount']
+        attrs['total_installments'] = len(rows)
+        attrs['frequency'] = property_obj.installment_frequency or 'monthly'
+        attrs['down_payment_amount'] = down
+        attrs['first_installment_date'] = regular[0]['due_date']
+        attrs['_first_due'] = rows[0]['due_date']
         return attrs
     
     def create(self, validated_data):
@@ -841,11 +883,11 @@ class ConstructionInstallmentCreateSerializer(serializers.ModelSerializer):
         # Set investor to current user
         validated_data['investor'] = self.context['request'].user
 
-        # The first installment is due immediately: at checkout the investor
-        # commits to the plan and pays installment #1 from their dashboard right
-        # away (funded by the wallet). After each payment the model advances the
-        # next due date by the plan's frequency.
-        validated_data['next_payment_date'] = timezone.now().date()
+        # The first payment (down payment, or installment #1) is due per the
+        # schedule — today unless the admin fixed a later first due date.
+        first_due = validated_data.pop('_first_due', None) or timezone.now().date()
+        validated_data['start_date'] = timezone.now().date()
+        validated_data['next_payment_date'] = first_due
 
         # Set initial status
         validated_data['status'] = 'pending'
@@ -1154,3 +1196,84 @@ class RentalDistributionReportSerializer(serializers.Serializer):
     generated_at = serializers.DateTimeField(default=timezone.now)
     generated_by = serializers.CharField(required=False)
     report_type = serializers.CharField(default='monthly_distribution')
+
+
+
+def build_listing_details(prop, request=None):
+    """
+    The admin-maintained listing data shown on the public property page:
+    payment plan, price phases, developer, returns, financial study,
+    valuation and insurance (+ their public documents).
+    """
+    from .payment_plan import active_tier, next_tier, plan_config
+
+    def doc_list(doc_type):
+        docs = [d for d in prop.documents.all() if d.document_type == doc_type and d.is_public]
+        return PropertyDocumentListSerializer(docs, many=True, context={'request': request}).data
+
+    tiers = list(prop.price_tiers.all().order_by('effective_from', 'order'))
+    current = active_tier(prop)
+    upcoming = next_tier(prop)
+    valuations = list(prop.valuations.all().order_by('-valuation_date')[:5])
+
+    def valuation_row(v):
+        report_url = None
+        if v.report:
+            report_url = request.build_absolute_uri(v.report.url) if request else v.report.url
+        return {
+            'current_value': v.current_value, 'valuation_date': v.valuation_date,
+            'method': v.valuation_method, 'appraiser': v.appraiser, 'report_url': report_url,
+            'notes': v.notes,
+        }
+
+    developer = None
+    if prop.developer_name:
+        developer = {
+            'name': prop.developer_name, 'description': prop.developer_description,
+            'website': prop.developer_website, 'established_year': prop.developer_established_year,
+            'projects_completed': prop.developer_projects_completed,
+            'contact_email': prop.developer_contact_email, 'contact_phone': prop.developer_contact_phone,
+        }
+
+    insurance = None
+    if prop.insurance_provider or prop.insurance_coverage:
+        insurance = {
+            'provider': prop.insurance_provider, 'policy_number': prop.insurance_policy_number,
+            'coverage': prop.insurance_coverage, 'coverage_amount': prop.insurance_coverage_amount,
+            'expiry_date': prop.insurance_expiry_date,
+        }
+
+    return {
+        'payment_plan': plan_config(prop),
+        'price_tiers': [{
+            'label': t.label, 'price_per_token': t.price_per_token,
+            'effective_from': t.effective_from, 'effective_to': t.effective_to,
+            'notes': t.notes,
+            'is_current': bool(current and t.pk == current.pk),
+            'is_upcoming': bool(upcoming and t.pk == upcoming.pk),
+        } for t in tiers],
+        'next_price_change': ({'label': upcoming.label, 'price_per_token': upcoming.price_per_token,
+                               'effective_from': upcoming.effective_from} if upcoming else None),
+        'developer': developer,
+        'returns': {
+            'expected_return': prop.expected_return,
+            'rental_yield': prop.rental_yield,
+            'expected_appreciation_rate': prop.expected_appreciation_rate,
+            'projected_annual_rental_income': prop.projected_annual_rental_income,
+            'monthly_rental_income': prop.monthly_rental_income,
+            'notes': prop.returns_notes,
+        },
+        'financial_study': {
+            'summary': prop.financial_study_summary,
+            'documents': doc_list('financial'),
+        },
+        'valuation': {
+            'latest': valuation_row(valuations[0]) if valuations else None,
+            'history': [valuation_row(v) for v in valuations],
+            'documents': doc_list('valuation'),
+        },
+        'insurance': {
+            **(insurance or {}),
+            'documents': doc_list('insurance'),
+        } if (insurance or doc_list('insurance')) else None,
+    }

@@ -61,9 +61,12 @@ class InvestmentCalculationSerializer(serializers.Serializer):
         
         if property_obj.status not in ['active', 'tokenized'] or not property_obj.is_published:
             raise serializers.ValidationError("Property is not available for investment")
-        
+        from properties.payment_plan import allows_cash
+        if not allows_cash(property_obj):
+            raise serializers.ValidationError("This property is sold in installments only.")
+
         return value
-    
+
     def validate_token_amount(self, value):
         """Validate token amount against property availability."""
         property_id = self.initial_data.get('property_id')
@@ -75,7 +78,7 @@ class InvestmentCalculationSerializer(serializers.Serializer):
                     raise serializers.ValidationError(f"Only {available_tokens} tokens available")
             except Property.DoesNotExist:
                 pass
-        
+
         return value
 
 
@@ -100,6 +103,9 @@ class InvestmentCreateSerializer(serializers.ModelSerializer):
         
         if property_obj.status not in ['active', 'tokenized'] or not property_obj.is_published:
             raise serializers.ValidationError("Property is not available for investment")
+        from properties.payment_plan import allows_cash
+        if not allows_cash(property_obj):
+            raise serializers.ValidationError("This property is sold in installments only.")
         
         return value
     

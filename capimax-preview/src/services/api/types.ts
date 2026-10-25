@@ -272,6 +272,7 @@ export interface Property {
   // Installment Fields
   supports_installments?: boolean;
   installment_period_months?: number;
+  listing_details?: import('../../utils/paymentPlan').ListingDetails;
   // SPV / legal entity (client edit #5)
   spv_company_name?: string;
   spv_registration_number?: string;

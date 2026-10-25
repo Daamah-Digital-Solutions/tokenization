@@ -37,6 +37,24 @@ export interface InstallmentPlan {
   tokens_pending_release: number;
   is_completed: boolean;
   is_active: boolean;
+  // Client round 3, #19: the full schedule with per-installment status.
+  property_city?: string;
+  property_country?: string;
+  token_price?: string | number;
+  down_payment_amount?: string | number;
+  first_installment_date?: string | null;
+  start_date?: string | null;
+  amount_due?: string | number;
+  schedule?: Array<{
+    number: number;
+    kind: 'down_payment' | 'installment';
+    due_date: string;
+    amount: string | number;
+    percent: string | number;
+    status: 'paid' | 'due' | 'overdue' | 'upcoming' | 'cancelled';
+    paid_at: string | null;
+    payment_id: string | null;
+  }>;
 }
 
 export interface PayInstallmentResult {
@@ -76,7 +94,7 @@ export class InstallmentService {
     return apiClient.post(`${InstallmentService.BASE}/${id}/process-payment/`, {});
   }
 
-  /** Full projected schedule for a plan (remaining payments). */
+  /** Full schedule for a plan (every payment with its status). */
   static async getPaymentSchedule(id: string): Promise<any> {
     return apiClient.get(`${InstallmentService.BASE}/${id}/payment-schedule/`);
   }

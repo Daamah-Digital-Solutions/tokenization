@@ -1,98 +1,120 @@
-import React from 'react';
-import { Calendar, CreditCard, Info } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
+import { AlertCircle, Calendar, CreditCard, Info } from 'lucide-react';
 import { cn } from '../../utils/cn';
+import { ScheduleTable } from '../properties/PaymentPlanSection';
+import { buildSchedule, fallbackPlan, formatMoney, formatPlanDate, parseDate } from '../../utils/paymentPlan';
 import type { InvestmentData, InvestmentProperty } from './types';
 
 interface PaymentScheduleStepProps {
   property: InvestmentProperty;
   investmentData: InvestmentData;
   onUpdate: (updates: Partial<InvestmentData>) => void;
+  error?: string;
 }
 
 /**
- * Step shown ONLY for under-construction properties that explicitly support
- * installment plans. Investors pick between paying everything upfront or
- * splitting their commitment into N installments. On the chain side, an
- * installment purchase escrows the full token allotment on the per-property
- * contract; tokens are released to the investor's wallet as each
- * ``ConstructionInstallment`` is paid (see processInstallment).
- *
- * For ready / income-generating properties this step is gated out by the
- * parent flow — they never see it.
+ * Shown when the admin offers installments for the property (client round
+ * 3, #20). The buyer picks full payment (if allowed) or installments; the
+ * installment option shows the property's down payment, the allowed
+ * installment counts and the full schedule — the same plan the backend
+ * creates (properties/payment_plan.build_schedule). Tokens are reserved on
+ * the property contract and released as each installment is paid.
  */
 export const PaymentScheduleStep: React.FC<PaymentScheduleStepProps> = ({
   property,
   investmentData,
   onUpdate,
+  error,
 }) => {
-  // Reasonable defaults: cap at the period the owner configured, fall back
-  // to 12 months if they didn't set one.
-  const maxMonths = property.installment_period_months || 12;
-  const presets = Array.from(
-    new Set([3, 6, 12, maxMonths].filter((n) => n >= 2 && n <= maxMonths)),
-  ).sort((a, b) => a - b);
-
+  const { t, i18n } = useTranslation('plan');
+  const lang = i18n.language || 'en';
+  const plan = property.paymentPlan ?? fallbackPlan(property);
+  const options = plan.installment_count
+    ? [plan.installment_count]
+    : plan.count_options?.length
+      ? plan.count_options
+      : [3, 6, 12];
   const isInstallment = !!investmentData.is_installment_purchase;
-  const installments = investmentData.total_installments || presets[0] || 3;
+  const count = plan.installment_count || investmentData.total_installments || options[options.length - 1];
+  const minimum = Number(plan.minimum_installment) || 100;
 
-  const perInstallment = isInstallment
-    ? investmentData.amount / installments
-    : investmentData.amount;
+  const rows = useMemo(
+    () =>
+      buildSchedule(investmentData.amount, {
+        downPaymentPercent: Number(plan.down_payment_percent) || 0,
+        count,
+        frequency: plan.frequency,
+        firstDueDate: parseDate(plan.first_due_date),
+      }),
+    [investmentData.amount, plan.down_payment_percent, count, plan.frequency, plan.first_due_date],
+  );
+  const regular = rows.filter((r) => r.kind === 'installment');
+  const down = rows[0]?.kind === 'down_payment' ? rows[0].amount : 0;
+  const per = regular[0]?.amount || 0;
+  const perLabel = t(`per.${plan.frequency}`);
 
   const handleUpfront = () => {
-    onUpdate({ is_installment_purchase: false, total_installments: undefined });
+    if (!plan.allows_cash) return;
+    onUpdate({ is_installment_purchase: false, total_installments: undefined, paymentMethod: null });
   };
 
   const handleInstallment = (n: number) => {
-    // Installments are funded from the wallet, so default the payment method to
-    // the wallet when this option is chosen (each instalment is paid from the
-    // dashboard's Installments panel).
+    // Installments are funded from the wallet (paid in Dashboard →
+    // Installments), so nothing is charged at checkout.
     onUpdate({ is_installment_purchase: true, total_installments: n, paymentMethod: 'wallet' });
   };
 
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Payment schedule
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('checkout.title')}</h3>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          This is an under-construction property. You can pay the full amount
-          now or split it across multiple payments.
+          {plan.allows_cash ? t('checkout.subtitle') : t('checkout.mustChooseInstallments')}
         </p>
       </div>
 
-      {/* Upfront option */}
-      <button
-        type="button"
-        onClick={handleUpfront}
-        className={cn(
-          'w-full text-left p-4 rounded-xl border-2 transition-colors',
-          !isInstallment
-            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-            : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600',
-        )}
-      >
-        <div className="flex items-start gap-3">
-          <CreditCard className="w-5 h-5 mt-1 text-primary-600 dark:text-primary-400 flex-shrink-0" />
-          <div className="flex-1">
-            <div className="font-medium text-gray-900 dark:text-gray-100">
-              Pay upfront
-            </div>
-            <div className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-              Single payment of ${investmentData.amount.toLocaleString()}.
-              Tokens are minted directly to your wallet on payment confirmation.
+      {error && (
+        <div className="flex items-start gap-2 text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Upfront option — only where the admin allows full payment */}
+      {plan.allows_cash && (
+        <button
+          type="button"
+          onClick={handleUpfront}
+          className={cn(
+            'w-full text-start p-4 rounded-xl border-2 transition-colors',
+            !isInstallment
+              ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
+              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600',
+          )}
+        >
+          <div className="flex items-start gap-3">
+            <CreditCard className="w-5 h-5 mt-1 text-primary-600 dark:text-primary-400 flex-shrink-0" />
+            <div className="flex-1">
+              <div className="font-medium text-gray-900 dark:text-gray-100">{t('checkout.upfront')}</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                {t('checkout.upfrontHint', { total: formatMoney(investmentData.amount) })}
+              </div>
             </div>
           </div>
-        </div>
-      </button>
+        </button>
+      )}
 
       {/* Installment option */}
-      <button
-        type="button"
-        onClick={() => handleInstallment(installments)}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => !isInstallment && handleInstallment(count)}
+        onKeyDown={(e) => {
+          if ((e.key === 'Enter' || e.key === ' ') && !isInstallment) handleInstallment(count);
+        }}
         className={cn(
-          'w-full text-left p-4 rounded-xl border-2 transition-colors',
+          'w-full text-start p-4 rounded-xl border-2 transition-colors cursor-pointer',
           isInstallment
             ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
             : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600',
@@ -100,81 +122,95 @@ export const PaymentScheduleStep: React.FC<PaymentScheduleStepProps> = ({
       >
         <div className="flex items-start gap-3">
           <Calendar className="w-5 h-5 mt-1 text-primary-600 dark:text-primary-400 flex-shrink-0" />
-          <div className="flex-1">
-            <div className="font-medium text-gray-900 dark:text-gray-100">
-              Pay in installments
-            </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-medium text-gray-900 dark:text-gray-100">{t('checkout.installments')}</div>
             <div className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-              Spread the total cost across {installments} monthly payments. Your
-              tokens are reserved on-chain and released as you pay each installment.
+              {down > 0
+                ? t('checkout.installmentsHint', {
+                    down: `${t('calculator.downPayment')} ${formatMoney(down)}`,
+                    count: regular.length,
+                    amount: formatMoney(per),
+                    per: perLabel,
+                  })
+                : t('checkout.installmentsHintNoDown', { count: regular.length, amount: formatMoney(per), per: perLabel })}
             </div>
 
             {isInstallment && (
               <div className="mt-3 space-y-3">
-                <div>
-                  <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">
-                    Number of installments
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {presets.map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleInstallment(n);
-                        }}
-                        className={cn(
-                          'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
-                          n === installments
-                            ? 'bg-primary-600 text-white'
-                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700',
-                        )}
-                      >
-                        {n}
-                      </button>
-                    ))}
+                {options.length > 1 && (
+                  <div>
+                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5 block">
+                      {t('calculator.count')}
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {options.map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleInstallment(n);
+                          }}
+                          className={cn(
+                            'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+                            n === count
+                              ? 'bg-primary-600 text-white'
+                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700',
+                          )}
+                        >
+                          {n}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
                   <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Per payment</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{t('checkout.firstPayment')}</div>
                     <div className="font-semibold text-gray-900 dark:text-gray-100 mt-0.5">
-                      ${perInstallment.toFixed(2)}
+                      {formatMoney(rows[0]?.amount)} · {formatPlanDate(rows[0]?.dueDate, lang)}
                     </div>
                   </div>
                   <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                    <div className="text-xs text-gray-500 dark:text-gray-400">Total commitment</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{t('checkout.perPayment')}</div>
                     <div className="font-semibold text-gray-900 dark:text-gray-100 mt-0.5">
-                      ${investmentData.amount.toLocaleString()}
+                      {formatMoney(per)} {perLabel}
+                    </div>
+                  </div>
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{t('checkout.totalCommitment')}</div>
+                    <div className="font-semibold text-gray-900 dark:text-gray-100 mt-0.5">
+                      {formatMoney(investmentData.amount)}
                     </div>
                   </div>
                 </div>
 
-                {perInstallment < 100 && (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <ScheduleTable rows={rows} lang={lang} maxHeightClass="max-h-56" />
+                </div>
+
+                {per > 0 && per < minimum && (
                   <div className="flex items-start gap-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3">
                     <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                    <span>
-                      Each installment must be at least $100. Choose fewer months or buy more tokens.
-                    </span>
+                    <span>{t('schedule.minimumWarning', { amount: formatMoney(minimum, 0) })}</span>
                   </div>
                 )}
 
-                {property.expected_completion_date && (
-                  <div className="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
-                    <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-500" />
-                    <span>
-                      Expected completion: <strong>{property.expected_completion_date}</strong>.
-                      You can hold your tokens or trade them on the secondary market once construction is done.
-                    </span>
-                  </div>
-                )}
+                <div className="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                  <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-500" />
+                  <span>
+                    {t('checkout.walletNote')}
+                    {property.expected_completion_date
+                      ? ` ${t('checkout.completion', { date: formatPlanDate(property.expected_completion_date, lang) })}`
+                      : ''}
+                  </span>
+                </div>
               </div>
             )}
           </div>
         </div>
-      </button>
+      </div>
     </div>
   );
 };

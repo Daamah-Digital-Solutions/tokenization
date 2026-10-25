@@ -19,6 +19,8 @@ export interface InvestmentProperty {
   installment_period_months?: number;
   property_category?: 'under_construction' | 'ready_property';
   expected_completion_date?: string;
+  /** Purchase methods + installment terms set by the admin (client round 3, #20). */
+  paymentPlan?: import('../../utils/paymentPlan').PaymentPlanConfig;
   investment: {
     minInvestment: number;
     avgAnnualReturn: number;
@@ -71,4 +73,7 @@ export interface InvestmentFlowProps {
   onComplete?: (investment: InvestmentData) => void;
   onGoToPortfolio?: () => void;
   initialTokens?: number;
+  /** Method chosen on the property page ("buy in installments" / "buy"). */
+  initialMethod?: 'cash' | 'installments';
+  initialInstallments?: number;
 }

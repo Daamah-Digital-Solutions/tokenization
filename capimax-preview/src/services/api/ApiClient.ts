@@ -237,9 +237,17 @@ export class ApiClient {
           });
         }
 
+        // Plain DRF bodies: {"detail": "..."} or {"field": ["..."]}.
+        const data = error.response.data;
+        const firstFieldError =
+          data && typeof data === 'object' && !data.error
+            ? Object.values(data).flat().find((v) => typeof v === 'string')
+            : undefined;
         const errorMessage =
-          error.response.data?.error?.message ||
-          error.response.data?.message ||
+          data?.error?.message ||
+          data?.message ||
+          data?.detail ||
+          (firstFieldError as string | undefined) ||
           `HTTP ${error.response.status} Error`;
         throw new ApiError(
           error.response.data?.error?.code || 'HTTP_ERROR',

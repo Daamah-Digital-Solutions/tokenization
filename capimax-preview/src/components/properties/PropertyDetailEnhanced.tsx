@@ -45,7 +45,17 @@ import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
 import type { Property, PropertyDocuments } from '../../services/api/types';
 import { PROPERTY_PLACEHOLDER, handleImageFallback } from '../../utils/imageFallback';
-import { InstallmentStatement } from './InstallmentStatement';
+import { useTranslation } from 'react-i18next';
+import { CalendarClock, Layers, TrendingUp as PriceUp } from 'lucide-react';
+import { PaymentPlanSection, PriceTiersCard } from './PaymentPlanSection';
+import {
+  DeveloperCard,
+  FinancialStudyCard,
+  InsuranceCard,
+  ReturnsCard,
+  ValuationCard,
+} from './ListingDetailsSections';
+import { buildSchedule, fallbackPlan, formatMoney, formatPlanDate, parseDate } from '../../utils/paymentPlan';
 
 interface PropertyDetailEnhancedProps {
   property: Property;
@@ -54,12 +64,12 @@ interface PropertyDetailEnhancedProps {
   documents?: PropertyDocuments[];
   isUnderConstruction?: boolean;
   constructionProgressData?: any;
-  onInvestClick?: (tokenCount?: number) => void;
+  onInvestClick?: (tokenCount?: number, method?: 'cash' | 'installments', installmentCount?: number) => void;
   onImageClick?: (index: number) => void;
   currentImageIndex?: number;
 }
 
-type TabId = 'overview' | 'financials' | 'analytics' | 'spv' | 'blockchain' | 'documents' | 'location';
+type TabId = 'overview' | 'plan' | 'financials' | 'analytics' | 'spv' | 'blockchain' | 'documents' | 'location';
 
 
 export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
@@ -79,6 +89,11 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [showSpvVerify, setShowSpvVerify] = useState(false);
   const [copiedContract, setCopiedContract] = useState(false);
+
+  const { t: tPlan, i18n } = useTranslation('plan');
+  const details = property.listing_details;
+  // Purchase methods + schedule set by the admin (client round 3, #18 #20).
+  const plan = details?.payment_plan ?? fallbackPlan(property as any);
 
   const currentImageIndex = externalImageIndex ?? internalImageIndex;
   const setCurrentImageIndex = onImageClick ?? setInternalImageIndex;
@@ -110,6 +125,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
 
   const tabs = [
     { id: 'overview' as const, label: 'Overview', icon: Eye },
+    { id: 'plan' as const, label: tPlan('tab'), icon: CalendarClock },
     { id: 'financials' as const, label: 'Financials', icon: BarChart3 },
     { id: 'analytics' as const, label: 'Analytics', icon: Activity },
     { id: 'spv' as const, label: 'SPV Info', icon: Briefcase },
@@ -142,6 +158,20 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
   };
 
   const { investmentAmount, annualReturn, quarterlyDividend, monthlyDividend } = calculateReturns();
+
+  // Per-installment amount for the sidebar's "buy in installments" button
+  // (the plan's longest option, i.e. the lowest installment).
+  const sidebarInstallment = (() => {
+    if (!plan.allows_installments) return 0;
+    const count = plan.installment_count || plan.count_options?.[plan.count_options.length - 1] || 12;
+    const rows = buildSchedule(investmentAmount, {
+      downPaymentPercent: Number(plan.down_payment_percent) || 0,
+      count,
+      frequency: plan.frequency,
+      firstDueDate: parseDate(plan.first_due_date),
+    });
+    return rows.find((r) => r.kind === 'installment')?.amount || 0;
+  })();
 
   // SPV Information — prefer the real SPV fields the backend serializes
   // (spv_company_name / spv_registration_number / spv_establishment_date),
@@ -445,14 +475,30 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                   </div>
                 </Card>
 
-                {/* Installment / payment-stage plan — shown for every
-                    under-construction property so investors always see the
-                    schedule + dates + downloadable table (client edit #4).
-                    InstallmentStatement falls back to a 12-month period when
-                    installment_period_months isn't set. */}
-                {isUnderConstruction && (
-                  <InstallmentStatement property={property} />
+                {/* Upcoming price phase (admin note #2) */}
+                {details?.next_price_change && (
+                  <div className="flex items-start gap-3 rounded-2xl border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-900/20 p-4">
+                    <PriceUp className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-blue-900 dark:text-blue-200">
+                      {tPlan('tiers.nextChange', {
+                        price: formatMoney(details.next_price_change.price_per_token),
+                        date: formatPlanDate(details.next_price_change.effective_from, i18n.language),
+                        label: details.next_price_change.label,
+                      })}
+                    </p>
+                  </div>
                 )}
+
+                {/* Payment plan: purchase methods + full installment schedule
+                    + PDF, as set by the admin (client round 3, #18 #20). */}
+                <PaymentPlanSection
+                  property={property}
+                  plan={plan}
+                  initialShares={tokenCount}
+                  onBuy={(shares, method, count) => onInvestClick?.(shares, method, count)}
+                />
+
+                <DeveloperCard details={details} />
 
                 {/* Distribution Schedule */}
                 <Card className="p-8">
@@ -575,14 +621,39 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                       </div>
                     </div>
 
-                    <Button
-                      variant="primary"
-                      size="lg"
-                      className="w-full"
-                      onClick={() => onInvestClick?.(tokenCount)}
-                    >
-                      Buy {tokenCount} {tokenCount === 1 ? 'Token' : 'Tokens'} — {formatCurrency(investmentAmount)}
-                    </Button>
+                    {plan.allows_cash && (
+                      <Button
+                        variant="primary"
+                        size="lg"
+                        className="w-full"
+                        onClick={() => onInvestClick?.(tokenCount, 'cash')}
+                      >
+                        {tPlan('buy.cash', { count: tokenCount, total: formatCurrency(investmentAmount) })}
+                      </Button>
+                    )}
+                    {plan.allows_installments && (
+                      <Button
+                        variant={plan.allows_cash ? 'outline' : 'primary'}
+                        size="lg"
+                        className="w-full flex items-center justify-center gap-2"
+                        onClick={() => onInvestClick?.(tokenCount, 'installments')}
+                      >
+                        <Layers className="w-4 h-4" />
+                        {tPlan('buy.installments', {
+                          amount: formatMoney(sidebarInstallment),
+                          per: tPlan(`per.${plan.frequency}`),
+                        })}
+                      </Button>
+                    )}
+                    {plan.allows_installments && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('plan')}
+                        className="w-full text-center text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:underline"
+                      >
+                        {tPlan('buy.viewPlan')}
+                      </button>
+                    )}
                   </div>
                 </Card>
 
@@ -612,7 +683,20 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
             </div>
           )}
 
+          {activeTab === 'plan' && (
+            <div className="space-y-8">
+              <PaymentPlanSection
+                property={property}
+                plan={plan}
+                initialShares={tokenCount}
+                onBuy={(shares, method, count) => onInvestClick?.(shares, method, count)}
+              />
+              <PriceTiersCard tiers={details?.price_tiers || []} />
+            </div>
+          )}
+
           {activeTab === 'financials' && (
+            <div className="space-y-8">
             <Card className="p-8">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                 <BarChart3 className="w-6 h-6 text-emerald-600" />
@@ -677,6 +761,16 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                 </div>
               </div>
             </Card>
+
+            {/* Admin-maintained listing details (admin note #2) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <ReturnsCard details={details} />
+              <ValuationCard details={details} />
+              <FinancialStudyCard details={details} />
+              <InsuranceCard details={details} />
+            </div>
+            <PriceTiersCard tiers={details?.price_tiers || []} />
+            </div>
           )}
 
           {activeTab === 'analytics' && (() => {
