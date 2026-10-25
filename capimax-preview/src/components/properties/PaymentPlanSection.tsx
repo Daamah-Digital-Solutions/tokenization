@@ -98,6 +98,7 @@ export const PaymentPlanSection: React.FC<PaymentPlanSectionProps> = ({
         tokenPrice,
         totalAmount: total,
         frequencyLabel: t(`frequency.${plan.frequency}`, { lng: 'en' }),
+        frequency: plan.frequency,
         downPayment: down,
         rows,
         notes: plan.notes || undefined,

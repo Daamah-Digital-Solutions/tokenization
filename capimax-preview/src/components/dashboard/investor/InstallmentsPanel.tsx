@@ -121,16 +121,17 @@ export const InstallmentsPanel: React.FC = () => {
 
   const downloadStatement = (plan: InstallmentPlan, rows: ScheduleRow[]) =>
     downloadInstallmentSchedulePdf({
-      title: 'Installment Plan Statement',
       propertyName: plan.property_title || 'Property',
       location: location(plan),
       investorName: investorName || user?.email,
+      investorEmail: user?.email,
       planReference: plan.id,
       tokens: plan.token_allocation,
       tokenPrice: Number(plan.token_price) || 0,
       totalAmount: Number(plan.total_investment_amount) || 0,
       paidAmount: Number(plan.total_amount_paid) || 0,
       frequencyLabel: FREQ_EN[plan.frequency] || 'Monthly',
+      frequency: plan.frequency,
       downPayment: Number(plan.down_payment_amount) || 0,
       rows,
     }).catch((e) => console.error('Statement PDF failed:', e));
@@ -145,6 +146,8 @@ export const InstallmentsPanel: React.FC = () => {
       planReference: plan.id,
       paymentReference: row.paymentId,
       label: row.kind === 'down_payment' ? 'Down payment' : `Installment ${installmentNo}`,
+      kind: row.kind,
+      installmentNumber: row.kind === 'installment' ? installmentNo : undefined,
       number: row.number,
       totalPayments: rows.length,
       amount: row.amount,

@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../services/api/ApiClient';
 import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
+import { useUser } from '../../contexts/AuthContext';
+import { downloadWithdrawalConfirmationPdf } from '../../utils/pdf/bankDocuments';
 
 interface WithdrawalRequest {
   id: string;
@@ -31,6 +33,7 @@ const WITHDRAWAL_STATUS_COPY: Record<WithdrawalRequest['status'], { label: strin
 };
 
 export const WithdrawalRequestsSection: React.FC = () => {
+  const user: any = useUser();
   const { data, isLoading, error } = useQuery({
     queryKey: ['wallet', 'withdraw-requests'],
     queryFn: async () => {
@@ -67,6 +70,22 @@ export const WithdrawalRequestsSection: React.FC = () => {
       ) : (
         <div className="divide-y divide-slate-200 dark:divide-slate-700">
           {requests.map((r) => {
+            // Official confirmation of the request (client round 3, #15).
+            const downloadConfirmation = () =>
+              downloadWithdrawalConfirmationPdf({
+                holderName: [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email || '',
+                holderEmail: user?.email,
+                requestId: r.id,
+                amount: parseFloat(r.amount) || 0,
+                currency: r.currency,
+                method: r.withdrawal_method || 'bank',
+                status: r.status,
+                requestedAt: new Date(r.created_at),
+                destination: r.withdrawal_method === 'crypto'
+                  ? [['Asset', r.crypto_asset || ''], ['Network', r.crypto_network || ''], ['Address', r.crypto_address || '']]
+                  : [['Account holder', r.account_holder_name], ['Bank', r.bank_name],
+                     ['Account', r.account_number ? `…${r.account_number.slice(-4)}` : '']],
+              }).catch((e) => console.error('Withdrawal PDF failed:', e));
             const copy = WITHDRAWAL_STATUS_COPY[r.status] ?? WITHDRAWAL_STATUS_COPY.pending;
             const isCrypto = r.withdrawal_method === 'crypto';
             const last4 = r.account_number && r.account_number.length > 4
@@ -102,9 +121,18 @@ export const WithdrawalRequestsSection: React.FC = () => {
                     </div>
                   )}
                 </div>
-                <span className={`shrink-0 inline-block text-xs font-semibold px-2 py-1 rounded-full border ${copy.tone}`}>
-                  {copy.label}
-                </span>
+                <div className="shrink-0 flex flex-col items-end gap-1.5">
+                  <span className={`inline-block text-xs font-semibold px-2 py-1 rounded-full border ${copy.tone}`}>
+                    {copy.label}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={downloadConfirmation}
+                    className="text-xs font-medium text-emerald-600 hover:text-emerald-700"
+                  >
+                    PDF
+                  </button>
+                </div>
               </div>
             );
           })}

@@ -1,5 +1,6 @@
 from rest_framework import generics, permissions
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from core.utils import create_success_response, create_error_response
 from .models import Document
 from .serializers import DocumentSerializer, DocumentAdminSerializer
@@ -77,3 +78,46 @@ class DocumentAdminDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Response(create_success_response(
             message="Document deleted successfully"
         ))
+
+
+class StatementView(APIView):
+    """
+    GET /api/v1/documents/statements/<kind>/?from=YYYY-MM-DD&to=YYYY-MM-DD
+
+    The data for the official PDF statements (client round 3, #16):
+    wallet, transactions, investments, holdings (owned properties).
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, kind):
+        from .statements import KINDS, build_statement
+
+        if kind not in KINDS:
+            return Response(create_error_response('Unknown statement type.', status_code=404), status=404)
+        data = build_statement(request.user, kind, request.query_params.get('from'),
+                               request.query_params.get('to'))
+        return Response(create_success_response(data=data))
+
+
+class TransactionsCsvView(APIView):
+    """GET /api/v1/documents/statements/transactions/export/ — the same rows as CSV."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        import csv
+        from django.http import HttpResponse
+        from .statements import build_statement
+
+        data = build_statement(request.user, 'transactions', request.query_params.get('from'),
+                               request.query_params.get('to'))
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
+        response['Content-Disposition'] = 'attachment; filename="capimax-rt-transactions.csv"'
+        response.write('﻿')  # Excel opens UTF-8 (Arabic names) correctly
+        writer = csv.writer(response)
+        writer.writerow(['Date', 'Type', 'Description', 'Method', 'Amount (USD)', 'Status', 'Reference'])
+        for r in data['rows']:
+            writer.writerow([r['date'], r['type'], r['description'], r['method'], r['amount'],
+                             r['status'], r['reference']])
+        return response

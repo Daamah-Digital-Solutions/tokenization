@@ -291,8 +291,11 @@ export class TransactionService {
    */
   static async exportTransactions(filters: TransactionFilters = {}): Promise<Blob> {
     try {
-      const params = { ...filters, format: 'csv' };
-      return await apiClient.get('/transactions/export/', params, {
+      // The real export lives with the official statements (round 3, #16/#17);
+      // /transactions/export/ never existed on the backend.
+      const params: Record<string, string> = {};
+      if (filters.date_from) params.from = String(filters.date_from).slice(0, 10);
+      return await apiClient.get('/documents/statements/transactions/export/', params, {
         responseType: 'blob'
       });
     } catch (error) {

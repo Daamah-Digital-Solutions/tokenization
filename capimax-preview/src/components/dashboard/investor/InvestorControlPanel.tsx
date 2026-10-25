@@ -808,6 +808,7 @@ export const WalletContent: React.FC<{
   const queryClient = useQueryClient();
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [addFundsOpen, setAddFundsOpen] = useState(false);
+  const [statementBusy, setStatementBusy] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -829,6 +830,28 @@ export const WalletContent: React.FC<{
           </Button>
           <Button variant="outline" onClick={() => setWithdrawOpen(true)}>
             Withdraw
+          </Button>
+          <Button
+            variant="outline"
+            disabled={statementBusy}
+            onClick={async () => {
+              // Official wallet statement (client round 3, #16).
+              setStatementBusy(true);
+              try {
+                const [{ StatementService }, { downloadStatementPdf }, { default: i18n }] = await Promise.all([
+                  import('../../../services/documents/StatementService'),
+                  import('../../../utils/pdf/statements'),
+                  import('../../../i18n/config'),
+                ]);
+                await downloadStatementPdf(await StatementService.get('wallet'), i18n.language || 'en');
+              } catch (e) {
+                console.error('Wallet statement failed:', e);
+              } finally {
+                setStatementBusy(false);
+              }
+            }}
+          >
+            {statementBusy ? 'Preparing…' : 'Statement (PDF)'}
           </Button>
         </div>
       </div>

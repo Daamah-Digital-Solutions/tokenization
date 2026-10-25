@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
+import { useUser } from '../../../contexts/AuthContext';
 import {
   AreaChart,
   Area,
@@ -147,6 +148,37 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
     };
   }, [periodData]);
 
+  // Export everything shown here as an official PDF (client round 3, #17).
+  const user: any = useUser();
+  const [exporting, setExporting] = useState(false);
+  const handleExportPdf = async () => {
+    setExporting(true);
+    try {
+      const { downloadAnalyticsReportPdf } = await import('../../../utils/pdf/analyticsReport');
+      await downloadAnalyticsReportPdf({
+        holderName: [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email || '',
+        holderEmail: user?.email,
+        periodLabel: selectedPeriod,
+        portfolio: {
+          total_value: (portfolio as any)?.total_value,
+          total_invested: (portfolio as any)?.total_invested,
+          return_percentage: (portfolio as any)?.return_percentage,
+          monthly_dividends: (portfolio as any)?.monthly_dividends,
+          total_dividends: (portfolio as any)?.total_dividends,
+          properties_count: (portfolio as any)?.properties_count ?? (portfolio as any)?.total_properties,
+        },
+        risk: riskMetrics as any,
+        performance: performanceData as any[],
+        allocation: allocationData,
+        income: incomeData as any[],
+      });
+    } catch (e) {
+      console.error('Analytics PDF failed:', e);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const formatCurrency = (value: number | undefined | null) => {
     if (typeof value !== 'number' || isNaN(value)) {
       return '$0';
@@ -233,9 +265,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             <RefreshCw className="w-4 h-4" />
           </Button>
 
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={exporting}>
             <Download className="w-4 h-4 mr-2" />
-            Export
+            {exporting ? 'Preparing…' : 'Export PDF'}
           </Button>
         </div>
       </div>

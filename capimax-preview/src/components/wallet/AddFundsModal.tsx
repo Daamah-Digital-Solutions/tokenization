@@ -16,6 +16,8 @@ import { CreditCardForm } from '../payments/CreditCardForm';
 import { PaymentService } from '../../services/payment/PaymentService';
 import { apiClient } from '../../services/api/ApiClient';
 import { cn } from '../../utils/cn';
+import { useUser } from '../../contexts/AuthContext';
+import { downloadBankInstructionsPdf } from '../../utils/pdf/bankDocuments';
 
 interface AddFundsModalProps {
   onClose: () => void;
@@ -59,6 +61,26 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
   const amountValid = !isNaN(amountValue) && amountValue >= MIN_AMOUNT;
 
   const selectedAccount = bankAccounts.find((a) => a.id === selectedAccountId);
+  const user: any = useUser();
+  const [instructionsBusy, setInstructionsBusy] = useState(false);
+  // Official bank-transfer instructions (client round 3, #15).
+  const downloadInstructions = async () => {
+    if (!selectedAccount) return;
+    setInstructionsBusy(true);
+    try {
+      await downloadBankInstructionsPdf({
+        holderName: [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email || '',
+        holderEmail: user?.email,
+        amount: amountValue,
+        reference: reference.trim() || undefined,
+        account: selectedAccount,
+      });
+    } catch (e) {
+      console.error('Bank instructions PDF failed:', e);
+    } finally {
+      setInstructionsBusy(false);
+    }
+  };
 
   // Load the platform's active receiving accounts when the bank step opens.
   useEffect(() => {
@@ -293,6 +315,14 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
                         {selectedAccount.instructions}
                       </p>
                     )}
+                    <button
+                      type="button"
+                      onClick={downloadInstructions}
+                      disabled={instructionsBusy}
+                      className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 hover:text-emerald-700 disabled:opacity-50"
+                    >
+                      {instructionsBusy ? 'Preparing…' : 'Download transfer instructions (PDF)'}
+                    </button>
                   </div>
                 )}
 

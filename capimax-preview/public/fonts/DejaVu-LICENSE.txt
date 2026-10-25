@@ -1,0 +1,12 @@
+DejaVu Sans (subset: Latin, Arabic and Arabic Presentation Forms) — used to
+draw Arabic text in Capimax RT PDF documents.
+
+Fonts are (c) Bitstream (Bitstream Vera Fonts). DejaVu changes are in the
+public domain. Glyphs imported from Arev fonts are (c) Tavmjong Bah.
+
+Distributed under the Bitstream Vera Fonts license and the Arev Fonts
+license, which permit use, copying, modification and redistribution,
+including embedding in documents, provided this notice is retained and the
+fonts are not sold by themselves.
+
+Full license: https://dejavu-fonts.github.io/License.html
