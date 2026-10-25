@@ -190,43 +190,11 @@ def approve_broker_application(request, application_id):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Create user account
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-
-        # Generate a temporary password
-        import secrets
-        import string
-        temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
-
-        # Create user
-        user = User.objects.create_user(
-            email=application.email,
-            first_name=application.first_name,
-            last_name=application.last_name,
-            password=temp_password,
-            role='broker',
-            is_verified=False  # They'll need to verify their email
-        )
-
-        # Create broker profile
-        broker_profile = BrokerProfile.objects.create(
-            user=user,
-            license_number=application.license_number or f'PENDING-{user.id}',
-            license_state='TBD',
-            license_expiry=timezone.now().date() + timedelta(days=365),
-            company_name=application.current_company or '',
-            bio=application.referral_strategy,
-            experience_years=0 if application.experience_level == '0-1' else
-                           3 if application.experience_level == '2-5' else
-                           7 if application.experience_level == '5-10' else 10,
-            verification_status=BrokerVerificationStatus.PENDING
-        )
-
-        # Update application
-        application.approve(request.user)
-        application.associated_user = user
-        application.save()
+        # Attach the broker role to the applicant's EXISTING account (or create
+        # one). create_user() on an existing email used to 500 here, leaving
+        # the applicant an investor (client round 3, #8).
+        from .onboarding import approve_application
+        user, broker_profile, temp_password = approve_application(application, request.user)
 
         # Send approval email
         send_approval_email(application, user, temp_password)
@@ -305,7 +273,7 @@ def send_approval_email(application, user, temp_password):
 
         Your Account Details:
         - Email: {user.email}
-        - Temporary Password: {temp_password}
+        - {('Temporary Password: ' + temp_password) if temp_password else 'Password: use your existing Capimax RT password'}
         - Broker ID: {user.broker_profile.id}
 
         Next Steps:

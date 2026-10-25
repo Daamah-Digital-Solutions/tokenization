@@ -181,13 +181,9 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
                     is_active=True
                 )
 
-        # Create email verification token
-        EmailVerificationToken.objects.create(
-            user=user,
-            expires_at=timezone.now() + timedelta(hours=24)
-        )
-
-        # Note: Email verification is now handled in the views.py with 6-digit codes
+        # The 6-digit verification code is issued by the view
+        # (accounts/verification.py). Creating an extra codeless token here
+        # left two rows per user, which crashed get_or_create later.
 
         return user
     
@@ -213,6 +209,15 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         two_factor_code = attrs.get('two_factor_code')
         
         if email and password:
+            # Emails are stored lower-cased; phones capitalise the first
+            # letter ("Name@gmail.com"), which made a correct password fail
+            # with "Invalid email or password".
+            email = email.strip()
+            stored = User.objects.filter(email__iexact=email).values_list('email', flat=True).first()
+            if stored:
+                email = stored
+                # SimpleJWT re-authenticates from attrs in super().validate().
+                attrs[self.username_field] = stored
             # Authenticate user
             user = authenticate(username=email, password=password)
             if not user:
@@ -226,11 +231,21 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                     f"Account is suspended. Reason: {user.suspension_reason or 'Contact support for more information.'}"
                 )
 
-            # Check email verification
+            # Unverified: send a fresh code (respecting the cooldown) and tell
+            # the client to open the code screen — instead of the generic
+            # "Authentication failed" users used to get.
             if not user.is_verified:
-                raise serializers.ValidationError(
-                    "Please verify your email address before logging in. Check your email for a verification link."
-                )
+                try:
+                    from .verification import issue_verification_code
+                    issue_verification_code(user, respect_cooldown=True)
+                except Exception:
+                    pass
+                raise serializers.ValidationError({
+                    'detail': "Your email address isn't verified yet. We've sent a 6-digit "
+                              "code to your email — enter it to activate your account.",
+                    'error_code': 'EMAIL_NOT_VERIFIED',
+                    'email': user.email,
+                })
 
             # Check 2FA if enabled
             if user.two_factor_enabled:
@@ -301,12 +316,15 @@ class UserProfileSerializer(serializers.ModelSerializer):
     available_roles = serializers.SerializerMethodField()
     primary_role = serializers.SerializerMethodField()
     kyc_status = serializers.CharField(read_only=True)
+    # Linked to an approved liquidity-provider record (LP dashboard access).
+    is_liquidity_provider = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = (
             'id', 'email', 'first_name', 'last_name', 'full_name', 'role',
-            'available_roles', 'primary_role', 'phone', 'country', 'date_of_birth',
+            'available_roles', 'primary_role', 'is_liquidity_provider',
+            'phone', 'country', 'date_of_birth',
             'address', 'city', 'state', 'postal_code', 'is_verified', 'kyc_status',
             'wallet_address', 'two_factor_enabled', 'created_at', 'updated_at'
         )
@@ -322,6 +340,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def get_primary_role(self, obj):
         """Get user's primary role."""
         return obj.get_primary_role()
+
+    def get_is_liquidity_provider(self, obj):
+        return hasattr(obj, 'liquidity_provider_profile')
     
     def validate_phone(self, value):
         """Validate phone number format."""
@@ -579,20 +600,16 @@ class EmailVerificationSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         """Validate verification code for the given email."""
-        email = attrs['email']
-        code = attrs['code']
-
-        try:
-            verification_token = EmailVerificationToken.objects.get(
-                user__email=email,
-                code=code
+        from .verification import find_valid_token
+        # Case-insensitive: phones often capitalise the first letter
+        # ("Name@gmail.com") while the account is stored lower-cased.
+        verification_token = find_valid_token(attrs['email'], attrs['code'])
+        if verification_token is None:
+            raise serializers.ValidationError(
+                "This code is invalid or has expired. Request a new code and try again."
             )
-            if not verification_token.is_valid():
-                raise serializers.ValidationError("Invalid or expired verification code.")
-            self.verification_token = verification_token
-            return attrs
-        except EmailVerificationToken.DoesNotExist:
-            raise serializers.ValidationError("Invalid verification code.")
+        self.verification_token = verification_token
+        return attrs
 
     def save(self):
         """Mark email as verified and generate JWT tokens for automatic login."""

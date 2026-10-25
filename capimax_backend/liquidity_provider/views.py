@@ -41,6 +41,13 @@ class IsLiquidityProvider(permissions.BasePermission):
         return hasattr(request.user, 'liquidity_provider_profile') and \
                request.user.liquidity_provider_profile is not None
 
+    def has_object_permission(self, request, view, obj):
+        # An LP may only change its OWN provider record (PATCH providers/<id>/
+        # used to accept any id).
+        if isinstance(obj, LiquidityProvider):
+            return obj.user_id == request.user.pk
+        return True
+
 
 # ============================================================================
 # LP Application Views

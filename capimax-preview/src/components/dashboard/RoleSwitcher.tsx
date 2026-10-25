@@ -6,8 +6,11 @@ import {
   Shield,
   Check,
   ChevronDown,
-  Briefcase
+  Briefcase,
+  Handshake,
+  Droplets
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth, useUser } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { useRouter } from '../../utils/router';
@@ -33,6 +36,20 @@ const ROLE_INFO = {
     icon: Building,
     color: 'blue'
   },
+  // Brokers and liquidity providers had no entry, so their role showed a
+  // blank label and could not be switched back to (client round 3, #8/#9).
+  [UserRole.BROKER]: {
+    label: 'Broker',
+    description: 'Refer clients and earn commissions',
+    icon: Handshake,
+    color: 'amber'
+  },
+  [UserRole.LIQUIDITY_PROVIDER]: {
+    label: 'Liquidity Provider',
+    description: 'Buy shares from owners who want to exit',
+    icon: Droplets,
+    color: 'cyan'
+  },
   [UserRole.ADMIN]: {
     label: 'Administrator',
     description: 'Platform administration',
@@ -45,6 +62,7 @@ export const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
   className,
   onRoleSwitch
 }) => {
+  const { t } = useTranslation('partners');
   const user = useUser();
   const { navigate } = useRouter();
   const { error: showError } = useNotifications();
@@ -128,7 +146,7 @@ export const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
 
         <div className="flex-1 text-left">
           <div className="text-sm font-medium text-slate-900 dark:text-white">
-            {currentRoleInfo?.label}
+            {primaryRole ? t(`roles.${primaryRole}`, { defaultValue: currentRoleInfo?.label }) : ''}
           </div>
           <div className="text-xs text-slate-500 dark:text-slate-400">
             Current Role
@@ -209,10 +227,10 @@ export const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
 
                       <div className="flex-1 text-left">
                         <div className="text-sm font-medium">
-                          {roleInfo.label}
+                          {t(`roles.${role}`, { defaultValue: roleInfo.label })}
                         </div>
                         <div className="text-xs opacity-75">
-                          {roleInfo.description}
+                          {t(`roles.${role}Desc`, { defaultValue: roleInfo.description })}
                         </div>
                       </div>
 

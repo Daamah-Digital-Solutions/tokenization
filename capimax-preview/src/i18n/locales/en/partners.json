@@ -1,0 +1,230 @@
+{
+  "common": {
+    "loading": "Loading your dashboard…",
+    "loadError": "We couldn't load your dashboard data.",
+    "retry": "Try again",
+    "na": "—"
+  },
+  "nav": {
+    "referrals": "Referrals",
+    "commissions": "Commissions",
+    "wallet": "Wallet",
+    "performance": "Performance",
+    "materials": "Marketing materials",
+    "requests": "Exit requests",
+    "transactions": "Transactions",
+    "lpProfile": "Provider profile"
+  },
+  "roles": {
+    "investor": "Owner",
+    "investorDesc": "Buy tokenized properties",
+    "property_owner": "Property owner",
+    "property_ownerDesc": "List and manage your properties",
+    "broker": "Broker",
+    "brokerDesc": "Refer clients and earn commissions",
+    "liquidity_provider": "Liquidity provider",
+    "liquidity_providerDesc": "Buy shares from owners who want to exit",
+    "admin": "Administrator",
+    "adminDesc": "Platform administration"
+  },
+  "broker": {
+    "title": "Broker dashboard",
+    "profileTitle": "Broker profile",
+    "verification": {
+      "pending": "Verification pending",
+      "verified": "Verified broker",
+      "rejected": "Verification rejected",
+      "suspended": "Suspended"
+    },
+    "fields": {
+      "email": "Email",
+      "company": "Company",
+      "license": "License number",
+      "licenseExpiry": "License expiry",
+      "commissionRate": "Commission rate",
+      "referralRate": "Referral commission",
+      "tier": "Tier",
+      "experience": "Experience",
+      "years": "{{count}} years"
+    },
+    "stats": {
+      "totalReferrals": "Total referrals",
+      "converted": "{{count}} purchased",
+      "conversion": "{{rate}}% conversion",
+      "noReferrals": "No referrals yet",
+      "totalEarned": "Total earned",
+      "lifetime": "Lifetime commission",
+      "pending": "Pending commission",
+      "awaitingPayout": "Awaiting payout",
+      "paid": "Paid to date",
+      "thisMonth": "This month"
+    },
+    "charts": {
+      "commission": "Commission growth",
+      "referrals": "Monthly referrals"
+    },
+    "actions": {
+      "generateLink": "Generate referral link",
+      "generateLinkDesc": "Copy your tracking link",
+      "linkCopied": "Referral link copied to the clipboard.",
+      "linkFailed": "The referral link couldn't be generated. Please try again.",
+      "withdraw": "Withdraw commission",
+      "withdrawDesc": "Request a payout",
+      "refer": "Refer a client",
+      "referDesc": "Invite a new buyer",
+      "materials": "Marketing materials",
+      "materialsDesc": "Guides to share"
+    },
+    "referrals": {
+      "title": "Referral tracker",
+      "manageTitle": "Referral management",
+      "manageDesc": "Track your referred clients and their purchases.",
+      "filterAll": "All statuses",
+      "empty": "No referrals for this filter yet.",
+      "purchased": "Purchased",
+      "commission": "Commission",
+      "joined": "Joined"
+    },
+    "referralStatus": {
+      "active": "Registered",
+      "invested": "Purchased",
+      "pending": "Invited",
+      "inactive": "Inactive"
+    },
+    "commissions": {
+      "title": "Commission transactions",
+      "empty": "No commissions yet. They appear here when a referred client buys.",
+      "property": "Property",
+      "amount": "Commission",
+      "base": "Purchase amount",
+      "status": "Status",
+      "date": "Date",
+      "breakdown": "Commission breakdown",
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "paid": "Paid to date",
+      "pending": "Pending"
+    },
+    "commissionStatus": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "paid": "Paid",
+      "disputed": "Disputed",
+      "cancelled": "Cancelled"
+    },
+    "materials": {
+      "title": "Marketing materials",
+      "desc": "Share your referral link and these guides with prospective buyers.",
+      "linkLabel": "Your referral link",
+      "generate": "Generate link",
+      "copy": "Copy",
+      "copied": "Copied",
+      "guides": "Guides to share",
+      "brokerGuide": "Broker guide",
+      "platformGuide": "Capimax RT guide",
+      "ownershipGuide": "Ownership guide",
+      "faq": "Frequently asked questions"
+    },
+    "wallet": {
+      "title": "Commission wallet",
+      "subtitle": "Withdraw your paid commissions to a bank account or crypto wallet.",
+      "balanceLabel": "Available commission",
+      "balanceHint": "Approved commissions are paid into your wallet and can be withdrawn here (reviewed by the team)."
+    }
+  },
+  "lp": {
+    "title": "Liquidity provider dashboard",
+    "notLinked": "Your account isn't linked to an approved liquidity provider yet. Please contact the platform team.",
+    "profileTitle": "Provider profile",
+    "status": {
+      "pending": "Pending activation",
+      "active": "Active",
+      "suspended": "Suspended",
+      "inactive": "Inactive"
+    },
+    "fields": {
+      "entity": "Legal entity",
+      "registration": "Registration no.",
+      "jurisdiction": "Jurisdiction",
+      "contact": "Contact person",
+      "email": "Email",
+      "phone": "Phone",
+      "liquidity": "Liquidity available",
+      "discount": "Discount rate (%)",
+      "maxTx": "Max per transaction",
+      "maxMonth": "Max per month",
+      "monthUsed": "Used this month",
+      "remaining": "Remaining this month",
+      "targets": "Preferred assets",
+      "ready": "Ready properties",
+      "construction": "Under-construction properties",
+      "portfolios": "Property portfolios"
+    },
+    "stats": {
+      "total": "Exit requests",
+      "pending": "Awaiting your decision",
+      "approved": "Offers made",
+      "completed": "Completed purchases",
+      "units": "Shares purchased",
+      "spent": "Total spent",
+      "monthVolume": "This month's volume",
+      "capacity": "Remaining capacity"
+    },
+    "requests": {
+      "title": "Exit requests",
+      "desc": "Owners who want to sell their shares. Review each request and make an offer or decline.",
+      "pendingTitle": "Waiting for your decision",
+      "empty": "No exit requests right now.",
+      "property": "Property",
+      "investor": "Owner",
+      "units": "Shares",
+      "requestedPrice": "Requested price / share",
+      "total": "Requested total",
+      "status": "Status",
+      "created": "Received",
+      "expires": "Offer expires",
+      "review": "Review",
+      "offerPrice": "Your offer per share (USD)",
+      "offerTotal": "Offer total",
+      "discount": "Discount vs requested",
+      "notes": "Notes to the owner",
+      "notesPlaceholder": "Optional message",
+      "approve": "Send offer",
+      "reject": "Decline",
+      "submitting": "Sending…",
+      "approved": "Your offer was sent to the owner.",
+      "rejected": "The request was declined.",
+      "failed": "The action couldn't be completed. Please try again.",
+      "cancel": "Cancel"
+    },
+    "requestStatus": {
+      "pending": "Pending",
+      "under_review": "Under review",
+      "approved": "Offer sent",
+      "rejected": "Declined",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "expired": "Expired"
+    },
+    "transactions": {
+      "title": "Purchase transactions",
+      "empty": "No completed purchases yet.",
+      "ref": "Reference",
+      "property": "Property",
+      "investor": "Seller",
+      "units": "Shares",
+      "price": "Price / share",
+      "total": "Total",
+      "fee": "Platform fee",
+      "date": "Date"
+    },
+    "settings": {
+      "title": "Purchase preferences",
+      "desc": "These limits decide which exit requests you can accept.",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "saved": "Preferences saved.",
+      "failed": "Your changes couldn't be saved."
+    }
+  }
+}

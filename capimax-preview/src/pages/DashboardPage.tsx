@@ -7,6 +7,7 @@ import { DynamicUserDashboard } from '../components/dashboard/DynamicUserDashboa
 import { InvestorControlPanel } from '../components/dashboard/investor/InvestorControlPanel';
 import { PropertyOwnerDashboard } from '../components/dashboard/property-owner/PropertyOwnerDashboard';
 import { BrokerDashboard } from '../components/dashboard/broker/BrokerDashboard';
+import { LiquidityProviderDashboard } from '../components/dashboard/liquidity-provider/LiquidityProviderDashboard';
 import { RoleSwitcher } from '../components/dashboard/RoleSwitcher';
 import { KYCReminderBanner } from '../components/kyc/KYCReminderBanner';
 import { useTranslation } from 'react-i18next';
@@ -16,7 +17,7 @@ import CapiMaxLightLogo from '../assets/tokenization_capi max  tokenization ligh
 import CapiMaxDarkLogo from '../assets/tokenization_capi max tokenization uk dark   copy.svg';
 
 // Dashboard Types
-export type UserRole = 'investor' | 'property_owner' | 'admin' | 'broker';
+export type UserRole = 'investor' | 'property_owner' | 'admin' | 'broker' | 'liquidity_provider';
 
 export interface DashboardUser {
   id: string;
@@ -48,6 +49,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const { theme, toggleTheme } = useTheme();
   const { t: tKyc } = useTranslation('kyc');
   const { t: tOwner } = useTranslation('owner');
+  const { t: tPartners } = useTranslation('partners');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Navigation items based on user role
@@ -107,11 +109,20 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       case 'broker':
         return [
           ...baseItems,
-          { id: 'referrals', label: 'Referrals', icon: '🤝' },
-          { id: 'commissions', label: 'Commissions', icon: '💰' },
-          { id: 'wallet', label: 'Wallet', icon: '💸' },
-          { id: 'performance', label: 'Performance', icon: '📊' },
-          { id: 'marketing-materials', label: 'Marketing Materials', icon: '📄' },
+          { id: 'referrals', label: tPartners('nav.referrals'), icon: '🤝' },
+          { id: 'commissions', label: tPartners('nav.commissions'), icon: '💰' },
+          { id: 'wallet', label: tPartners('nav.wallet'), icon: '💸' },
+          { id: 'performance', label: tPartners('nav.performance'), icon: '📊' },
+          { id: 'marketing-materials', label: tPartners('nav.materials'), icon: '📄' },
+        ];
+      case 'liquidity_provider':
+        // LP dashboard (client round 3, #9)
+        return [
+          ...baseItems,
+          { id: 'requests', label: tPartners('nav.requests'), icon: '📥' },
+          { id: 'transactions', label: tPartners('nav.transactions'), icon: '💳' },
+          { id: 'wallet', label: tPartners('nav.wallet'), icon: '💰' },
+          { id: 'lp-profile', label: tPartners('nav.lpProfile'), icon: '🏛️' },
         ];
       default:
         return baseItems;
@@ -444,6 +455,16 @@ export const DashboardPage: React.FC = () => {
       currentView
     });
 
+    // Brokers and liquidity providers have their own dashboards — including
+    // the overview, which used to render the investor overview for every
+    // role (client round 3, #8 / #9).
+    if (effectiveRole === 'broker') {
+      return <BrokerDashboard currentView={currentView} />;
+    }
+    if (effectiveRole === 'liquidity_provider') {
+      return <LiquidityProviderDashboard currentView={currentView} />;
+    }
+
     // For overview, use the new DynamicUserDashboard
     if (currentView === 'overview') {
       return <DynamicUserDashboard userRole={effectiveRole} onViewChange={setCurrentView} />;
@@ -475,8 +496,6 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
         );
-      case 'broker':
-        return <BrokerDashboard currentView={currentView} />;
       default:
         return (
           <div className="flex items-center justify-center h-64">

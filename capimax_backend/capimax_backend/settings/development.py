@@ -185,6 +185,7 @@ REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
     'anon': '1000/hour',
     'user': '5000/hour',
     'login': '10/min',
+    'verification': '30/hour',
 }
 
 # File upload limits for development

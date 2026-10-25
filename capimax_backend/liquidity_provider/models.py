@@ -241,9 +241,16 @@ class LPApplication(models.Model):
             discount_rate=self.expected_discount_rate,
             max_per_transaction=self.max_per_transaction,
             max_per_month=self.max_per_month,
-            status=LPStatus.PENDING,
-            approved_at=timezone.now()
+            # An approved application is an active provider (it used to be
+            # left "pending activation" with no way to activate from the UI).
+            status=LPStatus.ACTIVE,
+            approved_at=timezone.now(),
+            activated_at=timezone.now(),
         )
+        # Link the provider to the applicant's platform account (if any) so
+        # signing in opens the LP dashboard instead of the investor one.
+        from .accounts_link import link_provider_by_email
+        link_provider_by_email(lp)
         return lp
 
     def reject(self, reviewer, reason=''):
@@ -656,3 +663,32 @@ class LiquidityTransaction(models.Model):
             random_suffix = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
             self.reference_number = f"LPT-{timestamp}-{random_suffix}"
         super().save(*args, **kwargs)
+
+
+
+# ---------------------------------------------------------------------------
+# Keep LP accounts linked (client round 3, #9)
+# ---------------------------------------------------------------------------
+from django.db.models.signals import post_save  # noqa: E402
+from django.dispatch import receiver  # noqa: E402
+
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def link_new_user_to_waiting_provider(sender, instance, created, **kwargs):
+    """An approved provider whose contact registers later gets linked then."""
+    if not created:
+        return
+    lp = LiquidityProvider.objects.filter(
+        user__isnull=True, official_email__iexact=instance.email
+    ).first()
+    if lp:
+        from .accounts_link import link_provider_to_user
+        link_provider_to_user(lp, instance)
+
+
+@receiver(post_save, sender=LiquidityProvider)
+def ensure_linked_user_has_lp_role(sender, instance, **kwargs):
+    """An admin linking a user in Django admin also grants the LP role."""
+    if instance.user_id:
+        from .accounts_link import grant_lp_role
+        grant_lp_role(instance.user)

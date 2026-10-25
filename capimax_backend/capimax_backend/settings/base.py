@@ -180,6 +180,7 @@ REST_FRAMEWORK = {
         'anon': '100/hour',
         'user': '1000/hour',
         'login': '5/min',
+        'verification': '10/hour',
     },
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -332,3 +333,6 @@ GOOGLE_OAUTH_CLIENT_ID = (
 # Create logs directory if it doesn't exist
 logs_dir = BASE_DIR / 'logs'
 logs_dir.mkdir(exist_ok=True)
+
+# Don't let a slow SMTP server hang the request that sends an email.
+EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT', '20'))

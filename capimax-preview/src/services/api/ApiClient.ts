@@ -29,6 +29,9 @@ const PUBLIC_ENDPOINTS = [
   '/auth/password/reset/confirm/',
   '/auth/check-email/',
   '/auth/token/refresh/',
+  // Unverified users can't log in, so the code endpoints must be public.
+  '/auth/email/verify/',
+  '/auth/email/resend-verification/',
 ];
 
 function getCookie(name: string): string | null {
@@ -170,7 +173,8 @@ export class ApiClient {
             originalRequest.url?.includes('/auth/register')
           ) {
             throw new ApiError(
-              'AUTH_FAILED',
+              // e.g. EMAIL_NOT_VERIFIED — lets the login form open the code screen
+              error.response.data?.error?.code || 'AUTH_FAILED',
               error.response.data?.error?.message || 'Authentication failed',
               error.response.data?.error?.details
             );
@@ -212,9 +216,12 @@ export class ApiClient {
 
         if (error.response.status === 429) {
           throw new ApiError(
-            'RATE_LIMIT_EXCEEDED',
-            'Too many requests. Please try again later.',
-            { retryAfter: error.response.headers['retry-after'] }
+            error.response.data?.error?.code || 'RATE_LIMIT_EXCEEDED',
+            error.response.data?.error?.message || 'Too many requests. Please try again later.',
+            {
+              retryAfter: error.response.headers['retry-after'],
+              ...(error.response.data?.error?.details || {}),
+            }
           );
         }
 

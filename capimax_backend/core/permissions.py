@@ -79,7 +79,9 @@ class IsBrokerUser(BasePermission):
         return bool(
             request.user and
             request.user.is_authenticated and
-            request.user.role == UserRole.BROKER and
+            # Primary role, or an active broker role assignment on a
+            # multi-role account (e.g. an owner who is also a broker).
+            (request.user.role == UserRole.BROKER or request.user.has_role(UserRole.BROKER)) and
             request.user.is_verified
         )
 

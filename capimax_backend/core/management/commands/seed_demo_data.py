@@ -26,6 +26,9 @@ Test credentials produced by this command (all use password `TestPass123!`):
     Broker
       broker@test.com           broker role
 
+    Liquidity provider
+      lp@test.com               liquidity_provider role, linked to an active LP
+
 Properties created (all owned by owner@test.com):
 
     Marina Tower 12          tokenized · residential · no SPV · no lockup
@@ -146,6 +149,15 @@ class Command(BaseCommand):
             is_verified=True,
         )
 
+        # Liquidity provider (account linked to an approved, active LP)
+        users['lp'] = self._upsert_user(
+            email='lp@test.com',
+            role='liquidity_provider',
+            first_name='Lina', last_name='Liquidity',
+            is_verified=True,
+        )
+        self._upsert_liquidity_provider(users['lp'])
+
         # KYC + wallet balances. The post_save signal on User already
         # created a KYCProfile with status='pending'; we update it.
         self._set_kyc(users['investor'], status='approved',
@@ -202,6 +214,45 @@ class Command(BaseCommand):
         action = 'CREATED' if created else 'updated'
         self.stdout.write(f'  {action}: {email} ({role})')
         return user
+
+    def _upsert_liquidity_provider(self, user):
+        from liquidity_provider.models import (
+            LiquidityProvider, LPApplication, LPApplicationStatus, LPStatus,
+        )
+        from liquidity_provider.accounts_link import grant_lp_role
+        app, _ = LPApplication.objects.update_or_create(
+            registration_number='DEMO-LP-001',
+            defaults=dict(
+                legal_entity_name='Demo Liquidity Partners LLC', country='US',
+                jurisdiction='Delaware', entity_type='company',
+                contact_person_name='Lina Liquidity', contact_position='Director',
+                official_email=user.email, phone_number='+1 205 350 8771',
+                approximate_liquidity_available=Decimal('2000000'),
+                preferred_currencies=['USD'], average_transaction_size=Decimal('25000'),
+                target_ready_properties=True, target_under_construction=True,
+                target_property_portfolios=False, expected_discount_rate=Decimal('5.00'),
+                max_per_transaction=Decimal('100000'), max_per_month=Decimal('500000'),
+                ack_independent_provider=True, ack_no_exit_guarantee=True,
+                ack_compliance_agreement=True, status=LPApplicationStatus.APPROVED,
+            ),
+        )
+        LiquidityProvider.objects.update_or_create(
+            application=app,
+            defaults=dict(
+                user=user, legal_entity_name=app.legal_entity_name, country=app.country,
+                jurisdiction=app.jurisdiction, entity_type=app.entity_type,
+                registration_number=app.registration_number,
+                contact_person_name=app.contact_person_name,
+                contact_position=app.contact_position, official_email=user.email,
+                phone_number=app.phone_number, liquidity_available=Decimal('2000000'),
+                preferred_currencies=['USD'], target_ready_properties=True,
+                target_under_construction=True, discount_rate=Decimal('5.00'),
+                max_per_transaction=Decimal('100000'), max_per_month=Decimal('500000'),
+                status=LPStatus.ACTIVE, approved_at=timezone.now(), activated_at=timezone.now(),
+            ),
+        )
+        grant_lp_role(user)
+        self.stdout.write('  liquidity provider linked: lp@test.com')
 
     def _set_kyc(self, user, *, status, level, limit, extras=None):
         from kyc.models import KYCProfile

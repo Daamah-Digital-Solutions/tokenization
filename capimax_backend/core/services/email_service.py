@@ -59,10 +59,15 @@ class EmailService:
             # Render HTML template
             html_content = render_to_string(f'emails/{template_name}.html', context)
 
+            # Plain-text part with the real content (incl. verification
+            # codes). A "view this in HTML" placeholder is a spam signal for
+            # Gmail and hid the code from text-only clients.
+            text_content = EmailService._html_to_text(html_content)
+
             # Create email message with UTF-8 encoding
             email = EmailMultiAlternatives(
                 subject=subject,
-                body=f"Please view this email in HTML format.",  # Fallback text
+                body=text_content,
                 from_email=from_email,
                 to=[to_email],
                 cc=cc or [],
@@ -89,6 +94,17 @@ class EmailService:
         except Exception as e:
             logger.error(f"Failed to send email to {to_email}: {str(e)}")
             return False
+
+    @staticmethod
+    def _html_to_text(html: str) -> str:
+        import re
+        from django.utils.html import strip_tags
+        text = re.sub(r'(?is)<(style|script|head).*?</\1>', ' ', html or '')
+        text = re.sub(r'(?i)<br\s*/?>|</(p|div|tr|h[1-6]|li)>', '\n', text)
+        text = strip_tags(text)
+        text = re.sub(r'[ \t\r\f\v]+', ' ', text)
+        text = re.sub(r'\n\s*\n+', '\n\n', text)
+        return text.strip()
 
     @staticmethod
     def send_email(

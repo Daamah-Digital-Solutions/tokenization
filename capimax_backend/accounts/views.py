@@ -63,35 +63,12 @@ class UserRegistrationView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        # Send welcome and verification email with 6-digit code
+        # Send the welcome email with a 6-digit code (accounts/verification.py)
         try:
-            # Generate 6-digit verification code
-            verification_code = EmailVerificationToken.generate_code()
-
-            # Create verification token with code and expiration (15 minutes)
-            verification_token, created = EmailVerificationToken.objects.get_or_create(
-                user=user,
-                defaults={
-                    'code': verification_code,
-                    'expires_at': timezone.now() + timedelta(minutes=15)
-                }
-            )
-            if not created:
-                # Update existing token with new code and expiration
-                verification_token.code = verification_code
-                verification_token.expires_at = timezone.now() + timedelta(minutes=15)
-                verification_token.verified = False
-                verification_token.save()
-
-            # Send welcome email with 6-digit code
-            EmailService.send_welcome_verification_email(
-                user=user,
-                verification_url='',  # No URL needed for code-based verification
-                verification_code=verification_code
-            )
-
+            from .verification import issue_verification_code
+            issue_verification_code(user)
         except Exception as e:
-            # Log error but don't fail registration
+            # Log error but don't fail registration — the user can resend.
             logger.warning(f"Failed to send welcome email to {user.email}: {str(e)}")
 
         # Do not provide JWT tokens - require email verification first
@@ -269,14 +246,37 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             return response
 
         except Exception as e:
-            return Response(
-                create_error_response(
-                    message="Authentication failed",
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    details={'error': str(e)}
-                ),
-                status=status.HTTP_401_UNAUTHORIZED
+            # Surface the real reason ("Invalid email or password", "verify
+            # your email", …) instead of a bare "Authentication failed".
+            from rest_framework.exceptions import ValidationError as DRFValidationError
+            message = "Authentication failed"
+            details = {}
+            if isinstance(e, DRFValidationError):
+                detail = e.detail
+                if isinstance(detail, dict):
+                    code = detail.get('error_code')
+                    if isinstance(code, list):
+                        code = code[0] if code else None
+                    if code:
+                        details['error_code'] = str(code)
+                    msgs = detail.get('detail') or detail.get('non_field_errors') or []
+                    if isinstance(msgs, list) and msgs:
+                        message = str(msgs[0])
+                    elif msgs:
+                        message = str(msgs)
+                    if detail.get('email'):
+                        email = detail.get('email')
+                        details['email'] = str(email[0] if isinstance(email, list) else email)
+                elif isinstance(detail, list) and detail:
+                    message = str(detail[0])
+            payload = create_error_response(
+                message=message,
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                details=details or None,
             )
+            if details.get('error_code'):
+                payload['error']['code'] = details['error_code']
+            return Response(payload, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class UserLogoutView(APIView):
@@ -515,50 +515,57 @@ class ResendEmailVerificationView(APIView):
     Generates new verification token and sends email.
     """
     
-    permission_classes = [permissions.IsAuthenticated]
-    
+    # Public: the people who need a new code are exactly the ones who
+    # cannot log in yet (it used to require authentication, so "Resend"
+    # always failed for them). Abuse is limited by a scoped throttle and a
+    # per-user cooldown, and the response never reveals whether the email
+    # exists.
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+    throttle_scope = 'verification'
+
+    def get_throttles(self):
+        from rest_framework.settings import api_settings
+        from rest_framework.throttling import ScopedRateThrottle
+        # Only when the environment defines the scope (tests disable throttling).
+        if self.throttle_scope not in (api_settings.DEFAULT_THROTTLE_RATES or {}):
+            return []
+        return [ScopedRateThrottle()]
+
     def post(self, request):
-        """Resend email verification."""
-        user = request.user
-        
-        if user.is_verified:
-            return Response(
-                create_error_response(
-                    message="Email is already verified"
-                ),
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Generate 6-digit verification code
-        verification_code = EmailVerificationToken.generate_code()
+        """Send a fresh 6-digit code to an unverified account."""
+        from .verification import CODE_TTL_MINUTES, issue_verification_code
+        email = (request.data.get('email') or '').strip()
+        generic = create_success_response(
+            data={'expires_in_minutes': CODE_TTL_MINUTES},
+            message="If this email belongs to an account that still needs verification, "
+                    "a new code has been sent."
+        )
+        if not email:
+            return Response(create_error_response(message="Email is required."),
+                            status=status.HTTP_400_BAD_REQUEST)
 
-        # Create or update verification token with code and expiration (15 minutes)
-        verification_token, created = EmailVerificationToken.objects.get_or_create(
-            user=user,
-            defaults={
-                'code': verification_code,
-                'expires_at': timezone.now() + timedelta(minutes=15)
-            }
-        )
-        if not created:
-            # Update existing token with new code and expiration
-            verification_token.code = verification_code
-            verification_token.expires_at = timezone.now() + timedelta(minutes=15)
-            verification_token.verified = False
-            verification_token.save()
+        user = User.objects.filter(email__iexact=email).first()
+        if user is None or user.is_verified:
+            return Response(generic)
 
-        # Send welcome and verification email with 6-digit code
-        EmailService.send_welcome_verification_email(
-            user=user,
-            verification_url='',  # No URL needed for code-based verification
-            verification_code=verification_code
-        )
-        
-        return Response(
-            create_success_response(
-                message="Verification email sent successfully"
+        sent, retry_after = issue_verification_code(user, respect_cooldown=True)
+        if retry_after:
+            payload = create_error_response(
+                message=f"Please wait {retry_after} seconds before requesting another code.",
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                details={'retry_after': retry_after},
             )
-        )
+            payload['error']['code'] = 'RESEND_COOLDOWN'
+            return Response(payload, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        if not sent:
+            payload = create_error_response(
+                message="We couldn't send the email right now. Please try again in a few minutes.",
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+            payload['error']['code'] = 'EMAIL_SEND_FAILED'
+            return Response(payload, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        return Response(generic)
 
 
 class TwoFactorSetupView(APIView):

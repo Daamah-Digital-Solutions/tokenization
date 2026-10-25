@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export interface ChartDataPoint {
   date: string;
@@ -15,6 +16,10 @@ export interface PerformanceChartProps {
   showGrid?: boolean;
   showTooltip?: boolean;
   className?: string;
+  /** Prefix for values (default "$"); pass "" for counts. */
+  valuePrefix?: string;
+  /** Show `date` as given instead of parsing it as a date (e.g. "May 26"). */
+  rawLabels?: boolean;
 }
 
 export const PerformanceChart: React.FC<PerformanceChartProps> = ({
@@ -23,10 +28,13 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
   type = 'line',
   height = 200,
   color = '#10b981',
+  valuePrefix = '$',
+  rawLabels = false,
   showGrid = true,
   showTooltip = true,
   className = ''
 }) => {
+  const { t } = useTranslation('common');
   // Simple SVG-based chart implementation
   // In a real application, you would use Chart.js, Recharts, or similar library
   
@@ -201,7 +209,7 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
                   textAnchor="end"
                   className="fill-current"
                 >
-                  ${value.toLocaleString()}
+                  {valuePrefix}{value.toLocaleString()}
                 </text>
               );
             })}
@@ -212,6 +220,9 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
             {points.map((point, index) => {
               if (index % Math.ceil(points.length / 4) === 0) {
                 const date = new Date(point.date);
+                const label = rawLabels || isNaN(date.getTime())
+                  ? point.date
+                  : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 return (
                   <text
                     key={index}
@@ -220,7 +231,7 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
                     textAnchor="middle"
                     className="fill-current"
                   >
-                    {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {label}
                   </text>
                 );
               }
@@ -234,13 +245,13 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
       <div className="flex items-center justify-between mt-4 pt-4 border-t border-neutral-200 dark:border-slate-700">
         <div className="flex items-center space-x-4 text-sm">
           <div>
-            <span className="text-neutral-500 dark:text-slate-400">Current: </span>
+            <span className="text-neutral-500 dark:text-slate-400">{t('charts.current', { defaultValue: 'Current' })}: </span>
             <span className="font-semibold text-neutral-900 dark:text-slate-100">
-              ${data[data.length - 1]?.value.toLocaleString()}
+              {valuePrefix}{data[data.length - 1]?.value.toLocaleString()}
             </span>
           </div>
           <div>
-            <span className="text-neutral-500 dark:text-slate-400">Change: </span>
+            <span className="text-neutral-500 dark:text-slate-400">{t('charts.change', { defaultValue: 'Change' })}: </span>
             <span className={`font-semibold ${
               data[data.length - 1]?.value > data[0]?.value
                 ? 'text-green-600 dark:text-green-400'

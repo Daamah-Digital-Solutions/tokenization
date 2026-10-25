@@ -445,9 +445,10 @@ export class AuthService {
   /**
    * Resend email verification
    */
-  static async resendEmailVerification(): Promise<{ message: string }> {
+  static async resendEmailVerification(email?: string): Promise<{ message: string }> {
     try {
-      return await apiClient.post('/auth/email/resend-verification/');
+      // Works without a session (the user isn't verified yet), keyed by email.
+      return await apiClient.post('/auth/email/resend-verification/', email ? { email } : {});
     } catch (error) {
       console.error('Resend email verification failed:', error);
       throw error;

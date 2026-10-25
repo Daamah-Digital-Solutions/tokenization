@@ -48,7 +48,10 @@ export const EmailVerificationPage: React.FC = () => {
   const handleResendVerification = async () => {
     try {
       setIsResending(true);
-      const response = await AuthService.resendEmailVerification();
+      // Resend works without a session; it needs the account's email.
+      const response = await AuthService.resendEmailVerification(
+        new URLSearchParams(window.location.search).get('email') || undefined
+      );
       setMessage(response.message || 'Verification email sent successfully!');
       setVerificationState('pending');
     } catch (error: any) {

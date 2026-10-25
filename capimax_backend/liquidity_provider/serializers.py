@@ -244,7 +244,7 @@ class ExitRequestSerializer(serializers.ModelSerializer):
         return f"{obj.investor.first_name} {obj.investor.last_name}".strip() or obj.investor.email
 
     def get_property_name(self, obj):
-        return obj.investment.property_investment.name if obj.investment.property_investment else None
+        return obj.investment.property_investment.title if obj.investment.property_investment else None
 
     def get_discount_percentage(self, obj):
         return obj.calculate_discount()
@@ -295,7 +295,7 @@ class LiquidityTransactionSerializer(serializers.ModelSerializer):
         return f"{obj.investor.first_name} {obj.investor.last_name}".strip() or obj.investor.email
 
     def get_property_name(self, obj):
-        return obj.exit_request.investment.property_investment.name if obj.exit_request.investment.property_investment else None
+        return obj.exit_request.investment.property_investment.title if obj.exit_request.investment.property_investment else None
 
 
 class LPDashboardStatsSerializer(serializers.Serializer):

@@ -37,9 +37,10 @@ CACHES['default']['KEY_PREFIX'] = 'capimax_staging'
 
 # More permissive rate limiting for staging
 REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
-    'anon': '200/hour',
-    'user': '2000/hour',
+    'anon': '600/hour',
+    'user': '5000/hour',
     'login': '10/min',
+    'verification': '10/hour',  # resend verification code (accounts.views)
 }
 
 # Staging email configuration

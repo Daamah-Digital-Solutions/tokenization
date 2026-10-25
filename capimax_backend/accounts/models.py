@@ -20,6 +20,7 @@ class UserRole(models.TextChoices):
     INVESTOR = 'investor', 'Investor'
     PROPERTY_OWNER = 'property_owner', 'Property Owner'
     BROKER = 'broker', 'Broker'
+    LIQUIDITY_PROVIDER = 'liquidity_provider', 'Liquidity Provider'
     ADMIN = 'admin', 'Admin'
 
 

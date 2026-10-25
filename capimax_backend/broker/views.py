@@ -500,8 +500,14 @@ class BrokerDashboardView(generics.GenericAPIView):
             }
             
             serializer = BrokerDashboardSerializer(dashboard_data)
-            return Response(serializer.data)
-            
+            data = dict(serializer.data)
+            # Everything the broker dashboard renders, in one consistent shape
+            # (client round 3, #8: "the broker dashboard with his details,
+            # services and transactions"). The frontend used to read fields
+            # this endpoint never returned, so most figures showed "--".
+            data.update(_broker_dashboard_details(broker_profile, total_referrals, converted_referrals))
+            return Response(data)
+
         except BrokerProfile.DoesNotExist:
             return Response(
                 {"error": "Broker profile not found"},
@@ -624,3 +630,76 @@ def approve_broker_commission(request, commission_id):
             {'error': 'Failed to approve commission'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+def _broker_dashboard_details(broker_profile, total_referrals, converted_referrals):
+    """Totals, recent commissions / referrals and a 6-month series for the dashboard."""
+    from datetime import date
+
+    commissions = BrokerCommission.objects.filter(broker=broker_profile).exclude(
+        status=CommissionStatus.CANCELLED)
+
+    def total(qs):
+        return qs.aggregate(t=Sum('commission_amount'))['t'] or Decimal('0.00')
+
+    now = timezone.now()
+    this_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    last_month = (this_month - timezone.timedelta(days=1)).replace(day=1)
+
+    recent_commissions = []
+    for c in commissions.select_related('investment__property_investment', 'referral').order_by('-earned_at')[:10]:
+        prop = getattr(getattr(c, 'investment', None), 'property_investment', None)
+        recent_commissions.append({
+            'id': str(c.id),
+            'amount': c.commission_amount,
+            'base_amount': c.base_amount,
+            'rate': c.commission_rate,
+            'type': c.commission_type,
+            'status': c.status,
+            'property_title': getattr(prop, 'title', None),
+            'earned_at': c.earned_at,
+            'paid_at': c.paid_at,
+        })
+
+    recent_referrals = []
+    for r in (BrokerReferral.objects.filter(broker=broker_profile)
+              .select_related('referred_user').order_by('-created_at')[:20]):
+        user = r.referred_user
+        recent_referrals.append({
+            'id': str(r.id),
+            'name': (user.get_full_name() if user else '') or '',
+            'email': r.referred_email or (user.email if user else ''),
+            'status': 'invested' if r.is_converted else ('active' if user else 'pending'),
+            'total_investment': r.conversion_amount or Decimal('0.00'),
+            'commission_earned': r.commission_earned or Decimal('0.00'),
+            'joined_at': r.created_at,
+        })
+
+    monthly = []
+    cursor = date(this_month.year, this_month.month, 1)
+    months = []
+    for _ in range(6):
+        months.append(cursor)
+        cursor = (cursor.replace(day=1) - timezone.timedelta(days=1)).replace(day=1)
+    for start in reversed(months):
+        end = (start.replace(day=28) + timezone.timedelta(days=4)).replace(day=1)
+        monthly.append({
+            'month': start.strftime('%Y-%m'),
+            'commission': total(commissions.filter(earned_at__date__gte=start, earned_at__date__lt=end)),
+            'referrals': BrokerReferral.objects.filter(
+                broker=broker_profile, created_at__date__gte=start, created_at__date__lt=end).count(),
+        })
+
+    return {
+        'total_earned': total(commissions),
+        'total_paid': total(commissions.filter(status=CommissionStatus.PAID)),
+        'pending_commission': total(commissions.filter(
+            status__in=[CommissionStatus.PENDING, CommissionStatus.APPROVED])),
+        'this_month_earned': total(commissions.filter(earned_at__gte=this_month)),
+        'last_month_earned': total(commissions.filter(earned_at__gte=last_month, earned_at__lt=this_month)),
+        'total_referrals': total_referrals,
+        'converted_referrals': converted_referrals,
+        'recent_commissions': recent_commissions,
+        'recent_referrals': recent_referrals,
+        'monthly_performance': monthly,
+    }

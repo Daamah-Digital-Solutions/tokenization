@@ -3,6 +3,7 @@ export enum UserRole {
   INVESTOR = 'investor',
   PROPERTY_OWNER = 'property_owner',
   BROKER = 'broker',
+  LIQUIDITY_PROVIDER = 'liquidity_provider',
   ADMIN = 'admin'
 }
 

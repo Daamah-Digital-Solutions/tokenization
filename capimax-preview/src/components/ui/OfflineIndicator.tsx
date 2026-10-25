@@ -1,5 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { WifiOff, Wifi, AlertTriangle, CheckCircle } from 'lucide-react';
 
 // Network status interface
@@ -68,9 +69,9 @@ const useNetworkStatus = () => {
     // Test actual connectivity with a small request
     const testConnectivity = async () => {
       try {
-        const response = await fetch('/favicon.ico', {
+        const response = await fetch('/favicon.svg', {
           method: 'HEAD',
-          cache: 'no-cache'
+          cache: 'no-store'
         });
         if (!response.ok) {
           throw new Error('Network test failed');
@@ -112,7 +113,8 @@ const useNetworkStatus = () => {
 
 // Main offline indicator component
 export const OfflineIndicator: React.FC = () => {
-  const { isOnline, isSlowConnection, effectiveType, retryConnection } = useNetwork();
+  const { t } = useTranslation('common');
+  const { isOnline, isSlowConnection, retryConnection } = useNetwork();
   const [showOfflineMessage, setShowOfflineMessage] = useState(false);
   const [wasOffline, setWasOffline] = useState(false);
 
@@ -132,24 +134,29 @@ export const OfflineIndicator: React.FC = () => {
     }
   }, [isOnline, wasOffline]);
 
-  // Track if user dismissed the banner in this session
-  const [dismissed, setDismissed] = useState(() => {
-    try { return sessionStorage.getItem('offline-banner-dismissed') === 'true'; } catch { return false; }
+  // Dismissing the slow-connection notice lasts for the session; dismissing
+  // the offline / restored notice only hides the current occurrence.
+  const [slowDismissed, setSlowDismissed] = useState(() => {
+    try { return sessionStorage.getItem('slow-connection-dismissed') === 'true'; } catch { return false; }
   });
 
+  const showSlow = isOnline && !wasOffline && isSlowConnection && !slowDismissed;
+
   const handleDismiss = () => {
+    if (showSlow) {
+      setSlowDismissed(true);
+      try { sessionStorage.setItem('slow-connection-dismissed', 'true'); } catch {}
+    }
     setShowOfflineMessage(false);
-    setDismissed(true);
-    try { sessionStorage.setItem('offline-banner-dismissed', 'true'); } catch {}
   };
 
-  if (dismissed || (!showOfflineMessage && isOnline && !isSlowConnection)) {
+  if (!showOfflineMessage && !showSlow) {
     return null;
   }
 
   return (
     <AnimatePresence>
-      {(showOfflineMessage || isSlowConnection) && (
+      {(showOfflineMessage || showSlow) && (
         <motion.div
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -195,11 +202,11 @@ export const OfflineIndicator: React.FC = () => {
                       : 'text-amber-900 dark:text-amber-100'
                     : 'text-red-900 dark:text-red-100'
                 }`}>
-                  {isOnline 
-                    ? wasOffline 
-                      ? 'Connection Restored'
-                      : 'Slow Connection'
-                    : 'No Internet Connection'
+                  {isOnline
+                    ? wasOffline
+                      ? t('network.title_restored')
+                      : t('network.title_slow')
+                    : t('network.title_offline')
                   }
                 </h4>
                 <p className={`text-sm ${
@@ -209,11 +216,11 @@ export const OfflineIndicator: React.FC = () => {
                       : 'text-amber-700 dark:text-amber-300'
                     : 'text-red-700 dark:text-red-300'
                 }`}>
-                  {isOnline 
-                    ? wasOffline 
-                      ? 'You\'re back online! All features are now available.'
-                      : `You're on a ${effectiveType || 'slow'} connection. Some features may be limited.`
-                    : 'Please check your network connection and try again.'
+                  {isOnline
+                    ? wasOffline
+                      ? t('network.msg_restored')
+                      : t('network.msg_slow')
+                    : t('network.msg_offline')
                   }
                 </p>
               </div>
@@ -231,13 +238,14 @@ export const OfflineIndicator: React.FC = () => {
                       transition-colors duration-200
                     `}
                   >
-                    Retry
+                    {t('network.retry')}
                   </motion.button>
                 )}
                 
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   onClick={handleDismiss}
+                  aria-label={t('network.dismiss')}
                   className={`
                     p-1 rounded-lg transition-colors duration-200
                     ${isOnline 
@@ -332,12 +340,25 @@ export const NetworkProvider: React.FC<NetworkProviderProps> = ({ children }) =>
   const networkStatus = useNetworkStatus();
   const [retryCount, setRetryCount] = useState(0);
 
-  // Determine if connection is slow
-  const isSlowConnection = networkStatus.isOnline && (
-    networkStatus.effectiveType === '2g' || 
-    networkStatus.effectiveType === 'slow-2g' ||
-    (networkStatus.downlink !== undefined && networkStatus.downlink < 1.5)
+  // "Slow" = the browser classifies the link as 2G / slow-2G, and it has
+  // stayed that way for a few seconds. The old rule also fired on
+  // `downlink < 1.5`, but Chrome reports a coarse, privacy-rounded estimate
+  // (often ~1.2–1.45 Mbps right after page load, even on fast Wi-Fi), so
+  // almost everyone saw a false "Slow Connection" warning on opening the
+  // platform (client round 3, #1).
+  const looksSlow = networkStatus.isOnline && (
+    networkStatus.effectiveType === '2g' ||
+    networkStatus.effectiveType === 'slow-2g'
   );
+  const [isSlowConnection, setIsSlowConnection] = useState(false);
+  useEffect(() => {
+    if (!looksSlow) {
+      setIsSlowConnection(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setIsSlowConnection(true), 8000);
+    return () => window.clearTimeout(timer);
+  }, [looksSlow]);
 
   const retryConnection = () => {
     setRetryCount(prev => prev + 1);

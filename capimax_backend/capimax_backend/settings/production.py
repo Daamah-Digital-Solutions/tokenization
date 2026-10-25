@@ -278,11 +278,17 @@ if os.environ.get('USE_S3_STORAGE', 'False').lower() == 'true':
 # at the view level via custom scopes (see investments/views.py).
 # ============================================================================
 
+# The old 20/hour (anonymous) and 120/hour (logged in) limits were hit by
+# normal use: one dashboard load makes ~20 API calls, so users got blocked
+# after a few page views and saw errors that looked like an outage; visitors
+# sharing a mobile-carrier IP were blocked while browsing listings. Sensitive
+# auth endpoints keep their own tight scopes below.
 REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
-    'anon': '20/hour',
-    'user': '120/hour',
-    'login': '5/min',
-    'register': '3/hour',
+    'anon': '600/hour',
+    'user': '5000/hour',
+    'login': '10/min',
+    'register': '10/hour',
+    'verification': '10/hour',
     'investment_create': '10/hour',
     'payment_create': '20/hour',
     'webhook': '1000/min',
@@ -377,3 +383,8 @@ else:
         f"BLOCKCHAIN_KEY_PROVIDER='{BLOCKCHAIN_KEY_PROVIDER}' is not supported. "
         "Use 'env' (staging) or 'kms' (production)."
     )
+
+
+# One reverse proxy (the edge nginx) sits in front of Django, so DRF should
+# take the client IP from the last hop of X-Forwarded-For for throttling.
+REST_FRAMEWORK['NUM_PROXIES'] = int(os.environ.get('NUM_PROXIES', '1'))

@@ -218,7 +218,17 @@ export const LoginForm: React.FC<LoginFormProps> = ({
       if (error.code === 'TWO_FACTOR_REQUIRED') {
         setShowTwoFactor(true);
       }
-      // Error is handled by the auth context
+      // Unverified account: the server just emailed a fresh code — go
+      // straight to the code screen instead of a dead-end error.
+      if (error.code === 'EMAIL_NOT_VERIFIED') {
+        clearError();
+        navigate('code-verification', {
+          email: error.details?.email || formData.email,
+          sent: '1',
+        });
+        return;
+      }
+      // Other errors are handled by the auth context
     }
   };
 

@@ -378,17 +378,19 @@ class BrokerApplicationAdmin(admin.ModelAdmin):
         from django.utils import timezone
         pending_apps = queryset.filter(application_status='pending')
         if pending_apps.exists():
-            # This would normally integrate with the approve_broker_application view
-            # For now, just mark as approved for manual processing
-            updated = pending_apps.update(
-                application_status='approved',
-                reviewed_by=request.user,
-                reviewed_at=timezone.now()
-            )
+            # Full approval: broker role + BrokerProfile on the applicant's
+            # account (it used to only flip the status, so the applicant kept
+            # landing on the investor dashboard — client round 3, #8).
+            from .onboarding import approve_application
+            from .application_views import send_approval_email
+            approved = 0
+            for application in pending_apps:
+                user, _profile, temp_password = approve_application(application, request.user)
+                send_approval_email(application, user, temp_password)
+                approved += 1
             self.message_user(
                 request,
-                f'{updated} applications marked as approved. '
-                'Please use the API endpoints to complete user account creation.'
+                f'{approved} application(s) approved — the applicants now have broker accounts.'
             )
         else:
             self.message_user(request, 'No pending applications selected.')

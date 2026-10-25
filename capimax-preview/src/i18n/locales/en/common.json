@@ -2,7 +2,6 @@
   "appName": "Capimax RT",
   "tagline": "Tokenized Real Estate Ownership | SPV-Backed | Global Access",
   "taglineFull": "A global technology platform for tokenizing assets and offering fractional ownership of real estate through the SPV model, with document transparency, operational governance, and liquidity options via secondary market and optional liquidity provider.",
-
   "hero": {
     "badge": "Tokenized Real Estate Ownership | SPV-Backed | Global Access",
     "brand": "Capimax Tokenization",
@@ -17,7 +16,6 @@
       "returns": "Avg. Returns"
     }
   },
-
   "acceptedPayments": {
     "title": "Flexible Ways to Pay",
     "subtitle": "Beyond cards and bank transfers, we accept these partner payment options.",
@@ -33,7 +31,6 @@
       "discount": "5% OFF"
     }
   },
-
   "buttons": {
     "learnMore": "Learn More",
     "getStarted": "Get Started",
@@ -52,7 +49,6 @@
     "download": "Download",
     "upload": "Upload"
   },
-
   "status": {
     "active": "Active",
     "pending": "Pending",
@@ -62,7 +58,6 @@
     "approved": "Approved",
     "rejected": "Rejected"
   },
-
   "time": {
     "justNow": "Just now",
     "minutesAgo": "{{count}} minute ago",
@@ -72,13 +67,11 @@
     "daysAgo": "{{count}} day ago",
     "daysAgo_plural": "{{count}} days ago"
   },
-
   "currency": {
     "usd": "USD",
     "eur": "EUR",
     "aed": "AED"
   },
-
   "errors": {
     "generic": "Something went wrong. Please try again.",
     "network": "Network error. Please check your connection.",
@@ -86,7 +79,6 @@
     "unauthorized": "You are not authorized to access this page.",
     "sessionExpired": "Your session has expired. Please log in again."
   },
-
   "footer": {
     "copyright": "© {{year}} Capimax RT. All rights reserved.",
     "disclaimer": "Capimax RT is a technology platform and does not provide financial advice.",
@@ -96,5 +88,19 @@
     "regulatoryTitle": "Legal & Regulatory Status",
     "regulatoryBody1": "Capimax RT is a platform operated by Capimax Real Estate Technologies, a company registered, regulated and licensed in the United States and registered in the State of Wyoming.",
     "regulatoryBody2": "All assets and properties presented on the platform are held under Capimax Asset Structure, a company organized and registered in the State of Wyoming, United States."
+  },
+  "network": {
+    "title_slow": "Slow connection",
+    "msg_slow": "Your internet connection is very slow. Pages may take longer to load.",
+    "title_offline": "No internet connection",
+    "msg_offline": "Please check your network connection and try again.",
+    "title_restored": "Connection restored",
+    "msg_restored": "You're back online. All features are available again.",
+    "retry": "Retry",
+    "dismiss": "Dismiss"
+  },
+  "charts": {
+    "current": "Current",
+    "change": "Change"
   }
 }
