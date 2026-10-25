@@ -1,0 +1,173 @@
+{
+  "footer": {
+    "tagline": "Real estate tokenization platform for secure, transparent property ownership.",
+    "headquarters": "Global headquarters",
+    "unitedStates": "United States",
+    "unitedKingdom": "United Kingdom",
+    "email": "Email",
+    "sections": {
+      "platform": "Platform",
+      "learn": "Learn",
+      "guides": "Guides",
+      "legal": "Legal",
+      "help": "Help"
+    },
+    "links": {
+      "properties": "Properties",
+      "marketplace": "Secondary Market",
+      "liquidityProvider": "Liquidity Provider",
+      "howItWorks": "How It Works",
+      "partners": "Our Partners",
+      "brokerProgram": "Broker Program",
+      "about": "About",
+      "tokenization": "What is Tokenization",
+      "spv": "What is SPV",
+      "ownersGuide": "Owner's Guide",
+      "dataRoom": "Data Room",
+      "risks": "Risks & Disclosures",
+      "faq": "FAQ",
+      "propertyOwners": "For Property Owners",
+      "rtGuide": "Capimax RT Guide",
+      "ownershipGuide": "Ownership Guide",
+      "strategies": "Ownership Strategies",
+      "coOwnerGuide": "Co-Owner Guide",
+      "developerGuide": "Developer Guide",
+      "brokerGuide": "Broker Guide",
+      "lpGuide": "LP Guide",
+      "technology": "Technology",
+      "documentCenter": "Document Center",
+      "verificationCenter": "Verification Center",
+      "privacy": "Privacy Policy",
+      "terms": "Terms & Conditions",
+      "riskDisclosure": "Risk Disclosure",
+      "compliance": "Compliance",
+      "cookies": "Cookies Policy",
+      "amlKyc": "AML/KYC Policy",
+      "security": "Security Policy",
+      "disclaimer": "Disclaimer",
+      "support": "Support Center",
+      "contact": "Contact Us"
+    },
+    "disclaimerTitle": "Capimax RT Legal Disclaimer",
+    "disclaimer1": "This website is operated by Capimax Real Estate Technologies LLC (“Capimax”). Capimax RT is a technology platform and digital ecosystem connecting investors, property owners, developers, brokers and liquidity providers.",
+    "disclaimer2": "Capimax is not a registered broker-dealer or investment adviser and does not provide financial advisory services, personalised investment advice, or recommendations to buy, hold or sell any investment. Listings and website content are provided for information and do not constitute an endorsement or assurance of suitability.",
+    "disclaimer3": "All investments involve risk, including the possible loss of some or all invested capital. Capimax does not guarantee returns, income, capital appreciation, liquidity or repayment of capital. Past performance is not a reliable indicator of future results.",
+    "disclaimer4": "You are responsible for assessing whether an investment is appropriate for your financial circumstances, objectives and risk tolerance. Review the applicable documents and seek independent advice from qualified legal, tax and investment professionals before investing.",
+    "disclaimer5": "Use of this website is subject to our <terms>Terms & Conditions</terms> and <privacy>Privacy Policy</privacy>. Nothing in this disclaimer excludes liability that cannot lawfully be excluded.",
+    "copyright": "Copyright © {{year}} Capimax Real Estate Technologies LLC. All rights reserved."
+  },
+  "contact": {
+    "badge": "Contact us",
+    "title": "We're here to help",
+    "subtitle": "Questions about owning property shares, your account or a listing? Send us a message and our team replies by email, usually within one business day.",
+    "cards": {
+      "email": "Email us",
+      "emailHint": "For any question — we reply within one business day.",
+      "phone": "Call us",
+      "phoneHint": "Monday to Friday, 9:00 – 18:00 (US Eastern).",
+      "office": "Visit us",
+      "support": "Support center",
+      "supportHint": "Tickets, answers to common questions and our AI assistant."
+    },
+    "form": {
+      "title": "Send us a message",
+      "name": "Full name",
+      "email": "Email",
+      "phone": "Phone (optional)",
+      "topic": "Topic",
+      "subject": "Subject",
+      "message": "Message",
+      "send": "Send message",
+      "sending": "Sending…",
+      "sent": "Thank you — your message was received. A copy was sent to {{email}} and our team will reply shortly. Reference: {{reference}}",
+      "sendAnother": "Send another message",
+      "error": "Your message could not be sent. Please try again or email us directly.",
+      "required": "Please fill in all required fields.",
+      "invalidEmail": "Please enter a valid email address.",
+      "privacy": "We use your details only to answer your message."
+    },
+    "topics": {
+      "general": "General question",
+      "investment": "Owning property shares",
+      "account": "My account & verification",
+      "payments": "Payments & wallet",
+      "listing": "Listing a property",
+      "partnership": "Partnerships & brokers",
+      "media": "Press & media",
+      "other": "Other"
+    }
+  },
+  "support": {
+    "badge": "Support center",
+    "title": "How can we help?",
+    "subtitle": "Get instant answers from our AI assistant, open a ticket with our team, or reach us by phone, WhatsApp or email.",
+    "channels": {
+      "assistant": "AI assistant",
+      "assistantHint": "Instant answers about the platform, any time.",
+      "assistantCta": "Ask the assistant",
+      "whatsapp": "WhatsApp",
+      "whatsappHint": "Chat with our team.",
+      "whatsappCta": "Open WhatsApp",
+      "phone": "Phone",
+      "phoneHint": "Mon – Fri, 9:00 – 18:00 (US Eastern).",
+      "email": "Email",
+      "emailHint": "Replies within one business day.",
+      "contact": "Contact form",
+      "contactHint": "Send a message without an account.",
+      "contactCta": "Open the form"
+    },
+    "faq": {
+      "title": "Common questions",
+      "all": "See all questions",
+      "items": [
+        { "q": "How do I verify my identity (KYC)?", "a": "Open Dashboard → Identity verification, fill in your details, upload a passport, ID card or driving licence, and take a live selfie. Our team reviews it and you get an email with the result." },
+        { "q": "I didn't receive my verification code.", "a": "Check your Spam and Promotions folders, then use “Resend code” on the verification screen (available every 60 seconds). Codes are valid for 30 minutes." },
+        { "q": "How do I add money to my wallet?", "a": "Open Wallet → Add funds and choose card, crypto or bank transfer. Card and crypto top-ups are credited automatically; bank transfers after our team confirms them." },
+        { "q": "Can I pay for a property in installments?", "a": "Yes, when the property offers it. The property page shows the down payment, every installment with its date and amount, and you pay each one from your wallet in Dashboard → Installments." },
+        { "q": "How do I sell my shares?", "a": "List them on the Secondary Market from your portfolio. When a buyer purchases, the money is added to your wallet and the shares move to the buyer immediately." },
+        { "q": "Where are my documents and statements?", "a": "Dashboard → Documents has your certificates and property documents; Dashboard → Reports has official wallet, transactions, investments and owned-properties statements in English or Arabic." }
+      ]
+    },
+    "tickets": {
+      "title": "My support tickets",
+      "subtitle": "Open a ticket and follow the conversation with our team here.",
+      "new": "New ticket",
+      "signIn": "Sign in to open and follow support tickets.",
+      "signInCta": "Sign in",
+      "empty": "You have no support tickets yet.",
+      "loadError": "Couldn't load your tickets.",
+      "subject": "Subject",
+      "category": "Category",
+      "priority": "Priority",
+      "details": "Describe your request",
+      "submit": "Open ticket",
+      "submitting": "Sending…",
+      "created": "Ticket {{reference}} was opened. We'll reply here and by email.",
+      "error": "The ticket could not be opened. Please try again.",
+      "reply": "Write a reply…",
+      "send": "Send reply",
+      "you": "You",
+      "team": "Capimax RT support",
+      "back": "All tickets",
+      "opened": "Opened {{date}}",
+      "updated": "Updated {{date}}",
+      "categories": {
+        "investment": "Owning property shares",
+        "payments": "Payments & wallet",
+        "account": "Account & verification",
+        "technical": "Technical problem",
+        "other": "Other"
+      },
+      "priorities": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High"
+      },
+      "status": {
+        "open": "Open",
+        "pending": "Awaiting your reply",
+        "resolved": "Resolved"
+      }
+    }
+  }
+}

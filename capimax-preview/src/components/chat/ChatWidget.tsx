@@ -81,6 +81,14 @@ function loadHistory(): ChatMessage[] {
 
 export const ChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+
+  // Pages (e.g. the Support center) open the assistant with
+  // window.dispatchEvent(new Event('capimax:open-assistant')).
+  useEffect(() => {
+    const open = () => setIsOpen(true);
+    window.addEventListener('capimax:open-assistant', open);
+    return () => window.removeEventListener('capimax:open-assistant', open);
+  }, []);
   const [sessionId, setSessionId] = useState<string>(() => loadSessionId());
   const [messages, setMessages] = useState<ChatMessage[]>(() => loadHistory());
   const [input, setInput] = useState('');

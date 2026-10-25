@@ -41,7 +41,7 @@ export const Navbar: React.FC = () => {
     { name: 'Secondary Market', route: 'marketplace' as const },
     { name: 'Structure', route: 'structure' as const },
     { name: 'Document Center', route: 'document-center' as const },
-    { name: 'Support', route: 'contact' as const }
+    { name: 'Support', route: 'support' as const }
   ];
 
   // Authenticated navigation items — role-aware.

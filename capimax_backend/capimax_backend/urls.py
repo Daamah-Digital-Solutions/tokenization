@@ -139,6 +139,7 @@ urlpatterns = [
     path('api/v1/blockchain/', include('blockchain.urls')),  # ✅ ENABLED - Phase 1 Blockchain Activation
     path('api/v1/liquidity-provider/', include('liquidity_provider.urls')),
     path('api/v1/documents/', include('documents.urls')),
+    path('api/v1/support/', include('support.urls')),
 ]
 
 # Serve media files in development

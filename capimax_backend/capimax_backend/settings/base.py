@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     'marketplace',
     'liquidity_provider',
     'documents',
+    'support',  # Contact Us + support tickets (client round 3, #12 #13)
     'core',
     'legal',  # SPV legal entities, subscription agreements, cap table
 ]
@@ -337,3 +338,6 @@ logs_dir.mkdir(exist_ok=True)
 
 # Don't let a slow SMTP server hang the request that sends an email.
 EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT', '20'))
+
+# Contact Us messages and new support tickets are emailed here.
+SUPPORT_INBOX_EMAIL = os.environ.get('SUPPORT_INBOX_EMAIL', 'tech@capimaxholding.com')

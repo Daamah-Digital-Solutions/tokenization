@@ -32,6 +32,8 @@ const PUBLIC_ENDPOINTS = [
   // Unverified users can't log in, so the code endpoints must be public.
   '/auth/email/verify/',
   '/auth/email/resend-verification/',
+  // Contact Us works without an account (an expired session must not block it).
+  '/support/contact/',
 ];
 
 function getCookie(name: string): string | null {

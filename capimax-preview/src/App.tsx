@@ -94,6 +94,7 @@ const BrokerProgramPage = lazyWithRetry(() => import('./pages/BrokerProgramPage'
 const BrokerApplicationPage = lazyWithRetry(() => import('./pages/BrokerApplicationPage').then(m => ({ default: m.BrokerApplicationPage })));
 const AboutPage = lazyWithRetry(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })));
 const ContactPage = lazyWithRetry(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })));
+const SupportPage = lazyWithRetry(() => import('./pages/SupportPage').then(m => ({ default: m.SupportPage })));
 const PartnersPage = lazyWithRetry(() => import('./pages/PartnersPage').then(m => ({ default: m.PartnersPage })));
 const LiquidityProviderPage = lazyWithRetry(() => import('./pages/LiquidityProviderPage').then(m => ({ default: m.LiquidityProviderPage })));
 
@@ -415,6 +416,14 @@ const AppRouter: React.FC = () => {
           <main {...mainProps}>
             <Suspense fallback={<PageLoader message="Loading about page..." />}>
               <AboutPage />
+            </Suspense>
+          </main>
+        );
+      case 'support':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading support..." />}>
+              <SupportPage />
             </Suspense>
           </main>
         );
