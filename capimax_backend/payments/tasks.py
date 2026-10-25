@@ -56,6 +56,33 @@ def verify_pronova_transaction(self, pronova_payment_id: str):
         if tx_status.get('status') == 'confirmed':
             confirmations = tx_status.get('confirmations', 0)
             if confirmations >= required_confirmations:
+                # The transaction must actually pay the platform wallet the
+                # expected Pronova amount (client round 3, #14).
+                from .pronova_verify import verify_pronova_transfer
+                ok, reason = verify_pronova_transfer(
+                    web3_service.w3, pronova,
+                    contract_address=pronova_config.get('CONTRACT_ADDRESS', ''),
+                    decimals=int(pronova_config.get('DECIMALS', 18)),
+                )
+                if not ok:
+                    logger.error(f"PronovaPayment {pronova_payment_id} rejected: {reason}")
+                    pronova.status = 'failed'
+                    pronova.save(update_fields=['status', 'updated_at'])
+                    if pronova.payment:
+                        pronova.payment.status = PaymentStatus.FAILED
+                        pronova.payment.metadata = {**(pronova.payment.metadata or {}), 'failure_reason': reason}
+                        pronova.payment.save(update_fields=['status', 'metadata', 'updated_at'])
+                    NotificationService.create_notification(
+                        user=pronova.investment.user,
+                        title="Pronova payment not accepted",
+                        message=f"We could not accept your Pronova payment: {reason}",
+                        notification_type='payment',
+                        priority='high',
+                        send_email=True,
+                        send_real_time=True,
+                    )
+                    return
+
                 pronova.status = 'confirmed'
                 pronova.confirmations = confirmations
                 pronova.confirmed_at = timezone.now()
@@ -63,18 +90,12 @@ def verify_pronova_transaction(self, pronova_payment_id: str):
                     'status', 'confirmations', 'confirmed_at', 'updated_at'
                 ])
 
-                payment = pronova.payment
-                if payment:
-                    payment.status = PaymentStatus.COMPLETED
-                    payment.completed_at = timezone.now()
-                    payment.transaction_hash = pronova.tx_hash
-                    payment.save(update_fields=[
-                        'status', 'completed_at', 'transaction_hash', 'updated_at'
-                    ])
-
-                InvestmentProcessingService.process_investment(
-                    pronova.investment, payment
-                )
+                if pronova.payment:
+                    from .settlement import settle_payment
+                    settle_payment(pronova.payment, transaction_hash=pronova.tx_hash,
+                                   source='pronova_onchain')
+                else:
+                    InvestmentProcessingService.process_investment(pronova.investment, None)
 
                 NotificationService.create_notification(
                     user=pronova.investment.user,

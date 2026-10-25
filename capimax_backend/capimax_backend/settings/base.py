@@ -309,6 +309,7 @@ PRONOVA_CONFIG = {
     'NETWORK': os.environ.get('PRONOVA_NETWORK', 'bsc'),
     'RPC_URL': os.environ.get('PRONOVA_RPC_URL', 'https://bsc-dataseed.binance.org/'),
     'CONTRACT_ADDRESS': os.environ.get('PRONOVA_CONTRACT_ADDRESS', ''),
+    'DECIMALS': int(os.environ.get('PRONOVA_DECIMALS', '18')),
 }
 
 # Email Configuration

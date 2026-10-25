@@ -123,7 +123,10 @@ def get_error_message(error_data):
     """
     if isinstance(error_data, dict):
         if 'detail' in error_data:
-            return str(error_data['detail'])
+            detail = error_data['detail']
+            if isinstance(detail, (list, tuple)) and detail:
+                detail = detail[0]
+            return str(detail)
         elif 'non_field_errors' in error_data:
             return str(error_data['non_field_errors'][0])
         else:

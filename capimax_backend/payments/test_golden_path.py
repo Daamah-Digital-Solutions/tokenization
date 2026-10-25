@@ -135,6 +135,7 @@ class StripePaymentConfirmGoldenPathTests(TestCase):
         fake_intent = MagicMock()
         fake_intent.id = 'pi_confirm_001'
         fake_intent.status = 'succeeded'
+        fake_intent.amount_received = 25000  # cents — must cover the payment
 
         with patch(
             'payments.views.stripe.PaymentIntent.retrieve',

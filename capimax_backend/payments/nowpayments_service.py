@@ -7,6 +7,7 @@ for processing cryptocurrency payments with support for 150+ cryptocurrencies.
 
 import requests
 import hmac
+import json
 import hashlib
 import logging
 from typing import Dict, List, Optional, Any
@@ -317,16 +318,25 @@ class NOWPaymentsService:
             logger.warning("IPN secret not configured, cannot verify signature")
             return False
 
+        if not signature:
+            return False
         try:
-            # Calculate expected signature
-            expected_signature = hmac.new(
-                self.ipn_secret.encode('utf-8'),
-                request_data,
-                hashlib.sha512
-            ).hexdigest()
-
-            # Compare signatures
-            return hmac.compare_digest(expected_signature, signature)
+            # NOWPayments signs the payload with its keys sorted
+            # (recursively) and compact separators — not the raw body, whose
+            # key order differs. Accept either form.
+            candidates = [request_data]
+            try:
+                parsed = json.loads(request_data)
+                candidates.insert(0, json.dumps(
+                    parsed, sort_keys=True, separators=(',', ':'), ensure_ascii=False,
+                ).encode('utf-8'))
+            except (ValueError, TypeError):
+                pass
+            key = self.ipn_secret.encode('utf-8')
+            return any(
+                hmac.compare_digest(hmac.new(key, body, hashlib.sha512).hexdigest(), signature.lower())
+                for body in candidates
+            )
 
         except Exception as e:
             logger.error(f"Failed to verify IPN signature: {str(e)}")

@@ -799,7 +799,7 @@ const MarketplaceContent: React.FC = () => {
 // posts to /payments/wallet/withdraw/. The backend moves money from
 // available → locked and queues an admin-approved payout. Estimated
 // completion is 2 business days per the backend.
-const WalletContent: React.FC<{
+export const WalletContent: React.FC<{
   portfolio: Portfolio | undefined;
   loading: boolean;
   walletBalance: number;

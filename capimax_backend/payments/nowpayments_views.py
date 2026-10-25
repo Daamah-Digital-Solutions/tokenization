@@ -146,6 +146,11 @@ def nowpayments_create_payment(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        from .settlement import check_payable_investment
+        problem = check_payable_investment(request.user, investment_id, amount)
+        if problem:
+            return Response(create_error_response(problem), status=status.HTTP_400_BAD_REQUEST)
+
         if not pay_currency:
             return Response(
                 create_error_response("Cryptocurrency required"),
@@ -267,6 +272,11 @@ def nowpayments_create_invoice(request):
                 create_error_response("Invalid amount"),
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        from .settlement import check_payable_investment
+        problem = check_payable_investment(request.user, investment_id, amount)
+        if problem:
+            return Response(create_error_response(problem), status=status.HTTP_400_BAD_REQUEST)
 
         with transaction.atomic():
             # Create internal payment record
@@ -395,34 +405,16 @@ def nowpayments_payment_status(request, payment_id):
 
             # Update internal payment status
             if nowpayments_tx.payment_status == 'finished':
-                was_completed_already = payment.status == PaymentStatus.COMPLETED
-                payment.status = PaymentStatus.COMPLETED
-                payment.completed_at = timezone.now()
-                payment.save()
-
-                # Process the linked investment if we just transitioned to
-                # completed. Previously this only happened in the IPN
-                # callback, which means environments where NOWPayments
-                # can't reach the IPN URL (e.g. staging behind a proxy that
-                # isn't whitelisted) would leave the investment stuck in
-                # PENDING even though the on-chain crypto already arrived.
-                # The polling endpoint is now an idempotent fallback that
-                # matches the IPN logic.
-                if not was_completed_already and payment.investment:
-                    try:
-                        from investments.services import InvestmentProcessingService
-                        InvestmentProcessingService.process_investment(
-                            payment.investment, payment
-                        )
-                        logger.info(
-                            "Investment %s completed via NOWPayments status poll",
-                            payment.investment.id,
-                        )
-                    except Exception as exc:
-                        logger.error(
-                            "process_investment failed during NOWPayments status poll: %s",
-                            exc,
-                        )
+                # Idempotent fallback for when the IPN can't reach us; the
+                # shared settlement applies it once, whichever arrives first
+                # (and credits the wallet only for top-ups — client #14).
+                from .settlement import settle_payment
+                try:
+                    settle_payment(payment, external_id=nowpayments_tx.nowpayments_payment_id,
+                                   source='nowpayments_poll')
+                    payment.refresh_from_db()
+                except Exception as exc:
+                    logger.error("NOWPayments settlement failed during status poll: %s", exc)
             elif nowpayments_tx.is_failed:
                 payment.status = PaymentStatus.FAILED
                 payment.save()
@@ -480,7 +472,10 @@ def nowpayments_ipn_callback(request):
         logger.info(f"NOWPayments IPN received: {ipn_data}")
 
         from .middleware import webhook_event_is_replay
-        replay_key = ipn_data.get('ipn_id') or ipn_data.get('payment_id') or ''
+        replay_key = ipn_data.get('ipn_id') or (
+            f"{ipn_data.get('payment_id', '')}:{ipn_data.get('payment_status', '')}"
+            if ipn_data.get('payment_id') else ''
+        )
         if replay_key and webhook_event_is_replay('nowpayments', str(replay_key)):
             # Already processed — silently acknowledge so NOWPayments stops retrying.
             return Response(create_success_response(message="Already processed"))
@@ -548,113 +543,27 @@ def nowpayments_ipn_callback(request):
 
         # ---- Step 4: process based on terminal status ----
         if payment_status == 'finished':
-            # All wallet writes happen inside a single atomic block with a
-            # row lock on WalletBalance. This prevents duplicate IPN deliveries
-            # from racing and double-crediting the user.
-            with transaction.atomic():
-                # Re-fetch payment under a row lock and verify it's not already
-                # completed. If a concurrent webhook already finalised this
-                # payment, exit early.
-                locked_payment = Payment.objects.select_for_update().get(id=payment.id)
-                if locked_payment.status == PaymentStatus.COMPLETED:
-                    return Response(create_success_response(
-                        message="Payment already completed (duplicate IPN)"
-                    ))
-
-                locked_payment.status = PaymentStatus.COMPLETED
-                locked_payment.completed_at = timezone.now()
-                locked_payment.transaction_hash = ipn_data.get('tx_hash')
-                locked_payment.save(update_fields=[
-                    'status', 'completed_at', 'transaction_hash'
-                ])
-
-                # Row-locked wallet balance update. The first webhook win,
-                # all subsequent ones see status=COMPLETED above and bail.
-                wallet_balance = (
-                    WalletBalance.objects
-                    .select_for_update()
-                    .filter(user=locked_payment.user, currency=locked_payment.currency)
-                    .first()
+            # The amount NOWPayments priced must cover this payment.
+            price_amount = ipn_data.get('price_amount')
+            if price_amount is not None and Decimal(str(price_amount)) + Decimal('0.01') < payment.amount:
+                logger.error(
+                    "NOWPayments IPN for payment %s priced %s < expected %s — not settled",
+                    payment.id, price_amount, payment.amount,
                 )
-                if wallet_balance is None:
-                    wallet_balance = WalletBalance.objects.create(
-                        user=locked_payment.user,
-                        currency=locked_payment.currency,
-                        available_balance=Decimal('0.00'),
-                    )
+                return Response(create_success_response(message="Amount mismatch — held for review"))
 
-                previous_balance = wallet_balance.available_balance
-                wallet_balance.available_balance = (
-                    previous_balance + locked_payment.net_amount
-                )
-                wallet_balance.save(update_fields=['available_balance'])
-
-                # Invoice flow doesn't keep a NOWPaymentsTransaction row,
-                # so pull the pay-currency from the IPN payload instead.
-                pay_currency_label = (
-                    nowpayments_tx.pay_currency if nowpayments_tx
-                    else (ipn_data.get('pay_currency') or 'unknown')
-                )
-                wallet_tx = WalletTransaction.objects.create(
-                    user=locked_payment.user,
-                    transaction_type='deposit',
-                    amount=locked_payment.net_amount,
-                    currency=locked_payment.currency,
-                    balance_before=previous_balance,
-                    balance_after=wallet_balance.available_balance,
-                    reference_id=locked_payment.id,
-                    description=(
-                        f"Crypto payment (NOWPayments) - {pay_currency_label}"
-                    ),
-                )
-
-                # Use the locked payment instance from here on
-                payment = locked_payment
-
-                # Process linked investment OUTSIDE the wallet credit block
-                # would be ideal, but we keep it inside so a downstream failure
-                # rolls back the credit. Investment processing is expected
-                # to be atomic and idempotent in InvestmentProcessingService.
-                if payment.investment:
-                    try:
-                        from investments.services import InvestmentProcessingService
-                        InvestmentProcessingService.process_investment(
-                            payment.investment, payment
-                        )
-                        logger.info(
-                            f"Investment {payment.investment.id} completed via NOWPayments"
-                        )
-                    except Exception as e:
-                        logger.error(
-                            f"Failed to process investment {payment.investment.id}: {str(e)}"
-                        )
-
-                # Send notification email
-                try:
-                    actually_paid_label = (
-                        str(nowpayments_tx.actually_paid) if nowpayments_tx
-                        else str(ipn_data.get('actually_paid', 0))
-                    )
-                    transaction_details = {
-                        'type': 'Crypto Deposit',
-                        'amount': str(payment.net_amount),
-                        'transaction_id': str(wallet_tx.id),
-                        'payment_method': f'Cryptocurrency ({pay_currency_label})',
-                        'status': 'Confirmed',
-                        'previous_balance': str(previous_balance),
-                        'new_balance': str(wallet_balance.available_balance),
-                        'id': wallet_tx.id,
-                        'crypto_amount': actually_paid_label,
-                        'crypto_currency': pay_currency_label,
-                    }
-
-                    EmailService.send_funds_notification_email(
-                        user=payment.user,
-                        transaction_details=transaction_details
-                    )
-                    logger.info(f"Funds notification email sent for NOWPayments payment {payment.id}")
-                except Exception as e:
-                    logger.error(f"Failed to send funds notification email: {str(e)}")
+            # Shared, idempotent settlement (client round 3, #14): confirms
+            # the linked investment, or credits the wallet for a top-up —
+            # never both (the old code credited the wallet for investments).
+            from .settlement import settle_payment
+            settled = settle_payment(
+                payment, external_id=nowpayments_payment_id,
+                transaction_hash=ipn_data.get('tx_hash') or None, source='nowpayments_ipn',
+            )
+            if not settled:
+                return Response(create_success_response(
+                    message="Payment already completed (duplicate IPN)"
+                ))
 
         elif payment_status in ['failed', 'expired']:
             payment.status = PaymentStatus.FAILED

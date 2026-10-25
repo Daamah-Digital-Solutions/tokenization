@@ -381,6 +381,14 @@ class StripePaymentView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        from .settlement import check_payable_investment
+        problem = check_payable_investment(
+            request.user, serializer.validated_data.get('investment_id'),
+            serializer.validated_data['amount'],
+        )
+        if problem:
+            return Response(create_error_response(problem), status=status.HTTP_400_BAD_REQUEST)
+
         try:
             amount_cents = int(serializer.validated_data['amount'] * 100)
             currency = serializer.validated_data['currency'].lower()
@@ -461,17 +469,25 @@ class StripePaymentView(APIView):
             
             # Update payment status based on Stripe status
             if payment_intent.status == 'succeeded':
-                # Idempotency guard: credit the wallet only ONCE. A repeat
-                # confirm-payment call (or an overlapping webhook) must not
-                # double-credit — this flow now also powers wallet top-ups,
-                # where a double credit is real money created out of thin air.
-                if payment.status != PaymentStatus.COMPLETED:
-                    payment.status = PaymentStatus.COMPLETED
-                    payment.completed_at = timezone.now()
-                    payment.external_transaction_id = payment_intent.id
-
-                    # Process successful payment
-                    self._process_successful_payment(payment)
+                expected_cents = int((payment.amount * 100).quantize(Decimal('1')))
+                received = getattr(payment_intent, 'amount_received', None) or payment_intent.amount
+                if received < expected_cents:
+                    logger.error('Stripe intent %s paid %s < expected %s', payment_intent.id,
+                                 received, expected_cents)
+                    return Response(
+                        create_error_response("The amount paid does not match this payment."),
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                # One settlement path for every provider (client round 3,
+                # #14): idempotent, and an investment payment never credits
+                # the wallet.
+                from .settlement import settle_payment
+                settle_payment(payment, external_id=payment_intent.id, mint=True, source='stripe_confirm')
+                payment.refresh_from_db()
+                return Response(create_success_response(
+                    data=PaymentSerializer(payment).data,
+                    message="Payment processed successfully"
+                ))
 
             elif payment_intent.status in ['processing', 'requires_action']:
                 payment.status = PaymentStatus.PROCESSING
@@ -503,76 +519,6 @@ class StripePaymentView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
-    def _process_successful_payment(self, payment):
-        """Process successful payment."""
-        with transaction.atomic():
-            # Update wallet balance
-            wallet_balance, created = WalletBalance.objects.get_or_create(
-                user=payment.user,
-                currency=payment.currency,
-                defaults={'available_balance': Decimal('0.00')}
-            )
-            
-            wallet_balance.available_balance += payment.net_amount
-            wallet_balance.save()
-            
-            # Create wallet transaction record
-            transaction_record = WalletTransaction.objects.create(
-                user=payment.user,
-                transaction_type='deposit',
-                amount=payment.net_amount,
-                currency=payment.currency,
-                balance_before=wallet_balance.available_balance - payment.net_amount,
-                balance_after=wallet_balance.available_balance,
-                reference_id=payment.id,
-                description=f"Payment deposit - {payment.payment_method}"
-            )
-
-            # Send funds notification email for deposit
-            try:
-                transaction_details = {
-                    'type': 'Deposit',
-                    'amount': str(payment.net_amount),
-                    'transaction_id': str(transaction_record.id),
-                    'payment_method': payment.payment_method.title(),
-                    'status': 'Confirmed',
-                    'previous_balance': str(wallet_balance.available_balance - payment.net_amount),
-                    'new_balance': str(wallet_balance.available_balance),
-                    'id': transaction_record.id
-                }
-
-                EmailService.send_funds_notification_email(
-                    user=payment.user,
-                    transaction_details=transaction_details
-                )
-                logger.info(f"Funds notification email sent for deposit {transaction_record.id}")
-            except Exception as e:
-                logger.error(f"Failed to send funds notification email for deposit {transaction_record.id}: {str(e)}")
-            
-            # Process investment if applicable
-            if payment.investment:
-                self._process_investment_payment(payment)
-    
-    def _process_investment_payment(self, payment):
-        """Process payment for investment - triggers deferred token minting."""
-        investment = payment.investment
-
-        # Mark payment confirmed - tokens will be minted by Celery task
-        # This sets status to PENDING_MINT and schedules minting
-        investment.mark_payment_confirmed()
-
-        # Reserve tokens (mark as sold) but don't mint yet
-        # Actual on-chain minting happens via process_pending_mints Celery task
-        property_obj = investment.property_investment
-        property_obj.tokens_sold += investment.token_amount
-        property_obj.save(update_fields=['tokens_sold'])
-
-        logger.info(
-            f"Investment {investment.id} payment confirmed. "
-            f"Status: {investment.status}. Tokens will be minted by background task."
-        )
-
-
 class CryptoPaymentView(APIView):
     """Handle cryptocurrency payment processing."""
     
@@ -585,7 +531,13 @@ class CryptoPaymentView(APIView):
         elif action == 'create-payment':
             return self._create_crypto_payment(request)
         elif action == 'verify-payment':
-            return self._verify_crypto_payment(request)
+            # Removed (client round 3, #14): it marked payments completed
+            # from a client-supplied tx hash without checking anything.
+            # Crypto payments are confirmed by the NOWPayments IPN only.
+            return Response(
+                create_error_response("Crypto payments are confirmed automatically by the payment provider."),
+                status=status.HTTP_410_GONE
+            )
         else:
             return Response(
                 create_error_response("Invalid action"),
@@ -652,74 +604,6 @@ class CryptoPaymentView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
-    def _verify_crypto_payment(self, request):
-        """Verify cryptocurrency payment on blockchain."""
-        # Implementation would check blockchain for transaction confirmation
-        # This is a placeholder implementation
-        
-        payment_id = request.data.get('payment_id')
-        transaction_hash = request.data.get('transaction_hash')
-        
-        try:
-            payment = Payment.objects.get(id=payment_id, user=request.user)
-            crypto_payment = payment.crypto_details
-            
-            # Mock verification - in production, check blockchain
-            is_verified = self._verify_blockchain_transaction(
-                transaction_hash, 
-                crypto_payment.wallet_address, 
-                payment.amount
-            )
-            
-            if is_verified:
-                payment.status = PaymentStatus.COMPLETED
-                payment.transaction_hash = transaction_hash
-                payment.completed_at = timezone.now()
-                payment.save()
-                
-                crypto_payment.confirmations = 6  # Mock confirmation count
-                crypto_payment.save()
-                
-                # Process successful payment
-                self._process_successful_crypto_payment(payment)
-            
-            return Response(create_success_response(data={
-                'payment_id': payment.id,
-                'verified': is_verified,
-                'status': payment.status,
-                'confirmations': crypto_payment.confirmations
-            }))
-            
-        except Payment.DoesNotExist:
-            return Response(
-                create_error_response("Payment not found"),
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except Exception as e:
-            logger.error(f"Error verifying crypto payment: {str(e)}")
-            return Response(
-                create_error_response("Crypto payment verification failed"),
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-    
-    def _fetch_crypto_quote(self, from_currency, to_currency, amount):
-        """Fetch cryptocurrency quote from external API."""
-        # Use real crypto price service
-        quote = CryptoPriceService.get_crypto_quote(from_currency, to_currency, amount)
-        quote['valid_until'] = timezone.now() + timedelta(minutes=15)
-        return quote
-    
-    def _verify_blockchain_transaction(self, tx_hash, wallet_address, amount):
-        """Verify blockchain transaction (mock implementation)."""
-        # In production, this would connect to blockchain nodes
-        # and verify the transaction details
-        return True  # Mock verification success
-    
-    def _process_successful_crypto_payment(self, payment):
-        """Process successful cryptocurrency payment."""
-        # Similar to Stripe payment processing
-        self._process_successful_payment(payment)
-
 
 class WalletManagementView(APIView):
     """Handle wallet management operations."""
@@ -1335,71 +1219,6 @@ class RecurringPaymentViewSet(ModelViewSet):
 
 
 # Helper function to process successful payments
-def _process_successful_payment(payment):
-    """Process successful payment - shared utility function."""
-    with transaction.atomic():
-        # Update wallet balance
-        wallet_balance, created = WalletBalance.objects.get_or_create(
-            user=payment.user,
-            currency=payment.currency,
-            defaults={'available_balance': Decimal('0.00')}
-        )
-        
-        previous_balance = wallet_balance.available_balance
-        wallet_balance.available_balance += payment.net_amount
-        wallet_balance.save()
-        
-        # Create wallet transaction record
-        transaction_record = WalletTransaction.objects.create(
-            user=payment.user,
-            transaction_type='deposit',
-            amount=payment.net_amount,
-            currency=payment.currency,
-            balance_before=previous_balance,
-            balance_after=wallet_balance.available_balance,
-            reference_id=payment.id,
-            description=f"Payment deposit - {payment.payment_method}"
-        )
-
-        # Send funds notification email for deposit
-        try:
-            transaction_details = {
-                'type': 'Deposit',
-                'amount': str(payment.net_amount),
-                'transaction_id': str(transaction_record.id),
-                'payment_method': payment.payment_method.title(),
-                'status': 'Confirmed',
-                'previous_balance': str(previous_balance),
-                'new_balance': str(wallet_balance.available_balance),
-                'id': transaction_record.id
-            }
-
-            EmailService.send_funds_notification_email(
-                user=payment.user,
-                transaction_details=transaction_details
-            )
-            logger.info(f"Funds notification email sent for deposit {transaction_record.id}")
-        except Exception as e:
-            logger.error(f"Failed to send funds notification email for deposit {transaction_record.id}: {str(e)}")
-        
-        # Process investment if applicable - triggers deferred minting
-        if payment.investment:
-            investment = payment.investment
-
-            # Mark payment confirmed - tokens will be minted by Celery task
-            investment.mark_payment_confirmed()
-
-            # Reserve tokens (mark as sold) but don't mint on-chain yet
-            property_obj = investment.property_investment
-            property_obj.tokens_sold += investment.token_amount
-            property_obj.save(update_fields=['tokens_sold'])
-
-            logger.info(
-                f"Investment {investment.id} payment confirmed via helper. "
-                f"Status: {investment.status}. Minting scheduled."
-            )
-
-
 class StripeWebhookView(APIView):
     """
     Handle Stripe webhook events.
@@ -1485,93 +1304,28 @@ class StripeWebhookView(APIView):
 
     def _handle_payment_intent_succeeded(self, payment_intent):
         """Handle successful payment intent from Stripe webhook."""
+        from .settlement import settle_payment
+
         payment_intent_id = payment_intent['id']
         logger.info(f"Processing payment_intent.succeeded for {payment_intent_id}")
 
-        try:
-            # Find the payment record
-            payment = Payment.objects.get(payment_intent_id=payment_intent_id)
-
-            # Skip if already processed
-            if payment.status == PaymentStatus.COMPLETED:
-                logger.info(f"Payment {payment.id} already completed, skipping")
-                return
-
-            with transaction.atomic():
-                # Update payment status
-                payment.status = PaymentStatus.COMPLETED
-                payment.completed_at = timezone.now()
-                payment.external_transaction_id = payment_intent_id
-                payment.save()
-
-                # Update wallet balance
-                wallet_balance, created = WalletBalance.objects.get_or_create(
-                    user=payment.user,
-                    currency=payment.currency,
-                    defaults={'available_balance': Decimal('0.00')}
-                )
-
-                previous_balance = wallet_balance.available_balance
-                wallet_balance.available_balance += payment.net_amount
-                wallet_balance.save()
-
-                # Create wallet transaction record
-                transaction_record = WalletTransaction.objects.create(
-                    user=payment.user,
-                    transaction_type='deposit',
-                    amount=payment.net_amount,
-                    currency=payment.currency,
-                    balance_before=previous_balance,
-                    balance_after=wallet_balance.available_balance,
-                    reference_id=payment.id,
-                    description=f"Payment deposit via Stripe webhook"
-                )
-
-                # Process investment if linked
-                if payment.investment:
-                    investment = payment.investment
-
-                    # Only process if not already processed
-                    if investment.status not in ['completed', 'pending_mint', 'minting']:
-                        # Mark payment confirmed - triggers deferred minting
-                        investment.mark_payment_confirmed()
-
-                        # Reserve tokens
-                        property_obj = investment.property_investment
-                        property_obj.tokens_sold += investment.token_amount
-                        property_obj.save(update_fields=['tokens_sold'])
-
-                        logger.info(
-                            f"Investment {investment.id} payment confirmed via webhook. "
-                            f"Status: {investment.status}. Minting scheduled."
-                        )
-
-                # Send email notification
-                try:
-                    transaction_details = {
-                        'type': 'Deposit',
-                        'amount': str(payment.net_amount),
-                        'transaction_id': str(transaction_record.id),
-                        'payment_method': 'Credit Card',
-                        'status': 'Confirmed',
-                        'previous_balance': str(previous_balance),
-                        'new_balance': str(wallet_balance.available_balance),
-                        'id': transaction_record.id
-                    }
-                    EmailService.send_funds_notification_email(
-                        user=payment.user,
-                        transaction_details=transaction_details
-                    )
-                except Exception as e:
-                    logger.error(f"Failed to send webhook payment email: {str(e)}")
-
-            logger.info(f"Successfully processed payment {payment.id} via webhook")
-
-        except Payment.DoesNotExist:
+        payment = Payment.objects.filter(payment_intent_id=payment_intent_id).first()
+        if payment is None:
             logger.warning(f"Payment not found for intent {payment_intent_id}")
-        except Exception as e:
-            logger.error(f"Error processing payment_intent.succeeded: {str(e)}")
-            raise
+            return
+
+        expected_cents = int((payment.amount * 100).quantize(Decimal('1')))
+        received = payment_intent.get('amount_received') or payment_intent.get('amount') or 0
+        if received < expected_cents:
+            logger.error(f"Stripe intent {payment_intent_id} paid {received} < expected {expected_cents}")
+            return
+
+        # Shared, idempotent settlement (client round 3, #14): the confirm
+        # endpoint and this webhook can both arrive; only the first applies.
+        if settle_payment(payment, external_id=payment_intent_id, mint=True, source='stripe_webhook'):
+            logger.info(f"Successfully processed payment {payment.id} via webhook")
+        else:
+            logger.info(f"Payment {payment.id} already completed, skipping")
 
     def _handle_payment_intent_failed(self, payment_intent):
         """Handle failed payment intent from Stripe webhook."""
@@ -1645,25 +1399,25 @@ class BankTransferView(APIView):
         elif action == 'cancel':
             return self._cancel_transfer(request)
         else:
-            return create_error_response(
+            return Response(create_error_response(
                 message="Invalid action",
                 status_code=status.HTTP_400_BAD_REQUEST
-            )
+            ), status=status.HTTP_400_BAD_REQUEST)
 
     def _create_bank_transfer(self, request):
         """Create a new bank transfer payment."""
         from .serializers import BankTransferCreateSerializer
-        from .services import PaymentService
+        from .services import PaymentProcessorService as PaymentService
         from properties.models import Property
 
         try:
             serializer = BankTransferCreateSerializer(data=request.data)
             if not serializer.is_valid():
-                return create_error_response(
+                return Response(create_error_response(
                     message="Invalid data",
-                    errors=serializer.errors,
+                    details=serializer.errors,
                     status_code=status.HTTP_400_BAD_REQUEST
-                )
+                ), status=status.HTTP_400_BAD_REQUEST)
 
             validated_data = serializer.validated_data
 
@@ -1671,10 +1425,10 @@ class BankTransferView(APIView):
             try:
                 property_obj = Property.objects.get(id=validated_data['property_id'])
             except Property.DoesNotExist:
-                return create_error_response(
+                return Response(create_error_response(
                     message="Property not found",
                     status_code=status.HTTP_404_NOT_FOUND
-                )
+                ), status=status.HTTP_404_NOT_FOUND)
 
             # Create payment record
             payment_details = {
@@ -1708,7 +1462,7 @@ class BankTransferView(APIView):
                 from .serializers import BankTransferSerializer
                 transfer_data = BankTransferSerializer(bank_transfer).data
 
-                return create_success_response(
+                return Response(create_success_response(
                     data={
                         'payment_id': result.payment_id,
                         'transfer_reference': result.transaction_id,
@@ -1717,19 +1471,19 @@ class BankTransferView(APIView):
                         'metadata': result.metadata
                     },
                     message="Bank transfer initiated successfully"
-                )
+                ))
             else:
-                return create_error_response(
+                return Response(create_error_response(
                     message=result.error_message,
                     status_code=status.HTTP_400_BAD_REQUEST
-                )
+                ), status=status.HTTP_400_BAD_REQUEST)
 
         except Exception as e:
             logger.error(f"Bank transfer creation failed: {str(e)}")
-            return create_error_response(
+            return Response(create_error_response(
                 message="Failed to create bank transfer",
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            ), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def _get_transfer_status(self, request):
         """Get bank transfer status."""
@@ -1753,23 +1507,23 @@ class BankTransferView(APIView):
                     payment__user=request.user
                 )
             else:
-                return create_error_response(
+                return Response(create_error_response(
                     message="Transfer reference or payment ID required",
                     status_code=status.HTTP_400_BAD_REQUEST
-                )
+                ), status=status.HTTP_400_BAD_REQUEST)
 
             serializer = BankTransferSerializer(bank_transfer)
-            return create_success_response(
+            return Response(create_success_response(
                 data=serializer.data,
                 message="Transfer status retrieved successfully"
-            )
+            ))
 
         except Exception as e:
             logger.error(f"Transfer status retrieval failed: {str(e)}")
-            return create_error_response(
+            return Response(create_error_response(
                 message="Failed to retrieve transfer status",
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            ), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def _update_transfer_status(self, request):
         """Update bank transfer status (admin only)."""
@@ -1779,18 +1533,18 @@ class BankTransferView(APIView):
 
         # Check admin permissions
         if not IsAdminUser().has_permission(request, self):
-            return create_error_response(
+            return Response(create_error_response(
                 message="Admin access required",
                 status_code=status.HTTP_403_FORBIDDEN
-            )
+            ), status=status.HTTP_403_FORBIDDEN)
 
         try:
             transfer_reference = request.data.get('transfer_reference')
             if not transfer_reference:
-                return create_error_response(
+                return Response(create_error_response(
                     message="Transfer reference required",
                     status_code=status.HTTP_400_BAD_REQUEST
-                )
+                ), status=status.HTTP_400_BAD_REQUEST)
 
             bank_transfer = get_object_or_404(
                 BankTransfer,
@@ -1799,11 +1553,11 @@ class BankTransferView(APIView):
 
             serializer = BankTransferStatusSerializer(data=request.data)
             if not serializer.is_valid():
-                return create_error_response(
+                return Response(create_error_response(
                     message="Invalid data",
-                    errors=serializer.errors,
+                    details=serializer.errors,
                     status_code=status.HTTP_400_BAD_REQUEST
-                )
+                ), status=status.HTTP_400_BAD_REQUEST)
 
             validated_data = serializer.validated_data
 
@@ -1821,9 +1575,10 @@ class BankTransferView(APIView):
 
             # Update payment status based on transfer status
             if bank_transfer.transfer_status == 'completed':
-                bank_transfer.payment.status = PaymentStatus.COMPLETED
-                bank_transfer.payment.completed_at = validated_data.get('completed_at', timezone.now())
-                bank_transfer.payment.save()
+                # Shared settlement: confirms the linked investment (or
+                # credits a wallet top-up) exactly once (client round 3, #14).
+                from .settlement import settle_payment
+                settle_payment(bank_transfer.payment, source='bank_transfer_admin')
 
                 if not bank_transfer.completed_at:
                     bank_transfer.completed_at = timezone.now()
@@ -1841,17 +1596,17 @@ class BankTransferView(APIView):
             from .serializers import BankTransferSerializer
             transfer_data = BankTransferSerializer(bank_transfer).data
 
-            return create_success_response(
+            return Response(create_success_response(
                 data=transfer_data,
                 message="Transfer status updated successfully"
-            )
+            ))
 
         except Exception as e:
             logger.error(f"Transfer status update failed: {str(e)}")
-            return create_error_response(
+            return Response(create_error_response(
                 message="Failed to update transfer status",
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            ), status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def _cancel_transfer(self, request):
         """Cancel bank transfer."""
@@ -1860,10 +1615,10 @@ class BankTransferView(APIView):
         try:
             transfer_reference = request.data.get('transfer_reference')
             if not transfer_reference:
-                return create_error_response(
+                return Response(create_error_response(
                     message="Transfer reference required",
                     status_code=status.HTTP_400_BAD_REQUEST
-                )
+                ), status=status.HTTP_400_BAD_REQUEST)
 
             bank_transfer = get_object_or_404(
                 BankTransfer,
@@ -1873,10 +1628,10 @@ class BankTransferView(APIView):
 
             # Only allow cancellation if transfer is still pending
             if bank_transfer.transfer_status not in ['initiated', 'pending']:
-                return create_error_response(
+                return Response(create_error_response(
                     message="Transfer cannot be cancelled at this stage",
                     status_code=status.HTTP_400_BAD_REQUEST
-                )
+                ), status=status.HTTP_400_BAD_REQUEST)
 
             # Update status
             bank_transfer.transfer_status = 'cancelled'
@@ -1885,14 +1640,14 @@ class BankTransferView(APIView):
             bank_transfer.payment.status = PaymentStatus.CANCELLED
             bank_transfer.payment.save()
 
-            return create_success_response(
+            return Response(create_success_response(
                 data={'transfer_reference': transfer_reference, 'status': 'cancelled'},
                 message="Transfer cancelled successfully"
-            )
+            ))
 
         except Exception as e:
             logger.error(f"Transfer cancellation failed: {str(e)}")
-            return create_error_response(
+            return Response(create_error_response(
                 message="Failed to cancel transfer",
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            ), status=status.HTTP_500_INTERNAL_SERVER_ERROR)

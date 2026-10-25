@@ -35,7 +35,7 @@ class OrderMatchingEngine:
     def __init__(self):
         self.platform_fee_rate = Decimal('0.025')  # 2.5% default
     
-    def match_order(self, order: TradeOrder) -> Dict:
+    def match_order(self, order: TradeOrder, raise_settlement_errors: bool = False) -> Dict:
         """
         Match a trade order against available market listings.
         
@@ -88,6 +88,9 @@ class OrderMatchingEngine:
                 return result
                 
         except Exception as e:
+            from .settlement import TradeSettlementError
+            if raise_settlement_errors and isinstance(e, TradeSettlementError):
+                raise
             logger.error(f"Order matching failed for order {order.id}: {str(e)}")
             return {
                 'success': False,
@@ -182,32 +185,28 @@ class OrderMatchingEngine:
                 volume_24h=self._get_24h_volume(listing.property_listing)
             )
             
+            # Settle now: debit the buyer, pay the seller, move the shares
+            # (client round 3, #14/#21 — trades used to sit "in escrow" with
+            # no money or shares ever moving). Any failure rolls the whole
+            # order back.
+            from .settlement import settle_trade
+            settle_trade(transaction_obj)
+
             # Update listing tokens remaining
             listing.fill_order(tokens_to_trade)
-            
-            # Create escrow account for secure settlement
-            escrow = EscrowAccount.objects.create(
-                transaction=transaction_obj,
-                amount_held=transaction_obj.total_cost_to_buyer,
-                tokens_held=tokens_to_trade,
-                timeout_duration=timedelta(hours=24)
-            )
-            
-            # Update transaction status
-            transaction_obj.status = TransactionStatus.IN_ESCROW
-            transaction_obj.processed_at = timezone.now()
-            transaction_obj.save()
-            
+
             return {
                 'success': True,
                 'transaction': transaction_obj,
                 'tokens_traded': tokens_to_trade,
                 'amount_paid': trade_amount,
                 'fees_paid': transaction_obj.platform_fee,
-                'escrow': escrow
             }
-            
+
         except Exception as e:
+            from .settlement import TradeSettlementError
+            if isinstance(e, TradeSettlementError):
+                raise
             logger.error(f"Trade execution failed: {str(e)}")
             return {'success': False, 'error': str(e)}
     

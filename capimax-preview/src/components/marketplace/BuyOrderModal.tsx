@@ -22,6 +22,8 @@ import { Text } from '../design-system/typography/Text';
 import { cn } from '../../utils/cn';
 import { marketplaceService, type SecondaryMarketListing, type TradeOrderRequest } from '../../services/marketplace/MarketplaceService';
 import { useAuth } from '../../contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { PaymentService } from '../../services/payment/PaymentService';
 
 interface BuyOrderModalProps {
   isOpen: boolean;
@@ -45,6 +47,12 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Purchases are paid from the wallet balance (client round 3, #14/#21).
+  const { data: walletData } = useQuery({
+    queryKey: ['wallet-balance'],
+    queryFn: () => PaymentService.getWalletBalance(),
+    enabled: isOpen,
+  });
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -64,8 +72,15 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
 
   const pricePerToken = parseFloat(orderData.price_per_token || listing.price_per_token);
   const totalCost = pricePerToken * orderData.tokens_requested;
-  const estimatedFees = totalCost * 0.025; // 2.5% fee
+  // The 2.5% platform fee is split 50/50 between buyer and seller, so the
+  // buyer pays 1.25% on top of the price (marketplace TradeTransaction).
+  const estimatedFees = Math.round(totalCost * 0.0125 * 100) / 100;
   const totalWithFees = totalCost + estimatedFees;
+  const walletBalance =
+    walletData?.total_value_usd ||
+    walletData?.balances?.reduce((sum: number, b: any) => sum + (parseFloat(b.available_balance) || 0), 0) ||
+    0;
+  const insufficient = !!walletData && totalWithFees > walletBalance + 0.001;
 
   const validateOrder = () => {
     const newErrors: Record<string, string> = {};
@@ -153,7 +168,7 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -168,10 +183,10 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden"
+            className="relative w-full max-w-2xl max-h-[calc(100dvh-2rem)] flex flex-col bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden"
           >
             {/* Header */}
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-xl flex items-center justify-center">
@@ -200,7 +215,7 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
             </div>
 
             {/* Property Info */}
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+            <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 shrink-0">
               <div className="flex gap-4">
                 {(() => {
                   const imgUrl =
@@ -258,7 +273,7 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
             </div>
 
             {/* Content */}
-            <div className="p-6">
+            <div className="p-4 sm:p-6 pb-0 sm:pb-0 overflow-y-auto flex-1 min-h-0">
               {step === 'order' && (
                 <div className="space-y-6">
                   {/* Order Type */}
@@ -393,7 +408,7 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                         </span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">Platform Fee (2.5%)</span>
+                        <span className="text-gray-600 dark:text-gray-400">Platform Fee (1.25%)</span>
                         <span className="font-medium text-gray-900 dark:text-white">
                           ${estimatedFees.toFixed(2)}
                         </span>
@@ -409,7 +424,7 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                     </div>
                   </Card>
 
-                  <div className="flex gap-3">
+                  <div className="sticky bottom-0 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex gap-3">
                     <Button variant="outline" onClick={onClose} className="flex-1">
                       Cancel
                     </Button>
@@ -475,12 +490,22 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                           Important Notes:
                         </p>
                         <ul className="text-yellow-700 dark:text-yellow-300 space-y-1">
-                          <li>• Orders are processed immediately and cannot be cancelled</li>
-                          <li>• Token transfer will occur upon order completion</li>
+                          <li>• The total is paid from your wallet balance and the order executes immediately</li>
+                          <li>• The shares are added to your portfolio as soon as the order completes</li>
                           <li>• Platform fees are non-refundable</li>
                         </ul>
                       </div>
                     </div>
+                  </div>
+
+                  <div className={cn(
+                    'flex items-center justify-between rounded-lg p-4 text-sm border',
+                    insufficient
+                      ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-300'
+                      : 'bg-gray-50 dark:bg-gray-900/40 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
+                  )}>
+                    <span>Wallet balance: <strong>${walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></span>
+                    {insufficient && <span className="font-medium">Add funds to complete this purchase</span>}
                   </div>
 
                   {errors.general && (
@@ -492,11 +517,11 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                     </div>
                   )}
 
-                  <div className="flex gap-3">
+                  <div className="sticky bottom-0 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex gap-3">
                     <Button variant="outline" onClick={() => setStep('order')} className="flex-1">
                       Back
                     </Button>
-                    <Button onClick={handleSubmitOrder} disabled={isSubmitting} className="flex-1">
+                    <Button onClick={handleSubmitOrder} disabled={isSubmitting || insufficient} className="flex-1">
                       {isSubmitting ? 'Submitting...' : 'Submit Order'}
                     </Button>
                   </div>

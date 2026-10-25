@@ -313,6 +313,13 @@ class InvestmentProcessingService:
     @transaction.atomic
     def process_investment(cls, investment: Investment, payment: Payment) -> bool:
         """Process completed investment and update token ownership."""
+        # Idempotent: a second call (webhook + polling, admin double-click)
+        # must not count the shares as sold twice (client round 3, #14).
+        current = Investment.objects.filter(pk=investment.pk).values_list('status', flat=True).first()
+        if current in (InvestmentStatus.PAYMENT_CONFIRMED, InvestmentStatus.PENDING_MINT,
+                       InvestmentStatus.MINTING, InvestmentStatus.COMPLETED):
+            logger.info(f"Investment {investment.id} already processed ({current}); skipping")
+            return True
         try:
             property_obj = Property.objects.select_for_update().get(
                 id=investment.property_investment.id

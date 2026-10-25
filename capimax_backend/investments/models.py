@@ -24,6 +24,7 @@ class InvestmentStatus(models.TextChoices):
     FAILED = 'failed', 'Failed'                          # Payment or other failure
     CANCELLED = 'cancelled', 'Cancelled'                 # User cancelled
     REFUNDED = 'refunded', 'Refunded'                    # Refund processed
+    TRANSFERRED = 'transferred', 'Sold / transferred'    # All shares sold on the secondary market
 
 
 class Investment(models.Model):

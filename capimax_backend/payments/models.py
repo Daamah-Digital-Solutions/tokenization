@@ -516,6 +516,8 @@ class WalletTransaction(models.Model):
         ('dividend', 'Dividend'),
         ('fee', 'Fee'),
         ('refund', 'Refund'),
+        ('trade_purchase', 'Secondary market purchase'),
+        ('trade_sale', 'Secondary market sale'),
     ]
     
     id = models.UUIDField(

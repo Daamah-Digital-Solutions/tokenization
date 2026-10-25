@@ -7,6 +7,7 @@ providing endpoints for market listings, orders, transactions, and analytics.
 
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from django.db import transaction
@@ -33,6 +34,7 @@ from .services import (
     OrderMatchingEngine, TradingFeesCalculator, MarketAnalyticsService, MarketDataService
 )
 from .permissions import MarketplacePermissions
+from .settlement import TradeSettlementError
 from properties.models import Property
 from core.pagination import StandardResultsSetPagination
 from core.utils import create_success_response
@@ -90,6 +92,14 @@ class MarketListingViewSet(viewsets.ModelViewSet):
         """Filter queryset based on user permissions and request parameters."""
         if getattr(self, 'swagger_fake_view', False):
             return self.queryset.none()
+
+        # Listings past their expiry date are no longer for sale; they used
+        # to stay "active" and buyable on the market page.
+        MarketListing.objects.filter(
+            status__in=[ListingStatus.ACTIVE, ListingStatus.PARTIALLY_FILLED],
+            expires_at__lte=timezone.now(),
+        ).update(status=ListingStatus.EXPIRED)
+
         queryset = super().get_queryset()
 
         # Filter by property if specified
@@ -258,8 +268,22 @@ class TradeOrderViewSet(viewsets.ModelViewSet):
                 # Initialize order matching engine
                 matching_engine = OrderMatchingEngine()
                 
-                # Attempt to match the order
-                match_result = matching_engine.match_order(order)
+                # Attempt to match the order. A trade that can't settle
+                # (wallet balance, seller shares) rejects the whole order
+                # with a clear message instead of a silent "pending" order.
+                try:
+                    match_result = matching_engine.match_order(order, raise_settlement_errors=True)
+                except TradeSettlementError as exc:
+                    raise ValidationError({'code': exc.code, 'detail': exc.message})
+
+                # A market order must execute now; never leave the buyer with
+                # a silent "submitted" order that bought nothing.
+                if order.order_type == 'market' and not match_result.get('trades_executed'):
+                    raise ValidationError({
+                        'code': 'ORDER_NOT_EXECUTED',
+                        'detail': match_result.get('error_message') or
+                                  'This order could not be executed. Please try again.',
+                    })
                 
                 if match_result['success'] and match_result['trades_executed']:
                     logger.info(f"Order {order.id} matched successfully. "
