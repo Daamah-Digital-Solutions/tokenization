@@ -179,29 +179,54 @@ class PropertyViewSet(ModelViewSet):
             return PropertyDetailSerializer
     
     def get_queryset(self):
-        """Filter queryset based on user permissions."""
+        """
+        Public listings show ONLY published properties — for everyone,
+        including the owner and staff (client round 3, #24: an owner's draft
+        used to appear on the public pages as soon as it was saved, and admins
+        saw every draft there too). Owners manage their own submissions via
+        /properties/owner/; staff can pass ?scope=all for admin tooling.
+        Detail pages: public properties, plus the owner's own and staff.
+        """
         if getattr(self, 'swagger_fake_view', False):
             return self.queryset.none()
+        from .workflow import public_properties, visible_properties_for
         queryset = super().get_queryset()
         user = self.request.user
-        
+
         if self.action == 'list':
-            # For listing, only show approved and active properties to non-owners
-            if user.is_authenticated and (user.is_staff or user.is_superuser):
-                return queryset  # Admins see all properties
-            elif user.is_authenticated:
-                # Authenticated users see their own properties plus public ones
-                return queryset.filter(
-                    Q(owner=user) |
-                    Q(status__in=[PropertyStatus.APPROVED, PropertyStatus.ACTIVE, PropertyStatus.TOKENIZED])
-                )
-            else:
-                # Anonymous users only see public properties
-                return queryset.filter(
-                    status__in=[PropertyStatus.APPROVED, PropertyStatus.ACTIVE, PropertyStatus.TOKENIZED]
-                )
-        
-        return queryset
+            if user.is_authenticated and user.is_staff and \
+                    self.request.query_params.get('scope') == 'all':
+                return queryset
+            return public_properties(queryset)
+
+        return visible_properties_for(user, queryset)
+
+    def update(self, request, *args, **kwargs):
+        """Owners may edit only before approval; staff any time."""
+        from .workflow import owner_can_edit
+        property_obj = self.get_object()
+        if not request.user.is_staff:
+            if property_obj.owner_id != request.user.pk:
+                return Response({'detail': 'You do not have permission to edit this property.'},
+                                status=status.HTTP_403_FORBIDDEN)
+            if not owner_can_edit(property_obj):
+                return Response(
+                    {'detail': 'This property has already been reviewed or published. '
+                               'Send a message to the platform team to request changes.'},
+                    status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        """Owners may withdraw an unpublished submission with no buyers."""
+        property_obj = self.get_object()
+        if not request.user.is_staff:
+            if property_obj.owner_id != request.user.pk:
+                return Response({'detail': 'You do not have permission to delete this property.'},
+                                status=status.HTTP_403_FORBIDDEN)
+            if property_obj.is_published or property_obj.tokens_sold:
+                return Response({'detail': 'A published property cannot be deleted.'},
+                                status=status.HTTP_403_FORBIDDEN)
+        return super().destroy(request, *args, **kwargs)
     
     def create(self, request, *args, **kwargs):
         """Create a new property."""
@@ -220,6 +245,29 @@ class PropertyViewSet(ModelViewSet):
                 status='pending'
             )
 
+        # Owner's inbox gets a receipt; reviewers get a heads-up. The listing
+        # stays hidden until an admin approves and publishes it.
+        try:
+            from .workflow import notify_reviewers, send_owner_message
+            from .models import OwnerMessage
+            send_owner_message(
+                property_obj, property_obj.owner,
+                f'We received your property "{property_obj.title}"',
+                'Thank you for your submission. Our team will review the property details '
+                'and documents. It will not be visible to the public until it has been '
+                'reviewed and published by the platform team. We will contact you here if '
+                'anything else is needed.',
+                category=OwnerMessage.Category.REVIEW_NOTE, sender=None, email=False,
+                subject_ar=f'استلمنا عقارك "{property_obj.title}"',
+                body_ar='شكرًا لتقديمك. سيراجع فريقنا بيانات العقار ومستنداته، ولن يظهر '
+                        'للجمهور قبل مراجعته ونشره من قِبل فريق المنصة. سنتواصل معك هنا '
+                        'إذا احتجنا إلى أي شيء آخر.',
+            )
+            notify_reviewers(property_obj, 'New property submission',
+                             f'"{property_obj.title}" was submitted for review.')
+        except Exception:
+            logger.warning('Submission notifications failed for %s', property_obj.pk, exc_info=True)
+
             # Send property submission email to the property owner
             try:
                 property_details = {
@@ -227,7 +275,7 @@ class PropertyViewSet(ModelViewSet):
                     'location': f"{property_obj.city}, {property_obj.country}",
                     'property_type': property_obj.property_type,
                     'estimated_value': str(property_obj.total_value),
-                    'square_footage': str(property_obj.square_footage) if property_obj.square_footage else 'N/A',
+                    'square_footage': str(property_obj.property_size) if property_obj.property_size else 'N/A',
                     'expected_yield': f"{property_obj.expected_return}%" if property_obj.expected_return else 'N/A',
                     'submission_id': str(property_obj.id),
                     'id': property_obj.id
@@ -770,7 +818,12 @@ class PropertyDocumentUploadView(APIView):
         
         serializer = PropertyDocumentSerializer(data=document_data, context={'request': request})
         if serializer.is_valid():
-            document = serializer.save(property=property_obj)
+            extra = {'property': property_obj, 'uploaded_by': request.user}
+            if not request.user.is_staff:
+                # Owner/developer files (deeds, IDs, permits) are for the
+                # review team; an admin decides what investors may see.
+                extra.update(is_public=False, investor_access=False)
+            document = serializer.save(**extra)
             return Response(
                 PropertyDocumentSerializer(document, context={'request': request}).data,
                 status=status.HTTP_201_CREATED
@@ -943,44 +996,38 @@ class PropertyApprovalView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
         
+        from . import workflow
         action = request.data.get('action')
         review_notes = request.data.get('review_notes', '')
         required_changes = request.data.get('required_changes', '')
-        
-        if action not in ['approve', 'reject', 'request_changes']:
-            return Response(
-                {'detail': 'Invalid action. Must be approve, reject, or request_changes.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Get or create approval record
-        approval, _ = PropertyApproval.objects.get_or_create(property=property_obj)
-        approval.reviewer = request.user
-        approval.review_notes = review_notes
-        approval.reviewed_at = timezone.now()
-        
-        with transaction.atomic():
+
+        try:
             if action == 'approve':
-                property_obj.status = PropertyStatus.APPROVED
-                approval.status = 'approved'
-                approval.approved_at = timezone.now()
-                
+                workflow.approve(property_obj, request.user, review_notes)
             elif action == 'reject':
-                property_obj.status = PropertyStatus.DELISTED
-                approval.status = 'rejected'
-                
+                workflow.reject(property_obj, request.user, review_notes)
             elif action == 'request_changes':
-                property_obj.status = PropertyStatus.DRAFT
-                approval.status = 'requires_changes'
-                approval.required_changes = required_changes
-            
-            property_obj.save(update_fields=['status'])
-            approval.save()
-        
+                workflow.request_changes(property_obj, request.user,
+                                         required_changes or review_notes, review_notes)
+            elif action == 'publish':
+                workflow.publish(property_obj, request.user)
+            elif action == 'unpublish':
+                workflow.unpublish(property_obj, request.user, review_notes)
+            else:
+                return Response(
+                    {'detail': 'Invalid action. Use approve, reject, request_changes, publish or unpublish.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except workflow.WorkflowError as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        property_obj.refresh_from_db()
+        approval = PropertyApproval.objects.filter(property=property_obj).first()
         return Response({
-            'message': f'Property {action}d successfully',
+            'message': f'Property {action.replace("_", " ")} completed successfully',
             'status': property_obj.status,
-            'approval_status': approval.status
+            'is_published': property_obj.is_published,
+            'approval_status': approval.status if approval else None,
         })
 
 
@@ -1000,7 +1047,8 @@ class PropertySearchView(generics.ListAPIView):
     
     def get_queryset(self):
         """Get properties based on search filters."""
-        queryset = Property.objects.filter(
+        from .workflow import public_q
+        queryset = Property.objects.filter(public_q()).filter(
             status__in=[PropertyStatus.APPROVED, PropertyStatus.ACTIVE, PropertyStatus.TOKENIZED]
         ).select_related('owner').prefetch_related('images', 'reviews')
         
@@ -2052,8 +2100,16 @@ class PropertyApprovalStatusView(APIView):
 
             try:
                 approval = PropertyApproval.objects.select_related('reviewer').get(property=property_obj)
-                serializer = PropertyApprovalSerializer(approval)
-                return Response(serializer.data)
+                return Response({
+                    'status': approval.status,
+                    'property_status': property_obj.status,
+                    'is_published': property_obj.is_published,
+                    'review_notes': approval.review_notes,
+                    'required_changes': approval.required_changes,
+                    'submitted_at': approval.submitted_at,
+                    'reviewed_at': approval.reviewed_at,
+                    'approved_at': approval.approved_at,
+                })
             except PropertyApproval.DoesNotExist:
                 return Response(
                     {'detail': 'Property has not been submitted for approval.'},
@@ -2086,31 +2142,12 @@ class SubmitPropertyForApprovalView(APIView):
                     status=status.HTTP_403_FORBIDDEN
                 )
 
-            # Check if property is in draft status
-            if property_obj.status != PropertyStatus.DRAFT:
-                return Response(
-                    {'detail': 'Only draft properties can be submitted for approval.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            # Create or update approval record
-            approval, created = PropertyApproval.objects.get_or_create(
-                property=property_obj,
-                defaults={
-                    'status': 'pending',
-                    'submitted_at': timezone.now()
-                }
-            )
-
-            if not created:
-                approval.status = 'pending'
-                approval.submitted_at = timezone.now()
-                approval.save()
-
-            # Update property status
-            property_obj.status = PropertyStatus.PENDING_APPROVAL
-            property_obj.save(update_fields=['status'])
-
+            from . import workflow
+            try:
+                workflow.submit_for_review(property_obj, request.user)
+            except workflow.WorkflowError as exc:
+                return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+            approval = PropertyApproval.objects.get(property=property_obj)
             return Response({
                 'message': 'Property submitted for approval successfully.',
                 'approval_id': approval.id,
@@ -2202,6 +2239,14 @@ class PropertyOwnerDashboardView(APIView):
                 'occupancy_rate': str(prop.occupancy_rate),
                 'construction_progress': str(prop.construction_progress),
                 'image_url': image_url,
+                # Submission → review → publication state (client round 3, #23/#24)
+                'is_published': prop.is_published,
+                'approval_status': getattr(getattr(prop, 'approval', None), 'status', None),
+                'required_changes': getattr(getattr(prop, 'approval', None), 'required_changes', '') or '',
+                'review_notes': getattr(getattr(prop, 'approval', None), 'review_notes', '') or '',
+                'unread_messages': prop.owner_messages.filter(read_by_owner_at__isnull=True)
+                                       .exclude(sender_role='owner').count(),
+                'documents_count': prop.documents.count(),
                 'created_at': prop.created_at.isoformat(),
                 'updated_at': prop.updated_at.isoformat()
             })
@@ -3423,3 +3468,81 @@ class DataRoomDocumentVersionsView(generics.ListAPIView):
             property_id=property_id,
             name=document_name
         ).order_by('-version')
+
+
+
+class OwnerMessagesView(APIView):
+    """
+    The owner's / developer's inbox (client round 3, #23).
+
+    GET  ?property=<id>  → messages (newest first) + unread count
+    POST {property, body[, subject]} (+ optional `attachment`) → reply to the team
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def get(self, request):
+        from .models import OwnerMessage
+        qs = OwnerMessage.objects.filter(owner=request.user).select_related('property', 'sender')
+        prop = request.query_params.get('property')
+        if prop:
+            qs = qs.filter(property_id=prop)
+        unread = OwnerMessage.objects.filter(
+            owner=request.user, read_by_owner_at__isnull=True
+        ).exclude(sender_role=OwnerMessage.SenderRole.OWNER).count()
+        data = [{
+            'id': str(m.id),
+            'property': str(m.property_id) if m.property_id else None,
+            'property_title': m.property.title if m.property_id else None,
+            'sender_role': m.sender_role,
+            'sender_name': (m.sender.get_full_name() or 'Capimax RT') if m.sender else 'Capimax RT',
+            'category': m.category,
+            'subject': m.subject,
+            'body': m.body,
+            'subject_ar': m.subject_ar,
+            'body_ar': m.body_ar,
+            'attachment_url': request.build_absolute_uri(m.attachment.url) if m.attachment else None,
+            'is_read': m.sender_role == OwnerMessage.SenderRole.OWNER or m.read_by_owner_at is not None,
+            'created_at': m.created_at,
+        } for m in qs[:200]]
+        return Response({'results': data, 'unread_count': unread})
+
+    def post(self, request):
+        from .models import OwnerMessage
+        from .workflow import notify_reviewers
+        body = (request.data.get('body') or '').strip()
+        if not body:
+            return Response({'detail': 'Message text is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        prop = None
+        prop_id = request.data.get('property')
+        if prop_id:
+            prop = Property.objects.filter(pk=prop_id, owner=request.user).first()
+            if prop is None:
+                return Response({'detail': 'Property not found.'}, status=status.HTTP_404_NOT_FOUND)
+        subject = (request.data.get('subject') or '').strip() or (
+            f'Reply about "{prop.title}"' if prop else 'Message from owner')
+        message = OwnerMessage.objects.create(
+            owner=request.user, property=prop, sender=request.user,
+            sender_role=OwnerMessage.SenderRole.OWNER, category=OwnerMessage.Category.REPLY,
+            subject=subject[:255], body=body,
+            attachment=request.FILES.get('attachment'),
+        )
+        if prop:
+            notify_reviewers(prop, f'Owner reply: {subject}', body)
+        return Response({'id': str(message.id), 'created_at': message.created_at},
+                        status=status.HTTP_201_CREATED)
+
+
+class OwnerMessagesMarkReadView(APIView):
+    """Mark the owner's messages read (all, or one property's thread)."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        from .models import OwnerMessage
+        qs = OwnerMessage.objects.filter(owner=request.user, read_by_owner_at__isnull=True)
+        if request.data.get('property'):
+            qs = qs.filter(property_id=request.data.get('property'))
+        updated = qs.update(read_by_owner_at=timezone.now())
+        return Response({'updated': updated})

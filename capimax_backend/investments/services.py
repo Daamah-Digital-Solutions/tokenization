@@ -869,6 +869,10 @@ class WalletInvestmentService:
             # Get property with lock to prevent race conditions
             property_obj = Property.objects.select_for_update().get(id=property_id)
 
+            # Only published listings can be bought (client round 3, #24).
+            if not property_obj.is_published:
+                raise InvestmentError("This property is not open for ownership yet.")
+
             # Verify token availability
             available_tokens = property_obj.total_tokens - property_obj.tokens_sold
             if token_amount > available_tokens:

@@ -21,8 +21,12 @@ class IsOwnerOrReadOnly(BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         
-        # Write permissions only to the owner of the object
-        return obj.user == request.user
+        # Write permissions only to the owner of the object. Models name the
+        # owner differently (`user` vs Property.`owner`); reading `obj.user`
+        # on a Property raised AttributeError, so every property PUT/PATCH/
+        # DELETE returned 500 — even for admins.
+        owner = getattr(obj, 'user', None) or getattr(obj, 'owner', None)
+        return bool(request.user and (request.user.is_staff or owner == request.user))
 
 
 class IsVerifiedUser(BasePermission):

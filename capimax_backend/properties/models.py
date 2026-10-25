@@ -251,6 +251,26 @@ class Property(models.Model):
         help_text="Whether property is featured"
     )
 
+    # Publication is a separate, admin-only step (client round 3, #24):
+    # submitting or approving a property never lists it publicly.
+    is_published = models.BooleanField(
+        default=False,
+        help_text="Listed publicly. Only an admin can publish, after approval."
+    )
+    published_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When an admin published the property"
+    )
+    published_by = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='published_properties',
+        help_text="Admin who published the property"
+    )
+
     minimum_investment = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -379,6 +399,7 @@ class Property(models.Model):
     def can_accept_investments(self):
         """Check if property can accept new investments."""
         return (
+            self.is_published and
             self.status in [PropertyStatus.ACTIVE, PropertyStatus.TOKENIZED] and
             not self.is_fully_funded
         )
@@ -480,7 +501,22 @@ class DocumentType(models.TextChoices):
     FINANCIAL = 'financial', 'Financial Report'
     LEGAL = 'legal', 'Legal Documents'
     TECHNICAL = 'technical', 'Technical Documents'
+    OWNER_IDENTITY = 'owner_identity', 'Owner / Developer ID'
+    COMPANY_REGISTRATION = 'company_registration', 'Company Registration'
+    PERMITS = 'permits', 'Permits & Licenses'
     OTHER = 'other', 'Other'
+
+
+def property_document_upload_path(instance, filename):
+    """
+    property_documents/<property id>/<random>-<name>. Random prefixes keep
+    owner files (title deeds, IDs, permits) from being guessable by URL.
+    """
+    import os
+    from django.utils.text import get_valid_filename
+    base, ext = os.path.splitext(filename or 'document')
+    safe = get_valid_filename(base)[:60] or 'document'
+    return f'property_documents/{instance.property_id}/{uuid.uuid4().hex}-{safe}{ext.lower()}'
 
 
 class PropertyDocument(models.Model):
@@ -504,7 +540,7 @@ class PropertyDocument(models.Model):
     )
 
     document = models.FileField(
-        upload_to='property_documents/',
+        upload_to=property_document_upload_path,
         help_text="Document file"
     )
 
@@ -521,7 +557,8 @@ class PropertyDocument(models.Model):
     )
 
     size = models.PositiveIntegerField(
-        help_text="File size in bytes"
+        default=0,
+        help_text="File size in bytes (filled automatically from the file)"
     )
 
     # Version control fields
@@ -576,6 +613,14 @@ class PropertyDocument(models.Model):
 
     def save(self, *args, **kwargs):
         """Override save to handle version control."""
+        # Derive the size from the file. The admin inline never sent `size`,
+        # so adding a property with a document crashed with an IntegrityError
+        # (client round 3, admin note #1).
+        if self.document and not self.size:
+            try:
+                self.size = self.document.size
+            except Exception:
+                self.size = 0
         if not self.pk:  # New document
             # Check if there's an existing document with same name for this property
             existing = PropertyDocument.objects.filter(
@@ -1558,3 +1603,75 @@ class ConstructionInstallment(models.Model):
         
         super().save(*args, **kwargs)
 
+
+
+
+class OwnerMessage(models.Model):
+    """
+    Messages between the platform team and a property owner / developer
+    (client round 3, #23): review notes, document requests, approval
+    results, publication notices and the owner's replies.
+    """
+
+    class Category(models.TextChoices):
+        GENERAL = 'general', 'General'
+        REVIEW_NOTE = 'review_note', 'Review note'
+        DOCUMENT_REQUEST = 'document_request', 'Document request'
+        CHANGES_REQUESTED = 'changes_requested', 'Changes requested'
+        APPROVAL_RESULT = 'approval_result', 'Review result'
+        PUBLICATION = 'publication', 'Publication'
+        REPLY = 'reply', 'Owner reply'
+
+    class SenderRole(models.TextChoices):
+        ADMIN = 'admin', 'Platform team'
+        OWNER = 'owner', 'Owner'
+        SYSTEM = 'system', 'System'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    owner = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.CASCADE,
+        related_name='owner_messages',
+        help_text="Property owner / developer this conversation belongs to"
+    )
+    property = models.ForeignKey(
+        Property,
+        on_delete=models.CASCADE,
+        related_name='owner_messages',
+        null=True,
+        blank=True,
+        help_text="Related property (empty = general message)"
+    )
+    sender = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.SET_NULL,
+        related_name='sent_owner_messages',
+        null=True,
+        blank=True,
+        help_text="Who wrote the message (empty = system)"
+    )
+    sender_role = models.CharField(max_length=10, choices=SenderRole.choices, default=SenderRole.ADMIN)
+    category = models.CharField(max_length=30, choices=Category.choices, default=Category.GENERAL)
+    subject = models.CharField(max_length=255)
+    body = models.TextField()
+    # Arabic version of system-generated messages (the UI shows the one
+    # matching the user's language; admin-typed messages use subject/body).
+    subject_ar = models.CharField(max_length=255, blank=True)
+    body_ar = models.TextField(blank=True)
+    attachment = models.FileField(upload_to='owner_messages/', blank=True, null=True)
+    read_by_owner_at = models.DateTimeField(null=True, blank=True)
+    read_by_admin_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'properties_owner_message'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['owner', 'created_at']),
+            models.Index(fields=['property', 'created_at']),
+        ]
+        verbose_name = 'Owner message'
+        verbose_name_plural = 'Owner messages'
+
+    def __str__(self):
+        return f"{self.subject} → {self.owner.email}"

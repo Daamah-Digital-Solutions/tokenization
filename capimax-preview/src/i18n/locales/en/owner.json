@@ -1,0 +1,172 @@
+{
+  "submit": {
+    "title": "Submit a property",
+    "subtitle": "Tell us about the property and attach its documents. Our team reviews every submission.",
+    "hiddenNotice": "Your property will NOT be visible to the public when you submit it. It is reviewed by the platform team first and listed only after it has been approved and published by an admin.",
+    "sections": {
+      "basic": "Basic information",
+      "tokenization": "Tokenization",
+      "location": "Location",
+      "specifics": "Property specifics",
+      "photos": "Photos",
+      "documents": "Documents"
+    },
+    "fields": {
+      "title": "Title",
+      "titlePlaceholder": "e.g. Marina Tower 12",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe the property, its location and what makes it attractive.",
+      "type": "Type",
+      "category": "Category",
+      "tokenPrice": "Share (token) price (USD)",
+      "totalTokens": "Total shares (tokens)",
+      "totalValue": "Total value (USD)",
+      "totalValueHint": "Calculated from share price × total shares. Adjust if needed.",
+      "expectedReturn": "Expected annual return (%)",
+      "rentalYield": "Rental yield (%)",
+      "address": "Address",
+      "city": "City",
+      "state": "State / Region",
+      "country": "Country",
+      "size": "Size (m²)",
+      "yearBuilt": "Year built",
+      "completionDate": "Expected completion date"
+    },
+    "types": {
+      "residential": "Residential",
+      "commercial": "Commercial",
+      "industrial": "Industrial",
+      "mixed_use": "Mixed use",
+      "land": "Land"
+    },
+    "categories": {
+      "ready_property": "Ready (income-generating)",
+      "under_construction": "Under construction"
+    },
+    "photos": {
+      "hint": "Add up to {{max}} photos (JPG/PNG, max 8 MB each). The first one is the cover image.",
+      "add": "Add photo",
+      "cover": "Cover",
+      "remove": "Remove photo",
+      "errors": {
+        "max": "You can attach up to {{max}} photos.",
+        "notImage": "\"{{name}}\" is not an image.",
+        "tooLarge": "\"{{name}}\" is larger than 8 MB."
+      }
+    },
+    "documents": {
+      "intro": "Attach the documents for the property and its owner. They are seen only by the review team — the admin decides what is shown to buyers.",
+      "formats": "PDF, JPG, PNG or WEBP · max 15 MB each",
+      "required": "Required",
+      "optional": "Optional",
+      "requiredUnderConstruction": "Required for under-construction properties",
+      "choose": "Choose file",
+      "addMore": "Add file",
+      "replace": "Replace",
+      "remove": "Remove",
+      "missingRequired": "Please attach the required documents: {{list}}",
+      "badType": "\"{{name}}\" is not a supported file type.",
+      "tooLarge": "\"{{name}}\" is larger than 15 MB.",
+      "types": {
+        "ownership": "Title deed / proof of ownership",
+        "owner_identity": "Owner or developer ID",
+        "company_registration": "Company registration",
+        "permits": "Building permits & licenses",
+        "valuation": "Valuation report",
+        "insurance": "Insurance policy",
+        "financial": "Financial / feasibility study",
+        "other": "Other supporting documents"
+      },
+      "descs": {
+        "ownership": "Title deed, sale contract or registry extract proving ownership.",
+        "owner_identity": "Passport or national ID of the owner / authorised signatory.",
+        "company_registration": "Commercial registration if the owner or developer is a company.",
+        "permits": "Construction permit, licenses and approvals.",
+        "valuation": "Latest valuation report from an accredited valuer.",
+        "insurance": "Current insurance policy and coverage.",
+        "financial": "Financial study, feasibility study or projections.",
+        "other": "Floor plans, surveys or any other useful documents."
+      }
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "submit": "Submit for review",
+      "submitting": "Submitting…",
+      "uploadingImages": "Uploading photos…",
+      "uploadingDocuments": "Uploading documents…"
+    },
+    "errors": {
+      "generic": "We couldn't submit the property. Please check the form and try again."
+    }
+  },
+  "success": {
+    "title": "Property submitted for review",
+    "desc": "We received your property with {{images}} photo(s) and {{documents}} document(s). It is not public yet.",
+    "uploadFailures": "{{count}} file(s) could not be uploaded — you can send them from Messages.",
+    "nextTitle": "What happens next",
+    "step1": "Review — our team checks the property details and documents.",
+    "step2": "Questions or changes — if anything is missing, you'll get a message in your Messages inbox.",
+    "step3": "Approval — once everything is in order, the submission is approved.",
+    "step4": "Publication — the platform team completes the listing and publishes it. Only then can buyers see it.",
+    "messagesTitle": "Keep an eye on your Messages",
+    "messagesDesc": "All review notes, document requests and results are sent to the Messages section of your dashboard (and by email).",
+    "toMessages": "Open Messages",
+    "toMyProperties": "View my properties",
+    "toDashboard": "Back to dashboard"
+  },
+  "status": {
+    "pending": "Under review",
+    "under_review": "Under review",
+    "requires_changes": "Changes requested",
+    "approved": "Approved — awaiting publication",
+    "published": "Published",
+    "rejected": "Not approved",
+    "draft": "Draft",
+    "descs": {
+      "pending": "Our team is reviewing your submission. It is not public yet.",
+      "requires_changes": "The team asked for changes. Update the property and resubmit.",
+      "approved": "Approved. The platform team will publish it soon.",
+      "published": "Live and visible to buyers.",
+      "rejected": "This submission was not approved. See Messages for the reason."
+    },
+    "requiredChanges": "Requested changes:",
+    "resubmit": "Resubmit for review",
+    "resubmitted": "Resubmitted — the team has been notified.",
+    "unread": "{{count}} new message(s)",
+    "openMessages": "Messages"
+  },
+  "messages": {
+    "title": "Messages",
+    "subtitle": "Notes and requests from the Capimax RT team about your properties and documents.",
+    "empty": "No messages yet. Review notes and requests from our team will appear here.",
+    "allProperties": "All properties",
+    "general": "General",
+    "fromTeam": "Capimax RT team",
+    "you": "You",
+    "system": "Capimax RT",
+    "replyPlaceholder": "Write a reply to the team…",
+    "send": "Send",
+    "sending": "Sending…",
+    "attach": "Attach file",
+    "sent": "Message sent.",
+    "sendFailed": "The message could not be sent. Please try again.",
+    "loadFailed": "Messages could not be loaded.",
+    "unread": "New",
+    "property": "Property",
+    "uploadTitle": "Upload a requested document",
+    "uploadType": "Document type",
+    "uploadButton": "Upload document",
+    "uploading": "Uploading…",
+    "uploaded": "Document uploaded. The team has been notified.",
+    "uploadFailed": "The document could not be uploaded.",
+    "categories": {
+      "general": "Message",
+      "review_note": "Review note",
+      "document_request": "Document request",
+      "changes_requested": "Changes requested",
+      "approval_result": "Review result",
+      "publication": "Publication",
+      "reply": "Your reply"
+    }
+  }
+}

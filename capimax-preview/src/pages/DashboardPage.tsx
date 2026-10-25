@@ -47,6 +47,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const { navigate } = useRouter();
   const { theme, toggleTheme } = useTheme();
   const { t: tKyc } = useTranslation('kyc');
+  const { t: tOwner } = useTranslation('owner');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Navigation items based on user role
@@ -91,6 +92,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           { id: 'wallet', label: 'Wallet', icon: '💰' },
           { id: 'investors', label: 'Owners', icon: '👥' },
           { id: 'documents', label: 'Documents', icon: '📄' },
+          // Team ↔ owner/developer messages (client round 3, #23)
+          { id: 'messages', label: tOwner('messages.title'), icon: '✉️' },
         ];
       case 'admin':
         return [

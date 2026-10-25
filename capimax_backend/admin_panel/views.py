@@ -223,32 +223,31 @@ class PropertyApprovalDetailView(APIView):
             review_notes = request.data.get('review_notes', '')
             required_changes = request.data.get('required_changes', '')
 
-            if action not in ['approve', 'reject', 'request_changes']:
+            from properties import workflow
+            try:
+                if action == 'approve':
+                    workflow.approve(property_obj, request.user, review_notes)
+                elif action == 'reject':
+                    workflow.reject(property_obj, request.user, review_notes)
+                elif action == 'request_changes':
+                    workflow.request_changes(property_obj, request.user,
+                                             required_changes or review_notes, review_notes)
+                elif action == 'publish':
+                    workflow.publish(property_obj, request.user)
+                elif action == 'unpublish':
+                    workflow.unpublish(property_obj, request.user, review_notes)
+                else:
+                    return Response(create_error_response(
+                        message="Invalid action. Use approve, reject, request_changes, publish or unpublish",
+                        status_code=status.HTTP_400_BAD_REQUEST
+                    ), status=status.HTTP_400_BAD_REQUEST)
+            except workflow.WorkflowError as exc:
                 return Response(create_error_response(
-                    message="Invalid action. Must be 'approve', 'reject', or 'request_changes'",
-                    status_code=status.HTTP_400_BAD_REQUEST
+                    message=str(exc), status_code=status.HTTP_400_BAD_REQUEST
                 ), status=status.HTTP_400_BAD_REQUEST)
 
-            # Update approval record
-            approval.reviewer = request.user
-            approval.review_notes = review_notes
-            approval.reviewed_at = timezone.now()
-
-            if action == 'approve':
-                approval.status = 'approved'
-                property_obj.status = 'approved'
-
-            elif action == 'reject':
-                approval.status = 'rejected'
-                property_obj.status = 'delisted'
-
-            elif action == 'request_changes':
-                approval.status = 'requires_changes'
-                approval.required_changes = required_changes
-                property_obj.status = 'draft'
-
-            approval.save()
-            property_obj.save()
+            property_obj.refresh_from_db()
+            approval.refresh_from_db()
 
             return Response(create_success_response(
                 data={

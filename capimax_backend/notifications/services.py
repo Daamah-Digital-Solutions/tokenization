@@ -70,7 +70,9 @@ class NotificationService:
                 notification_type=notification_type,
                 priority=priority,
                 action_url=action_url,
-                action_label=action_label,
+                # The column is NOT NULL; callers that pass no button (e.g.
+                # the mint success/failure notices) used to fail to save.
+                action_label=action_label or '',
                 expires_at=expires_at
             )
             

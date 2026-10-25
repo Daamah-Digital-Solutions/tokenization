@@ -325,7 +325,17 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
     """Serializer for detailed property view with all related data."""
     
     images = PropertyImageSerializer(many=True, read_only=True)
-    documents = PropertyDocumentSerializer(many=True, read_only=True)
+    # Only documents marked public are embedded for everyone; the owner and
+    # staff see all. Investor-only files are served by the Data Room endpoint.
+    documents = serializers.SerializerMethodField()
+
+    def get_documents(self, obj):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        docs = obj.documents.all()
+        if not (user and user.is_authenticated and (user.is_staff or obj.owner_id == user.pk)):
+            docs = [d for d in docs if d.is_public]
+        return PropertyDocumentSerializer(docs, many=True, context=self.context).data
     updates = PropertyUpdateSerializer(many=True, read_only=True)
     reviews = PropertyReviewSerializer(many=True, read_only=True)
     valuations = PropertyValuationSerializer(many=True, read_only=True)
@@ -501,8 +511,10 @@ class PropertyCreateUpdateSerializer(serializers.ModelSerializer):
             'longitude', 'expected_completion_date', 'construction_progress',
             'rental_income_active', 'monthly_rental_income', 'occupancy_rate',
             'supports_installments', 'installment_period_months',
-            'featured', 'minimum_investment', 'images'
+            'minimum_investment', 'images'
         ]
+        # `featured`, `status` and `is_published` are platform decisions and
+        # are deliberately NOT writable here (client round 3, #24).
     
     def validate(self, attrs):
         """Validate property data."""
@@ -548,7 +560,10 @@ class PropertyCreateUpdateSerializer(serializers.ModelSerializer):
         """Create a new property."""
         user = self.context['request'].user
         validated_data['owner'] = user
-        validated_data['status'] = PropertyStatus.DRAFT
+        # A submission goes straight to review and stays hidden until an
+        # admin approves AND publishes it.
+        validated_data['status'] = PropertyStatus.PENDING_APPROVAL
+        validated_data['is_published'] = False
         return super().create(validated_data)
 
 
@@ -778,7 +793,11 @@ class ConstructionInstallmentCreateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         """Validate installment payment creation data."""
         property_obj = attrs.get('property_investment')
-        
+
+        # Only published listings can be bought (client round 3, #24).
+        if not property_obj.is_published:
+            raise serializers.ValidationError("This property is not open for ownership yet.")
+
         # Validate property supports installments
         if not property_obj.supports_installments:
             raise serializers.ValidationError(

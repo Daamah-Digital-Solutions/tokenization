@@ -118,6 +118,8 @@ def make_property(
         owner = make_property_owner()
     if smart_contract_address is None:
         smart_contract_address = '0x' + uuid.uuid4().hex.ljust(40, 'a')[:40]
+    # Live statuses are listed publicly (publication is its own admin step).
+    extra.setdefault('is_published', status in ('approved', 'active', 'tokenized'))
     return Property.objects.create(
         title=title,
         property_type=property_type,

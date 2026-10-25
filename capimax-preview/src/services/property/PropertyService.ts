@@ -280,7 +280,7 @@ export class PropertyService {
         formData.append(`documents[${index}]`, doc);
       });
 
-      return await apiClient.uploadFile(`/properties/${propertyId}/documents`, formData);
+      return await apiClient.uploadFile(`/properties/${propertyId}/documents/`, formData);
     } catch (error) {
       console.error('Failed to upload property documents:', error);
       throw error;

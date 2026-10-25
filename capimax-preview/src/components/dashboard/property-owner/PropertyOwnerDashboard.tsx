@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+import { OwnerMessagesPanel } from './OwnerMessagesPanel';
+import { OwnerSubmissionStatus } from './OwnerSubmissionStatus';
 import { useQuery } from '@tanstack/react-query';
 import { DashboardStats, ActivityFeed, PerformanceChart, QuickActions } from '../';
 import type { StatItem, ActivityItem, ChartDataPoint, QuickAction } from '../';
@@ -191,16 +193,9 @@ const PropertyOverview: React.FC = () => {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <span className={`px-3 py-1 text-xs font-medium rounded-full ${
-                    property.status === 'active'
-                      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                      : property.status === 'funding'
-                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-                      : 'bg-neutral-100 text-neutral-800 dark:bg-slate-600 dark:text-slate-300'
-                  }`}>
-                    {property.status}
-                  </span>
+                <div className="max-w-xs">
+                  {/* Real review / publication state (was the raw status string) */}
+                  <OwnerSubmissionStatus property={property as any} />
                 </div>
               </div>
 
@@ -596,9 +591,9 @@ const PropertyDocuments: React.FC = () => {
           </h3>
           <button
             type="button"
-            onClick={() => switchDashboardView('properties')}
+            onClick={() => switchDashboardView('messages')}
             className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg hover:bg-primary-700 transition-colors"
-            title="Open a property to upload a document"
+            title="Upload a document for one of your properties (Messages)"
           >
             Upload Document
           </button>
@@ -780,7 +775,7 @@ const PropertyOwnerOverview: React.FC = () => {
       label: 'Upload Documents',
       icon: '📄',
       description: 'Manage legal documents',
-      onClick: () => switchDashboardView('documents')
+      onClick: () => switchDashboardView('messages')
     }
   ];
 
@@ -1434,6 +1429,9 @@ export const PropertyOwnerDashboard: React.FC<{ currentView: string }> = ({ curr
 
     case 'notifications':
       return <PropertyOwnerNotifications />;
+
+    case 'messages':
+      return <OwnerMessagesPanel />;
 
     default:
       return (

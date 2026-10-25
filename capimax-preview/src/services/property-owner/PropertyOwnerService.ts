@@ -145,9 +145,9 @@ export class PropertyOwnerService {
         property_size: parseFloat(property.property_size),
         year_built: property.year_built,
         address: property.address || '',
-        city: property.city,
+        city: property.city || (property.location || '').split(',')[0]?.trim() || '',
         state: property.state || '',
-        country: property.country,
+        country: property.country || (property.location || '').split(',').slice(1).join(',').trim(),
         coordinates: property.coordinates,
         images: property.primary_image ? [property.primary_image] : ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"],
         documents: property.documents || [],
@@ -172,7 +172,14 @@ export class PropertyOwnerService {
         featured: property.featured,
         minimum_investment: parseFloat(property.minimum_investment || 1000),
         average_rating: property.average_rating,
-        total_reviews: property.total_reviews
+        total_reviews: property.total_reviews,
+        // Submission → review → publication (client round 3, #23/#24)
+        is_published: !!property.is_published,
+        approval_status: property.approval_status ?? null,
+        required_changes: property.required_changes || '',
+        review_notes: property.review_notes || '',
+        unread_messages: property.unread_messages || 0,
+        documents_count: property.documents_count || 0
       }));
     } catch (error) {
       console.error('Failed to fetch owned properties:', error);

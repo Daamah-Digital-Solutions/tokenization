@@ -59,7 +59,7 @@ class InvestmentCalculationSerializer(serializers.Serializer):
         except Property.DoesNotExist:
             raise serializers.ValidationError("Property not found")
         
-        if property_obj.status not in ['active', 'tokenized']:
+        if property_obj.status not in ['active', 'tokenized'] or not property_obj.is_published:
             raise serializers.ValidationError("Property is not available for investment")
         
         return value
@@ -98,7 +98,7 @@ class InvestmentCreateSerializer(serializers.ModelSerializer):
         except Property.DoesNotExist:
             raise serializers.ValidationError("Property not found")
         
-        if property_obj.status not in ['active', 'tokenized']:
+        if property_obj.status not in ['active', 'tokenized'] or not property_obj.is_published:
             raise serializers.ValidationError("Property is not available for investment")
         
         return value
