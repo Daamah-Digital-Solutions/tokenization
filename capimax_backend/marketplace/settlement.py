@@ -5,8 +5,9 @@ A matched trade used to be parked "in escrow" forever: the buyer was never
 charged, the seller never paid and the shares never changed hands. Trades
 now settle instantly on the platform ledger, in one database transaction:
 
-  * the buyer's wallet is debited the price + buyer fee;
-  * the seller's wallet is credited the price − seller fee;
+  * the buyer's wallet is debited the price, and the resale fee as its own
+    line (PropShare model: the buyer pays it, admin setting, 1% by default);
+  * the seller's wallet is credited the full price;
   * the shares move from the seller's completed investments (oldest first)
     to a new completed investment for the buyer.
 
@@ -37,11 +38,13 @@ class TradeSettlementError(Exception):
         self.message = message
 
 
-def buyer_cost(amount: Decimal, fee_percentage: Decimal = Decimal('0.0250')) -> Decimal:
-    """Price + the buyer's half of the platform fee (mirrors TradeTransaction.calculate_fees)."""
+def buyer_cost(amount: Decimal) -> Decimal:
+    """Price + the buyer's resale fee (mirrors TradeTransaction.calculate_fees)."""
+    from payments.models import PlatformFeeSettings
+
     amount = Decimal(amount)
-    buyer_fee = ((amount * fee_percentage).quantize(CENT) / 2).quantize(CENT)
-    return (amount + buyer_fee).quantize(CENT)
+    pct = Decimal(PlatformFeeSettings.current().secondary_resale_fee_pct)
+    return (amount + (amount * pct / 100).quantize(CENT)).quantize(CENT)
 
 
 def seller_available_shares(seller, property_obj) -> int:
@@ -97,9 +100,14 @@ def settle_trade(trade) -> None:
 
         reference = trade.id
         WalletBalance.debit(
-            trade.buyer, cost, transaction_type='trade_purchase', reference_id=reference,
+            trade.buyer, trade.total_amount, transaction_type='trade_purchase', reference_id=reference,
             description=f'Secondary market purchase: {tokens} shares of {prop.title}',
         )
+        if trade.buyer_fee > 0:  # its own ledger line, like PropShare
+            WalletBalance.debit(
+                trade.buyer, trade.buyer_fee, transaction_type='fee', reference_id=reference,
+                description=f'Resale fee ({trade.platform_fee_percentage * 100:.2f}%) — {prop.title}',
+            )
         WalletBalance.credit(
             trade.seller, proceeds, transaction_type='trade_sale', reference_id=reference,
             description=f'Secondary market sale: {tokens} shares of {prop.title}',

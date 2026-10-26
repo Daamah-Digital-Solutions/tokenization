@@ -48,9 +48,12 @@ class SecondaryMarketSettlementTests(TestCase):
 
         trade = TradeTransaction.objects.get()
         self.assertEqual(trade.status, 'completed')
-        # $120 + half of the 2.5% fee (1.25% = $1.50)
-        self.assertEqual(balance(self.buyer), Decimal('1000.00') - Decimal('121.50'))
-        self.assertEqual(balance(self.seller), Decimal('118.50'))
+        # PropShare model: $120 + the buyer's 1% resale fee ($1.20); the seller gets the full $120
+        self.assertEqual(balance(self.buyer), Decimal('1000.00') - Decimal('121.20'))
+        self.assertEqual(balance(self.seller), Decimal('120.00'))
+        from payments.models import WalletTransaction
+        fee = WalletTransaction.objects.get(user=self.buyer, transaction_type='fee')
+        self.assertEqual(fee.amount, Decimal('-1.20'))
 
         self.holding.refresh_from_db()
         self.assertEqual(self.holding.token_amount, 40)

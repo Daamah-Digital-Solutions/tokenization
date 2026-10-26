@@ -704,16 +704,18 @@ class TradeTransaction(models.Model):
         return percentage.quantize(Decimal('0.0001'))
     
     def calculate_fees(self):
-        """Calculate all fees for the transaction."""
-        self.platform_fee = (self.total_amount * self.platform_fee_percentage).quantize(Decimal('0.01'))
-        
-        # Split platform fee between buyer and seller (50/50)
-        fee_split = self.platform_fee / 2
-        self.buyer_fee = fee_split.quantize(Decimal('0.01'))
-        self.seller_fee = fee_split.quantize(Decimal('0.01'))
-        
-        # Calculate net amounts
-        self.net_amount_to_seller = (self.total_amount - self.seller_fee).quantize(Decimal('0.01'))
+        """
+        PropShare model: the buyer pays the resale fee (admin setting, 1% by
+        default) on top of the price; the seller receives the full price.
+        """
+        from payments.models import PlatformFeeSettings
+
+        pct = Decimal(PlatformFeeSettings.current().secondary_resale_fee_pct)
+        self.platform_fee_percentage = (pct / 100).quantize(Decimal('0.0001'))
+        self.buyer_fee = (self.total_amount * pct / 100).quantize(Decimal('0.01'))
+        self.seller_fee = Decimal('0.00')
+        self.platform_fee = self.buyer_fee
+        self.net_amount_to_seller = Decimal(self.total_amount).quantize(Decimal('0.01'))
         self.total_cost_to_buyer = (self.total_amount + self.buyer_fee).quantize(Decimal('0.01'))
     
     def complete_transaction(self, transaction_hash=None):

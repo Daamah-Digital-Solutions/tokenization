@@ -42,7 +42,7 @@
     "tokens": "Tokens",
     "pricePerToken": "Price per Token",
     "subtotal": "Subtotal",
-    "platformFee": "Platform Fee (1.25%)",
+    "platformFee": "Resale fee ({{pct}}%)",
     "total": "Total",
     "confirmTitle": "Confirm Your Order",
     "confirmSubtitle": "Please review your order details before submitting",

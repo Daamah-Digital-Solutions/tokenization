@@ -42,7 +42,7 @@
     "tokens": "الحصص",
     "pricePerToken": "سعر الحصة",
     "subtotal": "المجموع الفرعي",
-    "platformFee": "رسوم المنصة (1.25%)",
+    "platformFee": "رسوم إعادة البيع ({{pct}}%)",
     "total": "الإجمالي",
     "confirmTitle": "تأكيد طلبك",
     "confirmSubtitle": "يرجى مراجعة تفاصيل طلبك قبل الإرسال",

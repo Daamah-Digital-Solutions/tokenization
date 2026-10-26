@@ -14,6 +14,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { usePaymentOptions } from '../purchase/PaymentMethodList';
 import { Input } from '../design-system/forms/Input';
 import { Badge } from '../design-system/icons/Badge';
 import { Card } from '../design-system/cards/Card';
@@ -50,6 +51,7 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   // Purchases are paid from the wallet balance (client round 3, #14/#21).
+  const { data: feeOptions } = usePaymentOptions();
   const { data: walletData } = useQuery({
     queryKey: ['wallet-balance'],
     queryFn: () => PaymentService.getWalletBalance(),
@@ -74,9 +76,10 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
 
   const pricePerToken = parseFloat(orderData.price_per_token || listing.price_per_token);
   const totalCost = pricePerToken * orderData.tokens_requested;
-  // The 2.5% platform fee is split 50/50 between buyer and seller, so the
-  // buyer pays 1.25% on top of the price (marketplace TradeTransaction).
-  const estimatedFees = Math.round(totalCost * 0.0125 * 100) / 100;
+  // PropShare model: the buyer pays the resale fee (admin setting, 1% by
+  // default) on top of the price; the seller receives the full price.
+  const resaleFeePct = Number(feeOptions?.fees?.secondary_resale_fee_pct ?? 1);
+  const estimatedFees = Math.round(totalCost * resaleFeePct) / 100;
   const totalWithFees = totalCost + estimatedFees;
   const walletBalance =
     walletData?.total_value_usd ||
@@ -406,7 +409,7 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
                         </span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">{t('buy.platformFee')}</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('buy.platformFee', { pct: resaleFeePct })}</span>
                         <span className="font-medium text-gray-900 dark:text-white">
                           ${estimatedFees.toFixed(2)}
                         </span>
