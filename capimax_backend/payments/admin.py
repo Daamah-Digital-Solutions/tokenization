@@ -814,6 +814,27 @@ class PlatformFeeSettingsAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return not PlatformFeeSettings.objects.exists()
 
+    def get_urls(self):
+        from django.urls import path
+        return [path('reconciliation/', self.admin_site.admin_view(self.reconciliation_view),
+                     name='payments_reconciliation')] + super().get_urls()
+
+    def reconciliation_view(self, request):
+        """Money checks that should always hold (read-only; also emailed daily when something fails)."""
+        from django.template.response import TemplateResponse
+        from .reconciliation import run_checks
+        results = run_checks()
+        return TemplateResponse(request, 'admin/payments/reconciliation.html', {
+            **self.admin_site.each_context(request),
+            'title': 'Reconciliation', 'opts': self.model._meta, 'results': results,
+            'total': sum(len(r['findings']) for r in results),
+        })
+
+    def changelist_view(self, request, extra_context=None):
+        from django.urls import reverse
+        extra_context = {**(extra_context or {}), 'reconciliation_url': reverse('admin:payments_reconciliation')}
+        return super().changelist_view(request, extra_context)
+
     def has_delete_permission(self, request, obj=None):
         return False
 

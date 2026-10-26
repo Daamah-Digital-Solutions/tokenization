@@ -1,0 +1,22 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Home</a> &rsaquo; Reconciliation</div>
+{% endblock %}
+
+{% block content %}
+<style>
+  .rc-card{border:1px solid var(--hairline-color,#e5e7eb);border-radius:10px;padding:14px 18px;margin:0 0 14px}
+  .rc-ok{color:#16a34a;font-weight:600} .rc-bad{color:#dc2626;font-weight:600}
+  .rc-card ul{margin:8px 0 0 18px} .rc-card li{margin:3px 0}
+</style>
+<h1>Reconciliation</h1>
+<p>{% if total %}<span class="rc-bad">{{ total }} item(s) to check.</span>{% else %}<span class="rc-ok">Everything adds up.</span>{% endif %}
+  These checks also run every morning; anything found is emailed to the support inbox.</p>
+{% for r in results %}
+<div class="rc-card">
+  <h2 style="margin:0">{% if r.findings %}<span class="rc-bad">✗</span>{% else %}<span class="rc-ok">✓</span>{% endif %} {{ r.title }}</h2>
+  {% if r.findings %}<ul>{% for f in r.findings %}<li>{{ f.message }}</li>{% endfor %}</ul>{% endif %}
+</div>
+{% endfor %}
+{% endblock %}

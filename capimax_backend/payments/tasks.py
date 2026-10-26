@@ -292,3 +292,10 @@ def reconcile_card_checkouts():
     from .checkout import reconcile_pending_card_payments
     return {'checked': reconcile_pending_card_payments()}
 
+
+
+@shared_task
+def daily_reconciliation():
+    """Daily money checks (PropShare model); findings are emailed to the support inbox."""
+    from .reconciliation import report_by_email
+    return report_by_email()

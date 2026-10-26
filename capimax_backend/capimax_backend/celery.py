@@ -89,6 +89,10 @@ app.conf.beat_schedule = {
         'task': 'payments.tasks.reconcile_card_checkouts',
         'schedule': 300.0,
     },
+    'daily-reconciliation': {
+        'task': 'payments.tasks.daily_reconciliation',
+        'schedule': crontab(hour=6, minute=0),
+    },
 
     # Apply admin-defined price phases on their start dates (client round 3, admin note #2)
     'sync-property-price-phases': {
