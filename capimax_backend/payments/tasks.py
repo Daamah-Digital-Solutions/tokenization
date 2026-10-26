@@ -284,3 +284,11 @@ def reconcile_stripe_payments():
             )
 
     return {'checked': payments.count(), 'drift': drift_count}
+
+
+@shared_task
+def reconcile_card_checkouts():
+    """Every 5 minutes: ask Stripe about card checkouts still pending (missed webhooks)."""
+    from .checkout import reconcile_pending_card_payments
+    return {'checked': reconcile_pending_card_payments()}
+

@@ -25,6 +25,7 @@ class InvestmentStatus(models.TextChoices):
     CANCELLED = 'cancelled', 'Cancelled'                 # User cancelled
     REFUNDED = 'refunded', 'Refunded'                    # Refund processed
     TRANSFERRED = 'transferred', 'Sold / transferred'    # All shares sold on the secondary market
+    EXPIRED = 'expired', 'Reservation expired'           # Direct payment never arrived in time
 
 
 class Investment(models.Model):
@@ -156,6 +157,34 @@ class Investment(models.Model):
         null=True,
         blank=True,
         help_text="Timestamp when investment was completed"
+    )
+
+    # ------------------------------------------------------------------
+    # Purchase pricing (PropShare model): the server prices every purchase
+    # and keeps the rates it used, so later fee changes never rewrite history.
+    # ------------------------------------------------------------------
+    purchase_method = models.CharField(
+        max_length=20, blank=True,
+        help_text="wallet / card / crypto / pronova / bank / nova_sukuk",
+    )
+    unit_price_snapshot = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+        help_text="Share price at purchase",
+    )
+    platform_fee_amount = models.DecimalField(
+        max_digits=15, decimal_places=2, default=Decimal('0.00'),
+        help_text="Purchase fee charged to the buyer",
+    )
+    platform_fee_rate = models.DecimalField(max_digits=6, decimal_places=3, null=True, blank=True)
+    management_fee_rate = models.DecimalField(max_digits=6, decimal_places=3, null=True, blank=True)
+    total_charged = models.DecimalField(
+        max_digits=15, decimal_places=2, null=True, blank=True,
+        help_text="What the buyer pays: shares + fee − any discount",
+    )
+    fee_settings_snapshot = models.JSONField(default=dict, blank=True)
+    reserved_until = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Direct payments: the shares are held until then",
     )
 
     # ------------------------------------------------------------------
@@ -496,9 +525,16 @@ class TokenReservation(models.Model):
     )
     
     reserved_at = models.DateTimeField(auto_now_add=True)
-    
+
+    # NULL = held with no time limit (Nova Sukuk / bank transfer under review).
     expires_at = models.DateTimeField(
-        help_text="When the reservation expires"
+        null=True, blank=True,
+        help_text="When the reservation expires (empty = no time limit)"
+    )
+
+    investment = models.ForeignKey(
+        'investments.Investment', null=True, blank=True, on_delete=models.CASCADE,
+        related_name='reservations', help_text="The purchase these shares are held for",
     )
     
     released = models.BooleanField(
@@ -522,7 +558,7 @@ class TokenReservation(models.Model):
     @property
     def is_expired(self):
         """Check if reservation is expired."""
-        return timezone.now() > self.expires_at
+        return self.expires_at is not None and timezone.now() > self.expires_at
     
     def release_tokens(self):
         """Release the reserved tokens."""

@@ -92,6 +92,16 @@ app.conf.beat_schedule = {
         'kwargs': {},
     },
     
+    # PropShare-model checkout: release unpaid share holds, reconcile card checkouts
+    'expire-purchase-reservations': {
+        'task': 'investments.tasks.expire_purchase_reservations',
+        'schedule': 300.0,
+    },
+    'reconcile-card-checkouts': {
+        'task': 'payments.tasks.reconcile_card_checkouts',
+        'schedule': 300.0,
+    },
+
     # Apply admin-defined price phases on their start dates (client round 3, admin note #2)
     'sync-property-price-phases': {
         'task': 'properties.tasks.sync_property_price_phases',

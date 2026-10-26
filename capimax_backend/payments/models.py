@@ -2094,3 +2094,66 @@ class BankDepositRequest(models.Model):
 
     def __str__(self):
         return f"Bank deposit {self.amount} {self.currency} ({self.status})"
+
+
+class PlatformFeeSettings(models.Model):
+    """
+    Platform fees and discounts, editable by the admin (PropShare model).
+
+    A single row. Every purchase / plan snapshots the rates it used, so a
+    change here only affects new purchases.
+    """
+
+    platform_fee_pct = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal('2.50'),
+        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('20'))],
+        help_text="Purchase fee paid by the buyer (% of the shares bought)")
+    management_fee_pct = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal('1.00'),
+        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('20'))],
+        help_text="Yearly management fee, taken from rental distributions (%)")
+    installment_fee_pct = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal('4.00'),
+        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('20'))],
+        help_text="Fee on the down payment and each installment (%)")
+    secondary_resale_fee_pct = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal('1.00'),
+        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('20'))],
+        help_text="Secondary-market fee paid by the buyer on top of the price (%)")
+    reinvest_discount_pct = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal('5.00'),
+        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('50'))],
+        help_text="Discount on the share price when reinvesting from the wallet (%)")
+    pronova_discount_pct = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal('5.00'),
+        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('50'))],
+        help_text="Discount when paying with Pronova (charged on card; platform-funded) (%)")
+    crypto_short_tolerance_pct = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal('0.50'),
+        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('2'))],
+        help_text="A crypto payment short by no more than this % still completes the purchase")
+    crypto_short_tolerance_max = models.DecimalField(
+        max_digits=8, decimal_places=2, default=Decimal('1.00'),
+        validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('20'))],
+        help_text="…and by no more than this many USD")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Fees & discounts'
+        verbose_name_plural = 'Fees & discounts'
+
+    def __str__(self):
+        return 'Platform fees & discounts'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1  # single row
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def current(cls) -> 'PlatformFeeSettings':
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def rates(self) -> dict:
+        return {f.name: getattr(self, f.name) for f in self._meta.fields if f.name.endswith(('_pct', '_max'))}
+

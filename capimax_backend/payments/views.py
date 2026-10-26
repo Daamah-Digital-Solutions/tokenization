@@ -1285,7 +1285,22 @@ class StripeWebhookView(APIView):
         logger.info(f"Received Stripe webhook event: {event_type}")
 
         try:
-            if event_type == 'payment_intent.succeeded':
+            if event_type in ('checkout.session.completed', 'checkout.session.async_payment_succeeded',
+                              'checkout.session.expired', 'checkout.session.async_payment_failed'):
+                # Hosted checkout (PropShare model): purchases and wallet deposits.
+                from .checkout import apply_checkout_session, fail_payment
+                obj = event['data']['object']
+                if event_type == 'checkout.session.async_payment_failed':
+                    pid = obj.get('client_reference_id') or (obj.get('metadata') or {}).get('payment_id')
+                    payment = Payment.objects.filter(pk=pid).first() if pid else None
+                    if payment is not None:
+                        fail_payment(payment, reason='Payment failed')
+                else:
+                    apply_checkout_session(obj, source=f'stripe_webhook:{event_type}')
+            elif event_type == 'payment_intent.succeeded':
+                # Checkout-session payments are settled by the session events above.
+                if (event['data']['object'].get('metadata') or {}).get('payment_id') and                         not Payment.objects.filter(payment_intent_id=event['data']['object'].get('id')).exists():
+                    return Response({'status': 'success'}, status=status.HTTP_200_OK)
                 self._handle_payment_intent_succeeded(event['data']['object'])
             elif event_type == 'payment_intent.payment_failed':
                 self._handle_payment_intent_failed(event['data']['object'])

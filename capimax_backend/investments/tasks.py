@@ -634,3 +634,11 @@ def retry_failed_mint(investment_id: str):
     investment.save()
 
     return process_single_mint(investment_id)
+
+
+@shared_task
+def expire_purchase_reservations():
+    """Every 5 minutes: release shares held for card / Pronova / crypto purchases not paid in time."""
+    from .purchase import expire_reservations
+    return {'expired': expire_reservations()}
+

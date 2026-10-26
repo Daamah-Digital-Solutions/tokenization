@@ -13,6 +13,7 @@ from django.utils import timezone
 from datetime import timedelta
 
 from .models import (
+    PlatformFeeSettings,
     NOWPaymentsTransaction,
     Payment, UserPaymentMethod, WalletBalance, WalletTransaction,
     CryptoPayment, Refund, RecurringPayment,
@@ -795,4 +796,22 @@ from . import admin_withdrawals  # noqa: F401,E402
 
 # Bank deposit + platform bank account admin (same import-side-effect pattern).
 from . import admin_deposits  # noqa: F401,E402
+
+
+@admin.register(PlatformFeeSettings)
+class PlatformFeeSettingsAdmin(admin.ModelAdmin):
+    """Fees and discounts (single row). Changes apply to new purchases only."""
+
+    fieldsets = (
+        ('Purchases', {'fields': ('platform_fee_pct', 'pronova_discount_pct', 'reinvest_discount_pct')}),
+        ('Installments & secondary market', {'fields': ('installment_fee_pct', 'secondary_resale_fee_pct')}),
+        ('Rental income', {'fields': ('management_fee_pct',)}),
+        ('Crypto payments', {'fields': ('crypto_short_tolerance_pct', 'crypto_short_tolerance_max')}),
+    )
+
+    def has_add_permission(self, request):
+        return not PlatformFeeSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 

@@ -106,6 +106,15 @@ def _apply_to_investment(investment, payment, *, mint: bool) -> None:
     if investment.status in SETTLED_INVESTMENT_STATUSES:
         logger.info('Investment %s already confirmed (%s)', investment.pk, investment.status)
         return
+    if investment.status in ('expired', 'cancelled', 'failed'):
+        # Paid after the shares were released (PropShare model): re-take them
+        # if still free at the same price, otherwise refund to the wallet.
+        from investments.purchase import late_payment
+        outcome = late_payment(investment, payment)
+        logger.info('Late payment %s for investment %s: %s', payment.pk, investment.pk, outcome)
+        return
+    # The shares held for this purchase become sold shares.
+    investment.reservations.filter(released=False).update(released=True)
     if mint:
         Property.objects.filter(pk=investment.property_investment_id).update(
             tokens_sold=F('tokens_sold') + investment.token_amount)
