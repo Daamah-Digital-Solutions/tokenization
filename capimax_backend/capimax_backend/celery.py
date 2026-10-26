@@ -97,13 +97,9 @@ app.conf.beat_schedule = {
         'kwargs': {},
     },
 
-    # Monthly rental income distribution — runs on the 1st of every month
-    # to align with calendar months (not every 30 days which drifts).
-    'distribute-monthly-rental-income': {
-        'task': 'core.tasks.distribute_monthly_rental_income',
-        'schedule': crontab(day_of_month=1, hour=0, minute=30),
-        'kwargs': {},
-    },
+    # Rent payouts are recorded and paid by the admin (properties.RentDistribution,
+    # PropShare model); the old automatic monthly payout (estimated rent, wrong
+    # holder lookup — it paid nobody) is retired.
     
     # Weekly rental income collection
     'collect-rental-income': {

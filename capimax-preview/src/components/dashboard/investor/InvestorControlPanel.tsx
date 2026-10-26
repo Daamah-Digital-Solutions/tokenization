@@ -49,6 +49,7 @@ import { WithdrawModal } from '../../wallet/WithdrawModal';
 import { WithdrawalRequestsSection } from '../../wallet/WithdrawalRequestsSection';
 import { OpenCryptoPayments } from '../../purchase/OpenCryptoPayments';
 import { WalletLedger } from '../../wallet/WalletLedger';
+import { RentalReturns } from '../../wallet/RentalReturns';
 import { AddFundsModal } from '../../wallet/AddFundsModal';
 import WalletPanel from '../../wallet/WalletPanel';
 import { SecondaryMarketDashboard } from '../../marketplace/SecondaryMarketDashboard';
@@ -911,6 +912,9 @@ export const WalletContent: React.FC<{
           available balance — the locked total adds up to what's shown
           here. */}
       <WithdrawalRequestsSection />
+
+      {/* Rental income: rent, management fee, net (PropShare model). */}
+      <RentalReturns />
 
       {/* Every wallet movement with its numbered receipt (PropShare model). */}
       <WalletLedger />

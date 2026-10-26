@@ -1877,3 +1877,72 @@ class PropertyPriceTier(models.Model):
 
     def __str__(self):
         return f"{self.property.title}: {self.label} ({self.price_per_token})"
+
+
+class RentDistribution(models.Model):
+    """
+    Rent paid out to a property's owners for one period (PropShare model).
+
+    The admin records the rent actually collected (gross). It is split by the
+    shares each owner holds; the management fee (a yearly % of the value
+    held, for the length of the period) is taken from each share, and the net
+    is credited to the owner's wallet as a rental return. Draft until paid;
+    paid exactly once.
+    """
+
+    STATUS_CHOICES = [('draft', 'Draft'), ('paid', 'Paid')]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    property_investment = models.ForeignKey(Property, on_delete=models.PROTECT, related_name='rent_distributions')
+    period_start = models.DateField()
+    period_end = models.DateField()
+    gross_amount = models.DecimalField(max_digits=15, decimal_places=2,
+                                       validators=[MinValueValidator(Decimal('0.01'))],
+                                       help_text="Rent collected for the period, to be paid out (USD).")
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='draft', db_index=True)
+    total_management_fee = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    total_net = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    shares_counted = models.PositiveIntegerField(default=0)
+    note = models.CharField(max_length=255, blank=True)
+    created_by = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='+')
+    paid_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'properties_rent_distribution'
+        ordering = ['-period_end', '-created_at']
+        constraints = [
+            models.UniqueConstraint(fields=['property_investment', 'period_start', 'period_end'],
+                                    name='rent_distribution_once_per_period'),
+            models.CheckConstraint(condition=models.Q(period_end__gte=models.F('period_start')),
+                                   name='rent_distribution_period_order'),
+        ]
+
+    def __str__(self):
+        return f"{self.property_investment.title} {self.period_start}–{self.period_end} ({self.status})"
+
+    @property
+    def period_days(self) -> int:
+        return (self.period_end - self.period_start).days + 1
+
+
+class RentDistributionItem(models.Model):
+    """One owner's part of a rent distribution: gross, management fee, net."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    distribution = models.ForeignKey(RentDistribution, on_delete=models.CASCADE, related_name='items')
+    user = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='rent_distribution_items')
+    shares = models.PositiveIntegerField()
+    gross_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    management_fee = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    net_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    paid = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'properties_rent_distribution_item'
+        ordering = ['-gross_amount']
+        constraints = [models.UniqueConstraint(fields=['distribution', 'user'], name='rent_item_once_per_owner')]
+
+    def __str__(self):
+        return f"{self.user} {self.net_amount}"

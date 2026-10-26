@@ -20,6 +20,7 @@ from .models import (
     OwnerMessage, Property, PropertyAnalytics, PropertyApproval, PropertyDocument,
     PropertyImage, PropertyMarketData, PropertyPriceTier, PropertyReview, PropertySubscription,
     PropertyUpdate, PropertyValuation, PropertyViewLog,
+    RentDistribution, RentDistributionItem,
 )
 from . import workflow
 
@@ -499,3 +500,79 @@ class PropertySubscriptionAdmin(admin.ModelAdmin):
     search_fields = ['property__title', 'user__email']
     autocomplete_fields = ['property', 'user']
     readonly_fields = ['subscribed_at']
+
+
+class RentDistributionItemInline(admin.TabularInline):
+    model = RentDistributionItem
+    extra = 0
+    can_delete = False
+    fields = ('user', 'shares', 'gross_amount', 'management_fee', 'net_amount', 'paid')
+    readonly_fields = fields
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(RentDistribution)
+class RentDistributionAdmin(admin.ModelAdmin):
+    """
+    Rent payouts (PropShare model). Record the rent collected for a property
+    and a period, save to see each owner's part (gross, management fee, net),
+    then "Pay" to credit the owners' wallets — once.
+    """
+
+    list_display = ('property_investment', 'period_start', 'period_end', 'gross_amount',
+                    'total_management_fee', 'total_net', 'shares_counted', 'status', 'paid_at')
+    list_filter = ('status', 'property_investment')
+    search_fields = ('property_investment__title', 'note')
+    inlines = [RentDistributionItemInline]
+    actions = ('pay_distributions', 'recompute')
+    readonly_fields = ('status', 'total_management_fee', 'total_net', 'shares_counted', 'paid_at', 'created_by',
+                       'created_at')
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj is not None and obj.status == 'paid':
+            return [f.name for f in RentDistribution._meta.fields]
+        return self.readonly_fields
+
+    def has_delete_permission(self, request, obj=None):
+        return obj is None or obj.status != 'paid'
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        actions.pop('delete_selected', None)  # a paid distribution is never deleted
+        return actions
+
+    def save_model(self, request, obj, form, change):
+        from .rent_distribution import DistributionError, build
+        if obj.created_by_id is None:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+        try:
+            build(obj)
+            self.message_user(request, f'Split among {obj.items.count()} owner(s): net ${obj.total_net}, '
+                                       f'management fee ${obj.total_management_fee}. Use "Pay" to credit wallets.')
+        except DistributionError as exc:
+            self.message_user(request, exc.message, level=messages.WARNING)
+
+    @admin.action(description='Recompute the owners\' parts (draft only)')
+    def recompute(self, request, queryset):
+        from .rent_distribution import DistributionError, build
+        for dist in queryset.filter(status='draft'):
+            try:
+                build(dist)
+            except DistributionError as exc:
+                self.message_user(request, f'{dist}: {exc.message}', level=messages.WARNING)
+
+    @admin.action(description='Pay — credit the owners\' wallets (once)')
+    def pay_distributions(self, request, queryset):
+        from .rent_distribution import DistributionError, pay
+        done = 0
+        for dist in queryset:
+            try:
+                pay(dist, by=request.user)
+                done += 1
+            except DistributionError as exc:
+                self.message_user(request, f'{dist}: {exc.message}', level=messages.WARNING)
+        if done:
+            self.message_user(request, f'{done} distribution(s) paid; owners were notified.')

@@ -69,6 +69,25 @@ export interface PaymentStatus {
   investment_id: string | null;
 }
 
+export interface RentalReturns {
+  items: Array<{
+    id: string;
+    property_id: string;
+    property_title: string;
+    period_start: string;
+    period_end: string;
+    shares: number;
+    gross_amount: string;
+    management_fee: string;
+    net_amount: string;
+    paid_at: string | null;
+  }>;
+  total_gross: string;
+  total_management_fee: string;
+  total_net: string;
+  reinvestable: string;
+}
+
 export interface OpenCryptoPayment {
   payment_id: string;
   amount: string;
@@ -137,6 +156,11 @@ export class PurchaseService {
   /** Rental returns that can be reinvested at the discount (deposits do not qualify). */
   static reinvest(): Promise<{ returns: string; discount_pct: string }> {
     return apiClient.get('/purchases/reinvest/');
+  }
+
+  /** Rental income paid to the member: each payout's gross, management fee and net. */
+  static returns(): Promise<RentalReturns> {
+    return apiClient.get('/purchases/returns/');
   }
 
   static async openCrypto(): Promise<OpenCryptoPayment[]> {

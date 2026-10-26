@@ -975,5 +975,15 @@
       "trade_purchase": "Market purchase",
       "trade_sale": "Market sale"
     }
+  },
+  "rentReturns": {
+    "title": "Rental income",
+    "subtitle": "Rent paid to you, after the management fee. It lands in your wallet: withdraw it, or reinvest it at a discount on any property.",
+    "gross": "Rent",
+    "fee": "Management fee",
+    "net": "Paid to you",
+    "reinvestable": "Available to reinvest: {{amount}} ({{pct}}% off the share price)",
+    "shares": "{{n}} shares",
+    "empty": "No rental income yet."
   }
 }

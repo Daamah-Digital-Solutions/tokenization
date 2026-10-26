@@ -186,6 +186,45 @@ class ReinvestView(APIView):
         }))
 
 
+class ReturnsView(APIView):
+    """GET returns/ — the member's rental income: each payout's gross, management fee and net."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from django.db.models import Sum
+
+        from properties.models import RentDistributionItem
+
+        from .purchase import reinvestable_returns
+        qs = (RentDistributionItem.objects.filter(user=request.user, paid=True)
+              .select_related('distribution__property_investment').order_by('-distribution__period_end'))
+        totals = qs.aggregate(gross=Sum('gross_amount'), fee=Sum('management_fee'), net=Sum('net_amount'))
+
+        def cents(v):
+            from decimal import Decimal
+            return str(Decimal(str(v or 0)).quantize(Decimal('0.01')))
+        items = [{
+            'id': str(i.id),
+            'property_id': str(i.distribution.property_investment_id),
+            'property_title': i.distribution.property_investment.title,
+            'period_start': i.distribution.period_start.isoformat(),
+            'period_end': i.distribution.period_end.isoformat(),
+            'shares': i.shares,
+            'gross_amount': str(i.gross_amount),
+            'management_fee': str(i.management_fee),
+            'net_amount': str(i.net_amount),
+            'paid_at': i.distribution.paid_at.isoformat() if i.distribution.paid_at else None,
+        } for i in qs[:100]]
+        return Response(create_success_response(data={
+            'items': items,
+            'total_gross': cents(totals['gross']),
+            'total_management_fee': cents(totals['fee']),
+            'total_net': cents(totals['net']),
+            'reinvestable': str(reinvestable_returns(request.user)),
+        }))
+
+
 class CryptoCoinsView(APIView):
     """The coins enabled on the NOWPayments account (cached 10 minutes)."""
 
