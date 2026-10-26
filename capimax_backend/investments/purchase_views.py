@@ -142,3 +142,63 @@ class PurchaseStatusView(APIView):
             payment.refresh_from_db()
             inv.refresh_from_db()
         return Response(create_success_response(data=_purchase_dict(inv, payment)))
+
+
+class CryptoCoinsView(APIView):
+    """The coins enabled on the NOWPayments account (cached 10 minutes)."""
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        from django.core.cache import cache
+
+        from payments.nowpayments_service import NOWPaymentsService
+        from payments.providers import nowpayments_configured
+
+        if not nowpayments_configured():
+            return Response(create_success_response(data={'coins': [], 'available': False}))
+        coins = cache.get('np_coins')
+        if coins is None:
+            service = NOWPaymentsService()
+            try:
+                coins = (service._make_request('GET', 'merchant/coins') or {}).get('selectedCurrencies') or []
+            except Exception:  # noqa: BLE001
+                coins = []
+            if not coins:
+                coins = service.get_available_currencies() or []
+            coins = sorted({str(c).lower() for c in coins})
+            cache.set('np_coins', coins, 600)
+        return Response(create_success_response(data={'coins': coins, 'available': True}))
+
+
+class CryptoMinimumView(APIView):
+    """The smallest amount NOWPayments accepts for a coin, in USD."""
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        from payments.nowpayments_service import NOWPaymentsService
+        from payments.providers import nowpayments_configured
+
+        coin = (request.query_params.get('coin') or '').lower()
+        if not coin or not nowpayments_configured():
+            return Response(create_success_response(data={'coin': coin, 'minimum_usd': None}))
+        try:
+            data = NOWPaymentsService()._make_request('GET', 'min-amount', {
+                'currency_from': coin, 'currency_to': coin, 'fiat_equivalent': 'usd'})
+        except Exception:  # noqa: BLE001
+            data = {}
+        minimum = data.get('fiat_equivalent')
+        return Response(create_success_response(data={
+            'coin': coin, 'minimum_usd': str(minimum) if minimum is not None else None,
+            'minimum_coin': str(data.get('min_amount')) if data.get('min_amount') is not None else None}))
+
+
+class OpenCryptoPaymentsView(APIView):
+    """Crypto payments of the last 24 h not finished yet (wallet page card)."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from payments.crypto import open_payments
+        return Response(create_success_response(data={'payments': open_payments(request.user)}))

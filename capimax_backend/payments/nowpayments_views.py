@@ -541,33 +541,13 @@ def nowpayments_ipn_callback(request):
             payment.metadata = meta
             payment.save(update_fields=['metadata', 'updated_at'])
 
-        # ---- Step 4: process based on terminal status ----
-        if payment_status == 'finished':
-            # The amount NOWPayments priced must cover this payment.
-            price_amount = ipn_data.get('price_amount')
-            if price_amount is not None and Decimal(str(price_amount)) + Decimal('0.01') < payment.amount:
-                logger.error(
-                    "NOWPayments IPN for payment %s priced %s < expected %s — not settled",
-                    payment.id, price_amount, payment.amount,
-                )
-                return Response(create_success_response(message="Amount mismatch — held for review"))
-
-            # Shared, idempotent settlement (client round 3, #14): confirms
-            # the linked investment, or credits the wallet for a top-up —
-            # never both (the old code credited the wallet for investments).
-            from .settlement import settle_payment
-            settled = settle_payment(
-                payment, external_id=nowpayments_payment_id,
-                transaction_hash=ipn_data.get('tx_hash') or None, source='nowpayments_ipn',
-            )
-            if not settled:
-                return Response(create_success_response(
-                    message="Payment already completed (duplicate IPN)"
-                ))
-
-        elif payment_status in ['failed', 'expired']:
-            payment.status = PaymentStatus.FAILED
-            payment.save()
+        # ---- Step 4: settle the PropShare way (each NOWPayments payment once,
+        # tolerance for a hair-short purchase, the rest to the wallet).
+        from .crypto import settle_ipn
+        outcome = settle_ipn(payment, ipn_data)
+        logger.info("NOWPayments IPN for payment %s: %s", payment.id, outcome)
+        if outcome == 'duplicate':
+            return Response(create_success_response(message="Already processed"))
 
         return Response(create_success_response(message="IPN processed successfully"))
 
