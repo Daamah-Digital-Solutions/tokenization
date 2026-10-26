@@ -333,9 +333,11 @@ export const InstallmentsPanel: React.FC = () => {
                   </button>
                   {/* PropShare model: charged automatically on the due date; paying ahead is allowed. */}
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {isOverdue
-                      ? t('dashboard.autoPayOverdue')
-                      : t('dashboard.autoPay', { date: formatPlanDate(nextRow?.dueDate || plan.next_payment_date, lang) })}
+                    {(plan as any).auto_debit === false
+                      ? t(isOverdue ? 'dashboard.manualPayOverdue' : 'dashboard.manualPay', { date: formatPlanDate(nextRow?.dueDate || plan.next_payment_date, lang) })
+                      : isOverdue
+                        ? t('dashboard.autoPayOverdue')
+                        : t('dashboard.autoPay', { date: formatPlanDate(nextRow?.dueDate || plan.next_payment_date, lang) })}
                     {feeRate > 0 ? ` ${t('dashboard.feeIncluded', { pct: feeRate })}` : ''}
                     {` ${t('dashboard.payAheadNote')}`}
                   </p>

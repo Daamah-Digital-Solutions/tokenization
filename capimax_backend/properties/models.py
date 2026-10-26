@@ -1559,6 +1559,10 @@ class ConstructionInstallment(models.Model):
         default=0, help_text="Payment number the last 3-day reminder was sent for.")
     missed_notice_for = models.PositiveSmallIntegerField(
         default=0, help_text="Payment number the last 'payment missed' notice was sent for.")
+    auto_debit = models.BooleanField(
+        default=True,
+        help_text="Charge due payments from the wallet automatically (plans started before this was "
+                  "introduced are paid by the member).")
 
     class Meta:
         db_table = 'properties_installment_payment'

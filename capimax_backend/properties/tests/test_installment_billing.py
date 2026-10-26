@@ -117,3 +117,12 @@ class InstallmentBillingTests(TestCase):
         self.client.patch(f'/api/v1/properties/installments/{plan.id}/', {'status': 'completed'}, format='json')
         plan.refresh_from_db()
         self.assertEqual(plan.status, 'pending')
+
+    def test_plans_without_auto_debit_are_reminded_not_charged(self):
+        self._create()
+        plan = ConstructionInstallment.objects.get(investor=self.buyer)
+        ConstructionInstallment.objects.filter(pk=plan.pk).update(auto_debit=False)
+        with patch('properties.installment_billing._notify') as notify:
+            self.assertEqual(run_due(today=plan.next_payment_date - timedelta(days=1))['reminded'], 1)
+            self.assertIn('Dashboard', notify.call_args.args[2])
+            self.assertEqual(run_due(today=plan.next_payment_date + timedelta(days=3))['charged'], 0)

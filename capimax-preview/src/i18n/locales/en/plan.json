@@ -193,6 +193,8 @@
     "autoPay": "Charged automatically from your wallet on {{date}} — keep enough balance.",
     "autoPayOverdue": "This payment is overdue: we try your wallet again every hour — add funds or pay now. There is no late fee.",
     "feeIncluded": "Each payment includes the {{pct}}% installment fee.",
-    "payAheadNote": "You can pay ahead any time."
+    "payAheadNote": "You can pay ahead any time.",
+    "manualPay": "Pay it from your wallet here by {{date}}.",
+    "manualPayOverdue": "This payment is overdue — pay it from your wallet here. There is no late fee."
   }
 }

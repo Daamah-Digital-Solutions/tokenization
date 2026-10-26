@@ -164,15 +164,16 @@ def run_due(today=None) -> dict:
         updated = ConstructionInstallment.objects.filter(pk=plan.pk, reminder_sent_for__lt=number).update(
             reminder_sent_for=number)
         if updated:
+            how = ('It will be charged automatically from your wallet; keep enough balance in it.' if plan.auto_debit
+                   else 'Pay it from your wallet in Dashboard → Installments.')
             _notify(plan.investor, 'Upcoming installment payment',
                     f'{_label(plan, number)} for {plan.property_investment.title} — ${plan.total_due:,.2f} '
-                    f'— is due on {plan.next_payment_date:%Y-%m-%d}. It will be charged automatically from your '
-                    'wallet; keep enough balance in it.')
+                    f'— is due on {plan.next_payment_date:%Y-%m-%d}. {how}')
             stats['reminded'] += 1
 
     # 2. Charge what is due (and everything overdue), oldest first.
     service = InstallmentProcessingService()
-    for plan in open_plans.filter(next_payment_date__lte=today).order_by('next_payment_date'):
+    for plan in open_plans.filter(next_payment_date__lte=today, auto_debit=True).order_by('next_payment_date'):
         for _ in range(plan.remaining_payments):
             result = service.pay_installment_from_wallet(plan, auto=True, today=today)
             if result['success']:

@@ -717,7 +717,7 @@ class ConstructionInstallmentSerializer(serializers.ModelSerializer):
             'is_completed', 'is_active', 'property_title',
             'property_address', 'property_category', 'investor_email',
             'down_payment_amount', 'first_installment_date', 'start_date',
-            'schedule', 'amount_due', 'fee_due', 'total_due', 'is_overdue', 'fee_rate', 'fees_paid',
+            'schedule', 'amount_due', 'fee_due', 'total_due', 'is_overdue', 'fee_rate', 'fees_paid', 'auto_debit',
             'property_city', 'property_country', 'token_price',
             'created_at', 'updated_at'
         ]
@@ -727,7 +727,7 @@ class ConstructionInstallmentSerializer(serializers.ModelSerializer):
             'completion_percentage', 'tokens_pending_release', 'is_completed',
             'is_active', 'property_title', 'property_address',
             'property_category', 'investor_email', 'created_at', 'updated_at',
-            'fee_rate', 'fees_paid',
+            'fee_rate', 'fees_paid', 'auto_debit',
         ]
     
     def validate(self, attrs):
