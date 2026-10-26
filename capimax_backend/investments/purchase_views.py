@@ -144,6 +144,33 @@ class PurchaseStatusView(APIView):
         return Response(create_success_response(data=_purchase_dict(inv, payment)))
 
 
+class PaymentStatusView(APIView):
+    """GET payments/<payment_id>/ — follow a wallet deposit after the provider's page sends the member back."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, payment_id):
+        from decimal import Decimal
+
+        from payments.models import Payment
+
+        payment = get_object_or_404(Payment, pk=payment_id, user=request.user)
+        if payment.status == 'pending':
+            from payments.checkout import refresh_from_provider
+            refresh_from_provider(payment)
+            payment.refresh_from_db()
+        meta = payment.metadata or {}
+        credited = sum((Decimal(r['credited']) for r in (meta.get('np') or {}).values() if r.get('credited')),
+                       Decimal('0'))
+        if not credited and payment.status == 'completed':
+            credited = Decimal(payment.amount)
+        return Response(create_success_response(data={
+            'payment_id': str(payment.id), 'status': payment.status, 'amount': str(payment.amount),
+            'credited': str(credited), 'purpose': meta.get('purpose', 'deposit'),
+            'investment_id': str(payment.investment_id) if payment.investment_id else None,
+        }))
+
+
 class CryptoCoinsView(APIView):
     """The coins enabled on the NOWPayments account (cached 10 minutes)."""
 
@@ -261,6 +288,11 @@ class PurchaseProofView(APIView):
             )
         else:
             return _error(PurchaseError('INVALID_METHOD', 'This purchase does not take a document.', 400))
+
+        # The document is in: the shares stay held until the review.
+        inv.reservations.filter(released=False).update(expires_at=None)
+        inv.reserved_until = None
+        inv.save(update_fields=['reserved_until', 'updated_at'])
 
         try:
             from notifications.services import NotificationService

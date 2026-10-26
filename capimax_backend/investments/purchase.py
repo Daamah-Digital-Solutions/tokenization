@@ -30,6 +30,9 @@ from django.utils import timezone
 CENT = Decimal('0.01')
 HUNDRED = Decimal('100')
 RESERVATION_TTL = timedelta(minutes=30)
+# Bank transfer / Nova Sukuk: time to upload the document; once it is in,
+# the shares stay held until an admin reviews it.
+DOCUMENT_TTL = timedelta(hours=24)
 
 WALLET = 'wallet'
 DIRECT_METHODS = ('card', 'crypto', 'pronova')
@@ -261,7 +264,7 @@ def create_purchase(user, *, property_id, amount, method: str, expected_unit_pri
             return {'investment': inv, 'payment': payment, 'quote': quote, 'next': 'done'}
 
         # Direct pay / review: hold the shares.
-        expires = timezone.now() + RESERVATION_TTL if method in DIRECT_METHODS else None
+        expires = timezone.now() + (RESERVATION_TTL if method in DIRECT_METHODS else DOCUMENT_TTL)
         TokenReservation.objects.create(user=user, property_investment=prop, token_amount=quote.shares,
                                         expires_at=expires, investment=inv)
         inv.reserved_until = expires
@@ -290,7 +293,7 @@ def release_hold(inv, *, status: str) -> None:
 
 
 def expire_reservations(now=None) -> int:
-    """Card / Pronova / crypto purchases not paid within the hold time."""
+    """Purchases not paid (card / Pronova / crypto) or with no document sent (bank / Sukuk) in time."""
     from payments.models import Payment
 
     from .models import Investment, InvestmentStatus
@@ -298,7 +301,7 @@ def expire_reservations(now=None) -> int:
     now = now or timezone.now()
     count = 0
     for inv in Investment.objects.filter(status=InvestmentStatus.PENDING, reserved_until__lte=now,
-                                         purchase_method__in=DIRECT_METHODS):
+                                         purchase_method__in=DIRECT_METHODS + REVIEW_METHODS):
         with transaction.atomic():
             locked = Investment.objects.select_for_update().get(pk=inv.pk)
             if locked.status != InvestmentStatus.PENDING:

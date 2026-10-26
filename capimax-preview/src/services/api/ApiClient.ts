@@ -188,9 +188,12 @@ export class ApiClient {
         }
 
         if (error.response.status === 403) {
+          // keep the server's code and reason (e.g. KYC_REQUIRED) when it gives one
           throw new ApiError(
-            'ACCESS_DENIED',
-            'Access denied. You do not have permission to perform this action.',
+            error.response.data?.error?.code || 'ACCESS_DENIED',
+            error.response.data?.error?.message ||
+              error.response.data?.detail ||
+              'Access denied. You do not have permission to perform this action.',
             error.response.data?.error?.details
           );
         }
@@ -202,7 +205,7 @@ export class ApiClient {
             error.response.data?.message ||
             'This resource already exists';
           throw new ApiError(
-            'DUPLICATE_RESOURCE',
+            error.response.data?.error?.code || 'DUPLICATE_RESOURCE',
             message,
             error.response.data?.error?.details
           );
@@ -210,8 +213,8 @@ export class ApiClient {
 
         if (error.response.status === 422) {
           throw new ApiError(
-            'VALIDATION_ERROR',
-            'Validation failed',
+            error.response.data?.error?.code || 'VALIDATION_ERROR',
+            error.response.data?.error?.message || 'Validation failed',
             error.response.data?.error?.details || error.response.data?.errors
           );
         }

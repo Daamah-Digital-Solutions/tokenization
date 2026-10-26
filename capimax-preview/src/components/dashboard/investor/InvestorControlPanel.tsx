@@ -47,6 +47,7 @@ import { InstallmentsPanel } from './InstallmentsPanel';
 import { InvestorDocumentsPanel } from './InvestorDocumentsPanel';
 import { WithdrawModal } from '../../wallet/WithdrawModal';
 import { WithdrawalRequestsSection } from '../../wallet/WithdrawalRequestsSection';
+import { OpenCryptoPayments } from '../../purchase/OpenCryptoPayments';
 import { AddFundsModal } from '../../wallet/AddFundsModal';
 import WalletPanel from '../../wallet/WalletPanel';
 import { SecondaryMarketDashboard } from '../../marketplace/SecondaryMarketDashboard';
@@ -898,6 +899,8 @@ export const WalletContent: React.FC<{
           after KYC (address, network, verification, token balance, and the
           tokenized properties held in it). Previously only on the standalone
           /wallet route, so dashboard users never saw where their wallet was. */}
+      <OpenCryptoPayments />
+
       <WalletPanel />
 
       {/* Withdrawal request history. The investor sees every request

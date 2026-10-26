@@ -3,8 +3,10 @@
  * purchases (client edit #4a). Reuses the existing, already-wired payment
  * rails with NO investment attached, so the standard payment-success path
  * credits WalletBalance:
- *   • Card   → CreditCardForm (Stripe PaymentIntent → confirm → wallet credit)
- *   • Crypto → NOWPayments hosted invoice (IPN → wallet credit)
+ *   • Card   → Stripe's secure checkout page (PropShare model); the wallet is
+ *              credited when Stripe confirms, and /payment-return follows it
+ *   • Crypto → NOWPayments' page for the chosen coin (IPN → wallet credit;
+ *              a different amount arriving is what gets credited)
  *   • Bank   → manual wire to a platform account (admin reviews the proof and
  *              credits the wallet). The receiving accounts are managed by the
  *              admin; the customer picks one, wires the funds, and uploads
@@ -13,8 +15,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
-import { CreditCardForm } from '../payments/CreditCardForm';
-import { PaymentService } from '../../services/payment/PaymentService';
+import { useQuery } from '@tanstack/react-query';
+import { PurchaseService } from '../../services/purchase/PurchaseService';
+import { rememberPendingPurchase } from '../../utils/pendingPayment';
 import { apiClient } from '../../services/api/ApiClient';
 import { cn } from '../../utils/cn';
 import { useUser } from '../../contexts/AuthContext';
@@ -25,7 +28,7 @@ interface AddFundsModalProps {
   onSuccess: () => void;
 }
 
-type Step = 'amount' | 'card' | 'crypto-pending' | 'bank' | 'bank-submitted' | 'success';
+type Step = 'amount' | 'bank' | 'bank-submitted';
 
 interface PlatformBankAccount {
   id: string;
@@ -45,6 +48,7 @@ const MIN_AMOUNT = 10;
 
 export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess }) => {
   const { t } = useTranslation('payments');
+  const { t: tc } = useTranslation('checkout');
   const [method, setMethod] = useState<'card' | 'crypto' | 'bank'>('card');
   const [amount, setAmount] = useState('');
   const [step, setStep] = useState<Step>('amount');
@@ -58,6 +62,24 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
   const [reference, setReference] = useState('');
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const [coin, setCoin] = useState('');
+  const { data: coins = [] } = useQuery({
+    queryKey: ['crypto-coins'],
+    queryFn: () => PurchaseService.coins(),
+    enabled: method === 'crypto',
+    staleTime: 600_000,
+  });
+  useEffect(() => {
+    if (method !== 'crypto' || coin || !coins.length) return;
+    setCoin(['usdttrc20', 'usdc', 'btc', 'eth'].find((c) => coins.includes(c)) || coins[0]);
+  }, [method, coins]);
+  const { data: coinMinimum } = useQuery({
+    queryKey: ['crypto-minimum', coin],
+    queryFn: () => PurchaseService.minimum(coin),
+    enabled: method === 'crypto' && Boolean(coin),
+    staleTime: 300_000,
+  });
 
   const amountValue = parseFloat(amount);
   const amountValid = !isNaN(amountValue) && amountValue >= MIN_AMOUNT;
@@ -117,37 +139,34 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
     }
     setError(null);
 
-    if (method === 'card') {
-      setStep('card');
-      return;
-    }
-
     if (method === 'bank') {
       setStep('bank');
       return;
     }
+    if (method === 'crypto' && coinMinimum?.minimum_usd != null && amountValue < Number(coinMinimum.minimum_usd)) {
+      setError(tc('coinBelowMinimum', { amount: `$${Number(coinMinimum.minimum_usd).toFixed(2)}` }));
+      return;
+    }
 
-    // Crypto: create a hosted NOWPayments invoice and open it in a new tab.
+    // Card / crypto: the provider's secure page, in this tab; it sends the
+    // member back to /payment-return, which follows the deposit.
     setSubmitting(true);
     try {
-      const res = await PaymentService.createNowPaymentsInvoice({
-        amount: amountValue,
-        currency: 'USD',
-        order_description: 'Wallet top-up',
-        success_url: window.location.href,
-        cancel_url: window.location.href,
-      });
-      if (res?.invoice_url) {
-        window.open(res.invoice_url, '_blank', 'noopener,noreferrer');
-        setStep('crypto-pending');
-      } else {
-        setError(t('addFunds.errors.cryptoStartRetry'));
+      const res = await PurchaseService.deposit(amountValue, method, method === 'crypto' ? coin || undefined : undefined);
+      if (res?.checkout_url) {
+        rememberPendingPurchase(undefined, res.payment_id);
+        window.location.assign(res.checkout_url);
+        return;
       }
+      setError(t(method === 'crypto' ? 'addFunds.errors.cryptoStartRetry' : 'addFunds.errors.cryptoStart'));
     } catch (e: any) {
-      setError(e?.message || t('addFunds.errors.cryptoStart'));
-    } finally {
-      setSubmitting(false);
+      setError(
+        e?.code === 'KYC_REQUIRED' || e?.code === 'PAYMENTS_NOT_CONFIGURED'
+          ? tc(`errors.${e.code}`)
+          : e?.message || t('addFunds.errors.cryptoStart'),
+      );
     }
+    setSubmitting(false);
   };
 
   const handleBankSubmit = async () => {
@@ -200,31 +219,7 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
           {t('addFunds.subtitle')}
         </p>
 
-        {step === 'success' ? (
-          <>
-            <div className="p-4 mb-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm text-emerald-700 dark:text-emerald-300">
-              {t('addFunds.successCard')}
-            </div>
-            <button
-              onClick={onSuccess}
-              className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2.5 transition-colors"
-            >
-              {t('addFunds.done')}
-            </button>
-          </>
-        ) : step === 'crypto-pending' ? (
-          <>
-            <div className="p-4 mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-700 dark:text-blue-300">
-              {t('addFunds.cryptoPending')}
-            </div>
-            <button
-              onClick={onSuccess}
-              className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2.5 transition-colors"
-            >
-              {t('addFunds.done')}
-            </button>
-          </>
-        ) : step === 'bank-submitted' ? (
+        {step === 'bank-submitted' ? (
           <>
             <div className="p-4 mb-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg text-sm text-emerald-700 dark:text-emerald-300">
               <Trans
@@ -240,28 +235,6 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
             >
               {t('addFunds.done')}
             </button>
-          </>
-        ) : step === 'card' ? (
-          <>
-            <button
-              onClick={() => setStep('amount')}
-              className="text-sm text-slate-500 dark:text-slate-400 mb-3 hover:text-slate-700"
-            >
-              <span className="inline-block rtl:rotate-180">←</span> {t('addFunds.back')}
-            </button>
-            <div className="text-sm text-slate-600 dark:text-slate-300 mb-3">
-              <Trans
-                t={t}
-                i18nKey="addFunds.addingToWallet"
-                values={{ amount: `$${amountValue.toFixed(2)}` }}
-                components={{ b: <strong /> }}
-              />
-            </div>
-            <CreditCardForm
-              amount={amountValue}
-              onPaymentComplete={() => setStep('success')}
-              onCancel={() => setStep('amount')}
-            />
           </>
         ) : step === 'bank' ? (
           <>
@@ -406,6 +379,29 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
               ))}
             </div>
 
+            {method === 'crypto' && (
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{tc('coin')}</label>
+                <select
+                  value={coin}
+                  onChange={(e) => setCoin(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
+                >
+                  {coins.map((c) => (
+                    <option key={c} value={c}>{c.toUpperCase()}</option>
+                  ))}
+                </select>
+                {coinMinimum?.minimum_usd != null && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    {tc('coinMinimum', { amount: `$${Number(coinMinimum.minimum_usd).toFixed(2)}` })}
+                  </p>
+                )}
+              </div>
+            )}
+            {method !== 'bank' && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">{tc('deposit.redirectNote')}</p>
+            )}
+
             {error && (
               <div className="p-3 mb-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
                 {error}
@@ -424,13 +420,11 @@ export const AddFundsModal: React.FC<AddFundsModalProps> = ({ onClose, onSuccess
                 disabled={!amountValid || submitting}
                 className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-medium px-4 py-2.5 transition-colors"
               >
-                {method === 'card'
-                  ? t('addFunds.continueCard')
-                  : method === 'bank'
-                    ? t('addFunds.continueBank')
-                    : submitting
-                      ? t('addFunds.starting')
-                      : t('addFunds.payCrypto')}
+                {method === 'bank'
+                  ? t('addFunds.continueBank')
+                  : submitting
+                    ? t('addFunds.starting')
+                    : tc('confirm.button.checkout')}
               </button>
             </div>
           </>

@@ -1,0 +1,209 @@
+{
+  "title": "Buy shares",
+  "close": "Close",
+  "back": "Back",
+  "less": "One share less",
+  "more": "One share more",
+  "shares": "Shares",
+  "pricePerShare": "{{price}} per share",
+  "available": "{{n}} available",
+  "howYouPay": "How you pay",
+  "coin": "Coin",
+  "coinMinimum": "The smallest amount this coin accepts is {{amount}}.",
+  "coinBelowMinimum": "This coin needs at least {{amount}}. Choose another coin or a larger amount.",
+  "review": "Review purchase",
+  "goPortfolio": "Go to my portfolio",
+  "breakdown": {
+    "shares_one": "{{count}} share × {{price}}",
+    "shares_other": "{{count}} shares × {{price}}",
+    "fee": "Platform fee ({{pct}}%)",
+    "discount": "Pronova discount ({{pct}}%)",
+    "total": "Total you pay"
+  },
+  "methods": {
+    "unavailable": "Not available right now",
+    "noDevice": "Not available in this browser",
+    "walletBalance": "Balance: {{amount}}",
+    "walletShort": "Balance: {{amount}} — not enough for this purchase",
+    "off": "{{pct}}% OFF",
+    "financing": "Financing",
+    "wallet": {
+      "label": "Wallet balance",
+      "description": "Pay at once from your Capimax RT wallet"
+    },
+    "card": {
+      "label": "Credit / debit card",
+      "description": "Visa, Mastercard, Amex — on Stripe's secure page"
+    },
+    "apple_pay": {
+      "label": "Apple Pay",
+      "description": "On iPhone, iPad or Mac with Safari"
+    },
+    "google_pay": {
+      "label": "Google Pay",
+      "description": "On Android or Chrome"
+    },
+    "crypto": {
+      "label": "Cryptocurrency",
+      "description": "USDT, USDC, BTC, ETH and more — choose your coin here, pay on NOWPayments' page"
+    },
+    "pronova": {
+      "label": "Pronova",
+      "description": "A discount on everything you pay now",
+      "discount": "{{pct}}% off everything you pay now — paid on Stripe's secure page"
+    },
+    "nova_sukuk": {
+      "label": "Nova Sukuk",
+      "description": "Sharia-compliant financing — pay with your Nova certificate"
+    },
+    "bank": {
+      "label": "Bank transfer",
+      "description": "Transfer to our account and upload the receipt"
+    }
+  },
+  "confirm": {
+    "title": "Confirm your purchase",
+    "method": "Payment method",
+    "note": {
+      "done": "The amount is taken from your wallet and the shares are yours at once.",
+      "checkout": "You continue on the provider's secure page. Your shares are held for 30 minutes and confirmed as soon as the payment arrives.",
+      "review": "Next you upload the document. Your shares stay held until our team reviews it."
+    },
+    "button": {
+      "done": "Confirm & pay",
+      "checkout": "Continue to secure payment",
+      "review": "Continue"
+    }
+  },
+  "proof": {
+    "held": "Your shares are held for you while our team reviews the document. You will get a notification and an email.",
+    "submit": "Submit for review",
+    "later": "Close",
+    "bank": {
+      "title": "Transfer the amount",
+      "intro": "Transfer exactly {{amount}} to the account below, then upload the receipt.",
+      "reference": "Your transfer reference (optional)",
+      "file": "Upload the transfer receipt (PDF or image, up to 10 MB)",
+      "accountHolder": "Account holder",
+      "bank": "Bank",
+      "account": "Account / IBAN",
+      "swift": "SWIFT / BIC",
+      "routing": "Routing number",
+      "bankAddress": "Bank address",
+      "currency": "Currency"
+    },
+    "nova_sukuk": {
+      "title": "Upload your Nova Sukuk certificate",
+      "intro": "Upload the Nova Sukuk certificate that covers {{amount}} (PDF, up to 10 MB).",
+      "reference": "Certificate number (optional)",
+      "file": "Choose the certificate (PDF)"
+    }
+  },
+  "done": {
+    "title": "Investment confirmed",
+    "body_one": "{{count}} share of {{title}} is yours ({{amount}}). It now shows in your portfolio.",
+    "body_other": "{{count}} shares of {{title}} are yours ({{amount}}). They now show in your portfolio."
+  },
+  "submitted": {
+    "title": "Document received",
+    "body": "Reference {{ref}}. Your shares are held while our team reviews it — you will get a notification and an email."
+  },
+  "deposit": {
+    "redirectNote": "You pay on the provider's secure page. Your wallet is credited as soon as the payment is confirmed."
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "AMOUNT_TOO_LOW_one": "The minimum for this property is {{amount}} ({{count}} share).",
+    "AMOUNT_TOO_LOW_other": "The minimum for this property is {{amount}} ({{count}} shares).",
+    "PRICE_CHANGED": "The share price changed. Check the new total and confirm again.",
+    "INSUFFICIENT_FUNDS": "Your wallet balance is not enough. Add funds or choose another payment method.",
+    "INSUFFICIENT_SHARES": "Not enough shares remain. Choose fewer shares.",
+    "PROPERTY_NOT_OPEN": "This property is not open for ownership right now.",
+    "INSTALLMENTS_ONLY": "This property is sold on an installment plan only.",
+    "PAYMENTS_NOT_CONFIGURED": "This payment method is not available right now. Choose another one.",
+    "KYC_REQUIRED": "Verify your identity first.",
+    "PDF_REQUIRED": "The Sukuk certificate must be a PDF.",
+    "FILE_TOO_LARGE": "The file must be 10 MB or smaller.",
+    "FILE_REQUIRED": "Attach the document."
+  },
+  "return": {
+    "goWallet": "Go to my wallet",
+    "browse": "Browse properties",
+    "purchase": {
+      "pending": {
+        "title": "Payment received — confirming your shares…",
+        "body": "Your shares are held. This usually takes a few seconds."
+      },
+      "done": {
+        "title": "Investment confirmed",
+        "body_one": "{{count}} share of {{title}} is yours. It now shows in your portfolio.",
+        "body_other": "{{count}} shares of {{title}} are yours. They now show in your portfolio."
+      },
+      "refunded": {
+        "title": "The shares were no longer available",
+        "body": "Your payment arrived after the hold ended and the shares had been sold. The full amount was credited to your wallet — you can buy from your wallet."
+      },
+      "credited": {
+        "title": "The purchase was not completed",
+        "body": "{{amount}} arrived instead of the {{due}} due and was credited to your wallet. You can buy from your wallet."
+      },
+      "failed": {
+        "title": "The purchase was not completed",
+        "body": "Nothing was charged and the shares held for you are released."
+      },
+      "slow": {
+        "title": "Still confirming your purchase",
+        "body": "The payment provider has not confirmed it yet. You will get a notification and an email the moment your shares are confirmed — no need to pay again."
+      },
+      "cancelled": {
+        "title": "Purchase cancelled",
+        "body": "Nothing was charged. The shares held for you are released within a few minutes."
+      },
+      "missing": {
+        "title": "We could not find this payment",
+        "body": "Check your portfolio and notifications for its status."
+      }
+    },
+    "deposit": {
+      "pending": {
+        "title": "Payment received — crediting your wallet…",
+        "body": "This usually takes a few seconds."
+      },
+      "done": {
+        "title": "Deposit credited",
+        "body": "{{amount}} was added to your wallet."
+      },
+      "refunded": {
+        "title": "Deposit credited",
+        "body": "{{amount}} was added to your wallet."
+      },
+      "credited": {
+        "title": "Deposit credited",
+        "body": "{{amount}} arrived and was credited to your wallet."
+      },
+      "failed": {
+        "title": "The deposit was not completed",
+        "body": "Nothing was credited. You can try again or use another method."
+      },
+      "slow": {
+        "title": "Still confirming your deposit",
+        "body": "The payment provider has not confirmed it yet. You will get a notification and an email the moment it is credited — no need to pay again."
+      },
+      "cancelled": {
+        "title": "Deposit cancelled",
+        "body": "Nothing was charged."
+      },
+      "missing": {
+        "title": "We could not find this payment",
+        "body": "Check your wallet and notifications for its status."
+      }
+    }
+  },
+  "openCrypto": {
+    "title": "Crypto payments not finished",
+    "body": "{{amount}} {{what}} — started {{when}}.",
+    "deposit": "wallet deposit",
+    "purchase": "for {{title}}",
+    "resume": "Finish payment"
+  }
+}

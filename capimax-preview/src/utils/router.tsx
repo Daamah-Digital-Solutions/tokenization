@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Route = 'home' | 'login' | 'register' | 'email-verification' | 'code-verification' | 'password-reset' | 'new-password' | 'complete-google-profile' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'marketplace' | 'broker-program' | 'broker-application' | 'wallet' | 'role-management' | 'submit-property' | 'demo' | 'integration-test' | 'about' | 'contact' | 'support' | 'partners' | 'liquidity-provider' | 'legal-index' | 'legal-disclaimer' | 'legal-risk-disclosure' | 'legal-compliance' | 'legal-privacy' | 'legal-terms' | 'legal-cookies' | 'legal-aml-kyc' | 'legal-conflicts' | 'legal-complaints' | 'legal-security' | 'how-it-works' | 'tokenization' | 'spv' | 'data-room' | 'investor-guide' | 'secondary-market' | 'risks' | 'faq' | 'property-owner' | 'why-capimax' | 'structure' | 'document-center' | 'verification-center' | 'broker-guide' | 'capimax-rt-guide' | 'developer-guide' | 'investment-guide' | 'investment-strategies' | 'lp-guide' | 'owners-guide' | 'technology' | 'not-found';
+type Route = 'home' | 'login' | 'register' | 'email-verification' | 'code-verification' | 'password-reset' | 'new-password' | 'complete-google-profile' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'marketplace' | 'broker-program' | 'broker-application' | 'wallet' | 'role-management' | 'submit-property' | 'demo' | 'integration-test' | 'about' | 'contact' | 'support' | 'payment-return' | 'partners' | 'liquidity-provider' | 'legal-index' | 'legal-disclaimer' | 'legal-risk-disclosure' | 'legal-compliance' | 'legal-privacy' | 'legal-terms' | 'legal-cookies' | 'legal-aml-kyc' | 'legal-conflicts' | 'legal-complaints' | 'legal-security' | 'how-it-works' | 'tokenization' | 'spv' | 'data-room' | 'investor-guide' | 'secondary-market' | 'risks' | 'faq' | 'property-owner' | 'why-capimax' | 'structure' | 'document-center' | 'verification-center' | 'broker-guide' | 'capimax-rt-guide' | 'developer-guide' | 'investment-guide' | 'investment-strategies' | 'lp-guide' | 'owners-guide' | 'technology' | 'not-found';
 
 interface RouterContextType {
   currentRoute: Route;
@@ -56,6 +56,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       '/about': 'about',
       '/contact': 'contact',
       '/support': 'support',
+      '/payment-return': 'payment-return',
       '/partners': 'partners',
       '/liquidity-provider': 'liquidity-provider',
       '/legal': 'legal-index',
@@ -130,6 +131,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
         '/about': 'about',
         '/contact': 'contact',
         '/support': 'support',
+        '/payment-return': 'payment-return',
         '/partners': 'partners',
         '/liquidity-provider': 'liquidity-provider',
         '/legal': 'legal-index',
@@ -207,6 +209,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       about: '/about',
       contact: '/contact',
       support: '/support',
+      'payment-return': '/payment-return',
       partners: '/partners',
       'liquidity-provider': '/liquidity-provider',
       'legal-index': '/legal/privacy',

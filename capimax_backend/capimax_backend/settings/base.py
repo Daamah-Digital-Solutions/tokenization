@@ -341,3 +341,8 @@ EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT', '20'))
 
 # Contact Us messages and new support tickets are emailed here.
 SUPPORT_INBOX_EMAIL = os.environ.get('SUPPORT_INBOX_EMAIL', 'tech@capimaxholding.com')
+
+# CORS: the purchase API takes an Idempotency-Key header (a double click never buys twice).
+from corsheaders.defaults import default_headers  # noqa: E402
+
+CORS_ALLOW_HEADERS = (*default_headers, 'idempotency-key')

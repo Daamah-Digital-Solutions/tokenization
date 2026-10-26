@@ -41,8 +41,8 @@ def _return_urls(payment) -> tuple[str, str]:
     meta = payment.metadata or {}
     base = _frontend()
     if meta.get('purpose') == 'deposit':
-        return (f'{base}/wallet?payment={payment.id}&result=success',
-                f'{base}/wallet?payment={payment.id}&result=cancelled')
+        return (f'{base}/payment-return?deposit=1&payment={payment.id}',
+                f'{base}/payment-return?deposit=1&payment={payment.id}&cancelled=1')
     inv = meta.get('investment_id') or ''
     return (f'{base}/payment-return?purchase={inv}&payment={payment.id}',
             f'{base}/payment-return?purchase={inv}&payment={payment.id}&cancelled=1')

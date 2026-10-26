@@ -55,6 +55,7 @@ import { ConstructionProgress } from '../components/properties/ConstructionProgr
 import { InstallmentSchedule } from '../components/properties/InstallmentSchedule';
 import { PropertyDetailEnhanced } from '../components/properties/PropertyDetailEnhanced';
 import { KYCGate } from '../components/kyc/KYCGate';
+import { PurchaseModal } from '../components/purchase/PurchaseModal';
 import { ConstructionService } from '../services/construction/ConstructionService';
 import { useTranslation } from 'react-i18next';
 
@@ -88,6 +89,9 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showInvestmentFlow, setShowInvestmentFlow] = useState(false);
+  // Cash purchases go through the unified checkout (PropShare model);
+  // installment plans keep InvestmentFlow.
+  const [showPurchase, setShowPurchase] = useState(false);
   const [initialTokens, setInitialTokens] = useState<number>(1);
   const [initialMethod, setInitialMethod] = useState<'cash' | 'installments' | undefined>(undefined);
   const [initialInstallments, setInitialInstallments] = useState<number | undefined>(undefined);
@@ -346,7 +350,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
             if (tokenCount) setInitialTokens(tokenCount);
             setInitialMethod(method);
             setInitialInstallments(installmentCount);
-            setShowInvestmentFlow(true);
+            if (method === 'installments') setShowInvestmentFlow(true);
+            else setShowPurchase(true);
           }}
           onImageClick={(index) => setCurrentImageIndex(index)}
           currentImageIndex={currentImageIndex}
@@ -354,6 +359,26 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
       </Container>
 
       <Footer />
+
+      {showPurchase && (
+        <KYCGate action="own property">
+          <PurchaseModal
+            property={{
+              id: property.id,
+              title: property.title,
+              token_price: property.token_price,
+              tokens_available: Math.max(0, (Number(property.total_tokens) || 0) - (Number(property.tokens_sold) || 0)),
+            }}
+            initialShares={initialTokens}
+            onClose={() => setShowPurchase(false)}
+            onComplete={() => loadPropertyData()}
+            onGoToPortfolio={() => {
+              setShowPurchase(false);
+              navigate('dashboard', { view: 'portfolio' });
+            }}
+          />
+        </KYCGate>
+      )}
 
       {/* Investment Flow Modal with KYC Gate */}
       {showInvestmentFlow && (

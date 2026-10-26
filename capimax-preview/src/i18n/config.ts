@@ -26,6 +26,7 @@ import enBrokeruiW15 from './locales/en/brokerui.json';
 import enUiW15 from './locales/en/ui.json';
 import enSharedW15 from './locales/en/shared.json';
 import enPagesW15 from './locales/en/pages.json';
+import enCheckout from './locales/en/checkout.json';
 
 import arCommon from './locales/ar/common.json';
 import arAuth from './locales/ar/auth.json';
@@ -49,6 +50,7 @@ import arBrokeruiW15 from './locales/ar/brokerui.json';
 import arUiW15 from './locales/ar/ui.json';
 import arSharedW15 from './locales/ar/shared.json';
 import arPagesW15 from './locales/ar/pages.json';
+import arCheckout from './locales/ar/checkout.json';
 
 // Define resources
 const resources = {
@@ -75,6 +77,7 @@ const resources = {
     ui: enUiW15,
     shared: enSharedW15,
     pages: enPagesW15,
+    checkout: enCheckout,
   },
   ar: {
     common: arCommon,
@@ -99,6 +102,7 @@ const resources = {
     ui: arUiW15,
     shared: arSharedW15,
     pages: arPagesW15,
+    checkout: arCheckout,
   },
 };
 
@@ -110,7 +114,7 @@ i18n
     resources,
     fallbackLng: 'en',
     defaultNS: 'common',
-    ns: ['common', 'auth', 'navigation', 'properties', 'legal', 'kyc', 'owner', 'partners', 'plan', 'docs', 'site', 'dashboard', 'admin', 'ownerui', 'payments', 'invest', 'propui', 'market', 'brokerui', 'ui', 'shared', 'pages'],
+    ns: ['common', 'auth', 'navigation', 'properties', 'legal', 'kyc', 'owner', 'partners', 'plan', 'docs', 'site', 'dashboard', 'admin', 'ownerui', 'payments', 'invest', 'propui', 'market', 'brokerui', 'ui', 'shared', 'pages', 'checkout'],
 
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],

@@ -1,7 +1,7 @@
 from django.urls import path
 
 from .purchase_views import (
-    CryptoCoinsView, CryptoMinimumView, DepositCheckoutView, PurchaseProofView, OpenCryptoPaymentsView, PaymentMethodsView, PurchaseStatusView,
+    CryptoCoinsView, CryptoMinimumView, DepositCheckoutView, PurchaseProofView, OpenCryptoPaymentsView, PaymentMethodsView, PaymentStatusView, PurchaseStatusView,
     PurchaseView, QuoteView,
 )
 
@@ -13,6 +13,7 @@ urlpatterns = [
     path('crypto/minimum/', CryptoMinimumView.as_view(), name='purchase-crypto-minimum'),
     path('crypto/open/', OpenCryptoPaymentsView.as_view(), name='purchase-crypto-open'),
     path('deposit/', DepositCheckoutView.as_view(), name='purchase-deposit'),
+    path('payments/<uuid:payment_id>/', PaymentStatusView.as_view(), name='purchase-payment-status'),
     path('<uuid:investment_id>/proof/', PurchaseProofView.as_view(), name='purchase-proof'),
     path('<uuid:investment_id>/', PurchaseStatusView.as_view(), name='purchase-status'),
 ]

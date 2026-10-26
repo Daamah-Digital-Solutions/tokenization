@@ -150,12 +150,17 @@ class PurchaseTests(TestCase):
                 create_purchase(self.user, property_id=self.prop.pk, amount='1000', method='card')
         self.assertEqual(ctx.exception.code, 'PAYMENTS_NOT_CONFIGURED')
 
-    def test_sukuk_holds_without_time_limit(self):
+    def test_sukuk_holds_a_day_for_the_document(self):
+        from investments.purchase import DOCUMENT_TTL, expire_reservations
         r = create_purchase(self.user, property_id=self.prop.pk, amount='1000', method='nova_sukuk')
         self.assertEqual(r['next'], 'review')
         res = TokenReservation.objects.get(investment=r['investment'])
-        self.assertIsNone(res.expires_at)
+        self.assertIsNotNone(res.expires_at)
         self.assertEqual(available_shares(self.prop), 90)
+        # no document within the day: the shares go back on sale
+        self.assertEqual(expire_reservations(now=timezone.now() + DOCUMENT_TTL + timedelta(minutes=1)), 1)
+        self.assertEqual(Investment.objects.get(pk=r['investment'].pk).status, 'expired')
+        self.assertEqual(available_shares(self.prop), 100)
 
 
 @override_settings(**STRIPE)
@@ -235,6 +240,10 @@ class ProofAndDepositTests(TestCase):
         self.assertEqual(r.status_code, 201, r.content)
         self.assertTrue(r.json()['data']['reference'].startswith('BT'))
         self.assertEqual(BankTransfer.objects.count(), 1)
+        # with the document in, the shares are held until the review
+        from investments.purchase import expire_reservations
+        self.assertIsNone(TokenReservation.objects.get(investment_id=inv).expires_at)
+        self.assertEqual(expire_reservations(now=timezone.now() + timedelta(days=30)), 0)
 
     def test_sukuk_requires_pdf(self):
         from django.core.files.uploadedfile import SimpleUploadedFile
@@ -255,8 +264,17 @@ class ProofAndDepositTests(TestCase):
         with patch('stripe.checkout.Session.create', return_value=fake) as create:
             r = self.client.post('/api/v1/purchases/deposit/', {'amount': '250', 'method': 'card'}, format='json')
         self.assertEqual(r.status_code, 201, r.content)
-        self.assertIn('/wallet?payment=', create.call_args.kwargs['success_url'])
+        self.assertIn('/payment-return?deposit=1&payment=', create.call_args.kwargs['success_url'])
         pid = r.json()['data']['payment_id']
         apply_checkout_session({'id': 'cs_dep', 'client_reference_id': pid, 'payment_status': 'paid',
                                 'amount_total': 25000}, source='test')
         self.assertEqual(balance(self.user), Decimal('250.00'))
+        status = self.client.get(f'/api/v1/purchases/payments/{pid}/').json()['data']
+        self.assertEqual((status['status'], status['credited'], status['purpose']), ('completed', '250.00', 'deposit'))
+
+    def test_payment_status_is_private(self):
+        from payments.models import Payment
+        other = make_ready_investor()
+        p = Payment.objects.create(user=other, amount=Decimal('10'), net_amount=Decimal('10'), currency='USD',
+                                   payment_method='credit_card', status='pending', metadata={'purpose': 'deposit'})
+        self.assertEqual(self.client.get(f'/api/v1/purchases/payments/{p.pk}/').status_code, 404)
