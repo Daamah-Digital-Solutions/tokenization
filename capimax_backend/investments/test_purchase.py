@@ -207,3 +207,56 @@ class PurchaseApiTests(TestCase):
         r = c.post('/api/v1/purchases/', {'property_id': str(self.prop.pk), 'amount': '1000', 'method': 'wallet'},
                    format='json')
         self.assertEqual(r.status_code, 403)
+
+
+@override_settings(**STRIPE)
+class ProofAndDepositTests(TestCase):
+    def setUp(self):
+        self.user = make_ready_investor(wallet_balance=Decimal('0.00'))
+        self.prop = make_property(token_price=Decimal('100.00'), total_tokens=100, is_published=True,
+                                  status='active')
+        self.client = APIClient()
+        self.client.force_authenticate(self.user)
+
+    def _buy(self, method):
+        r = self.client.post('/api/v1/purchases/', {'property_id': str(self.prop.pk), 'amount': '500',
+                                                    'method': method}, format='json')
+        self.assertEqual(r.status_code, 201, r.content)
+        self.assertEqual(r.json()['data']['next'], 'review')
+        return r.json()['data']['investment_id']
+
+    def test_bank_proof(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from payments.models import BankTransfer
+        inv = self._buy('bank')
+        r = self.client.post(f'/api/v1/purchases/{inv}/proof/', {
+            'file': SimpleUploadedFile('proof.png', b'\x89PNG....', content_type='image/png'),
+            'account_holder_name': 'Iris', 'bank_name': 'Bank', 'account_number': '123'}, format='multipart')
+        self.assertEqual(r.status_code, 201, r.content)
+        self.assertTrue(r.json()['data']['reference'].startswith('BT'))
+        self.assertEqual(BankTransfer.objects.count(), 1)
+
+    def test_sukuk_requires_pdf(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from payments.models import NovaSukukPayment
+        inv = self._buy('nova_sukuk')
+        bad = self.client.post(f'/api/v1/purchases/{inv}/proof/',
+                               {'file': SimpleUploadedFile('c.png', b'nope', content_type='image/png')},
+                               format='multipart')
+        self.assertEqual(bad.status_code, 422)
+        ok = self.client.post(f'/api/v1/purchases/{inv}/proof/',
+                              {'file': SimpleUploadedFile('c.pdf', b'%PDF-1.4 x', content_type='application/pdf'),
+                               'reference': 'NS-1'}, format='multipart')
+        self.assertEqual(ok.status_code, 201, ok.content)
+        self.assertEqual(NovaSukukPayment.objects.get().sukuk_reference_number, 'NS-1')
+
+    def test_card_deposit_opens_checkout_and_credits_on_payment(self):
+        fake = SimpleNamespace(url='https://checkout.stripe.com/c/pay/cs_dep', id='cs_dep')
+        with patch('stripe.checkout.Session.create', return_value=fake) as create:
+            r = self.client.post('/api/v1/purchases/deposit/', {'amount': '250', 'method': 'card'}, format='json')
+        self.assertEqual(r.status_code, 201, r.content)
+        self.assertIn('/wallet?payment=', create.call_args.kwargs['success_url'])
+        pid = r.json()['data']['payment_id']
+        apply_checkout_session({'id': 'cs_dep', 'client_reference_id': pid, 'payment_status': 'paid',
+                                'amount_total': 25000}, source='test')
+        self.assertEqual(balance(self.user), Decimal('250.00'))

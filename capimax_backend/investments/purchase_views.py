@@ -202,3 +202,123 @@ class OpenCryptoPaymentsView(APIView):
     def get(self, request):
         from payments.crypto import open_payments
         return Response(create_success_response(data={'payments': open_payments(request.user)}))
+
+
+class PurchaseProofView(APIView):
+    """
+    POST <investment_id>/proof/ (multipart) — the second step of a bank-transfer
+    or Nova Sukuk purchase: the transfer proof / the Sukuk certificate. The
+    shares stay held until an admin reviews it.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, investment_id):
+        import secrets
+        import string
+
+        from payments.models import BankTransfer, NovaSukukPayment, Payment
+
+        from .models import Investment
+
+        inv = get_object_or_404(Investment, pk=investment_id, user=request.user)
+        payment = Payment.objects.filter(investment=inv).order_by('-created_at').first()
+        if inv.status != 'pending' or payment is None or payment.status != 'pending':
+            return _error(PurchaseError('NOT_PENDING', 'This purchase is no longer waiting for a document.', 409))
+        upload = request.FILES.get('file')
+        if upload is None:
+            return _error(PurchaseError('FILE_REQUIRED', 'Attach the document.', 422))
+        if upload.size > 10 * 1024 * 1024:
+            return _error(PurchaseError('FILE_TOO_LARGE', 'The file must be 10 MB or smaller.', 422))
+
+        if inv.purchase_method == 'nova_sukuk':
+            head = upload.read(5)
+            upload.seek(0)
+            if head != b'%PDF-':
+                return _error(PurchaseError('PDF_REQUIRED', 'The Sukuk certificate must be a PDF.', 422))
+            if NovaSukukPayment.objects.filter(investment=inv).exists():
+                return _error(PurchaseError('ALREADY_SUBMITTED', 'The certificate was already submitted.', 409))
+            sukuk = NovaSukukPayment.objects.create(
+                investment=inv, payment=payment, sukuk_pdf=upload,
+                sukuk_reference_number=(request.data.get('reference') or '')[:100] or f'NS-{str(inv.pk)[:8].upper()}',
+            )
+            reference = sukuk.sukuk_reference_number
+        elif inv.purchase_method == 'bank':
+            if BankTransfer.objects.filter(payment=payment).exists():
+                return _error(PurchaseError('ALREADY_SUBMITTED', 'The transfer proof was already submitted.', 409))
+            reference = 'BT' + ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(10))
+            BankTransfer.objects.create(
+                payment=payment,
+                account_holder_name=(request.data.get('account_holder_name') or '')[:200],
+                account_number=(request.data.get('account_number') or '')[:50],
+                routing_number=(request.data.get('routing_number') or '')[:50],
+                bank_name=(request.data.get('bank_name') or '')[:200],
+                swift_code=(request.data.get('swift_code') or '')[:20],
+                transfer_reference=reference,
+                transfer_status='pending',
+                transfer_instructions=(request.data.get('reference') or '')[:500],
+                proof_of_transfer=upload,
+            )
+        else:
+            return _error(PurchaseError('INVALID_METHOD', 'This purchase does not take a document.', 400))
+
+        try:
+            from notifications.services import NotificationService
+            NotificationService.create_notification(
+                user=request.user,
+                title='Document received',
+                message=f'We received your document for {inv.property_investment.title} (ref. {reference}). '
+                        'Your shares are held while our team reviews it.',
+                notification_type='payment', send_email=True,
+            )
+            from support.notify import _send, support_inbox
+            _send(support_inbox(), f'[Review] {inv.purchase_method} purchase {reference}',
+                  f'{request.user.email} submitted a {inv.purchase_method} document for '
+                  f'{inv.token_amount} shares of {inv.property_investment.title} (${inv.total_charged}).')
+        except Exception:  # noqa: BLE001
+            pass
+        data = _purchase_dict(inv, payment)
+        data['reference'] = reference
+        return Response(create_success_response(data=data), status=status.HTTP_201_CREATED)
+
+
+class DepositCheckoutView(APIView):
+    """POST deposit/ {amount, method: card|crypto, pay_currency?} — top up the wallet on the provider's page."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        from decimal import Decimal, InvalidOperation
+
+        from payments.checkout import CheckoutError, start_checkout
+        from payments.models import Payment
+        from payments.providers import provider_configured
+
+        method = request.data.get('method')
+        if method not in ('card', 'crypto'):
+            return _error(PurchaseError('INVALID_METHOD', 'Choose card or crypto.', 422))
+        kyc = getattr(request.user, 'kyc_profile', None)
+        if not kyc or not kyc.is_verified():
+            return _error(PurchaseError('KYC_REQUIRED', 'Verify your identity before adding funds.', 403))
+        try:
+            amount = Decimal(str(request.data.get('amount'))).quantize(Decimal('0.01'))
+        except (InvalidOperation, TypeError, ValueError):
+            amount = Decimal('0')
+        if amount <= 0 or amount > Decimal('1000000000'):
+            return _error(PurchaseError('INVALID_AMOUNT', 'Enter an amount.', 422))
+        if not provider_configured(method):
+            return _error(PurchaseError('PAYMENTS_NOT_CONFIGURED', 'This payment method is not available right now.', 503))
+        payment = Payment.objects.create(
+            user=request.user, amount=amount, net_amount=amount, currency='USD',
+            payment_method='credit_card' if method == 'card' else 'cryptocurrency', status='pending',
+            metadata={'purpose': 'deposit', **({'pay_currency': request.data['pay_currency']}
+                                                 if request.data.get('pay_currency') else {})},
+        )
+        try:
+            url = start_checkout(payment, request)
+        except CheckoutError as exc:
+            payment.status = 'failed'
+            payment.save(update_fields=['status', 'updated_at'])
+            return _error(PurchaseError(exc.code, exc.message, exc.status))
+        return Response(create_success_response(data={'payment_id': str(payment.id), 'checkout_url': url}),
+                        status=status.HTTP_201_CREATED)

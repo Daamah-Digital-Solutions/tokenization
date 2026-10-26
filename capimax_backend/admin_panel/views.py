@@ -567,6 +567,8 @@ class NovaSukukReviewView(APIView):
 
             investment.status = 'failed'
             investment.save(update_fields=['status', 'updated_at'])
+            # Shares held for this purchase go back on sale.
+            investment.reservations.filter(released=False).update(released=True)
 
             if payment:
                 payment.status = 'failed'
@@ -706,6 +708,8 @@ class BankTransferReviewView(APIView):
         if investment:
             investment.status = 'failed'
             investment.save(update_fields=['status', 'updated_at'])
+            # Shares held for this purchase go back on sale.
+            investment.reservations.filter(released=False).update(released=True)
 
         if payment:
             payment.status = 'failed'

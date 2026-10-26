@@ -632,6 +632,8 @@ def _reject_review_payment(modeladmin, request, queryset, kind):
         if investment:
             investment.status = 'failed'
             investment.save(update_fields=['status', 'updated_at'])
+            # Shares held for this purchase go back on sale.
+            investment.reservations.filter(released=False).update(released=True)
             try:
                 NotificationService.create_notification(
                     user=investment.user,
