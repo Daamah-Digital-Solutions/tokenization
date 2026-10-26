@@ -46,7 +46,8 @@
       "security": "Security Policy",
       "disclaimer": "Disclaimer",
       "support": "Support Center",
-      "contact": "Contact Us"
+      "contact": "Contact Us",
+      "fees": "Fees"
     },
     "disclaimerTitle": "Capimax RT Legal Disclaimer",
     "disclaimer1": "This website is operated by Capimax Real Estate Technologies LLC (“Capimax”). Capimax RT is a technology platform and digital ecosystem connecting investors, property owners, developers, brokers and liquidity providers.",
@@ -120,12 +121,30 @@
       "title": "Common questions",
       "all": "See all questions",
       "items": [
-        { "q": "How do I verify my identity (KYC)?", "a": "Open Dashboard → Identity verification, fill in your details, upload a passport, ID card or driving licence, and take a live selfie. Our team reviews it and you get an email with the result." },
-        { "q": "I didn't receive my verification code.", "a": "Check your Spam and Promotions folders, then use “Resend code” on the verification screen (available every 60 seconds). Codes are valid for 30 minutes." },
-        { "q": "How do I add money to my wallet?", "a": "Open Wallet → Add funds and choose card, crypto or bank transfer. Card and crypto top-ups are credited automatically; bank transfers after our team confirms them." },
-        { "q": "Can I pay for a property in installments?", "a": "Yes, when the property offers it. The property page shows the down payment, every installment with its date and amount, and you pay each one from your wallet in Dashboard → Installments." },
-        { "q": "How do I sell my shares?", "a": "List them on the Secondary Market from your portfolio. When a buyer purchases, the money is added to your wallet and the shares move to the buyer immediately." },
-        { "q": "Where are my documents and statements?", "a": "Dashboard → Documents has your certificates and property documents; Dashboard → Reports has official wallet, transactions, investments and owned-properties statements in English or Arabic." }
+        {
+          "q": "How do I verify my identity (KYC)?",
+          "a": "Open Dashboard → Identity verification, fill in your details, upload a passport, ID card or driving licence, and take a live selfie. Our team reviews it and you get an email with the result."
+        },
+        {
+          "q": "I didn't receive my verification code.",
+          "a": "Check your Spam and Promotions folders, then use “Resend code” on the verification screen (available every 60 seconds). Codes are valid for 30 minutes."
+        },
+        {
+          "q": "How do I add money to my wallet?",
+          "a": "Open Wallet → Add funds and choose card, crypto or bank transfer. Card and crypto top-ups are credited automatically; bank transfers after our team confirms them."
+        },
+        {
+          "q": "Can I pay for a property in installments?",
+          "a": "Yes, when the property offers it. The property page shows the down payment, every installment with its date and amount, and you pay each one from your wallet in Dashboard → Installments."
+        },
+        {
+          "q": "How do I sell my shares?",
+          "a": "List them on the Secondary Market from your portfolio. When a buyer purchases, the money is added to your wallet and the shares move to the buyer immediately."
+        },
+        {
+          "q": "Where are my documents and statements?",
+          "a": "Dashboard → Documents has your certificates and property documents; Dashboard → Reports has official wallet, transactions, investments and owned-properties statements in English or Arabic."
+        }
       ]
     },
     "tickets": {

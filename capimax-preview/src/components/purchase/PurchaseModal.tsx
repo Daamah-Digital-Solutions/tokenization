@@ -69,6 +69,7 @@ export function purchaseErrorText(t: (k: string, o?: any) => string, e: any): st
     case 'PDF_REQUIRED':
     case 'FILE_TOO_LARGE':
     case 'FILE_REQUIRED':
+    case 'NOT_ENOUGH_RETURNS':
       return t(`errors.${code}`);
     default:
       return e?.message || t('errors.generic');
@@ -113,7 +114,7 @@ export const PurchaseModal: React.FC<Props> = ({ property, initialShares = 1, on
 
   // If the default (wallet) is not live, move to the first method that is.
   useEffect(() => {
-    if (!options) return;
+    if (!options || methodId === 'reinvest') return;
     if (!methodLive(options.methods, method)) {
       const first = (['card', 'crypto', 'bank', 'nova_sukuk'] as PayMethodId[]).find((id) =>
         methodLive(options.methods, payMethod(id)),
@@ -121,6 +122,14 @@ export const PurchaseModal: React.FC<Props> = ({ property, initialShares = 1, on
       if (first) setMethodId(first);
     }
   }, [options]);
+
+  // Rental returns can be reinvested at a discount (PropShare model).
+  const { data: reinvest } = useQuery({
+    queryKey: ['reinvest'],
+    queryFn: () => PurchaseService.reinvest(),
+    refetchOnMount: 'always',
+  });
+  const returns = Number(reinvest?.returns || 0);
 
   const quoteQuery = useQuery<PurchaseQuote>({
     queryKey: ['purchase-quote', property.id, amount, method.apiMethod],
@@ -161,7 +170,7 @@ export const PurchaseModal: React.FC<Props> = ({ property, initialShares = 1, on
     (method.apiMethod !== 'crypto' || Boolean(coin));
 
   const kind: 'done' | 'checkout' | 'review' =
-    method.apiMethod === 'wallet' ? 'done' : method.apiMethod === 'bank' || method.apiMethod === 'nova_sukuk' ? 'review' : 'checkout';
+    method.apiMethod === 'wallet' || method.apiMethod === 'reinvest' ? 'done' : method.apiMethod === 'bank' || method.apiMethod === 'nova_sukuk' ? 'review' : 'checkout';
 
   const setSharesSafe = (n: number) => {
     const v = Math.max(1, Math.floor(n || 1));
@@ -275,9 +284,11 @@ export const PurchaseModal: React.FC<Props> = ({ property, initialShares = 1, on
   const breakdown = quote && (
     <div className="rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-700 px-4 py-2" data-testid="purchase-breakdown">
       <Row label={t('breakdown.shares', { count: quote.shares, price: money(quote.unit_price) })} value={money(quote.subtotal)} />
-      <Row label={t('breakdown.fee', { pct: Number(quote.platform_fee_pct) })} value={money(quote.platform_fee)} />
+      {Number(quote.platform_fee_pct) > 0 && (
+        <Row label={t('breakdown.fee', { pct: Number(quote.platform_fee_pct) })} value={money(quote.platform_fee)} />
+      )}
       {Number(quote.discount) > 0 && (
-        <Row label={t('breakdown.discount', { pct: Number(quote.discount_pct) })} value={`−${money(quote.discount)}`} tone="green" />
+        <Row label={t(method.apiMethod === 'reinvest' ? 'breakdown.reinvestDiscount' : 'breakdown.discount', { pct: Number(quote.discount_pct) })} value={`−${money(quote.discount)}`} tone="green" />
       )}
       <Row label={t('breakdown.total')} value={money(quote.total)} strong />
     </div>
@@ -341,6 +352,30 @@ export const PurchaseModal: React.FC<Props> = ({ property, initialShares = 1, on
 
               <div>
                 <div className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">{t('howYouPay')}</div>
+                {returns > 0 && (
+                  <button
+                    type="button"
+                    data-method="reinvest"
+                    aria-pressed={methodId === 'reinvest'}
+                    onClick={() => { setMethodId('reinvest'); setError(null); }}
+                    className={cn(
+                      'w-full mb-2 flex items-center justify-between gap-3 p-3.5 rounded-xl border text-start transition-colors',
+                      methodId === 'reinvest'
+                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                        : 'border-emerald-200 dark:border-emerald-800 hover:border-emerald-400',
+                    )}
+                  >
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-slate-900 dark:text-white">{t('methods.reinvest.label')}</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">
+                        {t('methods.reinvest.description', { amount: money(returns), pct: Number(reinvest?.discount_pct || 0) })}
+                      </div>
+                    </div>
+                    <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/40 px-2 py-1 rounded-full shrink-0">
+                      {t('methods.off', { pct: Number(reinvest?.discount_pct || 0) })}
+                    </span>
+                  </button>
+                )}
                 <PaymentMethodList value={methodId} onChange={(id) => { setMethodId(id); setError(null); }} walletBalance={walletBalance} total={total} />
               </div>
 

@@ -9,7 +9,7 @@
 
 import { apiClient } from '../api/ApiClient';
 
-export type PurchaseApiMethod = 'wallet' | 'card' | 'crypto' | 'pronova' | 'nova_sukuk' | 'bank';
+export type PurchaseApiMethod = 'wallet' | 'reinvest' | 'card' | 'crypto' | 'pronova' | 'nova_sukuk' | 'bank';
 
 export interface MethodAvailability {
   id: PurchaseApiMethod;
@@ -132,6 +132,11 @@ export class PurchaseService {
 
   static minimum(coin: string): Promise<{ coin: string; minimum_usd: string | null; minimum_coin?: string | null }> {
     return apiClient.get('/purchases/crypto/minimum/', { coin });
+  }
+
+  /** Rental returns that can be reinvested at the discount (deposits do not qualify). */
+  static reinvest(): Promise<{ returns: string; discount_pct: string }> {
+    return apiClient.get('/purchases/reinvest/');
   }
 
   static async openCrypto(): Promise<OpenCryptoPayment[]> {

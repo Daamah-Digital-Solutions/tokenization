@@ -278,3 +278,36 @@ class ProofAndDepositTests(TestCase):
         p = Payment.objects.create(user=other, amount=Decimal('10'), net_amount=Decimal('10'), currency='USD',
                                    payment_method='credit_card', status='pending', metadata={'purpose': 'deposit'})
         self.assertEqual(self.client.get(f'/api/v1/purchases/payments/{p.pk}/').status_code, 404)
+
+
+class ReinvestTests(TestCase):
+    """Reinvest (PropShare model): returns only, discount on the share price, no purchase fee."""
+
+    def setUp(self):
+        self.user = make_ready_investor(wallet_balance=Decimal('1000.00'))
+        self.prop = make_property(token_price=Decimal('100.00'), total_tokens=100, is_published=True,
+                                  status='active')
+
+    def _earn(self, amount):
+        WalletBalance.credit(self.user, Decimal(amount), transaction_type='dividend', description='Rent')
+
+    def test_quote_discounts_the_share_price_without_fee(self):
+        from investments.purchase import price_quote
+        q = price_quote(self.prop, '500', 'reinvest')
+        # $95 a share: 5 shares for $475, $25 off, no purchase fee
+        self.assertEqual((q.shares, q.total, q.discount, q.platform_fee), (5, Decimal('475.00'), Decimal('25.00'), Decimal('0.00')))
+
+    def test_deposited_money_does_not_qualify(self):
+        with self.assertRaises(PurchaseError) as ctx:
+            create_purchase(self.user, property_id=self.prop.pk, amount='200', method='reinvest')
+        self.assertEqual(ctx.exception.code, 'NOT_ENOUGH_RETURNS')
+
+    def test_returns_are_reinvested_once(self):
+        from investments.purchase import reinvestable_returns
+        self._earn('200')
+        r = create_purchase(self.user, property_id=self.prop.pk, amount='200', method='reinvest')
+        self.assertEqual(r['next'], 'done')
+        self.assertEqual(r['investment'].token_amount, 2)  # 2 x $95 = $190
+        self.assertEqual(balance(self.user), Decimal('1010.00'))
+        self.assertEqual(reinvestable_returns(self.user), Decimal('10.00'))
+        self.assertFalse(WalletTransaction.objects.filter(user=self.user, transaction_type='fee').exists())

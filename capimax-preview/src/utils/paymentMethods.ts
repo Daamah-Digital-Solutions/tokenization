@@ -1,4 +1,4 @@
-import { Bitcoin, Building2, Coins, CreditCard, FileText, Smartphone, Wallet } from 'lucide-react';
+import { Bitcoin, Building2, Coins, CreditCard, FileText, Repeat, Smartphone, Wallet } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { MethodAvailability, PurchaseApiMethod } from '../services/purchase/PurchaseService';
 
@@ -20,7 +20,8 @@ export type PayMethodId =
   | 'crypto'
   | 'pronova'
   | 'nova_sukuk'
-  | 'bank';
+  | 'bank'
+  | 'reinvest';
 
 export interface PayMethod {
   id: PayMethodId;
@@ -40,7 +41,11 @@ export const PAYMENT_METHODS: readonly PayMethod[] = [
   { id: 'bank', icon: Building2, apiMethod: 'bank' },
 ];
 
+/** Reinvesting rental returns (shown only when the member has returns): a discount on the share price, no fee. */
+export const REINVEST_METHOD: PayMethod = { id: 'reinvest', icon: Repeat, apiMethod: 'reinvest' };
+
 export function payMethod(id: PayMethodId): PayMethod {
+  if (id === 'reinvest') return REINVEST_METHOD;
   return PAYMENT_METHODS.find((m) => m.id === id) ?? PAYMENT_METHODS[0];
 }
 

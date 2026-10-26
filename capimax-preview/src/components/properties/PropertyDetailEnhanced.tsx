@@ -49,6 +49,7 @@ import { PROPERTY_PLACEHOLDER, handleImageFallback } from '../../utils/imageFall
 import { useTranslation } from 'react-i18next';
 import { CalendarClock, Layers, TrendingUp as PriceUp } from 'lucide-react';
 import { PaymentPlanSection, PriceTiersCard } from './PaymentPlanSection';
+import { usePaymentOptions } from '../purchase/PaymentMethodList';
 import {
   DeveloperCard,
   FinancialStudyCard,
@@ -92,6 +93,8 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
   const [copiedContract, setCopiedContract] = useState(false);
 
   const { t: tPlan, i18n } = useTranslation('plan');
+  // Live fee rates from the admin settings (PropShare model), never hard-coded.
+  const feeRates = usePaymentOptions().data?.fees;
   const { t } = useTranslation('propui');
   const isAr = i18n.language?.startsWith('ar');
   const details = property.listing_details;
@@ -756,11 +759,11 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                     )}
                     <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
                       <span className="text-gray-600 dark:text-gray-400">{t('detail.fin.managementFee')}</span>
-                      <span className="font-semibold text-gray-900 dark:text-white">2.5%</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{feeRates ? `${Number(feeRates.management_fee_pct)}%` : '—'}</span>
                     </div>
                     <div className="flex justify-between items-center py-3">
                       <span className="text-gray-600 dark:text-gray-400">{t('detail.fin.platformFee')}</span>
-                      <span className="font-semibold text-gray-900 dark:text-white">1.0%</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">{feeRates ? `${Number(feeRates.platform_fee_pct)}%` : '—'}</span>
                     </div>
                   </div>
                 </div>

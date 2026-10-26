@@ -18,7 +18,8 @@
     "shares_other": "{{count}} shares × {{price}}",
     "fee": "Platform fee ({{pct}}%)",
     "discount": "Pronova discount ({{pct}}%)",
-    "total": "Total you pay"
+    "total": "Total you pay",
+    "reinvestDiscount": "Reinvest discount ({{pct}}%)"
   },
   "methods": {
     "unavailable": "Not available right now",
@@ -59,6 +60,10 @@
     "bank": {
       "label": "Bank transfer",
       "description": "Transfer to our account and upload the receipt"
+    },
+    "reinvest": {
+      "label": "Reinvest my returns",
+      "description": "{{amount}} of rental returns — {{pct}}% off the share price, no purchase fee"
     }
   },
   "confirm": {
@@ -124,7 +129,8 @@
     "KYC_REQUIRED": "Verify your identity first.",
     "PDF_REQUIRED": "The Sukuk certificate must be a PDF.",
     "FILE_TOO_LARGE": "The file must be 10 MB or smaller.",
-    "FILE_REQUIRED": "Attach the document."
+    "FILE_REQUIRED": "Attach the document.",
+    "NOT_ENOUGH_RETURNS": "Your returns are not enough for this. Choose fewer shares or another payment method."
   },
   "return": {
     "goWallet": "Go to my wallet",
@@ -205,5 +211,60 @@
     "deposit": "wallet deposit",
     "purchase": "for {{title}}",
     "resume": "Finish payment"
+  },
+  "fees": {
+    "title": "Fees",
+    "intro": "Every fee and discount on Capimax RT, with the rates in force today. The amounts are always shown before you confirm.",
+    "year": "year",
+    "none": "None",
+    "note": "Rates are set by Capimax RT and can change; a change never applies to purchases or installment plans already made. Payment providers (card, crypto, bank) may charge their own fees.",
+    "cols": {
+      "fee": "Fee",
+      "rate": "Rate",
+      "who": "Who pays",
+      "when": "When"
+    },
+    "rows": {
+      "purchase": {
+        "name": "Purchase fee",
+        "who": "The buyer",
+        "when": "On buying shares (on the share amount)"
+      },
+      "installment": {
+        "name": "Installment fee",
+        "who": "The buyer on an installment plan",
+        "when": "On the down payment and every installment"
+      },
+      "resale": {
+        "name": "Secondary market fee",
+        "who": "The buyer (the seller receives the full price)",
+        "when": "On each secondary market purchase"
+      },
+      "management": {
+        "name": "Management fee",
+        "who": "Owners of shares",
+        "when": "Deducted from rental income distributions"
+      },
+      "pronova": {
+        "name": "Pronova discount",
+        "who": "Buyers paying with Pronova",
+        "when": "On everything paid at purchase"
+      },
+      "reinvest": {
+        "name": "Reinvest discount",
+        "who": "Owners reinvesting their rental returns",
+        "when": "On the share price; no purchase fee"
+      },
+      "late": {
+        "name": "Late payment fee",
+        "who": "—",
+        "when": "Overdue installments are retried automatically"
+      },
+      "withdrawal": {
+        "name": "Withdrawal fee",
+        "who": "—",
+        "when": "Withdrawals to your saved accounts"
+      }
+    }
   }
 }

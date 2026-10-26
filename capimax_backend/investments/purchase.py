@@ -35,13 +35,18 @@ RESERVATION_TTL = timedelta(minutes=30)
 DOCUMENT_TTL = timedelta(hours=24)
 
 WALLET = 'wallet'
+# Reinvest (PropShare model): rental returns in the wallet buy shares at a
+# discount on the share price (admin setting, 5% by default), no purchase fee.
+REINVEST = 'reinvest'
+WALLET_METHODS = (WALLET, REINVEST)
 DIRECT_METHODS = ('card', 'crypto', 'pronova')
 REVIEW_METHODS = ('bank', 'nova_sukuk')
-ALL_METHODS = (WALLET,) + DIRECT_METHODS + REVIEW_METHODS
+ALL_METHODS = WALLET_METHODS + DIRECT_METHODS + REVIEW_METHODS
 
 # Purchase method → Payment.payment_method
 PAYMENT_METHOD_CODE = {
     'wallet': 'wallet',
+    'reinvest': 'wallet',
     'card': 'credit_card',
     'pronova': 'pronova',
     'crypto': 'cryptocurrency',
@@ -119,6 +124,16 @@ def price_quote(prop, amount, method: str, rates: Optional[dict] = None) -> Quot
     if unit <= 0:
         raise PurchaseError('INVALID_PROPERTY', 'This property has no share price.', 409)
     amount = _q(Decimal(str(amount)))
+    if method == REINVEST:
+        pct = Decimal(rates['reinvest_discount_pct'])
+        effective = _q(unit * (HUNDRED - pct) / HUNDRED)
+        shares = int(amount // effective) if effective > 0 else 0
+        if shares < 1 or unit * shares < Decimal(prop.minimum_investment or 0):
+            raise minimum_error(prop)
+        subtotal = _q(unit * shares)
+        total = _q(effective * shares)
+        return Quote(shares=shares, unit_price=unit, subtotal=subtotal, platform_fee=Decimal('0.00'),
+                     platform_fee_pct=Decimal('0'), discount=_q(subtotal - total), discount_pct=pct, total=total)
     shares = int(amount // unit)
     if shares < 1 or unit * shares < Decimal(prop.minimum_investment or 0):
         raise minimum_error(prop)
@@ -131,6 +146,29 @@ def price_quote(prop, amount, method: str, rates: Optional[dict] = None) -> Quot
     return Quote(shares=shares, unit_price=unit, subtotal=subtotal, platform_fee=fee,
                  platform_fee_pct=fee_pct, discount=discount, discount_pct=discount_pct,
                  total=_q(total - discount))
+
+
+def reinvestable_returns(user, exclude_investment=None) -> Decimal:
+    """
+    Returns the member can still reinvest at the discount: rental returns
+    credited to the wallet, less what was already reinvested, never more than
+    the wallet balance. Deposited money does not qualify.
+    """
+    from django.db.models import Sum
+
+    from payments.models import WalletBalance, WalletTransaction
+
+    from .models import Investment
+
+    earned = WalletTransaction.objects.filter(user=user, transaction_type='dividend', amount__gt=0)         .aggregate(s=Sum('amount'))['s'] or Decimal('0')
+    used_qs = Investment.objects.filter(user=user, purchase_method=REINVEST).exclude(
+        status__in=['failed', 'cancelled', 'refunded', 'expired'])
+    if exclude_investment is not None:
+        used_qs = used_qs.exclude(pk=exclude_investment.pk)
+    used = used_qs.aggregate(s=Sum('total_charged'))['s'] or Decimal('0')
+    wallet = WalletBalance.objects.filter(user=user, currency='USD').first()
+    available = wallet.available_balance if wallet else Decimal('0')
+    return _q(max(Decimal('0'), min(Decimal(earned) - Decimal(used), available)))
 
 
 def check_open(prop, expected_unit_price=None) -> None:
@@ -236,28 +274,41 @@ def create_purchase(user, *, property_id, amount, method: str, expected_unit_pri
             payment_method={'type': method},
         )
 
-        if method == WALLET:
+        if method in WALLET_METHODS:
             WalletBalance.objects.get_or_create(user=user, currency='USD',
                                                 defaults={'available_balance': Decimal('0.00')})
             wallet = WalletBalance.objects.select_for_update().get(user=user, currency='USD')
+            if method == REINVEST:
+                returns = reinvestable_returns(user, exclude_investment=inv)
+                if returns < quote.total:
+                    raise PurchaseError(
+                        'NOT_ENOUGH_RETURNS',
+                        f'You have ${returns:,.2f} of returns to reinvest; this costs ${quote.total:,.2f}.',
+                        409, {'returns': str(returns), 'required': str(quote.total)})
             if wallet.available_balance < quote.total:
                 raise PurchaseError(
                     'INSUFFICIENT_FUNDS',
                     f'Your wallet balance is ${wallet.available_balance:,.2f}; this purchase costs '
                     f'${quote.total:,.2f}. Add funds or choose another payment method.',
                     409, {'required': str(quote.total), 'available': str(wallet.available_balance)})
-            WalletBalance.debit(user, quote.subtotal, transaction_type='investment', reference_id=inv.id,
-                                description=f'{quote.shares} shares of {prop.title}')
+            if method == REINVEST:
+                WalletBalance.debit(user, quote.total, transaction_type='investment', reference_id=inv.id,
+                                    description=f'Reinvest — {quote.shares} shares of {prop.title} '
+                                                f'({quote.discount_pct}% off)')
+            else:
+                WalletBalance.debit(user, quote.subtotal, transaction_type='investment', reference_id=inv.id,
+                                    description=f'{quote.shares} shares of {prop.title}')
             if quote.platform_fee:
                 WalletBalance.debit(user, quote.platform_fee, transaction_type='fee', reference_id=inv.id,
                                     description=f'Purchase fee ({quote.platform_fee_pct}%) — {prop.title}')
             payment = Payment.objects.create(
-                user=user, investment=inv, amount=quote.total, net_amount=quote.subtotal,
+                user=user, investment=inv, amount=quote.total,
+                net_amount=quote.total if method == REINVEST else quote.subtotal,
                 processing_fee=quote.platform_fee, currency='USD', payment_method='wallet',
                 status='completed', completed_at=timezone.now(),
                 metadata={'purpose': 'investment', 'quote': quote.as_dict(), **(extra_metadata or {})},
             )
-            inv.payment_method = {'type': 'wallet', 'payment_id': str(payment.id)}
+            inv.payment_method = {'type': method, 'payment_id': str(payment.id)}
             inv.save(update_fields=['payment_method'])
             InvestmentProcessingService.process_investment(inv, payment)
             inv.refresh_from_db()

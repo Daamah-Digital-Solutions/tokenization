@@ -171,6 +171,21 @@ class PaymentStatusView(APIView):
         }))
 
 
+class ReinvestView(APIView):
+    """GET reinvest/ — the member's returns that can be reinvested at the discount."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from payments.models import PlatformFeeSettings
+
+        from .purchase import reinvestable_returns
+        return Response(create_success_response(data={
+            'returns': str(reinvestable_returns(request.user)),
+            'discount_pct': str(PlatformFeeSettings.current().reinvest_discount_pct),
+        }))
+
+
 class CryptoCoinsView(APIView):
     """The coins enabled on the NOWPayments account (cached 10 minutes)."""
 

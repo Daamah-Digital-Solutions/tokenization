@@ -32,6 +32,7 @@ const FOOTER_LINKS: Record<string, Array<{ key: string; href: string }>> = {
     { key: 'ownersGuide', href: '/investor-guide' },
     { key: 'dataRoom', href: '/data-room' },
     { key: 'risks', href: '/risks' },
+    { key: 'fees', href: '/fees' },
     { key: 'faq', href: '/faq' },
     { key: 'propertyOwners', href: '/property-owner' },
   ],
