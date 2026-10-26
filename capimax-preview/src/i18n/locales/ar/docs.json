@@ -25,7 +25,8 @@
     "analytics": "تقرير تحليلات المحفظة",
     "bankInstructions": "تعليمات التحويل البنكي",
     "withdrawal": "تأكيد طلب سحب",
-    "deposit": "إيصال إيداع"
+    "deposit": "إيصال إيداع",
+    "walletReceipt": "إيصال حركة المحفظة"
   },
   "subtitles": {
     "period": "{{from}} – {{to}}",
@@ -186,7 +187,13 @@
     "owner": "المالك",
     "dateTime": "التاريخ والوقت",
     "receiptNo": "رقم الإيصال",
-    "confirmed": "مؤكد"
+    "confirmed": "مؤكد",
+    "balanceBefore": "الرصيد قبل",
+    "balanceAfter": "الرصيد بعد",
+    "details": "التفاصيل",
+    "description": "الوصف",
+    "reference": "المرجع",
+    "transferReference": "مرجع التحويل"
   },
   "certificate": {
     "intro": "تشهد هذه الوثيقة بأن الشخص المذكور أدناه هو المالك المسجَّل للحصص العقارية الموضحة، والمملوكة عبر هيكل كابي مكس للأصول.",

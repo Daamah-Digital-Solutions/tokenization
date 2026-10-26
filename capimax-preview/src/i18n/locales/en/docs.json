@@ -25,7 +25,8 @@
     "analytics": "Portfolio Analytics Report",
     "bankInstructions": "Bank Transfer Instructions",
     "withdrawal": "Withdrawal Request Confirmation",
-    "deposit": "Deposit Receipt"
+    "deposit": "Deposit Receipt",
+    "walletReceipt": "Wallet Receipt"
   },
   "subtitles": {
     "period": "{{from}} – {{to}}",
@@ -186,7 +187,13 @@
     "owner": "Owner",
     "dateTime": "Date & time",
     "receiptNo": "Receipt no.",
-    "confirmed": "Confirmed"
+    "confirmed": "Confirmed",
+    "balanceBefore": "Balance before",
+    "balanceAfter": "Balance after",
+    "details": "Details",
+    "description": "Description",
+    "reference": "Reference",
+    "transferReference": "Transfer reference"
   },
   "certificate": {
     "intro": "This certifies that the person named below is the registered owner of the property shares listed, held through Capimax Asset Structure.",

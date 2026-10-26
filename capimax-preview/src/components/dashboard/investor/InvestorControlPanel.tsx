@@ -48,6 +48,7 @@ import { InvestorDocumentsPanel } from './InvestorDocumentsPanel';
 import { WithdrawModal } from '../../wallet/WithdrawModal';
 import { WithdrawalRequestsSection } from '../../wallet/WithdrawalRequestsSection';
 import { OpenCryptoPayments } from '../../purchase/OpenCryptoPayments';
+import { WalletLedger } from '../../wallet/WalletLedger';
 import { AddFundsModal } from '../../wallet/AddFundsModal';
 import WalletPanel from '../../wallet/WalletPanel';
 import { SecondaryMarketDashboard } from '../../marketplace/SecondaryMarketDashboard';
@@ -911,6 +912,9 @@ export const WalletContent: React.FC<{
           here. */}
       <WithdrawalRequestsSection />
 
+      {/* Every wallet movement with its numbered receipt (PropShare model). */}
+      <WalletLedger />
+
       {/* Withdraw modal — the only wallet action surfaced to investors.
           (Deposit / Add Funds was removed; see comment above the action
           row.) */}
@@ -921,6 +925,8 @@ export const WalletContent: React.FC<{
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ['wallet'] });
             queryClient.invalidateQueries({ queryKey: ['transactions'] });
+            queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
+            queryClient.invalidateQueries({ queryKey: ['wallet-ledger'] });
             setWithdrawOpen(false);
           }}
         />

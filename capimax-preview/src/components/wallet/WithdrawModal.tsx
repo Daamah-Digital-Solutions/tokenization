@@ -1,9 +1,21 @@
-import React, { useState } from 'react';
+/**
+ * Withdraw — to one of the member's SAVED accounts only (PropShare model).
+ * Pick a saved bank account / crypto wallet, or add one (it is saved for
+ * next time). The amount is held in the wallet at once; our team sends it
+ * and the member is told at each step.
+ */
+
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { apiClient } from '../../services/api/ApiClient';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '../ui/Button';
 import { Text } from '../design-system/typography/Text';
 import { cn } from '../../utils/cn';
+import { PayoutService, type PayoutAccount, type PayoutKind } from '../../services/wallet/PayoutService';
+
+const inputClass =
+  'w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm';
+const labelClass = 'block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1';
 
 export const WithdrawModal: React.FC<{
   availableBalance: number;
@@ -11,31 +23,55 @@ export const WithdrawModal: React.FC<{
   onSuccess: () => void;
 }> = ({ availableBalance, onClose, onSuccess }) => {
   const { t } = useTranslation('payments');
-  const [method, setMethod] = useState<'bank' | 'crypto'>('bank');
+  const queryClient = useQueryClient();
+  const [method, setMethod] = useState<PayoutKind>('bank');
   const [amount, setAmount] = useState<string>('');
-  const [accountHolderName, setAccountHolderName] = useState('');
-  const [bankName, setBankName] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
-  const [swiftCode, setSwiftCode] = useState('');
-  const [routingNumber, setRoutingNumber] = useState('');
-  const [bankCountry, setBankCountry] = useState('');
-  const [cryptoAsset, setCryptoAsset] = useState('USDT');
-  const [cryptoNetwork, setCryptoNetwork] = useState('TRC20');
-  const [cryptoAddress, setCryptoAddress] = useState('');
-  const [cryptoMemo, setCryptoMemo] = useState('');
+  const [accountId, setAccountId] = useState<string>('');
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState({
+    account_holder_name: '', bank_name: '', account_number: '', swift_code: '', routing_number: '', bank_country: '',
+    crypto_asset: 'USDT', crypto_network: 'TRC20', crypto_address: '', crypto_memo: '',
+  });
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  // one key per request: a double click never holds the amount twice
+  const idempotencyKey = useRef(PayoutService.newIdempotencyKey());
+
+  const { data: accounts = [], isLoading } = useQuery({
+    queryKey: ['payout-accounts'],
+    queryFn: () => PayoutService.accounts(),
+    refetchOnMount: 'always',
+  });
+  const saved = accounts.filter((a) => a.kind === method);
+  const addingNew = adding || (!isLoading && saved.length === 0);
+
+  // Default to the account marked default for this kind.
+  useEffect(() => {
+    if (saved.some((a) => a.id === accountId)) return;
+    setAccountId((saved.find((a) => a.is_default) || saved[0])?.id || '');
+  }, [method, accounts]);
+
+  const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    setForm((f) => ({ ...f, [k]: k === 'bank_country' ? e.target.value.toUpperCase() : e.target.value }));
 
   const amountValue = parseFloat(amount);
-  const amountValid =
-    !isNaN(amountValue) && amountValue >= 10 && amountValue <= availableBalance;
-  const detailsValid =
+  const amountValid = !isNaN(amountValue) && amountValue >= 10 && amountValue <= availableBalance;
+  const newValid =
     method === 'bank'
-      ? !!(accountHolderName.trim() && bankName.trim() && accountNumber.trim())
-      : !!(cryptoAsset.trim() && cryptoNetwork.trim() && cryptoAddress.trim());
-  const isValid = amountValid && detailsValid;
+      ? !!(form.account_holder_name.trim() && form.bank_name.trim() && form.account_number.trim())
+      : !!(form.crypto_asset.trim() && form.crypto_network.trim() && form.crypto_address.trim());
+  const isValid = amountValid && (addingNew ? newValid : Boolean(accountId));
+
+  const removeAccount = async (a: PayoutAccount) => {
+    try {
+      await PayoutService.removeAccount(a.id);
+      queryClient.invalidateQueries({ queryKey: ['payout-accounts'] });
+    } catch (e: any) {
+      setError(e?.message || t('withdraw.errors.submitFailed'));
+    }
+  };
 
   const handleSubmit = async () => {
     if (!amountValid) {
@@ -46,66 +82,47 @@ export const WithdrawModal: React.FC<{
       );
       return;
     }
-    if (!detailsValid) {
-      setError(
-        method === 'bank'
-          ? t('withdraw.errors.bankRequired')
-          : t('withdraw.errors.cryptoRequired'),
-      );
+    if (addingNew && !newValid) {
+      setError(method === 'bank' ? t('withdraw.errors.bankRequired') : t('withdraw.errors.cryptoRequired'));
       return;
     }
     setSubmitting(true);
     setError(null);
     try {
-      const payload =
-        method === 'bank'
-          ? {
-              amount: amountValue,
-              currency: 'USD',
-              withdrawal_method: 'bank',
-              account_holder_name: accountHolderName.trim(),
-              bank_name: bankName.trim(),
-              account_number: accountNumber.trim(),
-              routing_number: routingNumber.trim(),
-              swift_code: swiftCode.trim(),
-              bank_country: bankCountry.trim().toUpperCase(),
-              notes: notes.trim(),
-            }
-          : {
-              amount: amountValue,
-              currency: 'USD',
-              withdrawal_method: 'crypto',
-              crypto_asset: cryptoAsset.trim(),
-              crypto_network: cryptoNetwork.trim(),
-              crypto_address: cryptoAddress.trim(),
-              crypto_memo: cryptoMemo.trim(),
-              notes: notes.trim(),
-            };
-      const result: any = await apiClient.post(
-        '/payments/wallet/withdraw-request/',
-        payload,
-      );
-      const refId = result?.id;
-      const dest = method === 'bank' ? bankName : `${cryptoAsset} (${cryptoNetwork})`;
+      let target = accountId;
+      if (addingNew) {
+        const fields =
+          method === 'bank'
+            ? (['account_holder_name', 'bank_name', 'account_number', 'swift_code', 'routing_number', 'bank_country'] as const)
+            : (['crypto_asset', 'crypto_network', 'crypto_address', 'crypto_memo'] as const);
+        const body: any = { kind: method };
+        fields.forEach((f) => (body[f] = form[f].trim()));
+        const created = await PayoutService.addAccount(body);
+        target = created.id;
+        setAccountId(created.id);
+        setAdding(false);
+        queryClient.invalidateQueries({ queryKey: ['payout-accounts'] });
+      }
+      const wd = await PayoutService.withdraw(target, amountValue, idempotencyKey.current, notes.trim());
       setSuccess(
-        t(method === 'bank' ? 'withdraw.successBank' : 'withdraw.successCrypto', {
+        t('withdraw.successRef', {
+          ref: wd.reference || wd.id.slice(0, 8),
           amount: `$${amountValue.toFixed(2)}`,
-          dest,
-        }) +
-          (refId ? ` ${t('withdraw.reference', { ref: refId.slice(0, 8) })}` : ''),
+          dest: wd.destination_label,
+        }),
       );
+      queryClient.invalidateQueries({ queryKey: ['wallet', 'withdraw-requests'] });
       setTimeout(() => onSuccess(), 2500);
     } catch (e: any) {
-      const msg = e?.message || t('withdraw.errors.submitFailed');
+      idempotencyKey.current = PayoutService.newIdempotencyKey();
       const details = e?.details;
-      if (details && typeof details === 'object') {
-        const flat = Object.entries(details)
-          .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
-          .join(' · ');
-        setError(`${msg} (${flat})`);
-      } else {
-        setError(msg);
-      }
+      const flat =
+        details && typeof details === 'object'
+          ? Object.entries(details)
+              .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+              .join(' · ')
+          : '';
+      setError(`${e?.message || t('withdraw.errors.submitFailed')}${flat ? ` (${flat})` : ''}`);
     } finally {
       setSubmitting(false);
     }
@@ -128,7 +145,7 @@ export const WithdrawModal: React.FC<{
           </>
         ) : (
           <>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.amountLabel')}</label>
+            <label className={labelClass}>{t('withdraw.amountLabel')}</label>
             <input
               type="number"
               min={10}
@@ -137,16 +154,16 @@ export const WithdrawModal: React.FC<{
               placeholder="100.00"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm mb-4"
+              className={cn(inputClass, 'mb-4')}
             />
 
-            {/* Bank | Crypto method toggle */}
+            {/* Bank | Crypto */}
             <div className="flex gap-2 mb-4 p-1 bg-slate-100 dark:bg-slate-700/50 rounded-lg">
               {(['bank', 'crypto'] as const).map((m) => (
                 <button
                   key={m}
                   type="button"
-                  onClick={() => { setMethod(m); setError(null); }}
+                  onClick={() => { setMethod(m); setAdding(false); setError(null); }}
                   className={cn(
                     'flex-1 py-2 rounded-md text-sm font-medium transition-colors',
                     method === m
@@ -159,140 +176,129 @@ export const WithdrawModal: React.FC<{
               ))}
             </div>
 
-            {method === 'bank' && (
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.holderName')} *</label>
-                <input
-                  type="text"
-                  placeholder={t('withdraw.placeholders.holderName')}
-                  value={accountHolderName}
-                  onChange={(e) => setAccountHolderName(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
-                />
+            {saved.length > 0 && (
+              <div className="mb-3" data-testid="payout-accounts">
+                <div className={labelClass}>{t('withdraw.sendTo')}</div>
+                <div className="space-y-2">
+                  {saved.map((a) => (
+                    <label
+                      key={a.id}
+                      className={cn(
+                        'flex items-center gap-3 p-3 rounded-xl border cursor-pointer',
+                        !adding && accountId === a.id
+                          ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20'
+                          : 'border-slate-200 dark:border-slate-700',
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        name="payout-account"
+                        checked={!adding && accountId === a.id}
+                        onChange={() => { setAccountId(a.id); setAdding(false); }}
+                      />
+                      <span className="flex-1 min-w-0 text-sm text-slate-800 dark:text-slate-100 truncate">
+                        {a.label ? `${a.label} — ` : ''}{a.display}
+                        {a.is_default && <span className="ms-2 text-xs text-emerald-600">{t('withdraw.default')}</span>}
+                      </span>
+                      <button type="button" onClick={(e) => { e.preventDefault(); removeAccount(a); }} className="text-xs text-slate-400 hover:text-red-600">
+                        {t('withdraw.remove')}
+                      </button>
+                    </label>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setAdding(true)}
+                    className={cn(
+                      'w-full text-start p-3 rounded-xl border border-dashed text-sm',
+                      adding ? 'border-emerald-500 text-emerald-700' : 'border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300',
+                    )}
+                  >
+                    {t('withdraw.addNew')}
+                  </button>
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.bankName')} *</label>
-                <input
-                  type="text"
-                  placeholder={t('withdraw.placeholders.bankName')}
-                  value={bankName}
-                  onChange={(e) => setBankName(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
-                />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.accountNumber')} *</label>
-                <input
-                  type="text"
-                  placeholder={t('withdraw.placeholders.accountNumber')}
-                  value={accountNumber}
-                  onChange={(e) => setAccountNumber(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.swift')}</label>
-                <input
-                  type="text"
-                  placeholder={t('withdraw.placeholders.swift')}
-                  value={swiftCode}
-                  onChange={(e) => setSwiftCode(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.routing')}</label>
-                <input
-                  type="text"
-                  placeholder={t('withdraw.placeholders.optional')}
-                  value={routingNumber}
-                  onChange={(e) => setRoutingNumber(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.bankCountry')}</label>
-                <input
-                  type="text"
-                  maxLength={2}
-                  placeholder="US, GB, AE…"
-                  value={bankCountry}
-                  onChange={(e) => setBankCountry(e.target.value.toUpperCase())}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm uppercase"
-                />
-              </div>
-            </div>
             )}
 
-            {method === 'crypto' && (
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.asset')} *</label>
-                <select
-                  value={cryptoAsset}
-                  onChange={(e) => setCryptoAsset(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
-                >
-                  <option value="USDT">USDT</option>
-                  <option value="BTC">BTC</option>
-                  <option value="ETH">ETH</option>
-                </select>
+            {addingNew && method === 'bank' && (
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="col-span-2 text-xs text-slate-500 dark:text-slate-400">{t('withdraw.newAccount')}</div>
+                <div>
+                  <label className={labelClass}>{t('withdraw.fields.holderName')} *</label>
+                  <input type="text" placeholder={t('withdraw.placeholders.holderName')} value={form.account_holder_name} onChange={set('account_holder_name')} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>{t('withdraw.fields.bankName')} *</label>
+                  <input type="text" placeholder={t('withdraw.placeholders.bankName')} value={form.bank_name} onChange={set('bank_name')} className={inputClass} />
+                </div>
+                <div className="col-span-2">
+                  <label className={labelClass}>{t('withdraw.fields.accountNumber')} *</label>
+                  <input type="text" placeholder={t('withdraw.placeholders.accountNumber')} value={form.account_number} onChange={set('account_number')} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>{t('withdraw.fields.swift')}</label>
+                  <input type="text" placeholder={t('withdraw.placeholders.swift')} value={form.swift_code} onChange={set('swift_code')} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>{t('withdraw.fields.routing')}</label>
+                  <input type="text" placeholder={t('withdraw.placeholders.optional')} value={form.routing_number} onChange={set('routing_number')} className={inputClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>{t('withdraw.fields.bankCountry')}</label>
+                  <input type="text" maxLength={2} placeholder="US, GB, AE…" value={form.bank_country} onChange={set('bank_country')} className={cn(inputClass, 'uppercase')} />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.network')} *</label>
-                <select
-                  value={cryptoNetwork}
-                  onChange={(e) => setCryptoNetwork(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
-                >
-                  <option value="TRC20">TRC20 (Tron)</option>
-                  <option value="BEP20">BEP20 (BNB Smart Chain)</option>
-                  <option value="ERC20">ERC20 (Ethereum)</option>
-                  <option value="BTC">BTC (Bitcoin)</option>
-                  <option value="ETH">ETH (Ethereum)</option>
-                </select>
+            )}
+
+            {addingNew && method === 'crypto' && (
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="col-span-2 text-xs text-slate-500 dark:text-slate-400">{t('withdraw.newAccount')}</div>
+                <div>
+                  <label className={labelClass}>{t('withdraw.fields.asset')} *</label>
+                  <select value={form.crypto_asset} onChange={set('crypto_asset')} className={inputClass}>
+                    <option value="USDT">USDT</option>
+                    <option value="USDC">USDC</option>
+                    <option value="BTC">BTC</option>
+                    <option value="ETH">ETH</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={labelClass}>{t('withdraw.fields.network')} *</label>
+                  <select value={form.crypto_network} onChange={set('crypto_network')} className={inputClass}>
+                    <option value="TRC20">TRC20 (Tron)</option>
+                    <option value="BEP20">BEP20 (BNB Smart Chain)</option>
+                    <option value="ERC20">ERC20 (Ethereum)</option>
+                    <option value="BTC">BTC (Bitcoin)</option>
+                    <option value="ETH">ETH (Ethereum)</option>
+                  </select>
+                </div>
+                <div className="col-span-2">
+                  <label className={labelClass}>{t('withdraw.fields.walletAddress')} *</label>
+                  <input type="text" placeholder={t('withdraw.placeholders.walletAddress')} value={form.crypto_address} onChange={set('crypto_address')} className={cn(inputClass, 'font-mono')} />
+                </div>
+                <div className="col-span-2">
+                  <label className={labelClass}>{t('withdraw.fields.memo')}</label>
+                  <input type="text" placeholder={t('withdraw.placeholders.memo')} value={form.crypto_memo} onChange={set('crypto_memo')} className={inputClass} />
+                </div>
               </div>
-              <div className="col-span-2">
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.walletAddress')} *</label>
-                <input
-                  type="text"
-                  placeholder={t('withdraw.placeholders.walletAddress')}
-                  value={cryptoAddress}
-                  onChange={(e) => setCryptoAddress(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm font-mono"
-                />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.memo')}</label>
-                <input
-                  type="text"
-                  placeholder={t('withdraw.placeholders.memo')}
-                  value={cryptoMemo}
-                  onChange={(e) => setCryptoMemo(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
-                />
-              </div>
-            </div>
             )}
 
             <div className="mb-3">
-              <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">{t('withdraw.fields.notes')}</label>
+              <label className={labelClass}>{t('withdraw.fields.notes')}</label>
               <textarea
                 rows={2}
                 placeholder={t('withdraw.placeholders.notes')}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-sm"
+                className={inputClass}
               />
             </div>
 
             <div className="p-3 mb-3 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-900 dark:text-amber-200">
-              {method === 'bank' ? t('withdraw.noticeBank') : t('withdraw.noticeCrypto')}
+              {t('withdraw.onlySaved')}
             </div>
 
             {error && (
-              <div className="p-3 mb-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
+              <div className="p-3 mb-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300" role="alert">
                 {error}
               </div>
             )}

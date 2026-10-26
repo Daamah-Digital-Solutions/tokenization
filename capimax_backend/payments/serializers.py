@@ -17,7 +17,7 @@ from .models import (
     CryptoPayment, Refund, RecurringPayment, PaymentMethod, PaymentStatus,
     BankTransfer, NovaSukukPayment, PronovaPayment,
     BankWithdrawalRequest,
-    PlatformBankAccount, BankDepositRequest,
+    PlatformBankAccount, BankDepositRequest, PayoutAccount,
 )
 from core.utils import validate_investment_amount, calculate_tokens_for_amount
 
@@ -825,8 +825,41 @@ class BankWithdrawalRequestSerializer(serializers.ModelSerializer):
             'account_number', 'routing_number', 'swift_code', 'bank_country',
             'crypto_asset', 'crypto_network', 'crypto_address', 'crypto_memo',
             'status', 'review_note', 'created_at', 'completed_at',
+            'reference', 'destination_label', 'transfer_reference', 'failure_reason',
         ]
         read_only_fields = fields
+
+
+class PayoutAccountSerializer(serializers.ModelSerializer):
+    """A member's saved bank account / crypto wallet (withdrawals go only here)."""
+    display = serializers.CharField(source='label_text', read_only=True)
+
+    class Meta:
+        model = PayoutAccount
+        fields = [
+            'id', 'kind', 'label', 'display', 'is_default', 'created_at',
+            'account_holder_name', 'bank_name', 'account_number', 'routing_number', 'swift_code',
+            'bank_country', 'currency', 'crypto_asset', 'crypto_network', 'crypto_address', 'crypto_memo',
+        ]
+        read_only_fields = ['id', 'display', 'is_default', 'created_at']
+
+    def validate(self, attrs):
+        kind = attrs.get('kind')
+        if kind == 'bank':
+            missing = [f for f in ('account_holder_name', 'bank_name', 'account_number') if not (attrs.get(f) or '').strip()]
+        elif kind == 'crypto':
+            missing = [f for f in ('crypto_asset', 'crypto_network', 'crypto_address') if not (attrs.get(f) or '').strip()]
+        else:
+            raise serializers.ValidationError({'kind': 'Choose bank or crypto.'})
+        if missing:
+            raise serializers.ValidationError({f: 'This field is required.' for f in missing})
+        for f in ('account_holder_name', 'bank_name', 'account_number', 'routing_number', 'swift_code',
+                  'crypto_asset', 'crypto_network', 'crypto_address', 'crypto_memo', 'label'):
+            if f in attrs and isinstance(attrs[f], str):
+                attrs[f] = attrs[f].strip()
+        if attrs.get('bank_country'):
+            attrs['bank_country'] = attrs['bank_country'].strip().upper()[:2]
+        return attrs
 
 
 class BankWithdrawalRequestAdminSerializer(serializers.ModelSerializer):

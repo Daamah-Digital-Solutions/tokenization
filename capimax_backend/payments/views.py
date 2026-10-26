@@ -780,9 +780,14 @@ class WalletManagementView(APIView):
             )
 
     def _create_withdraw_request(self, request):
-        """Create a bank-transfer withdrawal request (admin-reviewed)."""
+        """
+        Older form: account details typed with the request. They are saved as
+        one of the member's payout accounts (or matched to an existing one)
+        and the request follows the same rules as /payments/withdrawals/.
+        """
         from .serializers import BankWithdrawalRequestCreateSerializer, BankWithdrawalRequestSerializer
-        from .models import BankWithdrawalRequest
+        from .models import PayoutAccount
+        from .withdrawals import WithdrawalError, request_withdrawal
 
         serializer = BankWithdrawalRequestCreateSerializer(data=request.data)
         if not serializer.is_valid():
@@ -790,108 +795,35 @@ class WalletManagementView(APIView):
                 create_error_response("Invalid data", details=serializer.errors),
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         data = serializer.validated_data
-        amount = data['amount']
-        currency = data.get('currency') or 'USD'
-
+        kind = data.get('withdrawal_method') or 'bank'
+        if kind == 'crypto':
+            match = {'crypto_address': (data.get('crypto_address') or '').strip(),
+                     'crypto_network': (data.get('crypto_network') or '').strip()}
+            extra = {'crypto_asset': data.get('crypto_asset') or '', 'crypto_memo': data.get('crypto_memo') or ''}
+        else:
+            match = {'account_number': (data.get('account_number') or '').strip(),
+                     'bank_name': (data.get('bank_name') or '').strip()}
+            extra = {'account_holder_name': data.get('account_holder_name') or '',
+                     'routing_number': data.get('routing_number') or '',
+                     'swift_code': data.get('swift_code') or '',
+                     'bank_country': (data.get('bank_country') or '').upper()[:2]}
+        account = PayoutAccount.objects.filter(user=request.user, kind=kind, **match).first()
+        if account is None:
+            account = PayoutAccount.objects.create(
+                user=request.user, kind=kind, **match, **extra,
+                is_default=not PayoutAccount.objects.filter(user=request.user, kind=kind).exists())
         try:
-            with transaction.atomic():
-                # Lock the funds atomically. Refuses if insufficient balance.
-                try:
-                    wallet_balance = WalletBalance.objects.select_for_update().get(
-                        user=request.user,
-                        currency=currency,
-                    )
-                except WalletBalance.DoesNotExist:
-                    return Response(create_error_response(
-                        f"No {currency} wallet exists for your account."
-                    ), status=status.HTTP_400_BAD_REQUEST)
+            withdrawal = request_withdrawal(
+                request.user, payout_account_id=account.pk, amount=data['amount'],
+                idempotency_key=request.headers.get('Idempotency-Key'), notes=data.get('notes') or '')
+        except WithdrawalError as exc:
+            return Response(create_error_response(exc.message, status_code=exc.status), status=exc.status)
+        return Response(create_success_response(
+            data=BankWithdrawalRequestSerializer(withdrawal).data,
+            message="Withdrawal request submitted. Our team sends it and you are told at each step.",
+        ), status=status.HTTP_201_CREATED)
 
-                if wallet_balance.available_balance < amount:
-                    return Response(create_error_response(
-                        f"Insufficient balance. Available: "
-                        f"{wallet_balance.available_balance} {currency}",
-                    ), status=status.HTTP_400_BAD_REQUEST)
-
-                wallet_balance.available_balance -= amount
-                wallet_balance.locked_balance += amount
-                wallet_balance.save(update_fields=[
-                    'available_balance', 'locked_balance', 'updated_at',
-                ])
-
-                withdrawal = BankWithdrawalRequest.objects.create(
-                    user=request.user,
-                    amount=amount,
-                    currency=currency,
-                    withdrawal_method=data.get('withdrawal_method') or 'bank',
-                    account_holder_name=data.get('account_holder_name') or '',
-                    bank_name=data.get('bank_name') or '',
-                    account_number=data.get('account_number') or '',
-                    routing_number=data.get('routing_number') or '',
-                    swift_code=data.get('swift_code') or '',
-                    bank_country=(data.get('bank_country') or '').upper(),
-                    crypto_asset=data.get('crypto_asset') or '',
-                    crypto_network=data.get('crypto_network') or '',
-                    crypto_address=data.get('crypto_address') or '',
-                    crypto_memo=data.get('crypto_memo') or '',
-                    notes=data.get('notes') or '',
-                )
-
-                WalletTransaction.objects.create(
-                    user=request.user,
-                    transaction_type='withdrawal',
-                    amount=-amount,
-                    currency=currency,
-                    balance_before=wallet_balance.available_balance + amount,
-                    balance_after=wallet_balance.available_balance,
-                    reference_id=withdrawal.id,
-                    description=(
-                        f"{withdrawal.get_withdrawal_method_display()} withdrawal "
-                        f"request {withdrawal.id} — pending admin review"
-                    ),
-                )
-
-            # Investor-facing confirmation email + in-app notification.
-            # Without this the user sees their available balance drop but
-            # gets no acknowledgement that the request is in the queue.
-            try:
-                from notifications.services import NotificationService
-                NotificationService.create_notification(
-                    user=request.user,
-                    title="Withdrawal Request Received",
-                    message=(
-                        f"Your request to withdraw ${amount} {currency} to "
-                        f"{data['bank_name']} has been received and is "
-                        f"under compliance review. Funds are locked from "
-                        f"your wallet until the wire settles, typically "
-                        f"within 48 hours of approval."
-                    ),
-                    notification_type='payment',
-                    priority='medium',
-                    send_email=True,
-                    send_real_time=True,
-                )
-            except Exception as exc:
-                logger.warning(
-                    "Could not send withdrawal confirmation email: %s", exc,
-                )
-
-            return Response(create_success_response(
-                data=BankWithdrawalRequestSerializer(withdrawal).data,
-                message=(
-                    "Withdrawal request submitted. Compliance will review "
-                    "and process the wire — funds typically arrive within "
-                    "48 hours of approval."
-                ),
-            ), status=status.HTTP_201_CREATED)
-        except Exception as exc:
-            logger.error("Withdrawal request failed: %s", exc)
-            return Response(
-                create_error_response(f"Failed to submit withdrawal: {exc}"),
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-    
     def _deposit_funds(self, request):
         """Deposit funds to wallet."""
         serializer = WalletDepositSerializer(data=request.data)

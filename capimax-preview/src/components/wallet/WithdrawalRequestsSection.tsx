@@ -22,6 +22,10 @@ interface WithdrawalRequest {
   review_note: string;
   created_at: string;
   completed_at: string | null;
+  reference?: string | null;
+  destination_label?: string;
+  transfer_reference?: string;
+  failure_reason?: string;
 }
 
 // Labels/help text live in the `payments` namespace under withdrawals.status.<key>.
@@ -79,7 +83,7 @@ export const WithdrawalRequestsSection: React.FC = () => {
               downloadWithdrawalConfirmationPdf({
                 holderName: [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email || '',
                 holderEmail: user?.email,
-                requestId: r.id,
+                requestId: r.reference || r.id,
                 amount: parseFloat(r.amount) || 0,
                 currency: r.currency,
                 method: r.withdrawal_method || 'bank',
@@ -98,9 +102,9 @@ export const WithdrawalRequestsSection: React.FC = () => {
             const addrShort = r.crypto_address && r.crypto_address.length > 12
               ? `${r.crypto_address.slice(0, 6)}…${r.crypto_address.slice(-4)}`
               : (r.crypto_address || '');
-            const dest = isCrypto
+            const dest = r.destination_label || (isCrypto
               ? `${r.crypto_asset} · ${r.crypto_network} · ${addrShort}`
-              : `${r.bank_name} ${last4}`;
+              : `${r.bank_name} ${last4}`);
             return (
               <div key={r.id} className="py-3 flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
@@ -112,6 +116,9 @@ export const WithdrawalRequestsSection: React.FC = () => {
                       → {dest}
                     </span>
                   </div>
+                  {r.reference && (
+                    <div className="text-xs font-mono text-slate-500 dark:text-slate-400 mt-0.5">{r.reference}</div>
+                  )}
                   <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     {t('withdrawals.requestedAt', { date: new Date(r.created_at).toLocaleString(dateLocale) })}
                     {r.completed_at && ` · ${t('withdrawals.completedAt', { date: new Date(r.completed_at).toLocaleString(dateLocale) })}`}
@@ -119,9 +126,14 @@ export const WithdrawalRequestsSection: React.FC = () => {
                   <div className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
                     {t(`withdrawals.status.${copy.key}.help`)}
                   </div>
-                  {r.status === 'rejected' && r.review_note && (
+                  {r.status === 'completed' && r.transfer_reference && (
+                    <div className="text-xs text-emerald-700 dark:text-emerald-300 mt-1">
+                      {t('withdrawals.transferRef', { ref: r.transfer_reference })}
+                    </div>
+                  )}
+                  {r.status === 'rejected' && (r.failure_reason || r.review_note) && (
                     <div className="text-xs text-red-700 dark:text-red-300 mt-1">
-                      <strong>{t('withdrawals.complianceNote')}</strong> {r.review_note}
+                      <strong>{t('withdrawals.complianceNote')}</strong> {r.failure_reason || r.review_note}
                     </div>
                   )}
                 </div>

@@ -1925,6 +1925,26 @@ class BankWithdrawalRequest(models.Model):
 
     notes = models.TextField(blank=True, help_text="Free-form note from the investor.")
 
+    # PropShare model: paid only to one of the member's SAVED accounts. The
+    # account is copied onto the request (destination) so the desk still
+    # shows where to pay if the member deletes it afterwards.
+    reference = models.CharField(
+        max_length=16, unique=True, null=True, blank=True,
+        help_text="Request number shown to the member and the desk (WD-XXXXXXXXXX).",
+    )
+    payout_account = models.ForeignKey(
+        'payments.PayoutAccount', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='withdrawals',
+    )
+    destination = models.JSONField(default=dict, blank=True)
+    destination_label = models.CharField(max_length=255, blank=True)
+    transfer_reference = models.CharField(
+        max_length=200, blank=True,
+        help_text="Bank transfer number or transaction hash, entered when marked paid.",
+    )
+    failure_reason = models.TextField(blank=True, help_text="Why it was not sent (the member reads it).")
+    idempotency_key = models.CharField(max_length=100, unique=True, null=True, blank=True)
+
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default='pending',
         db_index=True,
@@ -1959,6 +1979,60 @@ class BankWithdrawalRequest(models.Model):
             else f"{self.crypto_asset} ({self.crypto_network})"
         )
         return f"Withdrawal {self.amount} {self.currency} to {dest} ({self.status})"
+
+
+class PayoutAccount(models.Model):
+    """
+    A member's own saved bank account or crypto wallet — the only places a
+    withdrawal is paid to (PropShare model). No money moves here.
+    """
+
+    KIND_CHOICES = [('bank', 'Bank account'), ('crypto', 'Crypto wallet')]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='payout_accounts')
+    kind = models.CharField(max_length=10, choices=KIND_CHOICES)
+    label = models.CharField(max_length=100, blank=True)
+    # bank
+    account_holder_name = models.CharField(max_length=255, blank=True)
+    bank_name = models.CharField(max_length=255, blank=True)
+    account_number = models.CharField(max_length=64, blank=True, help_text="IBAN / account number.")
+    routing_number = models.CharField(max_length=64, blank=True)
+    swift_code = models.CharField(max_length=20, blank=True)
+    bank_country = models.CharField(max_length=2, blank=True)
+    currency = models.CharField(max_length=3, default='USD')
+    # crypto
+    crypto_asset = models.CharField(max_length=20, blank=True)
+    crypto_network = models.CharField(max_length=30, blank=True)
+    crypto_address = models.CharField(max_length=255, blank=True)
+    crypto_memo = models.CharField(max_length=120, blank=True)
+
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'payments_payout_account'
+        ordering = ['-is_default', '-created_at']
+        indexes = [models.Index(fields=['user', 'kind'])]
+
+    def __str__(self):
+        return f"{self.user} · {self.label_text()}"
+
+    @staticmethod
+    def masked(value: str) -> str:
+        tail = ''.join((value or '').split())[-4:]
+        return f'****{tail}' if tail else '****'
+
+    def label_text(self) -> str:
+        if self.kind == 'bank':
+            return f"{self.bank_name or 'Bank'} · {self.masked(self.account_number)}"
+        return f"{self.crypto_asset} {self.crypto_network} · {self.masked(self.crypto_address)}".strip()
+
+    def snapshot(self) -> dict:
+        fields = (('account_holder_name', 'bank_name', 'account_number', 'routing_number', 'swift_code',
+                   'bank_country', 'currency') if self.kind == 'bank'
+                  else ('crypto_asset', 'crypto_network', 'crypto_address', 'crypto_memo'))
+        return {'kind': self.kind, 'label': self.label, **{f: getattr(self, f) for f in fields}}
 
 
 class PlatformBankAccount(models.Model):

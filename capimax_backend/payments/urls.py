@@ -20,6 +20,12 @@ from .views import (
     RecurringPaymentViewSet,
     BankTransferView,
 )
+from .withdrawal_views import (
+    PayoutAccountDetailView,
+    PayoutAccountListView,
+    WalletReceiptView,
+    WithdrawalListView,
+)
 from .nowpayments_views import (
     nowpayments_currencies,
     nowpayments_estimate,
@@ -39,6 +45,12 @@ router.register(r'recurring', RecurringPaymentViewSet, basename='recurring-payme
 app_name = 'payments'
 
 urlpatterns = [
+    # Saved payout accounts + withdrawals to them (PropShare model)
+    path('payout-accounts/', PayoutAccountListView.as_view(), name='payout-accounts'),
+    path('payout-accounts/<uuid:pk>/', PayoutAccountDetailView.as_view(), name='payout-account'),
+    path('withdrawals/', WithdrawalListView.as_view(), name='withdrawals'),
+    path('wallet/transactions/<uuid:pk>/receipt/', WalletReceiptView.as_view(), name='wallet-receipt'),
+
     # Router URLs
     path('', include(router.urls)),
 

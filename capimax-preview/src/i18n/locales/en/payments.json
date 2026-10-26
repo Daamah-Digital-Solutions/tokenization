@@ -899,7 +899,14 @@
       "bankRequired": "Account holder name, bank name, and account number are required.",
       "cryptoRequired": "Asset, network, and wallet address are required.",
       "submitFailed": "Failed to submit the withdrawal request."
-    }
+    },
+    "sendTo": "Send to",
+    "addNew": "+ Add a new account",
+    "newAccount": "New account — saved to your accounts for next time.",
+    "default": "Default",
+    "remove": "Remove",
+    "onlySaved": "Withdrawals are paid only to your saved accounts. The amount is held in your wallet at once; our team sends it and you are told at each step.",
+    "successRef": "Request {{ref}} received: {{amount}} to {{dest}}. The amount is held in your wallet until our team sends it — you are told at each step."
   },
   "withdrawals": {
     "title": "Your withdrawal requests",
@@ -924,29 +931,49 @@
     "pdfTitle": "Download withdrawal confirmation (PDF)",
     "status": {
       "pending": {
-        "label": "Pending Review",
-        "help": "Compliance is reviewing your request."
+        "label": "Pending",
+        "help": "Waiting for our team to send it."
       },
       "approved": {
         "label": "Approved",
         "help": "Approved. Wire will be executed within 48h."
       },
       "processing": {
-        "label": "Wire In Progress",
-        "help": "Wire has been initiated — funds in transit."
+        "label": "Processing",
+        "help": "Our team started the transfer."
       },
       "completed": {
-        "label": "Completed",
-        "help": "Funds have landed in your bank account."
+        "label": "Paid",
+        "help": "Sent to your account."
       },
       "rejected": {
-        "label": "Rejected",
-        "help": "Funds returned to your wallet balance."
+        "label": "Not sent",
+        "help": "The amount is back in your wallet."
       },
       "cancelled": {
         "label": "Cancelled",
         "help": "Cancelled before review."
       }
+    },
+    "transferRef": "Transfer reference: {{ref}}"
+  },
+  "ledger": {
+    "title": "Wallet activity",
+    "subtitle": "Every movement of your wallet, each with its numbered receipt.",
+    "receipt": "Receipt",
+    "empty": "No wallet activity yet.",
+    "more": "Show more",
+    "loading": "Loading…",
+    "failed": "Could not prepare the receipt.",
+    "types": {
+      "deposit": "Deposit",
+      "withdrawal": "Withdrawal",
+      "investment": "Investment",
+      "dividend": "Dividend",
+      "fee": "Fee",
+      "refund": "Refund",
+      "trade_purchase": "Market purchase",
+      "trade_sale": "Market sale"
     }
   }
 }

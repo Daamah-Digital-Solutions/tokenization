@@ -1,75 +1,96 @@
 """
-Django admin registration for BankWithdrawalRequest.
+Django admin for withdrawals — the Withdrawals desk (PropShare model).
 
-Kept in its own module so the bulk-action helpers stay readable; the
-import side-effect (when payments.admin imports this) registers it.
+A member asks for a withdrawal to one of their saved accounts; the amount is
+already held in their wallet. The team pays it by hand and closes it on the
+request's desk page:
+
+  - Mark as processing — the transfer has started (member is told);
+  - Mark as PAID       — with the bank transfer number / transaction hash;
+  - Mark as FAILED     — with the reason; the amount goes back to the
+                          member's wallet, once, with its ledger row.
+
+The status only moves through these actions (payments/withdrawals.py).
 """
 
-from django.contrib import admin
-from django.utils import timezone
+from django.contrib import admin, messages
+from django.shortcuts import get_object_or_404, redirect
+from django.template.response import TemplateResponse
+from django.urls import path, reverse
 from django.utils.html import format_html
 
-from .models import BankWithdrawalRequest, WalletBalance
+from .models import BankWithdrawalRequest, PayoutAccount, WalletTransaction
+from .withdrawals import WithdrawalError, mark_failed, mark_paid, mark_processing
+
+STATUS_COLOURS = {
+    'pending': '#d97706',
+    'approved': '#2563eb',
+    'processing': '#2563eb',
+    'completed': '#16a34a',
+    'rejected': '#dc2626',
+    'cancelled': '#6b7280',
+}
+STATUS_LABELS = {
+    'pending': 'Pending',
+    'approved': 'Approved',
+    'processing': 'Processing',
+    'completed': 'Paid',
+    'rejected': 'Failed (returned)',
+    'cancelled': 'Cancelled',
+}
+DEST_FIELDS = (
+    ('account_holder_name', 'Account holder'),
+    ('bank_name', 'Bank'),
+    ('account_number', 'IBAN / account number'),
+    ('swift_code', 'SWIFT / BIC'),
+    ('routing_number', 'Routing number'),
+    ('bank_country', 'Country'),
+    ('currency', 'Currency'),
+    ('crypto_asset', 'Asset'),
+    ('crypto_network', 'Network'),
+    ('crypto_address', 'Wallet address'),
+    ('crypto_memo', 'Memo / tag'),
+)
 
 
 @admin.register(BankWithdrawalRequest)
 class BankWithdrawalRequestAdmin(admin.ModelAdmin):
-    """Review interface for outgoing bank withdrawals.
-
-    The investor lodges a request (status=pending) and the platform
-    atomically locks that amount in their wallet. From here an admin
-    either:
-
-      - Approve   -> status=approved, funds stay locked. Operator
-                     executes the wire out-of-band. Once it lands, mark
-                     Complete.
-      - Complete  -> status=completed, the locked balance is consumed
-                     (locked_balance debited; no refund to available).
-      - Reject    -> status=rejected, the locked balance is unlocked
-                     back to the user's available_balance and the user
-                     is notified.
-    """
-
     list_display = (
-        'id_short', 'status_badge', 'investor_email', 'amount_display',
+        'reference_link', 'status_badge', 'investor_email', 'amount_display',
         'withdrawal_method', 'destination', 'created_at', 'reviewed_by',
     )
-    list_filter = ('status', 'withdrawal_method', 'currency', 'bank_country', 'created_at')
+    list_filter = ('status', 'withdrawal_method', 'currency', 'created_at')
     search_fields = (
-        'id', 'user__email', 'account_holder_name', 'bank_name',
-        'account_number', 'routing_number', 'swift_code',
-        'crypto_asset', 'crypto_network', 'crypto_address',
+        'reference', 'id', 'user__email', 'account_holder_name', 'bank_name',
+        'account_number', 'crypto_address', 'transfer_reference',
     )
-    readonly_fields = (
-        'id', 'user', 'amount', 'currency', 'withdrawal_method',
-        'account_holder_name', 'bank_name', 'account_number',
-        'routing_number', 'swift_code', 'bank_country',
-        'crypto_asset', 'crypto_network', 'crypto_address', 'crypto_memo',
-        'notes', 'reviewed_by', 'reviewed_at', 'completed_at',
-        'created_at', 'updated_at',
-    )
-    actions = ('approve_withdrawals', 'mark_completed', 'reject_withdrawals')
+    readonly_fields = [f.name for f in BankWithdrawalRequest._meta.fields]
+    actions = ('mark_processing_action',)
     list_select_related = ('user', 'reviewed_by')
 
-    def id_short(self, obj):
-        return str(obj.id)[:8]
-    id_short.short_description = 'ID'
+    def has_add_permission(self, request):
+        return False  # members ask from the site; the hold happens there
+
+    def has_delete_permission(self, request, obj=None):
+        return False  # money was held for it: close it on the desk instead
+
+    def get_urls(self):
+        return [
+            path('<uuid:pk>/desk/', self.admin_site.admin_view(self.desk_view), name='payments_withdrawal_desk'),
+        ] + super().get_urls()
+
+    # ----- list -------------------------------------------------------------
+
+    def reference_link(self, obj):
+        url = reverse('admin:payments_withdrawal_desk', args=[obj.pk])
+        return format_html('<a href="{}"><b>{}</b></a>', url, obj.reference or str(obj.pk)[:8])
+    reference_link.short_description = 'Reference (open desk)'
 
     def status_badge(self, obj):
-        colours = {
-            'pending': '#d97706',
-            'approved': '#2563eb',
-            'processing': '#2563eb',
-            'completed': '#16a34a',
-            'rejected': '#dc2626',
-            'cancelled': '#6b7280',
-        }
-        c = colours.get(obj.status, '#6b7280')
         return format_html(
-            '<span style="display:inline-block;padding:2px 8px;'
-            'border-radius:6px;background:{};color:white;'
-            'font-size:11px;">{}</span>',
-            c, obj.status.upper(),
+            '<span style="display:inline-block;padding:2px 8px;border-radius:6px;background:{};'
+            'color:white;font-size:11px;">{}</span>',
+            STATUS_COLOURS.get(obj.status, '#6b7280'), STATUS_LABELS.get(obj.status, obj.status).upper(),
         )
     status_badge.short_description = 'Status'
 
@@ -78,148 +99,76 @@ class BankWithdrawalRequestAdmin(admin.ModelAdmin):
     investor_email.short_description = 'Investor'
 
     def amount_display(self, obj):
-        return f"{obj.amount} {obj.currency}"
+        return f'{obj.amount} {obj.currency}'
     amount_display.short_description = 'Amount'
 
     def destination(self, obj):
-        """Where the operator sends the funds — bank name or crypto address."""
+        if obj.destination_label:
+            return obj.destination_label
         if obj.withdrawal_method == 'crypto':
-            return f"{obj.crypto_asset} · {obj.crypto_network} · {obj.crypto_address}"
+            return f'{obj.crypto_asset} · {obj.crypto_network} · {obj.crypto_address}'
         return obj.bank_name or '-'
-    destination.short_description = 'Destination'
+    destination.short_description = 'Pay to'
 
-    def account_number_last4(self, obj):
-        if not obj.account_number:
-            return '-'
-        return f"...{obj.account_number[-4:]}"
-    account_number_last4.short_description = 'Account'
-
-    # ----- Actions ----------------------------------------------------
-
-    def approve_withdrawals(self, request, queryset):
-        """Mark approved — funds stay locked, ready for the wire."""
-        from notifications.services import NotificationService
+    def mark_processing_action(self, request, queryset):
         n = 0
         for obj in queryset:
-            if obj.status != 'pending':
+            try:
+                mark_processing(obj, by=request.user)
+                n += 1
+            except WithdrawalError:
                 continue
-            obj.status = 'approved'
-            obj.reviewed_by = request.user
-            obj.reviewed_at = timezone.now()
-            obj.save(update_fields=['status', 'reviewed_by', 'reviewed_at', 'updated_at'])
+        self.message_user(request, f'{n} withdrawal(s) marked as processing. Close each one on its desk page.')
+    mark_processing_action.short_description = 'Mark as processing (transfer started)'
+
+    # ----- desk -------------------------------------------------------------
+
+    def desk_view(self, request, pk):
+        wd = get_object_or_404(BankWithdrawalRequest.objects.select_related('user', 'reviewed_by'), pk=pk)
+        if request.method == 'POST':
+            if not self.has_change_permission(request, wd):
+                messages.error(request, 'You cannot change withdrawals.')
+                return redirect(request.path)
+            action = request.POST.get('action')
             try:
-                NotificationService.create_notification(
-                    user=obj.user,
-                    title="Withdrawal Approved",
-                    message=(
-                        f"Your withdrawal of {obj.amount} {obj.currency} has "
-                        f"been approved. Funds will land in your bank account "
-                        f"within 48 hours."
-                    ),
-                    notification_type='payment',
-                    priority='high',
-                    send_email=True,
-                    send_real_time=True,
-                )
-            except Exception:
-                pass
-            n += 1
-        self.message_user(request, f"Approved {n} withdrawal(s).")
-    approve_withdrawals.short_description = 'Approve — funds clear in 48h'
+                if action == 'processing':
+                    mark_processing(wd, by=request.user)
+                    messages.success(request, f'{wd.reference} marked as processing; the member was told.')
+                elif action == 'paid':
+                    mark_paid(wd, request.POST.get('transfer_reference', ''), by=request.user)
+                    messages.success(request, f'{wd.reference} marked as PAID; the member was told.')
+                elif action == 'failed':
+                    mark_failed(wd, request.POST.get('reason', ''), by=request.user)
+                    messages.success(request, f'{wd.reference} marked as FAILED; ${wd.amount} went back to the wallet.')
+            except WithdrawalError as exc:
+                messages.error(request, exc.message)
+            return redirect(request.path)
 
-    def mark_completed(self, request, queryset):
-        """Mark completed — debit locked_balance (the wire has executed).
+        dest = dict(wd.destination or {})
+        if not dest:  # requests from before saved accounts
+            dest = {k: getattr(wd, k, '') for k, _ in DEST_FIELDS}
+        open_ = wd.status in ('pending', 'approved', 'processing')
+        context = {
+            **self.admin_site.each_context(request),
+            'title': f'Withdrawal {wd.reference or str(wd.pk)[:8]}',
+            'opts': self.model._meta,
+            'wd': wd,
+            'status_label': STATUS_LABELS.get(wd.status, wd.status),
+            'status_colour': STATUS_COLOURS.get(wd.status, '#6b7280'),
+            'dest_rows': [(label, dest.get(k)) for k, label in DEST_FIELDS if dest.get(k)],
+            'can_processing': wd.status in ('pending', 'approved'),
+            'can_close': open_,
+            'ledger': WalletTransaction.objects.filter(user=wd.user, reference_id=wd.pk).order_by('created_at'),
+        }
+        return TemplateResponse(request, 'admin/payments/withdrawal_desk.html', context)
 
-        Also notifies the investor by email so they know the funds have
-        landed in their bank account.
-        """
-        from notifications.services import NotificationService
-        n = 0
-        for obj in queryset:
-            if obj.status not in ('approved', 'processing'):
-                continue
-            try:
-                wb = WalletBalance.objects.select_for_update().get(
-                    user=obj.user, currency=obj.currency,
-                )
-                wb.locked_balance = max(wb.locked_balance - obj.amount, 0)
-                wb.save(update_fields=['locked_balance', 'updated_at'])
-            except WalletBalance.DoesNotExist:
-                pass
 
-            obj.status = 'completed'
-            obj.completed_at = timezone.now()
-            obj.save(update_fields=['status', 'completed_at', 'updated_at'])
+@admin.register(PayoutAccount)
+class PayoutAccountAdmin(admin.ModelAdmin):
+    list_display = ('user', 'kind', 'label_text', 'is_default', 'created_at')
+    list_filter = ('kind',)
+    search_fields = ('user__email', 'bank_name', 'account_number', 'crypto_address')
+    readonly_fields = [f.name for f in PayoutAccount._meta.fields]
 
-            try:
-                NotificationService.create_notification(
-                    user=obj.user,
-                    title="Withdrawal Completed",
-                    message=(
-                        f"Your withdrawal of {obj.amount} {obj.currency} to "
-                        f"{obj.bank_name} has been completed. The wire has "
-                        f"left our account and should now show in your bank "
-                        f"(allow up to 24 hours for international "
-                        f"correspondent banks to display it)."
-                    ),
-                    notification_type='payment',
-                    priority='high',
-                    send_email=True,
-                    send_real_time=True,
-                )
-            except Exception:
-                pass
-
-            n += 1
-        self.message_user(request, f"Marked {n} withdrawal(s) completed.")
-    mark_completed.short_description = 'Mark completed — wire has landed'
-
-    def reject_withdrawals(self, request, queryset):
-        """Reject — unlock funds back to available_balance, notify user."""
-        from notifications.services import NotificationService
-        n = 0
-        for obj in queryset:
-            if obj.status in ('completed', 'rejected', 'cancelled'):
-                continue
-            try:
-                wb = WalletBalance.objects.select_for_update().get(
-                    user=obj.user, currency=obj.currency,
-                )
-                wb.locked_balance = max(wb.locked_balance - obj.amount, 0)
-                wb.available_balance += obj.amount
-                wb.save(update_fields=[
-                    'locked_balance', 'available_balance', 'updated_at',
-                ])
-            except WalletBalance.DoesNotExist:
-                pass
-
-            obj.status = 'rejected'
-            obj.reviewed_by = request.user
-            obj.reviewed_at = timezone.now()
-            if not obj.review_note:
-                obj.review_note = (
-                    'Rejected by admin via Django admin bulk action.'
-                )
-            obj.save(update_fields=[
-                'status', 'reviewed_by', 'reviewed_at', 'review_note', 'updated_at',
-            ])
-            try:
-                NotificationService.create_notification(
-                    user=obj.user,
-                    title="Withdrawal Rejected",
-                    message=(
-                        f"Your withdrawal of {obj.amount} {obj.currency} was "
-                        f"rejected. Funds have been returned to your wallet "
-                        f"balance. Contact support if you believe this is in "
-                        f"error."
-                    ),
-                    notification_type='payment',
-                    priority='high',
-                    send_email=True,
-                    send_real_time=True,
-                )
-            except Exception:
-                pass
-            n += 1
-        self.message_user(request, f"Rejected {n} withdrawal(s).")
-    reject_withdrawals.short_description = 'Reject — unlock funds'
+    def has_add_permission(self, request):
+        return False
