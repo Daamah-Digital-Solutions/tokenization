@@ -71,27 +71,15 @@ app.conf.beat_schedule = {
         'kwargs': {},
     },
 
-    # Daily installment processing
-    'process-due-installments': {
-        'task': 'properties.tasks.process_due_installments',
-        'schedule': 60.0 * 60.0 * 24.0,  # Every day at midnight
+    # Installments (PropShare model): every hour — the 3-day reminder, then
+    # charge due and overdue payments from the wallet (retried hourly,
+    # no late fee, no automatic cancellation).
+    'installments-run-due': {
+        'task': 'properties.tasks.run_installments_due',
+        'schedule': 60.0 * 60.0,
         'kwargs': {},
     },
-    
-    # Daily payment reminders (3 days before due date)
-    'send-payment-reminders': {
-        'task': 'properties.tasks.send_payment_reminders',
-        'schedule': 60.0 * 60.0 * 24.0,  # Every day at midnight
-        'kwargs': {'days_before_due': 3},
-    },
-    
-    # Daily late payment processing
-    'process-late-payments': {
-        'task': 'properties.tasks.process_late_payments',
-        'schedule': 60.0 * 60.0 * 24.0,  # Every day at midnight
-        'kwargs': {},
-    },
-    
+
     # PropShare-model checkout: release unpaid share holds, reconcile card checkouts
     'expire-purchase-reservations': {
         'task': 'investments.tasks.expire_purchase_reservations',

@@ -1443,7 +1443,33 @@ class ConstructionInstallmentViewSet(ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        installment_plan = serializer.save()
+        # PropShare model: the plan holds its shares and the down payment is
+        # charged from the wallet now — all or nothing.
+        from django.db import transaction as db_transaction
+        from .installment_billing import start_plan
+
+        class _Rollback(Exception):
+            pass
+
+        first = None
+        try:
+            with db_transaction.atomic():
+                installment_plan = serializer.save()
+                first = start_plan(installment_plan)
+                if first is not None and not first['success']:
+                    raise _Rollback()
+        except _Rollback:
+            return Response({'success': False, 'code': first.get('code'), 'detail': first['error'],
+                             'message': first['error'], 'amount_due': str(first.get('total', ''))},
+                            status=status.HTTP_409_CONFLICT if first.get('code') == 'INSUFFICIENT_FUNDS'
+                            else status.HTTP_400_BAD_REQUEST)
+        installment_plan.refresh_from_db()
+        if first is not None:
+            from properties.services import InstallmentProcessingService
+            try:
+                InstallmentProcessingService()._send_payment_success_notification(installment_plan, first['total'])
+            except Exception:
+                pass
         response_serializer = ConstructionInstallmentSerializer(installment_plan, context={'request': request})
         
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
@@ -1545,8 +1571,9 @@ class ConstructionInstallmentViewSet(ModelViewSet):
 
         if not result['success']:
             return Response(
-                {'success': False, 'message': result['error']},
-                status=status.HTTP_400_BAD_REQUEST,
+                {'success': False, 'code': result.get('code'), 'message': result['error']},
+                status=status.HTTP_409_CONFLICT if result.get('code') == 'INSUFFICIENT_FUNDS'
+                else status.HTTP_400_BAD_REQUEST,
             )
 
         installment.refresh_from_db()
@@ -1559,6 +1586,8 @@ class ConstructionInstallmentViewSet(ModelViewSet):
             'success': True,
             'message': 'Installment paid successfully',
             'amount_paid': float(result['amount_paid']),
+            'base': float(result['base']),
+            'fee': float(result['fee']),
             'tokens_released': float(result['tokens_released']),
             'payment_number': installment.payments_made,
             'remaining_payments': installment.remaining_payments,
@@ -1616,9 +1645,14 @@ class ConstructionInstallmentViewSet(ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Update status to cancelled
-        installment.status = 'cancelled'
-        installment.save()
+        # Update status to cancelled; the shares it paid for count as sold,
+        # the rest go back on sale.
+        from django.db import transaction as db_transaction
+        from .installment_billing import finish_plan
+        with db_transaction.atomic():
+            installment.status = 'cancelled'
+            installment.save()
+            finish_plan(installment)
         
         # Log the cancellation
         logger.info(

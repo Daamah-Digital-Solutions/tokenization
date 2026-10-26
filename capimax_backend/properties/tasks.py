@@ -41,6 +41,15 @@ def _json_safe(value):
     return value
 
 
+@shared_task
+def run_installments_due():
+    """Hourly (PropShare model): 3-day reminders, then charge due / overdue installments from the wallet."""
+    from .installment_billing import run_due
+    stats = run_due()
+    logger.info('Installments run: %s', stats)
+    return stats
+
+
 @shared_task(bind=True, max_retries=3, retry_backoff=True)
 def process_due_installments(self, max_payments: int = 100) -> Dict[str, Any]:
     """

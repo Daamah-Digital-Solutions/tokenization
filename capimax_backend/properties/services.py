@@ -203,105 +203,42 @@ class InstallmentProcessingService:
                 'tokens_released': 0
             }
     
-    def pay_installment_from_wallet(self, installment: ConstructionInstallment) -> Dict[str, Any]:
+    def pay_installment_from_wallet(self, installment: ConstructionInstallment, *, auto: bool = False,
+                                    today=None) -> Dict[str, Any]:
         """
-        Charge one installment to the investor's wallet — the interactive
-        "Pay now" path used by the dashboard and the buy-in-instalments checkout.
+        Charge the next payment of a plan to the investor's wallet — "Pay now"
+        on the dashboard (any time: paying ahead is allowed) and the hourly
+        automatic debit (``auto=True``: only what is due).
 
-        Unlike the automated ``_process_single_installment`` batch path this does
-        NOT require a stored default UserPaymentMethod: the investor has
-        explicitly chosen to pay from their wallet balance. The wallet debit
-        (audited WalletTransaction), the Payment record and the plan advance all
-        happen in one atomic block behind a ``select_for_update`` row lock so two
-        rapid clicks can't double-pay; the best-effort on-chain token release
-        runs AFTER commit so a slow RPC never holds the lock.
+        The money (base + installment fee, each its own ledger line), the
+        Payment record and the plan advance happen in one transaction in
+        ``installment_billing.charge_next``; the best-effort on-chain token
+        release and the notice run after commit.
 
-        Returns ``{success, amount_paid, tokens_released, payment_id?, error?}``.
+        Returns ``{success, amount_paid, tokens_released, payment_id?, code?, error?}``.
         """
-        payment = None
-        tokens_released = 0
+        from .installment_billing import charge_next
+
         try:
-            with transaction.atomic():
-                # Lock the plan row for the duration of the charge.
-                installment = ConstructionInstallment.objects.select_for_update().get(pk=installment.pk)
-
-                if not installment.can_make_payment():
-                    return {
-                        'success': False,
-                        'error': 'This installment is not due for payment yet.',
-                        'amount_paid': Decimal('0.00'),
-                        'tokens_released': 0,
-                    }
-
-                # Payment #n of the schedule (the down payment, then equal
-                # installments; the last one absorbs rounding).
-                amount = installment.amount_due
-
-                try:
-                    WalletBalance.debit(
-                        installment.investor,
-                        amount,
-                        transaction_type='investment',
-                        description=f'Installment payment for {installment.property_investment.title}',
-                        reference_id=installment.id,
-                    )
-                except ValueError:
-                    return {
-                        'success': False,
-                        'error': 'Insufficient wallet balance',
-                        'amount_paid': Decimal('0.00'),
-                        'tokens_released': 0,
-                    }
-
-                payment = Payment.objects.create(
-                    user=installment.investor,
-                    amount=amount,
-                    currency='USD',
-                    payment_method='wallet',
-                    status=PaymentStatus.COMPLETED,
-                    net_amount=amount,
-                    completed_at=timezone.now(),
-                    metadata={
-                        'installment_id': str(installment.id),
-                        'property_id': str(installment.property_investment.id),
-                        'payment_number': installment.payments_made + 1,
-                        'total_payments': installment.total_installments,
-                    },
-                )
-
-                success, message, tokens_released = installment.process_payment(
-                    amount, payment_date=timezone.now().date()
-                )
-                if not success:
-                    # Roll the debit + Payment back — should be unreachable after
-                    # can_make_payment(), but never advance the plan without money.
-                    raise RuntimeError(message)
+            result = charge_next(installment, auto=auto, today=today)
         except RuntimeError as exc:
-            return {
-                'success': False,
-                'error': str(exc),
-                'amount_paid': Decimal('0.00'),
-                'tokens_released': 0,
-            }
+            return {'success': False, 'code': 'FAILED', 'error': str(exc),
+                    'amount_paid': Decimal('0.00'), 'tokens_released': 0}
+        if not result['success']:
+            return result
 
-        # --- post-commit, best-effort side effects ---------------------------
+        installment.refresh_from_db()
+        tokens_released = result['tokens_released']
         if installment.graduated_release and tokens_released and tokens_released > 0:
             try:
                 self._release_tokens_to_investor(installment, int(tokens_released))
             except Exception as e:
                 logger.warning(f"Token release failed for installment {installment.id}: {e}")
-
         try:
-            self._send_payment_success_notification(installment, amount)
+            self._send_payment_success_notification(installment, result['total'])
         except Exception:
             pass
-
-        return {
-            'success': True,
-            'amount_paid': amount,
-            'tokens_released': int(tokens_released or 0),
-            'payment_id': str(payment.id) if payment else None,
-        }
+        return result
 
     def _get_user_payment_method(self, user: User) -> Optional[UserPaymentMethod]:
         """Get user's preferred payment method for automatic payments."""

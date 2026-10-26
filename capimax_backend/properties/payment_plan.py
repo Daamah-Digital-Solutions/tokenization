@@ -176,6 +176,8 @@ def plan_schedule_with_status(plan) -> list[dict]:
             'kind': row['kind'],
             'due_date': row['due_date'],
             'amount': row['amount'],
+            'fee': plan.fee_for(number),
+            'total': row['amount'] + plan.fee_for(number),
             'percent': row['percent'],
             'paid_at': None,
             'payment_id': None,

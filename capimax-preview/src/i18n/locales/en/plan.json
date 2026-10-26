@@ -148,7 +148,8 @@
     "totalCommitment": "Total",
     "walletNote": "Installments are paid from your wallet in Dashboard → Installments.",
     "completion": "Expected completion: {{date}}.",
-    "mustChooseInstallments": "This property is sold in installments only."
+    "mustChooseInstallments": "This property is sold in installments only.",
+    "walletNoteFee": "The first payment — {{first}} including the {{pct}}% installment fee — is taken from your wallet when you confirm, so keep enough balance. The next ones are charged automatically on their due dates (each with the {{pct}}% fee, no late fee); you can also pay ahead in Dashboard → Installments."
   },
   "dashboard": {
     "title": "Installments",
@@ -174,7 +175,7 @@
     "nextPayment": "Next payment of {{amount}} due {{date}}",
     "paidSuccess": "Installment paid successfully.",
     "payFailed": "Payment could not be completed.",
-    "insufficient": "Not enough wallet balance for this installment. Add funds and try again.",
+    "insufficient": "Not enough wallet balance for this payment. Add funds and try again — we also retry automatically every hour.",
     "showSchedule": "Show full schedule",
     "hideSchedule": "Hide schedule",
     "downloadStatement": "Download statement (PDF)",
@@ -187,6 +188,11 @@
       "refunded": "Refunded",
       "failed": "Failed",
       "overdue": "Overdue"
-    }
+    },
+    "payAhead": "Pay {{amount}} ahead",
+    "autoPay": "Charged automatically from your wallet on {{date}} — keep enough balance.",
+    "autoPayOverdue": "This payment is overdue: we try your wallet again every hour — add funds or pay now. There is no late fee.",
+    "feeIncluded": "Each payment includes the {{pct}}% installment fee.",
+    "payAheadNote": "You can pay ahead any time."
   }
 }

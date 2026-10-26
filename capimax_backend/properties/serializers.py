@@ -691,6 +691,9 @@ class ConstructionInstallmentSerializer(serializers.ModelSerializer):
     # amount due now, and the property's city/country for the plan card.
     schedule = serializers.SerializerMethodField()
     amount_due = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True)
+    fee_due = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True)
+    total_due = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True)
+    is_overdue = serializers.BooleanField(read_only=True)
     property_city = serializers.CharField(source='property_investment.city', read_only=True)
     property_country = serializers.CharField(source='property_investment.country', read_only=True)
     token_price = serializers.DecimalField(source='property_investment.token_price', max_digits=10,
@@ -714,7 +717,8 @@ class ConstructionInstallmentSerializer(serializers.ModelSerializer):
             'is_completed', 'is_active', 'property_title',
             'property_address', 'property_category', 'investor_email',
             'down_payment_amount', 'first_installment_date', 'start_date',
-            'schedule', 'amount_due', 'property_city', 'property_country', 'token_price',
+            'schedule', 'amount_due', 'fee_due', 'total_due', 'is_overdue', 'fee_rate', 'fees_paid',
+            'property_city', 'property_country', 'token_price',
             'created_at', 'updated_at'
         ]
         read_only_fields = [
@@ -722,7 +726,8 @@ class ConstructionInstallmentSerializer(serializers.ModelSerializer):
             'tokens_per_payment', 'remaining_amount', 'remaining_payments',
             'completion_percentage', 'tokens_pending_release', 'is_completed',
             'is_active', 'property_title', 'property_address',
-            'property_category', 'investor_email', 'created_at', 'updated_at'
+            'property_category', 'investor_email', 'created_at', 'updated_at',
+            'fee_rate', 'fees_paid',
         ]
     
     def validate(self, attrs):
@@ -831,10 +836,13 @@ class ConstructionInstallmentCreateSerializer(serializers.ModelSerializer):
             )
         
         # Validate token allocation
+        # Shares held by other purchases and plans are not available.
+        from investments.purchase import available_shares
         token_allocation = attrs.get('token_allocation')
-        if token_allocation > property_obj.tokens_available:
+        available = available_shares(property_obj)
+        if token_allocation > available:
             raise serializers.ValidationError(
-                f"Token allocation ({token_allocation}) exceeds available tokens ({property_obj.tokens_available})"
+                f"Token allocation ({token_allocation}) exceeds available tokens ({available})"
             )
         
         # Plan terms come from the property (down payment, count options,
@@ -892,6 +900,10 @@ class ConstructionInstallmentCreateSerializer(serializers.ModelSerializer):
         # Set initial status
         validated_data['status'] = 'pending'
 
+        # The installment fee in force today stays with the plan (PropShare model).
+        from payments.models import PlatformFeeSettings
+        validated_data['fee_rate'] = PlatformFeeSettings.current().installment_fee_pct
+
         return super().create(validated_data)
 
 
@@ -900,9 +912,9 @@ class ConstructionInstallmentUpdateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = ConstructionInstallment
-        fields = [
-            'status', 'notes', 'late_payment_fee', 'grace_period_days'
-        ]
+        # Members may only edit their note: the status moves through payments
+        # and cancel, and there is no late fee (PropShare model).
+        fields = ['notes']
     
     def validate_status(self, value):
         """Validate status transitions."""

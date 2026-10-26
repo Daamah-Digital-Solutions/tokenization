@@ -276,10 +276,10 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
       updateStepStatus(processIdx, 'processing');
 
       // ─── Installment purchase: create a real ConstructionInstallment plan ───
-      // The investor commits to paying in instalments; creating the plan reserves
-      // their token allocation and sets the schedule. No charge happens at
-      // checkout — each instalment (including the first, due now) is paid from
-      // the wallet in the dashboard's Installments panel.
+      // PropShare model: creating the plan holds its shares and charges the
+      // first payment (down payment + installment fee) from the wallet — all
+      // or nothing (a short wallet is refused with INSUFFICIENT_FUNDS). The
+      // next payments are charged automatically on their due dates.
       if (investmentData.is_installment_purchase && investmentData.total_installments) {
         const plan = await InstallmentService.createPlan({
           property_investment: propertyId,

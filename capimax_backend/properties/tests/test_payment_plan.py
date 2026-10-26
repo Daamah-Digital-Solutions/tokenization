@@ -100,6 +100,9 @@ class BuyerPlanTests(TestCase):
                                               role=UserRole.PROPERTY_OWNER)
         self.buyer = User.objects.create_user(email='buy-bp@example.com', password='x12345678',
                                               role=UserRole.INVESTOR)
+        # The down payment (+ installment fee) is charged from the wallet at start.
+        from payments.models import WalletBalance
+        WalletBalance.objects.create(user=self.buyer, currency='USD', available_balance=Decimal('50000.00'))
         self.client = APIClient()
         self.client.force_authenticate(self.buyer)
         self.prop = make_property(self.owner, installment_down_payment_percent=Decimal('25'),
@@ -118,8 +121,10 @@ class BuyerPlanTests(TestCase):
         self.assertEqual(plan.total_installments, 4)
         self.assertEqual(plan.down_payment_amount, Decimal('2500.00'))
         self.assertEqual(plan.amount_due, Decimal('2500.00'))
-        self.assertEqual(plan.next_payment_date, timezone.now().date())
         rows = plan.schedule_rows()
+        self.assertEqual(rows[0]['due_date'], timezone.now().date())
+        self.assertEqual(plan.payments_made, 1)  # the down payment, charged at start
+        self.assertEqual(plan.next_payment_date, rows[1]['due_date'])
         self.assertEqual([r['amount'] for r in rows],
                          [Decimal('2500.00'), Decimal('2500.00'), Decimal('2500.00'), Decimal('2500.00')])
 
@@ -130,8 +135,9 @@ class BuyerPlanTests(TestCase):
         body = r.data.get('data', r.data) if isinstance(r.data, dict) else r.data
         schedule = body['schedule']
         self.assertEqual(len(schedule), 4)
-        self.assertEqual(schedule[0]['status'], 'due')
+        self.assertEqual(schedule[0]['status'], 'paid')
         self.assertEqual(schedule[0]['kind'], 'down_payment')
+        self.assertEqual(Decimal(str(schedule[1]['total'])), Decimal('2600.00'))  # + 4% fee
         self.assertEqual({s['status'] for s in schedule[1:]}, {'upcoming'})
 
     def test_payment_requires_scheduled_amount(self):

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { AlertCircle, Calendar, CreditCard, Info } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { ScheduleTable } from '../properties/PaymentPlanSection';
+import { usePaymentOptions } from '../purchase/PaymentMethodList';
 import { buildSchedule, fallbackPlan, formatMoney, formatPlanDate, parseDate } from '../../utils/paymentPlan';
 import type { InvestmentData, InvestmentProperty } from './types';
 
@@ -51,6 +52,9 @@ export const PaymentScheduleStep: React.FC<PaymentScheduleStepProps> = ({
   );
   const regular = rows.filter((r) => r.kind === 'installment');
   const down = rows[0]?.kind === 'down_payment' ? rows[0].amount : 0;
+  // PropShare model: every payment carries the installment fee (admin setting, 4% by default).
+  const { data: feeOptions } = usePaymentOptions();
+  const installmentFeePct = Number(feeOptions?.fees?.installment_fee_pct ?? 4);
   const per = regular[0]?.amount || 0;
   const perLabel = t(`per.${plan.frequency}`);
 
@@ -200,7 +204,10 @@ export const PaymentScheduleStep: React.FC<PaymentScheduleStepProps> = ({
                 <div className="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
                   <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-500" />
                   <span>
-                    {t('checkout.walletNote')}
+                    {t('checkout.walletNoteFee', {
+                      pct: installmentFeePct,
+                      first: formatMoney((Number(rows[0]?.amount) || 0) * (1 + installmentFeePct / 100)),
+                    })}
                     {property.expected_completion_date
                       ? ` ${t('checkout.completion', { date: formatPlanDate(property.expected_completion_date, lang) })}`
                       : ''}

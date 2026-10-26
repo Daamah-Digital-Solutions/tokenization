@@ -223,7 +223,9 @@ export const InstallmentsPanel: React.FC = () => {
             const pct = Math.min(100, Math.round(Number(plan.completion_percentage) || 0));
             const nextRow = rows.find((r) => r.status === 'due' || r.status === 'overdue' || r.status === 'upcoming');
             const dueRow = rows.find((r) => r.status === 'due' || r.status === 'overdue');
-            const amountDue = Number(plan.amount_due ?? plan.installment_amount) || 0;
+            // What the next payment costs: its amount + the installment fee (fixed on the plan).
+            const amountDue = Number((plan as any).total_due ?? plan.amount_due ?? plan.installment_amount) || 0;
+            const feeRate = Number((plan as any).fee_rate) || 0;
             const isOverdue = rows.some((r) => r.status === 'overdue');
             const paying = payMutation.isPending && payMutation.variables === plan.id;
             const confirming = confirmingId === plan.id;
@@ -313,7 +315,8 @@ export const InstallmentsPanel: React.FC = () => {
                       </button>
                     </div>
                   </div>
-                ) : dueRow && plan.is_active ? (
+                ) : plan.is_active && (dueRow || nextRow) ? (
+                  <div className="space-y-2">
                   <button
                     onClick={() => {
                       setFeedback(null);
@@ -324,8 +327,19 @@ export const InstallmentsPanel: React.FC = () => {
                     }`}
                   >
                     <Wallet className="w-4 h-4" />
-                    {t('dashboard.payNow', { amount: formatMoney(amountDue) })}
+                    {dueRow
+                      ? t('dashboard.payNow', { amount: formatMoney(amountDue) })
+                      : t('dashboard.payAhead', { amount: formatMoney(amountDue) })}
                   </button>
+                  {/* PropShare model: charged automatically on the due date; paying ahead is allowed. */}
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {isOverdue
+                      ? t('dashboard.autoPayOverdue')
+                      : t('dashboard.autoPay', { date: formatPlanDate(nextRow?.dueDate || plan.next_payment_date, lang) })}
+                    {feeRate > 0 ? ` ${t('dashboard.feeIncluded', { pct: feeRate })}` : ''}
+                    {` ${t('dashboard.payAheadNote')}`}
+                  </p>
+                  </div>
                 ) : nextRow ? (
                   <div className="text-sm text-gray-500 dark:text-gray-400">
                     {t('dashboard.nextPayment', { amount: formatMoney(nextRow.amount), date: formatPlanDate(nextRow.dueDate, lang) })}

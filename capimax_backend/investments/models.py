@@ -536,6 +536,10 @@ class TokenReservation(models.Model):
         'investments.Investment', null=True, blank=True, on_delete=models.CASCADE,
         related_name='reservations', help_text="The purchase these shares are held for",
     )
+    installment_plan = models.ForeignKey(
+        'properties.ConstructionInstallment', null=True, blank=True, on_delete=models.CASCADE,
+        related_name='reservations', help_text="The installment plan these shares are held for",
+    )
     
     released = models.BooleanField(
         default=False,

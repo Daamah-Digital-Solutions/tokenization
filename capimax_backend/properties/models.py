@@ -1549,6 +1549,17 @@ class ConstructionInstallment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    # PropShare model (installment fee + automatic wallet debit)
+    fee_rate = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal('0.00'),
+        help_text="Installment fee % charged on every payment, fixed when the plan starts.",
+    )
+    fees_paid = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))
+    reminder_sent_for = models.PositiveSmallIntegerField(
+        default=0, help_text="Payment number the last 3-day reminder was sent for.")
+    missed_notice_for = models.PositiveSmallIntegerField(
+        default=0, help_text="Payment number the last 'payment missed' notice was sent for.")
+
     class Meta:
         db_table = 'properties_installment_payment'
         indexes = [
@@ -1655,6 +1666,27 @@ class ConstructionInstallment(models.Model):
     def amount_due(self) -> Decimal:
         return self.amount_for_payment(self.payments_made + 1)
 
+    def fee_for(self, number: int) -> Decimal:
+        """Installment fee on payment #number (on its base amount, rounded half up)."""
+        from decimal import ROUND_HALF_UP
+        return (self.amount_for_payment(number) * Decimal(self.fee_rate or 0) / 100).quantize(
+            Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+    @property
+    def fee_due(self) -> Decimal:
+        return self.fee_for(self.payments_made + 1)
+
+    @property
+    def total_due(self) -> Decimal:
+        """What the next payment costs: its base amount + the installment fee."""
+        return self.amount_due + self.fee_due
+
+    @property
+    def is_overdue(self) -> bool:
+        from django.utils import timezone
+        return bool(self.is_active and self.remaining_payments > 0 and self.next_payment_date
+                    and self.next_payment_date < timezone.now().date())
+
     def calculate_tokens_per_payment(self):
         """Calculate tokens to release per payment."""
         if self.graduated_release and self.total_installments > 0:
@@ -1699,7 +1731,9 @@ class ConstructionInstallment(models.Model):
         if not payment_date:
             payment_date = timezone.now().date()
         
-        if not self.can_make_payment():
+        # Paying ahead is allowed (PropShare model); only an open plan with
+        # payments left can take one. Due dates stay as scheduled.
+        if not (self.is_active and self.remaining_payments > 0):
             return False, "Payment cannot be processed at this time", Decimal('0.00')
         
         due = self.amount_due
