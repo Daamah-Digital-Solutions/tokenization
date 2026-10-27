@@ -1368,6 +1368,27 @@ class InvestmentTransactionsView(APIView):
                 'blockchain_confirmed': False,
             })
         
+        # Shares sold on the secondary market (the buyer's side is its investment above),
+        # with the on-chain transfer once confirmed.
+        from marketplace.models import TradeTransaction
+        for trade in TradeTransaction.objects.filter(seller=user, status='completed').select_related('property_traded'):
+            transactions.append({
+                'id': trade.id,
+                'type': 'market_sale',
+                'property_title': trade.property_traded.title,
+                'property_id': trade.property_traded.id,
+                'amount': trade.net_amount_to_seller,
+                'currency': 'USD',
+                'status': 'completed',
+                'date': trade.completed_at or trade.created_at,
+                'description': f'Sold {trade.tokens_traded} shares of {trade.property_traded.title}',
+                'token_amount': trade.tokens_traded,
+                'token_price': trade.price_per_token,
+                'transaction_hash': trade.transaction_hash if trade.blockchain_confirmed else None,
+                'network': network_name,
+                'blockchain_confirmed': trade.blockchain_confirmed,
+            })
+
         # Sort by date (newest first)
         transactions.sort(key=lambda x: x['date'], reverse=True)
         

@@ -441,7 +441,7 @@ class TradeTransactionSerializer(serializers.ModelSerializer):
             'platform_fee', 'buyer_fee', 'seller_fee', 'net_amount_to_seller',
             'total_cost_to_buyer', 'status', 'payment_method', 'blockchain_network',
             'transaction_hash', 'blockchain_confirmed', 'confirmation_blocks',
-            'gas_fee', 'created_at', 'processed_at', 'completed_at',
+            'chain_status', 'gas_fee', 'created_at', 'processed_at', 'completed_at',
             'market_cap_at_trade', 'volume_24h', 'ownership_percentage_traded'
         ]
         read_only_fields = [

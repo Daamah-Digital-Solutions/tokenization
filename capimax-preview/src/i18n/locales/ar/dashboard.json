@@ -375,7 +375,8 @@
     "purchase": "شراء",
     "trade": "تداول",
     "rental_income": "دخل إيجاري",
-    "installment": "قسط"
+    "installment": "قسط",
+    "market_sale": "بيع في السوق"
   },
   "quickActions": {
     "title": "إجراءات سريعة"

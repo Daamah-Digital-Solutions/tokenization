@@ -11,9 +11,9 @@ now settle instantly on the platform ledger, in one database transaction:
   * the shares move from the seller's completed investments (oldest first)
     to a new completed investment for the buyer.
 
-On-chain custody balances are not moved here (there is no transfer service
-yet); the trade keeps ``blockchain_confirmed=False`` so the existing token
-reconciliation reports the pending sync.
+The tokens are then moved on-chain, from the seller's custodial wallet to
+the buyer's, by marketplace/chain_transfer.py (queued after commit, retried
+by the reconcile job); the trade's ``chain_status`` shows where that stands.
 """
 
 from __future__ import annotations
@@ -54,6 +54,30 @@ def seller_available_shares(seller, property_obj) -> int:
             user=seller, property_investment=property_obj, status=InvestmentStatus.COMPLETED,
         ).values_list('token_amount', flat=True)
     )
+
+
+def _check_custody(seller, prop, tokens: int) -> None:
+    """
+    A tokenized property's shares move on-chain from the seller's custodial
+    wallet. Shares the seller moved out to an external wallet cannot be moved
+    by the platform, so they cannot be sold until they are back.
+    """
+    from django.db.models import Sum
+
+    from blockchain.models import SmartContract, TokenBalance
+
+    contract = SmartContract.objects.filter(property_reference=prop, contract_type='real_estate_token',
+                                            status='active').first()
+    if contract is None or not seller.wallet_address:
+        return
+    rows = TokenBalance.objects.filter(contract=contract, user=seller, property_reference=prop)
+    custody = rows.filter(wallet_address__iexact=seller.wallet_address).aggregate(s=Sum('balance'))['s'] or 0
+    outside = rows.exclude(wallet_address__iexact=seller.wallet_address).aggregate(s=Sum('balance'))['s'] or 0
+    if custody < tokens and outside > 0:
+        raise TradeSettlementError(
+            'SHARES_NOT_IN_CUSTODY',
+            "These shares are in the seller's external wallet, so they cannot be transferred right now.",
+        )
 
 
 def settle_trade(trade) -> None:
@@ -97,6 +121,7 @@ def settle_trade(trade) -> None:
                 'SELLER_SHARES_UNAVAILABLE',
                 'The seller no longer holds enough shares for this listing.',
             )
+        _check_custody(trade.seller, prop, tokens)
 
         reference = trade.id
         WalletBalance.debit(
@@ -149,7 +174,19 @@ def settle_trade(trade) -> None:
         trade.payment_method = {**(trade.payment_method or {}), 'type': 'wallet', 'settled': 'ledger'}
         trade.save(update_fields=['status', 'processed_at', 'completed_at', 'payment_method'])
 
+        # Then move the tokens on-chain, seller custodial wallet -> buyer's
+        # (marketplace/chain_transfer.py); the reconcile job retries it.
+        transaction.on_commit(lambda: _queue_chain_transfer(trade.id))
+
     _notify(trade)
+
+
+def _queue_chain_transfer(trade_id) -> None:
+    try:
+        from .tasks import transfer_trade_tokens
+        transfer_trade_tokens.delay(str(trade_id))
+    except Exception:  # noqa: BLE001 — the reconcile job picks it up
+        logger.warning('Could not queue the on-chain transfer of trade %s', trade_id, exc_info=True)
 
 
 def _notify(trade) -> None:

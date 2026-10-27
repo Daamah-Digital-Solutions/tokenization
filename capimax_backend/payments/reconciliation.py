@@ -98,6 +98,21 @@ def shares_not_oversold() -> list:
     return out
 
 
+def trades_not_on_chain(hours: int = 2) -> list:
+    """Settled trades whose tokens were not moved on-chain in time (or need staff review)."""
+    from django.db.models import Q
+
+    from marketplace.models import TradeTransaction
+
+    since = timezone.now() - timedelta(hours=hours)
+    qs = TradeTransaction.objects.filter(status='completed').filter(
+        Q(chain_status='needs_review') | Q(chain_status__in=['pending', 'submitted', 'failed'], completed_at__lt=since))
+    return [_finding('trade_chain', f'{t.tokens_traded} shares of {t.property_traded.title} '
+                                    f'{t.seller.email} → {t.buyer.email}: {t.get_chain_status_display()}'
+                                    + (f' — {t.chain_error[:160]}' if t.chain_error else ''), str(t.pk))
+            for t in qs.select_related('seller', 'buyer', 'property_traded')[:200]]
+
+
 CHECKS = (
     ('wallet_ledger', 'Wallets match their ledger', wallets_match_ledger),
     ('stuck_payment', 'Card / crypto payments not stuck', stuck_payments),
@@ -105,6 +120,7 @@ CHECKS = (
     ('withdrawal_waiting', 'Withdrawals answered within 3 days', overdue_withdrawals),
     ('distribution', 'Rent payouts add up', distributions_add_up),
     ('oversold', 'No property oversold', shares_not_oversold),
+    ('trade_chain', 'Market trades moved on-chain', trades_not_on_chain),
 )
 
 

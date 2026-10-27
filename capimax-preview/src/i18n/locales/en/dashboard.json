@@ -359,7 +359,8 @@
     "purchase": "Purchase",
     "trade": "Trade",
     "rental_income": "Rental income",
-    "installment": "Installment"
+    "installment": "Installment",
+    "market_sale": "Market sale"
   },
   "quickActions": {
     "title": "Quick Actions"

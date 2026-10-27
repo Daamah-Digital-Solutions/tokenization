@@ -89,6 +89,10 @@ app.conf.beat_schedule = {
         'task': 'payments.tasks.reconcile_card_checkouts',
         'schedule': 300.0,
     },
+    'reconcile-trade-transfers': {
+        'task': 'marketplace.tasks.reconcile_trade_transfers',
+        'schedule': 300.0,
+    },
     'daily-reconciliation': {
         'task': 'payments.tasks.daily_reconciliation',
         'schedule': crontab(hour=6, minute=0),

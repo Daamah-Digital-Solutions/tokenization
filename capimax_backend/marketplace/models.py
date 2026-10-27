@@ -623,6 +623,21 @@ class TradeTransaction(models.Model):
         default=0,
         help_text="Number of blockchain confirmation blocks"
     )
+
+    # On-chain move of the shares (marketplace/chain_transfer.py): the seller's
+    # custodial wallet -> the buyer's, after the trade settles on the ledger.
+    CHAIN_STATUS_CHOICES = [
+        ('pending', 'Waiting to be sent'),
+        ('submitted', 'Sent, waiting for confirmation'),
+        ('confirmed', 'Confirmed on-chain'),
+        ('failed', 'Failed — will be retried'),
+        ('needs_review', 'Needs staff review'),
+        ('not_required', 'Property not tokenized'),
+    ]
+    chain_status = models.CharField(max_length=20, choices=CHAIN_STATUS_CHOICES, default='pending', db_index=True)
+    chain_attempts = models.PositiveSmallIntegerField(default=0)
+    chain_error = models.TextField(blank=True)
+    chain_updated_at = models.DateTimeField(null=True, blank=True)
     
     gas_fee = models.DecimalField(
         max_digits=10,

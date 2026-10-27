@@ -128,3 +128,34 @@ def expire_stale_limit_orders(self, max_age_days: int = 30):
 
     logger.info("Expired %d stale limit orders older than %d days", count, max_age_days)
     return {'expired': count}
+
+
+@shared_task(bind=True, max_retries=0)
+def transfer_trade_tokens(self, trade_id: str):
+    """Move a just-settled trade's tokens on-chain (seller custodial wallet -> buyer's)."""
+    from django.core.cache import cache
+
+    from .chain_transfer import ChainUnavailable, transfer_trade
+    from .models import TradeTransaction
+
+    lock = f'trade-chain-{trade_id}'
+    if not cache.add(lock, '1', timeout=300):
+        return 'busy'
+    try:
+        trade = TradeTransaction.objects.select_related('seller', 'buyer', 'property_traded').get(pk=trade_id)
+        return transfer_trade(trade)
+    except ChainUnavailable as exc:
+        logger.warning('Trade %s on-chain transfer postponed: %s', trade_id, exc)
+        return 'postponed'
+    except Exception:  # noqa: BLE001 — the reconcile job retries
+        logger.exception('Trade %s on-chain transfer failed', trade_id)
+        return 'error'
+    finally:
+        cache.delete(lock)
+
+
+@shared_task
+def reconcile_trade_transfers():
+    """Every 5 minutes: send / check / retry the on-chain moves of settled trades."""
+    from .chain_transfer import reconcile
+    return reconcile()

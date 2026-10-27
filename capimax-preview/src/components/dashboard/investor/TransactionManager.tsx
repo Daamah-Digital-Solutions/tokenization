@@ -536,7 +536,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
                               weight="semibold"
                               className={getAmountColor(transaction.type)}
                             >
-                              {[TransactionType.DIVIDEND, TransactionType.DEPOSIT, TransactionType.REFUND].includes(transaction.type) ? '+' : '-'}
+                              {[TransactionType.DIVIDEND, TransactionType.DEPOSIT, TransactionType.REFUND].includes(transaction.type) || (transaction.type as string) === 'market_sale' ? '+' : '-'}
                               ${transaction.amount.toLocaleString()}
                             </Text>
                             <Text variant="caption" color="muted">

@@ -165,9 +165,10 @@ class TradeTransactionAdmin(admin.ModelAdmin):
         "price_per_token",
         "total_amount",
         "status",
+        "chain_status",
         "created_at",
     )
-    list_filter = ("status", "created_at")
+    list_filter = ("status", "chain_status", "created_at")
     search_fields = (
         "id",
         "property_traded__title",
@@ -189,12 +190,25 @@ class TradeTransactionAdmin(admin.ModelAdmin):
         "transaction_hash",
         "market_cap_at_trade",
         "volume_24h",
+        "chain_status",
+        "chain_attempts",
+        "chain_error",
+        "chain_updated_at",
+        "blockchain_confirmed",
     )
     date_hierarchy = "created_at"
     list_select_related = ("buyer", "seller", "property_traded")
     ordering = ("-created_at",)
 
-    actions = ("mark_failed",)
+    actions = ("mark_failed", "retry_chain_transfer")
+
+    @admin.action(description="Retry the on-chain token transfer (after fixing the cause)")
+    def retry_chain_transfer(self, request, queryset):
+        """Back to 'pending' with a fresh attempt count; the transfer job sends it within 5 minutes."""
+        count = queryset.filter(status=TransactionStatus.COMPLETED).exclude(
+            chain_status__in=["confirmed", "submitted"]).update(
+            chain_status="pending", chain_attempts=0, chain_error="")
+        self.message_user(request, f"{count} trade(s) queued for the on-chain transfer.")
 
     @admin.action(description="Mark selected trades as FAILED (manual intervention)")
     def mark_failed(self, request, queryset):
