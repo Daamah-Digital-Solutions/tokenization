@@ -5,6 +5,7 @@ This module provides comprehensive Web3 integration for blockchain interactions
 including contract deployment, transaction monitoring, and event listening.
 """
 
+from blockchain.signer_lock import signer_lock
 import logging
 from decimal import Decimal
 from typing import Dict, List, Optional, Tuple, Any
@@ -253,31 +254,32 @@ class Web3Service:
                     logger.warning(f"Failed to estimate gas, using default: {str(e)}")
                     gas_limit = 3000000  # Default gas limit
             
-            # Get gas price if not provided
-            if not gas_price:
-                gas_price = self.get_optimal_gas_price()
+            with signer_lock(self.account.address):
+                # Get gas price if not provided
+                if not gas_price:
+                    gas_price = self.get_optimal_gas_price()
             
-            # Build transaction
-            constructor = contract.constructor(*constructor_args if constructor_args else [])
+                # Build transaction
+                constructor = contract.constructor(*constructor_args if constructor_args else [])
             
-            transaction_params = {
-                'from': self.account.address,
-                'gas': gas_limit,
-                'gasPrice': gas_price,
-                'nonce': self.w3.eth.get_transaction_count(self.account.address),
-            }
+                transaction_params = {
+                    'from': self.account.address,
+                    'gas': gas_limit,
+                    'gasPrice': gas_price,
+                    'nonce': self.w3.eth.get_transaction_count(self.account.address, 'pending'),
+                }
             
-            # Build the transaction
-            transaction_data = constructor.build_transaction(transaction_params)
+                # Build the transaction
+                transaction_data = constructor.build_transaction(transaction_params)
             
-            # Sign and send transaction
-            signed_txn = self.w3.eth.account.sign_transaction(transaction_data, self.account.key)
-            tx_hash = self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+                # Sign and send transaction
+                signed_txn = self.w3.eth.account.sign_transaction(transaction_data, self.account.key)
+                tx_hash = self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
             
-            logger.info(f"Contract deployment transaction sent: {tx_hash.hex()}")
+                logger.info(f"Contract deployment transaction sent: {tx_hash.hex()}")
             
-            # Wait for transaction receipt
-            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=300)
+                # Wait for transaction receipt
+                receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=300)
             
             if receipt['status'] == 1:
                 contract_address = receipt['contractAddress']
@@ -382,29 +384,30 @@ class Web3Service:
                     logger.warning(f"Failed to estimate gas: {str(e)}")
                     gas_limit = 200000  # Default gas limit
 
-            # Get gas price if not provided
-            if not gas_price:
-                gas_price = self.get_optimal_gas_price()
+            with signer_lock(self.account.address):
+                # Get gas price if not provided
+                if not gas_price:
+                    gas_price = self.get_optimal_gas_price()
 
-            # Build transaction
-            transaction_params = {
-                'from': self.account.address,
-                'gas': gas_limit,
-                'gasPrice': gas_price,
-                'value': value,
-                'nonce': self.w3.eth.get_transaction_count(self.account.address),
-            }
+                # Build transaction
+                transaction_params = {
+                    'from': self.account.address,
+                    'gas': gas_limit,
+                    'gasPrice': gas_price,
+                    'value': value,
+                    'nonce': self.w3.eth.get_transaction_count(self.account.address, 'pending'),
+                }
 
-            transaction_data = function_call.build_transaction(transaction_params)
+                transaction_data = function_call.build_transaction(transaction_params)
 
-            # Sign and send transaction
-            signed_txn = self.w3.eth.account.sign_transaction(transaction_data, self.account.key)
-            tx_hash = self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+                # Sign and send transaction
+                signed_txn = self.w3.eth.account.sign_transaction(transaction_data, self.account.key)
+                tx_hash = self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
 
-            logger.info(f"Transaction sent: {tx_hash.hex()}")
+                logger.info(f"Transaction sent: {tx_hash.hex()}")
 
-            # Wait for transaction receipt
-            receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=300)
+                # Wait for transaction receipt
+                receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash, timeout=300)
 
             return {
                 'transaction_hash': tx_hash.hex(),

@@ -137,6 +137,7 @@ def transfer_trade(trade) -> str:
 
     from accounts.custody import derive_custodial_wallet, is_custody_configured
     from accounts.wallet_withdraw import _ensure_gas
+    from blockchain.signer_lock import signer_lock
 
     if trade.chain_status in ('confirmed', 'not_required', 'needs_review'):
         return trade.chain_status
@@ -187,19 +188,20 @@ def transfer_trade(trade) -> str:
 
     deployer = Account.from_key(settings.BLOCKCHAIN_PRIVATE_KEY)
     _ensure_gas(w3, deployer, seller_addr)
-    gas_price = w3.eth.gas_price
-    tx = token.functions.safeTransferFrom(seller_addr, buyer_addr, TOKEN_ID, amount, b'').build_transaction({
-        'from': seller_addr,
-        'nonce': w3.eth.get_transaction_count(seller_addr, 'pending'),
-        'gas': TRANSFER_GAS_LIMIT,
-        'gasPrice': gas_price,
-        'chainId': chain_id,
-    })
-    signed = Account.sign_transaction(tx, derive_custodial_wallet(trade.seller.pk).private_key_hex)
-    tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
-    if not tx_hash.startswith('0x'):
-        tx_hash = '0x' + tx_hash
-    _set(trade, transaction_hash=tx_hash, chain_status='submitted')
+    with signer_lock(seller_addr):
+        gas_price = w3.eth.gas_price
+        tx = token.functions.safeTransferFrom(seller_addr, buyer_addr, TOKEN_ID, amount, b'').build_transaction({
+            'from': seller_addr,
+            'nonce': w3.eth.get_transaction_count(seller_addr, 'pending'),
+            'gas': TRANSFER_GAS_LIMIT,
+            'gasPrice': gas_price,
+            'chainId': chain_id,
+        })
+        signed = Account.sign_transaction(tx, derive_custodial_wallet(trade.seller.pk).private_key_hex)
+        tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
+        if not tx_hash.startswith('0x'):
+            tx_hash = '0x' + tx_hash
+        _set(trade, transaction_hash=tx_hash, chain_status='submitted')
 
     try:
         receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)

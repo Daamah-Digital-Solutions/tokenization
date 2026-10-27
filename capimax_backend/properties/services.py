@@ -400,6 +400,7 @@ class InstallmentProcessingService:
         try:
             w3 = Web3(Web3.HTTPProvider(token_sc.network.rpc_url))
             signer = Account.from_key(settings.BLOCKCHAIN_PRIVATE_KEY)
+            from blockchain.signer_lock import signer_lock
             token = w3.eth.contract(
                 address=Web3.to_checksum_address(token_sc.contract_address),
                 abi=token_sc.abi,
@@ -407,21 +408,22 @@ class InstallmentProcessingService:
 
             # Each clone holds exactly one property at tokenId=0.
             CLONE_TOKEN_ID = 0
-            tx = token.functions.processInstallment(
-                CLONE_TOKEN_ID,
-                Web3.to_checksum_address(destination),
-                int(token_count),
-            ).build_transaction({
-                'from': signer.address,
-                'nonce': w3.eth.get_transaction_count(signer.address, 'pending'),
-                'gas': 300_000,
-                'gasPrice': w3.eth.gas_price,
-                'chainId': token_sc.network.chain_id,
-            })
-            signed = w3.eth.account.sign_transaction(tx, settings.BLOCKCHAIN_PRIVATE_KEY)
-            tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
+            with signer_lock(signer.address):
+                tx = token.functions.processInstallment(
+                    CLONE_TOKEN_ID,
+                    Web3.to_checksum_address(destination),
+                    int(token_count),
+                ).build_transaction({
+                    'from': signer.address,
+                    'nonce': w3.eth.get_transaction_count(signer.address, 'pending'),
+                    'gas': 300_000,
+                    'gasPrice': w3.eth.gas_price,
+                    'chainId': token_sc.network.chain_id,
+                })
+                signed = w3.eth.account.sign_transaction(tx, settings.BLOCKCHAIN_PRIVATE_KEY)
+                tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
 
-            receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
+                receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
             if receipt.status != 1:
                 logger.error(
                     "processInstallment reverted for installment %s, tx 0x%s",

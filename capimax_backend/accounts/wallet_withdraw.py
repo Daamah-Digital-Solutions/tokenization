@@ -59,6 +59,12 @@ def _ensure_gas(w3, deployer_account, custodial_address: str) -> str | None:
     balance = w3.eth.get_balance(custodial_address)
     if balance >= GAS_FLOOR_WEI:
         return None
+    from blockchain.signer_lock import signer_lock
+    with signer_lock(deployer_account.address):
+        return _send_gas(w3, deployer_account, custodial_address)
+
+
+def _send_gas(w3, deployer_account, custodial_address: str) -> str:
     deficit = GAS_TOP_UP_WEI
     fund_tx = {
         'to': custodial_address,
@@ -221,39 +227,41 @@ def withdraw_tokens(request):
             status_code=status.HTTP_502_BAD_GATEWAY,
         ), status=status.HTTP_502_BAD_GATEWAY)
 
-    # Build and sign the transfer.
-    token_contract = w3.eth.contract(
-        address=Web3.to_checksum_address(contract.contract_address),
-        abi=contract.abi,
-    )
-    CLONE_TOKEN_ID = 0
-    try:
-        tx = token_contract.functions.safeTransferFrom(
-            custodial_addr, external_addr, CLONE_TOKEN_ID, amount, b'',
-        ).build_transaction({
-            'from': custodial_addr,
-            'nonce': w3.eth.get_transaction_count(custodial_addr, 'pending'),
-            'gas': TRANSFER_GAS_LIMIT,
-            'gasPrice': w3.eth.gas_price,
-            'chainId': chain_id,
-        })
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("Build transfer tx failed for user %s", user.pk)
-        return Response(create_error_response(
-            message=f'Transaction build failed: {exc}',
-            status_code=status.HTTP_502_BAD_GATEWAY,
-        ), status=status.HTTP_502_BAD_GATEWAY)
+    from blockchain.signer_lock import signer_lock
+    with signer_lock(custodial_addr):
+        # Build and sign the transfer.
+        token_contract = w3.eth.contract(
+            address=Web3.to_checksum_address(contract.contract_address),
+            abi=contract.abi,
+        )
+        CLONE_TOKEN_ID = 0
+        try:
+            tx = token_contract.functions.safeTransferFrom(
+                custodial_addr, external_addr, CLONE_TOKEN_ID, amount, b'',
+            ).build_transaction({
+                'from': custodial_addr,
+                'nonce': w3.eth.get_transaction_count(custodial_addr, 'pending'),
+                'gas': TRANSFER_GAS_LIMIT,
+                'gasPrice': w3.eth.gas_price,
+                'chainId': chain_id,
+            })
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("Build transfer tx failed for user %s", user.pk)
+            return Response(create_error_response(
+                message=f'Transaction build failed: {exc}',
+                status_code=status.HTTP_502_BAD_GATEWAY,
+            ), status=status.HTTP_502_BAD_GATEWAY)
 
-    # Sign with the custodial private key (re-derived; never stored).
-    signed = Account.sign_transaction(tx, custodial.private_key_hex)
-    try:
-        tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("Broadcast failed for user %s", user.pk)
-        return Response(create_error_response(
-            message=f'Broadcast failed: {exc}',
-            status_code=status.HTTP_502_BAD_GATEWAY,
-        ), status=status.HTTP_502_BAD_GATEWAY)
+        # Sign with the custodial private key (re-derived; never stored).
+        signed = Account.sign_transaction(tx, custodial.private_key_hex)
+        try:
+            tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("Broadcast failed for user %s", user.pk)
+            return Response(create_error_response(
+                message=f'Broadcast failed: {exc}',
+                status_code=status.HTTP_502_BAD_GATEWAY,
+            ), status=status.HTTP_502_BAD_GATEWAY)
 
     try:
         receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=240)
