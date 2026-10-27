@@ -15,6 +15,13 @@ their current holdings directly.
     python manage.py mint_unminted_holdings            # dry run: list what would be minted
     python manage.py mint_unminted_holdings --apply
 
+--unlanded also re-mints holdings whose recorded transaction hash never landed
+on-chain (old seed / demo rows), for owners whose on-chain balance is short of
+the platform. Every hash is checked on the network first, and an owner is only
+fixed when the rows that did not land add up exactly to the shortfall; anything
+else is listed for a look. Their custody records are reset to the on-chain
+balance so the new mint is not counted twice.
+
 A failed backfill mint alerts staff and is never auto-refunded.
 """
 
@@ -31,8 +38,12 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--apply', action='store_true', help='Queue the mints (default: dry run).')
+        parser.add_argument('--unlanded', action='store_true',
+                            help='Re-mint holdings whose recorded transaction never landed on-chain.')
 
-    def handle(self, *args, apply=False, **options):
+    def handle(self, *args, apply=False, unlanded=False, **options):
+        if unlanded:
+            return self._unlanded(apply)
         from marketplace.models import TradeTransaction
 
         qs = (Investment.objects
@@ -68,3 +79,58 @@ class Command(BaseCommand):
                                    chain_error='Closed by mint_unminted_holdings: the owners received their current '
                                                'holdings by mint, so no transfer is needed.')
         self.stdout.write(self.style.SUCCESS(f'{len(rows)} holding(s) queued for minting; {closed} trade(s) closed.'))
+
+    def _unlanded(self, apply):
+        from web3 import Web3
+
+        from blockchain.models import TokenBalance
+        from investments.chain_holdings import TOKEN_ID, _web3, compare, tx_landed
+
+        cache: dict = {}
+        plan = []
+        for row in compare():
+            gap = row['platform'] - row['on_chain']
+            if gap == 0:
+                continue
+            user, prop = row['user'], row['property']
+            invs = list(Investment.objects.filter(user=user, property_investment=prop,
+                                                  status=InvestmentStatus.COMPLETED, token_amount__gt=0)
+                        .exclude(transaction_hash__isnull=True).exclude(transaction_hash=''))
+            lost = [inv for inv in invs if not tx_landed(row['contract'], inv.transaction_hash, cache)]
+            lost_total = sum(inv.token_amount for inv in lost)
+            head = f'{user.email} {prop.title}: platform {row["platform"]}, on-chain {row["on_chain"]}'
+            if gap < 0 or lost_total != gap:
+                self.stdout.write(self.style.WARNING(
+                    f'NEEDS A LOOK  {head} — {len(lost)} row(s) not on-chain hold {lost_total}, shortfall {gap}'))
+                continue
+            self.stdout.write(f'FIX  {head} — re-mint {len(lost)} row(s): '
+                              + ', '.join(f'{inv.token_amount} ({inv.transaction_hash[:14]}…)' for inv in lost))
+            plan.append((row, lost))
+
+        self.stdout.write(f'\n{len(plan)} owner(s) to fix.')
+        if not apply:
+            self.stdout.write(self.style.WARNING('Dry run — nothing changed. Re-run with --apply.'))
+            return
+
+        with transaction.atomic():
+            for row, lost in plan:
+                # custody records follow the chain, so the new mint is not counted twice
+                w3, _ = _web3(row['contract'], cache)
+                token = w3.eth.contract(address=Web3.to_checksum_address(row['contract'].contract_address),
+                                        abi=row['contract'].abi)
+                for tb in TokenBalance.objects.select_for_update().filter(
+                        user=row['user'], property_reference=row['property'], contract=row['contract']):
+                    actual = int(token.functions.balanceOf(Web3.to_checksum_address(tb.wallet_address),
+                                                           TOKEN_ID).call()) if tb.wallet_address else 0
+                    if tb.balance != actual:
+                        tb.balance = actual
+                        tb.save(update_fields=['balance'])
+                for inv in lost:
+                    inv.payment_method = {**(inv.payment_method or {}), 'backfill_mint': True,
+                                          'unlanded_hash': inv.transaction_hash}
+                    inv.transaction_hash = None
+                    inv.mint_retry_count = 0
+                    inv.mint_error = None
+                    inv.save(update_fields=['payment_method', 'transaction_hash', 'mint_retry_count', 'mint_error'])
+                    inv.mark_payment_confirmed()
+        self.stdout.write(self.style.SUCCESS(f'{sum(len(lost) for _, lost in plan)} holding(s) queued for minting.'))

@@ -33,4 +33,4 @@ class ReconciliationTests(TestCase):
         r = c.get('/admin/payments/platformfeesettings/reconciliation/')
         self.assertEqual(r.status_code, 200)
         self.assertContains(r, 'Rent payouts add up')
-        self.assertEqual(len(run_checks()), 7)
+        self.assertEqual(len(run_checks()), 8)

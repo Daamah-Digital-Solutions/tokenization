@@ -113,6 +113,15 @@ def trades_not_on_chain(hours: int = 2) -> list:
             for t in qs.select_related('seller', 'buyer', 'property_traded')[:200]]
 
 
+def holdings_on_chain() -> list:
+    """Each owner's shares on the platform equal their token balance on-chain."""
+    from investments.chain_holdings import compare
+
+    return [_finding('holding_chain', f"{r['user'].email}: {r['property'].title} — {r['platform']} shares on the "
+                                      f"platform, {r['on_chain']} on-chain", f"{r['user'].pk}:{r['property'].pk}")
+            for r in compare() if r['platform'] != r['on_chain']]
+
+
 CHECKS = (
     ('wallet_ledger', 'Wallets match their ledger', wallets_match_ledger),
     ('stuck_payment', 'Card / crypto payments not stuck', stuck_payments),
@@ -121,6 +130,7 @@ CHECKS = (
     ('distribution', 'Rent payouts add up', distributions_add_up),
     ('oversold', 'No property oversold', shares_not_oversold),
     ('trade_chain', 'Market trades moved on-chain', trades_not_on_chain),
+    ('holding_chain', 'Holdings match the blockchain', holdings_on_chain),
 )
 
 
