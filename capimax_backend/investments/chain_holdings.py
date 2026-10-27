@@ -96,13 +96,31 @@ def compare() -> list:
     return rows
 
 
-def tx_landed(contract, tx_hash: str, cache: dict) -> bool:
-    """True when the hash is a successful transaction on the contract's network."""
+def _hex(value) -> str:
+    return (value.hex() if hasattr(value, 'hex') else str(value)).removeprefix('0x')
+
+
+def delivered(contract, tx_hash: str, addresses, cache: dict):
+    """Token-0 shares the transaction put at any of the addresses (this contract's TransferSingle logs);
+    None when the hash is not a successful transaction on the contract's network (e.g. seed data)."""
     if not tx_hash:
-        return False
-    w3, _ = _web3(contract, cache)
+        return None
+    w3, Web3 = _web3(contract, cache)
     try:
         receipt = w3.eth.get_transaction_receipt(tx_hash)
-    except Exception:  # noqa: BLE001 — not found / malformed hash (seed data)
-        return False
-    return bool(receipt) and receipt['status'] == 1
+    except Exception:  # noqa: BLE001 — not found / malformed hash
+        return None
+    if not receipt or receipt['status'] != 1:
+        return None
+    event = _hex(Web3.keccak(text='TransferSingle(address,address,address,uint256,uint256)'))
+    owners = {a.lower() for a in addresses}
+    total = 0
+    for log in receipt['logs']:
+        topics = [_hex(t) for t in log['topics']]
+        if (str(log['address']).lower() != contract.contract_address.lower() or len(topics) < 4
+                or topics[0] != event or '0x' + topics[3][-40:] not in owners):
+            continue
+        data = _hex(log['data'])
+        if int(data[:64], 16) == TOKEN_ID:
+            total += int(data[64:128], 16)
+    return total
