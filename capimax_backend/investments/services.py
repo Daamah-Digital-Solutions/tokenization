@@ -334,8 +334,14 @@ class InvestmentProcessingService:
             property_obj.tokens_sold += investment.token_amount
             property_obj.save(update_fields=['tokens_sold'])
             
-            # Complete investment
-            investment.complete_investment()
+            # A tokenized property's shares are minted on-chain to the buyer's
+            # wallet: the investment waits in PENDING_MINT and the mint task
+            # completes it (every payment method, not only card). Otherwise
+            # the ownership is on the platform ledger only.
+            if property_obj.status == 'tokenized' and getattr(property_obj, 'smart_contract_address', None):
+                investment.mark_payment_confirmed()
+            else:
+                investment.complete_investment()
 
             # Send investment confirmation email
             try:
@@ -360,12 +366,9 @@ class InvestmentProcessingService:
             except Exception as e:
                 logger.error(f"Failed to send investment confirmation email for investment {investment.id}: {str(e)}")
 
-            # Release any token reservations for this investment
-            TokenReservation.objects.filter(
-                user=investment.user,
-                property_investment=property_obj,
-                released=False
-            ).update(released=True)
+            # Release the shares held for THIS purchase (not the buyer's other
+            # holds on the property, e.g. an installment plan's).
+            TokenReservation.objects.filter(investment=investment, released=False).update(released=True)
             
             # Create initial dividend record if property has rental yield
             if property_obj.rental_yield and property_obj.rental_yield > 0:

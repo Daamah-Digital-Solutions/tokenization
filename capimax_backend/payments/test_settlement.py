@@ -47,14 +47,16 @@ class SettlePaymentTests(TestCase):
         self.assertEqual(balance(self.user), Decimal('500.00'))
         self.assertFalse(WalletTransaction.objects.filter(user=self.user, reference_id=pay.id).exists())
 
-    def test_non_mint_investment_payment_completes_investment(self):
+    def test_crypto_payment_of_tokenized_property_is_minted_too(self):
+        # every payment method mints a tokenized property's shares (not only card)
         inv = make_investment(user=self.user, prop=self.prop, token_amount=5,
                               investment_amount=Decimal('50.00'))
         pay = make_payment(user=self.user, investment=inv, amount=Decimal('50.00'),
                            payment_method='cryptocurrency')
         settle_payment(pay, source='test')
         inv.refresh_from_db()
-        self.assertEqual(inv.status, 'completed')
+        expected = 'pending_mint' if self.prop.status == 'tokenized' and self.prop.smart_contract_address else 'completed'
+        self.assertEqual(inv.status, expected)
         self.assertEqual(balance(self.user), Decimal('500.00'))
 
     def test_top_up_credits_wallet_once(self):

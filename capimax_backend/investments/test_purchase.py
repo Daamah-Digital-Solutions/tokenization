@@ -311,3 +311,28 @@ class ReinvestTests(TestCase):
         self.assertEqual(balance(self.user), Decimal('1010.00'))
         self.assertEqual(reinvestable_returns(self.user), Decimal('10.00'))
         self.assertFalse(WalletTransaction.objects.filter(user=self.user, transaction_type='fee').exists())
+
+
+class MintEveryMethodTests(TestCase):
+    """Every purchase of a tokenized property is minted on-chain (not only card)."""
+
+    def test_wallet_purchase_of_tokenized_property_waits_for_mint(self):
+        user = make_ready_investor(wallet_balance=Decimal('5000.00'))
+        prop = make_property(token_price=Decimal('100.00'), total_tokens=100, is_published=True,
+                             status='tokenized', smart_contract_address='0x' + 'a' * 40)
+        r = create_purchase(user, property_id=prop.pk, amount='500', method='wallet')
+        self.assertEqual(Investment.objects.get(pk=r['investment'].pk).status, 'pending_mint')
+
+    def test_untokenized_property_completes_on_the_ledger(self):
+        user = make_ready_investor(wallet_balance=Decimal('5000.00'))
+        prop = make_property(token_price=Decimal('100.00'), total_tokens=100, is_published=True, status='active')
+        r = create_purchase(user, property_id=prop.pk, amount='500', method='wallet')
+        self.assertEqual(Investment.objects.get(pk=r['investment'].pk).status, 'completed')
+
+    def test_a_purchase_does_not_release_the_buyers_other_holds(self):
+        user = make_ready_investor(wallet_balance=Decimal('5000.00'))
+        prop = make_property(token_price=Decimal('100.00'), total_tokens=100, is_published=True, status='active')
+        other = TokenReservation.objects.create(user=user, property_investment=prop, token_amount=10, expires_at=None)
+        create_purchase(user, property_id=prop.pk, amount='500', method='wallet')
+        other.refresh_from_db()
+        self.assertFalse(other.released)
