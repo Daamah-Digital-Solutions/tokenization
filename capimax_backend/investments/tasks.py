@@ -447,6 +447,12 @@ def auto_refund_failed_mint(self, investment_id: str):
         return {'skipped': True, 'reason': 'not_mint_failed',
                 'status': investment.status}
 
+    # A purchase completed long ago and minted afterwards (mint_unminted_holdings):
+    # a failed mint is fixed by staff, never answered with a refund.
+    if (investment.payment_method or {}).get('backfill_mint'):
+        _send_mint_failure_alert(investment, investment.mint_error or 'backfill mint failed')
+        return {'skipped': True, 'reason': 'backfill_mint'}
+
     # Investment → Payment is one-to-many (``Payment.investment`` FK with no
     # related_name → reverse manager ``payment_set``). In practice each
     # investment has exactly one COMPLETED payment that captured the funds;
