@@ -38,29 +38,55 @@ class BrokerApplicationCreateView(generics.CreateAPIView):
     parser_classes = [MultiPartParser, FormParser]  # Support file uploads
 
     def create(self, request, *args, **kwargs):
-        """Create broker application with file upload support."""
+        """
+        Create a broker application with its documents (client round 4, #13/#14).
+        A signed-in applicant is linked to the application and its email is the
+        account's, so approval gives the broker role to that account (a second
+        account used to be created when the typed email differed).
+        """
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        from django.db import transaction as db_transaction
+
+        from core.partner_documents import collect, fingerprint
+
+        from .models import BrokerApplicationDocument
+
         try:
-            response = super().create(request, *args, **kwargs)
-
-            # Send confirmation email
-            application = BrokerApplication.objects.get(id=response.data['id'])
-            self.send_application_confirmation_email(application)
-
-            logger.info(f"Broker application submitted: {application.email}")
-
-            return Response({
-                'message': 'Application submitted successfully',
-                'application_id': str(application.id),
-                'status': application.application_status,
-                'email': application.email
-            }, status=status.HTTP_201_CREATED)
-
-        except Exception as e:
-            logger.error(f"Error creating broker application: {str(e)}")
-            return Response(
-                {'error': 'Failed to submit application'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            files = collect(request, default_type='license')
+        except DjangoValidationError as exc:
+            return Response({'error': ' '.join(exc.messages), 'details': {'documents': exc.messages}},
+                            status=status.HTTP_400_BAD_REQUEST)
+        data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
+        data.pop('supporting_documents', None)
+        user = request.user if request.user.is_authenticated else None
+        if user is not None:
+            data['email'] = user.email
+        serializer = self.get_serializer(data=data)
+        if not serializer.is_valid():
+            first = next(iter(serializer.errors.values()), ['Please check the form.'])
+            return Response({'error': first[0] if isinstance(first, list) else str(first),
+                             'details': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        with db_transaction.atomic():
+            application = serializer.save(associated_user=user)
+            for doc_type, f in files:
+                BrokerApplicationDocument.objects.create(
+                    application=application, document_type=doc_type, file=f,
+                    original_name=f.name[:255], size=f.size or 0, sha256=fingerprint(f))
+        self.send_application_confirmation_email(application)
+        try:
+            from support.notify import _send, support_inbox
+            _send(support_inbox(), f'[Broker application] {application.get_full_name()}',
+                  f'New broker application from {application.get_full_name()} ({application.email}), '
+                  f'{len(files)} document(s). Review it in the admin: Broker applications.')
+        except Exception:  # noqa: BLE001
+            logger.warning('Staff notice for broker application failed', exc_info=True)
+        logger.info(f"Broker application submitted: {application.email}")
+        return Response({
+            'message': 'Application submitted successfully',
+            'application_id': str(application.id),
+            'status': application.application_status,
+            'email': application.email
+        }, status=status.HTTP_201_CREATED)
 
     def send_application_confirmation_email(self, application):
         """Send confirmation email to applicant."""
@@ -184,7 +210,8 @@ def approve_broker_application(request, application_id):
     try:
         application = get_object_or_404(BrokerApplication, id=application_id)
 
-        if application.application_status != BrokerApplicationStatus.PENDING:
+        from .onboarding import REVIEWABLE
+        if application.application_status not in REVIEWABLE:
             return Response(
                 {'error': 'Application is not in pending status'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -229,7 +256,8 @@ def reject_broker_application(request, application_id):
     try:
         application = get_object_or_404(BrokerApplication, id=application_id)
 
-        if application.application_status != BrokerApplicationStatus.PENDING:
+        from .onboarding import REVIEWABLE
+        if application.application_status not in REVIEWABLE:
             return Response(
                 {'error': 'Application is not in pending status'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -265,6 +293,8 @@ def send_approval_email(application, user, temp_password):
     try:
         from core.services.email_service import EmailService
 
+        from django.conf import settings
+        portal = f"{getattr(settings, 'FRONTEND_URL', '').rstrip('/')}/dashboard"
         subject = 'Broker Application Approved - Welcome to Capimax!'
         message = f"""
         Dear {application.get_full_name()},
@@ -277,8 +307,8 @@ def send_approval_email(application, user, temp_password):
         - Broker ID: {user.broker_profile.id}
 
         Next Steps:
-        1. Log in to your broker dashboard at: [BROKER_PORTAL_URL]
-        2. Change your temporary password immediately
+        1. Log in to your broker dashboard at: {portal}
+        2. {'Change your temporary password immediately' if temp_password else 'Use the role switcher if your account opens another dashboard'}
         3. Complete your profile verification
         4. Review our broker resources and marketing materials
 

@@ -27,6 +27,9 @@ from .models import BrokerApplicationStatus, BrokerProfile, BrokerVerificationSt
 
 logger = logging.getLogger(__name__)
 
+# An application can be decided while pending or once marked "under review"
+REVIEWABLE = (BrokerApplicationStatus.PENDING, BrokerApplicationStatus.UNDER_REVIEW)
+
 
 def grant_broker_role(user) -> None:
     from accounts.models import UserRole, UserRoleAssignment
@@ -59,8 +62,7 @@ def approve_application(application, reviewer):
     Approve a pending application. Returns ``(user, profile, temp_password)``;
     ``temp_password`` is set only when a new account had to be created.
     """
-    if application.application_status not in (BrokerApplicationStatus.PENDING,
-                                               BrokerApplicationStatus.APPROVED):
+    if application.application_status not in (*REVIEWABLE, BrokerApplicationStatus.APPROVED):
         raise ValueError('Application is not pending.')
 
     User = get_user_model()
@@ -93,7 +95,7 @@ def approve_application(application, reviewer):
         },
     )
 
-    if application.application_status == BrokerApplicationStatus.PENDING:
+    if application.application_status in REVIEWABLE:
         application.approve(reviewer)
     application.associated_user = user
     application.save()

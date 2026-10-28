@@ -40,6 +40,11 @@ def _busy_pairs() -> set:
                                 .filter(status='completed', chain_status__in=IN_FLIGHT_TRADE)
                                 .values_list('seller_id', 'buyer_id', 'property_traded_id')):
         busy.update({(seller, prop), (buyer, prop)})
+    from liquidity_provider.models import LiquidityTransaction
+    for seller, buyer, prop in (LiquidityTransaction.objects.filter(chain_status__in=IN_FLIGHT_TRADE)
+                                .values_list('investor_id', 'liquidity_provider__user_id',
+                                             'exit_request__investment__property_investment_id')):
+        busy.update({(seller, prop), (buyer, prop)})
     return busy
 
 

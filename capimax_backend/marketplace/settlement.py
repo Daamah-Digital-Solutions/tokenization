@@ -139,34 +139,12 @@ def settle_trade(trade) -> None:
         )
 
         # Move the shares (oldest holdings first). The cost basis moves with them.
-        remaining = tokens
-        for h in holdings:
-            if remaining <= 0:
-                break
-            take = min(remaining, h.token_amount)
-            if take == h.token_amount:
-                # Fully sold: keep the original purchase as history; a
-                # TRANSFERRED holding no longer counts as owned.
-                h.status = InvestmentStatus.TRANSFERRED
-                h.save(update_fields=['status', 'updated_at'])
-            else:
-                basis = (h.investment_amount * Decimal(take) / Decimal(h.token_amount)).quantize(CENT)
-                h.token_amount -= take
-                h.investment_amount = max(Decimal('0.00'), (h.investment_amount - basis).quantize(CENT))
-                h.save(update_fields=['token_amount', 'investment_amount', 'updated_at'])
-            remaining -= take
-
+        from .share_moves import move_holdings
         now = timezone.now()
-        Investment.objects.create(
-            user=trade.buyer,
-            property_investment=prop,
-            token_amount=tokens,
-            investment_amount=trade.total_amount,
-            status=InvestmentStatus.COMPLETED,
-            completed_at=now,
-            payment_method={'type': 'secondary_market', 'trade_id': str(trade.id),
-                            'price_per_token': str(trade.price_per_token)},
-        )
+        move_holdings(seller=trade.seller, buyer=trade.buyer, prop=prop, tokens=tokens,
+                      buyer_cost=trade.total_amount,
+                      payment_method={'type': 'secondary_market', 'trade_id': str(trade.id),
+                                      'price_per_token': str(trade.price_per_token)})
 
         trade.status = TransactionStatus.COMPLETED
         trade.processed_at = trade.processed_at or now

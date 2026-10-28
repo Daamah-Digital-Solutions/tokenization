@@ -85,7 +85,8 @@
       "cityAddress": "City/Address is required",
       "experience": "Experience level is required",
       "strategy": "Referral strategy is required",
-      "terms": "You must accept the terms"
+      "terms": "You must accept the terms",
+      "submit": "The application could not be sent. Please try again."
     },
     "submittedMetaTitle": "Application Submitted - Capimax Broker Program",
     "successTitle": "Application Submitted Successfully!",
@@ -146,7 +147,20 @@
     "previous": "Previous",
     "next": "Next",
     "submitting": "Submitting...",
-    "submit": "Submit Application"
+    "submit": "Submit Application",
+    "emailFromAccount": "The email of your account — approval upgrades this account.",
+    "docs": {
+      "badType": "Only PDF, JPG or PNG files.",
+      "tooBig": "The file is larger than 10 MB.",
+      "formats": "PDF, JPG or PNG, up to 10 MB each. Files are private and only seen by the review team.",
+      "types": {
+        "license": "Broker / real-estate licence",
+        "id_document": "ID / passport",
+        "company_registration": "Company registration",
+        "proof_of_address": "Proof of address",
+        "other": "Other document"
+      }
+    }
   },
   "calc": {
     "title": "Commission Calculator",
@@ -308,7 +322,30 @@
     "previous": "Previous",
     "next": "Next",
     "submitting": "Submitting...",
-    "submit": "Submit Application"
+    "submit": "Submit Application",
+    "signInTitle": "Sign in to apply",
+    "signInText": "The application is linked to your account: once approved, this account opens the liquidity provider dashboard.",
+    "signIn": "Sign in",
+    "createAccount": "Create an account",
+    "docs": {
+      "title": "Supporting documents",
+      "subtitle": "Upload the documents our compliance team reviews. Items marked * are required.",
+      "choose": "Choose file",
+      "remove": "Remove",
+      "required": "This document is required.",
+      "badType": "Only PDF, JPG or PNG files.",
+      "tooBig": "The file is larger than 10 MB.",
+      "hint": "PDF, JPG or PNG, up to 10 MB each. Files are private and only seen by the review team.",
+      "types": {
+        "certificate_of_incorporation": "Certificate of incorporation",
+        "director_id": "Director / signatory ID",
+        "regulatory_license": "Regulatory licence",
+        "proof_of_address": "Proof of address",
+        "proof_of_funds": "Proof of funds / bank reference",
+        "aml_policy": "AML / KYC policy",
+        "board_resolution": "Board resolution"
+      }
+    }
   },
   "lpPage": {
     "metaTitle": "Liquidity Provider Program | Capimax RT",

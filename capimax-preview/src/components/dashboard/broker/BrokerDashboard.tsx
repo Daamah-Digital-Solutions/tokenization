@@ -1,12 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { BadgeCheck, Building2, Copy, Check, Link2, BookOpen, Loader2, UserRound } from 'lucide-react';
+import { BadgeCheck, Building2, Copy, Check, Link2, BookOpen, Loader2, UserRound, Download, FileText } from 'lucide-react';
 
 import { DashboardStats, PerformanceChart, QuickActions } from '../';
 import { ReferClientPanel } from './ReferClientPanel';
 import type { StatItem, ChartDataPoint, QuickAction } from '../';
 import { PayoutsPanel } from '../../wallet/PayoutsPanel';
+import { NotificationsContent } from '../investor/InvestorControlPanel';
+import { apiClient } from '../../../services/api/ApiClient';
 import { BrokerService } from '../../../services/broker/BrokerService';
 import { useRouter } from '../../../utils/router';
 import { cn } from '../../../utils/cn';
@@ -70,6 +72,45 @@ const Card: React.FC<{ className?: string; children: React.ReactNode }> = ({ cla
     {children}
   </div>
 );
+
+/** Brochures, decks and videos the team uploads (Django admin → Marketing materials). */
+const MaterialsLibrary: React.FC = () => {
+  const { t } = useTranslation('partners');
+  const { data = [], isLoading } = useQuery({
+    queryKey: ['broker-materials'],
+    queryFn: async () => {
+      const res: any = await apiClient.get('/broker/materials/', { page_size: 100 });
+      return (Array.isArray(res) ? res : res?.results || []) as any[];
+    },
+  });
+  return (
+    <Card className="p-5">
+      <p className="text-sm font-medium text-neutral-800 dark:text-slate-200 mb-3 flex items-center gap-2">
+        <FileText className="w-4 h-4 text-emerald-600" /> {t('broker.materials.library')}
+      </p>
+      {isLoading ? (
+        <Loader2 className="w-5 h-5 animate-spin text-neutral-400" />
+      ) : data.length === 0 ? (
+        <p className="text-sm text-neutral-500 dark:text-slate-400">{t('broker.materials.libraryEmpty')}</p>
+      ) : (
+        <div className="grid sm:grid-cols-2 gap-3">
+          {data.map((m) => (
+            <div key={m.id} className="p-3 rounded-lg border border-neutral-200 dark:border-slate-700">
+              <p className="font-medium text-sm text-neutral-900 dark:text-slate-100">{m.title}</p>
+              {m.description && <p className="text-xs text-neutral-500 dark:text-slate-400 mt-0.5 line-clamp-2">{m.description}</p>}
+              {m.file_url && m.is_downloadable !== false && (
+                <a href={m.file_url} target="_blank" rel="noopener noreferrer"
+                   className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-emerald-700 dark:text-emerald-400 hover:underline">
+                  <Download className="w-4 h-4" /> {t('broker.materials.download')}
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+};
 
 export const BrokerDashboard: React.FC<{ currentView: string }> = ({ currentView }) => {
   const { t, i18n } = useTranslation('partners');
@@ -406,9 +447,13 @@ export const BrokerDashboard: React.FC<{ currentView: string }> = ({ currentView
               ))}
             </div>
           </Card>
+          <MaterialsLibrary />
           <ReferClientPanel />
         </div>
       );
+      break;
+    case 'notifications': // the header bell (client round 4, #13)
+      body = <NotificationsContent />;
       break;
     default:
       body = (

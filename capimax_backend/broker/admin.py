@@ -319,9 +319,46 @@ class BrokerPerformanceMetricsAdmin(admin.ModelAdmin):
 
 
 
+class BrokerApplicationDocumentInline(admin.TabularInline):
+    """Documents the applicant uploaded (client round 4, #14) — private, staff-only download."""
+
+    from .models import BrokerApplicationDocument as model  # noqa: N811
+    extra = 0
+    can_delete = False
+    fields = ['document_type', 'download', 'size', 'uploaded_at']
+    readonly_fields = fields
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    @admin.display(description='File')
+    def download(self, obj):
+        from core.partner_documents import admin_file_link
+        return admin_file_link('admin:broker_brokerapplication_document', obj)
+
+
 @admin.register(BrokerApplication)
 class BrokerApplicationAdmin(admin.ModelAdmin):
-    """Admin interface for broker applications."""
+    """Admin interface for broker applications. Decisions go through the actions."""
+
+    inlines = [BrokerApplicationDocumentInline]
+
+    def get_urls(self):
+        from django.urls import path
+        return [path('document/<uuid:doc_id>/', self.admin_site.admin_view(self.serve_document),
+                     name='broker_brokerapplication_document')] + super().get_urls()
+
+    def serve_document(self, request, doc_id):
+        from django.http import FileResponse, Http404
+
+        from .models import BrokerApplicationDocument
+        doc = BrokerApplicationDocument.objects.filter(pk=doc_id).first()
+        if doc is None or not doc.file:
+            raise Http404
+        try:
+            return FileResponse(doc.file.open('rb'), filename=doc.original_name or None)
+        except FileNotFoundError:
+            raise Http404
 
     list_display = [
         'full_name', 'email', 'application_status', 'experience_level',
@@ -335,8 +372,9 @@ class BrokerApplicationAdmin(admin.ModelAdmin):
         'first_name', 'last_name', 'email', 'phone_number',
         'current_company', 'license_number'
     ]
+    # status changes only through the actions (approval creates the broker profile and role)
     readonly_fields = [
-        'id', 'created_at', 'updated_at', 'reviewed_at'
+        'id', 'application_status', 'reviewed_by', 'associated_user', 'created_at', 'updated_at', 'reviewed_at'
     ]
     fieldsets = [
         ('Application Information', {
@@ -376,7 +414,7 @@ class BrokerApplicationAdmin(admin.ModelAdmin):
     def approve_applications(self, request, queryset):
         """Bulk approve applications (manual process - creates user accounts)."""
         from django.utils import timezone
-        pending_apps = queryset.filter(application_status='pending')
+        pending_apps = queryset.filter(application_status__in=['pending', 'under_review'])
         if pending_apps.exists():
             # Full approval: broker role + BrokerProfile on the applicant's
             # account (it used to only flip the status, so the applicant kept
@@ -397,15 +435,14 @@ class BrokerApplicationAdmin(admin.ModelAdmin):
     approve_applications.short_description = 'Approve selected applications'
 
     def reject_applications(self, request, queryset):
-        """Bulk reject applications."""
-        from django.utils import timezone
-        pending_apps = queryset.filter(application_status='pending')
-        updated = pending_apps.update(
-            application_status='rejected',
-            reviewed_by=request.user,
-            reviewed_at=timezone.now(),
-            rejection_reason='Bulk rejection via admin panel'
-        )
+        """Reject and email each applicant (the reason typed on the application, if any)."""
+        from .application_views import send_rejection_email
+        updated = 0
+        for application in queryset.filter(application_status__in=['pending', 'under_review']):
+            reason = application.rejection_reason or 'Application does not meet our current requirements.'
+            application.reject(request.user, reason)
+            send_rejection_email(application, reason)
+            updated += 1
         self.message_user(request, f'{updated} applications rejected.')
     reject_applications.short_description = 'Reject selected applications'
 

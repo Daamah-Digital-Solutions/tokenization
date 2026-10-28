@@ -68,6 +68,12 @@ class LPApplication(models.Model):
         editable=False
     )
 
+    applicant = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='lp_applications',
+        help_text="The account that submitted the application; it receives the LP role on approval."
+    )
+
     # Entity Information
     legal_entity_name = models.CharField(
         max_length=255,
@@ -249,8 +255,11 @@ class LPApplication(models.Model):
         )
         # Link the provider to the applicant's platform account (if any) so
         # signing in opens the LP dashboard instead of the investor one.
-        from .accounts_link import link_provider_by_email
-        link_provider_by_email(lp)
+        from .accounts_link import link_provider_by_email, link_provider_to_user
+        if self.applicant_id:  # the account that applied (round 4: no more email guessing)
+            link_provider_to_user(lp, self.applicant)
+        else:
+            link_provider_by_email(lp)
         return lp
 
     def reject(self, reviewer, reason=''):
@@ -643,6 +652,24 @@ class LiquidityTransaction(models.Model):
         help_text="Transaction reference number"
     )
 
+    # On-chain move of the shares, investor custodial wallet -> LP custodial wallet
+    # (marketplace/chain_transfer.py, same states as a market trade)
+    CHAIN_STATUS_CHOICES = [
+        ('pending', 'Waiting to be sent'),
+        ('submitted', 'Sent, waiting for confirmation'),
+        ('confirmed', 'Confirmed on-chain'),
+        ('failed', 'Failed — will be retried'),
+        ('needs_review', 'Needs staff review'),
+        ('not_required', 'Property not tokenized'),
+    ]
+    chain_status = models.CharField(max_length=20, choices=CHAIN_STATUS_CHOICES, default='pending', db_index=True)
+    chain_attempts = models.PositiveSmallIntegerField(default=0)
+    chain_error = models.TextField(blank=True)
+    chain_updated_at = models.DateTimeField(null=True, blank=True)
+    transaction_hash = models.CharField(max_length=80, null=True, blank=True)
+    blockchain_confirmed = models.BooleanField(default=False)
+    gas_fee = models.DecimalField(max_digits=20, decimal_places=8, null=True, blank=True)
+
     # Timestamps
     completed_at = models.DateTimeField(auto_now_add=True)
 
@@ -654,6 +681,18 @@ class LiquidityTransaction(models.Model):
     def __str__(self):
         return f"Transaction {self.reference_number}"
 
+    def chain_parts(self) -> dict:
+        """For marketplace/chain_transfer: investor -> liquidity provider."""
+        return {
+            'seller': self.investor,
+            'buyer': self.liquidity_provider.user,
+            'prop': self.exit_request.investment.property_investment,
+            'amount': int(self.units_purchased),
+            'settled': self.liquidity_provider.user_id is not None,
+            'holding_key': ('exit_id', str(self.exit_request_id)),
+            'label': f'LP sale {self.reference_number}',
+        }
+
     def save(self, *args, **kwargs):
         if not self.reference_number:
             # Generate reference number
@@ -664,6 +703,45 @@ class LiquidityTransaction(models.Model):
             self.reference_number = f"LPT-{timestamp}-{random_suffix}"
         super().save(*args, **kwargs)
 
+
+
+class LPDocumentType(models.TextChoices):
+    CERTIFICATE_OF_INCORPORATION = 'certificate_of_incorporation', 'Certificate of incorporation'
+    REGULATORY_LICENSE = 'regulatory_license', 'Regulatory licence'
+    DIRECTOR_ID = 'director_id', 'Director / signatory ID'
+    PROOF_OF_ADDRESS = 'proof_of_address', 'Proof of address'
+    PROOF_OF_FUNDS = 'proof_of_funds', 'Proof of funds / bank reference'
+    AML_POLICY = 'aml_policy', 'AML / KYC policy'
+    BOARD_RESOLUTION = 'board_resolution', 'Board resolution'
+    OTHER = 'other', 'Other'
+
+
+# Needed before an application can be approved (client round 4, #14)
+REQUIRED_LP_DOCUMENTS = (LPDocumentType.CERTIFICATE_OF_INCORPORATION, LPDocumentType.DIRECTOR_ID)
+
+
+def _lp_document_path(instance, filename):
+    from core.partner_documents import upload_path
+    return upload_path('liquidity_provider')(instance, filename)
+
+
+class LPApplicationDocument(models.Model):
+    """A file attached to an LP application. Private; staff-only download."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    application = models.ForeignKey(LPApplication, on_delete=models.CASCADE, related_name='documents')
+    document_type = models.CharField(max_length=40, choices=LPDocumentType.choices, default=LPDocumentType.OTHER)
+    file = models.FileField(upload_to=_lp_document_path, max_length=255)
+    original_name = models.CharField(max_length=255, blank=True)
+    size = models.PositiveIntegerField(default=0)
+    sha256 = models.CharField(max_length=64, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['uploaded_at']
+
+    def __str__(self):
+        return f'{self.get_document_type_display()} — {self.original_name}'
 
 
 # ---------------------------------------------------------------------------

@@ -5,7 +5,7 @@ This module contains API views for broker management, commission tracking,
 referral systems, marketing materials, and performance analytics.
 """
 
-from rest_framework import generics, status, permissions, filters
+from rest_framework import generics, status, permissions, filters, serializers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
@@ -533,11 +533,24 @@ def submit_verification_documents(request):
     try:
         broker_profile = request.user.broker_profile
         
-        # Handle file uploads (simplified - would integrate with file storage)
-        files = request.FILES
-        
+        # Stored on the broker's application, privately (they used to be discarded)
+        from django.core.exceptions import ValidationError as DjangoValidationError
+
+        from core.partner_documents import collect, fingerprint
+
+        from .models import BrokerApplication, BrokerApplicationDocument
+        try:
+            files = collect(request, default_type='verification')
+        except DjangoValidationError as exc:
+            return Response({'error': ' '.join(exc.messages)}, status=status.HTTP_400_BAD_REQUEST)
+        application = BrokerApplication.objects.filter(associated_user=request.user).order_by('-created_at').first()
+
         # Update verification status
-        if files:
+        if files and application is not None:
+            for doc_type, f in files:
+                BrokerApplicationDocument.objects.create(
+                    application=application, document_type=doc_type, file=f,
+                    original_name=f.name[:255], size=f.size or 0, sha256=fingerprint(f))
             broker_profile.verification_status = 'under_review'
             broker_profile.save()
             

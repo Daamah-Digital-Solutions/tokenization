@@ -968,7 +968,7 @@ export const WalletContent: React.FC<{
 
 
 // Notifications Content Component
-const NotificationsContent: React.FC = () => {
+export const NotificationsContent: React.FC = () => {
   const { t, i18n } = useTranslation('dashboard');
   const { data: notifications, isLoading } = useQuery({
     queryKey: ['notifications'],

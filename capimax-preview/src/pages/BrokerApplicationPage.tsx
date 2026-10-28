@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -19,6 +19,12 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/design-system/forms/Input';
 import { useRouter } from '../utils/router';
 import { useTranslation } from 'react-i18next';
+import { apiClient } from '../services/api/ApiClient';
+import { useUser } from '../contexts/AuthContext';
+
+// Documents the team reviews (client round 4, #14); PDF / JPG / PNG, 10 MB each.
+const BROKER_DOCUMENTS = ['license', 'id_document', 'company_registration', 'proof_of_address', 'other'] as const;
+const MAX_BYTES = 10 * 1024 * 1024;
 
 interface FormData {
   // Step 1: Personal Information
@@ -34,7 +40,7 @@ interface FormData {
   experienceLevel: string;
   currentCompany: string;
   referralStrategy: string;
-  supportingDocuments: File | null;
+  supportingDocuments: Record<string, File | null>;
 
   // Step 3: Agreements
   termsAccepted: boolean;
@@ -51,7 +57,7 @@ const initialFormData: FormData = {
   experienceLevel: '',
   currentCompany: '',
   referralStrategy: '',
-  supportingDocuments: null,
+  supportingDocuments: {},
   termsAccepted: false
 };
 
@@ -63,6 +69,38 @@ export const BrokerApplicationPage: React.FC = () => {
   const [errors, setErrors] = useState<Partial<FormData>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [docError, setDocError] = useState<string | null>(null);
+  const user = useUser() as any;
+
+  // The application belongs to the signed-in account (client round 4, #13):
+  // its email is the account's, so approval upgrades this account.
+  useEffect(() => {
+    if (user?.email) {
+      setFormData(prev => ({
+        ...prev,
+        email: user.email,
+        firstName: prev.firstName || user.first_name || '',
+        lastName: prev.lastName || user.last_name || '',
+      }));
+    }
+  }, [user?.email]);
+
+  const pickDocument = (type: string, file: File | null) => {
+    if (file) {
+      const ext = file.name.toLowerCase().split('.').pop() || '';
+      if (!['pdf', 'jpg', 'jpeg', 'png'].includes(ext)) {
+        setDocError(t('application.docs.badType'));
+        return;
+      }
+      if (file.size > MAX_BYTES) {
+        setDocError(t('application.docs.tooBig'));
+        return;
+      }
+    }
+    setDocError(null);
+    setFormData(prev => ({ ...prev, supportingDocuments: { ...prev.supportingDocuments, [type]: file } }));
+  };
 
   const steps = [
     {
@@ -133,6 +171,7 @@ export const BrokerApplicationPage: React.FC = () => {
     if (!validateStep(3)) return;
 
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
       const formDataToSubmit = new FormData();
 
@@ -149,24 +188,21 @@ export const BrokerApplicationPage: React.FC = () => {
       formDataToSubmit.append('referral_strategy', formData.referralStrategy);
       formDataToSubmit.append('terms_accepted', 'true');
 
-      if (formData.supportingDocuments) {
-        formDataToSubmit.append('supporting_documents', formData.supportingDocuments);
-      }
-
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/broker/applications/submit/`, {
-        method: 'POST',
-        body: formDataToSubmit,
+      Object.entries(formData.supportingDocuments).forEach(([type, file]) => {
+        if (file) {
+          formDataToSubmit.append('documents', file);
+          formDataToSubmit.append('document_types', type);
+        }
       });
 
-      if (response.ok) {
-        setSubmitSuccess(true);
-      } else {
-        const errorData = await response.json();
-        console.error('Submission failed:', errorData);
-        // Handle errors
-      }
-    } catch (error) {
-      console.error('Error submitting application:', error);
+      // through the shared client (signed in; the old fetch used an undefined base URL)
+      await apiClient.uploadFile('/broker/applications/submit/', formDataToSubmit);
+      setSubmitSuccess(true);
+    } catch (error: any) {
+      const details = error?.details && typeof error.details === 'object'
+        ? Object.values(error.details).flat().filter((v: any) => typeof v === 'string').join(' ')
+        : '';
+      setSubmitError(details || error?.message || t('application.err.submit'));
     } finally {
       setIsSubmitting(false);
     }
@@ -359,12 +395,16 @@ export const BrokerApplicationPage: React.FC = () => {
                           type="email"
                           value={formData.email}
                           onChange={(e) => updateFormData('email', e.target.value)}
-                          className={`ps-10 ${errors.email ? 'border-red-500' : ''}`}
+                          readOnly={!!user?.email}
+                          className={`ps-10 ${errors.email ? 'border-red-500' : ''} ${user?.email ? 'bg-gray-50 cursor-not-allowed' : ''}`}
                           placeholder="john.doe@example.com"
                         />
                       </div>
                       {errors.email && (
                         <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                      )}
+                      {user?.email && (
+                        <p className="text-xs text-gray-500 mt-1">{t('application.emailFromAccount')}</p>
                       )}
                     </div>
 
@@ -512,32 +552,33 @@ export const BrokerApplicationPage: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         {t('application.documents')}
                       </label>
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
-                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                        <div className="text-sm text-gray-600 mb-2">
-                          {t('application.documentsHint')}
-                        </div>
-                        <input
-                          type="file"
-                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                          onChange={(e) => updateFormData('supportingDocuments', e.target.files?.[0] || null)}
-                          className="hidden"
-                          id="documents"
-                        />
-                        <label
-                          htmlFor="documents"
-                          className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer"
-                        >
-                          {t('application.chooseFiles')}
-                        </label>
-                        {formData.supportingDocuments && (
-                          <div className="mt-2 text-sm text-green-600">
-                            ✓ {formData.supportingDocuments.name}
-                          </div>
-                        )}
+                      <div className="space-y-2">
+                        {BROKER_DOCUMENTS.map((type) => {
+                          const file = formData.supportingDocuments[type];
+                          return (
+                            <div key={type} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-200 p-3">
+                              <span className="text-sm font-medium text-gray-700">{t(`application.docs.types.${type}`)}</span>
+                              {file ? (
+                                <span className="inline-flex items-center gap-2 text-sm text-green-700">
+                                  <CheckCircle className="w-4 h-4" />
+                                  <span className="truncate max-w-[180px]" dir="ltr">{file.name}</span>
+                                  <button type="button" onClick={() => pickDocument(type, null)} className="text-gray-400 hover:text-red-500">×</button>
+                                </span>
+                              ) : (
+                                <label className="inline-flex items-center gap-1.5 cursor-pointer px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                  <Upload className="w-4 h-4" />
+                                  {t('application.chooseFiles')}
+                                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden"
+                                         onChange={(e) => pickDocument(type, e.target.files?.[0] || null)} />
+                                </label>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
+                      {docError && <p className="text-red-500 text-sm mt-2">{docError}</p>}
                       <p className="text-xs text-gray-500 mt-2">
-                        {t('application.formats')}
+                        {t('application.docs.formats')}
                       </p>
                     </div>
                   </div>
@@ -631,6 +672,9 @@ export const BrokerApplicationPage: React.FC = () => {
                 {t('application.previous')}
               </Button>
 
+              {submitError && (
+                <p className="text-red-600 text-sm flex-1 text-center px-2" role="alert">{submitError}</p>
+              )}
               {currentStep < 3 ? (
                 <Button
                   onClick={nextStep}
