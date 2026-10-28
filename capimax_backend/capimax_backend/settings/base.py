@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     'liquidity_provider',
     'documents',
     'support',  # Contact Us + support tickets (client round 3, #12 #13)
+    'certificates',  # ownership certificates + public QR verification (client round 4, #5)
     'core',
     'legal',  # SPV legal entities, subscription agreements, cap table
 ]

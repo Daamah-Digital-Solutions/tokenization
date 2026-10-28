@@ -44,6 +44,8 @@ import { MyProperties } from './MyProperties';
 import { InvestorReports } from './InvestorReports';
 import { KYCStatusSummaryCard } from '../../kyc/KYCStatusSummaryCard';
 import { InstallmentsPanel } from './InstallmentsPanel';
+import { MyCertificatesPanel } from '../../certificates/MyCertificatesPanel';
+import { VerificationCenterPanel } from '../../verification/VerificationCenterPanel';
 import { InvestorDocumentsPanel } from './InvestorDocumentsPanel';
 import { WithdrawModal } from '../../wallet/WithdrawModal';
 import { WithdrawalRequestsSection } from '../../wallet/WithdrawalRequestsSection';
@@ -66,7 +68,7 @@ interface InvestorControlPanelProps {
   currentView?: string;
 }
 
-type TabType = 'overview' | 'my-properties' | 'properties' | 'marketplace' | 'transactions' | 'installments' | 'reports' | 'analytics' | 'wallet' | 'documents' | 'notifications' | 'settings';
+type TabType = 'overview' | 'my-properties' | 'properties' | 'marketplace' | 'transactions' | 'installments' | 'reports' | 'analytics' | 'wallet' | 'certificates' | 'verification' | 'notifications' | 'settings';
 
 interface PriceAlert {
   id: string;
@@ -104,8 +106,11 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
         return 'wallet';
       case 'installments':
         return 'installments';
-      case 'documents':
-        return 'documents';
+      case 'documents': // old links: Documents became My Certificates (client round 4, #4)
+      case 'certificates':
+        return 'certificates';
+      case 'verification':
+        return 'verification';
       case 'notifications':
         return 'notifications';
       case 'settings':
@@ -259,8 +264,13 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
           <TransactionManager />
         )}
 
+        {/* Reports & Documents (client round 4, #4): statements, then receipts,
+            agreements and property documents. Certificates have their own view. */}
         {activeTab === 'reports' && (
-          <InvestorReports />
+          <div className="space-y-10">
+            <InvestorReports />
+            <InvestorDocumentsPanel />
+          </div>
         )}
 
         {activeTab === 'analytics' && (
@@ -279,8 +289,12 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
           <WalletContent portfolio={portfolio} loading={portfolioLoading} walletBalance={walletBalance} walletLoading={walletLoading} />
         )}
 
-        {activeTab === 'documents' && (
-          <InvestorDocumentsPanel />
+        {activeTab === 'certificates' && (
+          <MyCertificatesPanel />
+        )}
+
+        {activeTab === 'verification' && (
+          <VerificationCenterPanel onOpenCertificates={() => setActiveTab('certificates')} />
         )}
 
         {activeTab === 'notifications' && (

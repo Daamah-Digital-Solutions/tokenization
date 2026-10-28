@@ -252,5 +252,66 @@
       "investments": "Every investment and your installment plans.",
       "holdings": "The properties you own, your shares, ownership and value."
     }
+  },
+  "cert": {
+    "statement": "This certifies that {{name}} is the registered holder of {{units}} share(s) — {{pct}} of the property — in {{property}}, held through {{spv}}.",
+    "statementNoSpv": "This certifies that {{name}} is the registered holder of {{units}} share(s) — {{pct}} of the property — in {{property}}.",
+    "holder": "Registered holder",
+    "investorId": "Investor ID",
+    "wallet": "Holder wallet",
+    "certificateId": "Certificate ID",
+    "issueDate": "Issue date",
+    "units": "Shares",
+    "ownership": "Ownership",
+    "amount": "Investment amount",
+    "property": "Property",
+    "location": "Location",
+    "spv": "Owning company (SPV)",
+    "spvRef": "Registration / filing ID",
+    "jurisdiction": "Jurisdiction",
+    "wyoming": "Wyoming, USA",
+    "registry": "Public registry",
+    "unitPrice": "Price per share",
+    "acquisition": "Acquired by",
+    "subscriptionDate": "Subscription date",
+    "finalizedAt": "Final since",
+    "contract": "Token contract",
+    "standard": "Token standard / network",
+    "network": "Network",
+    "explorer": "View contract on explorer",
+    "mintTx": "Mint transaction",
+    "code": "Verification code",
+    "verifyAt": "Verify at",
+    "signature": "Digital signature (SHA-256)",
+    "signatory": "Authorized signatory",
+    "pending": "Pending",
+    "pendingDeployment": "Pending deployment",
+    "provisionalNote": "Provisional: paid and reserved for the holder — final once the shares are delivered on-chain or the plan is fully paid.",
+    "revokedNote": "This certificate has been revoked and no longer represents a holding. Reason: {{reason}}",
+    "status": {
+      "label": "Status",
+      "provisional": "Provisional",
+      "final": "Final",
+      "revoked": "Revoked"
+    },
+    "sections": {
+      "propertySpv": "Property & owning company",
+      "investment": "Investment",
+      "onchain": "On-chain record",
+      "verification": "Verification & authorization"
+    },
+    "acq": {
+      "purchase": "Primary purchase",
+      "market": "Secondary market purchase",
+      "installments": "Installment plan",
+      "wallet": "Primary purchase (wallet)",
+      "card": "Primary purchase (card)",
+      "credit_card": "Primary purchase (card)",
+      "bank_transfer": "Primary purchase (bank transfer)",
+      "crypto": "Primary purchase (crypto)",
+      "pronova": "Primary purchase (Pronova)",
+      "sukuk": "Primary purchase (Sukuk)",
+      "reinvest": "Reinvested earnings"
+    }
   }
 }

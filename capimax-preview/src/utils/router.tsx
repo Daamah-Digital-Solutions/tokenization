@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Route = 'home' | 'login' | 'register' | 'email-verification' | 'code-verification' | 'password-reset' | 'new-password' | 'complete-google-profile' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'marketplace' | 'broker-program' | 'broker-application' | 'wallet' | 'role-management' | 'submit-property' | 'demo' | 'integration-test' | 'about' | 'contact' | 'support' | 'payment-return' | 'fees' | 'partners' | 'liquidity-provider' | 'legal-index' | 'legal-disclaimer' | 'legal-risk-disclosure' | 'legal-compliance' | 'legal-privacy' | 'legal-terms' | 'legal-cookies' | 'legal-aml-kyc' | 'legal-conflicts' | 'legal-complaints' | 'legal-security' | 'how-it-works' | 'tokenization' | 'spv' | 'data-room' | 'investor-guide' | 'secondary-market' | 'risks' | 'faq' | 'property-owner' | 'why-capimax' | 'structure' | 'document-center' | 'verification-center' | 'broker-guide' | 'capimax-rt-guide' | 'developer-guide' | 'investment-guide' | 'investment-strategies' | 'lp-guide' | 'owners-guide' | 'technology' | 'not-found';
+type Route = 'home' | 'login' | 'register' | 'email-verification' | 'code-verification' | 'password-reset' | 'new-password' | 'complete-google-profile' | 'kyc' | 'dashboard' | 'properties' | 'property-detail' | 'marketplace' | 'broker-program' | 'broker-application' | 'wallet' | 'role-management' | 'submit-property' | 'demo' | 'integration-test' | 'about' | 'contact' | 'support' | 'payment-return' | 'fees' | 'partners' | 'liquidity-provider' | 'legal-index' | 'legal-disclaimer' | 'legal-risk-disclosure' | 'legal-compliance' | 'legal-privacy' | 'legal-terms' | 'legal-cookies' | 'legal-aml-kyc' | 'legal-conflicts' | 'legal-complaints' | 'legal-security' | 'how-it-works' | 'tokenization' | 'spv' | 'data-room' | 'investor-guide' | 'secondary-market' | 'risks' | 'faq' | 'property-owner' | 'why-capimax' | 'structure' | 'document-center' | 'verification-center' | 'verify-certificate' | 'broker-guide' | 'capimax-rt-guide' | 'developer-guide' | 'investment-guide' | 'investment-strategies' | 'lp-guide' | 'owners-guide' | 'technology' | 'not-found';
 
 interface RouterContextType {
   currentRoute: Route;
@@ -93,11 +93,12 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       '/investment-strategies': 'investment-strategies',
       '/lp-guide': 'lp-guide',
       '/owners-guide': 'owners-guide',
-      '/technology': 'technology'
+      '/technology': 'technology',
+        '/verify': 'verify-certificate'
     };
     // Return 'not-found' for unknown paths instead of falling back to home
     // This ensures invalid routes show 404 page, not silent redirect to home
-    return routeMap[path] || 'not-found';
+    return routeMap[path] || (path.startsWith('/verify/') ? 'verify-certificate' : 'not-found');
   };
 
   const [currentRoute, setCurrentRoute] = useState<Route>(getInitialRouteFromPath());
@@ -169,11 +170,12 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
         '/investment-strategies': 'investment-strategies',
         '/lp-guide': 'lp-guide',
         '/owners-guide': 'owners-guide',
-        '/technology': 'technology'
+        '/technology': 'technology',
+        '/verify': 'verify-certificate'
       };
 
       // Return 'not-found' for unknown paths - ensures 404 page shows for invalid URLs
-      const route = routeMap[path] || 'not-found';
+      const route = routeMap[path] || (path.startsWith('/verify/') ? 'verify-certificate' : 'not-found');
       setCurrentRoute(route);
     };
 
@@ -247,6 +249,7 @@ export const RouterProvider: React.FC<RouterProviderProps> = ({
       'lp-guide': '/lp-guide',
       'owners-guide': '/owners-guide',
       technology: '/technology',
+      'verify-certificate': '/verify',
       'not-found': '/404'
     };
 
