@@ -31,6 +31,7 @@ import { Text } from '../design-system/typography/Text';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
 
+import { RichText } from '../ui/RichText';
 interface PropertyApprovalDashboardProps {
   className?: string;
 }
@@ -572,7 +573,7 @@ const PropertyApprovalDetailModal: React.FC<PropertyApprovalDetailModalProps> = 
               {t('propertyModal.fields.description')}
             </Text>
             <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
-              <Text variant="body">{approval.property.description}</Text>
+              <RichText text={approval.property.description} />
             </div>
           </div>
 

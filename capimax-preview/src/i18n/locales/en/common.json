@@ -119,5 +119,6 @@
     "investmentIn": "Investment in {{property}}",
     "dividendFrom": "Dividend from {{property}}",
     "withdrawalFrom": "Withdrawal from {{property}}"
-  }
+  },
+  "richTextHint": "Formatting: leave an empty line between paragraphs, end a heading line with \":\" and start list items with \"*\" or \"-\"."
 }

@@ -215,6 +215,12 @@
     "metaDescription": "Trade property tokens on the Capimax secondary market. Buy and sell real estate tokens with instant settlement."
   },
   "smd": {
+    "tabMine": "My listings",
+    "tabMineDesc": "Follow or cancel your offers",
+    "cancelListing": "Cancel listing",
+    "cancelling": "Cancelling…",
+    "cancelConfirm": "Cancel this listing? It will be removed from the market. Shares already sold are not affected.",
+    "cancelFailed": "Could not cancel the listing. Please try again.",
     "tabSell": "Sell Orders",
     "tabSellDesc": "Tokens for sale",
     "tabBuy": "Buy Orders",
@@ -227,7 +233,7 @@
     "statActiveTraders": "Active Traders",
     "title": "Secondary Market",
     "subtitle": "Trade property tokens with instant settlement",
-    "createListing": "Create Listing",
+    "createListing": "List for sale",
     "searchPlaceholder": "Search by property name, location, or seller...",
     "filters": "Filters",
     "propertyType": "Property Type",

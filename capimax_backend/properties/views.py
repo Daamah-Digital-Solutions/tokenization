@@ -3311,6 +3311,7 @@ class DataRoomDocumentListView(generics.ListAPIView):
 
     serializer_class = PropertyDocumentListSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    pagination_class = None  # the property page renders the whole list (a page object crashed it)
 
     def get_queryset(self):
         property_id = self.kwargs.get('property_id')
@@ -3332,7 +3333,8 @@ class DataRoomDocumentListView(generics.ListAPIView):
             # Check if user is an investor in this property
             is_investor = Investment.objects.filter(
                 user=user,
-                property_investment=property_obj
+                property_investment=property_obj,
+                status__in=InvestorDocumentsView.HOLDING_STATUSES,
             ).exists()
 
             if is_investor:
@@ -3437,7 +3439,8 @@ class DataRoomDocumentDetailView(generics.RetrieveUpdateDestroyAPIView):
             # Investors can access investor_access documents
             is_investor = Investment.objects.filter(
                 user=user,
-                property_investment=property_obj
+                property_investment=property_obj,
+                status__in=InvestorDocumentsView.HOLDING_STATUSES,
             ).exists()
 
             if is_investor and obj.investor_access:
@@ -3484,6 +3487,7 @@ class DataRoomDocumentVersionsView(generics.ListAPIView):
 
     serializer_class = PropertyDocumentListSerializer
     permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
 
     def get_queryset(self):
         property_id = self.kwargs.get('property_id')

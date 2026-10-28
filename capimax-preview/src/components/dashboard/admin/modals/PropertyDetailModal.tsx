@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { adminService, type AdminProperty } from '../../../../services';
 import { useAdminActions } from '../../../../hooks/useAdminDashboard';
 
+import { RichText } from '../../../ui/RichText';
 interface PropertyDetailModalProps {
   property: AdminProperty;
   isOpen: boolean;
@@ -215,7 +216,7 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                       </div>
                       <div>
                         <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">{t('propertyModal.fields.description')}</label>
-                        <p className="text-neutral-700 dark:text-slate-300 text-sm">{property.description}</p>
+                        <RichText text={property.description} className="text-sm" />
                       </div>
                       <div>
                         <label className="text-sm font-medium text-neutral-700 dark:text-slate-300">{t('propertyModal.fields.location')}</label>

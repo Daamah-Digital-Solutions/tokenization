@@ -205,9 +205,14 @@
       "legalStructure": "Legal structure",
       "status": "Status",
       "statusValue": "Registered / Active",
-      "registeredNote": "This SPV is registered to hold the property on behalf of share owners. You can look up the registration number with the relevant company registry in the stated jurisdiction.",
+      "registeredNote": "This SPV is registered to hold the property on behalf of share owners. You can confirm its registration in the official Wyoming Secretary of State business registry.",
       "pendingNote": "The registration record for this SPV is being finalised. Contact support if you need the official registry reference.",
-      "lookup": "Look up registry"
+      "lookup": "Search Wyoming business registry",
+      "wyoming": "Wyoming, USA",
+      "pendingValue": "Pending registration",
+      "wyomingHowTo": "The company is registered with the Wyoming Secretary of State. Open the official business search and search by the company name or its filing ID.",
+      "copyFilingId": "Copy filing ID ({{id}})",
+      "copied": "Copied"
     },
     "bc": {
       "title": "Blockchain & Smart Contract",
@@ -254,6 +259,11 @@
         "insurance": "Insurance Documents",
         "spv": "SPV Documents",
         "construction": "Construction Documents",
+        "management": "Property Management",
+        "technical": "Technical Documents",
+        "owner_identity": "Owner / Developer ID",
+        "company_registration": "Company Registration",
+        "permits": "Permits & Licenses",
         "other": "Other Documents"
       },
       "noUrl": "This document does not have a download URL configured.",

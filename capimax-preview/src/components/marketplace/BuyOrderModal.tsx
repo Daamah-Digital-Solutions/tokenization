@@ -22,7 +22,7 @@ import { Heading } from '../design-system/typography/Heading';
 import { Text } from '../design-system/typography/Text';
 import { cn } from '../../utils/cn';
 import { marketplaceService, type SecondaryMarketListing, type TradeOrderRequest } from '../../services/marketplace/MarketplaceService';
-import { useAuth } from '../../contexts/AuthContext';
+import { useUser } from '../../contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { PaymentService } from '../../services/payment/PaymentService';
 import { useTranslation } from 'react-i18next';
@@ -40,7 +40,7 @@ export const BuyOrderModal: React.FC<BuyOrderModalProps> = ({
   listing,
   onSuccess
 }) => {
-  const { user } = useAuth();
+  const user = useUser(); // useAuth() exposes { state }, so { user } was always undefined
   const { t } = useTranslation('market');
   const [step, setStep] = useState<'order' | 'confirm' | 'processing' | 'success'>('order');
   const [orderData, setOrderData] = useState({

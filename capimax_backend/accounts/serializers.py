@@ -13,7 +13,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from datetime import timedelta
 import pyotp
-from .models import User, PasswordResetToken, EmailVerificationToken, UserRoleAssignment, UserRole
+from .models import SELF_SERVICE_ROLES, User, PasswordResetToken, EmailVerificationToken, UserRoleAssignment, UserRole
 from core.utils import generate_secure_token, send_notification_email
 
 
@@ -129,13 +129,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         role = attrs.get('role')
         roles = attrs.get('roles', [])
 
+        # Only self-service roles at sign-up: broker / LP need an approved application, admin is staff-only
+        for role_value in [*roles, *([role] if role else [])]:
+            if role_value not in SELF_SERVICE_ROLES:
+                raise serializers.ValidationError({"roles": f"Invalid role: {role_value}"})
+
         # If roles list is provided, validate it
         if roles:
-            # Validate each role choice
-            valid_roles = [choice[0] for choice in UserRole.choices]
-            for role_value in roles:
-                if role_value not in valid_roles:
-                    raise serializers.ValidationError({"roles": f"Invalid role: {role_value}"})
 
             # Remove duplicates while preserving order
             attrs['roles'] = list(dict.fromkeys(roles))

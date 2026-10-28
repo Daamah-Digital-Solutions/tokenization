@@ -24,6 +24,11 @@ class UserRole(models.TextChoices):
     ADMIN = 'admin', 'Admin'
 
 
+# Roles a user may give themselves (sign-up / add role). Broker and LP are granted
+# when their application is approved; admin only by staff.
+SELF_SERVICE_ROLES = (UserRole.INVESTOR, UserRole.PROPERTY_OWNER)
+
+
 class WalletKind(models.TextChoices):
     """
     Where a user's primary tokens live.

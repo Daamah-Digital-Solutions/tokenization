@@ -1149,7 +1149,8 @@ const SettingsContent: React.FC = () => {
 
       {/* Settings Tab Navigation */}
       <div className="border-b border-slate-200 dark:border-slate-700">
-        <nav className="flex gap-8" aria-label={t('icp.settings.tabsLabel')}>
+        {/* 2×2 on phones so no tab (e.g. Account) is pushed off-screen */}
+        <nav className="grid grid-cols-2 sm:flex sm:gap-8" aria-label={t('icp.settings.tabsLabel')}>
           {settingsTabs.map((tab) => {
             const isActive = activeSettingsTab === tab.id;
             return (
@@ -1157,7 +1158,7 @@ const SettingsContent: React.FC = () => {
                 key={tab.id}
                 onClick={() => setActiveSettingsTab(tab.id)}
                 className={cn(
-                  'group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+                  'group inline-flex items-center justify-center sm:justify-start py-3 sm:py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors',
                   isActive
                     ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
                     : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-300'
