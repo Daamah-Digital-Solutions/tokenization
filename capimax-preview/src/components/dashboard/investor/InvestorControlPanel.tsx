@@ -45,6 +45,7 @@ import { InvestorReports } from './InvestorReports';
 import { KYCStatusSummaryCard } from '../../kyc/KYCStatusSummaryCard';
 import { InstallmentsPanel } from './InstallmentsPanel';
 import { MyCertificatesPanel } from '../../certificates/MyCertificatesPanel';
+import { TransfersPanel } from '../../transfers/TransfersPanel';
 import { VerificationCenterPanel } from '../../verification/VerificationCenterPanel';
 import { InvestorDocumentsPanel } from './InvestorDocumentsPanel';
 import { WithdrawModal } from '../../wallet/WithdrawModal';
@@ -68,7 +69,7 @@ interface InvestorControlPanelProps {
   currentView?: string;
 }
 
-type TabType = 'overview' | 'my-properties' | 'properties' | 'marketplace' | 'transactions' | 'installments' | 'reports' | 'analytics' | 'wallet' | 'certificates' | 'verification' | 'notifications' | 'settings';
+type TabType = 'overview' | 'my-properties' | 'properties' | 'marketplace' | 'transactions' | 'installments' | 'reports' | 'analytics' | 'wallet' | 'transfers' | 'certificates' | 'verification' | 'notifications' | 'settings';
 
 interface PriceAlert {
   id: string;
@@ -111,6 +112,8 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
         return 'certificates';
       case 'verification':
         return 'verification';
+      case 'transfers':
+        return 'transfers';
       case 'notifications':
         return 'notifications';
       case 'settings':
@@ -287,6 +290,10 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
 
         {activeTab === 'wallet' && (
           <WalletContent portfolio={portfolio} loading={portfolioLoading} walletBalance={walletBalance} walletLoading={walletLoading} />
+        )}
+
+        {activeTab === 'transfers' && (
+          <TransfersPanel />
         )}
 
         {activeTab === 'certificates' && (

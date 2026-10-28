@@ -247,6 +247,9 @@ def _due(now):
                 .select_related('investor', 'liquidity_provider__user',
                                 'exit_request__investment__property_investment')
                 .order_by('completed_at'))
+    from transfers.models import Transfer
+    yield from (Transfer.objects.filter(status='delivered', asset='units').filter(due)
+                .select_related('sender', 'recipient', 'property_ref').order_by('delivered_at'))
 
 
 def reconcile(limit: int = 50) -> dict:

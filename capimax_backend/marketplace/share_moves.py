@@ -34,7 +34,7 @@ def held_shares(user, prop) -> int:
 
 
 def committed_shares(user, prop, *, exclude_exit=None) -> int:
-    """Shares promised elsewhere: open market listings and open liquidity-provider sales."""
+    """Shares promised elsewhere: open market listings, liquidity-provider sales and transfers."""
     from django.db.models import Sum
 
     from liquidity_provider.models import ExitRequest, ExitRequestStatus
@@ -49,7 +49,10 @@ def committed_shares(user, prop, *, exclude_exit=None) -> int:
         status__in=[ExitRequestStatus.PENDING, ExitRequestStatus.UNDER_REVIEW, ExitRequestStatus.APPROVED])
     if exclude_exit is not None:
         exits = exits.exclude(pk=exclude_exit.pk)
-    return int(listed) + int(exits.aggregate(s=Sum('units_requested'))['s'] or 0)
+    from transfers.models import OPEN, Transfer
+    sending = (Transfer.objects.filter(sender=user, property_ref=prop, asset='units', status__in=OPEN)
+               .aggregate(s=Sum('units'))['s'] or 0)
+    return int(listed) + int(exits.aggregate(s=Sum('units_requested'))['s'] or 0) + int(sending)
 
 
 def free_shares(user, prop, **kw) -> int:

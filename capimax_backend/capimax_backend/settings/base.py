@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     'documents',
     'support',  # Contact Us + support tickets (client round 3, #12 #13)
     'certificates',  # ownership certificates + public QR verification (client round 4, #5)
+    'transfers',  # send shares / balance to another user (client round 4, extra #3)
     'core',
     'legal',  # SPV legal entities, subscription agreements, cap table
 ]
@@ -344,6 +345,10 @@ EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT', '20'))
 SUPPORT_INBOX_EMAIL = os.environ.get('SUPPORT_INBOX_EMAIL', 'tech@capimaxholding.com')
 # The address shown to users (site, emails, PDFs) — client round 4, #8: set the real RT mailbox here
 SUPPORT_EMAIL = os.environ.get('SUPPORT_EMAIL', SUPPORT_INBOX_EMAIL)
+
+# Transfers between users (BRX model): unclaimed transfers return after N days; optional fee %
+TRANSFER_CLAIM_DAYS = int(os.environ.get('TRANSFER_CLAIM_DAYS', '30'))
+TRANSFER_FEE_PERCENT = os.environ.get('TRANSFER_FEE_PERCENT', '0')
 
 # CORS: the purchase API takes an Idempotency-Key header (a double click never buys twice).
 from corsheaders.defaults import default_headers  # noqa: E402

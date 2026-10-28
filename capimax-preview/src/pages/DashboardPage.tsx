@@ -51,6 +51,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const { t: tOwner } = useTranslation('owner');
   const { t: tPartners } = useTranslation('partners');
   const { t: tCerts } = useTranslation('certs');
+  const { t: tTransfers } = useTranslation('transfers');
   const { t } = useTranslation('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -79,6 +80,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           { id: 'analytics', label: t('nav.analytics'), icon: '📈' },
           { id: 'reports', label: tCerts('nav.reports'), icon: '📊' },
           { id: 'wallet', label: t('nav.wallet'), icon: '💰' },
+          { id: 'transfers', label: tTransfers('nav'), icon: '🔁' },
           { id: 'installments', label: t('nav.installments'), icon: '📅' },
           // client round 4: Documents -> My Certificates (#4) + Verification Center (#7)
           { id: 'certificates', label: tCerts('nav.certificates'), icon: '🏅' },

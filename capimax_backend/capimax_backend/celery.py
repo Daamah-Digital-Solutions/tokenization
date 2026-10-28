@@ -123,6 +123,13 @@ app.conf.beat_schedule = {
         'kwargs': {},
     },
     
+    # Transfers between users: deliver what is due, return unclaimed ones (round 4, extra #3)
+    'process-transfers': {
+        'task': 'transfers.tasks.process_transfers',
+        'schedule': 60.0 * 60.0,  # Every hour
+        'kwargs': {},
+    },
+
     # Email notification processing
     'process-pending-emails': {
         'task': 'notifications.tasks.process_pending_emails',

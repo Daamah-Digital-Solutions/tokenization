@@ -229,6 +229,15 @@ class KYCProfile(models.Model):
             status__in=[DocumentStatus.PENDING, DocumentStatus.IN_REVIEW]
         ).update(status=DocumentStatus.APPROVED, reviewed_by=reviewed_by_user,
                  reviewed_at=timezone.now())
+        # Transfers waiting for this person are delivered now (client round 4, extra #3)
+        try:
+            from django.db import transaction as _tx
+
+            from transfers.services import release_waiting
+            _user = self.user
+            _tx.on_commit(lambda: release_waiting(_user))
+        except Exception:  # noqa: BLE001
+            pass
         # Email + in-app notification (every path — admin + API — goes through here).
         self._notify_status(
             'approved',
