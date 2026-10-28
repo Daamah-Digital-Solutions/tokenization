@@ -266,8 +266,23 @@ def send_bulk_notifications(
             }
 
 
+@shared_task(bind=True, max_retries=0)
+def deliver_notification_email(self, notification_id: str) -> bool:
+    """Send one notification email (queued after commit by notifications/emailing.queue)."""
+    from .emailing import deliver
+    n = Notification.objects.select_related('user').filter(pk=notification_id).first()
+    return deliver(n) if n is not None else False
+
+
 @shared_task(bind=True, max_retries=2)
 def process_pending_emails(self, batch_size: int = 50) -> Dict[str, Any]:
+    """Every 5 minutes: resend failed (or stuck) notification emails, up to 3 attempts each."""
+    from .emailing import retry_failed
+    stats = retry_failed(limit=batch_size)
+    return {'success': True, **stats}
+
+
+def _legacy_process_pending_emails(self, batch_size: int = 50) -> Dict[str, Any]:
     """
     Process pending email notifications in batches.
     
@@ -599,3 +614,9 @@ def test_notification_system(user_email: str) -> str:
         error_message = f"Error in notification system test: {e}"
         logger.error(error_message)
         return error_message
+
+@shared_task(bind=True, max_retries=0, soft_time_limit=None, time_limit=None)
+def send_broadcast(self, broadcast_id: str):
+    """Admin broadcast email (client round 4, extra #4) — batches with a pause, see notifications/broadcasts.py."""
+    from .broadcasts import send
+    return send(broadcast_id)

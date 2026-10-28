@@ -20,6 +20,7 @@ import { useTranslation, Trans } from 'react-i18next';
 import { Navbar } from '../layout/Navbar';
 import { Footer } from '../layout/Footer';
 
+import { COMPANY } from '../../utils/company';
 interface LegalPageLayoutProps {
   title: string;
   lastUpdated: string;
@@ -181,8 +182,9 @@ export const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({
                     <Trans
                       t={t}
                       i18nKey="legal.footerNotice"
+                      values={{ email: COMPANY.email }}
                       components={{
-                        link: <a href="mailto:legal@capimaxrt.com" className="text-emerald-600 dark:text-emerald-400 hover:underline" />,
+                        link: <a href={`mailto:${COMPANY.email}`} className="text-emerald-600 dark:text-emerald-400 hover:underline" />,
                       }}
                     />
                   </p>

@@ -4,6 +4,7 @@ import { ChevronDown, Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { InfoPageLayout } from '../components/info/InfoPageLayout';
 
+import { COMPANY } from '../utils/company';
 interface FAQItem {
   question: string;
   answer: React.ReactNode;
@@ -1307,7 +1308,7 @@ export const FAQPage: React.FC = () => {
             {t('faq.contactText')}
           </p>
           <a
-            href="mailto:support@capimaxrt.com"
+            href={`mailto:${COMPANY.email}`}
             className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded-lg transition-colors"
           >
             {t('faq.contactSupport')}

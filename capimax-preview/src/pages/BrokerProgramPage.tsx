@@ -36,6 +36,7 @@ import { StatsCard } from '../components/design-system/cards/StatsCard';
 import { useRouter } from '../utils/router';
 import { useTranslation } from 'react-i18next';
 
+import { COMPANY } from '../utils/company';
 const partnerStats = [
   { number: "$250M+", label: "Partner Volume", icon: DollarSign },
   { number: "150+", label: "Active Partners", icon: Users },
@@ -140,7 +141,7 @@ export const BrokerProgramPage: React.FC = () => {
   };
 
   const handleContactSales = () => {
-    alert(t('program.contactSoon'));
+    alert(t('program.contactSoon', { email: COMPANY.email }));
   };
 
   return (
@@ -645,8 +646,8 @@ export const BrokerProgramPage: React.FC = () => {
 
                     <Text variant="caption" color="muted" align="center" as="p">
                       {t('program.questions')}{' '}
-                      <a href="mailto:partners@capimax.com" className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium">
-                        partners@capimax.com
+                      <a href={`mailto:${COMPANY.email}`} className="text-emerald-600 dark:text-emerald-400 hover:underline font-medium">
+                        {COMPANY.email}
                       </a>
                     </Text>
                   </div>

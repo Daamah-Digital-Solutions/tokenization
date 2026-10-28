@@ -220,8 +220,11 @@ class NotificationService:
                 logger.info(f"Email notifications disabled for user {user.email}")
                 return False
             
-            # Use appropriate email service
-            return EmailNotificationService.send_notification_email(notification)
+            # Branded email, sent in the background once the transaction commits
+            # (client round 4, #16) — never inside a purchase / sale.
+            from .emailing import queue
+            queue(notification)
+            return True
             
         except Exception as e:
             logger.error(f"Error sending email notification: {str(e)}")
@@ -359,9 +362,13 @@ class EmailNotificationService:
     
     @staticmethod
     def send_notification_email(notification: Notification) -> bool:
-        """
-        Send notification as email using appropriate template.
-        """
+        """Send now, with the branded notification template (notifications/emailing.py)."""
+        from .emailing import deliver
+        return deliver(notification)
+
+    @staticmethod
+    def _legacy_send_notification_email(notification: Notification) -> bool:
+        """Former DB-template path (unused: most types fell back to a red "System Alert")."""
         try:
             user = notification.user
             

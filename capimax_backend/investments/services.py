@@ -358,11 +358,13 @@ class InvestmentProcessingService:
                     'id': investment.id
                 }
 
-                EmailService.send_investment_confirmation_email(
-                    user=investment.user,
-                    investment_details=investment_details
-                )
-                logger.info(f"Investment confirmation email sent for investment {investment.id}")
+                # After commit (round 4, #16): never hold the purchase's row locks
+                # on SMTP, and never email a purchase that is rolled back.
+                from django.db import transaction as _tx
+                _user = investment.user
+                _tx.on_commit(lambda: EmailService.send_investment_confirmation_email(
+                    user=_user, investment_details=investment_details))
+                logger.info(f"Investment confirmation email queued for investment {investment.id}")
             except Exception as e:
                 logger.error(f"Failed to send investment confirmation email for investment {investment.id}: {str(e)}")
 

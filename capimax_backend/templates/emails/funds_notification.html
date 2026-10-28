@@ -556,7 +556,7 @@
             <div class="important-note">
                 <div class="important-text">
                     <strong>Important:</strong> If you didn't request this withdrawal, please contact our support team
-                    immediately at support@capimaxrt.com or call our security hotline.
+                    immediately at {{ support_email }} or call our security hotline.
                 </div>
             </div>
             {% endif %}
@@ -569,7 +569,7 @@
                 Your Trusted Real Estate Ownership Partner
             </div>
             <div class="contact-info">
-                Support: support@capimaxrt.com | Billing: support@capimaxrt.com<br>
+                Support: {{ support_email }} | Billing: {{ support_email }}<br>
                 This transaction confirmation was sent to {{ user.email }}.
             </div>
         </div>

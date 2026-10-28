@@ -636,7 +636,7 @@
     "opportunityDesc": "Focus on improving conversion from leads to registered users"
   },
   "program": {
-    "contactSoon": "Contact form coming soon! Email us at partners@capimax.com",
+    "contactSoon": "Contact form coming soon! Email us at {{email}}",
     "metaTitle": "Partner Program | Capimax - Professional Broker Partnership",
     "metaDescription": "Join the exclusive Capimax Partner Program. Earn premium commissions, access institutional opportunities, and grow your business with cutting-edge real estate technology.",
     "badge": "Elite Partner Program",

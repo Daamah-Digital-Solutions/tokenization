@@ -251,6 +251,10 @@ LOGGING = {
         'payments': {'handlers': ['console', 'file'], 'level': 'INFO', 'propagate': False},
         'blockchain': {'handlers': ['console', 'file'], 'level': 'INFO', 'propagate': False},
     },
+    # Every other app (core.services.email_service, notifications, accounts, broker,
+    # marketplace, kyc, certificates, liquidity_provider, support…): their warnings —
+    # e.g. a failed email — used to vanish (client round 4, #16).
+    'root': {'handlers': ['console', 'file'], 'level': 'INFO'},
 }
 
 

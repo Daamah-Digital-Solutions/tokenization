@@ -22,6 +22,7 @@ import { cn } from '../../utils/cn';
 import { downloadReceiptPdf } from '../../utils/receiptPdf';
 import { useTranslation, Trans } from 'react-i18next';
 
+import { COMPANY } from '../../utils/company';
 interface InvestmentReceiptProps {
   property: InvestmentProperty;
   investmentData: InvestmentData;
@@ -95,7 +96,7 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
         nextDividendDate,
       },
       blockchainHash,
-      supportEmail: 'support@capimax.com',
+      supportEmail: COMPANY.email,
     });
   };
 
@@ -358,7 +359,7 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
             </div>
             
             <Text variant="bodySmall" color="muted" className="mb-2">
-              {t('receipt.footer', { email: 'support@capimax.com' })}
+              {t('receipt.footer', { email: COMPANY.email })}
             </Text>
             
             {/* Blockchain Verification Section */}

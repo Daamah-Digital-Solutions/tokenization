@@ -586,6 +586,9 @@ class BrokerCommission(models.Model):
             self.status = CommissionStatus.APPROVED
             self.approved_at = timezone.now()
             self.save(update_fields=['status', 'approved_at'])
+            _notify_broker(self.broker.user, 'Commission approved',
+                           f'Your commission of ${self.commission_amount:,.2f} was approved and will be paid '
+                           f'to your wallet.')
     
     def mark_paid(self, payment_reference=None):
         """
@@ -611,6 +614,20 @@ class BrokerCommission(models.Model):
             if payment_reference:
                 self.payment_reference = payment_reference
             self.save(update_fields=['status', 'paid_at', 'payment_reference'])
+        _notify_broker(self.broker.user, 'Commission paid',
+                       f'${self.commission_amount:,.2f} was added to your wallet. You can withdraw it from '
+                       f'the Wallet section.', url='/dashboard?view=wallet')
+
+
+def _notify_broker(user, title, message, url='/dashboard?view=commissions'):
+    """In-app + email notice to a broker (client round 4, #16); never breaks the caller."""
+    try:
+        from notifications.services import NotificationService
+        NotificationService.create_notification(user=user, title=title, message=message,
+                                                notification_type='payment', action_url=url,
+                                                action_label='Broker dashboard', send_email=True)
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def generate_referral_code():

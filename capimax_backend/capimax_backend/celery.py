@@ -156,6 +156,8 @@ app.conf.task_routes = {
     
     # Low priority notification tasks
     'notifications.tasks.send_email_notification': {'queue': 'low_priority'},
+    'notifications.tasks.deliver_notification_email': {'queue': 'low_priority'},
+    'notifications.tasks.send_broadcast': {'queue': 'low_priority'},
     'notifications.tasks.send_bulk_notifications': {'queue': 'low_priority'},
     
     # Blockchain tasks

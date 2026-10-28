@@ -174,8 +174,12 @@ def _notify(trade) -> None:
         NotificationService.create_notification(
             user=trade.buyer,
             title='Purchase completed',
-            message=f'You bought {trade.tokens_traded} shares of {title} for ${trade.total_cost_to_buyer:,.2f}.',
+            message=f'You bought {trade.tokens_traded} shares of {title} for ${trade.total_cost_to_buyer:,.2f}. '
+                    f'The shares are in My Properties and your ownership certificate is in My Certificates.',
             notification_type='investment',
+            action_url='/dashboard?view=my-properties',
+            action_label='My Properties',
+            send_email=True,  # client round 4, #16: sales and purchases are emailed
         )
         NotificationService.create_notification(
             user=trade.seller,
@@ -183,6 +187,9 @@ def _notify(trade) -> None:
             message=f'{trade.tokens_traded} shares of {title} were sold. ${trade.net_amount_to_seller:,.2f} '
                     f'was added to your wallet.',
             notification_type='investment',
+            action_url='/dashboard?view=wallet',
+            action_label='My Wallet',
+            send_email=True,
         )
     except Exception:  # noqa: BLE001 — notifications must never undo a settled trade
         logger.warning('Trade %s settled but notification failed', trade.id, exc_info=True)

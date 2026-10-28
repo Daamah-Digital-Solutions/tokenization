@@ -327,6 +327,17 @@ def withdraw_tokens(request):
         "User %s withdrew %s tokens of property %s to %s (tx %s)",
         user.pk, amount, property_obj.pk, external_addr, tx_hash,
     )
+    try:  # client round 4, #16: every movement of shares is emailed
+        from notifications.services import NotificationService
+        NotificationService.create_notification(
+            user=user, title='Shares withdrawn to your wallet',
+            message=(f'{amount} share token(s) of {property_obj.title} were sent from your Capimax RT custody '
+                     f'wallet to {external_addr}.\nTransaction: {tx_hash}\n'
+                     f'If you did not request this, contact support immediately.'),
+            notification_type='investment', priority='high', action_url='/dashboard?view=wallet',
+            action_label='My Wallet', send_email=True)
+    except Exception:  # noqa: BLE001
+        logger.warning('Withdrawal notice failed', exc_info=True)
     return Response(create_success_response(
         data=_build_response_data(
             tx_hash=tx_hash,

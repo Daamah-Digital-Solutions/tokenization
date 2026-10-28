@@ -302,3 +302,72 @@ class NotificationChannelAdmin(admin.ModelAdmin):
     
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('notification', 'notification__user')
+
+
+from django.contrib import messages  # noqa: E402
+
+from .models import Broadcast  # noqa: E402
+
+
+@admin.register(Broadcast)
+class BroadcastAdmin(admin.ModelAdmin):
+    """
+    Email a group of users (client round 4, extra #4): write a draft, check the
+    audience preview, "Send a test to me", then "Send now". Sending runs in the
+    background; refresh to follow the counters.
+    """
+
+    list_display = ['subject', 'audience', 'status', 'recipients_count', 'sent_count', 'failed_count',
+                    'created_at', 'sent_at']
+    list_filter = ['status', 'audience', 'is_marketing']
+    search_fields = ['subject', 'title', 'message']
+    readonly_fields = ['status', 'audience_preview', 'recipients_count', 'sent_count', 'failed_count',
+                       'created_by', 'created_at', 'sent_at', 'last_error']
+    fieldsets = [
+        ('Message', {'fields': ['subject', 'title', 'message', 'action_url', 'action_label']}),
+        ('Audience', {'fields': ['audience', 'custom_emails', 'audience_preview', 'is_marketing', 'also_in_app']}),
+        ('Delivery', {'fields': ['status', 'recipients_count', 'sent_count', 'failed_count', 'sent_at',
+                                 'last_error', 'created_by', 'created_at']}),
+    ]
+    actions = ['send_test', 'send_now']
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)
+
+    def get_readonly_fields(self, request, obj=None):
+        ro = list(super().get_readonly_fields(request, obj))
+        if obj and obj.status in ('sending', 'sent'):
+            ro += ['subject', 'title', 'message', 'action_url', 'action_label', 'audience', 'custom_emails',
+                   'is_marketing', 'also_in_app']
+        return ro
+
+    @admin.display(description='Who will receive it')
+    def audience_preview(self, obj):
+        if not obj or not obj.pk:
+            return 'Save the draft to see the recipients.'
+        from .broadcasts import recipients
+        qs = recipients(obj)
+        sample = ', '.join(qs.values_list('email', flat=True)[:8])
+        return format_html('<strong>{}</strong> recipient(s){}', qs.count(), f' — e.g. {sample}' if sample else '')
+
+    @admin.action(description='Send a test to me')
+    def send_test(self, request, queryset):
+        from .broadcasts import send_one
+        for b in queryset[:1]:
+            ok = send_one(b, request.user)
+            self.message_user(request, f'Test of "{b.subject}" {"sent to " + request.user.email if ok else "failed"}.',
+                              messages.SUCCESS if ok else messages.ERROR)
+
+    @admin.action(description='Send now to the audience')
+    def send_now(self, request, queryset):
+        from .tasks import send_broadcast
+        for b in queryset.filter(status__in=['draft', 'failed']):
+            Broadcast.objects.filter(pk=b.pk).update(status='sending')
+            try:
+                send_broadcast.delay(str(b.pk))
+            except Exception:  # noqa: BLE001 — no worker reachable: send here
+                from .broadcasts import send
+                send(b.pk)
+            self.message_user(request, f'"{b.subject}" is being sent. Refresh to follow the counters.')
