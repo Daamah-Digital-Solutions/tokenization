@@ -100,6 +100,50 @@ def create_access_token(user, ttl_seconds: int = 1800) -> str:
     return token
 
 
+def fetch_applicant(applicant_id: str) -> dict:
+    """The applicant's verified data (name, date of birth, nationality, documents)."""
+    return _signed_request('GET', f'/resources/applicants/{applicant_id}/one')
+
+
+def _apply_verified_data(profile, applicant_id: str) -> None:
+    """
+    After a GREEN review, keep what Sumsub verified: fill the account's empty
+    name / date of birth and the profile's nationality (never overwrite what
+    the user already has), and keep the raw record for the audit trail.
+    """
+    if not applicant_id:
+        return
+    try:
+        data = fetch_applicant(applicant_id)
+    except Exception:  # noqa: BLE001 — the approval stands without the extra data
+        logger.warning('Could not fetch Sumsub applicant %s', applicant_id, exc_info=True)
+        return
+    info = data.get('info') or data.get('fixedInfo') or {}
+    user = profile.user
+    changed = []
+    for field, key in (('first_name', 'firstNameEn'), ('last_name', 'lastNameEn')):
+        value = (info.get(key) or info.get(key[:-2]) or '').strip()
+        if value and not getattr(user, field, ''):
+            setattr(user, field, value[:150])
+            changed.append(field)
+    dob = info.get('dob')
+    if dob and hasattr(user, 'date_of_birth') and not user.date_of_birth:
+        from datetime import date
+        try:
+            user.date_of_birth = date.fromisoformat(dob)
+            changed.append('date_of_birth')
+        except ValueError:
+            pass
+    if changed:
+        user.save(update_fields=changed)
+    nationality = (info.get('nationality') or info.get('country') or '').strip()
+    if nationality and not profile.nationality:
+        profile.nationality = nationality[:100]
+    profile.provider_payload = {**(profile.provider_payload or {}), 'applicant': {
+        'id': applicant_id, 'info': info, 'review': data.get('review')}}
+    profile.save(update_fields=['nationality', 'provider_payload', 'updated_at'])
+
+
 def verify_webhook_signature(raw_body: bytes, digest: str, algorithm: str) -> bool:
     secret = getattr(settings, 'SUMSUB_WEBHOOK_SECRET', '')
     if not secret or not digest:
@@ -149,7 +193,12 @@ def process_webhook(payload: dict) -> str:
         if profile.status not in (KYCStatus.IN_REVIEW, KYCStatus.APPROVED):
             profile.submit_for_review()
             outcome = 'in_review'
-    elif event == 'applicantReviewed':
+    elif event in ('applicantOnHold', 'applicantPersonalInfoChanged') and profile.status != KYCStatus.APPROVED:
+        if profile.status != KYCStatus.IN_REVIEW:
+            profile.submit_for_review()
+        outcome = 'in_review'
+    elif event in ('applicantReviewed', 'applicantWorkflowCompleted'):
+        # A level with a workflow reports its final verdict as applicantWorkflowCompleted
         result = payload.get('reviewResult') or {}
         answer = (result.get('reviewAnswer') or '').upper()
         profile.provider_review_answer = answer
@@ -157,6 +206,7 @@ def process_webhook(payload: dict) -> str:
         if answer == 'GREEN':
             if profile.status != KYCStatus.APPROVED:
                 profile.approve(None)
+                _apply_verified_data(profile, payload.get('applicantId', ''))
             outcome = 'approved'
         elif answer == 'RED':
             reason = _review_reason(result)
