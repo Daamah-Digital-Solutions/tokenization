@@ -203,6 +203,41 @@
         "title": "We could not find this payment",
         "body": "Check your wallet and notifications for its status."
       }
+    },
+    "goInstallments": "Go to my installments",
+    "installment": {
+      "pending": {
+        "title": "Payment received — starting your installment plan…",
+        "body": "Your shares are held. This usually takes a few seconds."
+      },
+      "done": {
+        "title": "Installment plan started",
+        "body": "Your first payment is confirmed. The plan and its schedule are in Dashboard → Installments."
+      },
+      "refunded": {
+        "title": "The plan could not start",
+        "body": "Your payment arrived after the hold ended and the shares were no longer available. The amount was credited to your wallet."
+      },
+      "credited": {
+        "title": "The plan was not started",
+        "body": "{{amount}} arrived instead of the {{due}} due and was credited to your wallet."
+      },
+      "failed": {
+        "title": "The first payment was not completed",
+        "body": "Nothing was charged and the shares held for you are released. You can try again."
+      },
+      "slow": {
+        "title": "Still confirming your first payment",
+        "body": "The payment provider has not confirmed it yet. You will get a notification the moment your plan starts — no need to pay again."
+      },
+      "cancelled": {
+        "title": "Payment cancelled",
+        "body": "Nothing was charged. The shares held for you are released within a few minutes."
+      },
+      "missing": {
+        "title": "We could not find this payment",
+        "body": "Check Dashboard → Installments and your notifications for its status."
+      }
     }
   },
   "openCrypto": {

@@ -94,9 +94,11 @@ export const PropertiesPage: React.FC = () => {
   };
 
   // Investment flow handlers
+  // "Own Now" opens the property page, whose checkout knows the property's
+  // payment plan and payment methods. The list's own flow sent a number made
+  // from the id instead of the property id, so every purchase from here failed.
   const handleInvestClick = (property: Property) => {
-    setSelectedProperty(property);
-    setShowInvestmentFlow(true);
+    navigate('property-detail', { id: String(property.id) });
   };
 
   const handleInvestmentComplete = (investment: InvestmentData) => {

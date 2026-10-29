@@ -179,6 +179,11 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
         const minimum = Number(plan.minimum_installment) || 100;
         if (per < minimum) {
           newErrors.schedule = t('flow.errors.minInstallment', { amount: `$${minimum}` });
+        } else if ((investmentData.installmentPayMethod || 'wallet') === 'wallet' && investmentData.walletShort) {
+          // Say it here, not as a failed payment later (client: "it never pays")
+          newErrors.schedule = t('flow.errors.walletShortFirst', {
+            amount: `$${(investmentData.dueNow || 0).toFixed(2)}`,
+          });
         }
       }
     }
@@ -250,7 +255,9 @@ export const InvestmentFlow: React.FC<InvestmentFlowProps> = ({
 
   // Handle going back to payment from processing (error recovery)
   const handleGoBackToPayment = () => {
-    setCurrentStep(paymentIndex);
+    // An installment purchase has no payment step: its method is chosen on the schedule step
+    const scheduleIndex = steps.findIndex(s => s.id === 'schedule');
+    setCurrentStep(paymentIndex >= 0 ? paymentIndex : Math.max(scheduleIndex, 0));
     setIsProcessing(false);
   };
 

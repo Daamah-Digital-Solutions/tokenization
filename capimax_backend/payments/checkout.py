@@ -52,6 +52,10 @@ def _return_urls(payment, request=None) -> tuple[str, str]:
     if meta.get('purpose') == 'deposit':
         return (f'{base}/payment-return?deposit=1&payment={payment.id}',
                 f'{base}/payment-return?deposit=1&payment={payment.id}&cancelled=1')
+    if meta.get('purpose') == 'installment_start':
+        plan = meta.get('installment_id') or ''
+        return (f'{base}/payment-return?installment={plan}&payment={payment.id}',
+                f'{base}/payment-return?installment={plan}&payment={payment.id}&cancelled=1')
     inv = meta.get('investment_id') or ''
     return (f'{base}/payment-return?purchase={inv}&payment={payment.id}',
             f'{base}/payment-return?purchase={inv}&payment={payment.id}&cancelled=1')
@@ -61,6 +65,11 @@ def _product_name(payment) -> str:
     meta = payment.metadata or {}
     if meta.get('purpose') == 'deposit':
         return 'Capimax RT wallet deposit'
+    if meta.get('purpose') == 'installment_start':
+        from properties.models import Property
+        prop = Property.objects.filter(pk=meta.get('property_id')).first()
+        return (f'Capimax RT — first installment payment, {meta.get("shares")} shares'
+                f'{f" of {prop.title}" if prop else ""}')
     if payment.investment_id:
         inv = payment.investment
         return f'Capimax RT — {inv.token_amount} shares of {inv.property_investment.title}'
@@ -199,6 +208,9 @@ def fail_payment(payment, *, reason: str = '') -> None:
         locked.save(update_fields=['status', 'metadata', 'updated_at'])
         if locked.investment_id:
             release_hold(locked.investment, status='failed')
+        elif (locked.metadata or {}).get('purpose') == 'installment_start':
+            from properties.installment_billing import fail_first_payment
+            fail_first_payment(locked)
 
 
 def refresh_from_provider(payment, *, force: bool = False) -> None:

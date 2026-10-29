@@ -74,6 +74,9 @@ export interface CreateInstallmentPlanPayload {
   frequency?: string;
   graduated_release?: boolean;
   notes?: string;
+  /** How the first payment is paid: wallet (at once) or card / pronova / crypto (provider's page). */
+  payment_method?: 'wallet' | 'card' | 'pronova' | 'crypto';
+  pay_currency?: string;
 }
 
 export class InstallmentService {

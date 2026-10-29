@@ -645,6 +645,8 @@ def retry_failed_mint(investment_id: str):
 @shared_task
 def expire_purchase_reservations():
     """Every 5 minutes: release shares held for card / Pronova / crypto purchases not paid in time."""
+    from properties.installment_billing import expire_unpaid_plans
+
     from .purchase import expire_reservations
-    return {'expired': expire_reservations()}
+    return {'expired': expire_reservations(), 'plans_expired': expire_unpaid_plans()}
 

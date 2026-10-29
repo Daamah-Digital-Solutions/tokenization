@@ -64,6 +64,14 @@ export interface InvestmentData {
   // contract escrow until each installment is paid.
   is_installment_purchase?: boolean;
   total_installments?: number;
+  // How the plan's first payment is paid (client, additional fixes #2): the
+  // wallet, or card / Apple Pay / Google Pay / crypto / Pronova on the
+  // provider's page. Later payments are charged from the wallet.
+  installmentPayMethod?: string;
+  /** The first payment + installment fee (before a Pronova discount). */
+  dueNow?: number;
+  /** The wallet cannot cover the first payment. */
+  walletShort?: boolean;
 }
 
 export interface InvestmentFlowProps {

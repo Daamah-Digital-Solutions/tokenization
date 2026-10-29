@@ -114,7 +114,8 @@ export const InstallmentsPanel: React.FC = () => {
     },
   });
 
-  const activePlans = plans.filter((p) => p.status !== 'cancelled');
+  // A plan whose first payment is still on the provider's page has not started yet
+  const activePlans = plans.filter((p) => p.status !== 'cancelled' && p.status !== 'awaiting_payment');
 
   const location = (plan: InstallmentPlan) =>
     [plan.property_city, plan.property_country].filter(Boolean).join(', ') || plan.property_address || undefined;

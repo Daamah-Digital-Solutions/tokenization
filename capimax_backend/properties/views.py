@@ -1429,8 +1429,16 @@ class ConstructionInstallmentViewSet(ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
+        method = serializer.validated_data.get('payment_method') or 'wallet'
+        pay_currency = serializer.validated_data.get('pay_currency') or None
+
         # Check if user already has an active installment plan for this property
         property_id = serializer.validated_data['property_investment'].id
+        # A plan left on the provider's page (never paid) makes way for this one.
+        from .installment_billing import AWAITING, HOSTED_METHODS, _release_unstarted
+        for stale in ConstructionInstallment.objects.filter(investor=request.user, status=AWAITING,
+                                                            property_investment_id=property_id):
+            _release_unstarted(stale, reason='replaced by a new plan')
         existing_plan = ConstructionInstallment.objects.filter(
             investor=request.user,
             property_investment_id=property_id,
@@ -1450,6 +1458,9 @@ class ConstructionInstallmentViewSet(ModelViewSet):
 
         class _Rollback(Exception):
             pass
+
+        if method in HOSTED_METHODS:
+            return self._create_with_checkout(request, serializer, method, pay_currency)
 
         first = None
         try:
@@ -1474,6 +1485,36 @@ class ConstructionInstallmentViewSet(ModelViewSet):
         
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
     
+    def _create_with_checkout(self, request, serializer, method, pay_currency):
+        """The first payment is paid on the provider's page; the plan starts when it is confirmed."""
+        from django.db import transaction as db_transaction
+
+        from payments.checkout import CheckoutError, start_checkout
+        from payments.providers import provider_configured
+
+        from .installment_billing import AWAITING, open_checkout
+
+        if not provider_configured(method):
+            return Response({'success': False, 'code': 'PAYMENTS_NOT_CONFIGURED',
+                             'detail': 'This payment method is not available right now.',
+                             'message': 'This payment method is not available right now.'},
+                            status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        try:
+            with db_transaction.atomic():
+                plan = serializer.save()
+                plan.status = AWAITING
+                plan.save(update_fields=['status'])
+                payment = open_checkout(plan, method, pay_currency=pay_currency)
+                checkout_url = start_checkout(payment, request)
+        except CheckoutError as exc:
+            return Response({'success': False, 'code': exc.code, 'detail': exc.message, 'message': exc.message},
+                            status=exc.status)
+        plan.refresh_from_db()
+        data = ConstructionInstallmentSerializer(plan, context={'request': request}).data
+        data.update({'checkout_url': checkout_url, 'payment_id': str(payment.id),
+                     'amount_due_now': str(payment.amount)})
+        return Response(data, status=status.HTTP_201_CREATED)
+
     @swagger_auto_schema(
         operation_description="Get installment payments by property",
         manual_parameters=[

@@ -2,6 +2,7 @@
  * Where Stripe / NOWPayments send the member back:
  *   /payment-return?purchase=<investment>&payment=<id>[&cancelled=1]
  *   /payment-return?deposit=1&payment=<id>[&cancelled=1]
+ *   /payment-return?installment=<plan>&payment=<id>[&cancelled=1]  (a plan's first payment)
  *
  * Nothing is confirmed from the redirect itself — the server settles the
  * payment from the provider's webhook (or its own lookup, which each poll
@@ -16,6 +17,7 @@ import { Navbar } from '../components/layout/Navbar';
 import { Footer } from '../components/layout/Footer';
 import { useRouter } from '../utils/router';
 import { PurchaseService } from '../services/purchase/PurchaseService';
+import { apiClient } from '../services/api/ApiClient';
 import { takePendingPayment } from '../utils/pendingPayment';
 
 const POLL_MS = 3000;
@@ -36,12 +38,13 @@ export const PaymentReturnPage: React.FC = () => {
     const remembered = takePendingPayment();
     return {
       deposit: q.get('deposit') === '1',
+      planId: q.get('installment') || '',
       investmentId: q.get('purchase') || remembered?.investmentId || '',
       paymentId: q.get('payment') || remembered?.paymentId || '',
       cancelled: q.get('cancelled') === '1',
     };
   });
-  const kind = ret.deposit ? 'deposit' : 'purchase';
+  const kind = ret.deposit ? 'deposit' : ret.planId ? 'installment' : 'purchase';
   const following = !ret.cancelled && Boolean(ret.paymentId);
 
   const [timedOut, setTimedOut] = useState(false);
@@ -55,10 +58,14 @@ export const PaymentReturnPage: React.FC = () => {
     queryKey: ['payment-return', ret.paymentId, ret.investmentId],
     queryFn: async () => {
       const [purchase, payment] = await Promise.all([
-        ret.investmentId ? PurchaseService.status(ret.investmentId) : Promise.resolve(null),
+        ret.investmentId && !ret.planId ? PurchaseService.status(ret.investmentId) : Promise.resolve(null),
         PurchaseService.paymentStatus(ret.paymentId),
       ]);
-      return { purchase, payment };
+      // A plan that could not start once paid (its shares were taken) was refunded to the wallet
+      const plan: any = ret.planId && payment?.status === 'completed'
+        ? await apiClient.get(`/properties/installments/${ret.planId}/`).catch(() => null)
+        : null;
+      return { purchase, payment, plan };
     },
     enabled: following,
     refetchInterval: (query) => {
@@ -74,13 +81,14 @@ export const PaymentReturnPage: React.FC = () => {
   let outcome: Outcome = 'pending';
   if (ret.cancelled) outcome = 'cancelled';
   else if (!following || isError) outcome = 'missing';
-  else if (payment && payment.status === 'completed') outcome = purchase?.status === 'refunded' ? 'refunded' : 'done';
+  else if (payment && payment.status === 'completed')
+    outcome = purchase?.status === 'refunded' || data?.plan?.status === 'cancelled' ? 'refunded' : 'done';
   else if (payment && payment.status !== 'pending') outcome = credited > 0 ? 'credited' : 'failed';
   else if (timedOut) outcome = 'slow';
 
   useEffect(() => {
     if (outcome === 'done' || outcome === 'refunded' || outcome === 'credited') {
-      ['wallet-balance', 'investments', 'portfolio', 'notifications'].forEach((k) =>
+      ['wallet-balance', 'investments', 'portfolio', 'notifications', 'installments'].forEach((k) =>
         queryClient.invalidateQueries({ queryKey: [k] }),
       );
     }
@@ -116,7 +124,11 @@ export const PaymentReturnPage: React.FC = () => {
           <h1 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t(`return.${kind}.${outcome}.title`, values)}</h1>
           <p className="text-sm text-slate-600 dark:text-slate-300">{t(`return.${kind}.${outcome}.body`, values)}</p>
           <div className="flex flex-wrap justify-center gap-3 mt-6">
-            {kind === 'purchase' ? (
+            {kind === 'installment' ? (
+              <button type="button" className={primary} onClick={() => navigate('dashboard', { view: 'installments' })}>
+                {t('return.goInstallments')}
+              </button>
+            ) : kind === 'purchase' ? (
               <button type="button" className={primary} onClick={() => navigate('dashboard', { view: 'portfolio' })}>
                 {t('goPortfolio')}
               </button>

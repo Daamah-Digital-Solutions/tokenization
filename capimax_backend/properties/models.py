@@ -1380,6 +1380,8 @@ class ConstructionInstallment(models.Model):
     """
     
     PAYMENT_STATUS_CHOICES = [
+        # First payment on the provider's page (card / Pronova / crypto), not confirmed yet
+        ('awaiting_payment', 'Awaiting first payment'),
         ('pending', 'Pending'),
         ('processing', 'Processing'),
         ('completed', 'Completed'),

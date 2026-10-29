@@ -59,7 +59,8 @@
       "maxTokens": "Only {{available}} shares available",
       "paymentMethod": "Please select a payment method",
       "installmentsOnly": "This property is sold in installments only.",
-      "minInstallment": "Each installment must be at least {{amount}}. Choose more shares or fewer installments."
+      "minInstallment": "Each installment must be at least {{amount}}. Choose more shares or fewer installments.",
+      "walletShortFirst": "Your wallet does not cover the first payment ({{amount}}). Choose a card, crypto or Pronova, or add funds to your wallet first."
     },
     "buttons": {
       "confirmPay": "Confirm & Pay",
@@ -276,7 +277,9 @@
     "progress": "Transaction Progress",
     "changeMethod": "Change Payment Method",
     "dontClose": "Please don't close this window. Your transaction is being processed securely.",
-    "security": "Your purchase is processed through secure, audited smart contracts. All transactions are recorded on the blockchain."
+    "security": "Your purchase is processed through secure, audited smart contracts. All transactions are recorded on the blockchain.",
+    "dueNow": "Due now (first payment + fee)",
+    "dueNowHint": "The next payments are charged automatically from your wallet on their due dates."
   },
   "confirmation": {
     "shareText": "I just bought {{value}} property shares in {{title}} through tokenized real estate! 🏢💎",

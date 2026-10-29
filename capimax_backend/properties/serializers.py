@@ -804,13 +804,20 @@ class ConstructionInstallmentSerializer(serializers.ModelSerializer):
 
 class ConstructionInstallmentCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating installment payment plans."""
+
+    # How the first payment is paid (PropShare model): from the wallet at once,
+    # or on the provider's page (card, Pronova, crypto) — the plan starts when
+    # the provider confirms it.
+    payment_method = serializers.ChoiceField(choices=['wallet', 'card', 'pronova', 'crypto'],
+                                             required=False, default='wallet', write_only=True)
+    pay_currency = serializers.CharField(required=False, allow_blank=True, write_only=True)
     
     class Meta:
         model = ConstructionInstallment
         fields = [
             'property_investment', 'total_investment_amount', 'token_allocation',
             'total_installments', 'frequency', 'graduated_release',
-            'notes'
+            'notes', 'payment_method', 'pay_currency'
         ]
         # `total_investment_amount` is derived authoritatively in validate()
         # (token_price × token_allocation), so the client need not send it.
@@ -896,6 +903,8 @@ class ConstructionInstallmentCreateSerializer(serializers.ModelSerializer):
 
         # Set investor to current user
         validated_data['investor'] = self.context['request'].user
+        validated_data.pop('payment_method', None)
+        validated_data.pop('pay_currency', None)
 
         # The first payment (down payment, or installment #1) is due per the
         # schedule — today unless the admin fixed a later first due date.

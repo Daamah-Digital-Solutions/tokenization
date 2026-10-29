@@ -90,6 +90,10 @@ def settle_payment(payment_or_id, *, external_id: Optional[str] = None,
         investment = investment_for(payment)
         if investment is not None:
             _apply_to_investment(investment, payment, mint=mint)
+        elif meta.get('purpose') == 'installment_start':
+            # The first payment of an installment plan, paid on the provider's page
+            from properties.installment_billing import settle_first_payment
+            settle_first_payment(payment)
         else:
             _credit_wallet(payment)
 

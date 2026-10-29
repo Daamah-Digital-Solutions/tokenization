@@ -1,9 +1,15 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle, Calendar, CreditCard, Info } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { ScheduleTable } from '../properties/PaymentPlanSection';
-import { usePaymentOptions } from '../purchase/PaymentMethodList';
+import { PaymentMethodList, usePaymentOptions } from '../purchase/PaymentMethodList';
+import { PaymentService } from '../../services/payment/PaymentService';
+import type { PayMethodId } from '../../utils/paymentMethods';
+
+// The first payment of a plan: the wallet, or the provider's page (no bank / Sukuk route)
+const FIRST_PAYMENT_METHODS: PayMethodId[] = ['wallet', 'card', 'apple_pay', 'google_pay', 'crypto', 'pronova'];
 import { buildSchedule, fallbackPlan, formatMoney, formatPlanDate, parseDate } from '../../utils/paymentPlan';
 import type { InvestmentData, InvestmentProperty } from './types';
 
@@ -57,6 +63,28 @@ export const PaymentScheduleStep: React.FC<PaymentScheduleStepProps> = ({
   const installmentFeePct = Number(feeOptions?.fees?.installment_fee_pct ?? 4);
   const per = regular[0]?.amount || 0;
   const perLabel = t(`per.${plan.frequency}`);
+
+  // What the first payment costs now, and whether the wallet can pay it
+  const payWith = (investmentData.installmentPayMethod || 'wallet') as PayMethodId;
+  const dueNow = Math.round((Number(rows[0]?.amount) || 0) * (1 + installmentFeePct / 100) * 100) / 100;
+  const pronovaPct = Number(feeOptions?.fees?.pronova_discount_pct ?? 0);
+  const dueWith = payWith === 'pronova' ? Math.round(dueNow * (100 - pronovaPct)) / 100 : dueNow;
+  const { data: walletData } = useQuery({
+    queryKey: ['wallet-balance'],
+    queryFn: () => PaymentService.getWalletBalance(),
+    enabled: isInstallment,
+  });
+  const walletBalance = walletData
+    ? Number(walletData.total_value_usd) ||
+      (walletData.balances || []).reduce((s: number, b: any) => s + (Number(b.available_balance) || 0), 0)
+    : undefined;
+  const walletShort = walletBalance !== undefined && walletBalance < dueNow;
+  useEffect(() => {
+    if (!isInstallment) return;
+    if (investmentData.dueNow !== dueNow || investmentData.walletShort !== walletShort) {
+      onUpdate({ dueNow, walletShort });
+    }
+  }, [isInstallment, dueNow, walletShort]);
 
   const handleUpfront = () => {
     if (!plan.allows_cash) return;
@@ -201,12 +229,29 @@ export const PaymentScheduleStep: React.FC<PaymentScheduleStepProps> = ({
                   </div>
                 )}
 
+                {/* How the first payment is paid (client, additional fixes #2) */}
+                <div onClick={(e) => e.stopPropagation()} className="space-y-2">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t('checkout.payFirstWith')}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                      {t('checkout.dueNow')} <strong className="text-gray-900 dark:text-white">{formatMoney(dueWith)}</strong>
+                    </span>
+                  </div>
+                  <PaymentMethodList
+                    value={payWith}
+                    onChange={(id) => onUpdate({ installmentPayMethod: id })}
+                    walletBalance={walletBalance}
+                    total={dueNow}
+                    only={FIRST_PAYMENT_METHODS}
+                  />
+                </div>
+
                 <div className="flex items-start gap-2 text-xs text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
                   <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-500" />
                   <span>
-                    {t('checkout.walletNoteFee', {
+                    {t('checkout.firstPaymentNote', {
                       pct: installmentFeePct,
-                      first: formatMoney((Number(rows[0]?.amount) || 0) * (1 + installmentFeePct / 100)),
+                      first: formatMoney(dueNow),
                     })}
                     {property.expected_completion_date
                       ? ` ${t('checkout.completion', { date: formatPlanDate(property.expected_completion_date, lang) })}`

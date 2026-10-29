@@ -25,6 +25,8 @@ import { BankTransferForm } from '../payments/BankTransferForm';
 import { NovaSukukForm } from '../payments/NovaSukukForm';
 import { InvestmentService } from '../../services/investment/InvestmentService';
 import { InstallmentService } from '../../services/installments/InstallmentService';
+import { payMethod, type PayMethodId } from '../../utils/paymentMethods';
+import { rememberPendingPurchase } from '../../utils/pendingPayment';
 import type { InvestmentProperty, InvestmentData } from './types';
 import { cn } from '../../utils/cn';
 import { useTranslation } from 'react-i18next';
@@ -161,6 +163,11 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
   const fees = calculateFees();
 
   const getPaymentMethodLabel = () => {
+    // An installment plan's first payment: the method chosen on the schedule step
+    if (investmentData.is_installment_purchase) {
+      const api = payMethod((investmentData.installmentPayMethod || 'wallet') as PayMethodId).apiMethod;
+      return t(`paymentMethod.methods.${api === 'card' ? 'fiat' : api}.name`);
+    }
     switch (investmentData.paymentMethod) {
       case 'crypto':
       case 'fiat':
@@ -282,7 +289,9 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
       // or nothing (a short wallet is refused with INSUFFICIENT_FUNDS). The
       // next payments are charged automatically on their due dates.
       if (investmentData.is_installment_purchase && investmentData.total_installments) {
-        const plan = await InstallmentService.createPlan({
+        const payWith = payMethod((investmentData.installmentPayMethod || 'wallet') as PayMethodId).apiMethod;
+        const plan: any = await InstallmentService.createPlan({
+          payment_method: payWith as 'wallet' | 'card' | 'pronova' | 'crypto',
           property_investment: propertyId,
           token_allocation: investmentData.tokens,
           total_installments: investmentData.total_installments,
@@ -291,6 +300,14 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
           frequency: property.paymentPlan?.frequency || 'monthly',
           graduated_release: true,
         });
+
+        // Card / Pronova / crypto: the first payment is made on the provider's
+        // page; the plan starts when the provider confirms it.
+        if (plan?.checkout_url) {
+          if (plan.payment_id) rememberPendingPurchase(undefined, plan.payment_id);
+          window.location.assign(plan.checkout_url);
+          return;
+        }
 
         updateStepStatus(processIdx, 'completed');
         const installmentConfirmIdx = processIdx + 1;
@@ -586,6 +603,17 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
             <Text variant="body" weight="semibold">${investmentData.amount.toLocaleString()}</Text>
           </div>
 
+          {investmentData.is_installment_purchase ? (
+            <div className="border-t pt-3">
+              <div className="flex justify-between items-center">
+                <Text variant="bodyLarge" weight="semibold">{t('processor.dueNow')}</Text>
+                <Text variant="bodyLarge" weight="bold" className="text-emerald-600">
+                  ${(investmentData.dueNow || 0).toFixed(2)}
+                </Text>
+              </div>
+              <Text variant="bodySmall" color="muted">{t('processor.dueNowHint')}</Text>
+            </div>
+          ) : (<>
           <div className="flex justify-between items-center">
             <Text variant="body">{t('processor.methodFee', { method: getPaymentMethodLabel() })}</Text>
             <Text variant="body" weight="semibold">
@@ -601,6 +629,7 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
               </Text>
             </div>
           </div>
+          </>)}
         </div>
       </Card>
 

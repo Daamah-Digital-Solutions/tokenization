@@ -25,10 +25,12 @@ interface Props {
   walletBalance?: number;
   /** What this purchase costs, to flag a wallet that is short. */
   total?: number;
+  /** Only these methods (an installment plan's first payment has no bank / Sukuk route). */
+  only?: PayMethodId[];
 }
 
 /** The payment methods of a purchase — the same list, in the same order, on every property. */
-export const PaymentMethodList: React.FC<Props> = ({ value, onChange, walletBalance, total }) => {
+export const PaymentMethodList: React.FC<Props> = ({ value, onChange, walletBalance, total, only }) => {
   const { t } = useTranslation('checkout');
   const { data: options } = usePaymentOptions();
   const pronovaPct = Number(options?.fees?.pronova_discount_pct ?? 0);
@@ -37,7 +39,7 @@ export const PaymentMethodList: React.FC<Props> = ({ value, onChange, walletBala
 
   return (
     <div className="space-y-2" data-testid="payment-methods">
-      {PAYMENT_METHODS.map((method) => {
+      {PAYMENT_METHODS.filter((m) => !only || only.includes(m.id)).map((method) => {
         const live = methodLive(options?.methods, method);
         const noDevice = method.id === 'apple_pay' && !applePay;
         const disabled = !live || noDevice;

@@ -15,13 +15,19 @@ Installment plans, the PropShare way.
   * Reminder: one notice 3 days before each due date.
   * Paying ahead: the member can pay the next payment any time; due dates
     stay as scheduled.
+  * The first payment (down payment, or installment 1) can also be paid by
+    card, Pronova or crypto through the provider's page (PropShare model):
+    the plan waits ("awaiting_payment", shares held 30 minutes) and starts
+    when the provider confirms the payment. Not paid in time -> the shares go
+    back on sale; paid late -> the plan starts if its shares are still free
+    at the same price, otherwise the money goes to the wallet.
 """
 
 from __future__ import annotations
 
 import logging
 from datetime import timedelta
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from django.db import transaction
 from django.db.models import F
@@ -30,6 +36,12 @@ from django.utils import timezone
 logger = logging.getLogger(__name__)
 
 REMINDER_DAYS = 3
+
+# First payment through a hosted checkout (purchase method -> Payment.payment_method)
+HOSTED_METHODS = ('card', 'pronova', 'crypto')
+CHECKOUT_HOLD = timedelta(minutes=30)
+START_PURPOSE = 'installment_start'
+AWAITING = 'awaiting_payment'
 
 
 def _notify(user, title: str, message: str, *, email: bool = True) -> None:
@@ -144,6 +156,145 @@ def start_plan(plan) -> dict | None:
     if first and (first['kind'] == 'down_payment' or first['due_date'] <= timezone.now().date()):
         return charge_next(plan)
     return None
+
+
+def open_checkout(plan, method: str, *, pay_currency: str | None = None):
+    """
+    The plan's first payment will be paid on the provider's page: hold its
+    shares for the checkout and create the pending Payment (base + fee, less
+    the Pronova discount). Runs in the caller's transaction.
+    """
+    from investments.models import TokenReservation
+    from investments.purchase import PAYMENT_METHOD_CODE
+    from payments.models import Payment, PlatformFeeSettings
+
+    TokenReservation.objects.create(user=plan.investor, property_investment=plan.property_investment,
+                                    token_amount=plan.token_allocation,
+                                    expires_at=timezone.now() + CHECKOUT_HOLD, installment_plan=plan)
+    base, fee = plan.amount_due, plan.fee_due
+    total = base + fee
+    discount = Decimal('0.00')
+    if method == 'pronova':
+        pct = Decimal(PlatformFeeSettings.current().pronova_discount_pct or 0)
+        discount = (total * pct / 100).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+    due = total - discount
+    meta = {
+        'purpose': START_PURPOSE, 'installment_id': str(plan.id),
+        'property_id': str(plan.property_investment_id), 'shares': plan.token_allocation,
+        'payment_number': 1, 'total_payments': plan.total_installments,
+        'base': str(base), 'fee': str(fee), 'discount': str(discount),
+        'provider': 'nowpayments' if method == 'crypto' else 'stripe',
+    }
+    if pay_currency and method == 'crypto':
+        meta['pay_currency'] = pay_currency
+    return Payment.objects.create(user=plan.investor, amount=due, net_amount=due, currency='USD',
+                                  payment_method=PAYMENT_METHOD_CODE[method], status='pending', metadata=meta)
+
+
+def _release_unstarted(plan, *, reason: str) -> None:
+    """A plan whose first payment never arrived: its shares go back on sale."""
+    plan.reservations.filter(released=False).update(released=True)
+    plan.status = 'cancelled'
+    plan.notes = (f'{plan.notes}\n' if plan.notes else '') + f'Not started: {reason}'
+    plan.save(update_fields=['status', 'notes', 'updated_at'])
+
+
+def settle_first_payment(payment) -> str:
+    """
+    The provider confirmed a plan's first payment (called by settle_payment,
+    under the payment lock): start the plan. Returns 'started', 'refunded'
+    or 'already'.
+    """
+    from investments.models import TokenReservation
+    from investments.purchase import available_shares
+    from payments.models import WalletBalance
+    from properties.models import ConstructionInstallment, Property
+
+    meta = payment.metadata or {}
+    plan = ConstructionInstallment.objects.select_for_update().select_related(
+        'property_investment', 'investor').filter(pk=meta.get('installment_id')).first()
+    if plan is not None and plan.status not in (AWAITING, 'cancelled'):
+        return 'already'
+
+    def refund(why: str) -> str:
+        WalletBalance.credit(payment.user, payment.amount, transaction_type='refund', reference_id=payment.id,
+                             description=f'Refund: {why}')
+        _notify(payment.user, 'Installment plan not started',
+                f'{why} We refunded ${Decimal(payment.amount):,.2f} to your wallet.')
+        return 'refunded'
+
+    if plan is None:
+        return refund('your first installment payment arrived, but its plan no longer exists.')
+
+    prop = Property.objects.select_for_update().get(pk=plan.property_investment_id)
+    held = plan.reservations.filter(released=False, expires_at__gt=timezone.now()).exists()
+    if not held:
+        # Paid after the hold ran out: the plan starts only at the same price, with free shares.
+        plan.reservations.filter(released=False).update(released=True)
+        same_price = plan.token_allocation and (
+            (prop.token_price * plan.token_allocation).quantize(Decimal('0.01'))
+            == Decimal(plan.total_investment_amount).quantize(Decimal('0.01')))
+        if not same_price or available_shares(prop) < plan.token_allocation:
+            if plan.status != 'cancelled':
+                _release_unstarted(plan, reason='first payment arrived after the shares were released')
+            return refund(f'the shares of {prop.title} were released before your first installment '
+                          'payment was confirmed, so the plan did not start.')
+        TokenReservation.objects.create(user=plan.investor, property_investment=prop,
+                                        token_amount=plan.token_allocation, installment_plan=plan,
+                                        expires_at=None)
+    else:
+        # From now on the plan holds its shares until it ends.
+        plan.reservations.filter(released=False).update(expires_at=None)
+
+    today = timezone.now().date()
+    plan.status = 'pending'
+    plan.start_date = today
+    plan.save(update_fields=['status', 'start_date', 'updated_at'])
+    base = Decimal(meta.get('base') or plan.amount_due)
+    fee = Decimal(meta.get('fee') or plan.fee_due)
+    ok, message, _released = plan.process_payment(base, payment_date=today)
+    if not ok:
+        raise RuntimeError(message)
+    ConstructionInstallment.objects.filter(pk=plan.pk).update(fees_paid=F('fees_paid') + fee)
+    if plan.status == 'completed':
+        finish_plan(plan)
+    try:
+        from properties.services import InstallmentProcessingService
+        InstallmentProcessingService()._send_payment_success_notification(plan, Decimal(payment.amount))
+    except Exception:  # noqa: BLE001
+        logger.exception('Installment start notice failed for plan %s', plan.pk)
+    return 'started'
+
+
+def fail_first_payment(payment) -> None:
+    """The provider says the first payment will not be paid: release the plan's shares."""
+    from properties.models import ConstructionInstallment
+
+    plan = ConstructionInstallment.objects.select_for_update().filter(
+        pk=(payment.metadata or {}).get('installment_id'), status=AWAITING).first()
+    if plan is not None:
+        _release_unstarted(plan, reason='the first payment was not completed')
+
+
+def expire_unpaid_plans(now=None) -> int:
+    """Plans whose first payment was not made in time (the 5-minute job)."""
+    from payments.models import Payment
+    from properties.models import ConstructionInstallment
+
+    now = now or timezone.now()
+    count = 0
+    for plan in ConstructionInstallment.objects.filter(status=AWAITING,
+                                                       created_at__lte=now - CHECKOUT_HOLD):
+        with transaction.atomic():
+            locked = ConstructionInstallment.objects.select_for_update().get(pk=plan.pk)
+            if locked.status != AWAITING or locked.reservations.filter(
+                    released=False, expires_at__gt=now).exists():
+                continue
+            _release_unstarted(locked, reason='the first payment was not made in time')
+            Payment.objects.filter(status='pending', metadata__purpose=START_PURPOSE,
+                                   metadata__installment_id=str(locked.pk)).update(status='cancelled')
+            count += 1
+    return count
 
 
 def run_due(today=None) -> dict:
