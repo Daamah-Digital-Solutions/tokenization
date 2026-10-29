@@ -92,7 +92,9 @@
       "spv": "SPV Info",
       "blockchain": "Blockchain",
       "documents": "Data Room",
-      "location": "Location"
+      "location": "Location",
+      "studies": "Financial Studies",
+      "insurance": "Insurance"
     },
     "na": "N/A",
     "tbd": "TBD",
@@ -285,7 +287,9 @@
       "transport": "Public Transport - {{km}} km",
       "schools": "Schools - {{km}} km",
       "hospital": "Hospital - {{km}} km"
-    }
+    },
+    "studiesEmpty": "No financial study has been published for this property yet.",
+    "insuranceEmpty": "No insurance details have been published for this property yet."
   },
   "units": {
     "million": "${{v}}M",

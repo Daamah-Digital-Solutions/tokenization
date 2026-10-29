@@ -226,6 +226,60 @@ class AdminAddPropertyTests(TestCase):
         self.assertEqual(prop.purchase_methods, 'both')
         self.assertTrue(prop.supports_installments)
 
+    def test_admin_change_form_saves(self):
+        """
+        Editing an existing property in the admin (client: "Save gives an error",
+        e.g. cash + installments -> cash only). The review inline never ran
+        formset.save(), so Django's change message crashed and rolled back.
+        """
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from django.test import Client
+        staff = User.objects.create_superuser(email='super-edit@example.com', password='x12345678')
+        client = Client()
+        client.force_login(staff)
+        base = {
+            'title': 'Mayfair Crown', 'description': 'Edited from admin',
+            'property_type': 'residential', 'property_category': 'ready_property',
+            'owner': str(self.owner.pk), 'status': 'approved',
+            'total_value': '100000', 'token_price': '100', 'total_tokens': '1000',
+            'tokens_sold': '0', 'construction_progress': '0', 'occupancy_rate': '100',
+            'address': '350A Mayfair', 'city': 'London', 'country': 'GB',
+            'offering_type': 'private', 'lockup_months': '12',
+            'purchase_methods': 'both', 'installment_down_payment_percent': '10',
+            'installment_frequency': 'monthly', 'installment_period_months': '12',
+        }
+
+        def forms(prefix, total, initial=0):
+            return {f'{prefix}-TOTAL_FORMS': str(total), f'{prefix}-INITIAL_FORMS': str(initial),
+                    f'{prefix}-MIN_NUM_FORMS': '0', f'{prefix}-MAX_NUM_FORMS': '1000'}
+
+        client.post('/admin/properties/property/add/', {
+            **base, **forms('price_tiers', 0), **forms('images', 0), **forms('documents', 1),
+            'documents-0-name': 'valuation Report', 'documents-0-document_type': 'valuation',
+            'documents-0-document': SimpleUploadedFile('v.pdf', b'%PDF-1.4 v', content_type='application/pdf'),
+            'documents-0-investor_access': 'on',
+        })
+        prop = Property.objects.get(title='Mayfair Crown')
+        approval = PropertyApproval.objects.get(property=prop)
+        doc = prop.documents.get()
+        url = f'/admin/properties/property/{prop.pk}/change/'
+        self.assertEqual(client.get(url).status_code, 200)
+
+        response = client.post(url, {
+            **base, 'purchase_methods': 'cash',
+            **forms('price_tiers', 0), **forms('images', 0), **forms('owner_messages', 0),
+            **forms('approval', 1, 1), 'approval-0-id': str(approval.pk),
+            'approval-0-property': str(prop.pk), 'approval-0-status': approval.status,
+            **forms('documents', 1, 1), 'documents-0-id': str(doc.pk), 'documents-0-property': str(prop.pk),
+            'documents-0-name': 'valuation Report', 'documents-0-document_type': 'valuation',
+            'documents-0-investor_access': 'on',
+        })
+        self.assertEqual(response.status_code, 302, response.content[:3000])
+        prop.refresh_from_db()
+        self.assertEqual(prop.purchase_methods, 'cash')
+        self.assertFalse(prop.supports_installments)
+        self.assertEqual(prop.documents.count(), 1)
+
     def test_admin_created_property_is_approved_but_unpublished(self):
         site = AdminSite()
         model_admin = PropertyAdmin(Property, site)

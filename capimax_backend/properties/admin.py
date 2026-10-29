@@ -329,6 +329,10 @@ class PropertyAdmin(admin.ModelAdmin):
                                            data.get('review_notes', ''), data.get('required_changes', ''))
                 else:
                     f.save()
+            # formset.save() is never called here, and Django's change message
+            # reads these afterwards: without them EVERY edit of an existing
+            # property crashed and was rolled back (client: "Save gives an error").
+            formset.new_objects, formset.changed_objects, formset.deleted_objects = [], [], []
             return
         super().save_formset(request, form, formset, change)
 

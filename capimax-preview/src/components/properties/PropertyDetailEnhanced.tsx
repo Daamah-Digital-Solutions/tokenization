@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { pushPropertyTab, readPropertyTab, subscribePropertyTab } from '../../utils/propertyTab';
 import { constructionStageLabel } from '../../utils/constructionStage';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -76,8 +77,21 @@ interface PropertyDetailEnhancedProps {
   currentImageIndex?: number;
 }
 
-type TabId = 'overview' | 'plan' | 'financials' | 'analytics' | 'spv' | 'blockchain' | 'documents' | 'location';
+type TabId = 'overview' | 'plan' | 'financials' | 'studies' | 'insurance' | 'analytics' | 'spv' | 'blockchain' | 'documents' | 'location';
+const TAB_IDS: TabId[] = ['overview', 'plan', 'financials', 'studies', 'insurance', 'analytics', 'spv', 'blockchain', 'documents', 'location'];
+const asTab = (value: string): TabId => (TAB_IDS.includes(value as TabId) ? (value as TabId) : 'overview');
 
+
+const hasFinancialStudy = (details: any) =>
+  !!(details?.financial_study?.summary || details?.financial_study?.documents?.length);
+
+const EmptySection: React.FC<{ icon: React.ElementType; title: string; text: string }> = ({ icon: Icon, title, text }) => (
+  <Card className="p-10 text-center">
+    <Icon className="w-10 h-10 mx-auto mb-3 text-gray-400" />
+    <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">{title}</h2>
+    <p className="text-gray-500 dark:text-gray-400">{text}</p>
+  </Card>
+);
 
 export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
   property,
@@ -92,7 +106,11 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
 }) => {
   const [internalImageIndex, setInternalImageIndex] = useState(0);
   const [tokenCount, setTokenCount] = useState(1);
-  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  // The open section is in the URL, so Back returns to the previous section of
+  // this property instead of the property list (client, additional fixes #4).
+  const [activeTab, setActiveTabState] = useState<TabId>(() => asTab(readPropertyTab()));
+  useEffect(() => subscribePropertyTab((tab) => setActiveTabState(asTab(tab))), []);
+  const setActiveTab = (tab: TabId) => pushPropertyTab(tab);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [showSpvVerify, setShowSpvVerify] = useState(false);
   const [copiedContract, setCopiedContract] = useState(false);
@@ -138,6 +156,9 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
     { id: 'overview' as const, label: t('detail.tabs.overview'), icon: Eye },
     { id: 'plan' as const, label: tPlan('tab'), icon: CalendarClock },
     { id: 'financials' as const, label: t('detail.tabs.financials'), icon: BarChart3 },
+    // Their own sections, out of Financials (client, additional fixes #1)
+    { id: 'studies' as const, label: t('detail.tabs.studies'), icon: FileText },
+    { id: 'insurance' as const, label: t('detail.tabs.insurance'), icon: Shield },
     { id: 'analytics' as const, label: t('detail.tabs.analytics'), icon: Activity },
     { id: 'spv' as const, label: t('detail.tabs.spv'), icon: Briefcase },
     { id: 'blockchain' as const, label: t('detail.tabs.blockchain'), icon: Boxes },
@@ -782,11 +803,21 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <ReturnsCard details={details} />
               <ValuationCard details={details} />
-              <FinancialStudyCard details={details} />
-              <InsuranceCard details={details} />
             </div>
             <PriceTiersCard tiers={details?.price_tiers || []} />
             </div>
+          )}
+
+          {activeTab === 'studies' && (
+            hasFinancialStudy(details)
+              ? <FinancialStudyCard details={details} />
+              : <EmptySection icon={FileText} title={t('detail.tabs.studies')} text={t('detail.studiesEmpty')} />
+          )}
+
+          {activeTab === 'insurance' && (
+            details?.insurance
+              ? <InsuranceCard details={details} />
+              : <EmptySection icon={Shield} title={t('detail.tabs.insurance')} text={t('detail.insuranceEmpty')} />
           )}
 
           {activeTab === 'analytics' && (() => {

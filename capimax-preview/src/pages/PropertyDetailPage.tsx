@@ -58,6 +58,7 @@ import { KYCGate } from '../components/kyc/KYCGate';
 import { PurchaseModal } from '../components/purchase/PurchaseModal';
 import { ConstructionService } from '../services/construction/ConstructionService';
 import { useTranslation } from 'react-i18next';
+import { backToPropertyOverview, readPropertyTab, subscribePropertyTab } from '../utils/propertyTab';
 
 // Property data interfaces
 interface PropertyDetailData {
@@ -88,6 +89,9 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
   const propertyId = propertyIdProp || new URLSearchParams(window.location.search).get('id') || undefined;
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
+  // Inside a section the Back button returns to the overview first (client, additional fixes #4)
+  const [openTab, setOpenTab] = useState(readPropertyTab);
+  useEffect(() => subscribePropertyTab(setOpenTab), []);
   const [showInvestmentFlow, setShowInvestmentFlow] = useState(false);
   // Cash purchases go through the unified checkout (PropShare model);
   // installment plans keep InvestmentFlow.
@@ -306,11 +310,11 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
           <Button
             variant="ghost"
             size="md"
-            onClick={onBack}
+            onClick={openTab !== 'overview' ? backToPropertyOverview : onBack}
             className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
           >
             <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
-            {t('propertyDetail.backToProperties')}
+            {openTab !== 'overview' ? t('propertyDetail.backToOverview') : t('propertyDetail.backToProperties')}
           </Button>
           
           <div className="flex items-center gap-3">
