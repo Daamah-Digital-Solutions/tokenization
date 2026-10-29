@@ -1,0 +1,57 @@
+{
+  "list": {
+    "title": "Biens à acquérir",
+    "subtitle": "Découvrez des opportunités de propriété immobilière tokenisée",
+    "filters": "Filtres",
+    "sortBy": "Trier par",
+    "noResults": "Aucun bien ne correspond à vos critères",
+    "clearFilters": "Effacer les filtres"
+  },
+  "detail": {
+    "overview": "Vue d'ensemble",
+    "location": "Emplacement",
+    "investment": "Détails de la propriété",
+    "documents": "Documents",
+    "spvInfo": "Informations sur la SPV",
+    "updates": "Actualités",
+    "reviews": "Avis"
+  },
+  "investment": {
+    "pricePerToken": "Prix par jeton",
+    "totalTokens": "Nombre total de jetons",
+    "availableTokens": "Jetons disponibles",
+    "soldTokens": "Jetons vendus",
+    "minInvestment": "Acquisition minimale",
+    "expectedYield": "Rendement attendu",
+    "fundingProgress": "Avancement du financement",
+    "investNow": "Devenir propriétaire",
+    "addToWatchlist": "Ajouter à ma liste de suivi"
+  },
+  "types": {
+    "residential": "Résidentiel",
+    "commercial": "Commercial",
+    "industrial": "Industriel",
+    "mixedUse": "Usage mixte",
+    "land": "Terrain"
+  },
+  "status": {
+    "available": "Disponible",
+    "fullyFunded": "Entièrement financé",
+    "comingSoon": "Bientôt disponible",
+    "underConstruction": "En construction"
+  },
+  "spv": {
+    "name": "Nom de la SPV",
+    "jurisdiction": "Juridiction",
+    "formationDate": "Date de constitution",
+    "viewDocuments": "Voir les documents de la SPV"
+  },
+  "dataRoom": {
+    "title": "Salle de données",
+    "ownership": "Documents de propriété",
+    "valuation": "Rapports d'évaluation",
+    "insurance": "Polices d'assurance",
+    "financial": "Rapports financiers",
+    "legal": "Documents juridiques"
+  }
+}

@@ -1,0 +1,289 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "close": "Fermer",
+    "retry": "Réessayer",
+    "na": "N/D",
+    "tbd": "À définir",
+    "backToTop": "Retour en haut"
+  },
+  "propertyCard": {
+    "featured": "EN VEDETTE",
+    "status": {
+      "underConstruction": "En construction",
+      "incomeActive": "Revenus actifs",
+      "readyProperty": "Bien achevé",
+      "active": "Actif",
+      "available": "Disponible"
+    },
+    "types": {
+      "residential": "Résidentiel",
+      "commercial": "Commercial",
+      "industrial": "Industriel",
+      "mixed_use": "Usage mixte",
+      "land": "Terrain"
+    },
+    "property": "Bien",
+    "totalValue": "Valeur totale",
+    "perToken": "Par jeton",
+    "constructionProgress": "Avancement des travaux",
+    "fundingProgress": "Avancement du financement",
+    "reserved": "{{value}} réservé",
+    "sold": "{{value}} vendu",
+    "total": "{{value}} au total",
+    "complete": "Terminé",
+    "completion": "Achèvement",
+    "monthsShort": "{{value}} mois",
+    "installments": "Échéances",
+    "owners": "Propriétaires",
+    "monthlyIncome": "Revenu mensuel",
+    "expectedReturn": "Rendement attendu",
+    "occupancy": "Occupation",
+    "built": "Construit en",
+    "reserveWithInstallments": "Réserver en paiement échelonné",
+    "ownNow": "Devenir propriétaire",
+    "installmentPlan": "Plan de paiement échelonné sur {{value}} mois disponible",
+    "quickView": "Aperçu rapide",
+    "calculate": "Calculer",
+    "verifiedInsured": "Vérifié et assuré",
+    "activeIncome": "Revenus actifs",
+    "preConstruction": "Avant construction",
+    "quarterlyDividends": "Distributions trimestrielles",
+    "addFavorite": "Ajouter aux favoris",
+    "removeFavorite": "Retirer des favoris",
+    "share": "Partager"
+  },
+  "forms": {
+    "selectPlaceholder": "Sélectionnez une option...",
+    "showPassword": "Afficher le mot de passe",
+    "hidePassword": "Masquer le mot de passe"
+  },
+  "a11y": {
+    "skipToContent": "Aller au contenu principal",
+    "enableHighContrast": "Activer le mode contraste élevé",
+    "disableHighContrast": "Désactiver le mode contraste élevé",
+    "required": "obligatoire",
+    "valueOfMax": "{{value}} sur {{max}}",
+    "percentComplete": "{{percentage}} % effectué",
+    "progressLabel": "{{label}} : {{percentage}} % effectué",
+    "fontSize": "Taille du texte :",
+    "decreaseFont": "Réduire la taille du texte",
+    "resetFont": "Réinitialiser la taille du texte",
+    "increaseFont": "Augmenter la taille du texte",
+    "reset": "Réinitialiser",
+    "options": "Options d'accessibilité",
+    "optionsTitle": "Options d'accessibilité",
+    "connection": {
+      "good": "Bonne connexion",
+      "fair": "Connexion moyenne",
+      "poor": "Connexion faible",
+      "offline": "Aucune connexion",
+      "unknown": "État de la connexion inconnu"
+    }
+  },
+  "blockchain": {
+    "minting": "Émission des jetons...",
+    "awaiting": "En attente de confirmation sur la blockchain",
+    "viewOn": "Voir sur {{explorer}}",
+    "verifiedOn": "Vérifié sur {{explorer}}"
+  },
+  "breadcrumb": {
+    "ariaLabel": "Fil d'Ariane",
+    "home": "Accueil",
+    "signIn": "Se connecter",
+    "createAccount": "Créer un compte",
+    "dashboard": "Tableau de bord",
+    "kyc": "Vérification KYC",
+    "properties": "Biens",
+    "propertyDetails": "Détails du bien",
+    "wallet": "Portefeuille",
+    "about": "À propos",
+    "contact": "Contact",
+    "page": "Page"
+  },
+  "confirm": {
+    "confirm": "Confirmer",
+    "cancel": "Annuler",
+    "close": "Fermer"
+  },
+  "errorBoundary": {
+    "title": "Une erreur s'est produite",
+    "description": "Nous sommes désolés, un incident inattendu s'est produit. Notre équipe en a été informée et travaille à le résoudre.",
+    "detailsTitle": "Détails de l'erreur (mode développement)",
+    "componentStack": "Pile des composants",
+    "tryAgain": "Réessayer",
+    "goHome": "Retour à l'accueil",
+    "reload": "Recharger la page",
+    "persists": "Si le problème persiste, veuillez <link>contacter notre équipe support</link>"
+  },
+  "theme": {
+    "toggle": "Changer de thème"
+  },
+  "chat": {
+    "welcome": "Bonjour ! Je suis l'assistant Capimax RT. Posez-moi toutes vos questions sur nos biens, la propriété tokenisée ou la façon de commencer.",
+    "noReply": "Désolé, je n'ai pas pu formuler de réponse pour le moment. Veuillez réessayer.",
+    "networkError": "Désolé — je n'ai pas pu joindre le serveur. Veuillez vérifier votre connexion et réessayer.",
+    "open": "Ouvrir l'assistant Capimax RT",
+    "dialogLabel": "Assistant Capimax RT",
+    "title": "Assistant Capimax RT",
+    "online": "En ligne",
+    "newChatLabel": "Démarrer une nouvelle conversation",
+    "newChat": "Nouvelle conversation",
+    "closeChat": "Fermer la conversation",
+    "placeholder": "Écrivez votre message…",
+    "send": "Envoyer le message",
+    "poweredBy": "Propulsé par l'IA de Capimax RT"
+  },
+  "pwa": {
+    "title": "Installer Capimax RT",
+    "dismiss": "Ignorer la proposition d'installation",
+    "nativeBody": "Ajoutez Capimax RT à votre écran d'accueil pour une expérience plus rapide, comme une application : accès hors ligne, lancement instantané et notifications push.",
+    "benefit1": "Accès rapide depuis votre écran d'accueil",
+    "benefit2": "Plein écran, comme une application native",
+    "benefit3": "Fonctionne hors ligne grâce aux données en cache",
+    "notNow": "Plus tard",
+    "install": "Installer",
+    "iosIntro": "Installez Capimax RT sur votre iPhone :",
+    "iosStep1": "Touchez le bouton Partager <icon></icon> ci-dessous",
+    "iosStep2": "Choisissez <b>Sur l'écran d'accueil</b> <icon></icon>",
+    "iosStep3": "Touchez <b>Ajouter</b> en haut à droite",
+    "gotIt": "Compris"
+  },
+  "update": {
+    "title": "Nouvelle version disponible",
+    "reloading": "Rechargement dans {{seconds}} s pour obtenir les derniers correctifs.",
+    "reloadNow": "Recharger maintenant",
+    "later": "Plus tard"
+  },
+  "mobileNav": {
+    "ariaLabel": "Navigation mobile principale",
+    "tabs": {
+      "home": "Accueil",
+      "properties": "Biens",
+      "marketplace": "Marché",
+      "dashboard": "Tableau de bord",
+      "account": "Compte"
+    }
+  },
+  "analytics": {
+    "unavailableTitle": "Évolution du portefeuille indisponible",
+    "unavailableDesc": "Impossible de charger les données de performance du portefeuille",
+    "title": "Performance du portefeuille",
+    "gain": "Gain de {{amount}}",
+    "loss": "Perte de {{amount}}",
+    "currentValue": "Valeur actuelle",
+    "purchasedAmount": "Montant acheté",
+    "loadingPerformance": "Chargement de la performance du portefeuille...",
+    "period": {
+      "week": "cette semaine",
+      "month": "ce mois-ci",
+      "quarter": "ce trimestre",
+      "year": "cette année",
+      "default": "sur cette période"
+    }
+  },
+  "kycTracker": {
+    "status": {
+      "not_started": {
+        "title": "Vérification non commencée",
+        "description": "Effectuez votre vérification d'identité pour accéder à toutes les fonctionnalités de la plateforme",
+        "badge": "Non commencée"
+      },
+      "pending": {
+        "title": "Documents téléversés",
+        "description": "Vos documents ont été envoyés et sont en attente d'examen",
+        "badge": "En attente"
+      },
+      "processing": {
+        "title": "En cours d'examen",
+        "description": "Notre équipe examine actuellement les documents que vous avez envoyés",
+        "badge": "En cours"
+      },
+      "approved": {
+        "title": "Vérification approuvée",
+        "description": "Votre identité a bien été vérifiée. Vous avez désormais pleinement accès à la plateforme.",
+        "badge": "Approuvée"
+      },
+      "rejected": {
+        "title": "Vérification refusée",
+        "description": "Votre dossier nécessite votre attention. Veuillez consulter les commentaires et le soumettre à nouveau.",
+        "badge": "Refusée"
+      },
+      "expired": {
+        "title": "Vérification expirée",
+        "description": "Votre vérification a expiré. Veuillez recommencer le processus de vérification.",
+        "badge": "Expirée"
+      }
+    },
+    "docs": {
+      "passport": "Passeport",
+      "national_id": "Carte d'identité nationale",
+      "utility_bill": "Facture de services publics",
+      "bank_statement": "Relevé bancaire",
+      "selfie": "Selfie en direct"
+    },
+    "submitted": "Envoyé le : {{date}}",
+    "reviewed": "Examiné le : {{date}}",
+    "uploaded": "Téléversé le : {{date}}",
+    "estDays_zero": "Délai estimé : {{count}} jour",
+    "estDays_one": "Délai estimé : {{count}} jour",
+    "estDays_two": "Délai estimé : {{count}} jours",
+    "estDays_few": "Délai estimé : {{count}} jours",
+    "estDays_many": "Délai estimé : {{count}} jours",
+    "estDays_other": "Délai estimé : {{count}} jours",
+    "estHours_zero": "Délai estimé : {{count}} heure",
+    "estHours_one": "Délai estimé : {{count}} heure",
+    "estHours_two": "Délai estimé : {{count}} heures",
+    "estHours_few": "Délai estimé : {{count}} heures",
+    "estHours_many": "Délai estimé : {{count}} heures",
+    "estHours_other": "Délai estimé : {{count}} heures",
+    "soon": "Finalisation prévue prochainement",
+    "documentStatus": "Statut des documents",
+    "rejectionReason": "Motif du refus",
+    "nextSteps": "Prochaines étapes",
+    "progress": "Avancement de la vérification",
+    "stepOf": "Étape {{current}} sur {{total}}",
+    "docReview": "Examen des documents",
+    "identity": "Vérification d'identité",
+    "finalApproval": "Approbation finale",
+    "start": "Commencer la vérification",
+    "retry": "Recommencer la vérification",
+    "certificate": "Voir le certificat",
+    "contact": "Contacter le support",
+    "tip": "<b>Conseil :</b> la plupart des vérifications sont finalisées sous 24 à 48 heures. Vous recevrez une notification par e-mail à chaque changement de statut."
+  },
+  "info": {
+    "learnMore": "En savoir plus",
+    "sidebarTitle": "Découvrir Capimax RT",
+    "nav": {
+      "how-it-works": "Comment ça marche",
+      "tokenization": "Qu'est-ce que la tokenisation",
+      "spv": "Qu'est-ce qu'une SPV",
+      "data-room": "Salle de données",
+      "investor-guide": "Guide du copropriétaire",
+      "secondary-market": "Marché secondaire",
+      "risks": "Risques et informations",
+      "faq": "FAQ",
+      "property-owner": "Pour les propriétaires de biens"
+    }
+  },
+  "legal": {
+    "documents": "Documents juridiques",
+    "printTitle": "Capimax RT",
+    "printSubtitle": "Plateforme de tokenisation immobilière Capimax",
+    "lastUpdated": "Dernière mise à jour : {{date}}",
+    "footerNotice": "Ce document fait partie du cadre juridique de Capimax RT. Pour toute question, veuillez contacter <link>{{email}}</link>",
+    "nav": {
+      "disclaimer": "Avertissement de la plateforme",
+      "risk-disclosure": "Avertissement sur les risques",
+      "compliance": "Aperçu de la conformité",
+      "privacy": "Politique de confidentialité",
+      "terms": "Conditions générales",
+      "cookies": "Politique relative aux cookies",
+      "aml-kyc": "Politique AML/KYC/KYB",
+      "conflicts": "Conflits d'intérêts",
+      "complaints": "Procédure de réclamation",
+      "security": "Politique de sécurité"
+    }
+  }
+}

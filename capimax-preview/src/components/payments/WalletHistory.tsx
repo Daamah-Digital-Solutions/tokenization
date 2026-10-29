@@ -21,6 +21,7 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../design-system/forms/Input';
 import { Select } from '../design-system/forms/Select';
+import { uiLocale } from '../../utils/locale';
 
 interface WalletHistoryProps {
   className?: string;
@@ -128,7 +129,7 @@ export function WalletHistory({ className, compact = false, limit }: WalletHisto
     if (diffHours < 24) return t('time.hoursAgo', { count: diffHours });
     if (diffDays < 7) return t('time.daysAgo', { count: diffDays });
     
-    return date.toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { 
+    return date.toLocaleDateString(uiLocale(i18n.language), { 
       month: 'short', 
       day: 'numeric',
       year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined

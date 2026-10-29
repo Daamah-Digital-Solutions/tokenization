@@ -21,6 +21,7 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../design-system/forms/Input';
 import { Select } from '../design-system/forms/Select';
+import { uiLocale } from '../../utils/locale';
 
 interface TransactionTrackerProps {
   className?: string;
@@ -41,7 +42,7 @@ interface TransactionStep {
 export function TransactionTracker({ className, transactionId, compact = false }: TransactionTrackerProps) {
   const { state, updateTransaction, dispatch } = usePayment();
   const { t, i18n } = useTranslation('payments');
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
+  const dateLocale = uiLocale(i18n.language);
   const statusLabel = (s: string) => t(`status.${s}`, { defaultValue: s });
   const methodName = (m: string) => t(`methodNames.${m}`, { defaultValue: m });
   const [selectedTx, setSelectedTx] = useState<string | null>(transactionId || null);

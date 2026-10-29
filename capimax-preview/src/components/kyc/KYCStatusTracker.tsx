@@ -16,6 +16,7 @@ import {
 import { useTranslation, Trans } from 'react-i18next';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
+import { uiLocale } from '../../utils/locale';
 
 interface KYCStatusTrackerProps {
   status: 'not_started' | 'pending' | 'processing' | 'approved' | 'rejected' | 'expired';
@@ -132,7 +133,7 @@ export const KYCStatusTracker: React.FC<KYCStatusTrackerProps> = ({
   };
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat(i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US', {
+    return new Intl.DateTimeFormat(uiLocale(i18n.language), {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

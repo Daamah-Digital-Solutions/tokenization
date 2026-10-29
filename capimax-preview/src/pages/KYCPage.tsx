@@ -27,6 +27,7 @@ import {
   type KYCStatusPayload,
   type KYCUiState,
 } from '../services/user/KYCService';
+import { baseLanguage } from '../utils/locale';
 
 /**
  * Identity verification page (client round 3, items 3–7).
@@ -91,9 +92,9 @@ export const KYCPage: React.FC = () => {
   };
 
   const fmtDate = (iso?: string | null) =>
-    iso ? new Date(iso).toLocaleDateString(isAr ? 'ar' : 'en', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+    iso ? new Date(iso).toLocaleDateString(baseLanguage(lang), { year: 'numeric', month: 'long', day: 'numeric' }) : '';
   const fmtMoney = (amount?: string | null) =>
-    amount ? new Intl.NumberFormat(isAr ? 'ar' : 'en', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(amount)) : '';
+    amount ? new Intl.NumberFormat(baseLanguage(lang), { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Number(amount)) : '';
 
   const uiState = deriveKYCUiState(payload);
   const style = STATE_STYLE[uiState];

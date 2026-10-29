@@ -39,6 +39,7 @@ import { BuyOrderModal } from './BuyOrderModal';
 import { CreateListingModal } from './CreateListingModal';
 import { useRouter } from '../../utils/router';
 import { useTranslation } from 'react-i18next';
+import { uiLocale } from '../../utils/locale';
 
 interface SecondaryMarketDashboardProps {
   className?: string;
@@ -611,7 +612,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
   currentUser
 }) => {
   const { t, i18n } = useTranslation('market');
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
+  const dateLocale = uiLocale(i18n.language);
   const isOwnListing = currentUser?.id === listing.seller.id;
   const isOpen = listing.status === 'active' || listing.status === 'partially_filled';
   const fillPercentage = ((listing.tokens_offered - listing.tokens_remaining) / listing.tokens_offered) * 100;

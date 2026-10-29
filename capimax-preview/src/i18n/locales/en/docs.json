@@ -251,7 +251,8 @@
       "transactions": "Payments, deposits, dividends, withdrawals and market trades.",
       "investments": "Every investment and your installment plans.",
       "holdings": "The properties you own, your shares, ownership and value."
-    }
+    },
+    "french": "French"
   },
   "cert": {
     "statement": "This certifies that {{name}} is the registered holder of {{units}} share(s) — {{pct}} of the property — in {{property}}, held through {{spv}}.",

@@ -6,6 +6,7 @@ import { CommissionCalculator } from './CommissionCalculator';
 import { MarketingMaterials } from './MarketingMaterials';
 import { PerformanceAnalytics } from './PerformanceAnalytics';
 import { useTranslation } from 'react-i18next';
+import { uiLocale } from '../../utils/locale';
 
 type TabType = 'overview' | 'commissions' | 'referrals' | 'marketing' | 'analytics';
 
@@ -35,7 +36,7 @@ export const BrokerDashboard: React.FC = () => {
   };
 
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US', {
+    return new Date(dateString).toLocaleDateString(uiLocale(i18n.language), {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

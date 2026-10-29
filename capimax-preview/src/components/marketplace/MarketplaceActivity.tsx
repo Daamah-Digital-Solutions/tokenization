@@ -15,6 +15,7 @@ import { Badge } from '../ui/Badge';
 import { cn } from '../../utils/cn';
 import type { MarketplaceActivity as ActivityType } from '../../services/marketplace/MarketplaceService';
 import { useTranslation } from 'react-i18next';
+import { uiLocale } from '../../utils/locale';
 
 interface MarketplaceActivityProps {
   activities: ActivityType[];
@@ -89,7 +90,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity, isFirst, isLast }
     if (diffInMinutes < 60) return t('activity.minutesAgo', { value: diffInMinutes });
     if (diffInHours < 24) return t('activity.hoursAgo', { value: diffInHours });
     if (diffInDays < 7) return t('activity.daysAgo', { value: diffInDays });
-    return date.toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : undefined);
+    return date.toLocaleDateString(uiLocale(i18n.language));
   };
 
   return (

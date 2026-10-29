@@ -606,6 +606,597 @@ const faqSections: FAQSection[] = [
   }
 ];
 
+const faqSectionsFr: FAQSection[] = [
+  {
+    title: "FAQ — Propriété et fonctionnement",
+    items: [
+      {
+        question: "1. Qu'est-ce que la tokenisation immobilière ?",
+        answer: (
+          <div>
+            <p>La tokenisation immobilière consiste à :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Convertir la valeur économique d'un bien en jetons numériques</li>
+              <li>Chaque jeton représente une participation fractionnée ou un droit financier défini</li>
+              <li>Les jetons sont émis au moyen de contrats intelligents documentés</li>
+            </ul>
+            <p className="mt-2">La tokenisation permet :</p>
+            <ul className="list-disc ps-5 mt-1 space-y-1">
+              <li>La propriété fractionnée</li>
+              <li>Une entrée et une sortie facilitées</li>
+              <li>Une liquidité supérieure à celle d'un achat immobilier traditionnel</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "2. Quels types de biens sont disponibles sur la plateforme ?",
+        answer: (
+          <div>
+            <p>La plateforme prend en charge un large éventail d'actifs immobiliers, notamment :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Biens résidentiels</li>
+              <li>Biens commerciaux</li>
+              <li>Immeubles de bureaux</li>
+              <li>Actifs hôteliers et touristiques</li>
+              <li>Projets de promotion immobilière</li>
+              <li>Biens à usage mixte</li>
+            </ul>
+            <p className="mt-2">Les actifs sont proposés dans plusieurs villes et pays afin de renforcer la diversification.</p>
+          </div>
+        )
+      },
+      {
+        question: "3. Qu'est-ce que le modèle de revenus ?",
+        answer: (
+          <div>
+            <p>Ce modèle s'applique aux biens :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Achevés</li>
+              <li>Loués</li>
+              <li>Générateurs de revenus</li>
+            </ul>
+            <p className="mt-2">Les propriétaires perçoivent :</p>
+            <ul className="list-disc ps-5 mt-1 space-y-1">
+              <li>Des rendements périodiques (mensuels ou trimestriels)</li>
+              <li>Distribués automatiquement via des contrats intelligents</li>
+              <li>Pouvant être retirés ou réinvestis</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "4. Qu'est-ce que le modèle de développement ?",
+        answer: (
+          <div>
+            <p>Ce modèle de propriété repose sur :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Une entrée en phase initiale à des prix plus bas</li>
+              <li>L'absence de revenus périodiques</li>
+              <li>Une plus-value en capital à travers des phases de développement structurées</li>
+            </ul>
+            <p className="mt-2">Il comprend :</p>
+            <ul className="list-disc ps-5 mt-1 space-y-1">
+              <li>Des tours de prix prédéfinis</li>
+              <li>Des calendriers fixes</li>
+              <li>Des plans de développement documentés</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "5. Qu'est-ce que le modèle de paiement échelonné ?",
+        answer: (
+          <div>
+            <p>Ce modèle permet aux propriétaires de :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Acquérir des jetons dès la phase initiale</li>
+              <li>Payer par échéances structurées</li>
+              <li>Sans intérêts bancaires</li>
+            </ul>
+            <p className="mt-2">Caractéristiques principales :</p>
+            <ul className="list-disc ps-5 mt-1 space-y-1">
+              <li>Flexibilité financière</li>
+              <li>Sortie possible à tout moment</li>
+              <li>Transfert des obligations restantes à un nouvel acheteur en cas de revente</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "6. La plateforme opère-t-elle à l'échelle mondiale ?",
+        answer: (
+          <div>
+            <p>Oui. La plateforme opère à l'échelle mondiale en :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Créant une SPV distincte pour chaque pays</li>
+              <li>Respectant la réglementation locale</li>
+              <li>Empêchant tout mélange d'actifs entre pays</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "7. Le cadre mondial est-il juridiquement encadré ?",
+        answer: (
+          <div>
+            <p>Oui. Le cadre respecte :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Le droit local des sociétés et le droit immobilier</li>
+              <li>La réglementation en matière de propriété</li>
+              <li>Les règles de lutte contre le blanchiment d'argent (AML)</li>
+              <li>Les exigences de connaissance du client (KYC)</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "8. Les actifs et les documents sont-ils examinés et vérifiés ?",
+        answer: (
+          <div>
+            <p>Oui. Chaque actif fait l'objet :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>D'une évaluation indépendante</li>
+              <li>D'une due diligence juridique complète</li>
+              <li>D'une vérification des documents (titres de propriété, permis, contrats)</li>
+              <li>D'un examen technique et opérationnel</li>
+            </ul>
+            <p className="mt-2">Les actifs ne sont proposés qu'après approbation complète.</p>
+          </div>
+        )
+      },
+      {
+        question: "9. Comment accéder aux détails, aux documents et au contrat intelligent pour les vérifier ?",
+        answer: "Tous les détails du bien, les documents, le contrat intelligent et les rapports sont disponibles sur la page du bien. Vous pouvez les vérifier à l'aide des liens et des méthodes de vérification fournis."
+      },
+      {
+        question: "10. Que deviennent les jetons après l'achat ?",
+        answer: "Après l'achat, les jetons ainsi que les documents relatifs au bien sont transférés dans votre portefeuille sur la plateforme. Vous pouvez accéder à votre portefeuille à tout moment pour vérifier les jetons et les documents."
+      },
+      {
+        question: "11. Qui gère le bien et distribue les rendements ?",
+        answer: (
+          <div>
+            <p>La gestion du bien est assurée par :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Des sociétés professionnelles de gestion d'actifs</li>
+              <li>Des promoteurs agréés</li>
+              <li>Des gestionnaires immobiliers habilités</li>
+            </ul>
+            <p className="mt-2">Les rendements :</p>
+            <ul className="list-disc ps-5 mt-1 space-y-1">
+              <li>Transitent par des comptes dédiés à chaque actif</li>
+              <li>Sont distribués automatiquement selon les termes du contrat intelligent</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "12. Puis-je vendre mes jetons sur le marché secondaire ?",
+        answer: (
+          <div>
+            <p><strong>Jetons de biens en développement :</strong> Oui, vous pouvez les vendre à tout moment. La décision vous appartient : sortir de manière anticipée ou attendre des rendements potentiellement plus élevés lors des tours suivants, selon le bien et son plan de développement.</p>
+            <p className="mt-2"><strong>Jetons de biens en construction avec plan de paiement échelonné :</strong> Oui, vous pouvez vendre le jeton à tout moment, conformément aux règles du marché secondaire et aux mécanismes de sortie disponibles.</p>
+            <p className="mt-2"><strong>Jetons de biens prêts à habiter :</strong> Oui, le jeton peut être vendu à tout moment sur le marché secondaire.</p>
+          </div>
+        )
+      },
+      {
+        question: "13. Tous les frais sont-ils transparents ?",
+        answer: (
+          <div>
+            <p>Oui, tous les frais sont entièrement transparents. La ventilation complète des frais de chaque bien figure sur la page du bien. En outre, l'ensemble des informations financières et des frais est documenté dans le livre blanc du bien, parmi les documents du bien. Cela comprend :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Les frais de tokenisation et de mise en ligne à la charge du propriétaire du bien</li>
+              <li>Les frais liés à la SPV</li>
+              <li>Les frais à la charge des propriétaires, tels que les frais d'achat, les frais de gestion annuels, les frais de sortie ou tous autres frais applicables, quelle qu'en soit la dénomination</li>
+            </ul>
+            <p className="mt-2">Il n'y a pas de frais cachés, et la plateforme garantit une clarté totale pour toutes les parties.</p>
+          </div>
+        )
+      },
+      {
+        question: "14. Qu'est-ce qu'une SPV et quel est son rôle au sein de la plateforme Capimax RT ?",
+        answer: (
+          <div>
+            <p>Une SPV (Special Purpose Vehicle, ou société ad hoc) est une entité juridique indépendante constituée dans un but unique et déterminé.</p>
+            <p className="mt-2">Au sein de la plateforme Capimax RT, ce but consiste à :</p>
+            <ul className="list-disc ps-5 mt-1 space-y-1">
+              <li>Détenir juridiquement un actif immobilier déterminé et gérer les droits des propriétaires liés à cet actif, dans une structure juridiquement séparée.</li>
+            </ul>
+            <p className="mt-2">Chaque bien proposé sur la plateforme est rattaché à une SPV dédiée. Les actifs et les passifs d'un bien ne sont jamais confondus avec ceux d'un autre.</p>
+          </div>
+        )
+      },
+      {
+        question: "15. Quel est le rôle de la SPV au sein de la plateforme ?",
+        answer: (
+          <div>
+            <p>La SPV joue un rôle central dans la structuration juridique de la propriété immobilière tokenisée. Ses responsabilités comprennent :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Détenir juridiquement l'actif immobilier ou les droits économiques qui y sont attachés</li>
+              <li>Émettre les jetons immobiliers représentant les parts des propriétaires</li>
+              <li>Percevoir les revenus générés par le bien (revenus locatifs / produits de cession)</li>
+              <li>Distribuer les rendements aux propriétaires conformément au Contrat de propriété</li>
+              <li>Isoler les risques, en veillant à ce que les passifs ne se transmettent ni d'un bien à l'autre, ni à la plateforme elle-même</li>
+              <li>Assurer la continuité juridique, même si la plateforme cesse ses activités</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "16. Quelle est la relation entre la SPV et le contrat intelligent ?",
+        answer: (
+          <div>
+            <p>Le Contrat de propriété de la SPV est juridiquement lié au contrat intelligent.</p>
+            <p className="mt-2">Le contrat intelligent exécute :</p>
+            <ul className="list-disc ps-5 mt-1 space-y-1">
+              <li>L'enregistrement de la propriété</li>
+              <li>La distribution des rendements</li>
+              <li>Les conditions de sortie</li>
+            </ul>
+            <p className="mt-2">Parallèlement, la propriété juridique et les droits des propriétaires restent garantis au sein de la SPV, en dehors de la blockchain.</p>
+            <p className="mt-2">Le contrat intelligent est un mécanisme d'exécution ; la SPV est le cadre de protection juridique.</p>
+          </div>
+        )
+      },
+      {
+        question: "17. Que deviennent les fonds des propriétaires si la plateforme ferme ?",
+        answer: (
+          <div>
+            <p>Si la plateforme Capimax RT est suspendue ou fermée pour quelque raison que ce soit :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Les fonds des propriétaires ne sont pas perdus</li>
+              <li>Les jetons restent la propriété de leur détenteur</li>
+              <li>La SPV reste juridiquement active</li>
+              <li>L'actif immobilier demeure la propriété de la SPV</li>
+              <li>Les droits des propriétaires restent juridiquement opposables et peuvent être gérés en dehors de la plateforme</li>
+            </ul>
+            <p className="mt-2">Les issues possibles comprennent :</p>
+            <ul className="list-disc ps-5 mt-1 space-y-1">
+              <li>La nomination d'un nouveau gestionnaire d'actifs ou gestionnaire immobilier</li>
+              <li>La liquidation de l'actif et la distribution du produit de la vente</li>
+              <li>La poursuite de la distribution des rendements conformément au Contrat de propriété</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "18. Pourquoi recourir au modèle de la SPV plutôt qu'à la propriété directe du bien ?",
+        answer: (
+          <div>
+            <p>Le recours à une SPV offre :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Une séparation juridique complète entre la plateforme, les propriétaires et le bien sous-jacent</li>
+              <li>Une conformité réglementaire facilitée</li>
+              <li>La protection des propriétaires contre le risque opérationnel</li>
+              <li>La possibilité d'une propriété transfrontalière</li>
+              <li>Un traitement fiscal et juridique plus clair</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "19. Quels sont les principaux avantages d'une SPV ?",
+        answer: (
+          <div>
+            <p>Les principaux avantages sont :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Une solide protection juridique des propriétaires</li>
+              <li>L'isolement des risques entre les actifs</li>
+              <li>Une capacité d'opérer à l'échelle mondiale</li>
+              <li>Une définition claire des droits et des obligations</li>
+              <li>Une intégration juridique avec les contrats intelligents</li>
+              <li>Une sortie et un transfert de propriété flexibles</li>
+              <li>Une auditabilité et une préparation réglementaire</li>
+            </ul>
+            <p className="mt-2">Oui, chaque bien est représenté par une SPV entièrement indépendante afin de garantir :</p>
+            <ul className="list-disc ps-5 mt-1 space-y-1">
+              <li>L'absence de mélange des fonds</li>
+              <li>L'absence de contagion des risques entre les actifs</li>
+              <li>Une transparence totale des rendements</li>
+              <li>Un audit et une comptabilité simplifiés</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "20. La SPV est-elle immatriculée et réglementée ?",
+        answer: (
+          <div>
+            <p>Oui. Les SPV sont constituées dans des juridictions juridiquement adaptées (comme le Wyoming, aux États-Unis) et sont soumises :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Au droit des sociétés</li>
+              <li>À la réglementation fiscale</li>
+              <li>Aux Contrats de propriété signés</li>
+              <li>À un contrôle juridique continu</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "21. Quel est le rôle du contrat intelligent ?",
+        answer: (
+          <div>
+            <p>Le contrat intelligent constitue le système central en :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Verrouillant les conditions de propriété</li>
+              <li>Enregistrant la propriété numérique</li>
+              <li>Distribuant les rendements</li>
+              <li>Gérant les sorties</li>
+              <li>Empêchant toute modification non autorisée</li>
+            </ul>
+            <p className="mt-2">Les contrats intelligents sont :</p>
+            <ul className="list-disc ps-5 mt-1 space-y-1">
+              <li>Transparents</li>
+              <li>Infalsifiables</li>
+              <li>Contraignants pour toutes les parties</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "22. La plateforme est-elle autorisée à proposer et à tokeniser des biens dans n'importe quel pays du monde ?",
+        answer: (
+          <div>
+            <p>Oui, la plateforme peut proposer des biens dans différents pays, sous réserve du strict respect des lois locales d'enregistrement immobilier de chaque juridiction concernée.</p>
+            <h4 className="font-semibold mt-3 mb-1">Fonctionnement de notre modèle :</h4>
+            <ol className="list-decimal ps-5 space-y-2">
+              <li><strong>Enregistrement juridique du bien :</strong> Le bien est officiellement enregistré dans le pays où il est physiquement situé, conformément au registre foncier et au droit immobilier locaux. Cet enregistrement constitue la preuve juridique principale de la propriété.</li>
+              <li><strong>Structure juridique (SPV basée aux États-Unis) :</strong> Une société ad hoc (SPV) est constituée aux États-Unis pour structurer et gérer les droits économiques attachés à l'actif. Les droits des propriétaires sont régis par le droit américain des sociétés et par des pactes d'actionnaires formels.</li>
+              <li><strong>Tokenisation et contrats intelligents (États-Unis) :</strong> Les jetons numériques et les contrats intelligents sont émis et exécutés dans un cadre juridique et technique réglementé aux États-Unis, ce qui garantit une documentation claire des droits de propriété, la distribution automatisée des rendements, des mécanismes de transfert contrôlés et une transparence opérationnelle totale.</li>
+            </ol>
+          </div>
+        )
+      },
+      {
+        question: "23. Les droits des propriétaires sont-ils protégés ?",
+        answer: (
+          <div>
+            <p>Oui. La protection repose sur trois niveaux clairement définis :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Une propriété du bien officiellement enregistrée dans le pays de l'actif</li>
+              <li>Une SPV basée aux États-Unis régissant les droits des propriétaires en vertu du droit des sociétés</li>
+              <li>Des accords juridiquement contraignants, appuyés par une infrastructure technologique sécurisée</li>
+            </ul>
+            <p className="mt-2">Dans ce modèle, la blockchain sert de couche opérationnelle et d'enregistrement, tandis que la protection juridique repose sur l'enregistrement officiel du bien et sur une entité juridique américaine structurée.</p>
+          </div>
+        )
+      },
+      {
+        question: "24. Qu'est-ce que cela signifie pour les propriétaires ?",
+        answer: (
+          <div>
+            <ul className="list-disc ps-5 space-y-1">
+              <li>L'actif immobilier sous-jacent est juridiquement enregistré.</li>
+              <li>Les droits des propriétaires sont définis contractuellement au sein d'une structure de SPV américaine.</li>
+              <li>La gestion et les transferts de propriété s'effectuent au moyen d'un système numérique transparent.</li>
+            </ul>
+            <p className="mt-2">Ainsi, la plateforme ne repose pas sur des environnements non réglementés ; elle associe : droit immobilier local + structuration juridique américaine + infrastructure technologique réglementée.</p>
+          </div>
+        )
+      }
+    ]
+  },
+  {
+    title: "FAQ juridique",
+    items: [
+      {
+        question: "1. Quel est le cadre juridique dans lequel opère la plateforme ?",
+        answer: (
+          <div>
+            <p>La plateforme opère dans un cadre juridique structuré reposant sur :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>La constitution d'entités juridiques indépendantes (sociétés ad hoc - SPV) pour chaque actif immobilier ou projet de propriété.</li>
+              <li>La soumission de chaque SPV au droit de la juridiction dans laquelle se situe l'actif sous-jacent.</li>
+              <li>Le plein respect de la réglementation en matière de lutte contre le blanchiment d'argent (AML) et de connaissance du client (KYC).</li>
+              <li>Une séparation juridique complète entre les actifs opérationnels de la plateforme et les actifs des propriétaires.</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "2. Mon achat est-il lié à la plateforme ou à l'actif sous-jacent ?",
+        answer: (
+          <div>
+            <p>Votre achat est juridiquement lié à l'actif immobilier ou au projet de propriété sous-jacent par :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Votre participation dans la SPV qui détient l'actif.</li>
+              <li>Ou par des jetons de propriété représentant des droits économiques et financiers définis sur cet actif.</li>
+            </ul>
+            <p className="mt-2">La plateforme agit uniquement en tant qu'intermédiaire technique et opérationnel et ne détient ni ne conserve les fonds des propriétaires.</p>
+          </div>
+        )
+      },
+      {
+        question: "3. Que se passe-t-il si la plateforme ferme ou cesse ses activités ?",
+        answer: (
+          <div>
+            <p>Si la plateforme venait à fermer pour quelque raison que ce soit (réglementaire, commerciale ou stratégique) :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Les fonds des propriétaires ne sont pas perdus.</li>
+              <li>Tous les actifs restent juridiquement la propriété de la SPV concernée.</li>
+              <li>Les propriétaires conservent l'intégralité de leurs droits juridiques sur leurs participations, sur tout rendement acquis ou futur, ainsi que leurs droits de vente ou de sortie conformément aux conditions de l'actif.</li>
+            </ul>
+            <p className="mt-2">L'une des mesures suivantes sera mise en œuvre :</p>
+            <ul className="list-disc ps-5 mt-1 space-y-1">
+              <li>Nomination d'un gestionnaire de remplacement.</li>
+              <li>Nomination d'un fiduciaire ou d'un administrateur légal.</li>
+              <li>Transfert de la gestion des actifs à une autre plateforme agréée ou à une autre entité juridique.</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "4. La plateforme peut-elle disposer de mes fonds ou de mes actifs, ou en prendre le contrôle ?",
+        answer: (
+          <div>
+            <p>Non.</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Les fonds des propriétaires ne figurent pas au bilan opérationnel de la plateforme.</li>
+              <li>Les actifs sont détenus par des SPV indépendantes.</li>
+              <li>La plateforme n'a aucun droit légal de vendre les actifs, de les nantir ou de les grever, ni d'en disposer.</li>
+            </ul>
+            <p className="mt-2">Sauf dans le strict respect des contrats applicables et des autorisations réglementaires requises.</p>
+          </div>
+        )
+      },
+      {
+        question: "5. La plateforme est-elle responsable des fluctuations des prix du marché immobilier ?",
+        answer: (
+          <div>
+            <p>La plateforme ne garantit aucun bénéfice et n'assume pas le risque du marché immobilier.</p>
+            <p className="mt-2">Toutefois, la plateforme applique plusieurs mécanismes d'atténuation des risques, notamment :</p>
+            <ul className="list-disc ps-5 mt-1 space-y-1">
+              <li>Diversification géographique.</li>
+              <li>Diversification par type d'actif (résidentiel, commercial, hôtellerie, etc.).</li>
+              <li>Évaluation professionnelle indépendante.</li>
+              <li>Due diligence juridique et technique.</li>
+              <li>Modèles de construction de portefeuilles diversifiés.</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "6. Quel est le statut juridique des jetons émis ?",
+        answer: (
+          <div>
+            <p>Les jetons émis par l'intermédiaire de la plateforme :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Ne sont pas des cryptomonnaies spéculatives.</li>
+              <li>Représentent des droits financiers, des intérêts économiques ou des droits d'usage / de participation aux bénéfices.</li>
+              <li>Sont régis par les conditions d'émission et la documentation contractuelle propres à chaque actif.</li>
+              <li>Ne représentent ni une participation au capital ni un droit de propriété sur la plateforme elle-même.</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "7. Puis-je transférer mes jetons ou mes participations vers un portefeuille externe tel que MetaMask ?",
+        answer: (
+          <div>
+            <p>Cela dépend du type d'actif, de la structure du jeton et du cadre réglementaire applicable.</p>
+            <p className="mt-2">Lorsque cela est autorisé :</p>
+            <ul className="list-disc ps-5 mt-1 space-y-1">
+              <li>Les jetons peuvent être transférés vers des portefeuilles externes compatibles.</li>
+              <li>Les propriétaires conservent le contrôle total de leurs jetons.</li>
+            </ul>
+            <p className="mt-2">La négociation est limitée aux marchés secondaires approuvés ou aux plateformes agréées conformes à la législation applicable.</p>
+          </div>
+        )
+      },
+      {
+        question: "8. Puis-je vendre ma participation en dehors de la plateforme ?",
+        answer: (
+          <div>
+            <p><strong>Actuellement :</strong></p>
+            <ul className="list-disc ps-5 mt-1 space-y-1">
+              <li>Via le marché secondaire approuvé.</li>
+              <li>Via le marché des fournisseurs de liquidité (LP) de la plateforme.</li>
+              <li>Ou avec l'accord juridique et réglementaire préalable.</li>
+            </ul>
+            <p className="mt-2"><strong>À l'avenir :</strong> Sur des plateformes d'échange de jetons.</p>
+            <p className="mt-2">Ceci afin de garantir la conformité réglementaire, de protéger les autres propriétaires et d'empêcher toute négociation illicite ou non conforme.</p>
+          </div>
+        )
+      },
+      {
+        question: "9. Que se passe-t-il si l'une des parties concernées (Propriétaire, Promoteur, Courtier) devient insolvable ?",
+        answer: (
+          <div>
+            <p>Chaque partie opère dans un cadre contractuel distinct.</p>
+            <p className="mt-2">L'insolvabilité de l'une des parties :</p>
+            <ul className="list-disc ps-5 mt-1 space-y-1">
+              <li>N'affecte pas directement les droits de propriété des propriétaires.</li>
+              <li>Déclenche les mécanismes de protection contractuels.</li>
+              <li>Permet, si nécessaire, le remplacement de la partie concernée.</li>
+            </ul>
+            <p className="mt-2">Les actifs restent juridiquement détenus par la SPV.</p>
+          </div>
+        )
+      },
+      {
+        question: "10. Comment les litiges sont-ils réglés ?",
+        answer: (
+          <div>
+            <p>Les litiges sont réglés selon les modalités suivantes :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Conformément au droit applicable de la juridiction de la SPV.</li>
+              <li>Ou par voie d'arbitrage commercial international.</li>
+              <li>Ou devant les juridictions compétentes, comme précisé dans les accords concernés.</li>
+            </ul>
+            <p className="mt-2">Ces modalités sont clairement définies dans les Conditions générales, les Contrats de propriété et la documentation d'offre.</p>
+          </div>
+        )
+      },
+      {
+        question: "11. La plateforme est-elle soumise à une supervision réglementaire ?",
+        answer: (
+          <div>
+            <p>Oui. Selon son périmètre d'activité, la plateforme est soumise :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Aux lois locales et internationales.</li>
+              <li>Aux exigences de conformité financière.</li>
+              <li>Aux autorités de régulation compétentes en matière d'actifs numériques ou de propriété immobilière.</li>
+            </ul>
+            <p className="mt-2">La plateforme met également à jour régulièrement ses politiques juridiques et de conformité et s'adapte aux évolutions réglementaires futures.</p>
+          </div>
+        )
+      },
+      {
+        question: "12. Les conditions de propriété peuvent-elles être modifiées après la souscription ?",
+        answer: (
+          <div>
+            <p>Non. Les conditions de propriété d'un actif ne peuvent pas être modifiées après la souscription.</p>
+            <p className="mt-2">Toutes les conditions sont fixes, documentées et juridiquement contraignantes pour toutes les parties.</p>
+            <p className="mt-2">Toute modification future s'applique uniquement aux actifs nouvellement proposés et n'affecte pas les achats existants.</p>
+          </div>
+        )
+      },
+      {
+        question: "13. Qui assume la responsabilité juridique finale ?",
+        answer: (
+          <div>
+            <ul className="list-disc ps-5 space-y-1">
+              <li>Chaque SPV assume la responsabilité juridique de son actif sous-jacent.</li>
+              <li>La responsabilité des propriétaires est strictement limitée au montant versé.</li>
+              <li>La plateforme est responsable uniquement de la technologie, des opérations et de la gestion de la plateforme.</li>
+              <li>La plateforme n'assume aucune responsabilité au-delà de son rôle juridiquement défini.</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "14. Mon achat est-il juridiquement protégé en cas d'expansion mondiale ?",
+        answer: (
+          <div>
+            <p>Oui.</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Une SPV distincte est constituée pour chaque pays.</li>
+              <li>Plein respect des lois locales de chaque juridiction.</li>
+              <li>Aucun mélange d'actifs entre pays.</li>
+              <li>Des rapports transparents, propres à chaque juridiction.</li>
+            </ul>
+          </div>
+        )
+      },
+      {
+        question: "15. Ce cadre juridique peut-il être modifié à l'avenir ?",
+        answer: (
+          <div>
+            <p>Oui, à condition que :</p>
+            <ul className="list-disc ps-5 mt-2 space-y-1">
+              <li>Les modifications soient exigées par de nouvelles lois ou réglementations.</li>
+              <li>Les droits existants des propriétaires ne soient pas affectés défavorablement.</li>
+              <li>Une transparence totale et une information préalable soient assurées.</li>
+            </ul>
+          </div>
+        )
+      }
+    ]
+  }
+];
+
 const faqSectionsAr: FAQSection[] = [
   {
     title: "الأسئلة الشائعة حول التملّك والتشغيل",
@@ -1200,7 +1791,8 @@ const faqSectionsAr: FAQSection[] = [
 export const FAQPage: React.FC = () => {
   const { t, i18n } = useTranslation('pages');
   const isAr = (i18n.language || 'en').startsWith('ar');
-  const sections = isAr ? faqSectionsAr : faqSections;
+  const isFr = (i18n.language || 'en').startsWith('fr');
+  const sections = isAr ? faqSectionsAr : isFr ? faqSectionsFr : faqSections;
   const [searchTerm, setSearchTerm] = useState('');
   const [openIndex, setOpenIndex] = useState<string | null>(null);
 

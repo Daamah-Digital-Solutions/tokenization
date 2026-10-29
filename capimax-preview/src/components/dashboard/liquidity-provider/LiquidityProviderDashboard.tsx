@@ -14,6 +14,7 @@ import {
   type LPExitRequest,
   type LPProfile,
 } from '../../../services/liquidity-provider/LiquidityProviderService';
+import { baseLanguage } from '../../../utils/locale';
 
 /**
  * Liquidity-provider dashboard (client round 3, #9). LP accounts used to
@@ -34,7 +35,7 @@ const STATUS_STYLE: Record<string, string> = {
 
 const useFormat = () => {
   const { i18n } = useTranslation();
-  const locale = (i18n.language || 'en').startsWith('ar') ? 'ar' : 'en';
+  const locale = baseLanguage(i18n.language);
   return {
     money: (v: string | number | null | undefined) =>
       new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD', maximumFractionDigits: 2 })

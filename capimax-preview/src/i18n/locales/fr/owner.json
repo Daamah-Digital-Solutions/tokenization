@@ -1,0 +1,172 @@
+{
+  "submit": {
+    "title": "Soumettre un bien",
+    "subtitle": "Présentez-nous le bien et joignez ses documents. Notre équipe examine chaque soumission.",
+    "hiddenNotice": "Votre bien ne sera PAS visible du public lors de sa soumission. Il est d'abord examiné par l'équipe de la plateforme et n'est mis en ligne qu'après avoir été approuvé et publié par un administrateur.",
+    "sections": {
+      "basic": "Informations de base",
+      "tokenization": "Tokenisation",
+      "location": "Emplacement",
+      "specifics": "Caractéristiques du bien",
+      "photos": "Photos",
+      "documents": "Documents"
+    },
+    "fields": {
+      "title": "Titre",
+      "titlePlaceholder": "ex. : Marina Tower 12",
+      "description": "Description",
+      "descriptionPlaceholder": "Décrivez le bien, son emplacement et ce qui le rend attractif.",
+      "type": "Type",
+      "category": "Catégorie",
+      "tokenPrice": "Prix de la part (jeton) (USD)",
+      "totalTokens": "Nombre total de parts (jetons)",
+      "totalValue": "Valeur totale (USD)",
+      "totalValueHint": "Calculée à partir du prix de la part × le nombre total de parts. Ajustez si nécessaire.",
+      "expectedReturn": "Rendement annuel attendu (%)",
+      "rentalYield": "Rendement locatif (%)",
+      "address": "Adresse",
+      "city": "Ville",
+      "state": "État / Région",
+      "country": "Pays",
+      "size": "Superficie (m²)",
+      "yearBuilt": "Année de construction",
+      "completionDate": "Date d'achèvement prévue"
+    },
+    "types": {
+      "residential": "Résidentiel",
+      "commercial": "Commercial",
+      "industrial": "Industriel",
+      "mixed_use": "Usage mixte",
+      "land": "Terrain"
+    },
+    "categories": {
+      "ready_property": "Achevé (générant des revenus)",
+      "under_construction": "En construction"
+    },
+    "photos": {
+      "hint": "Ajoutez jusqu'à {{max}} photos (JPG/PNG, 8 Mo max. chacune). La première sert d'image de couverture.",
+      "add": "Ajouter une photo",
+      "cover": "Couverture",
+      "remove": "Retirer la photo",
+      "errors": {
+        "max": "Vous pouvez joindre jusqu'à {{max}} photos.",
+        "notImage": "« {{name}} » n'est pas une image.",
+        "tooLarge": "« {{name}} » dépasse 8 Mo."
+      }
+    },
+    "documents": {
+      "intro": "Joignez les documents relatifs au bien et à son propriétaire. Ils ne sont consultés que par l'équipe d'examen — l'administrateur décide de ce qui est présenté aux acheteurs.",
+      "formats": "PDF, JPG, PNG ou WEBP · 15 Mo max. chacun",
+      "required": "Obligatoire",
+      "optional": "Facultatif",
+      "requiredUnderConstruction": "Obligatoire pour les biens en construction",
+      "choose": "Choisir un fichier",
+      "addMore": "Ajouter un fichier",
+      "replace": "Remplacer",
+      "remove": "Retirer",
+      "missingRequired": "Veuillez joindre les documents obligatoires : {{list}}",
+      "badType": "« {{name}} » n'est pas un type de fichier pris en charge.",
+      "tooLarge": "« {{name}} » dépasse 15 Mo.",
+      "types": {
+        "ownership": "Titre de propriété / justificatif de propriété",
+        "owner_identity": "Pièce d'identité du propriétaire ou du promoteur",
+        "company_registration": "Immatriculation de la société",
+        "permits": "Permis de construire et autorisations",
+        "valuation": "Rapport d'évaluation",
+        "insurance": "Police d'assurance",
+        "financial": "Étude financière / de faisabilité",
+        "other": "Autres justificatifs"
+      },
+      "descs": {
+        "ownership": "Titre de propriété, contrat de vente ou extrait du registre prouvant la propriété.",
+        "owner_identity": "Passeport ou carte d'identité nationale du propriétaire / du signataire autorisé.",
+        "company_registration": "Extrait d'immatriculation au registre du commerce si le propriétaire ou le promoteur est une société.",
+        "permits": "Permis de construire, licences et autorisations.",
+        "valuation": "Dernier rapport d'évaluation établi par un expert agréé.",
+        "insurance": "Police d'assurance en cours et couverture.",
+        "financial": "Étude financière, étude de faisabilité ou prévisions.",
+        "other": "Plans, relevés ou tout autre document utile."
+      }
+    },
+    "buttons": {
+      "cancel": "Annuler",
+      "submit": "Soumettre pour examen",
+      "submitting": "Envoi…",
+      "uploadingImages": "Téléversement des photos…",
+      "uploadingDocuments": "Téléversement des documents…"
+    },
+    "errors": {
+      "generic": "Nous n'avons pas pu soumettre le bien. Veuillez vérifier le formulaire et réessayer."
+    }
+  },
+  "success": {
+    "title": "Bien soumis pour examen",
+    "desc": "Nous avons bien reçu votre bien avec {{images}} photo(s) et {{documents}} document(s). Il n'est pas encore public.",
+    "uploadFailures": "{{count}} fichier(s) n'ont pas pu être téléversés — vous pouvez les envoyer depuis Messages.",
+    "nextTitle": "Prochaines étapes",
+    "step1": "Examen — notre équipe vérifie les informations et les documents du bien.",
+    "step2": "Questions ou modifications — s'il manque un élément, vous recevrez un message dans votre boîte Messages.",
+    "step3": "Approbation — une fois tout en ordre, la soumission est approuvée.",
+    "step4": "Publication — l'équipe de la plateforme finalise l'annonce et la publie. Ce n'est qu'à ce moment que les acheteurs peuvent la voir.",
+    "messagesTitle": "Surveillez vos Messages",
+    "messagesDesc": "Toutes les notes d'examen, demandes de documents et décisions sont envoyées dans la section Messages de votre tableau de bord (et par e-mail).",
+    "toMessages": "Ouvrir Messages",
+    "toMyProperties": "Voir mes biens",
+    "toDashboard": "Retour au tableau de bord"
+  },
+  "status": {
+    "pending": "En cours d'examen",
+    "under_review": "En cours d'examen",
+    "requires_changes": "Modifications demandées",
+    "approved": "Approuvé — en attente de publication",
+    "published": "Publié",
+    "rejected": "Non approuvé",
+    "draft": "Brouillon",
+    "descs": {
+      "pending": "Notre équipe examine votre soumission. Elle n'est pas encore publique.",
+      "requires_changes": "L'équipe a demandé des modifications. Mettez le bien à jour et soumettez-le à nouveau.",
+      "approved": "Approuvé. L'équipe de la plateforme le publiera prochainement.",
+      "published": "En ligne et visible par les acheteurs.",
+      "rejected": "Cette soumission n'a pas été approuvée. Consultez Messages pour en connaître le motif."
+    },
+    "requiredChanges": "Modifications demandées :",
+    "resubmit": "Soumettre à nouveau pour examen",
+    "resubmitted": "Soumis à nouveau — l'équipe a été informée.",
+    "unread": "{{count}} nouveau(x) message(s)",
+    "openMessages": "Messages"
+  },
+  "messages": {
+    "title": "Messages",
+    "subtitle": "Notes et demandes de l'équipe Capimax RT concernant vos biens et vos documents.",
+    "empty": "Aucun message pour le moment. Les notes d'examen et les demandes de notre équipe apparaîtront ici.",
+    "allProperties": "Tous les biens",
+    "general": "Général",
+    "fromTeam": "Équipe Capimax RT",
+    "you": "Vous",
+    "system": "Capimax RT",
+    "replyPlaceholder": "Écrivez une réponse à l'équipe…",
+    "send": "Envoyer",
+    "sending": "Envoi…",
+    "attach": "Joindre un fichier",
+    "sent": "Message envoyé.",
+    "sendFailed": "Le message n'a pas pu être envoyé. Veuillez réessayer.",
+    "loadFailed": "Impossible de charger les messages.",
+    "unread": "Nouveau",
+    "property": "Bien",
+    "uploadTitle": "Téléverser un document demandé",
+    "uploadType": "Type de document",
+    "uploadButton": "Téléverser le document",
+    "uploading": "Téléversement…",
+    "uploaded": "Document téléversé. L'équipe a été informée.",
+    "uploadFailed": "Le document n'a pas pu être téléversé.",
+    "categories": {
+      "general": "Message",
+      "review_note": "Note d'examen",
+      "document_request": "Demande de document",
+      "changes_requested": "Modifications demandées",
+      "approval_result": "Résultat de l'examen",
+      "publication": "Publication",
+      "reply": "Votre réponse"
+    }
+  }
+}

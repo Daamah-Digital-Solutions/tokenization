@@ -1,3 +1,4 @@
+import { uiLocale } from './locale';
 /**
  * Payment plans, price phases and listing details (client round 3, #18 #19
  * #20 and admin note #2).
@@ -225,7 +226,7 @@ export const formatMoney = (n: number | string | null | undefined, digits = 2, l
 export const formatPlanDate = (d: Date | string | null | undefined, lang = 'en'): string => {
   const date = parseDate(d as any);
   if (!date) return '—';
-  return date.toLocaleDateString(lang.startsWith('ar') ? 'ar-EG' : 'en-US', {
+  return date.toLocaleDateString(uiLocale(lang), {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

@@ -4,6 +4,7 @@ import { adminService, type AdminProperty } from '../../../../services';
 import { useAdminActions } from '../../../../hooks/useAdminDashboard';
 
 import { RichText } from '../../../ui/RichText';
+import { uiLocale } from '../../../../utils/locale';
 interface PropertyDetailModalProps {
   property: AdminProperty;
   isOpen: boolean;
@@ -20,7 +21,7 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
   onPropertyUpdated
 }) => {
   const { t, i18n } = useTranslation('admin');
-  const locale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
+  const locale = uiLocale(i18n.language);
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectForm, setShowRejectForm] = useState(false);

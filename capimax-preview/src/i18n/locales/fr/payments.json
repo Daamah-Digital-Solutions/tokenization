@@ -1,0 +1,989 @@
+{
+  "addFunds": {
+    "title": "Ajouter des fonds",
+    "subtitle": "Alimentez le solde de votre portefeuille pour acheter des parts de biens.",
+    "successCard": "Paiement confirmé — le solde de votre portefeuille a été alimenté.",
+    "done": "Terminé",
+    "cryptoPending": "Finalisez votre paiement crypto dans l'onglet de paiement qui vient de s'ouvrir. Le solde de votre portefeuille se met à jour automatiquement dès que le paiement est confirmé on-chain (cela peut prendre quelques minutes).",
+    "bankSubmitted": "Demande de dépôt bancaire envoyée. Dès que notre équipe aura confirmé votre virement, <b>{{amount}}</b> sera crédité sur votre portefeuille — généralement sous 1 à 2 jours ouvrés. Vous recevrez une notification une fois l'opération effectuée.",
+    "back": "Retour",
+    "addingToWallet": "Ajout de <b>{{amount}}</b> à votre portefeuille.",
+    "bankIntro": "Virez <b>{{amount}}</b> sur le compte ci-dessous, puis envoyez ce formulaire. Nous créditerons votre portefeuille dès que le virement sera confirmé.",
+    "loadingBank": "Chargement des coordonnées bancaires…",
+    "bankUnavailable": "Le virement bancaire n'est pas disponible pour le moment — aucun compte de réception n'est configuré. Veuillez utiliser la carte ou la crypto, ou réessayer plus tard.",
+    "transferTo": "Virer à",
+    "details": {
+      "accountHolder": "Titulaire du compte",
+      "bank": "Banque",
+      "account": "Compte / IBAN",
+      "swift": "SWIFT / BIC",
+      "routing": "Code de routage / code guichet",
+      "bankAddress": "Adresse de la banque",
+      "country": "Pays",
+      "currency": "Devise"
+    },
+    "copy": "Copier",
+    "copied": "Copié",
+    "preparing": "Préparation…",
+    "downloadInstructions": "Télécharger les instructions de virement (PDF)",
+    "referenceLabel": "Référence du virement (facultatif)",
+    "referencePlaceholder": "ex. l'e-mail de votre compte",
+    "proofLabel": "Preuve de virement (facultatif — accélère la vérification)",
+    "submitting": "Envoi…",
+    "madeTransfer": "J'ai effectué le virement",
+    "amountLabel": "Montant (USD)",
+    "methods": {
+      "card": "Carte",
+      "crypto": "Crypto",
+      "bank": "Banque"
+    },
+    "cancel": "Annuler",
+    "continueCard": "Continuer vers la carte",
+    "continueBank": "Continuer vers le virement bancaire",
+    "starting": "Lancement…",
+    "payCrypto": "Payer en crypto",
+    "errors": {
+      "loadBank": "Impossible de charger les coordonnées bancaires. Veuillez réessayer.",
+      "minAmount": "Saisissez un montant d'au moins {{min}}.",
+      "cryptoStartRetry": "Impossible de lancer le paiement crypto. Veuillez réessayer.",
+      "cryptoStart": "Impossible de lancer le paiement crypto.",
+      "bankSubmit": "Impossible d'envoyer votre dépôt bancaire. Veuillez réessayer."
+    }
+  },
+  "methodNames": {
+    "crypto": "Crypto",
+    "card": "Carte",
+    "bank": "Banque",
+    "bank_transfer": "Virement bancaire",
+    "paypal": "PayPal",
+    "wallet": "Portefeuille",
+    "nova_sukuk": "Nova Sukuk"
+  },
+  "analytics": {
+    "title": "Analyse des paiements",
+    "subtitle": "Suivez et analysez la performance de vos paiements",
+    "totalVolume": "Volume total",
+    "vsPrevious": "par rapport à la période précédente",
+    "transactions": "Transactions",
+    "avg": "Moy. :",
+    "successRate": "Taux de réussite",
+    "completedCount_one": "{{count}} terminée",
+    "completedCount_other": "{{count}} terminées",
+    "totalFees": "Frais totaux",
+    "ofVolume": "{{pct}} % du volume",
+    "txVolume": "Volume des transactions",
+    "metrics": {
+      "volume": "Volume",
+      "count": "Nombre",
+      "fees": "Frais"
+    },
+    "paymentMethods": "Moyens de paiement",
+    "txCount_one": "{{count}} transaction",
+    "txCount_other": "{{count}} transactions",
+    "avgSize": "Montant moyen par transaction",
+    "trends": "Tendances des transactions",
+    "last7Volume": "Volume des 7 derniers jours",
+    "txThisWeek": "Transactions cette semaine",
+    "growthRate": "Taux de croissance",
+    "currencyDistribution": "Répartition par devise",
+    "ranges": {
+      "7d": "7 derniers jours",
+      "30d": "30 derniers jours",
+      "90d": "90 derniers jours",
+      "1y": "Dernière année"
+    },
+    "export": "Exporter",
+    "tabs": {
+      "overview": "Vue d'ensemble",
+      "methods": "Moyens de paiement",
+      "trends": "Tendances"
+    }
+  },
+  "card": {
+    "title": "Paiement par carte",
+    "subtitle": "Payez {{amount}} avec votre carte de crédit ou de débit",
+    "holderName": "Nom du titulaire",
+    "holderPlaceholder": "Tel qu'il figure sur la carte",
+    "cardDetails": "Informations de la carte",
+    "saveCard": "Enregistrer cette carte pour de futurs paiements",
+    "pciTitle": "Sécurisé PCI-DSS",
+    "pciBody": "Les données de carte sont collectées par Stripe dans un iframe isolé. Capimax RT ne voit jamais votre numéro de carte, votre CVC ni sa date d'expiration.",
+    "continue": "Continuer",
+    "back": "Retour",
+    "billingTitle": "Adresse de facturation",
+    "billingSubtitle": "Saisissez votre adresse de facturation pour vérification",
+    "street": "Adresse",
+    "streetPlaceholder": "123 Main Street",
+    "city": "Ville",
+    "cityPlaceholder": "New York",
+    "state": "État / Région",
+    "zip": "Code postal",
+    "country": "Pays",
+    "subtotal": "Sous-total :",
+    "processingFeePct": "Frais de traitement ({{pct}} %) :",
+    "completePayment": "Finaliser le paiement",
+    "processingTitle": "Traitement du paiement",
+    "processingBody": "Veuillez patienter pendant que nous confirmons votre paiement par carte auprès de Stripe",
+    "doNotClose": "Ne fermez pas cette fenêtre et n'actualisez pas la page",
+    "successTitle": "Paiement réussi",
+    "successBody": "Votre paiement par carte a été traité avec succès",
+    "paymentId": "ID du paiement :",
+    "receiptSent": "Un reçu a été envoyé à votre adresse e-mail",
+    "done": "Terminé",
+    "confirmTitle": "Confirmer le paiement",
+    "confirmMessage": "Voulez-vous vraiment effectuer ce paiement ? Cette action est irréversible.",
+    "processing": "Traitement…",
+    "amount": "Montant",
+    "processingFee": "Frais de traitement",
+    "total": "Total",
+    "txDescription": "Paiement d'achat de {{amount}}",
+    "errors": {
+      "streetRequired": "L'adresse est obligatoire",
+      "cityRequired": "La ville est obligatoire",
+      "stateRequired": "L'État / la région est obligatoire",
+      "zipRequired": "Le code postal est obligatoire",
+      "countryRequired": "Le pays est obligatoire",
+      "stripeLoading": "Stripe.js n'a pas encore fini de se charger. Veuillez réessayer dans un instant.",
+      "cardNotReady": "Le champ de carte n'est pas prêt. Veuillez actualiser la page et réessayer.",
+      "declined": "Carte refusée",
+      "badStatus": "Le paiement est au statut « {{status}} ». Veuillez réessayer ou contacter l'assistance.",
+      "toastTitle": "Échec du paiement",
+      "processingRetry": "Le traitement du paiement a échoué. Veuillez réessayer.",
+      "processing": "Le traitement du paiement a échoué",
+      "completeCard": "Veuillez compléter les informations de votre carte.",
+      "required": "Obligatoire"
+    }
+  },
+  "depositWithdraw": {
+    "addFunds": "Ajouter des fonds",
+    "withdrawFunds": "Retirer des fonds",
+    "chooseDeposit": "Choisissez votre mode de dépôt",
+    "chooseWithdraw": "Choisissez comment recevoir vos fonds",
+    "methodCards": {
+      "crypto": "Cryptomonnaie",
+      "card": "Carte de crédit/débit",
+      "bank": "Virement bancaire",
+      "bankDesc": "ACH, virement télégraphique",
+      "paypalDesc": "Paiements numériques"
+    },
+    "methods": {
+      "crypto": "Crypto",
+      "card": "Carte",
+      "bank": "Banque",
+      "paypal": "PayPal"
+    },
+    "enterAmount": "Saisir le montant",
+    "howMuchAdd": "Quel montant souhaitez-vous ajouter ?",
+    "howMuchWithdraw": "Quel montant souhaitez-vous retirer ?",
+    "currency": "Devise",
+    "amount": "Montant",
+    "amountPlaceholder": "Saisissez le montant en {{currency}}",
+    "availableBalance": "Solde disponible :",
+    "amountColon": "Montant :",
+    "feeColon": "Frais :",
+    "totalColon": "Total :",
+    "methodColon": "Mode :",
+    "statusColon": "Statut :",
+    "txId": "ID de transaction :",
+    "newBalance": "Nouveau solde :",
+    "back": "Retour",
+    "continue": "Continuer",
+    "confirmDepositTitle": "Confirmer le dépôt",
+    "confirmWithdrawalTitle": "Confirmer le retrait",
+    "reviewDetails": "Veuillez vérifier les détails de votre transaction",
+    "important": "Important :",
+    "onlySend": "N'envoyez que des {{currency}} à cette adresse. L'envoi d'autres devises peut entraîner une perte de fonds.",
+    "confirmDeposit": "Confirmer le dépôt",
+    "confirmWithdrawal": "Confirmer le retrait",
+    "processingTitle": "Traitement de la transaction",
+    "processingDeposit": "Veuillez patienter pendant le traitement de votre dépôt",
+    "processingWithdrawal": "Veuillez patienter pendant le traitement de votre retrait",
+    "completeTitle": "Transaction terminée",
+    "completeDeposit": "Votre dépôt a été traité avec succès",
+    "completeWithdrawal": "Votre retrait a été traité avec succès",
+    "depositMore": "Déposer davantage",
+    "withdrawMore": "Retirer davantage",
+    "done": "Terminé",
+    "deposit": "Déposer",
+    "withdraw": "Retirer",
+    "txDeposit": "Dépôt de {{amount}}",
+    "txWithdraw": "Retrait de {{amount}}",
+    "errors": {
+      "minAmount": "Le montant minimum est de {{amount}}",
+      "insufficient": "Solde insuffisant. Disponible : {{amount}}"
+    }
+  },
+  "status": {
+    "pending": "En attente",
+    "processing": "En cours de traitement",
+    "completed": "Terminé",
+    "failed": "Échoué",
+    "cancelled": "Annulé",
+    "confirmed": "Confirmé",
+    "approved": "Approuvé",
+    "rejected": "Rejeté",
+    "active": "Actif"
+  },
+  "time": {
+    "justNow": "À l'instant",
+    "minutesAgo_one": "il y a {{count}} min",
+    "minutesAgo_other": "il y a {{count}} min",
+    "hoursAgo_one": "il y a {{count}} h",
+    "hoursAgo_other": "il y a {{count}} h",
+    "daysAgo_one": "il y a {{count}} j",
+    "daysAgo_other": "il y a {{count}} j"
+  },
+  "history": {
+    "title": "Historique des transactions",
+    "export": "Exporter",
+    "searchPlaceholder": "Rechercher des transactions...",
+    "types": {
+      "all": "Tous les types",
+      "deposit": "Dépôts",
+      "withdrawal": "Retraits",
+      "investment": "Achats",
+      "dividend": "Distributions",
+      "fee": "Frais"
+    },
+    "allStatus": "Tous les statuts",
+    "ranges": {
+      "all": "Depuis le début",
+      "today": "Aujourd'hui",
+      "week": "Cette semaine",
+      "month": "Ce mois-ci"
+    },
+    "emptyTitle": "Aucune transaction trouvée",
+    "emptyFiltered": "Essayez de modifier vos filtres",
+    "emptyDefault": "Votre historique de transactions apparaîtra ici",
+    "view": "Voir",
+    "fee": "Frais :",
+    "confirmations": "{{count}}/{{total}} confirmations",
+    "paymentMethod": "Moyen de paiement :",
+    "viewAll": "Voir toutes les transactions"
+  },
+  "crypto": {
+    "title": "Payer en cryptomonnaie",
+    "intro": "Payez <b>{{amount}}</b>. Vous choisirez la cryptomonnaie à utiliser sur la page de paiement NOWPayments — Bitcoin, USDT, USDC, ETH, BNB, MATIC et plus de 200 autres y sont acceptées.",
+    "nextTitle": "Et ensuite ?",
+    "next1": "Nous ouvrons la page de paiement NOWPayments dans un nouvel onglet.",
+    "next2": "Vous choisissez la cryptomonnaie à envoyer et finalisez le paiement sur cette page.",
+    "next3": "Cette fenêtre reste ouverte et attend la confirmation on-chain — votre achat est finalisé automatiquement à l'arrivée des fonds.",
+    "opening": "Ouverture du paiement…",
+    "continue": "Continuer vers NOWPayments",
+    "awaitingTitle": "Paiement en attente sur NOWPayments",
+    "awaitingBody": "Finalisez le paiement dans le nouvel onglet que nous venons d'ouvrir. Votre achat est finalisé dès que le réseau confirme le transfert.",
+    "statusLabel": "Statut",
+    "reopen": "Rouvrir la page de paiement",
+    "keepOpen": "Ne fermez pas cette fenêtre avant la confirmation du paiement — nous vérifions la mise à jour toutes les {{seconds}} s. Vous pouvez la laisser ouverte en arrière-plan.",
+    "payLater": "Je paierai plus tard",
+    "receivedTitle": "Paiement reçu",
+    "receivedBody": "Votre paiement crypto est confirmé on-chain. Les parts apparaîtront bientôt dans votre portefeuille — l'émission se fait en arrière-plan.",
+    "providerStatus": {
+      "waiting": "En attente",
+      "confirming": "Confirmation en cours",
+      "confirmed": "Confirmé",
+      "sending": "Envoi en cours",
+      "partially_paid": "Partiellement payé",
+      "finished": "Terminé",
+      "failed": "Échoué",
+      "refunded": "Remboursé",
+      "expired": "Expiré"
+    },
+    "errors": {
+      "createInvoice": "Impossible de créer la facture crypto.",
+      "notConfigured": "Les paiements crypto ne sont pas encore configurés pour cet environnement. Veuillez utiliser un autre moyen de paiement ou contacter l'assistance.",
+      "providerFailed": "Le prestataire de paiement crypto n'a pas pu générer la page de paiement. Veuillez réessayer dans un instant ou choisir un autre moyen de paiement.",
+      "toastTitle": "Échec du paiement crypto",
+      "timeout": "Délai dépassé en attendant le paiement on-chain. Si vous avez déjà envoyé les fonds, ils seront tout de même crédités — consultez Transactions dans quelques minutes. Sinon, vous pouvez annuler et réessayer.",
+      "invoiceFailed": "NOWPayments a signalé cette facture comme échouée ou expirée. Vous pouvez annuler et réessayer avec un nouveau devis."
+    }
+  },
+  "multiWallet": {
+    "title": "Connecter un portefeuille",
+    "close": "Fermer",
+    "connected": "Portefeuille connecté",
+    "address": "Adresse :",
+    "copyAddress": "Copier l'adresse",
+    "balance": "Solde :",
+    "network": "Réseau :",
+    "unknownNetwork": "Inconnu",
+    "disconnect": "Déconnecter",
+    "continue": "Continuer",
+    "popular": "Populaires",
+    "moreOptions": "Plus d'options",
+    "securityNote": "Les identifiants de votre portefeuille ne sont jamais stockés sur nos serveurs",
+    "installed": "Installé",
+    "wallets": {
+      "metamask": "Se connecter avec le portefeuille du navigateur",
+      "walletconnect": "Scannez avec votre portefeuille mobile",
+      "coinbase": "Connectez votre Coinbase Wallet",
+      "trust": "Portefeuille crypto pensé pour le mobile",
+      "phantom": "Portefeuille Solana et Ethereum",
+      "rainbow": "Portefeuille crypto simple et ludique"
+    },
+    "errors": {
+      "notSupported": "Le portefeuille {{name}} n'est pas encore pris en charge",
+      "noAccounts": "Aucun compte trouvé",
+      "connectFailed": "Échec de la connexion du portefeuille"
+    }
+  },
+  "shared": {
+    "cancel": "Annuler",
+    "submitForReview": "Envoyer pour vérification",
+    "submittedForReview": "Envoyé pour vérification",
+    "fileTooLarge": "Fichier trop volumineux (10 Mo max.).",
+    "max10mb": "10 Mo max.",
+    "noInvestmentReturned": "Envoi accepté, mais aucun investissement n'a été renvoyé."
+  },
+  "nova": {
+    "title": "Nova Sukuk — envoyer le document",
+    "intro": "Importez votre certificat Sukuk signé de <b>{{amount}}</b> pour vérification par l'administrateur. Les parts sont émises une fois le document approuvé.",
+    "referenceLabel": "Numéro de référence Sukuk",
+    "referencePlaceholder": "Référence imprimée sur le certificat",
+    "documentLabel": "Document Sukuk (PDF / image)",
+    "uploadPrompt": "Cliquez pour importer un PDF ou une image",
+    "uploading": "Import de votre document Sukuk…",
+    "doneBody": "Votre document Sukuk est dans la file de vérification de l'administrateur. Les parts seront émises une fois le document approuvé — vous recevrez une notification et un e-mail à ce moment-là.",
+    "errors": {
+      "fileType": "Importez un PDF ou une image (JPG / PNG).",
+      "fileRequired": "Veuillez importer le document Sukuk signé.",
+      "referenceRequired": "Le numéro de référence Sukuk est obligatoire.",
+      "submitFailed": "Échec de l'envoi du paiement Nova Sukuk."
+    }
+  },
+  "bankForm": {
+    "title": "Virement bancaire — envoyer la preuve",
+    "intro": "Envoyez <b>{{amount}}</b> depuis votre banque et importez une capture d'écran ou un reçu PDF. Un administrateur vérifiera le virement et débloquera vos parts à l'arrivée des fonds (généralement sous 1 à 3 jours ouvrés).",
+    "fields": {
+      "holderName": "Nom du titulaire du compte",
+      "bankName": "Nom de la banque",
+      "accountNumber": "Numéro de compte / IBAN",
+      "routing": "Code de routage / code guichet",
+      "swift": "SWIFT / BIC",
+      "reference": "Référence / libellé"
+    },
+    "placeholders": {
+      "holderName": "Tel qu'il figure sur le compte",
+      "bankName": "ex. HSBC",
+      "accountNumber": "Compte émetteur",
+      "optional": "Facultatif",
+      "swift": "Pour les virements internationaux",
+      "reference": "Note facultative pour l'administrateur"
+    },
+    "proofLabel": "Preuve de virement",
+    "uploadPrompt": "Cliquez pour importer un JPG, PNG ou PDF",
+    "uploading": "Import de votre preuve de virement…",
+    "doneBody": "Vos parts sont réservées. Un administrateur les débloquera dès réception des fonds de notre côté. Vous recevrez une notification et un e-mail à ce moment-là.",
+    "includeReference": "Indiquez cette référence dans le libellé de votre virement :",
+    "errors": {
+      "fileType": "Importez une image JPG/PNG/WEBP ou un PDF.",
+      "holderRequired": "Le nom du titulaire du compte est obligatoire.",
+      "bankRequired": "Le nom de la banque est obligatoire.",
+      "accountRequired": "Le numéro de compte est obligatoire.",
+      "proofRequired": "Veuillez importer la preuve du virement.",
+      "submitFailed": "Échec de l'envoi du virement bancaire."
+    }
+  },
+  "payouts": {
+    "title": "Portefeuille et versements",
+    "subtitle": "Votre solde disponible et l'historique de vos retraits.",
+    "balanceLabel": "Solde disponible",
+    "withdraw": "Retirer"
+  },
+  "security": {
+    "title": "Sécurité des paiements",
+    "subtitle": "Gérez les paramètres de sécurité et de conformité de votre compte",
+    "tabs": {
+      "overview": "Vue d'ensemble",
+      "rules": "Règles de sécurité",
+      "twoFactor": "Double authentification",
+      "alerts": "Alertes de sécurité",
+      "compliance": "Conformité"
+    },
+    "score": "Score de sécurité",
+    "scoreSubtitle": "La note de sécurité de votre compte",
+    "outOf100": "sur 100",
+    "twoFactorShort": "Double authentification",
+    "enabled": "Activée",
+    "disabled": "Désactivée",
+    "paymentLimits": "Plafonds de paiement",
+    "perDay": "{{amount}} par jour",
+    "activeAlerts": "Alertes actives",
+    "unresolved_one": "{{count}} non résolue",
+    "unresolved_other": "{{count}} non résolues",
+    "recentActivity": "Activité de sécurité récente",
+    "rulesTitle": "Règles de sécurité",
+    "rulesSubtitle": "Configurez les politiques de sécurité de votre compte",
+    "severity": {
+      "low": "faible",
+      "medium": "moyenne",
+      "high": "élevée"
+    },
+    "rules": {
+      "daily_limit": {
+        "title": "Plafond quotidien de transactions",
+        "description": "Montant maximal pouvant être dépensé par jour"
+      },
+      "single_tx_limit": {
+        "title": "Plafond par transaction",
+        "description": "Montant maximal pour une seule transaction"
+      },
+      "require_2fa": {
+        "title": "Authentification à deux facteurs",
+        "description": "Exiger la 2FA pour toutes les transactions au-delà du seuil"
+      },
+      "geo_restriction": {
+        "title": "Restrictions géographiques",
+        "description": "Bloquer les transactions provenant de pays soumis à restrictions"
+      },
+      "velocity_check": {
+        "title": "Surveillance de la fréquence",
+        "description": "Détecter les schémas de transactions inhabituels"
+      },
+      "device_verification": {
+        "title": "Vérification des appareils",
+        "description": "Vérifier les nouveaux appareils avant d'autoriser les transactions"
+      }
+    },
+    "alerts": {
+      "alert_1": {
+        "title": "Lieu de connexion inhabituel",
+        "description": "Connexion détectée depuis un nouveau lieu : San Francisco, CA"
+      },
+      "alert_2": {
+        "title": "Plafond quotidien bientôt atteint",
+        "description": "Vous avez utilisé 85 % de votre plafond quotidien de transactions"
+      }
+    },
+    "setup2fa": "Configurer la 2FA",
+    "chooseMethod": "Choisissez votre méthode de 2FA :",
+    "methods": {
+      "sms": {
+        "label": "SMS",
+        "desc": "Recevoir les codes par SMS"
+      },
+      "email": {
+        "label": "E-mail",
+        "desc": "Recevoir les codes par e-mail"
+      },
+      "authenticator": {
+        "label": "Application d'authentification",
+        "desc": "Utilisez Google Authenticator ou une application similaire"
+      }
+    },
+    "continue": "Continuer",
+    "back": "Retour",
+    "verify": "Vérifier",
+    "enterCode": "Saisissez le code de vérification envoyé par {{method}} :",
+    "codePlaceholder": "Saisissez le code à 6 chiffres",
+    "backupCodes": "Codes de secours",
+    "backupCodesBody": "Conservez ces codes en lieu sûr. Ils vous permettent d'accéder à votre compte si vous perdez votre appareil.",
+    "completeSetup": "Terminer la configuration",
+    "alertsTitle": "Alertes de sécurité",
+    "alertsSubtitle": "Surveillez et gérez les notifications de sécurité",
+    "resolve": "Résoudre",
+    "complianceTitle": "Conformité et vérification",
+    "complianceSubtitle": "Statut de vérification du compte et de conformité réglementaire",
+    "identity": "Vérification d'identité",
+    "emailVerified": "E-mail vérifié",
+    "phoneVerified": "Téléphone vérifié",
+    "idDocument": "Pièce d'identité",
+    "addressProof": "Justificatif de domicile",
+    "amlStatus": "Statut LCB-FT/KYC",
+    "riskAssessment": "Évaluation des risques",
+    "lowRisk": "Risque faible",
+    "txLimit": "Plafond de transactions",
+    "lastReview": "Dernier examen",
+    "regulatory": "Conformité réglementaire",
+    "regulatoryBody": "Votre compte est conforme aux réglementations financières applicables, notamment en matière de LCB-FT, de KYC et de protection des données.",
+    "gdpr": "Conforme au RGPD",
+    "pci": "Certifié PCI DSS",
+    "twoFactorTitle": "Authentification à deux facteurs",
+    "twoFactorSubtitle": "Ajoutez une couche de sécurité supplémentaire à votre compte",
+    "twoFactorActive": "La 2FA est active",
+    "usingMethod": "{{method}} utilisé comme méthode principale"
+  },
+  "selector": {
+    "title": "Choisir un moyen de paiement",
+    "subtitle": "Payez {{amount}} pour votre acquisition immobilière",
+    "compare": "Comparer les moyens",
+    "recommended": "Recommandé",
+    "popular": "Populaire",
+    "discount": "Réduction",
+    "fee": "Frais",
+    "free": "Gratuit",
+    "processing": "Traitement",
+    "totalAmount": "Montant total :",
+    "minAmount": "Montant minimum : {{amount}}",
+    "maxAmount": "Montant maximum : {{amount}}",
+    "walletRequired": "Connexion d'un portefeuille requise",
+    "notImplemented": "Moyen de paiement pas encore disponible",
+    "back": "Retour",
+    "backToMethods": "Retour aux moyens de paiement",
+    "backToProperty": "Retour au bien",
+    "submitting": "Envoi...",
+    "close": "Fermer",
+    "comparisonTitle": "Comparaison des moyens de paiement",
+    "table": {
+      "method": "Moyen",
+      "fee": "Frais",
+      "processingTime": "Délai de traitement",
+      "limits": "Plafonds",
+      "bestFor": "Idéal pour"
+    },
+    "secureTitle": "Traitement sécurisé des paiements",
+    "secureBody": "Tous les paiements transitent par des canaux chiffrés dotés de mesures de sécurité conformes aux standards du secteur. Vos informations financières ne sont jamais stockées sur nos serveurs.",
+    "nova": {
+      "receivedTitle": "Envoi reçu",
+      "receivedBody": "Votre certificat Nova Sukuk a été envoyé pour vérification par l'administrateur. Vous serez averti dès la fin de la vérification (1 à 2 jours ouvrés).",
+      "title": "Paiement Nova Sukuk",
+      "subtitle": "Importez le PDF de votre certificat Sukuk pour vérification",
+      "purchaseAmount": "Montant de l'achat :",
+      "certificate": "Certificat Sukuk (PDF)",
+      "uploadPrompt": "Cliquez pour importer un PDF",
+      "maxSize": "Taille maximale du fichier : 10 Mo",
+      "referencePlaceholder": "Saisissez votre numéro de référence Sukuk"
+    },
+    "pronova": {
+      "submittedTitle": "Transaction envoyée",
+      "submittedBody": "Votre transaction Pronova est en cours de vérification on-chain. Cela prend généralement 5 à 15 minutes.",
+      "title": "Paiement Pronova",
+      "subtitle": "BNB Smart Chain - réduction de 5 % appliquée",
+      "originalAmount": "Montant initial",
+      "discount5": "Réduction de 5 %",
+      "youPay": "Vous payez",
+      "howItWorks": "Comment ça marche :",
+      "step1": "Envoyez des jetons Pronova à l'adresse du portefeuille de la plateforme",
+      "step2": "Saisissez le hash de votre transaction pour vérification",
+      "step3": "Attendez la confirmation on-chain (5 à 15 min)",
+      "step4": "Les parts sont attribuées automatiquement à votre compte",
+      "proceed": "Procéder au paiement",
+      "sendTo": "Envoyez les jetons Pronova à :",
+      "equivalent": "Équivalent de {{amount}} en Pronova",
+      "sent": "J'ai envoyé le paiement",
+      "txHash": "Hash de la transaction",
+      "invalidHash": "Format de hash de transaction invalide (doit être 0x + 64 caractères hexadécimaux)",
+      "verifying": "Vérification...",
+      "verify": "Vérifier la transaction"
+    },
+    "methods": {
+      "crypto": {
+        "name": "Cryptomonnaie",
+        "description": "Payez en Bitcoin, Ethereum ou d'autres cryptomonnaies",
+        "fee": "0.1-0.5%",
+        "processingTime": "10 à 30 minutes",
+        "discount": "",
+        "features": [
+          "Décentralisé",
+          "Mondial",
+          "Règlement rapide"
+        ],
+        "pros": [
+          "Frais réduits",
+          "Pas de rétrofacturation",
+          "Accès mondial",
+          "Rapide pour les montants élevés"
+        ],
+        "cons": [
+          "Volatilité des cours",
+          "Complexité technique",
+          "Portefeuille requis"
+        ]
+      },
+      "card": {
+        "name": "Carte de crédit/débit",
+        "description": "Payez instantanément avec Visa, Mastercard ou American Express",
+        "fee": "2.9% + $0.30",
+        "processingTime": "Instantané",
+        "discount": "",
+        "features": [
+          "Traitement instantané",
+          "Protection du consommateur",
+          "Largement acceptée"
+        ],
+        "pros": [
+          "Confirmation instantanée",
+          "Procédure familière",
+          "Protection de l'acheteur",
+          "Points de fidélité"
+        ],
+        "cons": [
+          "Frais plus élevés",
+          "Risque de rétrofacturation",
+          "Restrictions géographiques"
+        ]
+      },
+      "bank": {
+        "name": "Virement bancaire",
+        "description": "Virement direct depuis votre compte bancaire (ACH/virement télégraphique)",
+        "fee": "ACH : gratuit, virement télégraphique : $25",
+        "processingTime": "ACH : 1 à 3 jours, virement télégraphique : le jour même",
+        "discount": "",
+        "features": [
+          "Plafonds élevés",
+          "Sécurisé",
+          "Économique"
+        ],
+        "pros": [
+          "Frais faibles ou nuls",
+          "Plafonds élevés",
+          "Sécurisé",
+          "Aucun intermédiaire"
+        ],
+        "cons": [
+          "Traitement plus lent",
+          "Horaires bancaires",
+          "Mise en place plus complexe"
+        ]
+      },
+      "paypal": {
+        "name": "PayPal",
+        "description": "Payez avec votre solde PayPal ou vos comptes associés",
+        "fee": "3.49% + $0.49",
+        "processingTime": "Instantané",
+        "discount": "",
+        "features": [
+          "Protection de l'acheteur",
+          "Configuration facile",
+          "Adapté au mobile"
+        ],
+        "pros": [
+          "Configuration rapide",
+          "Protection de l'acheteur",
+          "Adapté au mobile",
+          "Aucune donnée de carte partagée"
+        ],
+        "cons": [
+          "Frais plus élevés",
+          "Risque de gel du compte",
+          "Réservé aux utilisateurs PayPal"
+        ]
+      },
+      "nova_sukuk": {
+        "name": "Nova Sukuk",
+        "description": "Payez avec un certificat Nova Sukuk - importez le PDF pour vérification par l'administrateur",
+        "fee": "Gratuit",
+        "processingTime": "1 à 2 jours ouvrés (vérification manuelle)",
+        "discount": "",
+        "features": [
+          "Conforme à la charia",
+          "Sans frais",
+          "Plafonds élevés"
+        ],
+        "pros": [
+          "Aucuns frais de transaction",
+          "Conforme à la charia",
+          "Plafonds d'achat élevés"
+        ],
+        "cons": [
+          "Vérification manuelle requise",
+          "Délai de traitement plus long"
+        ]
+      },
+      "pronova": {
+        "name": "Pronova",
+        "description": "Payez avec la crypto Pronova sur BNB Smart Chain - bénéficiez de 5 % de réduction !",
+        "fee": "Gratuit",
+        "processingTime": "5 à 15 minutes",
+        "discount": "-5 %",
+        "features": [
+          "Réduction de 5 %",
+          "BNB Smart Chain",
+          "Règlement rapide"
+        ],
+        "pros": [
+          "5 % de réduction sur l'achat",
+          "Frais réduits",
+          "Confirmation rapide",
+          "Vérification on-chain"
+        ],
+        "cons": [
+          "Jetons Pronova requis",
+          "Portefeuille crypto requis"
+        ]
+      }
+    }
+  },
+  "txTypes": {
+    "investment": "Achat",
+    "deposit": "Dépôt",
+    "withdrawal": "Retrait",
+    "dividend": "Distribution",
+    "fee": "Frais",
+    "refund": "Remboursement"
+  },
+  "tracker": {
+    "steps": {
+      "initiated": {
+        "title": "Transaction initiée",
+        "desc": "Demande de paiement créée",
+        "details": "{{type}} de {{amount}}"
+      },
+      "walletConnected": {
+        "title": "Portefeuille connecté",
+        "desc": "Portefeuille de cryptomonnaie connecté",
+        "details": "Connecté au réseau {{network}}"
+      },
+      "signed": {
+        "title": "Transaction signée",
+        "desc": "Transaction signée dans le portefeuille",
+        "details": "Hash de la transaction : {{hash}}"
+      },
+      "confirmations": {
+        "title": "Confirmations du réseau",
+        "desc": "En attente des confirmations du réseau"
+      },
+      "cardProcessing": {
+        "title": "Traitement de la carte",
+        "desc": "Traitement du paiement par carte",
+        "details": "Carte se terminant par {{last4}}"
+      },
+      "authorized": {
+        "title": "Paiement autorisé",
+        "desc": "Paiement autorisé par l'émetteur de la carte"
+      },
+      "bankTransfer": {
+        "title": "Virement bancaire initié",
+        "desc": "Virement initié depuis votre banque",
+        "details": "Délai de traitement : 1 à 3 jours ouvrés"
+      },
+      "complete": {
+        "title": "Paiement terminé",
+        "desc": "Paiement traité avec succès",
+        "details": "Les fonds ont été crédités sur votre compte"
+      }
+    },
+    "notifCompleted": "Transaction {{id}} terminée !",
+    "notifUpdated": "Statut de la transaction {{id}} mis à jour : {{status}}",
+    "detailsTitle": "Détails de la transaction",
+    "detailsSubtitle": "Suivez l'avancement de votre transaction",
+    "refresh": "Actualiser",
+    "id": "ID :",
+    "started": "Début :",
+    "dateAtTime": "{{date}} à {{time}}",
+    "noFee": "Sans frais",
+    "progress": "Avancement",
+    "viewOnChain": "Voir sur la blockchain",
+    "recentUpdates": "Mises à jour récentes",
+    "allTransactions": "Toutes les transactions",
+    "ranges": {
+      "24h": "Dernières 24 h"
+    },
+    "emptyHint": "Essayez de modifier vos filtres ou votre recherche",
+    "selectTitle": "Sélectionnez une transaction",
+    "selectHint": "Cliquez sur une transaction pour afficher le suivi détaillé"
+  },
+  "walletBalance": {
+    "totalValue": "Valeur totale du portefeuille",
+    "hideBalances": "Masquer les soldes",
+    "showBalances": "Afficher les soldes",
+    "growthError": "Impossible de charger les données de croissance",
+    "retry": "Réessayer",
+    "retrying": "Nouvelle tentative...",
+    "growthLoading": "Chargement des données de croissance...",
+    "hideGrowth": "Masquer les données de croissance",
+    "showGrowth": "Afficher les données de croissance",
+    "period": {
+      "week": "cette semaine",
+      "month": "ce mois-ci",
+      "quarter": "ce trimestre",
+      "year": "cette année"
+    },
+    "addFunds": "Ajouter des fonds",
+    "withdraw": "Retirer",
+    "withdrawFunds": "Retirer des fonds",
+    "deposit": "Déposer",
+    "refresh": "Actualiser",
+    "currencyBalances": "Soldes par devise",
+    "noBalances": "Aucun solde disponible",
+    "addFirstFunds": "Ajoutez vos premiers fonds",
+    "locked": "{{amount}} bloqués",
+    "analyticsUnavailable": "Analyse du portefeuille temporairement indisponible",
+    "pendingTx_one": "{{count}} transaction en attente",
+    "pendingTx_other": "{{count}} transactions en attente",
+    "loading": "Chargement..."
+  },
+  "walletPanel": {
+    "title": "Votre portefeuille Capimax",
+    "subtitle": "Votre portefeuille numérique et votre propriété immobilière tokenisée.",
+    "blockchain": "Blockchain",
+    "tiles": {
+      "status": "Statut du portefeuille",
+      "active": "Actif",
+      "pending": "En attente",
+      "network": "Réseau",
+      "verification": "Vérification",
+      "verified": "Vérifié",
+      "unverified": "Non vérifié",
+      "shareBalance": "Solde de parts"
+    },
+    "primarySelf": "Portefeuille principal (auto-conservation)",
+    "primaryManaged": "Portefeuille principal (géré par la plateforme)",
+    "noSetup": "Aucune configuration requise",
+    "loading": "Chargement…",
+    "notAssigned": "Pas encore attribué",
+    "copyPrimaryAria": "Copier l'adresse du portefeuille principal",
+    "copy": "Copier",
+    "copied": "Copié",
+    "externalTitle": "Portefeuille externe (facultatif)",
+    "unlink": "Dissocier",
+    "unlinking": "Dissociation…",
+    "linkIntro": "Associez un portefeuille en auto-conservation (MetaMask, portefeuille matériel, etc.) si vous souhaitez que les achats payés en crypto y arrivent directement, ou pour retirer ultérieurement vos parts de la conservation Capimax.",
+    "linkExternal": "Associer un portefeuille externe",
+    "waitingWallet": "En attente du portefeuille…",
+    "signNote": "Il vous sera demandé de signer un message de vérification — sans frais de gas, aucun fonds n'est déplacé.",
+    "propertiesTitle": "Biens tokenisés dans votre portefeuille",
+    "sharesUnit_one": "part",
+    "sharesUnit_other": "parts",
+    "split": "{{custody}} en conservation · {{external}} dans votre portefeuille",
+    "withdraw": "Retirer",
+    "withdrawing": "Retrait…",
+    "tokenContract": "Contrat du jeton :",
+    "viewExplorer": "Voir sur l'explorateur",
+    "withdrawBroadcast": "Retrait diffusé.",
+    "viewTx": "Voir la transaction",
+    "custodyNote": "Les parts détenues dans le portefeuille de conservation géré par la plateforme peuvent être transférées à tout moment vers votre portefeuille externe associé. Les frais de gas sont pris en charge par la plateforme.",
+    "confirmWithdraw_one": "Retirer {{count}} part de « {{property}} » vers votre portefeuille externe ?\n\nCela envoie une transaction on-chain signée par le système de conservation Capimax. Les frais de gas sont pris en charge par la plateforme.",
+    "confirmWithdraw_other": "Retirer {{count}} parts de « {{property}} » vers votre portefeuille externe ?\n\nCela envoie une transaction on-chain signée par le système de conservation Capimax. Les frais de gas sont pris en charge par la plateforme.",
+    "errors": {
+      "load": "Impossible de charger les informations du portefeuille.",
+      "noWallet": "Aucun portefeuille de navigateur détecté. Installez MetaMask (ou un autre portefeuille EVM) et réessayez.",
+      "cancelled": "Connexion annulée.",
+      "link": "Impossible d'associer le portefeuille.",
+      "unlink": "Impossible de dissocier le portefeuille.",
+      "nothingToWithdraw": "Rien à retirer pour ce bien.",
+      "withdraw": "Le retrait a échoué."
+    }
+  },
+  "withdraw": {
+    "title": "Retirer des fonds",
+    "availableBalance": "Solde disponible :",
+    "close": "Fermer",
+    "cancel": "Annuler",
+    "amountLabel": "Montant (USD)",
+    "methodBank": "Virement bancaire",
+    "methodCrypto": "Crypto",
+    "fields": {
+      "holderName": "Nom du titulaire du compte",
+      "bankName": "Nom de la banque",
+      "accountNumber": "Numéro de compte / IBAN",
+      "swift": "SWIFT / BIC",
+      "routing": "Code de routage / code guichet",
+      "bankCountry": "Pays de la banque (ISO-2)",
+      "asset": "Actif",
+      "network": "Réseau",
+      "walletAddress": "Adresse du portefeuille",
+      "memo": "Mémo / tag (facultatif)",
+      "notes": "Note pour la conformité (facultatif)"
+    },
+    "placeholders": {
+      "holderName": "Tel qu'il figure sur le compte",
+      "bankName": "ex. HSBC",
+      "accountNumber": "Compte de réception",
+      "swift": "Pour les virements internationaux",
+      "optional": "Facultatif",
+      "walletAddress": "Adresse du portefeuille de destination",
+      "memo": "Uniquement si votre plateforme d'échange ou votre blockchain l'exige",
+      "notes": "Ex. urgence, référence souhaitée, etc."
+    },
+    "noticeBank": "Le service conformité examine chaque demande. Les fonds sont bloqués sur votre solde disponible dès l'envoi de la demande, puis virés sur votre compte bancaire dans les 48 heures suivant l'approbation. Vous recevrez un e-mail à chaque étape.",
+    "noticeCrypto": "Le service conformité examine chaque demande. Les fonds sont bloqués sur votre solde disponible dès l'envoi de la demande, puis envoyés à l'adresse de votre portefeuille dans les 48 heures suivant l'approbation. Vous recevrez un e-mail à chaque étape.",
+    "submitting": "Envoi…",
+    "submit": "Retirer {{amount}}",
+    "successBank": "Demande de retrait envoyée. Le service conformité l'examinera et virera {{amount}} vers {{dest}} sous 48 heures.",
+    "successCrypto": "Demande de retrait envoyée. Le service conformité l'examinera et enverra {{amount}} vers {{dest}} sous 48 heures.",
+    "reference": "Référence : {{ref}}.",
+    "errors": {
+      "exceedsBalance": "Le montant dépasse votre solde disponible de {{balance}}.",
+      "minAmount": "Saisissez un montant d'au moins $10.",
+      "bankRequired": "Le nom du titulaire du compte, le nom de la banque et le numéro de compte sont obligatoires.",
+      "cryptoRequired": "L'actif, le réseau et l'adresse du portefeuille sont obligatoires.",
+      "submitFailed": "Impossible d'envoyer la demande de retrait."
+    },
+    "sendTo": "Envoyer vers",
+    "addNew": "+ Ajouter un nouveau compte",
+    "newAccount": "Nouveau compte — enregistré dans vos comptes pour la prochaine fois.",
+    "default": "Par défaut",
+    "remove": "Supprimer",
+    "onlySaved": "Les retraits sont versés uniquement sur vos comptes enregistrés. Le montant est immédiatement bloqué dans votre portefeuille ; notre équipe l'envoie et vous êtes informé à chaque étape.",
+    "successRef": "Demande {{ref}} reçue : {{amount}} vers {{dest}}. Le montant reste bloqué dans votre portefeuille jusqu'à son envoi par notre équipe — vous êtes informé à chaque étape."
+  },
+  "withdrawals": {
+    "title": "Vos demandes de retrait",
+    "subtitle": "Chaque demande indique le compte de destination et son étape dans le processus de vérification. Les demandes en attente et approuvées ont déjà été bloquées sur votre solde disponible.",
+    "loading": "Chargement de l'historique des retraits…",
+    "loadError": "Impossible de charger votre historique de retraits.",
+    "emptyBefore": "Vous n'avez encore demandé aucun retrait. Cliquez sur ",
+    "emptyAction": "Retirer",
+    "emptyAfter": " ci-dessus pour transférer des fonds vers votre banque.",
+    "dest": {
+      "asset": "Actif",
+      "network": "Réseau",
+      "address": "Adresse",
+      "accountHolder": "Titulaire du compte",
+      "bank": "Banque",
+      "account": "Compte"
+    },
+    "requestedAt": "Demandé le {{date}}",
+    "completedAt": "Terminé le {{date}}",
+    "complianceNote": "Note de conformité :",
+    "pdf": "PDF",
+    "pdfTitle": "Télécharger la confirmation de retrait (PDF)",
+    "status": {
+      "pending": {
+        "label": "En attente",
+        "help": "En attente d'envoi par notre équipe."
+      },
+      "approved": {
+        "label": "Approuvé",
+        "help": "Approuvé. Le virement sera exécuté sous 48 h."
+      },
+      "processing": {
+        "label": "En cours",
+        "help": "Notre équipe a lancé le transfert."
+      },
+      "completed": {
+        "label": "Payé",
+        "help": "Envoyé sur votre compte."
+      },
+      "rejected": {
+        "label": "Non envoyé",
+        "help": "Le montant a été restitué dans votre portefeuille."
+      },
+      "cancelled": {
+        "label": "Annulé",
+        "help": "Annulé avant vérification."
+      }
+    },
+    "transferRef": "Référence du virement : {{ref}}"
+  },
+  "ledger": {
+    "title": "Activité du portefeuille",
+    "subtitle": "Chaque mouvement de votre portefeuille, avec son reçu numéroté.",
+    "receipt": "Reçu",
+    "empty": "Aucune activité sur le portefeuille pour le moment.",
+    "more": "Afficher plus",
+    "loading": "Chargement…",
+    "failed": "Impossible de préparer le reçu.",
+    "types": {
+      "deposit": "Dépôt",
+      "withdrawal": "Retrait",
+      "investment": "Investissement",
+      "dividend": "Distribution",
+      "fee": "Frais",
+      "refund": "Remboursement",
+      "trade_purchase": "Achat sur le marché",
+      "trade_sale": "Vente sur le marché"
+    }
+  },
+  "rentReturns": {
+    "title": "Revenus locatifs",
+    "subtitle": "Loyers qui vous sont versés, après déduction des frais de gestion. Ils arrivent dans votre portefeuille : retirez-les ou réinvestissez-les avec une remise sur n'importe quel bien.",
+    "gross": "Loyer",
+    "fee": "Frais de gestion",
+    "net": "Versé à vous",
+    "reinvestable": "Disponible pour réinvestissement : {{amount}} ({{pct}} % de remise sur le prix de la part)",
+    "shares": "{{n}} parts",
+    "empty": "Aucun revenu locatif pour le moment."
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "appName": "Capimax RT",
+  "tagline": "Propriété immobilière tokenisée | Adossée à une SPV | Accès mondial",
+  "taglineFull": "Une plateforme technologique mondiale de tokenisation d'actifs proposant la propriété fractionnée de biens immobiliers via le modèle SPV, avec transparence documentaire, gouvernance opérationnelle et options de liquidité grâce au marché secondaire et à un fournisseur de liquidité optionnel.",
+  "hero": {
+    "badge": "Propriété immobilière tokenisée | Adossée à une SPV | Accès mondial",
+    "brand": "Capimax Tokenization",
+    "headline": "Votre porte d'entrée vers la propriété immobilière tokenisée dans le monde entier",
+    "body": "La première plateforme mondiale qui réunit promoteurs, propriétaires, investisseurs et courtiers — dans un cadre unique adossé à une SPV.",
+    "ctaPrimary": "Devenir propriétaire",
+    "ctaSecondary": "Découvrir les biens",
+    "stats": {
+      "assets": "Actifs mondiaux",
+      "owners": "Propriétaires",
+      "properties": "Biens",
+      "returns": "Rendement moyen"
+    }
+  },
+  "acceptedPayments": {
+    "title": "Des moyens de paiement flexibles",
+    "subtitle": "En plus des cartes et des virements bancaires, nous acceptons ces options de paiement partenaires.",
+    "nova": {
+      "title": "Nous acceptons Nova Finance",
+      "desc": "Payez avec des certificats Nova Sukuk. Faites votre demande auprès de Nova Finance pour commencer.",
+      "cta": "Faire une demande avec Nova Finance"
+    },
+    "pronova": {
+      "title": "Nous acceptons Pronova",
+      "desc": "Payez avec la crypto Pronova sur BNB Smart Chain — les détenteurs de Pronova bénéficient de 5 % de réduction.",
+      "cta": "Visiter Pronova",
+      "discount": "-5 %"
+    }
+  },
+  "buttons": {
+    "learnMore": "En savoir plus",
+    "getStarted": "Commencer",
+    "submit": "Envoyer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "view": "Voir",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "confirm": "Confirmer",
+    "loading": "Chargement...",
+    "retry": "Réessayer",
+    "download": "Télécharger",
+    "upload": "Importer"
+  },
+  "status": {
+    "active": "Actif",
+    "pending": "En attente",
+    "completed": "Terminé",
+    "failed": "Échoué",
+    "processing": "En cours de traitement",
+    "approved": "Approuvé",
+    "rejected": "Rejeté"
+  },
+  "time": {
+    "justNow": "À l'instant",
+    "minutesAgo": "Il y a {{count}} minute",
+    "minutesAgo_plural": "Il y a {{count}} minutes",
+    "hoursAgo": "Il y a {{count}} heure",
+    "hoursAgo_plural": "Il y a {{count}} heures",
+    "daysAgo": "Il y a {{count}} jour",
+    "daysAgo_plural": "Il y a {{count}} jours"
+  },
+  "currency": {
+    "usd": "USD",
+    "eur": "EUR",
+    "aed": "AED"
+  },
+  "errors": {
+    "generic": "Une erreur s'est produite. Veuillez réessayer.",
+    "network": "Erreur réseau. Veuillez vérifier votre connexion.",
+    "notFound": "Page introuvable.",
+    "unauthorized": "Vous n'êtes pas autorisé à accéder à cette page.",
+    "sessionExpired": "Votre session a expiré. Veuillez vous reconnecter."
+  },
+  "footer": {
+    "copyright": "© {{year}} Capimax RT. Tous droits réservés.",
+    "disclaimer": "Capimax RT est une plateforme technologique et ne fournit pas de conseil financier.",
+    "quickLinks": "Liens rapides",
+    "legal": "Mentions légales",
+    "support": "Assistance",
+    "regulatoryTitle": "Statut juridique et réglementaire",
+    "regulatoryBody1": "Capimax RT est une plateforme exploitée par Capimax Real Estate Technologies, une société enregistrée, réglementée et agréée aux États-Unis et immatriculée dans l'État du Wyoming.",
+    "regulatoryBody2": "Tous les actifs et biens présentés sur la plateforme sont détenus par Capimax Asset Structure, une société constituée et immatriculée dans l'État du Wyoming, aux États-Unis."
+  },
+  "network": {
+    "title_slow": "Connexion lente",
+    "msg_slow": "Votre connexion Internet est très lente. Le chargement des pages peut prendre plus de temps.",
+    "title_offline": "Pas de connexion Internet",
+    "msg_offline": "Veuillez vérifier votre connexion réseau et réessayer.",
+    "title_restored": "Connexion rétablie",
+    "msg_restored": "Vous êtes de nouveau en ligne. Toutes les fonctionnalités sont à nouveau disponibles.",
+    "retry": "Réessayer",
+    "dismiss": "Ignorer"
+  },
+  "charts": {
+    "current": "Actuel",
+    "change": "Variation"
+  },
+  "pageLoader": {
+    "title": "Chargement…",
+    "wait": "Veuillez patienter un instant…",
+    "redirecting": "Redirection vers la connexion…"
+  },
+  "constructionStage": {
+    "complete": "Construction achevée",
+    "nearly": "Presque achevé",
+    "half": "À mi-parcours",
+    "progress": "En cours",
+    "started": "Tout juste commencé"
+  },
+  "txDescription": {
+    "investmentIn": "Investissement dans {{property}}",
+    "dividendFrom": "Distribution de {{property}}",
+    "withdrawalFrom": "Retrait de {{property}}"
+  },
+  "richTextHint": "Mise en forme : laissez une ligne vide entre les paragraphes, terminez une ligne de titre par « : » et commencez les éléments de liste par « * » ou « - »."
+}

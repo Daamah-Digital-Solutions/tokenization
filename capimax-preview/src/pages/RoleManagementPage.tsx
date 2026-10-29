@@ -27,6 +27,7 @@ import { cn } from '../utils/cn';
 import { useTranslation } from 'react-i18next';
 
 import { COMPANY } from '../utils/company';
+import { uiLocale } from '../utils/locale';
 interface RoleData {
   role: UserRole;
   role_display: string;
@@ -89,7 +90,7 @@ export const RoleManagementPage: React.FC = () => {
   const { navigate } = useRouter();
   const user = useUser();
   const { t, i18n } = useTranslation('ui');
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
+  const dateLocale = uiLocale(i18n.language);
   const humanize = (key: string) => key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   const [userRoles, setUserRoles] = useState<RoleData[]>([]);
   const [availableRoles, setAvailableRoles] = useState<UserRole[]>([]);

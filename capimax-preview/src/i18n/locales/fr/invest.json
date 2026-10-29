@@ -1,0 +1,556 @@
+{
+  "common": {
+    "cancel": "Annuler",
+    "back": "Retour",
+    "continue": "Continuer",
+    "close": "Fermer",
+    "retry": "Réessayer",
+    "shareCount_one": "{{count}} part",
+    "shareCount_other": "{{count}} parts",
+    "shares": "Parts",
+    "pricePerShare": "Prix par part",
+    "totalAmount": "Montant total",
+    "processingFee": "Frais de traitement",
+    "platformFee": "Frais de plateforme",
+    "networkFee": "Frais de réseau",
+    "total": "Total",
+    "free": "Gratuit",
+    "copy": "Copier",
+    "copied": "Copié !",
+    "frequency": {
+      "Monthly": "Mensuel",
+      "Quarterly": "Trimestriel",
+      "Semi-annually": "Semestriel",
+      "Annually": "Annuel",
+      "Annual": "Annuel",
+      "monthly": "Mensuel",
+      "quarterly": "Trimestriel",
+      "semi_annual": "Semestriel",
+      "annually": "Annuel",
+      "annual": "Annuel"
+    }
+  },
+  "flow": {
+    "title": "Acheter des parts de {{title}}",
+    "steps": {
+      "amount": {
+        "title": "Choisir les parts",
+        "description": "Choisissez le nombre de parts à acheter"
+      },
+      "payment": {
+        "title": "Moyen de paiement",
+        "description": "Choisissez comment vous souhaitez payer"
+      },
+      "process": {
+        "title": "Traitement",
+        "description": "Votre transaction est en cours de traitement"
+      },
+      "confirmation": {
+        "title": "Confirmation",
+        "description": "Votre achat est terminé"
+      },
+      "schedule": {
+        "title": "Échéancier de paiement",
+        "description": "Paiement intégral ou échelonné"
+      }
+    },
+    "errors": {
+      "minTokens": "Vous devez acheter au moins 1 part",
+      "maxTokens": "Seulement {{available}} parts disponibles",
+      "paymentMethod": "Veuillez sélectionner un moyen de paiement",
+      "installmentsOnly": "Ce bien est vendu uniquement en paiement échelonné.",
+      "minInstallment": "Chaque échéance doit être d'au moins {{amount}}. Choisissez plus de parts ou moins d'échéances.",
+      "walletShortFirst": "Votre portefeuille ne couvre pas le premier paiement ({{amount}}). Choisissez une carte, la crypto ou Pronova, ou ajoutez d'abord des fonds à votre portefeuille."
+    },
+    "buttons": {
+      "confirmPay": "Confirmer et payer",
+      "confirmPlan": "Confirmer le plan de paiement échelonné",
+      "chooseSchedule": "Choisir l'échéancier",
+      "choosePayment": "Choisir le paiement"
+    },
+    "cancelDialog": {
+      "title": "Annuler l'achat ?",
+      "body": "Votre progression sera perdue",
+      "continue": "Poursuivre l'achat",
+      "confirm": "Oui, annuler"
+    }
+  },
+  "amount": {
+    "title": "Choisissez le nombre de parts",
+    "perShare": "{{price}} par part",
+    "numberOfShares": "Nombre de parts",
+    "placeholder": "Saisissez le nombre de parts",
+    "available": "Disponibles : {{available}} parts",
+    "totalCost": "Coût total",
+    "quickSelect": "Sélection rapide",
+    "summary": "Récapitulatif de l'achat",
+    "showAdvanced": "Afficher les détails avancés",
+    "hideAdvanced": "Masquer les détails avancés",
+    "annualReturn": "Rendement annuel",
+    "roi": "Rendement (ROI) de {{value}} %",
+    "dividend": "Distribution ({{frequency}})",
+    "paymentsPerYear": "{{value}} versements/an",
+    "ownershipShare": "Quote-part de propriété",
+    "ofTotalProperty": "du bien total",
+    "returnBreakdown": "Détail du rendement",
+    "grossAnnualReturn": "Rendement annuel brut :",
+    "managementFee": "Frais de gestion :",
+    "netAnnualReturn": "Rendement annuel net :",
+    "shareDetails": "Détails des parts",
+    "sharesSelected": "Parts sélectionnées :",
+    "expectedReturnRate": "Taux de rendement attendu :",
+    "fundingProgress": "Progression du financement du bien",
+    "percentComplete": "{{value}} % atteint",
+    "sold": "{{value}} vendues",
+    "yourPurchase": "+{{value}} votre achat",
+    "totalShares": "{{value}} au total",
+    "riskTitle": "Avertissement sur les risques liés à la propriété",
+    "riskBody": "La détention immobilière comporte des risques, y compris la perte potentielle du capital. Les performances passées ne garantissent pas les résultats futurs. Les rendements sont des projections fondées sur les conditions actuelles du marché et ne sont pas garantis."
+  },
+  "paymentMethod": {
+    "amountRequired": "Montant d'achat requis",
+    "amountRequiredHint": "Veuillez sélectionner un montant d'achat pour accéder aux options de paiement",
+    "title": "Choisissez un moyen de paiement",
+    "subtitle": "Payez {{amount}} pour votre achat immobilier",
+    "recommended": "Recommandé",
+    "popular": "Populaire",
+    "discount": "Réduction",
+    "fee": "Frais",
+    "processing": "Délai",
+    "selected": "{{name}} sélectionné",
+    "selectedHint": "Cliquez sur « Confirmer et payer » ci-dessous pour continuer",
+    "cryptoGuidanceTitle": "Les parts seront déposées dans votre portefeuille Capimax RT",
+    "cryptoGuidanceBody": "Vos parts de bien sont émises sous forme de jetons numériques dans un portefeuille géré par Capimax RT et lié à votre compte. Vous pouvez consulter le solde et l'historique on-chain à tout moment depuis l'onglet Portefeuille.",
+    "mintedTo": "Les parts seront émises vers",
+    "yourWallet": "Votre portefeuille",
+    "platformManaged": "Géré par la plateforme",
+    "securityTitle": "Traitement sécurisé des paiements",
+    "securityBody": "Tous les paiements sont traités via des canaux chiffrés, avec des mesures de sécurité conformes aux normes du secteur. Vos informations financières ne sont jamais stockées sur nos serveurs.",
+    "methods": {
+      "wallet": {
+        "name": "Portefeuille Capimax RT",
+        "description": "Utilisez le solde existant de votre portefeuille Capimax RT pour un achat instantané",
+        "fee": "Gratuit",
+        "time": "Instantané"
+      },
+      "crypto": {
+        "name": "Cryptomonnaie",
+        "description": "Payez en Bitcoin, Ethereum ou autres cryptomonnaies",
+        "fee": "0.5%",
+        "time": "10 à 30 minutes"
+      },
+      "fiat": {
+        "name": "Carte de crédit/débit",
+        "description": "Payez instantanément avec Visa, Mastercard ou American Express",
+        "fee": "2.9% + $0.30",
+        "time": "Instantané"
+      },
+      "bank": {
+        "name": "Virement bancaire",
+        "description": "Virement direct depuis votre compte bancaire (ACH/Wire)",
+        "fee": "Gratuit (ACH)",
+        "time": "1 à 3 jours ouvrés"
+      },
+      "nova_sukuk": {
+        "name": "Nova Sukuk",
+        "description": "Payez avec un certificat Nova Sukuk - téléversez le PDF pour examen par l'administrateur",
+        "fee": "Gratuit",
+        "time": "1 à 2 jours ouvrés"
+      },
+      "pronova": {
+        "name": "Pronova",
+        "description": "Payez en crypto Pronova sur BNB Smart Chain - bénéficiez de 5 % de réduction !",
+        "fee": "Gratuit",
+        "time": "5 à 15 minutes",
+        "discount": "-5 %"
+      }
+    }
+  },
+  "schedule": {
+    "title": "Choisissez votre échéancier de paiement",
+    "purchaseAmount": "Montant de l'achat : {{amount}}",
+    "sort": {
+      "popular": "Trier par popularité",
+      "totalCost": "Trier par coût total",
+      "downPayment": "Trier par apport initial",
+      "apr": "Trier par taux d'intérêt"
+    },
+    "cards": "Cartes",
+    "compare": "Comparer",
+    "badges": {
+      "mostPopular": "Le plus populaire",
+      "lowestInterest": "Intérêts les plus bas",
+      "lowestDown": "Apport initial le plus bas"
+    },
+    "downPayment": "Apport initial",
+    "periodicPayment": "Paiement ({{frequency}})",
+    "totalPayments": "Total des paiements",
+    "totalCost": "Coût total",
+    "apr": "TAEG",
+    "tokenRelease": "Libération des parts",
+    "release": {
+      "immediate": "Immédiate",
+      "partial": "Partielle",
+      "completion": "À la fin"
+    },
+    "releaseHint": {
+      "immediate": "Toutes les parts libérées immédiatement",
+      "partial": "Parts libérées à chaque paiement",
+      "completion": "Toutes les parts libérées à la fin du plan"
+    },
+    "bestFor": "Idéal pour :",
+    "benefits": "Avantages :",
+    "moreBenefits": "+{{value}} autres avantages",
+    "table": {
+      "plan": "Plan",
+      "payments": "Paiements",
+      "select": "Choisir"
+    },
+    "plusInterest": "+{{amount}} d'intérêts",
+    "customPrompt": "Vous ne trouvez pas de plan adapté à vos besoins ?",
+    "customButton": "Demander un plan de paiement personnalisé",
+    "selected": "Sélectionné : {{name}}",
+    "dueNow": "À payer maintenant",
+    "then": "Puis",
+    "paymentsOf": "{{value}} paiements de {{amount}}",
+    "interest": "Intérêts",
+    "noInterest": "Sans intérêts"
+  },
+  "processor": {
+    "payment": "Paiement",
+    "cta": {
+      "kyc": "Terminer la vérification d'identité",
+      "support": "Contacter l'assistance",
+      "reduce": "Réduire le montant de l'achat",
+      "accredited": "Demander le statut d'investisseur qualifié",
+      "browse": "Parcourir les biens éligibles"
+    },
+    "steps": {
+      "validate": {
+        "title": "Valider l'achat",
+        "description": "Vérification de la disponibilité et des limites",
+        "pronovaDescription": "Vérification de la disponibilité et calcul de la réduction de 5 %"
+      },
+      "process": {
+        "title": "Traiter le paiement",
+        "description": "Traitement du paiement {{method}}",
+        "cryptoDescription": "Obtenir l'adresse de paiement crypto et attendre les fonds"
+      },
+      "tokens": {
+        "title": "Confirmer les parts",
+        "description": "Confirmation de vos parts de bien"
+      },
+      "sukukUpload": {
+        "title": "Téléverser le document Sukuk",
+        "description": "Envoi du PDF pour examen par l'administrateur"
+      },
+      "sukukReview": {
+        "title": "En attente d'examen",
+        "description": "L'administrateur examinera et approuvera votre paiement"
+      },
+      "pronovaCreate": {
+        "title": "Créer le paiement",
+        "description": "Configuration du paiement Pronova avec réduction"
+      },
+      "pronovaAwait": {
+        "title": "En attente du paiement",
+        "description": "Envoyez des Pronova au portefeuille de la plateforme pour finaliser"
+      }
+    },
+    "eta": {
+      "s10": "10 s",
+      "s15": "15 s",
+      "s30": "30 s",
+      "m5_30": "5-30 min"
+    },
+    "errors": {
+      "failed": "La transaction a échoué. Veuillez réessayer ou utiliser un autre moyen de paiement.",
+      "cardCancelled": "Le paiement par carte a été annulé. Vous pouvez réessayer ou choisir un autre moyen.",
+      "cryptoCancelled": "Le paiement crypto a été annulé. Vous pouvez réessayer ou choisir un autre moyen — si vous avez déjà envoyé des fonds, ils seront tout de même crédités, mais vous devrez peut-être actualiser la page.",
+      "submissionCancelled": "Soumission annulée. Vous pouvez réessayer ou choisir un autre moyen de paiement."
+    },
+    "summary": "Récapitulatif de la transaction",
+    "propertyShares": "Parts du bien :",
+    "each": "{{price}} chacune",
+    "subtotal": "Sous-total :",
+    "methodFee": "Frais {{method}} :",
+    "progress": "Progression de la transaction",
+    "changeMethod": "Changer de moyen de paiement",
+    "dontClose": "Veuillez ne pas fermer cette fenêtre. Votre transaction est traitée de manière sécurisée.",
+    "security": "Votre achat est traité via des contrats intelligents sécurisés et audités. Toutes les transactions sont enregistrées sur la blockchain.",
+    "dueNow": "À payer maintenant (premier paiement + frais)",
+    "dueNowHint": "Les paiements suivants sont prélevés automatiquement sur votre portefeuille à leurs dates d'échéance."
+  },
+  "confirmation": {
+    "shareText": "Je viens d'acheter {{value}} parts du bien {{title}} grâce à l'immobilier tokenisé ! 🏢💎",
+    "copy": {
+      "heading": "Confirmation d'achat",
+      "property": "Bien",
+      "shares": "Parts achetées",
+      "totalCost": "Coût total",
+      "annualReturn": "Rendement annuel attendu",
+      "transactionId": "ID de transaction"
+    },
+    "success": "Achat réussi !",
+    "welcome": "Bienvenue dans l'avenir de la propriété immobilière",
+    "planCreated": "Plan de paiement échelonné créé",
+    "planCreatedCount": "Plan de paiement échelonné créé — {{value}} paiements mensuels",
+    "planBody": "Vos parts sont réservées et vous sont libérées au fur et à mesure de vos paiements. Votre première échéance est due maintenant — réglez-la depuis la section <strong>Échéances</strong> de votre tableau de bord, à partir de votre portefeuille.",
+    "yourOwnership": "Votre propriété",
+    "active": "Active",
+    "purchased": "Acheté",
+    "expectedRoi": "Rendement (ROI) annuel attendu",
+    "nextDividend": "Prochaine distribution :",
+    "deliveredTo": "Parts livrées à",
+    "whatsNext": "Et maintenant ?",
+    "next": {
+      "portfolioTitle": "Voir mes investissements",
+      "portfolioBody": "Vos parts sont prêtes. Suivez la performance, gérez vos avoirs et consultez vos distributions dans votre portefeuille.",
+      "dividendTitle": "Première distribution",
+      "dividendBody": "Votre première distribution trimestrielle de {{amount}} est attendue le {{date}}.",
+      "certificateTitle": "Certificat de propriété",
+      "certificateBody": "Un certificat de propriété numérique vous sera envoyé par e-mail sous 48 heures."
+    },
+    "viewReceipt": "Voir le reçu",
+    "downloadReceipt": "Télécharger le reçu",
+    "copyDetails": "Copier les détails",
+    "email": {
+      "title": "Confirmation par e-mail",
+      "sent": "E-mail de confirmation envoyé avec succès !",
+      "hint": "Recevez une confirmation d'achat détaillée par e-mail",
+      "sending": "Envoi...",
+      "sentShort": "Envoyé !",
+      "send": "Envoyer l'e-mail"
+    },
+    "share": {
+      "title": "Partagez votre achat",
+      "hint": "Faites connaître votre choix de propriété intelligent"
+    },
+    "goToPortfolio": "Aller à mes investissements",
+    "returnToProperty": "Retour au bien",
+    "congrats": "Félicitations pour votre achat !",
+    "congratsBody": "Vous faites désormais partie de l'avenir de la propriété immobilière"
+  },
+  "receipt": {
+    "brand": "CAPIMAX RT",
+    "tagline": "Plateforme de tokenisation immobilière",
+    "title": "Reçu d'achat",
+    "confirmed": "Transaction confirmée",
+    "transactionInfo": "Informations sur la transaction",
+    "dateTime": "Date et heure :",
+    "dateAt": "{{date}} à {{time}}",
+    "paymentMethod": "Moyen de paiement :",
+    "fiat": "Monnaie fiduciaire",
+    "status": "Statut :",
+    "statusConfirmed": "Confirmé",
+    "ownerInfo": "Informations sur le propriétaire",
+    "ownerId": "ID du propriétaire :",
+    "accountType": "Type de compte :",
+    "individual": "Particulier",
+    "kycStatus": "Vérification d'identité :",
+    "verified": "Vérifiée",
+    "propertyDetails": "Détails de la propriété du bien",
+    "noLocation": "Emplacement non disponible",
+    "propertyType": "Type de bien :",
+    "propertyTypes": {
+      "residential": "Résidentiel",
+      "commercial": "Commercial",
+      "industrial": "Industriel",
+      "mixed_use": "Usage mixte",
+      "land": "Terrain"
+    },
+    "totalValue": "Valeur totale du bien :",
+    "breakdown": "Détail de votre achat",
+    "purchaseAmount": "Montant de l'achat :",
+    "projections": "Projections de rendement",
+    "estPerYear": "Env. {{amount}}/an",
+    "quarterlyDividend": "Distribution trimestrielle",
+    "every3Months": "Tous les 3 mois",
+    "nextDividend": "Prochaine distribution",
+    "expectedDate": "Date prévue",
+    "disclaimer": "<strong>Avertissement :</strong> Les rendements projetés sont des estimations fondées sur les conditions actuelles du marché et les performances historiques. Les rendements réels peuvent varier et ne sont pas garantis. Toute détention immobilière comporte des risques, y compris la perte potentielle du capital.",
+    "badges": "Conforme SEC • Sécurisé par la blockchain • Entièrement audité",
+    "footer": "Ce reçu constitue la confirmation officielle de votre achat de parts immobilières. Pour toute question ou assistance, contactez-nous à {{email}}",
+    "mintedTitle": "Parts émises sur la blockchain Polygon",
+    "mintedBody": "Vos parts de bien ont été émises de manière sécurisée sous forme de jetons numériques et enregistrées sur la blockchain.",
+    "addToCalendar": "Ajouter au calendrier",
+    "generatedOn": "Généré le {{date}}"
+  },
+  "installment": {
+    "errors": {
+      "min": "L'achat minimum est de {{value}} parts",
+      "max": "L'achat maximum est de {{value}} parts",
+      "plan": "Veuillez sélectionner un plan de paiement échelonné",
+      "planMin": "Ce plan exige un achat minimum de {{amount}}",
+      "planMax": "Ce plan a une limite d'achat maximale de {{amount}}"
+    },
+    "title": "Achat échelonné",
+    "steps": {
+      "amount": "Montant",
+      "plan": "Plan",
+      "payment": "Paiement",
+      "review": "Vérification"
+    },
+    "chooseAmount": "Choisissez le montant de l'achat",
+    "totalPurchase": "Achat total",
+    "minShares": "Min : {{value}} parts",
+    "riskLevel": "Niveau de risque",
+    "risk": {
+      "low": "FAIBLE",
+      "medium": "MOYEN",
+      "high": "ÉLEVÉ"
+    },
+    "estYield": "Rendement estimé",
+    "status": "Statut",
+    "completion": "Achèvement",
+    "selectPlan": "Sélectionnez un plan de paiement échelonné",
+    "installments": "Échéances",
+    "downPaymentMethod": "Moyen de paiement de l'apport initial",
+    "methods": {
+      "credit_card": {
+        "name": "Carte de crédit",
+        "description": "Traitement instantané"
+      },
+      "bank_transfer": {
+        "name": "Virement bancaire",
+        "description": "1 à 3 jours ouvrés"
+      },
+      "crypto": {
+        "name": "Cryptomonnaie",
+        "description": "USDC, ETH, BTC acceptés"
+      },
+      "wire": {
+        "name": "Virement international",
+        "description": "Pour les montants importants"
+      }
+    },
+    "review": "Vérifiez votre achat",
+    "sharesValue": "{{value}} parts",
+    "breakdown": "Détail des paiements",
+    "downDueNow": "Apport initial (à payer maintenant)",
+    "installmentsOf": "{{value}} échéances de",
+    "totalWithInterest": "Total avec intérêts",
+    "terms": "En continuant, vous acceptez les conditions générales du plan d'achat échelonné. Les parts seront réservées dès le versement de l'apport initial et libérées selon l'échéancier du plan choisi.",
+    "firstDue": "La première échéance sera due 30 jours après le traitement de l'apport initial.",
+    "previous": "Précédent",
+    "processing": "Traitement...",
+    "complete": "Finaliser l'achat",
+    "next": "Suivant"
+  },
+  "reserved": {
+    "title": "Gestionnaire de réservations de parts",
+    "expiringSoon": "{{value}} expirent bientôt",
+    "activeReservations": "Réservations actives",
+    "reservedValue": "Valeur réservée",
+    "activatedValue": "Valeur activée",
+    "readyToActivate": "Prêtes à activer",
+    "emptyTitle": "Aucune réservation de parts",
+    "emptyBody": "Vous n'avez encore aucune réservation de parts",
+    "sharesAt": "{{value}} parts à {{price}}",
+    "status": {
+      "active": "ACTIVE",
+      "expired": "EXPIRÉE",
+      "activated": "ACTIVÉE",
+      "cancelled": "ANNULÉE"
+    },
+    "daysLeft": "{{value}} jours restants",
+    "paymentProgress": "Progression des paiements",
+    "paymentsCount": "{{paid}}/{{total}} paiements",
+    "percentComplete": "{{value}} % effectué",
+    "sharesActivated": "{{value}} parts activées",
+    "reserved": "Réservées",
+    "activated": "Activées",
+    "available": "Disponibles",
+    "remainingBalance": "Solde restant",
+    "autoActivation": "Activation automatique",
+    "autoActivationHint": "Activer automatiquement les parts lorsque {{value}} % des paiements sont effectués",
+    "expiresIn": "La réservation expire dans {{value}} jour(s)",
+    "nextPaymentDue": "Prochain paiement dû : {{date}}",
+    "activateN": "Activer {{value}} parts",
+    "makePayment": "Effectuer un paiement",
+    "extend": "Prolonger la réservation",
+    "modify": "Modifier",
+    "modal": {
+      "activate": "Activer les parts",
+      "modify": "Modifier la réservation",
+      "toActivate": "Parts à activer",
+      "maxAvailable": "Maximum disponible : {{value}}",
+      "extensionDays": "Durée de prolongation (jours)",
+      "extensionFee": "Des frais de prolongation peuvent s'appliquer",
+      "newAmount": "Nouveau nombre de parts",
+      "additionalPayment": "Un paiement supplémentaire peut être requis en cas d'augmentation",
+      "confirm": "Confirmer"
+    }
+  },
+  "graduated": {
+    "title": "Suivi de la propriété progressive",
+    "subtitle": "Suivez votre propriété progressive et les avantages de votre palier",
+    "detailedView": "Vue détaillée",
+    "overview": "Vue d'ensemble",
+    "activePositions": "Positions actives",
+    "totalPurchased": "Total acheté",
+    "currentValue": "Valeur actuelle",
+    "totalDividends": "Total des distributions",
+    "emptyTitle": "Aucune position de propriété",
+    "emptyBody": "Commencez votre parcours de propriété progressive en effectuant votre premier achat",
+    "status": {
+      "active": "ACTIVE",
+      "paused": "EN PAUSE",
+      "completed": "TERMINÉE",
+      "defaulted": "EN DÉFAUT"
+    },
+    "ownedOf": "{{owned}} parts sur {{total}}",
+    "perShare": "({{value}} % de propriété par part)",
+    "upgradeAvailable": "Passage au palier supérieur disponible",
+    "paymentProgress": "Progression des paiements : {{value}} %",
+    "nextTier": "Suivant : {{name}} à {{value}} %",
+    "paid": "Payé",
+    "remaining": "Restant",
+    "dividendRate": "Taux de distribution",
+    "dividendsEarned": "Distributions perçues",
+    "nextMilestone": "Prochaine étape : {{name}}",
+    "sharesAt": "{{value}} parts à {{percent}} %",
+    "tierBenefits": "Avantages du palier actuel",
+    "benefits": "Avantages",
+    "rights": "Droits et options",
+    "voting": "Droits de vote",
+    "yes": "Oui",
+    "no": "Non",
+    "transfer": "Droits de cession",
+    "transferRights": {
+      "none": "Aucun",
+      "limited": "Limités",
+      "full": "Complets"
+    },
+    "liquidity": "Options de liquidité",
+    "milestoneProgress": "Progression des étapes",
+    "atPayment": "À {{value}} % des paiements",
+    "upgradeTo": "Passer au palier {{name}}",
+    "viewProjections": "Voir les projections",
+    "availableTiers": "Paliers de propriété disponibles",
+    "tierLine": "{{min}} %-{{max}} % • {{ownership}} % de propriété • {{dividend}} % de distribution"
+  },
+  "wallet": {
+    "connectFailed": "Échec de la connexion du portefeuille. Veuillez réessayer.",
+    "connectedTitle": "Portefeuille connecté",
+    "connected": "Connecté",
+    "disconnect": "Déconnecter",
+    "address": "Adresse",
+    "showAddress": "Afficher l'adresse complète",
+    "hideAddress": "Masquer l'adresse complète",
+    "balance": "Solde",
+    "connectedTo": "Connecté à {{network}}",
+    "title": "Connectez votre portefeuille",
+    "subtitle": "Choisissez un portefeuille à connecter pour finaliser votre achat",
+    "notInstalled": "Non installé",
+    "noWallet": "Vous n'avez pas de portefeuille ?",
+    "learn": "Découvrez comment configurer un portefeuille crypto",
+    "security": "Nous ne stockons jamais vos clés privées ni votre phrase de récupération. Votre portefeuille reste entièrement sous votre contrôle.",
+    "options": {
+      "metamask": "Le portefeuille Ethereum le plus populaire",
+      "walletconnect": "Connexion avec des portefeuilles mobiles",
+      "coinbase": "Portefeuille non dépositaire de Coinbase",
+      "phantom": "Portefeuille Solana et Ethereum"
+    }
+  }
+}

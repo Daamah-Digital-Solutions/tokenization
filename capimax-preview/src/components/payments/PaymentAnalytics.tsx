@@ -20,6 +20,7 @@ import { formatCurrency, getCurrencyInfo } from '../../utils/currencyConverter';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Select } from '../design-system/forms/Select';
+import { uiLocale } from '../../utils/locale';
 
 interface PaymentAnalyticsProps {
   className?: string;
@@ -54,7 +55,7 @@ interface PaymentMethodStats {
 export function PaymentAnalytics({ className, timeRange: defaultTimeRange = '30d' }: PaymentAnalyticsProps) {
   const { state } = usePayment();
   const { t, i18n } = useTranslation('payments');
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
+  const dateLocale = uiLocale(i18n.language);
   const methodName = (m: string) => t(`methodNames.${m}`, { defaultValue: m });
   const [timeRange, setTimeRange] = useState(defaultTimeRange);
   const [selectedMetric, setSelectedMetric] = useState<'volume' | 'count' | 'fees'>('volume');

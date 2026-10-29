@@ -5,10 +5,11 @@ import { InfoPageLayout } from '../components/info/InfoPageLayout';
 export const CapimaxRTGuidePage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const isFr = i18n.language?.startsWith('fr');
   return (
     <InfoPageLayout
-      title={isAr ? 'دليل كابي مكس RT' : 'Capimax RT Guide'}
-      subtitle={isAr ? 'جزء من Capimax Group' : 'Part of Capimax Group'}
+      title={isAr ? 'دليل كابي مكس RT' : isFr ? 'Guide Capimax RT' : 'Capimax RT Guide'}
+      subtitle={isAr ? 'جزء من Capimax Group' : isFr ? 'Membre de Capimax Group' : 'Part of Capimax Group'}
     >
       {isAr ? (
       <section className="info-section">
@@ -199,6 +200,199 @@ export const CapimaxRTGuidePage: React.FC = () => {
           <li>تقدّم خدمات رقمية متقدمة للملاك والبائعين والمطوّرين والوسطاء.</li>
           <li>تدعم الملكية الجزئية عبر البلوك تشين لتحقيق الحماية والمرونة والربحية.</li>
           <li>توفّر أدوات تسويق وتقارير وسوقًا داخلية ومزايا تقنية متقدمة.</li>
+        </ul>
+      </section>
+      ) : isFr ? (
+      <section className="info-section">
+        <p className="info-intro">
+          Capimax Group est un groupe international regroupant 12 sociétés implantées aux
+          États-Unis, au Royaume-Uni et aux Émirats arabes unis, spécialisé dans :
+        </p>
+        <ul>
+          <li>L'accession à la propriété et la gestion de fonds de propriété immobilière.</li>
+          <li>La blockchain et les technologies financières.</li>
+          <li>Les actifs virtuels.</li>
+        </ul>
+        <p>
+          <strong>Champ d'activité :</strong> mondial, sans restriction géographique, permettant aux propriétaires, aux vendeurs
+          de biens, aux promoteurs et aux courtiers de participer depuis n'importe où dans le monde.
+        </p>
+
+        <h2>Présentation de la plateforme Capimax RT</h2>
+        <p>
+          Capimax RT est une plateforme numérique avancée de tokenisation immobilière, qui s'appuie sur
+          la technologie blockchain et les contrats intelligents pour permettre :
+        </p>
+        <ul>
+          <li>La propriété fractionnée et l'achat partiel de biens tokenisés.</li>
+          <li>Une protection juridique et financière pour les propriétaires, les vendeurs de biens et les promoteurs.</li>
+          <li>L'accès à un marché de sortie interne et à de multiples plateformes de paiement, avec bientôt un fournisseur de liquidité permettant des sorties instantanées.</li>
+        </ul>
+
+        <h2>Types de biens proposés sur la plateforme</h2>
+        <h3>1. Biens de rapport prêts à l'emploi :</h3>
+        <ul>
+          <li>Biens entièrement construits et en exploitation.</li>
+          <li>Ils offrent aux propriétaires des rendements périodiques fixes en fonction de leurs parts de propriété.</li>
+          <li>Gérés et contrôlés par des sociétés professionnelles de gestion immobilière afin d'assurer des rendements stables.</li>
+        </ul>
+        <h3>2. Biens en développement en quatre tours de financement :</h3>
+        <ul>
+          <li>Projets à différentes phases de développement, répartis en quatre tours de financement.</li>
+          <li>Les propriétaires peuvent participer dès les premières étapes, ce qui accroît le rendement potentiel à mesure que le projet avance.</li>
+          <li>Chaque tour est encadré par des contrats intelligents garantissant le respect des conditions juridiques et financières.</li>
+        </ul>
+        <h3>3. Biens en construction avec plans de paiement échelonné :</h3>
+        <ul>
+          <li>Achetez des biens en construction avec des options de paiement échelonné flexibles.</li>
+          <li>Les contrats intelligents garantissent que les promoteurs respectent le calendrier du projet et les jalons de livraison.</li>
+        </ul>
+        <p>
+          Tous les biens sont rigoureusement évalués par des spécialistes de l'immobilier et des sociétés
+          d'expertise internationales afin d'en garantir la qualité et la transparence.
+        </p>
+
+        <h2>Modèle de SPV (société ad hoc)</h2>
+        <p>
+          Chaque projet sur Capimax RT est géré par une SPV indépendante, une structure juridique et de propriété
+          qui protège les droits de toutes les parties et garantit :
+        </p>
+        <h3>Pour les propriétaires :</h3>
+        <ul>
+          <li>Une propriété fractionnée précise grâce aux jetons numériques.</li>
+          <li>Une flexibilité quant au montant de l'achat.</li>
+          <li>Une protection juridique et financière grâce aux contrats intelligents.</li>
+          <li>Des options de sortie via le marché interne annuel ou bientôt via un fournisseur de liquidité.</li>
+          <li>Des rapports et analyses détaillés sur la performance de la propriété.</li>
+        </ul>
+        <h3>Pour les vendeurs de biens / promoteurs :</h3>
+        <ul>
+          <li>Un financement de projet sécurisé et flexible apporté par les acheteurs.</li>
+          <li>Une gestion transparente des engagements financiers des acheteurs.</li>
+          <li>Des risques opérationnels et d'assurance réduits.</li>
+          <li>Le suivi des projets grâce à des tableaux de bord dédiés aux vendeurs/promoteurs.</li>
+        </ul>
+        <h3>Pour la plateforme Capimax RT :</h3>
+        <ul>
+          <li>Une sécurité totale des transactions financières et juridiques.</li>
+          <li>La constitution d'un réseau mondial de propriétaires, promoteurs, courtiers et fournisseurs de liquidité.</li>
+          <li>Des revenus durables issus des frais de tokenisation et de gestion de la plateforme.</li>
+          <li>L'expansion mondiale de la plateforme dans le respect des normes juridiques internationales.</li>
+        </ul>
+
+        <h2>Promotion immobilière</h2>
+        <p>
+          La promotion immobilière consiste à commercialiser des biens afin d'attirer acheteurs et vendeurs,
+          notamment par :
+        </p>
+        <ul>
+          <li>Une présentation professionnelle du bien, incluant l'emplacement, le type, les rendements attendus et les plans de développement.</li>
+          <li>Des informations transparentes sur les rendements et les risques.</li>
+          <li>L'utilisation d'outils numériques et de la blockchain pour prouver la propriété et garantir la transparence.</li>
+        </ul>
+        <p>
+          Une promotion immobilière efficace accroît l'engagement des propriétaires et la liquidité sur le marché
+          interne de la plateforme.
+        </p>
+
+        <h2>Propriété fractionnée</h2>
+        <p>
+          La propriété fractionnée permet aux propriétaires de détenir une part déterminée d'un bien au lieu d'acheter
+          le bien en entier, ce qui offre :
+        </p>
+        <ul>
+          <li>Un seuil d'entrée plus bas pour les acheteurs.</li>
+          <li>Une répartition des risques entre plusieurs propriétaires.</li>
+          <li>La possibilité de vendre et d'échanger des parts au sein du marché interne.</li>
+        </ul>
+
+        <h3>Avantages de la propriété fractionnée grâce à la blockchain :</h3>
+        <ul>
+          <li>Une vérification sécurisée et transparente de la propriété grâce aux contrats intelligents.</li>
+          <li>Une traçabilité complète de chaque transaction financière et juridique.</li>
+          <li>Des sorties et des échanges facilités, rapides et fiables.</li>
+          <li>Des coûts d'intermédiation traditionnels réduits.</li>
+        </ul>
+
+        <h3>Avantages pour chaque partie :</h3>
+        <p><strong>Pour les propriétaires :</strong></p>
+        <ul>
+          <li>Une propriété précise et des rendements proportionnels.</li>
+          <li>Une grande flexibilité financière et un accès anticipé à de grands projets.</li>
+          <li>La possibilité de sortir ou d'échanger des parts facilement au sein d'une plateforme sécurisée.</li>
+        </ul>
+        <p><strong>Pour les promoteurs / vendeurs :</strong></p>
+        <ul>
+          <li>Un financement de projet rapide et flexible, sans prêts traditionnels.</li>
+          <li>Une répartition des risques entre plusieurs propriétaires.</li>
+          <li>Une gestion financière transparente et efficace.</li>
+        </ul>
+        <p><strong>Pour la plateforme Capimax RT :</strong></p>
+        <ul>
+          <li>Instaure la confiance et la transparence entre toutes les parties.</li>
+          <li>Accroît le volume des échanges et l'activité de propriété.</li>
+          <li>Offre des services numériques professionnels et intégrés à tous les utilisateurs.</li>
+        </ul>
+
+        <h2>Tableaux de bord et analyses</h2>
+        <p>La plateforme propose des tableaux de bord spécialisés pour chaque partie :</p>
+        <ol>
+          <li><strong>Propriétaire :</strong> suivre ses parts, ses rendements, la performance des biens et les options de sortie.</li>
+          <li><strong>Vendeur :</strong> gérer la propriété fractionnée, suivre les rendements et les rapports juridiques.</li>
+          <li><strong>Promoteur :</strong> suivre les jalons du projet, les tours de financement et les engagements des acheteurs.</li>
+          <li><strong>Courtier :</strong> gérer ses clients, suivre les demandes et faciliter les transactions.</li>
+        </ol>
+        <p>Fonctionnalités des tableaux de bord et des analyses :</p>
+        <ul>
+          <li>Rapports financiers et juridiques détaillés.</li>
+          <li>Indicateurs de performance, rendement (ROI) et suivi des risques.</li>
+          <li>Vérification en temps réel de toutes les transactions pour une transparence totale.</li>
+        </ul>
+
+        <h2>Marché de sortie annuel et fournisseur de liquidité</h2>
+        <ul>
+          <li><strong>Marché de sortie annuel :</strong> permet aux propriétaires actuels de mettre en vente leurs parts auprès de nouveaux acheteurs au sein de la plateforme.</li>
+          <li><strong>Fournisseur de liquidité :</strong> permet une sortie instantanée pour les parts tokenisées, ce qui accroît la flexibilité de la propriété.</li>
+        </ul>
+
+        <h2>Multiples moyens de paiement et de retrait</h2>
+        <ul>
+          <li>Les principales cryptomonnaies.</li>
+          <li>Les devises fiduciaires locales et internationales.</li>
+          <li>Les moyens de paiement numériques, y compris les cartes virtuelles, les portefeuilles électroniques et les virements bancaires.</li>
+        </ul>
+        <p>Conçus pour offrir commodité et flexibilité aux utilisateurs du monde entier.</p>
+
+        <h2>Transparence et vérification</h2>
+        <ul>
+          <li>Toutes les transactions sont traçables et vérifiables grâce aux contrats intelligents et à la blockchain.</li>
+          <li>Les propriétaires, vendeurs et promoteurs peuvent accéder en temps réel à des informations détaillées sur les biens et les parts qu'ils détiennent.</li>
+          <li>Garantit la crédibilité et la transparence de toutes les opérations, analyses et expertises.</li>
+        </ul>
+
+        <h2>L'ensemble des fonctionnalités de la plateforme</h2>
+        <ul>
+          <li>Tokenisation immobilière s'appuyant sur une SPV et la blockchain pour la sécurité juridique et financière.</li>
+          <li>Propriété fractionnée précise avec des options de sortie flexibles.</li>
+          <li>Tableaux de bord et analyses avancés pour toutes les parties.</li>
+          <li>Marché de sortie interne et, bientôt, fournisseur de liquidité.</li>
+          <li>Prise en charge de plusieurs devises et des paiements numériques.</li>
+          <li>Transparence et crédibilité totales dans toutes les opérations.</li>
+          <li>Outils professionnels de promotion immobilière pour attirer des acheteurs.</li>
+          <li>Prise en charge multilingue et multidevise pour un usage mondial.</li>
+          <li>Structure de SPV indépendante pour chaque projet, protégeant toutes les parties.</li>
+          <li>Des opportunités de propriété et de collaboration élargies à l'échelle mondiale pour les promoteurs et les acheteurs.</li>
+        </ul>
+
+        <h2>Conclusion</h2>
+        <p>
+          Capimax RT est une plateforme mondiale entièrement intégrée dédiée à la propriété immobilière fractionnée :
+        </p>
+        <ul>
+          <li>Sécurisée, transparente et flexible.</li>
+          <li>Elle offre des services numériques avancés aux propriétaires, vendeurs, promoteurs et courtiers.</li>
+          <li>Elle permet la propriété fractionnée via la blockchain, gage de protection, de flexibilité et de rentabilité.</li>
+          <li>Elle propose des outils de promotion, des rapports, un marché interne et des avantages technologiques de pointe.</li>
         </ul>
       </section>
       ) : (

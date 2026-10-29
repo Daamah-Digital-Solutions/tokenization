@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { adminService, type AdminUser, type UserActivity, type AdminNote } from '../../../../services';
 import { useAdminActions } from '../../../../hooks/useAdminDashboard';
+import { uiLocale } from '../../../../utils/locale';
 
 interface UserDetailModalProps {
   user: AdminUser;
@@ -19,7 +20,7 @@ const UserDetailModal: React.FC<UserDetailModalProps> = ({
   onUserUpdated
 }) => {
   const { t, i18n } = useTranslation('admin');
-  const locale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
+  const locale = uiLocale(i18n.language);
   const [activeTab, setActiveTab] = useState<TabType>('profile');
   const [userActivity, setUserActivity] = useState<UserActivity[]>([]);
   const [userNotes, setUserNotes] = useState<AdminNote[]>([]);

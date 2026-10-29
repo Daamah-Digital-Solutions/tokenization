@@ -24,6 +24,7 @@ import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Input } from '../design-system/forms/Input';
 import { Select } from '../design-system/forms/Select';
+import { uiLocale } from '../../utils/locale';
 
 interface PaymentSecurityProps {
   className?: string;
@@ -60,7 +61,7 @@ interface TwoFactorSetup {
 export function PaymentSecurity({ className }: PaymentSecurityProps) {
   const { state, dispatch } = usePayment();
   const { t, i18n } = useTranslation('payments');
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
+  const dateLocale = uiLocale(i18n.language);
   // Rule / alert copy is kept in state as English defaults; render via keys by id.
   const ruleText = (rule: SecurityRule, field: 'title' | 'description') =>
     t(`security.rules.${rule.id}.${field}`, { defaultValue: rule[field] });

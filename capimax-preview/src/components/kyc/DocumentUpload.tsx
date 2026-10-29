@@ -4,6 +4,7 @@ import { Upload, FileText, Check, X, AlertCircle, Eye, RotateCcw, Loader2, Clock
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
 import type { KYCDocumentStatus, KYCServerDocument } from '../../services/user/KYCService';
+import { baseLanguage } from '../../utils/locale';
 
 /**
  * One KYC document slot. The status shown is the SERVER's status for the
@@ -108,7 +109,7 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const canChange = !locked && !uploading && document?.status !== 'approved';
   const previewSrc = localPreview || (document && isImageName(document.file_name) ? document.file_url : null);
   const dateFmt = (iso: string) =>
-    new Date(iso).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar' : 'en', {
+    new Date(iso).toLocaleDateString(baseLanguage(i18n.language), {
       year: 'numeric', month: 'short', day: 'numeric',
     });
 

@@ -5,10 +5,11 @@ import { LegalPageLayout } from '../../components/legal/LegalPageLayout';
 export const TermsPage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const isFr = i18n.language?.startsWith('fr');
   return (
     <LegalPageLayout
-      title={isAr ? 'شروط وأحكام الاستخدام' : 'Terms and Conditions of Use'}
-      lastUpdated={isAr ? 'يناير 2026' : 'January 2026'}
+      title={isAr ? 'شروط وأحكام الاستخدام' : isFr ? "Conditions générales d'utilisation" : 'Terms and Conditions of Use'}
+      lastUpdated={isAr ? 'يناير 2026' : isFr ? 'janvier 2026' : 'January 2026'}
     >
       {isAr ? (
       <section className="legal-section">
@@ -54,6 +55,52 @@ export const TermsPage: React.FC = () => {
         <h2>5.7 القانون الحاكم</h2>
         <p>
           تخضع هذه الشروط لقوانين الولاية القضائية المعمول بها التي تحدّدها المنصة.
+        </p>
+      </section>
+      ) : isFr ? (
+      <section className="legal-section">
+        <h2>5.1 Étendue du service</h2>
+        <p>
+          Capimax RT fournit des outils numériques destinés à faciliter l'administration de la propriété tokenisée.
+        </p>
+
+        <h2>5.2 Obligations de l'utilisateur</h2>
+        <p>Les utilisateurs doivent :</p>
+        <ul>
+          <li>Fournir des informations exactes ;</li>
+          <li>Respecter les lois et les politiques de la plateforme ;</li>
+          <li>S'abstenir de tout usage abusif ou de toute activité non autorisée.</li>
+        </ul>
+
+        <h2>5.3 Reconnaissance relative à la propriété</h2>
+        <p>Les utilisateurs reconnaissent que :</p>
+        <ul>
+          <li>La propriété immobilière tokenisée présente un caractère spéculatif ;</li>
+          <li>Aucun rendement ni aucune liquidité ne sont garantis ;</li>
+          <li>Les informations de la plateforme ne constituent pas un conseil.</li>
+        </ul>
+
+        <h2>5.4 Frais</h2>
+        <p>
+          Les frais peuvent comprendre des frais d'inscription d'annonce, des frais de gestion, des frais de transaction et des frais de services optionnels, tels qu'ils sont communiqués avant toute transaction.
+        </p>
+
+        <h2>5.5 Suspension et résiliation</h2>
+        <p>Capimax RT peut suspendre ou résilier des comptes en raison :</p>
+        <ul>
+          <li>De manquements aux règles de conformité ;</li>
+          <li>De fraude ou d'usage abusif ;</li>
+          <li>D'exigences légales ou réglementaires.</li>
+        </ul>
+
+        <h2>5.6 Limitation de responsabilité</h2>
+        <p>
+          Dans toute la mesure permise par la loi, Capimax RT ne saurait être tenue responsable des pertes indirectes, accessoires ou consécutives.
+        </p>
+
+        <h2>5.7 Droit applicable</h2>
+        <p>
+          Les présentes Conditions sont régies par le droit de la juridiction applicable désignée par la plateforme.
         </p>
       </section>
       ) : (

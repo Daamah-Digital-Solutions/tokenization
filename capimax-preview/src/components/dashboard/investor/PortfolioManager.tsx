@@ -43,6 +43,7 @@ import { useUser } from '../../../contexts/AuthContext';
 import { MyCertificatesPanel } from '../../certificates/MyCertificatesPanel';
 import { CertificateService } from '../../../services/certificates/CertificateService';
 import { useTranslation } from 'react-i18next';
+import { uiLocale } from '../../../utils/locale';
 
 interface PortfolioManagerProps {
   portfolio: Portfolio | undefined;
@@ -109,7 +110,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
   className
 }) => {
   const { t, i18n } = useTranslation('dashboard');
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
+  const dateLocale = uiLocale(i18n.language);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortField, setSortField] = useState<SortField>('value');
@@ -837,7 +838,7 @@ const InvestmentCard: React.FC<{
   formatCurrency: (amount: number) => string;
 }> = ({ investment, getStatusColor, getStatusIcon, formatCurrency }) => {
   const { t, i18n } = useTranslation('dashboard');
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
+  const dateLocale = uiLocale(i18n.language);
   const StatusIcon = getStatusIcon(investment.status);
 
   return (
@@ -991,7 +992,7 @@ const InvestmentListItem: React.FC<{
   formatCurrency: (amount: number) => string;
 }> = ({ investment, getStatusColor, getStatusIcon, formatCurrency }) => {
   const { t, i18n } = useTranslation('dashboard');
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
+  const dateLocale = uiLocale(i18n.language);
   const StatusIcon = getStatusIcon(investment.status);
 
   return (

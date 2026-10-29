@@ -1,0 +1,297 @@
+{
+  "common": {
+    "loading": "Chargement de votre tableau de bord…",
+    "loadError": "Impossible de charger les données de votre tableau de bord.",
+    "retry": "Réessayer",
+    "na": "—"
+  },
+  "nav": {
+    "referrals": "Parrainages",
+    "commissions": "Commissions",
+    "wallet": "Portefeuille",
+    "performance": "Performance",
+    "materials": "Supports marketing",
+    "requests": "Demandes de sortie",
+    "transactions": "Transactions",
+    "lpProfile": "Profil du fournisseur"
+  },
+  "roles": {
+    "investor": "Propriétaire",
+    "investorDesc": "Acheter des biens tokenisés",
+    "property_owner": "Propriétaire du bien",
+    "property_ownerDesc": "Publier et gérer vos biens",
+    "broker": "Courtier",
+    "brokerDesc": "Recommander des clients et percevoir des commissions",
+    "liquidity_provider": "Fournisseur de liquidité",
+    "liquidity_providerDesc": "Racheter les parts des propriétaires qui souhaitent sortir",
+    "admin": "Administrateur",
+    "adminDesc": "Administration de la plateforme"
+  },
+  "broker": {
+    "title": "Tableau de bord courtier",
+    "profileTitle": "Profil du courtier",
+    "verification": {
+      "pending": "Vérification en attente",
+      "verified": "Courtier vérifié",
+      "rejected": "Vérification refusée",
+      "suspended": "Suspendu"
+    },
+    "fields": {
+      "email": "E-mail",
+      "company": "Société",
+      "license": "Numéro de licence",
+      "licenseExpiry": "Expiration de la licence",
+      "commissionRate": "Taux de commission",
+      "referralRate": "Commission de parrainage",
+      "tier": "Niveau",
+      "experience": "Expérience",
+      "years": "{{count}} ans"
+    },
+    "stats": {
+      "totalReferrals": "Total des parrainages",
+      "converted": "{{count}} ayant acheté",
+      "conversion": "{{rate}} % de conversion",
+      "noReferrals": "Aucun parrainage pour le moment",
+      "totalEarned": "Total perçu",
+      "lifetime": "Commissions cumulées",
+      "pending": "Commissions en attente",
+      "awaitingPayout": "En attente de versement",
+      "paid": "Versé à ce jour",
+      "thisMonth": "Ce mois-ci"
+    },
+    "charts": {
+      "commission": "Évolution des commissions",
+      "referrals": "Parrainages mensuels"
+    },
+    "actions": {
+      "generateLink": "Générer un lien de parrainage",
+      "generateLinkDesc": "Copiez votre lien de suivi",
+      "linkCopied": "Lien de parrainage copié dans le presse-papiers.",
+      "linkFailed": "Impossible de générer le lien de parrainage. Veuillez réessayer.",
+      "withdraw": "Retirer les commissions",
+      "withdrawDesc": "Demander un versement",
+      "refer": "Recommander un client",
+      "referDesc": "Inviter un nouvel acheteur",
+      "materials": "Supports marketing",
+      "materialsDesc": "Guides à partager"
+    },
+    "referrals": {
+      "title": "Suivi des parrainages",
+      "manageTitle": "Gestion des parrainages",
+      "manageDesc": "Suivez vos clients parrainés et leurs achats.",
+      "filterAll": "Tous les statuts",
+      "empty": "Aucun parrainage pour ce filtre pour le moment.",
+      "purchased": "Achats",
+      "commission": "Commission",
+      "joined": "Inscription"
+    },
+    "referralStatus": {
+      "active": "Inscrit",
+      "invested": "A acheté",
+      "pending": "Invité",
+      "inactive": "Inactif"
+    },
+    "commissions": {
+      "title": "Transactions de commissions",
+      "empty": "Aucune commission pour le moment. Elles apparaîtront ici lorsqu'un client parrainé effectuera un achat.",
+      "property": "Bien",
+      "amount": "Commission",
+      "base": "Montant de l'achat",
+      "status": "Statut",
+      "date": "Date",
+      "breakdown": "Détail des commissions",
+      "thisMonth": "Ce mois-ci",
+      "lastMonth": "Le mois dernier",
+      "paid": "Versé à ce jour",
+      "pending": "En attente"
+    },
+    "commissionStatus": {
+      "pending": "En attente",
+      "approved": "Approuvée",
+      "paid": "Versée",
+      "disputed": "Contestée",
+      "cancelled": "Annulée"
+    },
+    "materials": {
+      "title": "Supports marketing",
+      "desc": "Partagez votre lien de parrainage et ces guides avec vos acheteurs potentiels.",
+      "linkLabel": "Votre lien de parrainage",
+      "generate": "Générer le lien",
+      "copy": "Copier",
+      "copied": "Copié",
+      "guides": "Guides à partager",
+      "brokerGuide": "Guide du courtier",
+      "platformGuide": "Guide Capimax RT",
+      "ownershipGuide": "Guide de la propriété",
+      "faq": "Questions fréquentes",
+      "library": "Supports marketing",
+      "libraryEmpty": "L'équipe n'a pas encore publié de supports.",
+      "download": "Télécharger"
+    },
+    "wallet": {
+      "title": "Portefeuille de commissions",
+      "subtitle": "Retirez vos commissions versées vers un compte bancaire ou un portefeuille crypto.",
+      "balanceLabel": "Commissions disponibles",
+      "balanceHint": "Les commissions approuvées sont versées sur votre portefeuille et peuvent être retirées ici (après examen par l'équipe)."
+    }
+  },
+  "lp": {
+    "title": "Tableau de bord fournisseur de liquidité",
+    "notLinked": "Votre compte n'est pas encore associé à un fournisseur de liquidité approuvé. Veuillez contacter l'équipe de la plateforme.",
+    "profileTitle": "Profil du fournisseur",
+    "status": {
+      "pending": "Activation en attente",
+      "active": "Actif",
+      "suspended": "Suspendu",
+      "inactive": "Inactif"
+    },
+    "fields": {
+      "entity": "Entité juridique",
+      "registration": "N° d'immatriculation",
+      "jurisdiction": "Juridiction",
+      "contact": "Personne à contacter",
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "liquidity": "Liquidité disponible",
+      "discount": "Taux de décote (%)",
+      "maxTx": "Maximum par transaction",
+      "maxMonth": "Maximum par mois",
+      "monthUsed": "Utilisé ce mois-ci",
+      "remaining": "Restant ce mois-ci",
+      "targets": "Actifs privilégiés",
+      "ready": "Biens achevés",
+      "construction": "Biens en construction",
+      "portfolios": "Portefeuilles de biens"
+    },
+    "stats": {
+      "total": "Demandes de sortie",
+      "pending": "En attente de votre décision",
+      "approved": "Offres envoyées",
+      "completed": "Achats finalisés",
+      "units": "Parts achetées",
+      "spent": "Total dépensé",
+      "monthVolume": "Volume du mois",
+      "capacity": "Capacité restante"
+    },
+    "requests": {
+      "title": "Demandes de sortie",
+      "desc": "Propriétaires souhaitant vendre leurs parts. Examinez chaque demande et faites une offre ou refusez-la.",
+      "pendingTitle": "En attente de votre décision",
+      "empty": "Aucune demande de sortie pour le moment.",
+      "property": "Bien",
+      "investor": "Propriétaire",
+      "units": "Parts",
+      "requestedPrice": "Prix demandé / part",
+      "total": "Total demandé",
+      "status": "Statut",
+      "created": "Reçue le",
+      "expires": "Expiration de l'offre",
+      "review": "Examiner",
+      "offerPrice": "Votre offre par part (USD)",
+      "offerTotal": "Total de l'offre",
+      "discount": "Décote par rapport au prix demandé",
+      "notes": "Message au propriétaire",
+      "notesPlaceholder": "Message facultatif",
+      "approve": "Envoyer l'offre",
+      "reject": "Refuser",
+      "submitting": "Envoi…",
+      "approved": "Votre offre a été envoyée au propriétaire.",
+      "rejected": "La demande a été refusée.",
+      "failed": "L'action n'a pas pu aboutir. Veuillez réessayer.",
+      "cancel": "Annuler"
+    },
+    "requestStatus": {
+      "pending": "En attente",
+      "under_review": "En cours d'examen",
+      "approved": "Offre envoyée",
+      "rejected": "Refusée",
+      "completed": "Finalisée",
+      "cancelled": "Annulée",
+      "expired": "Expirée"
+    },
+    "transactions": {
+      "title": "Transactions d'achat",
+      "empty": "Aucun achat finalisé pour le moment.",
+      "ref": "Référence",
+      "property": "Bien",
+      "investor": "Vendeur",
+      "units": "Parts",
+      "price": "Prix / part",
+      "total": "Total",
+      "fee": "Frais de plateforme",
+      "date": "Date"
+    },
+    "settings": {
+      "title": "Préférences d'achat",
+      "desc": "Ces limites déterminent les demandes de sortie que vous pouvez accepter.",
+      "save": "Enregistrer les modifications",
+      "saving": "Enregistrement…",
+      "saved": "Préférences enregistrées.",
+      "failed": "Impossible d'enregistrer vos modifications."
+    }
+  },
+  "join": {
+    "menu": "Partenaires",
+    "broker": "Devenir courtier",
+    "brokerDesc": "Recommandez des clients et percevez des commissions",
+    "lp": "Devenir fournisseur de liquidité",
+    "lpDesc": "Rachetez les parts des propriétaires qui souhaitent sortir",
+    "myApplications": "Mes candidatures partenaire",
+    "authHint": "Vous souhaitez rejoindre la plateforme en tant que courtier ou fournisseur de liquidité ?",
+    "authHintBroker": "Courtier",
+    "authHintLp": "Fournisseur de liquidité",
+    "dashNav": "Devenir partenaire",
+    "roleName": {
+      "broker": "courtier",
+      "lp": "fournisseur de liquidité"
+    },
+    "panel": {
+      "title": "Devenir partenaire",
+      "subtitle": "Postulez depuis ce compte. Notre équipe examine chaque candidature et, une fois celle-ci approuvée, ce même compte vous donne accès au tableau de bord partenaire.",
+      "step1": "Postulez avec vos documents",
+      "step2": "Notre équipe l'examine (généralement sous 2 à 3 jours ouvrés) et vous informe de sa décision par e-mail",
+      "step3": "Une fois approuvé, ouvrez votre tableau de bord partenaire depuis cette page ou depuis le sélecteur de rôle en haut",
+      "loadFailed": "Impossible de charger le statut de votre candidature."
+    },
+    "card": {
+      "brokerTitle": "Courtier",
+      "brokerText": "Recommandez des clients à Capimax RT et percevez une commission sur leurs achats. Licence et pièce d'identité requises.",
+      "lpTitle": "Fournisseur de liquidité",
+      "lpText": "Rachetez les parts des propriétaires qui souhaitent sortir, au prix que vous proposez. Pour les sociétés, les fonds et les investisseurs professionnels.",
+      "status": {
+        "none": "Aucune candidature",
+        "pending": "Reçue — en attente d'examen",
+        "under_review": "En cours d'examen",
+        "incomplete": "Informations complémentaires requises",
+        "approved": "Approuvée",
+        "rejected": "Non approuvée",
+        "withdrawn": "Retirée",
+        "active": "Active"
+      },
+      "submittedOn": "Envoyée le {{date}}",
+      "reason": "Motif : {{reason}}",
+      "apply": "Postuler",
+      "applyAgain": "Postuler à nouveau",
+      "learnMore": "Comment ça marche",
+      "openBroker": "Ouvrir le tableau de bord courtier",
+      "openLp": "Ouvrir le tableau de bord fournisseur de liquidité",
+      "reviewNote": "Nous vous enverrons un e-mail dès qu'une décision aura été prise.",
+      "incompleteNote": "Notre équipe vous contactera par e-mail au sujet des éléments manquants."
+    },
+    "gate": {
+      "signInTitle": "Connectez-vous pour postuler",
+      "signInText": "La candidature est liée à votre compte : une fois approuvée, ce même compte vous donne accès au tableau de bord de {{role}}. Vous pouvez aussi continuer avec Google. Après connexion, vous reviendrez directement ici.",
+      "signIn": "Se connecter",
+      "createAccount": "Créer un compte",
+      "pendingTitle": "Votre candidature est en cours d'examen",
+      "pendingText": "Nous avons reçu votre candidature de {{role}} le {{date}}. Nous vous enverrons un e-mail dès qu'une décision aura été prise.",
+      "partnerTitle": "Votre compte a déjà le rôle de {{role}}",
+      "partnerText": "Ouvrez votre tableau de bord pour commencer.",
+      "openDashboard": "Ouvrir mon tableau de bord",
+      "rejectedTitle": "Votre précédente candidature n'a pas été approuvée",
+      "rejectedText": "Vous pouvez envoyer une nouvelle candidature ci-dessous.",
+      "back": "Retour à mon tableau de bord",
+      "switchFailed": "Impossible d'ouvrir ce tableau de bord. Utilisez le sélecteur de rôle en haut du tableau de bord."
+    }
+  }
+}

@@ -1,0 +1,490 @@
+{
+  "shared": {
+    "retry": "Réessayer",
+    "viewAll": "Tout voir",
+    "tbd": "À définir",
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "dismiss": "Ignorer",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "save": "Enregistrer",
+    "edit": "Modifier",
+    "loading": "Chargement...",
+    "status": {
+      "pending": "En attente",
+      "verified": "Vérifié",
+      "approved": "Approuvé",
+      "rejected": "Rejeté",
+      "active": "Actif",
+      "inactive": "Inactif",
+      "pending_approval": "En attente d'approbation",
+      "under_review": "En cours d'examen",
+      "requires_changes": "Modifications demandées",
+      "completed": "Terminé",
+      "failed": "Échoué",
+      "processing": "En cours de traitement",
+      "cancelled": "Annulé",
+      "suspended": "Suspendu",
+      "draft": "Brouillon",
+      "funded": "Financé",
+      "sold_out": "Épuisé",
+      "delisted": "Retiré",
+      "not_started": "Non commencé",
+      "refunded": "Remboursé",
+      "not_submitted": "Non soumis",
+      "expired": "Expiré"
+    },
+    "roles": {
+      "investor": "Propriétaire",
+      "property_owner": "Propriétaire du bien",
+      "broker": "Courtier",
+      "admin": "Administrateur",
+      "liquidity_provider": "Fournisseur de liquidité",
+      "developer": "Promoteur"
+    },
+    "txTypes": {
+      "investment": "Achat",
+      "withdrawal": "Retrait",
+      "deposit": "Dépôt",
+      "dividend": "Distribution",
+      "commission": "Commission",
+      "refund": "Remboursement",
+      "fee": "Frais",
+      "transfer": "Transfert",
+      "payment": "Paiement"
+    },
+    "severity": {
+      "CRITICAL": "Critique",
+      "HIGH": "Élevée",
+      "MEDIUM": "Moyenne",
+      "LOW": "Faible"
+    },
+    "refresh": "Actualiser",
+    "actions": "Actions",
+    "viewDetails": "Voir les détails",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "pageOf": "Page {{page}} sur {{pages}}",
+    "propertyTypes": {
+      "residential": "Résidentiel",
+      "commercial": "Commercial",
+      "industrial": "Industriel",
+      "mixed_use": "Usage mixte",
+      "land": "Terrain",
+      "retail": "Commerce de détail",
+      "office": "Bureaux",
+      "hospitality": "Hôtellerie"
+    }
+  },
+  "ws": {
+    "criticalAlert": "Alerte système critique : {{title}}",
+    "systemErrorTitle": "Erreur système détectée",
+    "systemErrorMessage": "Une erreur s'est produite dans le système"
+  },
+  "dashboard": {
+    "stats": {
+      "totalUsers": "Total des utilisateurs",
+      "totalUsersDesc": "Utilisateurs inscrits",
+      "platformVolume": "Volume de la plateforme",
+      "platformVolumeDesc": "Volume total des transactions",
+      "activeProperties": "Biens actifs",
+      "activePropertiesDesc": "Biens sur la plateforme",
+      "platformRevenue": "Revenus de la plateforme",
+      "platformRevenueDesc": "Frais de plateforme mensuels"
+    },
+    "charts": {
+      "transactionVolume": "Volume des transactions de la plateforme",
+      "userGrowth": "Croissance des utilisateurs"
+    },
+    "users": {
+      "title": "Gestion des utilisateurs",
+      "pendingKyc": "{{count}} KYC en attente",
+      "suspended": "(Suspendu)",
+      "joined": "Inscrit le",
+      "totalPurchased": "Total acheté",
+      "properties": "Biens",
+      "review": "Examiner",
+      "verify": "Vérifier",
+      "unsuspend": "Réactiver",
+      "actions": "Actions",
+      "suspendPrompt": "Veuillez indiquer le motif de la suspension :"
+    },
+    "approval": {
+      "title": "File d'approbation des biens",
+      "pendingReview": "{{count}} en attente d'examen",
+      "byOwner": "par {{name}}",
+      "targetAmount": "Montant cible",
+      "submitted": "Soumis",
+      "shares": "Parts",
+      "funding": "Financement",
+      "rejectPrompt": "Veuillez indiquer un motif de rejet :",
+      "reviewDetails": "Examiner les détails"
+    },
+    "transactions": {
+      "title": "Transactions récentes"
+    },
+    "health": {
+      "title": "État du système",
+      "apiResponseTime": "Temps de réponse de l'API",
+      "uptime": "Disponibilité du système",
+      "days": "{{value}} jours",
+      "databaseResponse": "Réponse de la base de données",
+      "activeConnections": "Connexions actives",
+      "errorRate": "Taux d'erreur",
+      "memoryUsage": "Utilisation de la mémoire",
+      "target": "Objectif : {{value}}",
+      "levels": {
+        "excellent": "Excellent",
+        "good": "Bon",
+        "warning": "Avertissement",
+        "error": "Erreur"
+      }
+    },
+    "quick": {
+      "reviewKyc": "Examiner les KYC",
+      "pendingApprovals": "{{count}} approbations en attente",
+      "reviewProperties": "Examiner les biens",
+      "pendingReviews": "{{count}} examens en attente",
+      "systemAlerts": "Alertes système",
+      "criticalAlerts": "{{count}} alertes critiques",
+      "allNormal": "Tous les systèmes fonctionnent normalement",
+      "refreshData": "Actualiser les données",
+      "updateDashboard": "Mettre à jour le tableau de bord"
+    },
+    "userStats": {
+      "title": "Statistiques des utilisateurs",
+      "totalUsers": "Total des utilisateurs",
+      "verifiedUsers": "Utilisateurs vérifiés",
+      "pendingKyc": "KYC en attente",
+      "suspendedUsers": "Utilisateurs suspendus"
+    },
+    "userTypes": {
+      "title": "Types d'utilisateurs",
+      "owners": "Propriétaires",
+      "propertyOwners": "Propriétaires de biens",
+      "brokers": "Courtiers"
+    },
+    "geo": {
+      "title": "Répartition géographique",
+      "northAmerica": "Amérique du Nord",
+      "europe": "Europe",
+      "asia": "Asie",
+      "others": "Autres"
+    },
+    "platform": {
+      "dailyActiveUsers": "Utilisateurs actifs quotidiens",
+      "transactionVolume": "Volume des transactions",
+      "platformRevenue": "Revenus de la plateforme",
+      "successRate": "Taux de réussite"
+    },
+    "alerts": {
+      "title": "Alertes système actives",
+      "acknowledge": "Prendre en compte",
+      "resolve": "Résoudre",
+      "resolvePrompt": "Veuillez indiquer les détails de la résolution :"
+    },
+    "financial": {
+      "title": "Gestion financière",
+      "totalRevenue": "Revenus totaux",
+      "monthlyRevenue": "Revenus mensuels",
+      "thisMonth": "Ce mois-ci",
+      "pendingWithdrawals": "Retraits en attente",
+      "requests": "{{count}} demandes",
+      "totalCommissions": "Total des commissions",
+      "pendingCount": "{{count}} en attente",
+      "loadFailed": "Échec du chargement des données financières"
+    },
+    "underDevelopment": {
+      "title": "Tableau de bord {{name}}",
+      "body": "Cette section est en cours de développement"
+    },
+    "views": {
+      "overview": "Vue d'ensemble",
+      "users": "Utilisateurs",
+      "properties-admin": "Biens",
+      "transactions-admin": "Transactions",
+      "platform": "Plateforme",
+      "system": "Système",
+      "financial": "Finances",
+      "settings": "Paramètres",
+      "reports": "Rapports"
+    }
+  },
+  "transactions": {
+    "title": "Gestion des transactions",
+    "subtitle": "Surveillez les transactions, gérez les retraits et consultez les indicateurs financiers",
+    "exportCsv": "Exporter en CSV",
+    "loadFailed": "Échec du chargement des transactions",
+    "listTitle": "Liste des transactions ({{count}} au total)",
+    "empty": "Aucune transaction trouvée",
+    "stats": {
+      "count": "Nombre de transactions",
+      "average": "Moy. : {{amount}}"
+    },
+    "filters": {
+      "type": "Type de transaction",
+      "allTypes": "Tous les types",
+      "allStatuses": "Tous les statuts",
+      "startDate": "Date de début",
+      "endDate": "Date de fin",
+      "perPage": "Résultats par page"
+    },
+    "fields": {
+      "date": "Date",
+      "type": "Type",
+      "user": "Utilisateur",
+      "amount": "Montant",
+      "fee": "Frais",
+      "status": "Statut",
+      "paymentMethod": "Moyen de paiement"
+    },
+    "pagination": {
+      "showing": "Affichage de {{from}} à {{to}} sur {{total}} transactions"
+    },
+    "detail": {
+      "title": "Détails de la transaction",
+      "id": "ID : {{id}}...",
+      "userInfo": "Informations sur l'utilisateur",
+      "userName": "Nom de l'utilisateur",
+      "userEmail": "E-mail de l'utilisateur",
+      "userId": "ID utilisateur",
+      "propertyInfo": "Informations sur le bien",
+      "propertyTitle": "Titre du bien",
+      "propertyId": "ID du bien",
+      "paymentDetails": "Détails du paiement",
+      "paymentReference": "Référence du paiement",
+      "createdAt": "Créée le",
+      "processedAt": "Traitée le",
+      "blockchainInfo": "Informations blockchain",
+      "txHash": "Hash de la transaction",
+      "blockNumber": "Numéro de bloc",
+      "gasFee": "Frais de gas",
+      "failureReason": "Motif de l'échec",
+      "metadata": "Métadonnées supplémentaires"
+    },
+    "withdrawals": {
+      "title": "Demandes de retrait",
+      "titleCount": "Demandes de retrait ({{count}})",
+      "approvePrompt": "Ajouter des notes d'approbation (facultatif) :",
+      "rejectPrompt": "Veuillez indiquer le motif du rejet :",
+      "netAmount": "Montant net",
+      "requested": "Demandé le",
+      "bankDetails": "Coordonnées bancaires",
+      "bankName": "Nom de la banque",
+      "accountHolder": "Titulaire du compte",
+      "accountNumber": "Numéro de compte",
+      "routingNumber": "Code de routage",
+      "empty": "Aucune demande de retrait en attente"
+    }
+  },
+  "users": {
+    "subtitle": "Gérez les utilisateurs, vérifiez les KYC et surveillez l'activité des utilisateurs",
+    "loadFailed": "Échec du chargement des utilisateurs",
+    "listTitle": "Liste des utilisateurs ({{count}} au total)",
+    "pagination": {
+      "showing": "Affichage de {{from}} à {{to}} sur {{total}} utilisateurs"
+    },
+    "tabs": {
+      "overview": "Vue d'ensemble",
+      "profile": "Profil",
+      "activity": "Activité",
+      "notes": "Notes",
+      "properties": "Biens",
+      "transactions": "Transactions"
+    },
+    "fields": {
+      "accountStatus": "Statut du compte",
+      "kycStatus": "Statut KYC",
+      "totalOwned": "Total détenu",
+      "propertiesOwned": "Biens détenus",
+      "userDetails": "Détails de l'utilisateur",
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "accountCreated": "Compte créé le",
+      "lastLogin": "Dernière connexion",
+      "address": "Adresse",
+      "role": "Rôle"
+    },
+    "suspension": {
+      "title": "Compte suspendu",
+      "reason": "Motif : {{reason}}",
+      "until": "Suspendu jusqu'au : {{date}}"
+    },
+    "actions": {
+      "verifyKyc": "Vérifier le KYC",
+      "unsuspend": "Réactiver l'utilisateur",
+      "suspend": "Suspendre l'utilisateur",
+      "suspendShort": "Suspendre"
+    },
+    "activityCategories": {
+      "AUTH": "Connexion",
+      "INVESTMENT": "Achat",
+      "PAYMENT": "Paiement",
+      "KYC": "Vérification d'identité",
+      "PROFILE": "Profil",
+      "SECURITY": "Sécurité",
+      "SYSTEM": "Système"
+    },
+    "empty": {
+      "activity": "Aucune activité trouvée",
+      "notes": "Aucune note trouvée",
+      "users": "Aucun utilisateur trouvé",
+      "propertyHistory": "L'historique des biens sera chargé ici",
+      "transactionHistory": "L'historique des transactions sera chargé ici"
+    },
+    "notes": {
+      "title": "Notes de l'administrateur",
+      "add": "Ajouter une note",
+      "addNew": "Ajouter une nouvelle note",
+      "save": "Enregistrer la note",
+      "placeholder": "Saisissez le contenu de la note...",
+      "titlePlaceholder": "Titre de la note (facultatif)",
+      "by": "Par : {{name}}",
+      "confidentialLabel": "Note confidentielle",
+      "confidential": "CONFIDENTIEL",
+      "addedBy": "Ajoutée par {{name}} le {{date}}",
+      "updated": "Mise à jour le {{date}}",
+      "none": "Aucune note ajoutée pour le moment"
+    },
+    "noteTypes": {
+      "GENERAL": "Général",
+      "COMPLIANCE": "Conformité",
+      "RISK_ASSESSMENT": "Évaluation des risques",
+      "SUPPORT": "Assistance",
+      "INVESTIGATION": "Enquête",
+      "WARNING": "Avertissement"
+    },
+    "priority": {
+      "LOW": "Faible",
+      "MEDIUM": "Moyenne",
+      "HIGH": "Élevée",
+      "URGENT": "Urgente"
+    },
+    "filters": {
+      "search": "Rechercher",
+      "searchPlaceholder": "Rechercher par nom ou e-mail...",
+      "allRoles": "Tous les rôles",
+      "sortBy": "Trier par",
+      "sort": {
+        "createdAt": "Date de création",
+        "firstName": "Prénom",
+        "lastName": "Nom",
+        "email": "E-mail"
+      }
+    },
+    "modal": {
+      "loadFailed": "Échec du chargement des données de l'utilisateur",
+      "updateFailed": "Échec de la mise à jour de l'utilisateur",
+      "durationPrompt": "Durée en jours (facultatif) :",
+      "notesPrompt": "Notes (facultatif) :",
+      "verifyPrompt": "Notes de vérification (facultatif) :",
+      "personalInfo": "Informations personnelles",
+      "notProvided": "Non renseigné",
+      "memberSince": "Membre depuis",
+      "never": "Jamais",
+      "recentActivity": "Activité récente",
+      "noActivity": "Aucune activité enregistrée",
+      "propertyPortfolio": "Portefeuille de biens",
+      "propertyDataSoon": "Les données des biens seront chargées ici",
+      "transactionHistory": "Historique des transactions",
+      "transactionDataSoon": "Les données des transactions seront chargées ici",
+      "comingSoon": "Fonctionnalité bientôt disponible"
+    }
+  },
+  "propertyModal": {
+    "approveConfirm": "Voulez-vous vraiment approuver ce bien ?",
+    "reasonRequired": "Veuillez indiquer un motif de rejet",
+    "approve": "Approuver le bien",
+    "reject": "Rejeter le bien",
+    "rejectionReason": "Motif du rejet",
+    "rejectionPlaceholder": "Veuillez indiquer un motif de rejet détaillé...",
+    "confirmRejection": "Confirmer le rejet",
+    "tabs": {
+      "overview": "Vue d'ensemble",
+      "documents": "Documents",
+      "owners": "Propriétaires",
+      "financial": "Finances",
+      "history": "Historique"
+    },
+    "propertyDetails": "Détails du bien",
+    "financialInfo": "Informations financières",
+    "ownerInfo": "Informations sur le propriétaire",
+    "timeline": "Chronologie",
+    "fields": {
+      "title": "Titre",
+      "description": "Description",
+      "location": "Emplacement",
+      "propertyType": "Type de bien",
+      "raisedAmount": "Montant levé",
+      "minPurchase": "Achat minimum",
+      "expectedReturn": "Rendement attendu",
+      "annually": "{{value}} % par an",
+      "fundingProgress": "Progression du financement",
+      "name": "Nom",
+      "ownerId": "ID du propriétaire",
+      "approvedAt": "Approuvé le",
+      "fundingDeadline": "Date limite de financement",
+      "sharesIssued": "Parts émises"
+    },
+    "documents": "Documents du bien",
+    "documentN": "Document {{n}}",
+    "viewDocument": "Voir le document",
+    "noDocuments": "Aucun document téléversé",
+    "images": "Images du bien",
+    "imageAlt": "Image du bien {{n}}",
+    "noImages": "Aucune image téléversée",
+    "ownersTotal": "{{count}} au total",
+    "ownersSoon": "Les informations détaillées sur les propriétaires s'afficheront ici",
+    "financialOverview": "Aperçu financier",
+    "financialSoon": "Les analyses financières détaillées et les graphiques s'afficheront ici",
+    "history": "Historique du bien",
+    "historySoon": "L'historique des transactions et de l'activité du bien s'affichera ici"
+  },
+  "approval": {
+    "title": "Tableau de bord d'approbation des biens",
+    "subtitle": "Examinez et gérez les biens soumis à la tokenisation",
+    "searchPlaceholder": "Rechercher par titre du bien ou propriétaire...",
+    "empty": "Aucun bien ne correspond à vos critères",
+    "reviewer": "Examinateur : {{name}}",
+    "reviewNotesLabel": "Notes d'examen :",
+    "requiredChangesLabel": "Modifications requises :",
+    "filters": {
+      "pending": "En attente",
+      "under_review": "En cours d'examen",
+      "approved": "Approuvés",
+      "rejected": "Rejetés",
+      "requires_changes": "Modifications requises",
+      "all": "Tous"
+    },
+    "stats": {
+      "pendingReview": "En attente d'examen",
+      "overdue": "{{count}} en retard",
+      "underReview": "En cours d'examen",
+      "underReviewSub": "Actuellement en cours d'examen",
+      "approvedThisMonth": "Approuvés ce mois-ci",
+      "approvedSub": "Prêts pour la tokenisation",
+      "avgReviewTime": "Durée moyenne d'examen",
+      "daysShort": "{{value}} j",
+      "avgSub": "Jours pour finaliser"
+    },
+    "modal": {
+      "title": "Examen d'approbation du bien",
+      "totalValue": "Valeur totale",
+      "sharePrice": "Prix de la part",
+      "perShare": "{{price}} par part",
+      "totalShares": "Total des parts",
+      "sharesCount": "{{value}} parts",
+      "dateAtTime": "{{date}} à {{time}}",
+      "documents": "Documents soumis",
+      "download": "Télécharger",
+      "reviewDecision": "Examen et décision",
+      "reviewNotes": "Notes d'examen",
+      "reviewNotesPlaceholder": "Ajoutez vos commentaires d'examen...",
+      "requiredChanges": "Modifications requises",
+      "rejectPlaceholder": "Expliquez pourquoi ce bien est rejeté...",
+      "changesPlaceholder": "Précisez les modifications nécessaires...",
+      "requestChanges": "Demander des modifications"
+    }
+  }
+}

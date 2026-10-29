@@ -1,0 +1,305 @@
+{
+  "page": {
+    "title": "Vérification d'identité",
+    "subtitle": "Vérifiez votre identité une seule fois pour débloquer l'investissement, les dépôts et les retraits sur Capimax RT.",
+    "breadcrumbDashboard": "Tableau de bord",
+    "loading": "Chargement de votre statut de vérification…",
+    "loadError": "Impossible de charger votre statut de vérification.",
+    "retry": "Réessayer",
+    "backToDashboard": "Retour au tableau de bord"
+  },
+  "status": {
+    "label": "Statut de la vérification",
+    "not_started": "Non commencée",
+    "pending": "Pas encore soumise",
+    "action_required": "Action requise",
+    "in_review": "En cours d'examen",
+    "approved": "Vérifiée",
+    "rejected": "Non approuvée",
+    "expired": "Expirée",
+    "desc": {
+      "not_started": "Vous n'avez pas encore commencé la vérification d'identité. Elle prend environ 5 minutes.",
+      "pending": "Complétez les étapes restantes ci-dessous et soumettez votre vérification.",
+      "action_required": "Notre équipe vous a demandé de mettre à jour certains documents. Remplacez-les ci-dessous et soumettez à nouveau.",
+      "in_review": "Vos documents ont été soumis et notre équipe conformité les examine. Cela prend généralement 24 à 48 heures.",
+      "approved": "Votre identité est vérifiée. Vous avez un accès complet à la plateforme.",
+      "rejected": "Votre vérification n'a pas été approuvée. Lisez le motif ci-dessous, téléversez de nouveaux documents et soumettez à nouveau.",
+      "expired": "Votre vérification a expiré. Veuillez vérifier à nouveau votre identité."
+    },
+    "progress": "{{percent}} % effectué",
+    "reasonTitle": "Motif de notre équipe d'examen",
+    "notesTitle": "Messages de l'équipe d'examen",
+    "submittedOn": "Soumise le {{date}}",
+    "reviewedOn": "Examinée le {{date}}",
+    "limit": "Limite de détention : {{amount}}",
+    "expiresOn": "Valable jusqu'au {{date}}"
+  },
+  "steps": {
+    "title": "Ce que vous devez faire",
+    "complete_personal_info": "Indiquez votre date de naissance, votre nationalité et votre pays de résidence",
+    "upload_identity": "Téléversez une pièce d'identité officielle (passeport, carte d'identité nationale ou permis de conduire)",
+    "upload_selfie": "Prenez un selfie en direct avec votre caméra",
+    "upload_address": "Téléversez un justificatif de domicile",
+    "upload_video": "Enregistrez une courte vidéo de vérification",
+    "replace_identity": "Remplacez votre pièce d'identité",
+    "replace_selfie": "Reprenez votre selfie",
+    "replace_address": "Remplacez votre justificatif de domicile",
+    "replace_video": "Réenregistrez votre vidéo de vérification",
+    "submit": "Soumettez votre vérification pour examen",
+    "await_review": "Attendez que notre équipe examine vos documents (24 à 48 heures)",
+    "approved": "Vérification terminée"
+  },
+  "groups": {
+    "identity": "Pièce d'identité",
+    "selfie": "Selfie en direct",
+    "address": "Justificatif de domicile",
+    "video": "Vidéo de vérification"
+  },
+  "docTypes": {
+    "passport": "Passeport",
+    "national_id": "Carte d'identité nationale",
+    "driving_license": "Permis de conduire",
+    "utility_bill": "Facture de services publics",
+    "bank_statement": "Relevé bancaire",
+    "proof_of_address": "Justificatif de domicile",
+    "selfie": "Selfie en direct",
+    "video_verification": "Vidéo de vérification"
+  },
+  "docStatus": {
+    "pending": "Téléversé — en attente d'examen",
+    "in_review": "En cours d'examen",
+    "approved": "Approuvé",
+    "rejected": "À remplacer",
+    "resubmission_required": "À remplacer",
+    "expired": "Expiré",
+    "error": "Échec du téléversement",
+    "uploading": "Téléversement…"
+  },
+  "upload": {
+    "requirements": "Exigences",
+    "dropTitle": "Téléverser un document",
+    "dropHere": "Déposez votre fichier ici",
+    "dropHint": "Glissez-déposez un fichier ici, ou touchez pour en choisir un",
+    "formats": "Max. {{size}} Mo · {{formats}}",
+    "view": "Voir",
+    "replace": "Remplacer",
+    "remove": "Supprimer",
+    "retry": "Réessayer",
+    "uploadedOn": "Téléversé le {{date}}",
+    "rejectedReason": "Pourquoi il doit être remplacé :",
+    "errorTitle": "Ce fichier n'a pas été téléversé.",
+    "locked": "Ce document ne peut pas être modifié pendant son examen ou s'il est déjà approuvé.",
+    "invalidType": "Ce type de fichier n'est pas pris en charge. Veuillez téléverser {{formats}}.",
+    "tooLarge": "Ce fichier dépasse {{size}} Mo. Veuillez téléverser un fichier plus petit."
+  },
+  "wizard": {
+    "stepOf": "Étape {{current}} sur {{total}}",
+    "back": "Retour",
+    "next": "Suivant",
+    "skip": "Passer pour l'instant",
+    "steps": {
+      "intro": "Aperçu",
+      "personal": "Infos personnelles",
+      "identity": "Pièce d'identité",
+      "address": "Adresse",
+      "selfie": "Selfie",
+      "review": "Soumettre"
+    },
+    "intro": {
+      "title": "Vérifions votre identité",
+      "desc": "La réglementation nous oblige à confirmer votre identité avant que vous puissiez détenir des parts de biens. Vos données sont chiffrées et utilisées uniquement pour la vérification.",
+      "timeNote": "Cela prend environ 5 minutes. Vous aurez besoin de votre pièce d'identité et d'un appareil équipé d'une caméra.",
+      "needTitle": "Ce dont vous aurez besoin",
+      "needId": "Une pièce d'identité officielle valide",
+      "needIdDesc": "Passeport, carte d'identité nationale ou permis de conduire",
+      "needSelfie": "Un selfie en direct",
+      "needSelfieDesc": "Pris avec la caméra de votre téléphone ou de votre ordinateur",
+      "needAddress": "Justificatif de domicile (facultatif)",
+      "needAddressDesc": "Facture de services publics ou relevé bancaire datant de moins de 3 mois",
+      "processing": "La plupart des vérifications sont examinées sous 24 à 48 heures. Vous recevrez un e-mail et une notification avec le résultat."
+    },
+    "personal": {
+      "title": "Informations personnelles",
+      "desc": "Elles doivent correspondre à votre pièce d'identité.",
+      "dob": "Date de naissance",
+      "dobHint": "Vous devez avoir au moins 18 ans.",
+      "nationality": "Nationalité",
+      "nationalityPlaceholder": "Sélectionnez votre nationalité",
+      "residency": "Pays de résidence",
+      "residencyPlaceholder": "Sélectionnez votre pays de résidence",
+      "privacy": "Vos informations personnelles sont chiffrées et stockées en toute sécurité.",
+      "errors": {
+        "dobRequired": "La date de naissance est obligatoire",
+        "dobUnderage": "Vous devez avoir au moins 18 ans pour utiliser cette plateforme",
+        "dobFuture": "La date de naissance ne peut pas être dans le futur",
+        "nationalityRequired": "La nationalité est obligatoire",
+        "residencyRequired": "Le pays de résidence est obligatoire",
+        "saveFailed": "Impossible d'enregistrer vos informations. Veuillez réessayer."
+      }
+    },
+    "identity": {
+      "title": "Téléversez votre pièce d'identité",
+      "desc": "Téléversez UN des documents suivants. Assurez-vous que le document entier est visible et lisible.",
+      "or": "ou",
+      "passportDesc": "La page photo de votre passeport",
+      "nationalIdDesc": "Recto de votre carte d'identité nationale (incluez le verso dans la même image si possible)",
+      "drivingDesc": "Recto de votre permis de conduire",
+      "req1": "Le document entier est visible",
+      "req2": "Tout le texte est net et lisible",
+      "req3": "Aucun reflet, ombre ou doigt ne le masque",
+      "req4": "Le document est valide et non expiré"
+    },
+    "address": {
+      "title": "Justificatif de domicile (facultatif)",
+      "desc": "Vous pouvez passer cette étape. L'ajouter maintenant accélère l'accès à des limites de détention plus élevées par la suite.",
+      "utilityDesc": "Facture d'électricité, d'eau, de gaz ou d'internet",
+      "bankDesc": "Relevé bancaire indiquant votre nom et votre adresse",
+      "req1": "Émis au cours des 3 derniers mois",
+      "req2": "Indique votre nom complet et votre adresse",
+      "req3": "Tout le texte est lisible"
+    },
+    "selfie": {
+      "title": "Prenez un selfie en direct",
+      "desc": "Nous comparons votre selfie à la photo de votre pièce d'identité pour confirmer que c'est bien vous."
+    },
+    "review": {
+      "title": "Vérifier et soumettre",
+      "desc": "Vérifiez toutes les informations ci-dessous, puis soumettez votre vérification pour examen.",
+      "personal": "Informations personnelles",
+      "dob": "Date de naissance",
+      "nationality": "Nationalité",
+      "residency": "Pays de résidence",
+      "documents": "Documents",
+      "missing": "Non fourni",
+      "optional": "Facultatif",
+      "submit": "Soumettre pour examen",
+      "submitting": "Envoi en cours…",
+      "consent": "En soumettant, vous confirmez que les informations et les documents sont authentiques et vous appartiennent."
+    },
+    "complete": {
+      "title": "Vérification soumise",
+      "desc": "Merci ! Notre équipe conformité examine vos documents.",
+      "next1": "L'examen prend généralement 24 à 48 heures",
+      "next2": "Vous recevrez un e-mail et une notification avec le résultat",
+      "next3": "Si quelque chose doit être corrigé, nous vous indiquerons précisément quoi mettre à jour",
+      "toDashboard": "Aller au tableau de bord"
+    }
+  },
+  "camera": {
+    "introTitle": "Préparez-vous pour votre selfie",
+    "tip1": "Placez-vous dans un endroit bien éclairé, face à la lumière",
+    "tip2": "Retirez lunettes de soleil, chapeaux et masques",
+    "tip3": "Tenez l'appareil à hauteur des yeux et regardez la caméra",
+    "start": "Activer la caméra",
+    "requesting": "En attente de l'autorisation de la caméra… Veuillez toucher « Autoriser » si votre navigateur le demande.",
+    "liveTitle": "Placez votre visage dans l'ovale",
+    "liveHint": "Ne bougez pas et regardez droit vers la caméra.",
+    "live": "En direct",
+    "capture": "Prendre la photo",
+    "countdown": "Photo dans {{seconds}}…",
+    "cancel": "Annuler",
+    "capturedTitle": "Vérifiez votre photo",
+    "capturedHint": "Assurez-vous que votre visage entier est visible, net et bien éclairé.",
+    "retake": "Reprendre",
+    "usePhoto": "Utiliser cette photo",
+    "uploading": "Téléversement de votre selfie…",
+    "uploadedTitle": "Selfie enregistré",
+    "uploadedHint": "Votre selfie a été téléversé. Vous pouvez le reprendre jusqu'à la soumission.",
+    "fallbackTitle": "Impossible d'utiliser la caméra en direct ?",
+    "fallbackDesc": "Prenez plutôt un selfie avec l'application appareil photo de votre téléphone.",
+    "fallbackButton": "Prendre / choisir une photo selfie",
+    "errors": {
+      "permission": "L'accès à la caméra a été bloqué. Autorisez l'accès à la caméra dans les paramètres de votre navigateur (l'icône de caméra dans la barre d'adresse), puis réessayez.",
+      "notFound": "Aucune caméra n'a été détectée sur cet appareil. Utilisez le bouton ci-dessous pour prendre un selfie avec votre téléphone.",
+      "inUse": "Votre caméra est utilisée par une autre application. Fermez-la et réessayez.",
+      "insecure": "La caméra ne fonctionne que sur une connexion sécurisée (https).",
+      "unsupported": "Ce navigateur ne prend pas en charge la capture par caméra en direct. Utilisez plutôt le bouton ci-dessous.",
+      "generic": "Impossible de démarrer votre caméra. Réessayez ou prenez plutôt un selfie avec votre téléphone.",
+      "noFrame": "L'image de la caméra n'était pas encore prête. Veuillez réessayer.",
+      "uploadFailed": "Votre selfie n'a pas pu être téléversé. Veuillez réessayer."
+    },
+    "retry": "Réessayer"
+  },
+  "inReview": {
+    "title": "Votre vérification est en cours d'examen",
+    "desc": "Vous n'avez rien à faire pour le moment. Nous vous enverrons un e-mail dès que l'examen sera terminé.",
+    "documentsTitle": "Documents soumis"
+  },
+  "approved": {
+    "title": "Vous êtes vérifié",
+    "desc": "Vous pouvez désormais détenir des parts de biens, déposer et retirer des fonds."
+  },
+  "sumsub": {
+    "title": "Vérification avec notre partenaire d'identité",
+    "desc": "La vérification est gérée en toute sécurité par Sumsub. Suivez les étapes ci-dessous ; cela prend environ 5 minutes.",
+    "loading": "Chargement de la vérification sécurisée…",
+    "error": "Le service de vérification n'a pas pu être chargé. Veuillez réessayer dans quelques minutes.",
+    "submitted": "Merci — votre vérification a été soumise. Nous mettrons à jour votre statut automatiquement."
+  },
+  "errors": {
+    "KYC_UNDER_REVIEW": "Votre vérification est en cours d'examen : les documents ne peuvent donc pas être modifiés pour le moment. Si notre équipe a besoin de quoi que ce soit, nous vous demanderons de le mettre à jour.",
+    "KYC_ALREADY_APPROVED": "Votre identité est déjà vérifiée.",
+    "KYC_DOCUMENT_APPROVED": "Ce document a déjà été approuvé et n'a pas besoin d'être remplacé.",
+    "KYC_INCOMPLETE": "Votre vérification n'est pas encore terminée. Veuillez compléter les étapes mises en évidence :",
+    "SUMSUB_UNAVAILABLE": "Le service de vérification est temporairement indisponible. Veuillez réessayer dans quelques minutes.",
+    "NETWORK_ERROR": "Problème de connexion. Vérifiez votre connexion internet et réessayez.",
+    "generic": "Une erreur s'est produite. Veuillez réessayer."
+  },
+  "banner": {
+    "not_started": {
+      "title": "Vérifiez votre identité pour commencer à détenir des biens",
+      "desc": "La vérification d'identité (KYC) est requise avant de pouvoir investir, déposer ou retirer des fonds. Elle prend environ 5 minutes."
+    },
+    "pending": {
+      "title": "Terminez votre vérification d'identité",
+      "desc": "Vous avez commencé la vérification mais ne l'avez pas encore soumise."
+    },
+    "action_required": {
+      "title": "Action requise sur votre vérification",
+      "desc": "Notre équipe vous a demandé de mettre à jour certains documents."
+    },
+    "in_review": {
+      "title": "Votre vérification est en cours d'examen",
+      "desc": "Nous vous préviendrons par e-mail dès qu'elle sera terminée (généralement sous 24 à 48 heures)."
+    },
+    "rejected": {
+      "title": "Votre vérification n'a pas été approuvée",
+      "desc": "Consultez le motif et soumettez à nouveau vos documents."
+    },
+    "stepsLabel": "3 étapes rapides :",
+    "step1": "Infos personnelles",
+    "step2": "Pièce d'identité",
+    "step3": "Selfie en direct",
+    "ctaStart": "Vérifier maintenant",
+    "ctaContinue": "Continuer la vérification",
+    "ctaFix": "Corriger les documents",
+    "ctaView": "Voir le statut"
+  },
+  "gate": {
+    "title": "Vérification d'identité requise",
+    "desc": "Pour {{action}}, vous devez d'abord vérifier votre identité. Cela protège votre compte et est exigé par la réglementation financière.",
+    "start": "Commencer la vérification",
+    "pendingTitle": "Vérification en cours d'examen",
+    "pendingDesc": "Vos documents sont en cours d'examen. Vous pourrez {{action}} dès que vous serez vérifié (généralement sous 24 à 48 heures).",
+    "rejectedTitle": "Vérification non approuvée",
+    "rejectedDesc": "Votre vérification nécessite votre attention avant que vous puissiez {{action}}.",
+    "viewStatus": "Voir le statut de la vérification",
+    "fixNow": "Corriger et soumettre à nouveau",
+    "actions": {
+      "deposit": "déposer des fonds",
+      "own": "détenir des parts de biens",
+      "withdraw": "retirer des fonds"
+    }
+  },
+  "info": {
+    "secureTitle": "Sécurisé et conforme",
+    "secureDesc": "Vos données sont chiffrées et traitées selon les normes du secteur financier.",
+    "fastTitle": "Examen rapide",
+    "fastDesc": "La plupart des vérifications sont examinées sous 24 à 48 heures, avec des mises à jour par e-mail.",
+    "supportTitle": "De l'aide quand vous en avez besoin",
+    "supportDesc": "Des questions sur la vérification ? Notre équipe d'assistance et notre assistant IA sont là pour vous aider."
+  },
+  "nav": {
+    "identityVerification": "Vérification d'identité"
+  }
+}

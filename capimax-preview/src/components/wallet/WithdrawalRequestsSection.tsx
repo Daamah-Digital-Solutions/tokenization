@@ -6,6 +6,7 @@ import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
 import { useUser } from '../../contexts/AuthContext';
 import { downloadWithdrawalConfirmationPdf } from '../../utils/pdf/bankDocuments';
+import { uiLocale } from '../../utils/locale';
 
 interface WithdrawalRequest {
   id: string;
@@ -41,7 +42,7 @@ const WITHDRAWAL_STATUS_COPY: Record<WithdrawalRequest['status'], { key: string;
 export const WithdrawalRequestsSection: React.FC = () => {
   const user: any = useUser();
   const { t, i18n } = useTranslation('payments');
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
+  const dateLocale = uiLocale(i18n.language);
   const { data, isLoading, error } = useQuery({
     queryKey: ['wallet', 'withdraw-requests'],
     queryFn: async () => {

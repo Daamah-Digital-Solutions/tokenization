@@ -61,6 +61,7 @@ import {
   ValuationCard,
 } from './ListingDetailsSections';
 import { buildSchedule, fallbackPlan, formatMoney, formatPlanDate, parseDate } from '../../utils/paymentPlan';
+import { uiLocale } from '../../utils/locale';
 
 // Wyoming Secretary of State business search (client round 4, #6; same link as Capimax BRX)
 const WYOMING_BUSINESS_SEARCH = 'https://wyobiz.wyo.gov/Business/FilingSearch.aspx';
@@ -142,7 +143,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
   const formatPercentage = (value: number) => `${value.toFixed(1)}%`;
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', {
+    return new Date(dateString).toLocaleDateString(uiLocale(i18n.language), {
       year: 'numeric',
       month: 'long',
       day: 'numeric'

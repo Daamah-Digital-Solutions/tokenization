@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { StatementService, type StatementKind } from '../../../services/documents/StatementService';
 import { downloadStatementPdf } from '../../../utils/pdf/statements';
+import { baseLanguage } from '../../../utils/locale';
 
 type Preset = 'month' | 'quarter' | 'year' | 'all';
 
@@ -42,7 +43,7 @@ export const InvestorReports: React.FC = () => {
   const { t, i18n } = useTranslation('docs');
   const [preset, setPreset] = useState<Preset>('all');
   const [range, setRange] = useState(presetRange('all'));
-  const [docLang, setDocLang] = useState<string>(i18n.language?.startsWith('ar') ? 'ar' : 'en');
+  const [docLang, setDocLang] = useState<string>(baseLanguage(i18n.language));
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -136,7 +137,7 @@ export const InvestorReports: React.FC = () => {
           <div>
             <div className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">{t('ui.language')}</div>
             <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-              {(['en', 'ar'] as const).map((l) => (
+              {(['en', 'ar', 'fr'] as const).map((l) => (
                 <button
                   key={l}
                   type="button"
@@ -145,7 +146,7 @@ export const InvestorReports: React.FC = () => {
                     docLang === l ? 'bg-slate-900 text-white dark:bg-emerald-600' : 'text-slate-700 dark:text-slate-200'
                   }`}
                 >
-                  {l === 'en' ? t('ui.english') : t('ui.arabic')}
+                  {t(`ui.${{ en: 'english', ar: 'arabic', fr: 'french' }[l]}`)}
                 </button>
               ))}
             </div>

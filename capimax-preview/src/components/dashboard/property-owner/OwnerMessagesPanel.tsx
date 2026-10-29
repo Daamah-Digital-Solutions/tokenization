@@ -10,6 +10,7 @@ import {
   OWNER_UPLOADABLE_DOC_TYPES,
   type OwnerMessage,
 } from '../../../services/property-owner/OwnerMessagesService';
+import { baseLanguage } from '../../../utils/locale';
 
 /**
  * Messages between the owner / developer and the platform team (client
@@ -107,7 +108,7 @@ export const OwnerMessagesPanel: React.FC<{ initialPropertyId?: string | null }>
   }, [selected, thread, refresh]);
 
   const fmt = (iso: string) =>
-    new Date(iso).toLocaleString(isAr ? 'ar' : 'en', { dateStyle: 'medium', timeStyle: 'short' });
+    new Date(iso).toLocaleString(baseLanguage((i18n.language || 'en')), { dateStyle: 'medium', timeStyle: 'short' });
 
   const send = async () => {
     if (!body.trim()) return;

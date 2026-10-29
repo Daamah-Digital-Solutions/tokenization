@@ -27,6 +27,7 @@ import {
   type KYCServerDocument,
   type KYCStatusPayload,
 } from '../../services/user/KYCService';
+import { baseLanguage } from '../../utils/locale';
 
 /**
  * KYC wizard driven by the SERVER's state (client round 3, items 5–7).
@@ -144,7 +145,7 @@ export const KYCWizard: React.FC<KYCWizardProps> = ({ status, onRefresh, onSubmi
 
   const currentId = STEPS[step].id;
   const fmtDate = (iso: string) =>
-    new Date(iso).toLocaleDateString(lang.startsWith('ar') ? 'ar' : 'en', {
+    new Date(iso).toLocaleDateString(baseLanguage(lang), {
       year: 'numeric', month: 'long', day: 'numeric',
     });
 

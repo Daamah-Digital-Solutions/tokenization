@@ -5,6 +5,7 @@ import { PropertyService } from '../../services';
 import PropertyOwnerService from '../../services/property-owner/PropertyOwnerService';
 import type { Property } from '../../services/api/types';
 import { Link } from 'react-router-dom';
+import { uiLocale } from '../../utils/locale';
 
 type PropertyStatus = 'draft' | 'pending_approval' | 'approved' | 'active' | 'tokenized' | 'delisted';
 
@@ -96,7 +97,7 @@ export const PropertyListManagement: React.FC = () => {
   };
 
   const formatDate = (date: string): string => {
-    return new Date(date).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US', {
+    return new Date(date).toLocaleDateString(uiLocale(i18n.language), {
       year: 'numeric',
       month: 'short',
       day: 'numeric',

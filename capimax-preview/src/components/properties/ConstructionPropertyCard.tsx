@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '../ui/Button';
 import { useTranslation } from 'react-i18next';
+import { uiLocale } from '../../utils/locale';
 
 export interface ConstructionProperty {
   id: string;
@@ -47,7 +48,7 @@ export const ConstructionPropertyCard: React.FC<ConstructionPropertyCardProps> =
   className = ''
 }) => {
   const { t, i18n } = useTranslation('propui');
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
+  const dateLocale = uiLocale(i18n.language);
   const progressPercentage = property.constructionProgress;
   const tokenAvailability = ((property.totalTokens - property.reservedTokens - property.activeTokens) / property.totalTokens) * 100;
   

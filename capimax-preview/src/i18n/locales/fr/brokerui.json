@@ -1,0 +1,811 @@
+{
+  "appForm": {
+    "errSubmit": "Échec de l'envoi de la candidature",
+    "errFullName": "Le nom complet doit contenir au moins 3 caractères",
+    "errEmail": "Veuillez saisir une adresse e-mail valide",
+    "errPhone": "Veuillez saisir un numéro de téléphone valide (10 chiffres minimum)",
+    "errSpecialization": "Veuillez sélectionner votre spécialisation",
+    "errYears": "Les années d'expérience ne peuvent pas être négatives",
+    "errLinkedin": "Veuillez saisir une URL LinkedIn valide",
+    "errUrl": "Veuillez saisir une URL valide",
+    "errMotivation": "Veuillez expliquer votre motivation en au moins 100 caractères",
+    "errClients": "Le nombre de clients prévus ne peut pas être négatif",
+    "stepPersonal": "Informations personnelles",
+    "stepProfessional": "Informations professionnelles",
+    "stepMotivation": "Motivation et objectifs",
+    "personalTitle": "Informations personnelles",
+    "fullName": "Nom complet *",
+    "fullNamePh": "Jean Dupont",
+    "email": "Adresse e-mail *",
+    "phone": "Numéro de téléphone *",
+    "company": "Nom de la société (facultatif)",
+    "companyPh": "ABC Realty Group",
+    "professionalTitle": "Informations professionnelles",
+    "specialization": "Spécialisation *",
+    "selectSpecialization": "Sélectionnez votre spécialisation...",
+    "spec": {
+      "residential": "Biens résidentiels",
+      "commercial": "Biens commerciaux",
+      "industrial": "Biens industriels",
+      "mixedUse": "Projets à usage mixte",
+      "land": "Terrains et promotion",
+      "luxury": "Immobilier de luxe",
+      "investment": "Biens d'investissement",
+      "management": "Gestion immobilière",
+      "general": "Immobilier général"
+    },
+    "years": "Années d'expérience *",
+    "license": "Numéro de licence (facultatif)",
+    "licenseHint": "Si vous détenez une licence d'agent immobilier, veuillez indiquer son numéro",
+    "linkedin": "Profil LinkedIn (facultatif)",
+    "portfolio": "Site web portfolio (facultatif)",
+    "motivationTitle": "Motivation et objectifs",
+    "motivation": "Pourquoi souhaitez-vous devenir courtier sur notre plateforme ? *",
+    "motivationPh": "Parlez-nous de votre motivation, de votre expérience et de la manière dont vous pouvez aider vos clients à acheter de l'immobilier tokenisé...",
+    "minChars": "{{value}} / 100 minimum",
+    "targetMarket": "Marché cible (facultatif)",
+    "targetMarketPh": "ex. : particuliers fortunés, acheteurs internationaux",
+    "targetMarketHint": "Décrivez le profil de votre clientèle cible",
+    "expectedClients": "Clients prévus la première année (facultatif)",
+    "agreeTitle": "En soumettant cette candidature, vous acceptez de :",
+    "agree1": "Respecter notre code de conduite et nos règles d'éthique pour les courtiers",
+    "agree2": "Fournir des informations exactes et honnêtes à tous les clients",
+    "agree3": "Respecter toutes les réglementations immobilières et financières applicables",
+    "agree4": "Maintenir une communication active avec les clients parrainés",
+    "agree5": "Accepter notre structure de commissions et nos conditions de paiement",
+    "successTitle": "Candidature envoyée avec succès !",
+    "successThanks": "Merci d'avoir postulé pour devenir courtier sur notre plateforme.",
+    "successReview": "Nous examinerons votre candidature et vous contacterons sous 3 à 5 jours ouvrés.",
+    "applicationId": "ID de candidature :",
+    "goDashboard": "Aller au tableau de bord",
+    "checkStatus": "Vérifier le statut de la candidature",
+    "title": "Candidature de courtier",
+    "subtitle": "Rejoignez notre réseau de courtiers immobiliers professionnels et percevez des commissions attractives",
+    "back": "Retour",
+    "nextStep": "Étape suivante",
+    "submitting": "Envoi en cours...",
+    "submit": "Envoyer la candidature"
+  },
+  "application": {
+    "steps": {
+      "personal": "Informations personnelles",
+      "personalDesc": "Coordonnées de base",
+      "professional": "Qualifications professionnelles",
+      "professionalDesc": "Expérience et qualifications",
+      "agreements": "Engagements et envoi",
+      "agreementsDesc": "Conditions et vérification finale"
+    },
+    "err": {
+      "firstName": "Le prénom est obligatoire",
+      "lastName": "Le nom est obligatoire",
+      "email": "L'e-mail est obligatoire",
+      "emailInvalid": "L'e-mail n'est pas valide",
+      "phone": "Le numéro de téléphone est obligatoire",
+      "country": "Le pays est obligatoire",
+      "cityAddress": "La ville / l'adresse est obligatoire",
+      "experience": "Le niveau d'expérience est obligatoire",
+      "strategy": "La stratégie de parrainage est obligatoire",
+      "terms": "Vous devez accepter les conditions",
+      "submit": "La candidature n'a pas pu être envoyée. Veuillez réessayer."
+    },
+    "submittedMetaTitle": "Candidature envoyée - Programme courtiers Capimax",
+    "successTitle": "Candidature envoyée avec succès !",
+    "successDesc": "Merci de l'intérêt que vous portez au programme de courtiers partenaires Capimax. Nous avons bien reçu votre candidature et l'examinerons sous 2 à 3 jours ouvrés.",
+    "nextTitle": "Et ensuite ?",
+    "next1": "Notre équipe examinera votre candidature",
+    "next2": "Vous recevrez un e-mail vous informant de notre décision",
+    "next3": "En cas d'approbation, nous vous fournirons les identifiants de votre compte courtier",
+    "backHome": "Retour à l'accueil",
+    "learnMore": "En savoir plus sur notre programme",
+    "metaTitle": "Candidature de courtier - Programme partenaires Capimax",
+    "metaDescription": "Rejoignez le programme de courtiers partenaires Capimax. Envoyez votre candidature pour devenir courtier certifié en tokenisation immobilière.",
+    "title": "Candidature de courtier partenaire",
+    "subtitle": "Rejoignez notre réseau d'élite de courtiers en tokenisation immobilière et accédez à de nouvelles opportunités",
+    "personalDesc": "Veuillez indiquer vos coordonnées de base",
+    "firstName": "Prénom *",
+    "firstNamePh": "Jean",
+    "lastName": "Nom *",
+    "lastNamePh": "Dupont",
+    "email": "Adresse e-mail *",
+    "phone": "Numéro de téléphone *",
+    "country": "Pays de résidence *",
+    "countryPh": "France",
+    "cityAddress": "Ville / adresse *",
+    "cityAddressPh": "75001 Paris\n123 rue Principale",
+    "professionalDesc": "Parlez-nous de votre expérience et de vos qualifications",
+    "license": "Numéro de licence d'agent immobilier",
+    "licensePh": "Facultatif - Saisissez votre numéro de licence le cas échéant",
+    "licenseHint": "Vous n'avez pas encore de licence ? Ce n'est pas grave, nous assurons la formation.",
+    "years": "Années d'expérience *",
+    "selectExperience": "Sélectionnez votre niveau d'expérience",
+    "yearsRange": "{{value}} ans",
+    "company": "Agence / société actuelle",
+    "companyPh": "Facultatif - Employeur ou agence actuels",
+    "strategy": "Comment comptez-vous apporter des clients ? *",
+    "strategyPh": "Décrivez votre stratégie pour orienter des clients vers notre plateforme de tokenisation : votre réseau, vos méthodes marketing et votre public cible.",
+    "documents": "Pièces justificatives",
+    "documentsHint": "Téléversez votre licence, l'immatriculation de votre société ou tout autre document pertinent",
+    "chooseFiles": "Choisir des fichiers",
+    "formats": "Formats acceptés : PDF, DOC, DOCX, JPG, PNG (10 Mo max.)",
+    "reviewTitle": "Vérification et envoi",
+    "reviewDesc": "Veuillez vérifier vos informations et accepter nos conditions",
+    "summary": "Récapitulatif de la candidature",
+    "nameLabel": "Nom :",
+    "emailLabel": "E-mail :",
+    "experienceLabel": "Expérience :",
+    "countryLabel": "Pays :",
+    "termsTitle": "Conditions générales du programme courtiers",
+    "termsIntro": "En postulant pour devenir courtier partenaire Capimax, vous acceptez de :",
+    "terms1": "Maintenir des standards professionnels dans toutes vos interactions avec les clients",
+    "terms2": "Respecter toutes les réglementations immobilières et financières applicables",
+    "terms3": "Fournir des informations exactes sur notre plateforme de tokenisation",
+    "terms4": "Suivre les programmes de formation et de certification requis",
+    "terms5": "Préserver la confidentialité des informations des clients et de la société",
+    "terms6": "Respecter notre structure de commissions et nos conditions de paiement",
+    "terms7": "Déclarer avec exactitude toutes les transactions et tous les parrainages",
+    "termsAccept": "J'ai lu et j'accepte les conditions générales du programme courtiers *",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "submitting": "Envoi en cours...",
+    "submit": "Envoyer la candidature",
+    "emailFromAccount": "L'e-mail de votre compte — l'approbation met à niveau ce compte.",
+    "docs": {
+      "badType": "Fichiers PDF, JPG ou PNG uniquement.",
+      "tooBig": "Le fichier dépasse 10 Mo.",
+      "formats": "PDF, JPG ou PNG, 10 Mo max. chacun. Les fichiers sont privés et consultés uniquement par l'équipe d'examen.",
+      "types": {
+        "license": "Licence de courtier / d'agent immobilier",
+        "id_document": "Pièce d'identité / passeport",
+        "company_registration": "Immatriculation de la société",
+        "proof_of_address": "Justificatif de domicile",
+        "other": "Autre document"
+      }
+    }
+  },
+  "calc": {
+    "title": "Calculateur de commissions",
+    "showMonthly": "Afficher la projection mensuelle",
+    "showSingle": "Afficher une transaction unique",
+    "currentTier": "Niveau actuel",
+    "baseRate": "Taux de base",
+    "totalVolume": "Volume total",
+    "payoutSchedule": "Calendrier de versement",
+    "payout": {
+      "monthly": "Mensuel",
+      "quarterly": "Trimestriel",
+      "per_transaction": "Par transaction"
+    },
+    "purchaseDetails": "Détails de l'achat",
+    "purchaseAmount": "Montant de l'achat",
+    "propertyType": "Type de bien",
+    "standard": "Bien standard",
+    "construction": "Bien en construction (+{{value}} %)",
+    "premium": "Bien premium (+{{value}} %)",
+    "types": {
+      "standard": "Standard",
+      "construction": "En construction",
+      "premium": "Premium"
+    },
+    "additionalReferrals": "Parrainages supplémentaires ce mois-ci",
+    "plusPerReferral": "+{{value}} % par parrainage",
+    "breakdown": "Détail de la commission",
+    "baseCommission": "Commission de base ({{value}} %)",
+    "bonusCommission": "Commission bonus ({{value}} %)",
+    "totalCommission": "Commission totale ({{value}} %)",
+    "yearlyProjection": "Projection annuelle",
+    "nextTier": "Niveau suivant : {{name}}",
+    "rate": "Taux de {{value}} %",
+    "moreVolume": "Encore ${{value}} de volume nécessaire",
+    "structure": "Structure des commissions",
+    "baseTiers": "Niveaux de commission de base",
+    "requirements": "Conditions :",
+    "specialRates": "Taux spéciaux et bonus",
+    "constructionProps": "Biens en construction",
+    "premiumProps": "Biens premium",
+    "referralBonus": "Bonus de parrainage",
+    "perReferral": "{{value}} % par parrainage",
+    "teamOverride": "Commission d'équipe",
+    "minPayout": "Versement minimum :",
+    "payoutScheduleLabel": "Calendrier de versement :",
+    "recalculate": "Recalculer",
+    "copyText": "Calcul de commission :\nAchat : ${{amount}}\nType de bien : {{type}}\nTaux total : {{rate}} %\nCommission totale : ${{total}}",
+    "copyResults": "Copier les résultats"
+  },
+  "dash": {
+    "errorTitle": "Erreur de chargement du tableau de bord",
+    "errorDesc": "Impossible de charger les données du tableau de bord courtier. Veuillez réessayer.",
+    "tabs": {
+      "overview": "Vue d'ensemble",
+      "commissions": "Commissions",
+      "referrals": "Parrainages",
+      "marketing": "Marketing",
+      "analytics": "Analyses"
+    },
+    "totalEarned": "Total perçu",
+    "allTimeEarnings": "Gains depuis le début",
+    "pendingCommission": "Commission en attente",
+    "awaitingPayout": "En attente de versement",
+    "totalReferrals": "Total des parrainages",
+    "successful": "{{value}} réussis",
+    "conversionRate": "Taux de conversion",
+    "referralToPurchase": "Du parrainage à l'achat",
+    "commissionSummary": "Récapitulatif des commissions",
+    "pending": "En attente",
+    "paidOut": "Versé",
+    "thisMonth": "Ce mois-ci",
+    "lastMonth": "Le mois dernier",
+    "recentCommissions": "Commissions récentes",
+    "viewAll": "Tout voir",
+    "propertyPurchase": "Achat de bien",
+    "owner": "Propriétaire",
+    "status": {
+      "paid": "Payé",
+      "pending": "En attente",
+      "approved": "Approuvé",
+      "rejected": "Rejeté",
+      "cancelled": "Annulé",
+      "invested": "Propriétaire",
+      "registered": "Inscrit",
+      "active": "Actif",
+      "inactive": "Inactif",
+      "suspended": "Suspendu",
+      "expired": "Expiré",
+      "completed": "Terminé"
+    },
+    "recentReferrals": "Parrainages récents",
+    "newReferral": "Nouveau parrainage",
+    "code": "Code : {{code}}",
+    "title": "Tableau de bord courtier",
+    "welcome": "Bon retour, {{name}}",
+    "broker": "Courtier",
+    "commissionRate": "Taux de commission",
+    "statusLabel": "Statut :",
+    "yearsExperience": "{{value}} ans d'expérience"
+  },
+  "lp": {
+    "required": "Obligatoire",
+    "invalidEmail": "E-mail invalide",
+    "selectOne": "Sélectionnez au moins une option",
+    "mustAcknowledge": "Confirmation requise",
+    "mustAgree": "Acceptation requise",
+    "errSubmit": "Échec de l'envoi de la candidature",
+    "submittedTitle": "Candidature envoyée",
+    "submittedDesc": "Merci pour votre candidature. Notre équipe l'examinera et vous contactera sous 5 à 7 jours ouvrés.",
+    "entityInfo": "Informations sur l'entité",
+    "legalName": "Dénomination sociale *",
+    "legalNamePh": "Nom de la société Ltd.",
+    "entityType": "Type d'entité *",
+    "entity": {
+      "company": "Société",
+      "fund": "Fonds d'investissement",
+      "professional_individual": "Particulier professionnel"
+    },
+    "country": "Pays *",
+    "countryPh": "Émirats arabes unis",
+    "jurisdiction": "Juridiction *",
+    "jurisdictionPh": "DIFC, Dubaï",
+    "registrationNumber": "Numéro d'immatriculation *",
+    "website": "Site web (facultatif)",
+    "contactInfo": "Coordonnées",
+    "contactName": "Nom de la personne de contact *",
+    "contactNamePh": "Jean Martin",
+    "position": "Poste / fonction *",
+    "positionPh": "Directeur des investissements",
+    "officialEmail": "E-mail officiel *",
+    "phone": "Numéro de téléphone *",
+    "financialInfo": "Informations financières",
+    "liquidity": "Liquidité disponible approximative (USD) *",
+    "avgTxSize": "Montant moyen par transaction (USD) *",
+    "currencies": "Devises préférées *",
+    "currency": {
+      "USD": "USD",
+      "EUR": "EUR",
+      "CRYPTO": "CRYPTO",
+      "OTHER": "AUTRE"
+    },
+    "operatingPolicy": "Politique opérationnelle",
+    "targetAssets": "Types d'actifs ciblés",
+    "readyProps": "Biens prêts / achevés",
+    "underConstruction": "Biens en construction",
+    "portfolios": "Portefeuilles immobiliers",
+    "discountRate": "Taux de décote attendu (%) *",
+    "maxPerTx": "Maximum par transaction (USD) *",
+    "maxPerMonth": "Maximum par mois (USD) *",
+    "acknowledgments": "Déclarations",
+    "ackIntro": "Veuillez lire attentivement et confirmer les déclarations suivantes avant d'envoyer votre candidature.",
+    "ack1": "Je reconnais que le fournisseur de liquidité agit en tant que <strong>tiers indépendant</strong> et n'est ni affilié à Capimax RT ou à une SPV, ni approuvé par eux, ni leur représentant.",
+    "ack2": "Je comprends qu'en tant que fournisseur de liquidité, je ne suis <strong>pas tenu de garantir les sorties</strong>, d'acheter toutes les demandes, de maintenir des prix fixes ni de fournir une liquidité permanente.",
+    "ack3": "J'accepte de respecter l'ensemble des conditions de la plateforme et des réglementations applicables, et de me soumettre au processus de vérification KYB (Know Your Business).",
+    "stepOf": "Étape {{step}} sur {{total}}",
+    "percentComplete": "{{value}} % terminé",
+    "cancel": "Annuler",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "submitting": "Envoi en cours...",
+    "submit": "Envoyer la candidature",
+    "signInTitle": "Connectez-vous pour postuler",
+    "signInText": "La candidature est liée à votre compte : une fois approuvée, ce compte donne accès au tableau de bord fournisseur de liquidité.",
+    "signIn": "Se connecter",
+    "createAccount": "Créer un compte",
+    "docs": {
+      "title": "Pièces justificatives",
+      "subtitle": "Téléversez les documents examinés par notre équipe conformité. Les éléments marqués * sont obligatoires.",
+      "choose": "Choisir un fichier",
+      "remove": "Supprimer",
+      "required": "Ce document est obligatoire.",
+      "badType": "Fichiers PDF, JPG ou PNG uniquement.",
+      "tooBig": "Le fichier dépasse 10 Mo.",
+      "hint": "PDF, JPG ou PNG, 10 Mo max. chacun. Les fichiers sont privés et consultés uniquement par l'équipe d'examen.",
+      "types": {
+        "certificate_of_incorporation": "Certificat de constitution",
+        "director_id": "Pièce d'identité du dirigeant / signataire",
+        "regulatory_license": "Agrément réglementaire",
+        "proof_of_address": "Justificatif de domicile",
+        "proof_of_funds": "Justificatif de fonds / référence bancaire",
+        "aml_policy": "Politique LCB-FT / KYC",
+        "board_resolution": "Résolution du conseil d'administration"
+      }
+    }
+  },
+  "lpPage": {
+    "metaTitle": "Programme fournisseurs de liquidité | Capimax RT",
+    "metaDescription": "Rejoignez le programme fournisseurs de liquidité de Capimax RT. Offrez une liquidité facultative aux propriétaires, fixez vos propres conditions et profitez des écarts de prix.",
+    "badge": "Programme fournisseurs de liquidité",
+    "heroTitle": "Programme fournisseurs de liquidité",
+    "brand": "Capimax RT",
+    "heroDesc": "Le programme fournisseurs de liquidité permet à des tiers qualifiés d'offrir une liquidité facultative et encadrée aux propriétaires souhaitant sortir de leur détention immobilière tokenisée, selon les conditions, les prix et les limites fixés par le fournisseur de liquidité lui-même.",
+    "noticeTitle": "Avis important",
+    "noticeDesc": "Le fournisseur de liquidité <strong>n'est pas une entité de rachat</strong>, ne garantit pas la sortie et ne constitue pas une obligation pour la plateforme ou la SPV. Toutes les opérations de sortie sont soumises aux conditions du fournisseur de liquidité et aux validations de conformité.",
+    "applyNow": "Postuler",
+    "howTitle": "Comment ça marche",
+    "howDesc": "Un processus simple et transparent pour devenir fournisseur de liquidité sur notre plateforme.",
+    "steps": {
+      "s1": {
+        "title": "Envoyer la candidature",
+        "description": "Le fournisseur de liquidité envoie une candidature officielle via la plateforme"
+      },
+      "s2": {
+        "title": "Vérification KYB",
+        "description": "Il se soumet au processus KYB (Know Your Business) et à une évaluation opérationnelle"
+      },
+      "s3": {
+        "title": "Définir les paramètres",
+        "description": "Définir les actifs ciblés, les limites de liquidité et la politique de prix (décote / spread)"
+      },
+      "s4": {
+        "title": "Activation du tableau de bord",
+        "description": "Un panneau de contrôle dédié est activé pour gérer les opérations"
+      },
+      "s5": {
+        "title": "Recevoir les demandes",
+        "description": "Recevoir les demandes de sortie des propriétaires souhaitant vendre leurs parts"
+      },
+      "s6": {
+        "title": "Examiner et exécuter",
+        "description": "Approuver ou rejeter les demandes selon vos politiques et exécuter les achats"
+      }
+    },
+    "modelTitle": "Modèle économique",
+    "modelDesc": "Plusieurs sources de profit avec une flexibilité opérationnelle totale.",
+    "profitSources": "Sources de profit",
+    "profit": {
+      "p0": {
+        "title": "Écart de prix",
+        "description": "Acheter avec une décote (spread) auprès des propriétaires souhaitant une sortie anticipée"
+      },
+      "p1": {
+        "title": "Frais de service de sortie",
+        "description": "Facturer des frais de service pour le traitement des transactions de sortie (le cas échéant)"
+      },
+      "p2": {
+        "title": "Revente sur le marché secondaire",
+        "description": "Revendre les parts acquises sur le marché secondaire au prix du marché"
+      },
+      "p3": {
+        "title": "Conserver et percevoir des rendements",
+        "description": "Conserver temporairement les parts et bénéficier des distributions"
+      }
+    },
+    "notObligatedTitle": "Ce à quoi vous n'êtes PAS tenu",
+    "notObligated": {
+      "n0": "Acheter toutes les demandes de sortie",
+      "n1": "Maintenir des prix fixes",
+      "n2": "Exécuter dans des délais déterminés",
+      "n3": "Garantir une liquidité permanente"
+    },
+    "controlNote": "En tant que fournisseur de liquidité, vous gardez le contrôle total de vos opérations, de vos prix et de vos décisions, sans aucune obligation de garantir les sorties.",
+    "benefitsTitle": "Avantages de l'adhésion",
+    "benefitsDesc": "Des avantages complets sur les plans opérationnel, financier et juridique.",
+    "operational": "Avantages opérationnels",
+    "financial": "Avantages financiers",
+    "legal": "Avantages juridiques",
+    "operationalList": {
+      "o0": "Panneau de contrôle indépendant",
+      "o1": "Contrôle total des prix, des actifs, des limites et des approbations",
+      "o2": "Rapports et analyses en temps réel"
+    },
+    "financialList": {
+      "f0": "Possibilité d'acheter des parts avec une décote",
+      "f1": "Diversification du portefeuille de détention",
+      "f2": "Profit sur les écarts de prix",
+      "f3": "Totale flexibilité pour la revente"
+    },
+    "legalList": {
+      "l0": "Aucune obligation de rachat",
+      "l1": "Aucune gestion des fonds de la plateforme",
+      "l2": "Activité en tant que partie indépendante",
+      "l3": "Contrats parfaitement clairs"
+    },
+    "ctaTitle": "Prêt à devenir fournisseur de liquidité ?",
+    "ctaDesc": "Rejoignez notre réseau de fournisseurs de liquidité et saisissez des opportunités uniques sur le marché de l'immobilier tokenisé.",
+    "inquiries": "Pour toute question, contactez-nous à"
+  },
+  "materials": {
+    "title": "Supports marketing",
+    "subtitle": "Téléchargez et partagez des supports de vente professionnels",
+    "requestMaterial": "Demander un support",
+    "grid": "Grille",
+    "list": "Liste",
+    "totalMaterials": "Total des supports",
+    "newThisWeek": "Nouveautés de la semaine",
+    "totalDownloads": "Total des téléchargements",
+    "categories": "Catégories",
+    "searchPlaceholder": "Rechercher des supports...",
+    "allCategories": "Toutes les catégories",
+    "allTypes": "Tous les types",
+    "category": {
+      "general": "Général",
+      "property_specific": "Spécifique à un bien",
+      "education": "Formation",
+      "compliance": "Conformité",
+      "social_media": "Réseaux sociaux",
+      "email": "Modèles d'e-mail"
+    },
+    "type": {
+      "pdf": "PDF",
+      "video": "Vidéo",
+      "image": "Image",
+      "presentation": "Présentation",
+      "template": "Modèle",
+      "link": "Lien"
+    },
+    "mostDownloaded": "Les plus téléchargés",
+    "downloads": "{{value}} téléchargements",
+    "download": "Télécharger",
+    "recentlyAdded": "Ajoutés récemment",
+    "added": "Ajouté le {{date}}",
+    "new": "Nouveau",
+    "noMaterials": "Aucun support trouvé",
+    "noMaterialsHint": "Essayez de modifier vos filtres ou vos termes de recherche",
+    "requestCustom": "Demander un support personnalisé",
+    "customizable": "Personnalisable",
+    "more": "+{{value}} de plus",
+    "preview": "Aperçu",
+    "share": "Partager",
+    "customize": "Personnaliser",
+    "updated": "Mis à jour le {{date}}",
+    "categoryLabel": "Catégorie",
+    "description": "Description",
+    "descriptionPh": "Décrivez le support dont vous avez besoin...",
+    "cancel": "Annuler",
+    "submitRequest": "Envoyer la demande"
+  },
+  "partnerCard": {
+    "category": {
+      "developer": "Promoteur",
+      "financial": "Finance",
+      "insurance": "Assurance",
+      "management": "Gestion"
+    },
+    "logoAlt": "Logo {{name}}",
+    "visitWebsite": "Visiter le site web"
+  },
+  "partnersPage": {
+    "metaTitle": "Nos partenaires | Capimax RT - Partenaires de confiance de l'écosystème",
+    "metaDescription": "Découvrez notre réseau de partenaires de confiance : promoteurs immobiliers, conseillers financiers, assureurs et sociétés de gestion immobilière, qui collaborent pour offrir des opportunités exceptionnelles de détention immobilière.",
+    "badge": "Écosystème de confiance",
+    "heroTitle1": "Nos",
+    "heroTitle2": "partenaires",
+    "heroDesc": "Nous travaillons avec des partenaires de premier plan pour offrir des opportunités exceptionnelles de détention immobilière. Notre écosystème de confiance garantit qualité, transparence et gestion professionnelle à chaque étape.",
+    "tabs": {
+      "all": {
+        "label": "Tous les partenaires",
+        "description": "Voir tous nos partenaires de confiance"
+      },
+      "developer": {
+        "label": "Promoteurs",
+        "description": "Partenaires de promotion immobilière"
+      },
+      "financial": {
+        "label": "Finance",
+        "description": "Évaluation et gestion financière"
+      },
+      "insurance": {
+        "label": "Assurance",
+        "description": "Partenaires de couverture d'assurance"
+      },
+      "management": {
+        "label": "Gestion",
+        "description": "Services de gestion immobilière"
+      }
+    },
+    "list": {
+      "eliteGate": {
+        "name": "Elite Gate",
+        "description": "Promoteur immobilier de premier plan, spécialisé dans les projets résidentiels et commerciaux haut de gamme dans toute la région.",
+        "role": "Partenaire de promotion immobilière"
+      },
+      "primeOne": {
+        "name": "Prime One",
+        "description": "Promoteur immobilier innovant axé sur des espaces de vie urbains modernes et durables, au design de pointe.",
+        "role": "Partenaire de promotion immobilière"
+      },
+      "tdh": {
+        "name": "TDH",
+        "description": "Promoteur reconnu disposant d'un solide portefeuille de projets à usage mixte et de résidences emblématiques.",
+        "role": "Partenaire de promotion immobilière"
+      },
+      "capimaxDevelopment": {
+        "name": "Capimax Development",
+        "description": "Pôle de promotion interne spécialisé dans les biens prêts à être tokenisés, conçus pour la détention fractionnée.",
+        "role": "Partenaire de promotion interne"
+      },
+      "capimaxFinancial": {
+        "name": "Capimax Financial",
+        "description": "Entité de gestion financière dédiée, offrant des services complets de gestion de la détention, de distribution et de reporting financier.",
+        "role": "Gestion financière et administration de SPV"
+      },
+      "cim": {
+        "name": "CIM Financial Group",
+        "description": "Cabinet indépendant d'évaluation et de conseil financier, fournissant des évaluations immobilières professionnelles et des analyses de marché.",
+        "role": "Évaluation immobilière et conseil"
+      },
+      "assurax": {
+        "name": "Assurax",
+        "description": "Fournisseur de solutions d'assurance complètes : couverture des biens, responsabilité civile et protection de la détention.",
+        "role": "Assurance des biens et responsabilité civile"
+      },
+      "hcc": {
+        "name": "HCC",
+        "description": "Assureur spécialisé proposant des couvertures sur mesure pour la détention immobilière et les actifs tokenisés.",
+        "role": "Couverture d'assurance spécialisée"
+      },
+      "nova": {
+        "name": "Nova Property",
+        "description": "Société de gestion immobilière professionnelle chargée des relations avec les locataires, de l'entretien, de l'encaissement des loyers et de l'exploitation courante des biens.",
+        "role": "Services de gestion immobilière"
+      }
+    },
+    "noPartners": "Aucun partenaire dans cette catégorie.",
+    "categoriesTitle": "Catégories de partenaires",
+    "categoriesDesc": "Chaque partenaire joue un rôle essentiel dans notre écosystème et garantit qualité et professionnalisme à chaque étape de votre parcours de propriétaire.",
+    "partnerCount_zero": "{{count}} partenaire",
+    "partnerCount_one": "{{count}} partenaire",
+    "partnerCount_two": "{{count}} partenaires",
+    "partnerCount_few": "{{count}} partenaires",
+    "partnerCount_many": "{{count}} partenaires",
+    "partnerCount_other": "{{count}} partenaires",
+    "ctaTitle": "Envie de devenir notre partenaire ?",
+    "ctaDesc": "Si vous êtes promoteur immobilier, établissement financier, assureur ou société de gestion immobilière et souhaitez rejoindre notre écosystème, nous serions ravis d'échanger avec vous.",
+    "contactUs": "Nous contacter",
+    "brokerProgram": "Programme courtiers",
+    "inquiries": "Pour toute demande de partenariat, contactez-nous à"
+  },
+  "perf": {
+    "days": "{{value}} jours",
+    "title": "Analyse des performances",
+    "subtitle": "Suivez les performances de vos parrainages et vos indicateurs de conversion",
+    "range": {
+      "7d": "7 j",
+      "30d": "30 j",
+      "90d": "90 j",
+      "1y": "1 an"
+    },
+    "growth": "Croissance de {{value}}",
+    "avg": "Moy. : {{value}}",
+    "retentionRate": "Taux de rétention",
+    "ltv": "LTV : {{value}}",
+    "trends": "Tendances de performance",
+    "compare": "Comparer les indicateurs",
+    "commission": "Commission",
+    "referrals": "Parrainages",
+    "conversions": "Conversions",
+    "dealSize": "Montant moyen",
+    "commissionTrend": "Évolution des commissions",
+    "referralVolume": "Volume de parrainages",
+    "commissionPerformance": "Performance des commissions",
+    "conversionTrends": "Évolution des conversions",
+    "avgDealSize": "Montant moyen par opération",
+    "funnel": "Entonnoir de conversion",
+    "dropOff": "-{{value}} d'abandon",
+    "overallConversion": "Taux de conversion global",
+    "sourcePerformance": "Performance par source de parrainage",
+    "source": "Source",
+    "convRate": "Taux de conv.",
+    "totalValue": "Valeur totale",
+    "avgValue": "Valeur moy.",
+    "roi": "ROI",
+    "rank": "Rang",
+    "insights": "Analyses de performance",
+    "topSource": "Meilleure source",
+    "topSourceDesc": "avec un taux de conversion de {{value}}",
+    "growthTitle": "Croissance",
+    "growing": "En hausse de {{value}} par mois",
+    "declining": "En baisse de {{value}} par mois",
+    "opportunity": "Opportunité",
+    "opportunityDesc": "Concentrez-vous sur l'amélioration de la conversion des prospects en utilisateurs inscrits"
+  },
+  "program": {
+    "contactSoon": "Formulaire de contact bientôt disponible ! Écrivez-nous à {{email}}",
+    "metaTitle": "Programme partenaires | Capimax - Partenariat professionnel pour courtiers",
+    "metaDescription": "Rejoignez le programme partenaires exclusif de Capimax. Percevez des commissions premium, accédez à des opportunités institutionnelles et développez votre activité grâce à une technologie immobilière de pointe.",
+    "badge": "Programme partenaires d'élite",
+    "heroTitle1": "Devenez partenaire de",
+    "heroTitle2": "l'immobilier de demain",
+    "heroDesc": "Rejoignez notre réseau exclusif de professionnels de l'immobilier d'élite et libérez un potentiel de revenus sans précédent grâce à la détention immobilière tokenisée de niveau institutionnel.",
+    "applicationsOpen": "Candidatures ouvertes",
+    "limitedPositions": "Places limitées",
+    "applyNow": "Postuler",
+    "contactSales": "Contacter l'équipe commerciale",
+    "stats": {
+      "s0": "Volume des partenaires",
+      "s1": "Partenaires actifs",
+      "s2": "Commission moyenne",
+      "s3": "Satisfaction client"
+    },
+    "benefitsTitle": "Des avantages partenaires inégalés",
+    "benefitsDesc": "Profitez des avantages d'un partenariat avec la plateforme de détention immobilière la plus innovante",
+    "benefits": {
+      "b0": {
+        "title": "Taux de commission élevés",
+        "description": "Percevez jusqu'à 5 % de commission sur chaque achat que vous apportez, avec des structures de versement parmi les meilleures du secteur.",
+        "highlight": "Jusqu'à 5 %"
+      },
+      "b1": {
+        "title": "Revenus récurrents",
+        "description": "Continuez à percevoir des revenus sur les distributions et les transactions du marché secondaire, sur toute la durée de la relation client.",
+        "highlight": "Valeur à vie"
+      },
+      "b2": {
+        "title": "Bonus de performance",
+        "description": "Débloquez des bonus par niveau et des récompenses d'étape à mesure que vos volumes de vente augmentent.",
+        "highlight": "Niveaux de bonus"
+      },
+      "b3": {
+        "title": "Accompagnement dédié",
+        "description": "Accédez à une équipe d'assistance dédiée aux courtiers, à des ressources de formation et à une assistance 24 h/24, 7 j/7.",
+        "highlight": "Assistance 24/7"
+      },
+      "b4": {
+        "title": "Analyses en temps réel",
+        "description": "Suivez vos performances grâce à un tableau de bord analytique complet et à des outils de reporting.",
+        "highlight": "Données en direct"
+      },
+      "b5": {
+        "title": "Annonces premium",
+        "description": "Accès anticipé aux annonces de biens premium, aux offres exclusives et aux opportunités institutionnelles.",
+        "highlight": "Accès exclusif"
+      }
+    },
+    "structureTitle": "Structure des commissions",
+    "structureDesc": "Des niveaux de commission transparents, fondés sur la performance, qui récompensent votre réussite",
+    "tiers": {
+      "t0": {
+        "name": "Bronze",
+        "benefits": {
+          "0": "Commission standard",
+          "1": "Assistance de base",
+          "2": "Rapports mensuels"
+        }
+      },
+      "t1": {
+        "name": "Argent",
+        "benefits": {
+          "0": "Commission améliorée",
+          "1": "Assistance prioritaire",
+          "2": "Rapports hebdomadaires",
+          "3": "Annonces exclusives"
+        }
+      },
+      "t2": {
+        "name": "Or",
+        "benefits": {
+          "0": "Commission premium",
+          "1": "Gestionnaire dédié",
+          "2": "Analyses en temps réel",
+          "3": "Accès avant lancement"
+        }
+      },
+      "t3": {
+        "name": "Platine",
+        "benefits": {
+          "0": "Commission maximale",
+          "1": "Service sur mesure",
+          "2": "Solutions personnalisées",
+          "3": "Soutien au co-marketing"
+        }
+      }
+    },
+    "commissionRate": "Taux de commission",
+    "tierBenefits": "Avantages du niveau :",
+    "mostPopular": "Le plus populaire",
+    "requirementsTitle": "Conditions pour les partenaires",
+    "requirementsDesc": "Nous collaborons avec des professionnels d'exception qui répondent à nos exigences élevées d'excellence et d'intégrité",
+    "requirements": {
+      "r0": "Professionnel de l'immobilier titulaire d'une licence ou conseiller financier",
+      "r1": "Au moins 2 ans d'expérience commerciale dans l'immobilier ou la finance",
+      "r2": "Solide réseau de clients et d'acheteurs fortunés",
+      "r3": "Engagement à suivre le programme de formation et de certification Capimax",
+      "r4": "Références professionnelles et vérification des antécédents"
+    },
+    "readyTitle": "Prêt à devenir partenaire ?",
+    "readyDesc": "Rejoignez notre réseau exclusif de professionnels de l'immobilier d'élite et commencez dès aujourd'hui à percevoir des commissions premium.",
+    "startApplication": "Commencer la candidature",
+    "secureProcess": "Processus sécurisé",
+    "quickApproval": "Approbation rapide",
+    "questions": "Des questions ? Contactez notre équipe partenaires à",
+    "finalTitle": "Transformez votre activité dès aujourd'hui",
+    "finalDesc": "Rejoignez la plateforme de détention immobilière la plus avancée et ouvrez à votre activité des perspectives de croissance sans précédent.",
+    "beginApplication": "Commencer la candidature de partenariat",
+    "schedule": "Planifier une consultation",
+    "features": {
+      "f0": "Accès à un réseau d'élite",
+      "f1": "Opportunités mondiales",
+      "f2": "Assistance premium"
+    }
+  },
+  "referrals": {
+    "title": "Suivi des parrainages",
+    "exportData": "Exporter les données",
+    "generateLink": "Générer un lien",
+    "totalReferrals": "Total des parrainages",
+    "conversionRate": "Taux de conversion",
+    "totalCommission": "Commission totale",
+    "avgPurchase": "Achat moyen",
+    "allStatus": "Tous les statuts",
+    "allTiers": "Tous les niveaux",
+    "status": {
+      "leads": "Prospects",
+      "lead": "Prospect",
+      "registered": "Inscrit",
+      "kyc_pending": "KYC en attente",
+      "active": "Actif",
+      "owners": "Propriétaires",
+      "invested": "Propriétaire",
+      "inactive": "Inactif"
+    },
+    "tier": {
+      "bronze": "Bronze",
+      "silver": "Argent",
+      "gold": "Or",
+      "platinum": "Platine"
+    },
+    "sortJoin": "Trier par date d'inscription",
+    "sortPurchase": "Trier par montant d'achat",
+    "sortCommission": "Trier par commission",
+    "sortActivity": "Trier par activité",
+    "noReferrals": "Aucun parrainage trouvé",
+    "noReferralsYet": "Vous n'avez encore effectué aucun parrainage",
+    "noMatch": "Aucun parrainage ne correspond aux filtres sélectionnés",
+    "generateReferralLink": "Générer un lien de parrainage",
+    "via": "via {{source}}",
+    "joined": "Inscrit le {{date}}",
+    "purchase": "Achat",
+    "commission": "Commission",
+    "lastActivity": "Dernière activité",
+    "today": "Aujourd'hui",
+    "daysAgo": "il y a {{value}} j",
+    "contact": "Contact",
+    "phone": "Téléphone",
+    "notProvided": "Non renseigné",
+    "purchaseCount": "Nombre d'achats",
+    "lifetimeValue": "Valeur à vie",
+    "conversionDate": "Date de conversion",
+    "notConverted": "Non converti",
+    "notes": "Notes",
+    "noNotes": "Aucune note pour le moment",
+    "addNotePh": "Ajouter une note...",
+    "addNote": "Ajouter une note",
+    "sendMessage": "Envoyer un message"
+  }
+}

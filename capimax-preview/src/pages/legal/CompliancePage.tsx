@@ -5,10 +5,11 @@ import { LegalPageLayout } from '../../components/legal/LegalPageLayout';
 export const CompliancePage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const isFr = i18n.language?.startsWith('fr');
   return (
     <LegalPageLayout
-      title={isAr ? 'الإطار التنظيمي وإطار الامتثال' : 'Regulatory & Compliance Framework'}
-      lastUpdated={isAr ? 'يناير 2026' : 'January 2026'}
+      title={isAr ? 'الإطار التنظيمي وإطار الامتثال' : isFr ? 'Cadre réglementaire et de conformité' : 'Regulatory & Compliance Framework'}
+      lastUpdated={isAr ? 'يناير 2026' : isFr ? 'janvier 2026' : 'January 2026'}
     >
       {isAr ? (
       <section className="legal-section">
@@ -54,6 +55,52 @@ export const CompliancePage: React.FC = () => {
         <h2>3.6 حفظ السجلات</h2>
         <p>
           تحتفظ كابي مكس RT بسجلات الامتثال وسجلات التدقيق وسجلات المعاملات وفقًا للمتطلبات القانونية السارية.
+        </p>
+      </section>
+      ) : isFr ? (
+      <section className="legal-section">
+        <p className="legal-intro">
+          Capimax RT opère en tant que plateforme technologique et d'infrastructure et applique une approche fondée en priorité sur la conformité, alignée sur les meilleures pratiques internationales.
+        </p>
+
+        <h2>3.1 Objectifs de conformité</h2>
+        <ul>
+          <li>Prévenir le blanchiment de capitaux et la criminalité financière ;</li>
+          <li>Protéger l'intégrité de la plateforme ;</li>
+          <li>Garantir une participation licite des utilisateurs éligibles.</li>
+        </ul>
+
+        <h2>3.2 KYC / KYB</h2>
+        <p>Tous les utilisateurs doivent effectuer une vérification d'identité :</p>
+        <ul>
+          <li>Personnes physiques : pièce d'identité délivrée par une autorité publique, justificatif de domicile ;</li>
+          <li>Personnes morales : documents sociaux, structure de l'actionnariat, signataires autorisés.</li>
+        </ul>
+
+        <h2>3.3 Sanctions et filtrage</h2>
+        <p>La plateforme procède à un filtrage au regard :</p>
+        <ul>
+          <li>Des listes de sanctions internationales ;</li>
+          <li>Des bases de données des personnes politiquement exposées (PEP) ;</li>
+          <li>Des listes de surveillance émanant de fournisseurs reconnus.</li>
+        </ul>
+
+        <h2>3.4 Restrictions juridictionnelles</h2>
+        <p>L'accès peut être restreint en fonction :</p>
+        <ul>
+          <li>Du pays de résidence ;</li>
+          <li>De la nationalité ;</li>
+          <li>Des lois locales applicables.</li>
+        </ul>
+
+        <h2>3.5 Classification des investisseurs</h2>
+        <p>
+          Certaines offres peuvent être réservées à des catégories d'investisseurs spécifiques (par exemple, investisseurs professionnels, qualifiés ou accrédités).
+        </p>
+
+        <h2>3.6 Conservation des registres</h2>
+        <p>
+          Capimax RT conserve les registres de conformité, les journaux d'audit et l'historique des transactions conformément aux exigences légales applicables.
         </p>
       </section>
       ) : (

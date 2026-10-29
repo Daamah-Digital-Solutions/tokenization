@@ -32,6 +32,7 @@ import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
+import { uiLocale } from '../../utils/locale';
 
 interface DashboardContent {
   stats: Array<{
@@ -626,7 +627,7 @@ const RecentTransactions: React.FC<{ data: any; loading: boolean }> = ({ data, l
               {localizeTxDescription(transaction.description)}
             </Text>
             <Text variant="caption" color="muted">
-              {new Date(transaction.date || transaction.created_at).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : undefined)}
+              {new Date(transaction.date || transaction.created_at).toLocaleDateString(uiLocale(i18n.language))}
             </Text>
           </div>
           <Text variant="body" weight="semibold">

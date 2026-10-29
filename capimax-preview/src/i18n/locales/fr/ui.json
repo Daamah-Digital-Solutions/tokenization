@@ -1,0 +1,846 @@
+{
+  "brand": "Capimax RT",
+  "authLayout": {
+    "title": "Plateforme de tokenisation immobilière",
+    "subtitle": "Démocratiser la détention d'immobilier haut de gamme grâce à la technologie blockchain",
+    "features": {
+      "premium": {
+        "title": "Biens premium",
+        "desc": "Accédez à des opportunités immobilières sélectionnées, avec une due diligence de niveau institutionnel"
+      },
+      "returns": {
+        "title": "Rendements avérés",
+        "desc": "Rendements historiques de 12 à 18 % par an, avec un suivi transparent des performances"
+      },
+      "secure": {
+        "title": "Sécurisé et conforme",
+        "desc": "Sécurité de niveau bancaire, pleine conformité réglementaire et protection par assurance"
+      },
+      "support": {
+        "title": "Accompagnement expert",
+        "desc": "Une équipe d'assistance dédiée, experte en immobilier et en blockchain"
+      }
+    },
+    "stats": {
+      "assets": "Actifs tokenisés",
+      "owners": "Propriétaires actifs",
+      "return": "Rendement annuel moy."
+    }
+  },
+  "fields": {
+    "email": "Adresse e-mail",
+    "emailPlaceholder": "Saisissez votre e-mail",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "Saisissez votre mot de passe",
+    "emailAddressPlaceholder": "Saisissez votre adresse e-mail",
+    "firstName": "Prénom",
+    "firstNamePlaceholder": "Saisissez votre prénom",
+    "lastName": "Nom",
+    "lastNamePlaceholder": "Saisissez votre nom",
+    "phone": "Numéro de téléphone",
+    "phonePlaceholder": "Saisissez votre numéro de téléphone",
+    "country": "Pays",
+    "countryPlaceholder": "Sélectionnez votre pays",
+    "city": "Ville",
+    "cityPlaceholder": "Saisissez votre ville",
+    "createPasswordPlaceholder": "Créez un mot de passe robuste",
+    "confirmPassword": "Confirmer le mot de passe",
+    "confirmPasswordPlaceholder": "Confirmez votre mot de passe"
+  },
+  "validation": {
+    "emailRequired": "L'e-mail est obligatoire",
+    "emailInvalid": "Veuillez saisir une adresse e-mail valide",
+    "passwordRequired": "Le mot de passe est obligatoire",
+    "passwordMin6": "Le mot de passe doit contenir au moins 6 caractères",
+    "twoFactorRequired": "Le code 2FA est obligatoire",
+    "firstNameRequired": "Le prénom est obligatoire",
+    "lastNameRequired": "Le nom est obligatoire",
+    "phoneRequired": "Le numéro de téléphone est obligatoire",
+    "countryRequired": "Le pays est obligatoire",
+    "cityRequired": "La ville est obligatoire",
+    "passwordMin8": "Le mot de passe doit contenir au moins 8 caractères",
+    "passwordComplexity": "Le mot de passe doit contenir une majuscule, une minuscule et un chiffre",
+    "confirmRequired": "Veuillez confirmer votre mot de passe",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "roleRequired": "Veuillez sélectionner au moins un rôle",
+    "termsRequired": "Vous devez accepter les conditions générales",
+    "privacyRequired": "Vous devez accepter la politique de confidentialité"
+  },
+  "login": {
+    "title": "Bon retour parmi nous",
+    "subtitle": "Connectez-vous à votre compte pour continuer",
+    "googleFailed": "Échec de l'authentification Google. Veuillez réessayer.",
+    "googleExists": "Un compte existe déjà avec cet e-mail. Veuillez vous connecter avec votre e-mail et votre mot de passe.",
+    "twoFactorLabel": "Code d'authentification à deux facteurs",
+    "twoFactorPlaceholder": "Saisissez votre code à 6 chiffres",
+    "rememberMe": "Se souvenir de moi",
+    "forgotPassword": "Mot de passe oublié ?",
+    "signingIn": "Connexion...",
+    "signIn": "Se connecter",
+    "orContinueWith": "Ou continuer avec",
+    "googleSigningIn": "Connexion avec Google...",
+    "continueWithGoogle": "Continuer avec Google",
+    "noAccount": "Vous n'avez pas de compte ?",
+    "createAccount": "Créer un compte"
+  },
+  "recovery": {
+    "title": "Mot de passe oublié ?",
+    "subtitle": "Pas d'inquiétude ! Saisissez votre e-mail et nous vous enverrons un code de réinitialisation.",
+    "sending": "Envoi du lien de réinitialisation...",
+    "send": "Envoyer le lien de réinitialisation",
+    "checkEmail": "Consultez votre boîte e-mail",
+    "sentTo": "Nous avons envoyé un lien de réinitialisation du mot de passe à",
+    "clickLink": "Cliquez sur le lien sécurisé reçu par e-mail pour créer un nouveau mot de passe. Le lien expire dans 24 heures.",
+    "tipSpam": "Vérifiez votre dossier de courrier indésirable si l'e-mail n'apparaît pas dans votre boîte de réception",
+    "tipOnce": "Pour des raisons de sécurité, le lien ne peut être utilisé qu'une seule fois",
+    "sendingShort": "Envoi...",
+    "sendAgain": "Vous n'avez pas reçu l'e-mail ? Renvoyer",
+    "differentEmail": "Utiliser une autre adresse e-mail",
+    "backToSignIn": "Retour à la connexion"
+  },
+  "actions": {
+    "back": "Retour",
+    "next": "Suivant",
+    "continue": "Continuer",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "submit": "Envoyer",
+    "retry": "Réessayer",
+    "close": "Fermer"
+  },
+  "register": {
+    "steps": {
+      "personal": "Informations personnelles",
+      "location": "Localisation",
+      "account": "Compte",
+      "agreements": "Engagements"
+    },
+    "roles": {
+      "owner": {
+        "title": "Propriétaire",
+        "desc": "Je souhaite acheter de l'immobilier"
+      },
+      "propertyOwner": {
+        "title": "Propriétaire du bien",
+        "desc": "Je souhaite tokeniser mon bien"
+      }
+    },
+    "failedTitle": "Échec de l'inscription",
+    "failedMsg": "Impossible de créer le compte. Veuillez réessayer.",
+    "selectRoles": "Sélectionnez votre ou vos rôles",
+    "switchRoles": "Vous pouvez changer de rôle à tout moment depuis votre tableau de bord",
+    "passwordHelper": "8 caractères minimum, avec une majuscule, une minuscule et un chiffre",
+    "agreePrefix": "J'accepte",
+    "terms": "les conditions générales",
+    "termsSuffix": "et je comprends les risques liés à la tokenisation immobilière",
+    "privacy": "la politique de confidentialité",
+    "privacySuffix": "et je consens au traitement de mes données personnelles",
+    "marketing": "Je souhaite recevoir des communications marketing et des opportunités de détention (facultatif)",
+    "title": "Créez votre compte",
+    "subtitle": "Rejoignez notre plateforme et commencez votre parcours de propriétaire",
+    "googleSigningUp": "Inscription avec Google...",
+    "googleSignUp": "S'inscrire avec Google",
+    "orEmail": "Ou s'inscrire avec un e-mail",
+    "stepOf": "Étape {{current}} sur {{total}}",
+    "creating": "Création du compte...",
+    "create": "Créer un compte",
+    "hasAccount": "Vous avez déjà un compte ?",
+    "signIn": "Se connecter"
+  },
+  "twoFactor": {
+    "methods": {
+      "sms": {
+        "title": "Vérification par SMS",
+        "desc": "Recevez les codes par SMS"
+      },
+      "authenticator": {
+        "title": "Application d'authentification",
+        "desc": "Utilisez Google Authenticator ou une application similaire"
+      },
+      "biometric": {
+        "title": "Authentification biométrique",
+        "desc": "Utilisez l'empreinte digitale ou la reconnaissance faciale"
+      }
+    },
+    "codeRequired": "Le code de vérification est obligatoire",
+    "codeLength": "Le code doit comporter 6 chiffres",
+    "chooseTitle": "Choisissez une méthode d'authentification",
+    "chooseSubtitle": "Choisissez comment sécuriser votre compte",
+    "continueWith": "Continuer avec {{method}}",
+    "smsSetupTitle": "Configuration de la vérification par SMS",
+    "smsSetupSubtitle": "Saisissez votre numéro de téléphone pour recevoir les codes de vérification",
+    "sendingCode": "Envoi du code...",
+    "sendCode": "Envoyer le code de vérification",
+    "smsSentTo": "Nous avons envoyé un code de vérification au",
+    "codeLabel": "Code de vérification",
+    "codePlaceholder": "Saisissez le code à 6 chiffres",
+    "verifying": "Vérification...",
+    "verifyEnableSms": "Vérifier et activer la 2FA par SMS",
+    "appSetupTitle": "Configuration de l'application d'authentification",
+    "appSetupSubtitle": "Configurez l'authentification à deux facteurs avec une application d'authentification",
+    "scanQr": "Scannez ce QR code avec votre application d'authentification",
+    "qrAlt": "QR code",
+    "manualKey": "Impossible de scanner ? Saisissez cette clé manuellement :",
+    "addedAccount": "J'ai ajouté le compte",
+    "enterAppCode": "Saisissez le code à 6 chiffres de votre application d'authentification pour valider la configuration",
+    "verifyEnable": "Vérifier et activer la 2FA",
+    "enabledTitle": "Authentification à deux facteurs activée !",
+    "enabledMsg": "Votre compte est désormais protégé par l'authentification à deux facteurs",
+    "backupTitle": "Enregistrez vos codes de secours",
+    "backupMsg": "Conservez ces codes en lieu sûr. Ils vous permettront d'accéder à votre compte si vous perdez votre appareil.",
+    "copyAll": "Copier tous les codes",
+    "title": "Authentification à deux facteurs",
+    "enterFromPhone": "Saisissez le code de vérification reçu sur votre téléphone",
+    "enterFromApp": "Saisissez le code de vérification de votre application d'authentification",
+    "verifyCode": "Vérifier le code"
+  },
+  "loginPage": {
+    "resetFailed": "Échec de l'envoi de l'e-mail de réinitialisation. Veuillez réessayer.",
+    "successTitle": "Bon retour parmi nous !",
+    "successMsg": "Vous êtes bien connecté à votre compte.",
+    "redirecting": "Redirection vers le tableau de bord...",
+    "layoutTitle": "Bon retour parmi nous",
+    "layoutSubtitle": "Connectez-vous pour accéder à votre portefeuille immobilier et découvrir de nouvelles opportunités"
+  },
+  "registerPage": {
+    "layoutTitle": "Rejoignez Capimax RT",
+    "layoutSubtitle": "Créez votre compte et devenez propriétaire d'immobilier tokenisé à partir de 100 $"
+  },
+  "newPassword": {
+    "missingToken": "Jeton de réinitialisation invalide ou manquant. Veuillez demander une nouvelle réinitialisation du mot de passe.",
+    "required": "Le nouveau mot de passe est obligatoire",
+    "failed": "Échec de la réinitialisation du mot de passe. Veuillez réessayer ou demander un nouveau lien.",
+    "layoutTitle": "Définir un nouveau mot de passe",
+    "layoutSubtitle": "Sécurisation de l'accès à votre compte",
+    "validating": "Validation du lien de réinitialisation...",
+    "invalidTitle": "Lien de réinitialisation invalide",
+    "invalidMsg": "Le lien de réinitialisation du mot de passe est invalide ou a expiré. Veuillez en demander un nouveau.",
+    "requestNew": "Demander un nouveau lien",
+    "successLayoutTitle": "Mot de passe mis à jour",
+    "successLayoutSubtitle": "Vous pouvez désormais vous connecter avec votre nouveau mot de passe",
+    "successTitle": "Mot de passe mis à jour !",
+    "successMsg": "Votre mot de passe a été mis à jour. Vous pouvez désormais vous connecter avec votre nouveau mot de passe.",
+    "continueSignIn": "Continuer vers la connexion",
+    "formLayoutTitle": "Définissez votre nouveau mot de passe",
+    "formLayoutSubtitle": "Saisissez votre nouveau mot de passe pour retrouver l'accès à votre compte",
+    "formTitle": "Créer un nouveau mot de passe",
+    "formSubtitle": "Saisissez votre nouveau mot de passe ci-dessous",
+    "newLabel": "Nouveau mot de passe",
+    "newPlaceholder": "Saisissez le nouveau mot de passe",
+    "confirmLabel": "Confirmer le nouveau mot de passe",
+    "confirmPlaceholder": "Confirmez le nouveau mot de passe",
+    "updating": "Mise à jour du mot de passe...",
+    "update": "Mettre à jour le mot de passe"
+  },
+  "passwordResetPage": {
+    "layoutTitle": "Réinitialiser le mot de passe",
+    "successLayoutTitle": "Mot de passe réinitialisé",
+    "successTitle": "Mot de passe réinitialisé avec succès !",
+    "formLayoutTitle": "Réinitialisez votre mot de passe",
+    "resetting": "Réinitialisation du mot de passe...",
+    "reset": "Réinitialiser le mot de passe"
+  },
+  "emailVerify": {
+    "yourEmail": "votre e-mail",
+    "verifiedShort": "E-mail vérifié avec succès !",
+    "failedMsg": "Échec de la vérification de l'e-mail. Veuillez réessayer.",
+    "resent": "E-mail de vérification envoyé avec succès !",
+    "resendFailed": "Échec du renvoi de l'e-mail de vérification. Veuillez réessayer.",
+    "verifying": "Vérification de votre e-mail...",
+    "pleaseWait": "Veuillez patienter pendant la vérification de votre adresse e-mail.",
+    "sentLink": "Nous avons envoyé un lien de vérification à {{email}}. Consultez votre boîte de réception et cliquez sur le lien pour vérifier votre compte.",
+    "tipSpam": "Vérifiez votre dossier de courrier indésirable si l'e-mail n'apparaît pas",
+    "tipExpire": "Le lien de vérification expire dans 24 heures",
+    "tipMust": "Vous devez vérifier votre e-mail avant de pouvoir vous connecter",
+    "resend": "Renvoyer l'e-mail de vérification",
+    "backToLogin": "Retour à la connexion",
+    "successTitle": "E-mail vérifié avec succès !",
+    "successMsg": "Votre e-mail a été vérifié. Vous pouvez désormais vous connecter à votre compte.",
+    "redirecting": "Redirection vers la page de connexion...",
+    "continueLogin": "Continuer vers la connexion",
+    "failedTitle": "Échec de la vérification",
+    "invalidLink": "Le lien de vérification est invalide ou a expiré.",
+    "tipExpireAfter": "Les liens de vérification expirent au bout de 24 heures",
+    "tipComplete": "Assurez-vous d'avoir cliqué sur le lien complet figurant dans l'e-mail",
+    "tipRequest": "Vous pouvez demander un nouvel e-mail de vérification ci-dessous",
+    "sendNew": "Envoyer un nouvel e-mail de vérification",
+    "layoutTitle": "Vérification de l'e-mail",
+    "layoutSubtitle": "Vérifiez votre adresse e-mail pour finaliser la création de votre compte"
+  },
+  "googleProfile": {
+    "failed": "Impossible de compléter le profil. Veuillez réessayer.",
+    "title": "Complétez votre profil",
+    "welcome": "Bienvenue, {{name}} ! Veuillez compléter votre profil pour continuer.",
+    "verified": "Vérifié",
+    "contact": "Coordonnées",
+    "dob": "Date de naissance (facultatif)",
+    "terms": "Conditions et engagements",
+    "completing": "Finalisation du profil...",
+    "complete": "Compléter le profil et continuer"
+  },
+  "roleMgmt": {
+    "roles": {
+      "investor": {
+        "label": "Copropriétaire",
+        "desc": "Détenez des biens immobiliers tokenisés et percevez des rendements",
+        "f1": "Parcourir et acheter des biens",
+        "f2": "Suivre la performance du portefeuille",
+        "f3": "Recevoir les distributions",
+        "f4": "Accéder aux analyses de détention",
+        "f5": "Participer aux votes sur les biens"
+      },
+      "owner": {
+        "label": "Propriétaire du bien",
+        "desc": "Proposez vos biens à la tokenisation et levez des capitaux",
+        "f1": "Proposer des biens à la tokenisation",
+        "f2": "Définir les conditions de détention",
+        "f3": "Suivre l'intérêt des acheteurs",
+        "f4": "Gérer les documents des biens",
+        "f5": "Verser les distributions aux copropriétaires"
+      },
+      "admin": {
+        "label": "Administrateur",
+        "desc": "Accès complet à l'administration et à la gestion de la plateforme",
+        "f1": "Gérer tous les utilisateurs et rôles",
+        "f2": "Approuver les annonces de biens",
+        "f3": "Surveiller l'activité de la plateforme",
+        "f4": "Accéder aux paramètres système",
+        "f5": "Générer des rapports de plateforme"
+      }
+    },
+    "loadFailed": "Impossible de charger les informations sur les rôles",
+    "added": "Rôle {{role}} ajouté avec succès",
+    "addFailed": "Impossible d'ajouter le rôle",
+    "confirmRemove": "Voulez-vous vraiment retirer le rôle {{role}} ?",
+    "removed": "Rôle {{role}} retiré avec succès",
+    "removeFailed": "Impossible de retirer le rôle",
+    "primarySet": "{{role}} est désormais votre rôle principal",
+    "primaryFailed": "Impossible de définir le rôle principal",
+    "backToDashboard": "Retour au tableau de bord",
+    "title": "Gestion des rôles",
+    "currentRoles": "Vos rôles actuels",
+    "primary": "Principal",
+    "addedOn": "Ajouté le {{date}}",
+    "setPrimary": "Définir comme principal",
+    "addAnother": "Ajouter un autre rôle",
+    "permissions": "Vos autorisations",
+    "capabilitiesTitle": "Capacités actuelles",
+    "capabilities": {
+      "can_invest": "Peut investir",
+      "can_list_properties": "Peut proposer des biens",
+      "is_admin": "Est administrateur",
+      "can_access_investor_dashboard": "Accès au tableau de bord propriétaire",
+      "can_access_property_owner_dashboard": "Accès au tableau de bord propriétaire du bien",
+      "can_access_admin_panel": "Accès au panneau d'administration"
+    },
+    "actionRequired": "Action requise",
+    "requirements": {
+      "email_verification_required": "Vérification de l'e-mail requise",
+      "kyc_verification_required": "Vérification d'identité requise"
+    },
+    "addRole": "Ajouter un rôle",
+    "addThis": "Ajouter ce rôle",
+    "aboutTitle": "À propos des rôles",
+    "aboutBody": "Les rôles déterminent ce que vous pouvez faire sur la plateforme. Vous pouvez avoir plusieurs rôles et passer de l'un à l'autre selon vos besoins.",
+    "primaryRoleLabel": "Rôle principal :",
+    "primaryRoleText": "Votre tableau de bord par défaut",
+    "multipleLabel": "Plusieurs rôles :",
+    "multipleText": "Accédez à différentes fonctionnalités sans comptes séparés",
+    "switchingLabel": "Changement de rôle :",
+    "switchingText": "Changez de rôle actif à tout moment depuis le tableau de bord",
+    "helpTitle": "Besoin d'aide ?",
+    "helpBody": "Contactez notre équipe d'assistance si vous avez besoin d'aide pour gérer vos rôles.",
+    "contactSupport": "Contacter l'assistance"
+  },
+  "investorCta": {
+    "b1": {
+      "title": "Détention fractionnée",
+      "desc": "Commencez avec un capital réduit et diversifiez-vous sur plusieurs biens"
+    },
+    "b2": {
+      "title": "Protection par SPV",
+      "desc": "Votre détention est protégée par des structures juridiques indépendantes"
+    },
+    "b3": {
+      "title": "Transparence totale",
+      "desc": "Accès à tous les documents, évaluations et rapports des biens"
+    },
+    "b4": {
+      "title": "Distribution des revenus",
+      "desc": "Percevez votre quote-part des revenus locatifs et des plus-values"
+    },
+    "b5": {
+      "title": "Accès mondial",
+      "desc": "Détenez des biens dans le monde entier, où que vous soyez"
+    },
+    "b6": {
+      "title": "Marché secondaire",
+      "desc": "Possibilité d'échanger vos parts avec d'autres propriétaires"
+    },
+    "badge": "Pour les propriétaires",
+    "titlePrefix": "Détenez",
+    "titleHighlight": "de l'immobilier premium",
+    "subtitle": "Accédez à une détention immobilière de niveau institutionnel, avec un capital réduit et une transparence totale grâce à notre plateforme tokenisée.",
+    "browse": "Parcourir les biens",
+    "createAccount": "Créer un compte gratuit"
+  },
+  "legalDisclaimer": {
+    "title": "À propos de Capimax RT",
+    "important": "Important",
+    "intro": "Capimax RT - Capimax Real Estate Tokenization est une plateforme technologique mondiale conçue pour fournir une infrastructure numérique permettant de structurer, présenter et administrer des opportunités de détention immobilière fractionnée et tokenisée, au travers d'entités juridiques indépendantes telles que des sociétés ad hoc (SPV).",
+    "roleTitle": "Rôle de la plateforme",
+    "roleBody": "La plateforme agit exclusivement en tant que fournisseur d'infrastructure technologique et opérationnelle. Elle n'est ni une banque, ni un établissement financier, ni une société de courtage, ni un gestionnaire d'actifs, ni un conseiller en investissement, ni un fiduciaire, ni un intermédiaire financier, et elle ne fournit aucun conseil en investissement, financier, juridique ou fiscal de quelque nature que ce soit.",
+    "infoTitle": "L'ensemble des opportunités, informations, documents, rapports, projections et distributions affichés sur la plateforme :",
+    "info1": "Sont fournis par les tiers concernés, notamment les propriétaires de biens, promoteurs, SPV, gestionnaires d'actifs, sociétés d'évaluation et assureurs ;",
+    "info2": "Sont présentés à titre purement informatif et organisationnel, sans aucune déclaration, garantie ou assurance de la part de Capimax RT quant à leur exactitude, leur exhaustivité ou leurs performances futures.",
+    "noGuaranteeTitle": "Capimax RT ne garantit pas :",
+    "noGuarantee1": "Des rendements, revenus ou bénéfices ;",
+    "noGuarantee2": "Un quelconque niveau de liquidité ou de possibilité de sortie ;",
+    "noGuarantee3": "La préservation du capital investi.",
+    "riskTitle": "Avertissement sur les risques de détention",
+    "riskBody": "Investir via la plateforme comporte des risques importants, notamment la perte potentielle de tout ou partie du capital investi. Les utilisateurs sont seuls responsables de :",
+    "risk1": "Mener leur propre due diligence indépendante ;",
+    "risk2": "Évaluer l'adéquation et les risques de l'investissement ;",
+    "risk3": "Solliciter l'avis de conseillers professionnels dûment agréés avant toute décision d'investissement.",
+    "agreePrefix": "En accédant à cette plateforme ou en l'utilisant, vous reconnaissez et acceptez d'être lié par les",
+    "terms": "conditions générales",
+    "comma": ",",
+    "privacy": "politique de confidentialité",
+    "risk": "avertissements sur les risques",
+    "agreeSuffix": " de la plateforme, ainsi que par l'ensemble des cadres réglementaires et de conformité applicables adoptés par Capimax RT.",
+    "showLess": "Afficher moins",
+    "readFull": "Lire l'avertissement complet"
+  },
+  "lpCta": {
+    "h1": {
+      "label": "Rendements compétitifs",
+      "value": "Rendements fondés sur le marché"
+    },
+    "h2": {
+      "label": "Gestion des risques",
+      "value": "Portefeuille diversifié"
+    },
+    "h3": {
+      "label": "Conditions flexibles",
+      "value": "Diverses durées d'engagement"
+    },
+    "h4": {
+      "label": "Plateforme vérifiée",
+      "value": "Activités réglementées"
+    },
+    "badge": "Programme de liquidité",
+    "titlePrefix": "Devenez",
+    "titleHighlight": "fournisseur de liquidité",
+    "subtitle": "Soutenez l'écosystème de la plateforme en apportant de la liquidité au marché secondaire. Percevez des rendements compétitifs tout en aidant les propriétaires à accéder à des opportunités de sortie.",
+    "apply": "Postuler",
+    "learnMore": "En savoir plus",
+    "benefitsTitle": "Avantages du programme LP",
+    "benefitsSubtitle": "Pour les participants qualifiés",
+    "benefit1": "Accès prioritaire aux opportunités de détention",
+    "benefit2": "Frais de plateforme réduits",
+    "benefit3": "Gestion de compte dédiée",
+    "benefit4": "Rapports et analyses avancés",
+    "benefit5": "Accès anticipé aux nouvelles fonctionnalités",
+    "disclaimer": "Le programme fournisseurs de liquidité est soumis à des conditions d'éligibilité et à des conditions générales. Les rendements ne sont pas garantis et les performances passées ne préjugent pas des résultats futurs."
+  },
+  "ownerCta": {
+    "b1": "Ouvrez de nouvelles sources de financement grâce à de multiples copropriétaires",
+    "b2": "Une commercialisation plus large, avec une confiance bâtie sur la documentation",
+    "b3": "Une meilleure gestion du cycle de vie de l'actif",
+    "b4": "Maîtrise des conditions de l'annonce : achat minimum, période de blocage, politique de distribution",
+    "b5": "Liquidité renforcée grâce au marché secondaire",
+    "badge": "Pour les propriétaires de biens",
+    "titleA": "Pour les propriétaires de biens",
+    "titleB": "Promoteurs",
+    "subtitle": "Transformez vos actifs immobiliers en opportunités de détention sans en céder la pleine propriété.",
+    "list": "Proposer votre bien",
+    "learnMore": "En savoir plus",
+    "benefitsTitle": "Avantages pour les propriétaires de biens"
+  },
+  "visual": {
+    "global": {
+      "titleBefore": "Détenez de l'immobilier",
+      "titleHighlight": "partout",
+      "titleAfter": "dans le monde",
+      "subtitle": "Accédez à des biens premium dans le monde entier",
+      "description": "Diversifiez votre portefeuille sur les marchés internationaux grâce à une détention immobilière de niveau institutionnel.",
+      "statCountries": "Pays",
+      "statProperties": "Biens",
+      "statReturns": "Rendements moy.",
+      "cta": "Voir les biens"
+    },
+    "institutional": {
+      "titleBefore": "Actifs immobiliers de niveau",
+      "titleHighlight": "institutionnel",
+      "titleAfter": "",
+      "subtitle": "Détention immobilière premium",
+      "description": "Accédez aux mêmes opportunités de détention de qualité, traditionnellement réservées aux acheteurs institutionnels.",
+      "statMinValue": "Valeur min. de l'actif",
+      "statVetted": "Sélectionnés",
+      "statProtected": "Protégés",
+      "cta": "En savoir plus"
+    }
+  },
+  "spvExplainer": {
+    "b1": {
+      "title": "Isolation des risques",
+      "desc": "Chaque actif est cantonné dans sa propre entité juridique"
+    },
+    "b2": {
+      "title": "Aucun mélange d'actifs",
+      "desc": "Votre détention est séparée des autres projets"
+    },
+    "b3": {
+      "title": "Protection contre les dettes sans lien",
+      "desc": "La responsabilité limitée protège les propriétaires"
+    },
+    "b4": {
+      "title": "Gouvernance claire",
+      "desc": "Reporting et comptes financiers définis"
+    },
+    "b5": {
+      "title": "Flexibilité de sortie",
+      "desc": "Les parts peuvent être cédées sans affecter la propriété de l'actif"
+    },
+    "badge": "Structure juridique",
+    "titlePrefix": "Qu'est-ce qu'une",
+    "titleHighlight": "SPV",
+    "titleSuffix": " ?",
+    "intro": "Une SPV (société ad hoc, Special Purpose Vehicle) est une société juridiquement indépendante, créée spécifiquement pour détenir un bien ou réaliser un projet immobilier.",
+    "ownTitle": "Ce que les propriétaires détiennent réellement",
+    "ownBody": "Les propriétaires détiennent des droits économiques ou contractuels dans la SPV, documentés par contrat et cessibles selon les règles de la plateforme.",
+    "learnMore": "En savoir plus sur la SPV",
+    "whyTitle": "Pourquoi Capimax RT utilise une SPV"
+  },
+  "secondaryPreview": {
+    "f1": {
+      "title": "Mettez vos parts en vente",
+      "desc": "Proposez vos parts à la vente au prix de votre choix"
+    },
+    "f2": {
+      "title": "Achetez des parts",
+      "desc": "Achetez des parts auprès d'autres propriétaires sur la place de marché"
+    },
+    "f3": {
+      "title": "Prix fixés par le marché",
+      "desc": "Prix déterminés par l'offre et la demande"
+    },
+    "f4": {
+      "title": "Conformité vérifiée",
+      "desc": "Toutes les transactions respectent les exigences réglementaires"
+    },
+    "badge": "Plateforme d'échange",
+    "titlePrefix": "Marché",
+    "titleHighlight": "secondaire",
+    "subtitle": "Échangez vos parts avec d'autres propriétaires vérifiés sur notre marché secondaire organisé.",
+    "explore": "Explorer la place de marché",
+    "example": "Exemple d'annonce",
+    "active": "Active",
+    "property": "Bien",
+    "propertyName": "Dubai Marina Tower",
+    "unitsAvailable": "Parts disponibles",
+    "units_one": "{{count}} part",
+    "units_other": "{{count}} parts",
+    "pricePerUnit": "Prix par part",
+    "noticeTitle": "Avis important",
+    "noticeBody": "La liquidité n'est pas garantie. Les prix peuvent fluctuer selon l'offre et la demande. Les performances passées ne préjugent pas des résultats futurs.",
+    "units_zero": "{{count}} part",
+    "units_two": "{{count}} parts",
+    "units_few": "{{count}} parts",
+    "units_many": "{{count}} parts"
+  },
+  "tokenExplainer": {
+    "enables1": "Diviser la propriété en petites parts",
+    "enables2": "Abaisser le seuil d'entrée minimum",
+    "enables3": "Élargir la base de propriétaires",
+    "enables4": "Améliorer la transparence",
+    "enables5": "Faciliter des échanges organisés",
+    "not1": "Ne garantit pas de bénéfices",
+    "not2": "Ne signifie pas une liquidité immédiate",
+    "not3": "Ne signifie pas une propriété directe inscrite au registre foncier",
+    "not4": "N'élimine pas les risques liés à la détention",
+    "badge": "Comprendre la tokenisation",
+    "titlePrefix": "Qu'est-ce que la",
+    "titleHighlight": "tokenisation",
+    "titleSuffix": " ?",
+    "intro": "La tokenisation est une méthode moderne qui convertit les droits économiques attachés à un bien immobilier en parts de détention numériques, permettant à plusieurs copropriétaires de participer à un même actif au lieu de le détenir entièrement.",
+    "enablesTitle": "Ce que permet la tokenisation",
+    "notTitle": "Ce que la tokenisation NE signifie PAS",
+    "learnMore": "En savoir plus sur la tokenisation"
+  },
+  "hero": {
+    "bgAlt": "Détention immobilière",
+    "viewBackground": "Afficher l'arrière-plan {{n}}",
+    "discoverMore": "Découvrir"
+  },
+  "demoShowcase": {
+    "f1": {
+      "title": "8 pages complètes",
+      "desc": "De l'authentification à la gestion des biens"
+    },
+    "f2": {
+      "title": "Plus de 95 composants",
+      "desc": "Système de design complet avec éléments interactifs"
+    },
+    "f3": {
+      "title": "Fonctionnalités en direct",
+      "desc": "KYC, paiements, tableaux de bord et plus encore"
+    },
+    "f4": {
+      "title": "Prêt pour la production",
+      "desc": "TypeScript, accessibilité et performances optimisées"
+    },
+    "badge": "Démo en direct disponible",
+    "title": "Explorez la plateforme complète",
+    "subtitle": "Plongez dans notre démo complète présentant toutes les pages, tous les composants et toutes les fonctionnalités de la plateforme de tokenisation immobilière. Vivez le parcours complet, de l'inscription à la détention.",
+    "readyTitle": "Prêt à explorer ?",
+    "readyBody": "Accédez à la démo complète avec toutes les fonctionnalités, pages et composants. Découvrez comment chaque élément s'intègre dans une plateforme professionnelle prête pour la production.",
+    "viewDemo": "Voir la démo complète",
+    "jumpTo": "Ou accédez directement à une section :",
+    "linkAuth": "Authentification",
+    "linkKyc": "Processus KYC",
+    "linkDashboard": "Tableau de bord",
+    "linkWallet": "Portefeuille"
+  },
+  "featured": {
+    "loadFailed": "Impossible de charger les biens à la une",
+    "badge": "Opportunités de détention premium",
+    "title": "Biens à la une",
+    "loading": "Chargement des biens à la une...",
+    "tryAgain": "Réessayer",
+    "subtitle": "Des opportunités immobilières premium rigoureusement sélectionnées, avec des rendements vérifiés, des conditions d'achat transparentes et une due diligence de niveau institutionnel",
+    "categories": {
+      "all": "Tous",
+      "Residential": "Résidentiel",
+      "Commercial": "Commercial",
+      "Hospitality": "Hôtellerie"
+    },
+    "emptyAllTitle": "De nouveaux biens arrivent bientôt",
+    "emptyCategoryTitle": "Aucun bien {{category}} pour le moment",
+    "emptyAllBody": "Notre équipe finalise la prochaine sélection de biens tokenisés. Revenez bientôt ou parcourez le catalogue complet.",
+    "emptyCategoryBody": "Essayez une autre catégorie ou parcourez le catalogue complet pour voir toutes les annonces en cours.",
+    "browseAll": "Parcourir tous les biens",
+    "prev": "Biens précédents",
+    "next": "Biens suivants",
+    "featuredBadge": "À LA UNE",
+    "totalValue": "Valeur totale",
+    "perToken": "Par jeton",
+    "fundingProgress": "Avancement du financement",
+    "sold": "{{n}} vendus",
+    "total": "{{n}} au total",
+    "owners": "Propriétaires",
+    "returns": "Rendements",
+    "built": "Construit en",
+    "ownNow": "Devenir propriétaire",
+    "verified": "Bien vérifié et assuré",
+    "quarterly": "Distributions trimestrielles",
+    "ctaTitle": "Découvrez d'autres opportunités de détention",
+    "ctaBody": "Accédez à notre portefeuille complet de plus de 500 biens premium dans les secteurs résidentiel, commercial et hôtelier",
+    "browseAllCta": "Parcourir tous les biens",
+    "calculator": "Calculateur d'achat",
+    "invalidData": "Données de biens invalides reçues du serveur"
+  },
+  "howItWorks": {
+    "s1": {
+      "title": "Parcourez les biens",
+      "desc": "Explorez des biens achevés générant un revenu immédiat ou des projets en construction offrant des rendements plus élevés."
+    },
+    "s2": {
+      "title": "Achetez en toute sécurité",
+      "desc": "Connectez votre portefeuille et achetez via l'infrastructure réglementée et sécurisée de notre plateforme."
+    },
+    "s3": {
+      "title": "Détenez des parts numériques",
+      "desc": "Recevez des jetons blockchain représentant votre détention fractionnée de biens premium."
+    },
+    "s4": {
+      "title": "Percevez des rendements",
+      "desc": "Recevez des distributions trimestrielles sur les biens achevés ou des rendements liés aux étapes de construction sur les nouveaux projets."
+    },
+    "title": "Comment ça marche",
+    "subtitle": "Quatre étapes simples pour devenir propriétaire d'immobilier premium grâce à notre plateforme sécurisée",
+    "ctaTitle": "Prêt à commencer ?",
+    "ctaBody": "Rejoignez des milliers de propriétaires qui se constituent un patrimoine grâce à l'immobilier tokenisé.",
+    "ctaButton": "Devenir propriétaire"
+  },
+  "testimonials": {
+    "t1": {
+      "name": "Michael Chen",
+      "title": "Gérant de portefeuille",
+      "company": "Blackstone Group",
+      "quote": "L'infrastructure de niveau institutionnel de la plateforme et la transparence du processus nous ont donné la confiance nécessaire pour engager des capitaux importants. Les rendements ont dépassé nos attentes."
+    },
+    "t2": {
+      "name": "Sarah Williams",
+      "title": "Directrice des investissements",
+      "company": "Family office",
+      "quote": "Une approche sophistiquée de la tokenisation immobilière, avec une due diligence approfondie et une conformité réglementaire qui nous rassurent."
+    },
+    "t3": {
+      "name": "David Rodriguez",
+      "title": "Gérant de fonds",
+      "company": "Fonds souverain",
+      "quote": "Offre les plus hauts standards de sécurité et de conformité tout en donnant accès à des opportunités premium par des canaux traditionnels."
+    },
+    "title": "La confiance des professionnels",
+    "subtitle": "Découvrez ce que les professionnels de l'immobilier disent de notre plateforme",
+    "quoteWrap": "« {{quote}} »"
+  },
+  "whyChooseUs": {
+    "f1": {
+      "title": "Sécurisé et réglementé",
+      "desc": "Sécurité de niveau bancaire, pleine conformité réglementaire et protection des propriétaires."
+    },
+    "f2": {
+      "title": "Biens premium",
+      "desc": "Des opportunités immobilières de niveau institutionnel rigoureusement sélectionnées."
+    },
+    "f3": {
+      "title": "Rendements avérés",
+      "desc": "Des performances régulières, avec un reporting et des analyses transparents."
+    },
+    "f4": {
+      "title": "Accès mondial",
+      "desc": "Détenez des biens premium sur les principaux marchés du monde."
+    },
+    "f5": {
+      "title": "Équipe d'experts",
+      "desc": "Soutenus par des professionnels expérimentés de l'immobilier et de la blockchain."
+    },
+    "f6": {
+      "title": "Minimums réduits",
+      "desc": "Devenez propriétaire avec un capital inférieur à celui de l'immobilier traditionnel."
+    },
+    "title": "Pourquoi choisir notre plateforme",
+    "subtitle": "Conçue pour les propriétaires exigeants en matière de sécurité, de transparence et d'expertise professionnelle"
+  },
+  "trustedPartners": {
+    "title": "Partenaires de confiance"
+  },
+  "navbar": {
+    "about": "À propos",
+    "whyCapimax": "Pourquoi Capimax RT",
+    "properties": "Biens",
+    "secondaryMarket": "Marché secondaire",
+    "structure": "Structure",
+    "documentCenter": "Centre de documents",
+    "support": "Assistance",
+    "home": "Accueil",
+    "myPortfolio": "Mes investissements",
+    "submitProperty": "Proposer un bien",
+    "dashboard": "Tableau de bord",
+    "logoutFailedTitle": "Échec de la déconnexion",
+    "logoutFailedMsg": "Impossible de vous déconnecter. Veuillez réessayer.",
+    "myProperties": "Mes biens",
+    "myReferrals": "Mes parrainages",
+    "goHome": "Aller à la page d'accueil",
+    "user": "Utilisateur",
+    "logout": "Se déconnecter",
+    "signIn": "Se connecter",
+    "getStarted": "Commencer",
+    "toggleMenu": "Afficher/masquer le menu mobile"
+  },
+  "connection": {
+    "offline": "Hors ligne",
+    "excellent": "Excellente",
+    "good": "Bonne",
+    "fair": "Moyenne",
+    "poor": "Faible",
+    "requiresInternet": "Cette action nécessite une connexion Internet"
+  },
+  "propertiesPage": {
+    "loadFailed": "Impossible de charger les biens",
+    "title": "Place de marché des biens",
+    "subtitle": "Découvrez des opportunités de détention immobilière premium, avec des rendements vérifiés et une tokenisation transparente",
+    "statProperties": "Biens",
+    "searchPlaceholder": "Rechercher des biens par nom, localisation ou type...",
+    "status": {
+      "all": "Tous",
+      "funding": "En financement",
+      "funded": "Financé",
+      "upcoming": "À venir",
+      "approved": "Approuvé"
+    },
+    "filters": "Filtres",
+    "sort": {
+      "featured": "À la une d'abord",
+      "priceLow": "Prix : croissant",
+      "priceHigh": "Prix : décroissant",
+      "returnHigh": "Rendement : décroissant",
+      "returnLow": "Rendement : croissant",
+      "newest": "Plus récents d'abord",
+      "oldest": "Plus anciens d'abord"
+    },
+    "viewGrid": "Vue grille",
+    "viewList": "Vue liste",
+    "viewMap": "Vue carte",
+    "advancedFilters": "Filtres avancés",
+    "priceRange": "Fourchette de prix",
+    "minReturn": "Rendement minimum",
+    "any": "Indifférent",
+    "yearBuilt": "Année de construction",
+    "loading": "Chargement des biens...",
+    "failedTitle": "Impossible de charger les biens",
+    "found_one": "{{count}} bien trouvé",
+    "found_other": "{{count}} biens trouvés",
+    "showingFor": "Résultats pour « {{query}} »",
+    "allProperties": "tous les biens",
+    "tokenPrice": "Prix du jeton",
+    "expectedReturn": "Rendement attendu",
+    "funded": "{{pct}} % financé",
+    "viewDetails": "Voir les détails",
+    "own": "Acheter",
+    "mapSoonTitle": "Vue carte bientôt disponible",
+    "mapSoonBody": "La carte interactive sera disponible dans la prochaine mise à jour",
+    "noneTitle": "Aucun bien trouvé",
+    "noneBody": "Essayez de modifier vos filtres ou vos termes de recherche pour trouver davantage de biens",
+    "clearFilters": "Effacer tous les filtres",
+    "found_zero": "{{count}} bien trouvé",
+    "found_two": "{{count}} biens trouvés",
+    "found_few": "{{count}} biens trouvés",
+    "found_many": "{{count}} biens trouvés"
+  },
+  "propertyDetail": {
+    "loadFailed": "Impossible de charger le bien",
+    "loadDataFailed": "Impossible de charger les données du bien",
+    "noneTitle": "Aucun bien sélectionné",
+    "noneBody": "Veuillez sélectionner un bien sur la page des biens pour en afficher les détails.",
+    "loading": "Chargement des détails du bien...",
+    "notFoundTitle": "Bien introuvable",
+    "notFoundBody": "Le bien demandé est introuvable.",
+    "goBack": "Retour",
+    "inProgress": "En cours",
+    "developer": "Promoteur",
+    "unknown": "Inconnu",
+    "contactViaPlatform": "Contact via la plateforme",
+    "projectManager": "Chef de projet",
+    "backToProperties": "Retour aux biens",
+    "saved": "Enregistré",
+    "save": "Enregistrer",
+    "share": "Partager",
+    "backToOverview": "Retour à la vue d'ensemble"
+  },
+  "brokerCta": {
+    "badge": "Programme courtiers",
+    "title": "Devenez courtier Capimax RT",
+    "subtitle": "Présentez l'immobilier tokenisé à vos clients et percevez une commission sur chaque achat finalisé. Postulez en quelques minutes : notre équipe examine votre candidature et active votre tableau de bord courtier.",
+    "s1": {
+      "title": "Postulez",
+      "text": "Envoyez votre candidature de courtier avec votre licence et vos pièces justificatives."
+    },
+    "s2": {
+      "title": "Obtenez votre lien de parrainage",
+      "text": "Une fois approuvé, partagez votre lien personnel ou parrainez des clients par e-mail."
+    },
+    "s3": {
+      "title": "Suivez tout",
+      "text": "Suivez parrainages, achats et commissions dans votre tableau de bord courtier."
+    },
+    "s4": {
+      "title": "Soyez payé",
+      "text": "Les commissions approuvées sont versées sur votre portefeuille de la plateforme, prêtes à être retirées."
+    },
+    "apply": "Postuler comme courtier",
+    "learnMore": "Fonctionnement du programme"
+  }
+}

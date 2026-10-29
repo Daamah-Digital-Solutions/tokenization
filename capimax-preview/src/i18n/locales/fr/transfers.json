@@ -1,0 +1,66 @@
+{
+  "nav": "Transferts",
+  "title": "Transferts",
+  "subtitle": "Envoyez des parts d'un bien ou du solde de portefeuille à qui vous voulez par e-mail — famille, associés ou amis.",
+  "refresh": "Actualiser",
+  "newTransfer": "Nouveau transfert",
+  "tabs": {
+    "all": "Tous",
+    "sent": "Envoyés",
+    "received": "Reçus",
+    "open": "En cours"
+  },
+  "emptyTitle": "Aucun transfert pour le moment",
+  "emptyText": "Les transferts que vous envoyez ou recevez apparaissent ici.",
+  "status": {
+    "scheduled": "Programmé",
+    "waiting": "En attente du destinataire",
+    "delivered": "Livré",
+    "cancelled": "Annulé",
+    "expired": "Retourné",
+    "failed": "Retourné"
+  },
+  "row": {
+    "units": "{{count}} part(s) de {{property}}",
+    "to": "{{what}} à {{who}}",
+    "from": "{{what}} de {{who}}",
+    "date": "date : {{date}}",
+    "until": "retour le {{date}} s'il n'est pas réclamé",
+    "cancel": "Annuler",
+    "confirmCancel": "Annuler ce transfert ? Tout vous sera restitué."
+  },
+  "new": {
+    "title": "Nouveau transfert",
+    "close": "Fermer",
+    "cancel": "Annuler",
+    "send": "Envoyer",
+    "asset": {
+      "units": "Parts de bien",
+      "cash": "Solde du portefeuille"
+    },
+    "property": "Bien",
+    "chooseProperty": "Choisissez un bien",
+    "free": "{{count}} disponible(s)",
+    "noShares": "Vous n'avez aucune part disponible à envoyer (les parts mises en vente ou faisant l'objet d'une offre ne sont pas disponibles).",
+    "units": "Parts",
+    "amount": "Montant ($)",
+    "balance": "Solde du portefeuille : {{amount}}",
+    "email": "E-mail du destinataire",
+    "name": "Nom du destinataire (facultatif)",
+    "date": "Livrer le",
+    "message": "Message (facultatif)",
+    "youSend": "Vous envoyez",
+    "costBasis": "Valeur (votre coût d'acquisition)",
+    "fee": "Frais de transfert ({{pct}} %)",
+    "rules": "Les parts / fonds sont bloqués sur votre compte dès maintenant. Le destinataire les reçoit à la date prévue si son compte dispose d'une identité vérifiée ; sinon, nous l'invitons et le transfert reste en attente {{days}} jours, puis vous est restitué. Vous pouvez l'annuler jusqu'à sa livraison.",
+    "errEmail": "Saisissez l'e-mail du destinataire.",
+    "errUnits": "Choisissez un bien et un nombre de parts que vous pouvez envoyer.",
+    "errAmount": "Saisissez un montant couvert par votre portefeuille (frais éventuels compris).",
+    "errGeneric": "Une erreur s'est produite. Veuillez réessayer.",
+    "result": {
+      "delivered": "Livré à {{email}}.",
+      "scheduled": "Programmé. {{email}} le recevra à la date choisie.",
+      "waiting": "Envoyé. {{email}} n'a pas encore de compte vérifié — nous l'avons invité. Il dispose de {{days}} jours pour le réclamer ; à défaut, le transfert vous sera restitué."
+    }
+  }
+}

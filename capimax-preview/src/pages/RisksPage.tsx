@@ -5,6 +5,7 @@ import { InfoPageLayout } from '../components/info/InfoPageLayout';
 export const RisksPage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const isFr = i18n.language?.startsWith('fr');
   const navigateToPage = (path: string) => {
     window.history.pushState({}, '', path);
     window.dispatchEvent(new PopStateEvent('popstate'));
@@ -13,8 +14,8 @@ export const RisksPage: React.FC = () => {
 
   return (
     <InfoPageLayout
-      title={isAr ? 'مخاطر التملّك وإفصاحات الملاك' : 'Ownership Risks & Owner Disclosures'}
-      subtitle={isAr ? 'فهم مخاطر التملّك والتزامات المنصة' : 'Understanding ownership risks and platform commitments'}
+      title={isAr ? 'مخاطر التملّك وإفصاحات الملاك' : isFr ? 'Risques liés à la propriété et informations aux propriétaires' : 'Ownership Risks & Owner Disclosures'}
+      subtitle={isAr ? 'فهم مخاطر التملّك والتزامات المنصة' : isFr ? 'Comprendre les risques liés à la propriété et les engagements de la plateforme' : 'Understanding ownership risks and platform commitments'}
     >
       {isAr ? (
       <section className="info-section">
@@ -76,6 +77,69 @@ export const RisksPage: React.FC = () => {
           </button>
           <button className="link-button-outline" onClick={() => navigateToPage('/faq')}>
             الأسئلة الشائعة
+          </button>
+        </div>
+      </section>
+      ) : isFr ? (
+      <section className="info-section">
+        <p className="info-intro">
+          Cette section vise à sensibiliser et à protéger à la fois les propriétaires et la plateforme grâce à des informations claires.
+        </p>
+
+        <h2>Principales catégories de risques</h2>
+
+        <h3>Risque de marché et d'évaluation</h3>
+        <p>
+          La valeur des actifs immobiliers peut fluctuer en fonction de la conjoncture économique, des taux d'intérêt, de l'inflation, de l'équilibre entre l'offre et la demande et des événements géopolitiques.
+        </p>
+
+        <h3>Risque de liquidité</h3>
+        <p>
+          Les parts de propriété tokenisées peuvent être illiquides. Le marché secondaire ne garantit ni des échanges actifs ni la présence d'acheteurs. Les dispositifs de fournisseur de liquidité (le cas échéant) sont facultatifs, limités et soumis à conditions.
+        </p>
+
+        <h3>Risque opérationnel et de gestion</h3>
+        <p>
+          Des risques peuvent découler d'erreurs ou de défaillances des SPV (sociétés ad hoc), des gestionnaires de biens, des sociétés d'évaluation, des assureurs ou des prestataires de paiement. Des défaillances technologiques, des incidents de cybersécurité ou des violations de données peuvent également survenir.
+        </p>
+
+        <h3>Risque réglementaire et juridique</h3>
+        <p>
+          Des modifications des lois, des réglementations ou des pratiques de contrôle peuvent restreindre l'accès à la plateforme, affecter l'éligibilité des propriétaires ou avoir une incidence sur la légalité ou la structure des offres tokenisées.
+        </p>
+
+        <h3>Risque de contrepartie</h3>
+        <p>
+          Les SPV, les promoteurs ou les prestataires de services peuvent faire défaut, devenir insolvables ou ne pas exécuter leurs obligations contractuelles.
+        </p>
+
+        <h3>Cas de force majeure</h3>
+        <p>
+          Des événements échappant à tout contrôle, tels que les catastrophes naturelles, les pandémies, les guerres et les mesures gouvernementales, peuvent avoir une incidence significative sur la performance des actifs.
+        </p>
+
+        <div className="info-warning">
+          <strong>Avertissement relatif à la propriété :</strong> Toute propriété immobilière comporte des risques, y compris la perte potentielle d'une partie ou de la totalité du capital consacré à l'achat. Les propriétaires potentiels doivent examiner attentivement et comprendre l'ensemble des facteurs de risque avant de prendre toute décision d'achat.
+        </div>
+
+        <h2>L'engagement de Capimax RT</h2>
+        <ul className="check-list">
+          <li>Communication complète des risques et des informations importantes</li>
+          <li>Aucune promesse ni garantie de performance</li>
+          <li>Aucun marketing ni publicité trompeurs</li>
+          <li>Pédagogie et transparence envers les propriétaires</li>
+        </ul>
+
+        <h2>Ressources associées</h2>
+        <div>
+          <button className="link-button" onClick={() => navigateToPage('/legal/risk-disclosure')}>
+            Avertissement complet sur les risques
+          </button>
+          <button className="link-button" onClick={() => navigateToPage('/legal/disclaimer')}>
+            Clause de non-responsabilité de la plateforme
+          </button>
+          <button className="link-button-outline" onClick={() => navigateToPage('/faq')}>
+            FAQ
           </button>
         </div>
       </section>

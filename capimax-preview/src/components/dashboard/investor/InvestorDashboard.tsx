@@ -7,6 +7,7 @@ import type { Investment, Property, Transaction } from '../../../services/api/ty
 import { apiClient } from '../../../services/api/ApiClient';
 import { MyProperties } from './MyProperties';
 import { useTranslation } from 'react-i18next';
+import { uiLocale } from '../../../utils/locale';
 // MyProperties is also exported from InvestorControlPanel — the
 // dashboard router actually uses InvestorControlPanel for investor
 // role, not this file. Keeping the import here means the case below
@@ -369,7 +370,7 @@ const InvestorAnalytics: React.FC<{ portfolioData: PortfolioData }> = ({ portfol
 export const InvestorDashboard: React.FC<{ currentView: string }> = ({ currentView }) => {
   const { state } = useAuth();
   const { t, i18n } = useTranslation('dashboard');
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
+  const dateLocale = uiLocale(i18n.language);
   const [portfolioData, setPortfolioData] = useState<PortfolioData>({
     stats: [],
     performanceData: [],

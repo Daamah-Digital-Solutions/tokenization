@@ -1,0 +1,305 @@
+{
+  "title": "Acheter des parts",
+  "close": "Fermer",
+  "back": "Retour",
+  "less": "Une part de moins",
+  "more": "Une part de plus",
+  "shares": "Parts",
+  "pricePerShare": "{{price}} par part",
+  "available": "{{n}} disponible(s)",
+  "howYouPay": "Mode de paiement",
+  "coin": "Cryptomonnaie",
+  "coinMinimum": "Le montant minimum accepté pour cette cryptomonnaie est de {{amount}}.",
+  "coinBelowMinimum": "Cette cryptomonnaie exige au moins {{amount}}. Choisissez une autre cryptomonnaie ou un montant plus élevé.",
+  "review": "Vérifier l'achat",
+  "goPortfolio": "Voir mes investissements",
+  "breakdown": {
+    "shares_one": "{{count}} part × {{price}}",
+    "shares_other": "{{count}} parts × {{price}}",
+    "fee": "Frais de plateforme ({{pct}} %)",
+    "discount": "Remise Pronova ({{pct}} %)",
+    "total": "Total à payer",
+    "reinvestDiscount": "Remise de réinvestissement ({{pct}} %)"
+  },
+  "methods": {
+    "unavailable": "Indisponible pour le moment",
+    "noDevice": "Indisponible dans ce navigateur",
+    "walletBalance": "Solde : {{amount}}",
+    "walletShort": "Solde : {{amount}} — insuffisant pour cet achat",
+    "off": "-{{pct}} %",
+    "financing": "Financement",
+    "wallet": {
+      "label": "Solde du portefeuille",
+      "description": "Payez en une fois depuis votre portefeuille Capimax RT"
+    },
+    "card": {
+      "label": "Carte de crédit / débit",
+      "description": "Visa, Mastercard, Amex — sur la page sécurisée de Stripe"
+    },
+    "apple_pay": {
+      "label": "Apple Pay",
+      "description": "Sur iPhone, iPad ou Mac avec Safari"
+    },
+    "google_pay": {
+      "label": "Google Pay",
+      "description": "Sur Android ou Chrome"
+    },
+    "crypto": {
+      "label": "Cryptomonnaie",
+      "description": "USDT, USDC, BTC, ETH et plus encore — choisissez votre cryptomonnaie ici, payez sur la page de NOWPayments"
+    },
+    "pronova": {
+      "label": "Pronova",
+      "description": "Une remise sur tout ce que vous payez maintenant",
+      "discount": "{{pct}} % de remise sur tout ce que vous payez maintenant — paiement sur la page sécurisée de Stripe"
+    },
+    "nova_sukuk": {
+      "label": "Nova Sukuk",
+      "description": "Financement conforme à la charia — payez avec votre certificat Nova"
+    },
+    "bank": {
+      "label": "Virement bancaire",
+      "description": "Effectuez un virement sur notre compte et téléversez le justificatif"
+    },
+    "reinvest": {
+      "label": "Réinvestir mes rendements",
+      "description": "{{amount}} de rendements locatifs — {{pct}} % de remise sur le prix de la part, sans frais d'achat"
+    }
+  },
+  "confirm": {
+    "title": "Confirmez votre achat",
+    "method": "Mode de paiement",
+    "note": {
+      "done": "Le montant est prélevé sur votre portefeuille et les parts vous appartiennent immédiatement.",
+      "checkout": "Vous poursuivez sur la page sécurisée du prestataire. Vos parts sont réservées pendant 30 minutes et confirmées dès réception du paiement.",
+      "review": "Vous allez ensuite téléverser le document. Vos parts restent réservées jusqu'à son examen par notre équipe."
+    },
+    "button": {
+      "done": "Confirmer et payer",
+      "checkout": "Continuer vers le paiement sécurisé",
+      "review": "Continuer"
+    }
+  },
+  "proof": {
+    "held": "Vos parts vous sont réservées pendant que notre équipe examine le document. Vous recevrez une notification et un e-mail.",
+    "submit": "Envoyer pour examen",
+    "later": "Fermer",
+    "bank": {
+      "title": "Virez le montant",
+      "intro": "Virez exactement {{amount}} sur le compte ci-dessous, puis téléversez le justificatif.",
+      "reference": "Référence de votre virement (facultatif)",
+      "file": "Téléversez le justificatif de virement (PDF ou image, 10 Mo max.)",
+      "accountHolder": "Titulaire du compte",
+      "bank": "Banque",
+      "account": "Compte / IBAN",
+      "swift": "SWIFT / BIC",
+      "routing": "Code d'acheminement (routing number)",
+      "bankAddress": "Adresse de la banque",
+      "currency": "Devise"
+    },
+    "nova_sukuk": {
+      "title": "Téléversez votre certificat Nova Sukuk",
+      "intro": "Téléversez le certificat Nova Sukuk couvrant {{amount}} (PDF, 10 Mo max.).",
+      "reference": "Numéro du certificat (facultatif)",
+      "file": "Choisir le certificat (PDF)"
+    }
+  },
+  "done": {
+    "title": "Investissement confirmé",
+    "body_one": "{{count}} part de {{title}} vous appartient ({{amount}}). Elle apparaît désormais dans votre portefeuille.",
+    "body_other": "{{count}} parts de {{title}} vous appartiennent ({{amount}}). Elles apparaissent désormais dans votre portefeuille."
+  },
+  "submitted": {
+    "title": "Document reçu",
+    "body": "Référence {{ref}}. Vos parts sont réservées pendant que notre équipe l'examine — vous recevrez une notification et un e-mail."
+  },
+  "deposit": {
+    "redirectNote": "Vous payez sur la page sécurisée du prestataire. Votre portefeuille est crédité dès que le paiement est confirmé."
+  },
+  "errors": {
+    "generic": "Une erreur s'est produite. Veuillez réessayer.",
+    "AMOUNT_TOO_LOW_one": "Le minimum pour ce bien est de {{amount}} ({{count}} part).",
+    "AMOUNT_TOO_LOW_other": "Le minimum pour ce bien est de {{amount}} ({{count}} parts).",
+    "PRICE_CHANGED": "Le prix de la part a changé. Vérifiez le nouveau total et confirmez à nouveau.",
+    "INSUFFICIENT_FUNDS": "Le solde de votre portefeuille est insuffisant. Ajoutez des fonds ou choisissez un autre mode de paiement.",
+    "INSUFFICIENT_SHARES": "Il ne reste pas assez de parts. Choisissez un nombre de parts inférieur.",
+    "PROPERTY_NOT_OPEN": "Ce bien n'est pas ouvert à l'acquisition pour le moment.",
+    "INSTALLMENTS_ONLY": "Ce bien est uniquement vendu avec un plan de paiement échelonné.",
+    "PAYMENTS_NOT_CONFIGURED": "Ce mode de paiement est indisponible pour le moment. Choisissez-en un autre.",
+    "KYC_REQUIRED": "Veuillez d'abord vérifier votre identité.",
+    "PDF_REQUIRED": "Le certificat Sukuk doit être au format PDF.",
+    "FILE_TOO_LARGE": "Le fichier ne doit pas dépasser 10 Mo.",
+    "FILE_REQUIRED": "Joignez le document.",
+    "NOT_ENOUGH_RETURNS": "Vos rendements sont insuffisants pour cet achat. Choisissez moins de parts ou un autre mode de paiement."
+  },
+  "return": {
+    "goWallet": "Accéder à mon portefeuille",
+    "browse": "Parcourir les biens",
+    "purchase": {
+      "pending": {
+        "title": "Paiement reçu — confirmation de vos parts…",
+        "body": "Vos parts sont réservées. Cela ne prend généralement que quelques secondes."
+      },
+      "done": {
+        "title": "Investissement confirmé",
+        "body_one": "{{count}} part de {{title}} vous appartient. Elle apparaît désormais dans votre portefeuille.",
+        "body_other": "{{count}} parts de {{title}} vous appartiennent. Elles apparaissent désormais dans votre portefeuille."
+      },
+      "refunded": {
+        "title": "Les parts n'étaient plus disponibles",
+        "body": "Votre paiement est arrivé après la fin de la réservation et les parts avaient été vendues. L'intégralité du montant a été créditée sur votre portefeuille — vous pouvez acheter depuis votre portefeuille."
+      },
+      "credited": {
+        "title": "L'achat n'a pas été finalisé",
+        "body": "{{amount}} ont été reçus au lieu des {{due}} dus et ont été crédités sur votre portefeuille. Vous pouvez acheter depuis votre portefeuille."
+      },
+      "failed": {
+        "title": "L'achat n'a pas été finalisé",
+        "body": "Aucun montant n'a été débité et les parts réservées pour vous sont libérées."
+      },
+      "slow": {
+        "title": "Confirmation de votre achat en cours",
+        "body": "Le prestataire de paiement ne l'a pas encore confirmé. Vous recevrez une notification et un e-mail dès que vos parts seront confirmées — inutile de payer à nouveau."
+      },
+      "cancelled": {
+        "title": "Achat annulé",
+        "body": "Aucun montant n'a été débité. Les parts réservées pour vous seront libérées d'ici quelques minutes."
+      },
+      "missing": {
+        "title": "Nous n'avons pas trouvé ce paiement",
+        "body": "Consultez votre portefeuille et vos notifications pour connaître son statut."
+      }
+    },
+    "deposit": {
+      "pending": {
+        "title": "Paiement reçu — crédit de votre portefeuille…",
+        "body": "Cela ne prend généralement que quelques secondes."
+      },
+      "done": {
+        "title": "Dépôt crédité",
+        "body": "{{amount}} ont été ajoutés à votre portefeuille."
+      },
+      "refunded": {
+        "title": "Dépôt crédité",
+        "body": "{{amount}} ont été ajoutés à votre portefeuille."
+      },
+      "credited": {
+        "title": "Dépôt crédité",
+        "body": "{{amount}} ont été reçus et crédités sur votre portefeuille."
+      },
+      "failed": {
+        "title": "Le dépôt n'a pas été finalisé",
+        "body": "Aucun montant n'a été crédité. Vous pouvez réessayer ou utiliser un autre mode de paiement."
+      },
+      "slow": {
+        "title": "Confirmation de votre dépôt en cours",
+        "body": "Le prestataire de paiement ne l'a pas encore confirmé. Vous recevrez une notification et un e-mail dès qu'il sera crédité — inutile de payer à nouveau."
+      },
+      "cancelled": {
+        "title": "Dépôt annulé",
+        "body": "Aucun montant n'a été débité."
+      },
+      "missing": {
+        "title": "Nous n'avons pas trouvé ce paiement",
+        "body": "Consultez votre portefeuille et vos notifications pour connaître son statut."
+      }
+    },
+    "goInstallments": "Accéder à mes échéances",
+    "installment": {
+      "pending": {
+        "title": "Paiement reçu — démarrage de votre plan de paiement échelonné…",
+        "body": "Vos parts sont réservées. Cela ne prend généralement que quelques secondes."
+      },
+      "done": {
+        "title": "Plan de paiement échelonné démarré",
+        "body": "Votre premier paiement est confirmé. Le plan et son échéancier se trouvent dans Tableau de bord → Échéances."
+      },
+      "refunded": {
+        "title": "Le plan n'a pas pu démarrer",
+        "body": "Votre paiement est arrivé après la fin de la réservation et les parts n'étaient plus disponibles. Le montant a été crédité sur votre portefeuille."
+      },
+      "credited": {
+        "title": "Le plan n'a pas été démarré",
+        "body": "{{amount}} ont été reçus au lieu des {{due}} dus et ont été crédités sur votre portefeuille."
+      },
+      "failed": {
+        "title": "Le premier paiement n'a pas été finalisé",
+        "body": "Aucun montant n'a été débité et les parts réservées pour vous sont libérées. Vous pouvez réessayer."
+      },
+      "slow": {
+        "title": "Confirmation de votre premier paiement en cours",
+        "body": "Le prestataire de paiement ne l'a pas encore confirmé. Vous recevrez une notification dès le démarrage de votre plan — inutile de payer à nouveau."
+      },
+      "cancelled": {
+        "title": "Paiement annulé",
+        "body": "Aucun montant n'a été débité. Les parts réservées pour vous seront libérées d'ici quelques minutes."
+      },
+      "missing": {
+        "title": "Nous n'avons pas trouvé ce paiement",
+        "body": "Consultez Tableau de bord → Échéances et vos notifications pour connaître son statut."
+      }
+    }
+  },
+  "openCrypto": {
+    "title": "Paiements crypto non finalisés",
+    "body": "{{amount}} {{what}} — commencé {{when}}.",
+    "deposit": "de dépôt sur le portefeuille",
+    "purchase": "pour {{title}}",
+    "resume": "Finaliser le paiement"
+  },
+  "fees": {
+    "title": "Frais",
+    "intro": "Tous les frais et remises de Capimax RT, aux taux actuellement en vigueur. Les montants sont toujours affichés avant votre confirmation.",
+    "year": "an",
+    "none": "Aucun",
+    "note": "Les taux sont fixés par Capimax RT et peuvent évoluer ; une modification ne s'applique jamais aux achats ni aux plans de paiement échelonné déjà conclus. Les prestataires de paiement (carte, crypto, banque) peuvent appliquer leurs propres frais.",
+    "cols": {
+      "fee": "Frais",
+      "rate": "Taux",
+      "who": "À la charge de",
+      "when": "Quand"
+    },
+    "rows": {
+      "purchase": {
+        "name": "Frais d'achat",
+        "who": "L'acheteur",
+        "when": "À l'achat de parts (sur le montant des parts)"
+      },
+      "installment": {
+        "name": "Frais d'échelonnement",
+        "who": "L'acheteur en plan de paiement échelonné",
+        "when": "Sur l'apport initial et chaque échéance"
+      },
+      "resale": {
+        "name": "Frais du marché secondaire",
+        "who": "L'acheteur (le vendeur perçoit le prix intégral)",
+        "when": "Sur chaque achat sur le marché secondaire"
+      },
+      "management": {
+        "name": "Frais de gestion",
+        "who": "Les propriétaires de parts",
+        "when": "Déduits des distributions de revenus locatifs"
+      },
+      "pronova": {
+        "name": "Remise Pronova",
+        "who": "Les acheteurs payant avec Pronova",
+        "when": "Sur tout montant payé à l'achat"
+      },
+      "reinvest": {
+        "name": "Remise de réinvestissement",
+        "who": "Les propriétaires réinvestissant leurs rendements locatifs",
+        "when": "Sur le prix de la part ; sans frais d'achat"
+      },
+      "late": {
+        "name": "Pénalité de retard",
+        "who": "—",
+        "when": "Les échéances en retard font automatiquement l'objet d'une nouvelle tentative"
+      },
+      "withdrawal": {
+        "name": "Frais de retrait",
+        "who": "—",
+        "when": "Retraits vers vos comptes enregistrés"
+      }
+    }
+  }
+}

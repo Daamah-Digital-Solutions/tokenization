@@ -10,6 +10,7 @@ import { Text } from '../typography/Text';
 import { PropertyCategory } from '../../../services/api/types';
 import type { Property } from '../../../services/api/types';
 import { PROPERTY_PLACEHOLDER, handleImageFallback } from '../../../utils/imageFallback';
+import { uiLocale } from '../../../utils/locale';
 
 interface PropertyCardProps extends Omit<Property, 'id'> {
   id: string;
@@ -366,7 +367,7 @@ export const PropertyCard = React.forwardRef<HTMLDivElement, PropertyCardProps>(
               <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                 <Calendar className="w-4 h-4 mx-auto mb-1 text-blue-600 dark:text-blue-400" />
                 <Text variant="bodySmall" weight="bold" className="text-blue-600 dark:text-blue-400">
-                  {expected_completion_date ? new Date(expected_completion_date).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', { month: 'short', year: 'numeric' }) : t('common.tbd')}
+                  {expected_completion_date ? new Date(expected_completion_date).toLocaleDateString(uiLocale(i18n.language), { month: 'short', year: 'numeric' }) : t('common.tbd')}
                 </Text>
                 <Text variant="caption" color="muted">
                   {t('propertyCard.completion')}

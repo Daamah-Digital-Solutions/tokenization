@@ -22,6 +22,7 @@ import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
 import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
+import { uiLocale } from '../../utils/locale';
 
 interface PropertyApprovalStatusProps {
   propertyId: string;
@@ -33,7 +34,7 @@ export const PropertyApprovalStatus: React.FC<PropertyApprovalStatusProps> = ({
   className
 }) => {
   const { t, i18n } = useTranslation('ownerui');
-  const locale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
+  const locale = uiLocale(i18n.language);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState('');

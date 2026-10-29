@@ -5,6 +5,7 @@ import { InfoPageLayout } from '../components/info/InfoPageLayout';
 export const InvestorGuidePage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const isFr = i18n.language?.startsWith('fr');
   const navigateToPage = (path: string) => {
     window.history.pushState({}, '', path);
     window.dispatchEvent(new PopStateEvent('popstate'));
@@ -13,8 +14,8 @@ export const InvestorGuidePage: React.FC = () => {
 
   return (
     <InfoPageLayout
-      title={isAr ? 'دليل الشريك المالك' : 'Co-Owner Guide'}
-      subtitle={isAr ? 'كيف تتملّك على كابي مكس RT - دليل عملي خطوة بخطوة' : 'How to Own on Capimax RT - A practical step-by-step guide'}
+      title={isAr ? 'دليل الشريك المالك' : isFr ? 'Guide du copropriétaire' : 'Co-Owner Guide'}
+      subtitle={isAr ? 'كيف تتملّك على كابي مكس RT - دليل عملي خطوة بخطوة' : isFr ? 'Comment devenir propriétaire sur Capimax RT - Un guide pratique étape par étape' : 'How to Own on Capimax RT - A practical step-by-step guide'}
     >
       {isAr ? (
       <section className="info-section">
@@ -89,6 +90,82 @@ export const InvestorGuidePage: React.FC = () => {
           </button>
           <button className="link-button-outline" onClick={() => navigateToPage('/faq')}>
             الأسئلة الشائعة
+          </button>
+        </div>
+      </section>
+      ) : isFr ? (
+      <section className="info-section">
+        <p className="info-intro">
+          Ce guide présente, étape par étape et de manière pratique, comment devenir propriétaire via Capimax RT.
+        </p>
+
+        <h2>Le parcours du propriétaire, étape par étape</h2>
+
+        <ol>
+          <li>
+            <span className="step-title">Création du compte</span>
+            Créez votre compte sur Capimax RT avec votre adresse e-mail et vos informations de base.
+          </li>
+          <li>
+            <span className="step-title">Vérification d'identité (KYC)</span>
+            Effectuez la procédure de vérification d'identité pour devenir un propriétaire vérifié.
+          </li>
+          <li>
+            <span className="step-title">Découverte des opportunités disponibles</span>
+            Explorez les opportunités de propriété disponibles proposées sur la plateforme.
+          </li>
+          <li>
+            <span className="step-title">Examen de la documentation de l'actif</span>
+            Accédez à la salle de données et examinez toute la documentation pertinente relative au bien choisi.
+          </li>
+          <li>
+            <span className="step-title">Réalisation d'un achat</span>
+            Choisissez le montant de votre achat et finalisez le processus d'acquisition.
+          </li>
+          <li>
+            <span className="step-title">Suivi de la performance du portefeuille</span>
+            Suivez les biens que vous détenez depuis votre tableau de bord personnalisé.
+          </li>
+          <li>
+            <span className="step-title">Perception des distributions (le cas échéant)</span>
+            Percevez les distributions de revenus conformément à la politique de distribution annoncée.
+          </li>
+          <li>
+            <span className="step-title">Mise en œuvre d'une stratégie de sortie</span>
+            Le moment venu, utilisez les mécanismes de sortie, notamment le marché secondaire ou les options du fournisseur de liquidité.
+          </li>
+        </ol>
+
+        <h2>Tableau de bord du portefeuille du propriétaire</h2>
+        <p>
+          Le tableau de bord du propriétaire présente :
+        </p>
+        <ul className="check-list">
+          <li>La liste des actifs détenus</li>
+          <li>Le nombre de parts détenues</li>
+          <li>La valeur de la propriété</li>
+          <li>L'historique des distributions</li>
+          <li>Les certificats de propriété numériques</li>
+          <li>L'historique des transactions</li>
+        </ul>
+
+        <div className="info-warning">
+          <strong>Important :</strong> Avant tout achat, assurez-vous d'avoir examiné attentivement toute la documentation, d'avoir compris les risques encourus et, si nécessaire, d'avoir consulté votre conseiller financier. Toute propriété immobilière comporte des risques, y compris la perte potentielle du capital investi.
+        </div>
+
+        <h2>Commencer</h2>
+        <div>
+          <button className="link-button" onClick={() => navigateToPage('/register')}>
+            Créer un compte
+          </button>
+          <button className="link-button" onClick={() => navigateToPage('/properties')}>
+            Parcourir les biens
+          </button>
+          <button className="link-button-outline" onClick={() => navigateToPage('/risks')}>
+            Voir les avertissements sur les risques
+          </button>
+          <button className="link-button-outline" onClick={() => navigateToPage('/faq')}>
+            FAQ
           </button>
         </div>
       </section>

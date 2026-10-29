@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { uiLocale } from '../../utils/locale';
 
 export interface OwnershipTier {
   id: string;
@@ -69,7 +70,7 @@ export const GraduatedOwnershipTracker: React.FC<GraduatedOwnershipTrackerProps>
   const [viewMode, setViewMode] = useState<'overview' | 'detailed'>('overview');
 
   const formatCurrency = (amount: number) => `$${amount.toLocaleString()}`;
-  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US');
+  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString(uiLocale(i18n.language));
 
   const getTierColor = (tier: OwnershipTier) => tier.color;
   

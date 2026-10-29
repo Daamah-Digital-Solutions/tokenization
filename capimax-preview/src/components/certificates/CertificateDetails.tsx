@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import type { CertificateRecord, CertificateStatus } from '../../services/certificates/CertificateService';
 import { cn } from '../../utils/cn';
+import { uiLocale } from '../../utils/locale';
 
 const STATUS_STYLE: Record<CertificateStatus, { icon: React.ElementType; cls: string }> = {
   final: { icon: BadgeCheck, cls: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800' },
@@ -35,7 +36,7 @@ export const percent = (v: string | number) => `${(Number(v) || 0).toFixed(4)}%`
 
 export function useCertDate() {
   const { i18n } = useTranslation();
-  const locale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
+  const locale = uiLocale(i18n.language);
   return (d?: string | null) => (d ? new Date(d).toLocaleDateString(locale, { year: 'numeric', month: 'long', day: 'numeric' }) : '—');
 }
 

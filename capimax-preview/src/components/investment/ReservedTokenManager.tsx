@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '../ui/Button';
 import { Input } from '../design-system/forms/Input';
 import { useTranslation } from 'react-i18next';
+import { uiLocale } from '../../utils/locale';
 
 export interface TokenReservation {
   id: string;
@@ -51,7 +52,7 @@ export const ReservedTokenManager: React.FC<ReservedTokenManagerProps> = ({
   const [actionType, setActionType] = useState<'activate' | 'extend' | 'modify' | null>(null);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US', {
+    return new Date(dateString).toLocaleDateString(uiLocale(i18n.language), {
       month: 'short',
       day: 'numeric',
       year: 'numeric'

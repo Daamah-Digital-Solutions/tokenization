@@ -12,6 +12,7 @@ import { apiClient } from '../../../services/api/ApiClient';
 import { BrokerService } from '../../../services/broker/BrokerService';
 import { useRouter } from '../../../utils/router';
 import { cn } from '../../../utils/cn';
+import { baseLanguage } from '../../../utils/locale';
 
 /**
  * Broker dashboard (client round 3, #8: "brokers must land on their own
@@ -115,7 +116,7 @@ const MaterialsLibrary: React.FC = () => {
 export const BrokerDashboard: React.FC<{ currentView: string }> = ({ currentView }) => {
   const { t, i18n } = useTranslation('partners');
   const isAr = (i18n.language || 'en').startsWith('ar');
-  const locale = isAr ? 'ar' : 'en';
+  const locale = baseLanguage((i18n.language || 'en'));
   const { navigate } = useRouter();
   const [referralFilter, setReferralFilter] = useState('all');
   const [link, setLink] = useState<string | null>(null);

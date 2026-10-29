@@ -8,8 +8,9 @@ import type {
   UserActivity,
   AdminNote
 } from '../../../services';
+import { uiLocale } from '../../../utils/locale';
 
-const dateLocale = (lng?: string) => (lng?.startsWith('ar') ? 'ar-EG' : 'en-US');
+const dateLocale = (lng?: string) => (uiLocale(lng));
 
 interface UserDetailViewProps {
   user: AdminUser;

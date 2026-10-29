@@ -1,0 +1,203 @@
+{
+  "tab": "Plan de paiement",
+  "section": {
+    "title": "Plan de paiement",
+    "subtitle": "Comment vous pouvez payer ce bien"
+  },
+  "methods": {
+    "title": "Modes d'achat",
+    "cash": "Paiement intégral",
+    "cashHint": "Payez le prix total en une fois — vos parts sont émises dès la confirmation.",
+    "installments": "Paiement échelonné",
+    "installmentsHint": "Versez un apport initial puis le solde en échéances — les parts sont libérées au fur et à mesure de vos paiements.",
+    "available": "Disponible",
+    "notAvailable": "Non proposé",
+    "cashOnly": "Ce bien est uniquement vendu en paiement intégral.",
+    "installmentsOnly": "Ce bien est uniquement vendu en paiement échelonné."
+  },
+  "frequency": {
+    "monthly": "Mensuelle",
+    "quarterly": "Trimestrielle",
+    "semi_annual": "Tous les 6 mois",
+    "annual": "Annuelle"
+  },
+  "per": {
+    "monthly": "/ mois",
+    "quarterly": "/ trimestre",
+    "semi_annual": "/ 6 mois",
+    "annual": "/ an"
+  },
+  "calculator": {
+    "shares": "Nombre de parts",
+    "sharesHint": "{{total}} à {{price}} par part",
+    "maxAvailable": "maximum disponible",
+    "count": "Nombre d'échéances",
+    "countFixed": "{{count}} échéances (fixé pour ce bien)",
+    "countOption": "{{count}} échéances",
+    "downPayment": "Apport initial",
+    "downPaymentPercent": "Apport initial de {{percent}} %",
+    "noDownPayment": "Sans apport initial",
+    "installment": "Échéance",
+    "firstDue": "Première échéance",
+    "lastDue": "Dernière échéance",
+    "total": "Prix total",
+    "summary": "{{count}} paiements · {{total}} au total"
+  },
+  "schedule": {
+    "title": "Échéancier",
+    "subtitle": "Chaque paiement avec sa date d'échéance et son montant",
+    "number": "N°",
+    "payment": "Paiement",
+    "dueDate": "Date d'échéance",
+    "amount": "Montant",
+    "percent": "Part",
+    "remaining": "Restant dû",
+    "status": "Statut",
+    "paidOn": "Payé le {{date}}",
+    "downPayment": "Apport initial",
+    "installment": "Échéance {{n}}",
+    "download": "Télécharger l'échéancier (PDF)",
+    "preparing": "Préparation…",
+    "estimateNote": "Affiché pour le nombre de parts sélectionné. Les mêmes conditions s'appliquent à votre plan lorsque vous achetez en paiement échelonné.",
+    "minimumWarning": "Chaque échéance doit être d'au moins {{amount}}. Choisissez plus de parts ou moins d'échéances.",
+    "notes": "Conditions du plan"
+  },
+  "status": {
+    "paid": "Payée",
+    "due": "Exigible",
+    "overdue": "En retard",
+    "upcoming": "À venir",
+    "cancelled": "Annulée"
+  },
+  "tiers": {
+    "title": "Phases de prix",
+    "subtitle": "Le prix de la part change automatiquement à ces dates",
+    "current": "Prix actuel",
+    "next": "Phase suivante",
+    "past": "Terminée",
+    "from": "À partir du {{date}}",
+    "until": "jusqu'au {{date}}",
+    "perShare": "par part",
+    "nextChange": "Le prix de la part passera à {{price}} le {{date}} ({{label}})."
+  },
+  "developer": {
+    "title": "Promoteur",
+    "established": "Création",
+    "projects": "Projets réalisés",
+    "website": "Site web",
+    "contact": "Contact"
+  },
+  "returns": {
+    "title": "Rendements",
+    "expectedReturn": "Rendement annuel attendu",
+    "rentalYield": "Rendement locatif",
+    "appreciation": "Plus-value annuelle attendue",
+    "annualRent": "Revenu locatif annuel prévisionnel",
+    "monthlyRent": "Revenu locatif mensuel",
+    "notes": "Origine des rendements"
+  },
+  "financialStudy": {
+    "title": "Étude financière",
+    "empty": "L'étude financière sera publiée ici."
+  },
+  "valuation": {
+    "title": "Évaluation",
+    "latest": "Dernière évaluation",
+    "date": "Date d'évaluation",
+    "method": "Méthode",
+    "appraiser": "Expert évaluateur",
+    "report": "Rapport d'évaluation",
+    "history": "Historique des évaluations",
+    "methods": {
+      "comparative": "Analyse comparative de marché",
+      "income": "Méthode par le revenu",
+      "cost": "Méthode par le coût",
+      "automated": "Évaluation automatisée"
+    }
+  },
+  "insurance": {
+    "title": "Assurance",
+    "provider": "Assureur",
+    "policy": "Numéro de police",
+    "coverage": "Couverture",
+    "coverageAmount": "Montant de la couverture",
+    "expiry": "Valable jusqu'au"
+  },
+  "documents": {
+    "download": "Télécharger",
+    "files": "Documents"
+  },
+  "buy": {
+    "cash_one": "Acheter 1 part — {{total}}",
+    "cash_other": "Acheter {{count}} parts — {{total}}",
+    "installments": "Acheter en paiement échelonné — {{amount}} {{per}}",
+    "installmentsFrom": "ou en paiement échelonné à partir de {{amount}} {{per}}",
+    "viewPlan": "Voir le plan de paiement"
+  },
+  "checkout": {
+    "title": "Comment souhaitez-vous payer ?",
+    "subtitle": "Choisissez l'un des modes d'achat proposés pour ce bien.",
+    "upfront": "Payer en intégralité",
+    "upfrontHint": "Un paiement unique de {{total}}. Vos parts sont émises dès la confirmation du paiement.",
+    "installments": "Payer en échéances",
+    "installmentsHint": "{{down}} puis {{count}} × {{amount}} {{per}}. Vos parts sont réservées et libérées au fur et à mesure de vos paiements.",
+    "installmentsHintNoDown": "{{count}} × {{amount}} {{per}}. Vos parts sont réservées et libérées au fur et à mesure de vos paiements.",
+    "firstPayment": "Premier paiement dû",
+    "firstPaymentToday": "Aujourd'hui, depuis votre portefeuille",
+    "perPayment": "Par échéance",
+    "totalCommitment": "Total",
+    "walletNote": "Les échéances sont payées depuis votre portefeuille dans Tableau de bord → Échéances.",
+    "completion": "Achèvement prévu : {{date}}.",
+    "mustChooseInstallments": "Ce bien est uniquement vendu en paiement échelonné.",
+    "walletNoteFee": "Le premier paiement — {{first}}, frais d'échelonnement de {{pct}} % inclus — est prélevé sur votre portefeuille lors de votre confirmation ; veillez donc à disposer d'un solde suffisant. Les suivants sont prélevés automatiquement à leur date d'échéance (chacun avec les frais de {{pct}} %, sans pénalité de retard) ; vous pouvez aussi payer par anticipation dans Tableau de bord → Échéances.",
+    "payFirstWith": "Régler le premier paiement avec",
+    "dueNow": "À payer maintenant :",
+    "firstPaymentNote": "Le premier paiement — {{first}}, frais d'échelonnement de {{pct}} % inclus — est réglé maintenant avec le mode de paiement de votre choix (portefeuille, carte, crypto ou Pronova). Les paiements suivants sont prélevés automatiquement sur votre portefeuille à leur date d'échéance (chacun avec les frais de {{pct}} %, sans pénalité de retard) ; vous pouvez aussi payer par anticipation dans Tableau de bord → Échéances."
+  },
+  "dashboard": {
+    "title": "Échéances",
+    "subtitle": "Vos plans de paiement échelonné, l'échéancier complet de chacun et leur paiement.",
+    "addFunds": "Ajouter des fonds",
+    "loadError": "Impossible de charger vos plans de paiement échelonné.",
+    "retry": "Réessayer",
+    "emptyTitle": "Aucun plan de paiement échelonné pour le moment",
+    "emptyBody": "Lorsque vous achetez un bien en paiement échelonné, votre plan et son échéancier complet apparaissent ici.",
+    "viewProperty": "Voir le bien",
+    "progress": "{{paid}}/{{total}} paiements · {{percent}} %",
+    "shares": "{{released}}/{{total}} parts libérées",
+    "dueNow": "Montant dû",
+    "remaining": "Restant dû",
+    "paid": "Payé à ce jour",
+    "nextDue": "Prochaine échéance",
+    "completed": "Terminé",
+    "fullyPaid": "Intégralement payé — toutes les parts sont libérées",
+    "payNow": "Payer {{amount}} maintenant",
+    "confirmPay": "Payer {{amount}} depuis votre portefeuille ?",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "nextPayment": "Prochain paiement de {{amount}} dû le {{date}}",
+    "paidSuccess": "Échéance payée avec succès.",
+    "payFailed": "Le paiement n'a pas pu aboutir.",
+    "insufficient": "Solde du portefeuille insuffisant pour ce paiement. Ajoutez des fonds et réessayez — nous effectuons également une nouvelle tentative automatique toutes les heures.",
+    "showSchedule": "Afficher l'échéancier complet",
+    "hideSchedule": "Masquer l'échéancier",
+    "downloadStatement": "Télécharger le relevé (PDF)",
+    "receipt": "Reçu",
+    "planStatus": {
+      "pending": "Actif",
+      "processing": "En cours de traitement",
+      "completed": "Terminé",
+      "cancelled": "Annulé",
+      "refunded": "Remboursé",
+      "failed": "Échoué",
+      "overdue": "En retard"
+    },
+    "payAhead": "Payer {{amount}} par anticipation",
+    "autoPay": "Prélevé automatiquement sur votre portefeuille le {{date}} — veillez à disposer d'un solde suffisant.",
+    "autoPayOverdue": "Ce paiement est en retard : nous réessayons de prélever votre portefeuille toutes les heures — ajoutez des fonds ou payez maintenant. Aucune pénalité de retard n'est appliquée.",
+    "feeIncluded": "Chaque paiement inclut les frais d'échelonnement de {{pct}} %.",
+    "payAheadNote": "Vous pouvez payer par anticipation à tout moment.",
+    "manualPay": "Réglez-le ici depuis votre portefeuille avant le {{date}}.",
+    "manualPayOverdue": "Ce paiement est en retard — réglez-le ici depuis votre portefeuille. Aucune pénalité de retard n'est appliquée."
+  }
+}

@@ -5,10 +5,11 @@ import { InfoPageLayout } from '../components/info/InfoPageLayout';
 export const InvestmentStrategiesPage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const isFr = i18n.language?.startsWith('fr');
   return (
     <InfoPageLayout
-      title={isAr ? 'استراتيجيات التملّك' : 'Ownership Strategies'}
-      subtitle={isAr ? 'منصة كابي مكس RT – التملّك العقاري المرمّز' : 'Capi Max RT Platform – Tokenized Real Estate Ownership'}
+      title={isAr ? 'استراتيجيات التملّك' : isFr ? 'Stratégies de propriété' : 'Ownership Strategies'}
+      subtitle={isAr ? 'منصة كابي مكس RT – التملّك العقاري المرمّز' : isFr ? 'Plateforme Capi Max RT – Propriété immobilière tokenisée' : 'Capi Max RT Platform – Tokenized Real Estate Ownership'}
     >
       {isAr ? (
       <section className="info-section">
@@ -247,6 +248,246 @@ export const InvestmentStrategiesPage: React.FC = () => {
           <li>عقود ذكية ملزمة</li>
           <li>سيولة منظّمة</li>
           <li>حماية قانونية</li>
+        </ul>
+      </section>
+      ) : isFr ? (
+      <section className="info-section">
+        <h2>1) Propriété de jetons en développement</h2>
+
+        <h3>Définition</h3>
+        <p>
+          L'achat d'un bien en développement consiste à acquérir un actif immobilier dès ses premières étapes. Le
+          propriétaire achète des jetons lors des premiers tours à un prix plus bas, sans rendements périodiques, en
+          contrepartie de :
+        </p>
+        <ul>
+          <li>Un prix d'entrée plus bas</li>
+          <li>La croissance de la valeur du jeton au fil des tours de financement</li>
+          <li>La transparence des plans de tarification futurs</li>
+        </ul>
+
+        <h3>Mécanisme des tours de prix</h3>
+        <p>Le promoteur précise :</p>
+        <ul>
+          <li>Le nombre de tours (généralement 4)</li>
+          <li>Le prix du jeton pour chaque tour</li>
+          <li>La date d'ouverture de chaque tour</li>
+        </ul>
+        <p>Ces données sont :</p>
+        <ul>
+          <li>Publiées sur la plateforme</li>
+          <li>Étayées par des documents</li>
+          <li>Rattachées au contrat intelligent</li>
+        </ul>
+
+        <h3>Exemple illustratif :</h3>
+        <div className="overflow-x-auto my-4">
+          <table className="min-w-full border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+            <thead className="bg-slate-50 dark:bg-slate-800">
+              <tr>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Tour</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Prix du jeton</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Date</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Remarques</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-slate-200 dark:border-slate-700">
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">1</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">$50</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">01/03/2025</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Entrée anticipée</td>
+              </tr>
+              <tr className="border-b border-slate-200 dark:border-slate-700">
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">2</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">$65</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">01/09/2025</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Croissance de +20%</td>
+              </tr>
+              <tr className="border-b border-slate-200 dark:border-slate-700">
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">3</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">$80</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">01/03/2026</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Croissance cumulée</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">4</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">$90</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">01/09/2026</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Avant mise en exploitation</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Comment le propriétaire connaît les rendements attendus</h3>
+        <ul>
+          <li>Prix du tour suivant annoncé à l'avance</li>
+          <li>Date de lancement connue</li>
+          <li>Performances passées documentées</li>
+          <li>Rentabilité calculable avant l'achat</li>
+        </ul>
+
+        <h3>Options du propriétaire</h3>
+        <ul>
+          <li>Sortir à n'importe quel tour ultérieur</li>
+          <li>Vendre sur le marché secondaire</li>
+          <li>Conserver jusqu'à la mise en exploitation</li>
+          <li>Passer ensuite à un modèle générateur de revenus</li>
+        </ul>
+
+        <h3>Documentation et transparence</h3>
+        <ul>
+          <li>Tableau des tours figé</li>
+          <li>Contrat de développement documenté</li>
+          <li>Prix garanti dans le contrat intelligent</li>
+          <li>Modifications uniquement par communication officielle</li>
+        </ul>
+
+        <h2>2) Propriété en développement par paiement échelonné</h2>
+
+        <h3>Définition</h3>
+        <p>Un plan de propriété à long terme qui permet au propriétaire de :</p>
+        <ul>
+          <li>Acheter des jetons dès le départ</li>
+          <li>Payer par échéances</li>
+          <li>Profiter de la valorisation du bien</li>
+          <li>Passer à terme à un bien générateur de revenus</li>
+        </ul>
+
+        <h3>Mécanisme des échéances</h3>
+        <p>Le promoteur précise :</p>
+        <ul>
+          <li>La durée du paiement échelonné</li>
+          <li>Le montant de chaque échéance</li>
+          <li>Le nombre de versements</li>
+        </ul>
+        <p>Caractéristiques :</p>
+        <ul>
+          <li>Calendrier de paiement confortable</li>
+          <li>Durée plus longue que les conditions habituelles du marché</li>
+          <li>Pas d'intérêts bancaires</li>
+        </ul>
+
+        <h3>Droits pendant le paiement échelonné</h3>
+        <ul>
+          <li>Propriété économique progressive</li>
+          <li>La valeur du jeton augmente à mesure que la construction avance</li>
+          <li>Possibilité de sortie à tout moment</li>
+        </ul>
+
+        <h3>Sortie pendant le paiement échelonné</h3>
+        <p>En cas de vente sur le marché secondaire :</p>
+        <ul>
+          <li>Prise en compte du montant déjà payé</li>
+          <li>Application du taux de croissance du prix</li>
+          <li>Transfert du jeton au nouvel acheteur</li>
+          <li>Les échéances restantes se poursuivent aux mêmes conditions</li>
+          <li>Le nouveau propriétaire profite de la valorisation du prix</li>
+        </ul>
+
+        <h3>Avantages</h3>
+        <ul>
+          <li>Montant d'entrée initial plus faible</li>
+          <li>Engagement financier confortable</li>
+          <li>Grande flexibilité</li>
+          <li>Liquidité avant la livraison</li>
+        </ul>
+
+        <h2>3) Actif stabilisé générateur de revenus</h2>
+
+        <h3>Définition</h3>
+        <p>Un bien qui est :</p>
+        <ul>
+          <li>Achevé</li>
+          <li>Loué</li>
+          <li>Générateur de revenus périodiques</li>
+          <li>En valorisation progressive</li>
+        </ul>
+
+        <h3>Avantages pour le propriétaire</h3>
+        <ul>
+          <li>Rendement locatif périodique</li>
+          <li>Croissance progressive de la valeur du jeton</li>
+          <li>Transparence totale des revenus</li>
+        </ul>
+
+        <h3>Distribution des rendements</h3>
+        <ul>
+          <li>Mensuelle ou trimestrielle</li>
+          <li>Automatique via un contrat intelligent</li>
+          <li>Retirable ou réinvestissable</li>
+        </ul>
+
+        <h3>Options de sortie</h3>
+        <ul>
+          <li>Vendre le jeton sur le marché secondaire</li>
+          <li>Sortir lors de la vente du bien</li>
+          <li>Transférer facilement la propriété numérique</li>
+        </ul>
+
+        <h3>Adapté à</h3>
+        <ul>
+          <li>Propriétaires prudents</li>
+          <li>Ceux qui recherchent un revenu stable</li>
+          <li>Propriétaires privilégiant une plus grande stabilité</li>
+        </ul>
+
+        <h2>Comparaison rapide des stratégies</h2>
+        <div className="overflow-x-auto my-4">
+          <table className="min-w-full border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+            <thead className="bg-slate-50 dark:bg-slate-800">
+              <tr>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Critère</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Développement</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Paiement échelonné</th>
+                <th className="px-4 py-3 text-start text-sm font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-700">Générateur de revenus</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-slate-200 dark:border-slate-700">
+                <td className="px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300">Prix d'entrée</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Bas</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Flexible</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Plus élevé</td>
+              </tr>
+              <tr className="border-b border-slate-200 dark:border-slate-700">
+                <td className="px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300">Rendement périodique</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Non</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Non (différé)</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Oui</td>
+              </tr>
+              <tr className="border-b border-slate-200 dark:border-slate-700">
+                <td className="px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300">Croissance du prix</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Élevée</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Élevée et progressive</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Stable</td>
+              </tr>
+              <tr className="border-b border-slate-200 dark:border-slate-700">
+                <td className="px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300">Flexibilité de sortie</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Flexible</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Flexible</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Flexible</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 text-sm font-medium text-slate-700 dark:text-slate-300">Niveau de risque</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Plus élevé</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Moyen</td>
+                <td className="px-4 py-3 text-sm text-slate-700 dark:text-slate-300">Plus faible</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>Résumé des stratégies Capi Max RT</h2>
+        <p>La plateforme offre :</p>
+        <ul>
+          <li>Une transparence totale</li>
+          <li>Des prix annoncés à l'avance</li>
+          <li>Des contrats documentés</li>
+          <li>Des contrats intelligents contraignants</li>
+          <li>Une liquidité organisée</li>
+          <li>Une protection juridique</li>
         </ul>
       </section>
       ) : (

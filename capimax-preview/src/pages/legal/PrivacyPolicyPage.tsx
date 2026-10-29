@@ -5,10 +5,11 @@ import { LegalPageLayout } from '../../components/legal/LegalPageLayout';
 export const PrivacyPolicyPage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const isFr = i18n.language?.startsWith('fr');
   return (
     <LegalPageLayout
-      title={isAr ? 'سياسة الخصوصية' : 'Privacy Policy'}
-      lastUpdated={isAr ? 'يناير 2026' : 'January 2026'}
+      title={isAr ? 'سياسة الخصوصية' : isFr ? 'Politique de confidentialité' : 'Privacy Policy'}
+      lastUpdated={isAr ? 'يناير 2026' : isFr ? 'janvier 2026' : 'January 2026'}
     >
       {isAr ? (
       <section className="legal-section">
@@ -56,6 +57,54 @@ export const PrivacyPolicyPage: React.FC = () => {
         <h2>4.6 أمن البيانات</h2>
         <p>
           تُطبَّق تدابير تقنية وتنظيمية مناسبة لحماية البيانات الشخصية.
+        </p>
+      </section>
+      ) : isFr ? (
+      <section className="legal-section">
+        <p className="legal-intro">
+          Capimax RT s'engage à protéger les données personnelles et à respecter la vie privée des utilisateurs.
+        </p>
+
+        <h2>4.1 Données collectées</h2>
+        <ul>
+          <li>Données d'identification (nom, pièce d'identité, date de naissance) ;</li>
+          <li>Coordonnées ;</li>
+          <li>Données de conformité (KYC/KYB) ;</li>
+          <li>Données relatives aux transactions et à l'utilisation ;</li>
+          <li>Données techniques (adresse IP, appareil, cookies).</li>
+        </ul>
+
+        <h2>4.2 Finalités du traitement</h2>
+        <p>Les données sont traitées afin de :</p>
+        <ul>
+          <li>Créer et gérer les comptes ;</li>
+          <li>Satisfaire aux obligations de conformité ;</li>
+          <li>Faciliter le fonctionnement de la plateforme ;</li>
+          <li>Améliorer les services et la sécurité ;</li>
+          <li>Communiquer avec les utilisateurs.</li>
+        </ul>
+
+        <h2>4.3 Partage des données</h2>
+        <p>Les données peuvent être communiquées :</p>
+        <ul>
+          <li>Aux prestataires de conformité et de vérification d'identité (KYC) ;</li>
+          <li>Aux partenaires de paiement et technologiques ;</li>
+          <li>Aux autorités judiciaires ou réglementaires lorsque la loi l'exige.</li>
+        </ul>
+
+        <h2>4.4 Conservation des données</h2>
+        <p>
+          Les données personnelles ne sont conservées que pendant la durée nécessaire au respect des obligations légales, réglementaires et opérationnelles.
+        </p>
+
+        <h2>4.5 Droits des utilisateurs</h2>
+        <p>
+          Les utilisateurs peuvent demander l'accès à leurs données personnelles, leur rectification ou leur suppression, sous réserve des limitations légales.
+        </p>
+
+        <h2>4.6 Sécurité des données</h2>
+        <p>
+          Des mesures techniques et organisationnelles appropriées sont mises en œuvre pour protéger les données personnelles.
         </p>
       </section>
       ) : (

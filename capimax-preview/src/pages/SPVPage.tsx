@@ -5,6 +5,7 @@ import { InfoPageLayout } from '../components/info/InfoPageLayout';
 export const SPVPage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const isFr = i18n.language?.startsWith('fr');
   const navigateToPage = (path: string) => {
     window.history.pushState({}, '', path);
     window.dispatchEvent(new PopStateEvent('popstate'));
@@ -13,8 +14,8 @@ export const SPVPage: React.FC = () => {
 
   return (
     <InfoPageLayout
-      title={isAr ? 'ما هي الشركة ذات الغرض الخاص (SPV) وكيف تحمي الملاك؟' : 'What Is an SPV and How Does It Protect Owners?'}
-      subtitle={isAr ? 'فهم هيكل الشركة ذات الغرض الخاص (SPV) بوصفه آلية قانونية للحد من المخاطر' : 'Understanding the SPV structure as a legal and risk-mitigation mechanism'}
+      title={isAr ? 'ما هي الشركة ذات الغرض الخاص (SPV) وكيف تحمي الملاك؟' : isFr ? "Qu'est-ce qu'une SPV et comment protège-t-elle les propriétaires ?" : 'What Is an SPV and How Does It Protect Owners?'}
+      subtitle={isAr ? 'فهم هيكل الشركة ذات الغرض الخاص (SPV) بوصفه آلية قانونية للحد من المخاطر' : isFr ? 'Comprendre la structure de la SPV en tant que mécanisme juridique et de limitation des risques' : 'Understanding the SPV structure as a legal and risk-mitigation mechanism'}
     >
       {isAr ? (
       <section className="info-section">
@@ -67,6 +68,60 @@ export const SPVPage: React.FC = () => {
           </button>
           <button className="link-button-outline" onClick={() => navigateToPage('/how-it-works')}>
             كيف تعمل المنصة
+          </button>
+        </div>
+      </section>
+      ) : isFr ? (
+      <section className="info-section">
+        <p className="info-intro">
+          Expliquer la structure de la SPV en tant que mécanisme juridique et de limitation des risques.
+        </p>
+
+        <h2>Qu'est-ce qu'une SPV ?</h2>
+        <p>
+          Une SPV (Special Purpose Vehicle, ou société ad hoc) est une société juridiquement indépendante créée dans un but unique et précis, comme la détention d'un seul bien ou la réalisation d'un seul projet immobilier.
+        </p>
+
+        <h2>Pourquoi Capimax RT utilise des SPV</h2>
+        <ul>
+          <li>Pour isoler les risques</li>
+          <li>Pour éviter la confusion des actifs</li>
+          <li>Pour protéger les propriétaires contre des passifs sans lien avec le projet</li>
+          <li>Pour permettre un reporting et une gouvernance clairs</li>
+        </ul>
+
+        <h2>Comment les SPV protègent les propriétaires</h2>
+        <ul className="check-list">
+          <li>Les actifs sont juridiquement détenus par la SPV</li>
+          <li>Les comptes financiers sont cantonnés</li>
+          <li>Les obligations sont limitées au projet concerné</li>
+          <li>Les intérêts des propriétaires sont définis contractuellement</li>
+        </ul>
+
+        <h2>Ce que les propriétaires détiennent réellement</h2>
+        <p>
+          Les propriétaires détiennent :
+        </p>
+        <ul>
+          <li>Des droits économiques ou contractuels dans la SPV</li>
+          <li>Définis par les conventions de propriété</li>
+          <li>Cessibles selon les règles de la plateforme</li>
+        </ul>
+
+        <div className="info-highlight">
+          <strong>Important :</strong> Les propriétaires ne détiennent pas directement le titre de propriété du bien physique inscrit au registre foncier. Ils détiennent des droits économiques ou contractuels dans une SPV, et non une propriété directe inscrite au registre foncier, sauf mention expresse contraire dans la documentation de l'offre.
+        </div>
+
+        <h2>En savoir plus</h2>
+        <div>
+          <button className="link-button" onClick={() => navigateToPage('/tokenization')}>
+            Qu'est-ce que la tokenisation
+          </button>
+          <button className="link-button" onClick={() => navigateToPage('/data-room')}>
+            Salle de données
+          </button>
+          <button className="link-button-outline" onClick={() => navigateToPage('/how-it-works')}>
+            Comment ça marche
           </button>
         </div>
       </section>

@@ -56,12 +56,30 @@ const COPY = {
     verifyBtn: 'التحقق من المستندات',
     poweredBy: 'التحقق المركزي عبر Capimax Trust',
   },
+  fr: {
+    title: 'Centre de vérification',
+    body:
+      'Tous les documents, certificats et registres émis par l’intermédiaire de cette plateforme — y compris ceux générés par l’écosystème Capimax ainsi que les documents émis par des organismes externes tels que les sociétés d’évaluation, les assureurs, les conseillers juridiques, les auditeurs, les institutions financières et les autorités publiques — peuvent être vérifiés, leur statut consulté et leurs copies officielles téléchargées via la plateforme Capimax Trust.',
+    body2:
+      'Capimax Trust constitue la passerelle de vérification centrale de l’écosystème Capimax et offre une source sécurisée et fiable pour valider l’authenticité et l’intégrité des documents enregistrés.',
+    features: [
+      'Vérifier l’authenticité des documents',
+      'Consulter le statut actuel d’un document',
+      'Télécharger la copie officielle',
+      'Afficher les données de vérification du document',
+    ],
+    cta: 'Accéder à Capimax Trust',
+    ctaHint: 'Cliquez ici pour vérifier',
+    verifyBtn: 'Vérifier des documents',
+    poweredBy: 'Vérification centrale par Capimax Trust',
+  },
 };
 
 export const VerificationCenterPage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = (i18n.language || 'en').toLowerCase().startsWith('ar');
-  const t = isAr ? COPY.ar : COPY.en;
+  const isFr = (i18n.language || 'en').toLowerCase().startsWith('fr');
+  const t = isAr ? COPY.ar : isFr ? COPY.fr : COPY.en;
 
   return (
     <div
@@ -123,7 +141,7 @@ export const VerificationCenterPage: React.FC = () => {
               <div className="flex items-center justify-center gap-2 mb-1.5">
                 <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                  {isAr ? 'بوابة التحقق المركزية' : 'Central Verification Gateway'}
+                  {isAr ? 'بوابة التحقق المركزية' : isFr ? 'Passerelle de vérification centrale' : 'Central Verification Gateway'}
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">

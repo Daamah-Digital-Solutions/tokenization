@@ -32,13 +32,14 @@ import { Button } from '../ui/Button';
 import { cn } from '../../utils/cn';
 
 import { RichText } from '../ui/RichText';
+import { uiLocale } from '../../utils/locale';
 interface PropertyApprovalDashboardProps {
   className?: string;
 }
 
 type ApprovalFilter = 'all' | 'pending' | 'under_review' | 'approved' | 'rejected' | 'requires_changes';
 
-const dateLocale = (lng?: string) => (lng?.startsWith('ar') ? 'ar-EG' : 'en-US');
+const dateLocale = (lng?: string) => (uiLocale(lng));
 
 export const PropertyApprovalDashboard: React.FC<PropertyApprovalDashboardProps> = ({
   className

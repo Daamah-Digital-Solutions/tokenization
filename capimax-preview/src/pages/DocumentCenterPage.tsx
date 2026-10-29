@@ -8,6 +8,7 @@ import { Section } from '../components/design-system/sections/Section';
 import { DocumentService, type Document } from '../services/documents/DocumentService';
 import { useRouter } from '../utils/router';
 import { useTranslation } from 'react-i18next';
+import { uiLocale } from '../utils/locale';
 
 export const DocumentCenterPage: React.FC = () => {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -178,7 +179,7 @@ export const DocumentCenterPage: React.FC = () => {
                           {doc.title}
                         </h3>
                         <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {new Date(doc.created_at).toLocaleDateString(isAr ? 'ar-EG' : 'en-US', {
+                          {new Date(doc.created_at).toLocaleDateString(uiLocale((i18n.language || 'en')), {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric'

@@ -47,6 +47,7 @@ import { Text } from '../../design-system/typography/Text';
 import { Button } from '../../ui/Button';
 import { cn } from '../../../utils/cn';
 import { useTranslation } from 'react-i18next';
+import { uiLocale } from '../../../utils/locale';
 
 interface TransactionManagerProps {
   className?: string;
@@ -61,7 +62,7 @@ export const TransactionManager: React.FC<TransactionManagerProps> = ({
   className
 }) => {
   const { t, i18n } = useTranslation('dashboard');
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
+  const dateLocale = uiLocale(i18n.language);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');

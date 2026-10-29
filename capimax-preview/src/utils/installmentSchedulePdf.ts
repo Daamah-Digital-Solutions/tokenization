@@ -12,6 +12,7 @@ import i18n from '../i18n/config';
 import type { ScheduleRow } from './paymentPlan';
 import { docT, newOfficialDocument, codeLabel } from './pdf/statements';
 import { documentReference, pdfDate, pdfMoney, pdfShortDate } from './pdf/officialDocument';
+import { baseLanguage } from './locale';
 
 export type InstallmentScheduleRow = ScheduleRow;
 
@@ -40,7 +41,7 @@ export interface InstallmentSchedulePdfData {
 export async function downloadInstallmentSchedulePdf(data: InstallmentSchedulePdfData): Promise<void> {
   const lang = data.lang || i18n.language || 'en';
   const t = docT(lang);
-  const tp = i18n.getFixedT(lang.startsWith('ar') ? 'ar' : 'en', 'plan');
+  const tp = i18n.getFixedT(baseLanguage(lang), 'plan');
   const when = data.generatedAt ?? new Date();
   const isStatement = data.paidAmount !== undefined;
   const ref = documentReference(isStatement ? 'IPS' : 'SCH', data.planReference || data.propertyName.replace(/\W/g, ''), when);

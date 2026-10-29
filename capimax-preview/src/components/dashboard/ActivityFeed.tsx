@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { uiLocale } from '../../utils/locale';
 
 export interface ActivityItem {
   id: string;
@@ -77,7 +78,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({
     if (diffMins < 60) return t('activity.minutesAgo', { count: diffMins });
     if (diffHours < 24) return t('activity.hoursAgo', { count: diffHours });
     if (diffDays < 7) return t('activity.daysAgo', { count: diffDays });
-    return date.toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : undefined);
+    return date.toLocaleDateString(uiLocale(i18n.language));
   };
 
   const displayedActivities = activities.slice(0, maxItems);

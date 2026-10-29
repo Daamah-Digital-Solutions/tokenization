@@ -8,6 +8,7 @@
 import i18n from '../../i18n/config';
 import type { StatementData, StatementKind } from '../../services/documents/StatementService';
 import { OfficialDocument, documentReference, pdfDate, pdfMoney, pdfShortDate, type Column } from './officialDocument';
+import { baseLanguage } from '../locale';
 
 const PREFIX: Record<StatementKind, string> = {
   wallet: 'WST',
@@ -17,7 +18,7 @@ const PREFIX: Record<StatementKind, string> = {
 };
 
 export function docT(lang: string) {
-  return i18n.getFixedT(lang.startsWith('ar') ? 'ar' : 'en', 'docs');
+  return i18n.getFixedT(baseLanguage(lang), 'docs');
 }
 
 /** Translate a code from a group (types / methods / status / category), falling back to a readable form. */

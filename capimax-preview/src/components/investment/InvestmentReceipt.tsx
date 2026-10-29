@@ -23,6 +23,7 @@ import { downloadReceiptPdf } from '../../utils/receiptPdf';
 import { useTranslation, Trans } from 'react-i18next';
 
 import { COMPANY } from '../../utils/company';
+import { uiLocale } from '../../utils/locale';
 interface InvestmentReceiptProps {
   property: InvestmentProperty;
   investmentData: InvestmentData;
@@ -45,7 +46,7 @@ export const InvestmentReceipt: React.FC<InvestmentReceiptProps> = ({
   className
 }) => {
   const { t, i18n } = useTranslation('invest');
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
+  const dateLocale = uiLocale(i18n.language);
   const currentDate = new Date();
   const nextDividendDate = new Date();
   nextDividendDate.setMonth(nextDividendDate.getMonth() + 3);

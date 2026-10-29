@@ -17,6 +17,7 @@ import { useRouter } from '../utils/router';
 import { useUser } from '../contexts/AuthContext';
 import { COMPANY, SUPPORT_WHATSAPP } from '../utils/company';
 import { SupportService, type SupportTicket } from '../services/support/SupportService';
+import { uiLocale } from '../utils/locale';
 
 const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`;
 const inputClass =
@@ -34,7 +35,7 @@ export const SupportPage: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const faq = t('support.faq.items', { returnObjects: true }) as Array<{ q: string; a: string }>;
   const fmt = (iso: string) =>
-    new Date(iso).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    new Date(iso).toLocaleDateString(uiLocale(i18n.language, 'en-GB'), { day: 'numeric', month: 'short', year: 'numeric' });
 
   const channels = [
     {

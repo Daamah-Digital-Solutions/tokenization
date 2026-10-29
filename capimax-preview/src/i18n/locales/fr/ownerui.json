@@ -1,0 +1,445 @@
+{
+  "shared": {
+    "retry": "Réessayer",
+    "viewAll": "Tout voir",
+    "tbd": "À définir",
+    "bytes": "Octets",
+    "loading": "Chargement…",
+    "saving": "Enregistrement…"
+  },
+  "dashboard": {
+    "errorLoading": "Erreur de chargement des données",
+    "loadFailed": "Impossible de charger les données du tableau de bord",
+    "portfolio": {
+      "title": "Portefeuille de biens",
+      "loadFailed": "Impossible de charger vos biens",
+      "emptyTitle": "Aucun bien pour le moment",
+      "emptyBody": "Tokenisez votre premier bien pour le voir apparaître ici",
+      "addFirst": "Ajouter votre premier bien",
+      "totalValue": "Valeur totale",
+      "funding": "Financement",
+      "monthlyRevenue": "Revenus mensuels",
+      "owners": "Propriétaires",
+      "sharesSold": "Parts vendues"
+    },
+    "charts": {
+      "shareSales": "Progression des ventes de parts",
+      "revenuePerformance": "Performance des revenus",
+      "tokenizationLoadFailed": "Impossible de charger les données de tokenisation",
+      "revenueLoadFailed": "Impossible de charger les données de revenus"
+    },
+    "topOwners": {
+      "title": "Principaux propriétaires",
+      "loadFailed": "Impossible de charger les données des propriétaires",
+      "empty": "Aucun propriétaire pour le moment. Faites la promotion de vos biens pour attirer des copropriétaires.",
+      "joined": "Inscrit le {{date}}",
+      "purchase": "Achat",
+      "properties": "Biens"
+    },
+    "documents": {
+      "title": "Documents récents",
+      "loadFailed": "Impossible de charger les documents",
+      "noPublicUrl": "Aucune URL publique n'est configurée pour ce document.",
+      "noDownloadUrl": "Aucune URL de téléchargement n'est configurée pour ce document.",
+      "uploadHint": "Téléversez un document pour l'un de vos biens (Messages)",
+      "upload": "Téléverser un document",
+      "empty": "Aucun document téléversé pour le moment. Ouvrez un bien pour téléverser sa documentation.",
+      "download": "Télécharger",
+      "downloadNamed": "Télécharger {{name}}",
+      "view": "Voir",
+      "viewNamed": "Voir {{name}}"
+    },
+    "stats": {
+      "totalProperties": "Total des biens",
+      "totalPropertiesDesc": "Biens tokenisés",
+      "capitalRaised": "Capital levé",
+      "capitalRaisedDesc": "Issu des ventes de parts",
+      "activeOwners": "Propriétaires actifs",
+      "activeOwnersDesc": "Sur l'ensemble des biens",
+      "monthlyRevenueDesc": "Revenus locatifs générés"
+    },
+    "quick": {
+      "addProperty": "Ajouter un bien",
+      "addPropertyDesc": "Tokeniser un nouveau bien",
+      "manageOwners": "Gérer les propriétaires",
+      "manageOwnersDesc": "Voir les détails des propriétaires",
+      "distributeRevenue": "Distribuer les revenus",
+      "distributeRevenueDesc": "Traiter les paiements",
+      "uploadDocuments": "Téléverser des documents",
+      "uploadDocumentsDesc": "Gérer les documents juridiques"
+    },
+    "revenue": {
+      "totalRevenue": "Revenus totaux",
+      "pendingDistributions": "Distributions en attente",
+      "toBeProcessed": "À traiter",
+      "nextDistribution": "Prochaine distribution",
+      "estimated": "Estimation : {{amount}}",
+      "distributionRate": "Taux de distribution",
+      "history": "Historique des distributions de revenus"
+    },
+    "ownersView": {
+      "loadFailed": "Impossible de charger les statistiques des propriétaires",
+      "retail": "Propriétaires particuliers",
+      "institutional": "Institutionnels",
+      "highNetWorth": "Grandes fortunes",
+      "averagePurchase": "Achat moyen",
+      "totalCapitalRaised": "Capital total levé",
+      "retention": "Fidélisation des propriétaires",
+      "newOwners30d": "Nouveaux propriétaires (30 j)",
+      "distribution": "Répartition des propriétaires",
+      "ownersCount": "{{count}} propriétaires",
+      "noDistribution": "Aucune donnée de répartition des propriétaires disponible",
+      "metrics": "Indicateurs d'achat",
+      "noMetrics": "Aucun indicateur d'achat disponible"
+    },
+    "settings": {
+      "saveFailed": "Impossible d'enregistrer le profil.",
+      "title": "Paramètres du compte",
+      "subtitle": "Gérez les informations de votre profil. L'e-mail et le rôle ne peuvent être modifiés que par le support.",
+      "profileInfo": "Informations du profil",
+      "updated": "Profil mis à jour.",
+      "email": "E-mail",
+      "role": "Rôle",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "phone": "Téléphone",
+      "country": "Pays",
+      "city": "Ville",
+      "address": "Adresse",
+      "saveChanges": "Enregistrer les modifications",
+      "manageKyc": "Gérer la vérification d'identité",
+      "manageRoles": "Gérer les rôles"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "subtitle": "Actualités concernant vos biens, vos propriétaires et vos distributions de revenus.",
+      "emptyTitle": "Aucune notification",
+      "emptyBody": "Vous êtes à jour. Les nouvelles notifications concernant vos biens et vos propriétaires apparaîtront ici.",
+      "fallbackTitle": "Notification"
+    },
+    "myProperties": {
+      "title": "Mes biens",
+      "subtitle": "Gérez votre portefeuille immobilier tokenisé",
+      "addNew": "Ajouter un nouveau bien"
+    },
+    "wallet": {
+      "title": "Portefeuille et versements",
+      "subtitle": "Votre solde disponible et l'historique de vos retraits.",
+      "balanceLabel": "Disponible pour versement",
+      "balanceHint": "Les revenus sont crédités sur votre portefeuille par l'équipe Capimax ; retirez-les vers un compte bancaire ou un portefeuille crypto."
+    },
+    "underDevelopment": {
+      "title": "Tableau de bord {{name}}",
+      "body": "Cette section est en cours de développement"
+    },
+    "views": {
+      "overview": "Vue d'ensemble",
+      "properties": "Biens",
+      "my-properties": "Mes biens",
+      "tokenization": "Tokenisation",
+      "revenue": "Revenus",
+      "wallet": "Portefeuille",
+      "investors": "Propriétaires",
+      "documents": "Documents",
+      "settings": "Paramètres",
+      "notifications": "Notifications",
+      "messages": "Messages",
+      "analytics": "Statistiques"
+    }
+  },
+  "createForm": {
+    "title": "Créer un nouveau bien",
+    "back": "Retour",
+    "next": "Suivant",
+    "creating": "Création...",
+    "create": "Créer le bien",
+    "descriptionCounter": "50 caractères minimum ({{count}}/50)",
+    "steps": {
+      "basic": "Informations de base",
+      "financial": "Données financières",
+      "location": "Emplacement et détails",
+      "review": "Vérification et envoi"
+    },
+    "types": {
+      "residential": "Résidentiel",
+      "commercial": "Commercial",
+      "industrial": "Industriel",
+      "mixed_use": "Usage mixte",
+      "land": "Terrain"
+    },
+    "categories": {
+      "under_construction": "En construction",
+      "under_constructionDesc": "Bien en cours de construction avec options de paiement échelonné",
+      "ready_property": "Bien achevé",
+      "ready_propertyDesc": "Bien achevé générant des revenus locatifs"
+    },
+    "alerts": {
+      "created": "Bien créé avec succès ! Il a été soumis pour approbation.",
+      "failed": "Impossible de créer le bien : {{message}}"
+    },
+    "errors": {
+      "titleRequired": "Le titre est obligatoire",
+      "titleMin": "Le titre doit comporter au moins 5 caractères",
+      "descriptionRequired": "La description est obligatoire",
+      "descriptionMin": "La description doit comporter au moins 50 caractères",
+      "typeRequired": "Le type de bien est obligatoire",
+      "categoryRequired": "La catégorie du bien est obligatoire",
+      "totalValuePositive": "La valeur totale doit être supérieure à 0",
+      "sharePricePositive": "Le prix de la part doit être supérieur à 0",
+      "totalSharesPositive": "Le nombre total de parts doit être supérieur à 0",
+      "totalValueMismatch": "La valeur totale doit être égale au prix de la part × le nombre total de parts",
+      "expectedReturnRequired": "Le rendement attendu est obligatoire",
+      "rentalYieldRequired": "Le rendement locatif est obligatoire pour les biens achevés",
+      "monthlyIncomeRequired": "Le revenu locatif mensuel est obligatoire lorsque le bien génère des revenus locatifs",
+      "completionDateRequired": "La date d'achèvement prévue est obligatoire pour les biens en construction",
+      "installmentPeriodRequired": "La durée d'échelonnement est obligatoire lorsque le paiement échelonné est proposé",
+      "addressRequired": "L'adresse est obligatoire",
+      "cityRequired": "La ville est obligatoire",
+      "countryRequired": "Le pays est obligatoire",
+      "sizeRequired": "La superficie du bien est obligatoire",
+      "yearRange": "L'année de construction doit être comprise entre 1800 et {{max}}"
+    },
+    "fields": {
+      "title": "Titre du bien",
+      "description": "Description",
+      "type": "Type de bien",
+      "category": "Catégorie du bien",
+      "totalValue": "Valeur totale du bien ($)",
+      "sharePrice": "Prix de la part ($)",
+      "totalShares": "Nombre total de parts",
+      "expectedReturn": "Rendement attendu (%)",
+      "rentalYield": "Rendement locatif (%)",
+      "minPurchase": "Achat minimum ($)",
+      "monthlyIncome": "Revenu locatif mensuel ($)",
+      "occupancy": "Taux d'occupation (%)",
+      "completionDate": "Date d'achèvement prévue",
+      "installmentPeriod": "Durée maximale d'échelonnement (mois)",
+      "address": "Adresse complète",
+      "city": "Ville",
+      "state": "État/Province",
+      "country": "Pays",
+      "latitude": "Latitude (facultatif)",
+      "longitude": "Longitude (facultatif)",
+      "size": "Superficie du bien (pi²)",
+      "yearBuilt": "Année de construction"
+    },
+    "placeholders": {
+      "title": "ex. : Résidence de luxe - Manhattan",
+      "description": "Description détaillée de votre bien...",
+      "type": "Sélectionnez le type de bien",
+      "address": "456 Park Avenue, New York, NY 10022",
+      "city": "New York",
+      "state": "NY",
+      "country": "USA"
+    },
+    "validation": {
+      "label": "Vérification :",
+      "matches": "Correspond à la valeur totale",
+      "shouldMatch": "Doit correspondre à la valeur totale"
+    },
+    "ready": {
+      "title": "Paramètres du bien achevé",
+      "activeIncome": "Le bien génère actuellement des revenus locatifs"
+    },
+    "construction": {
+      "title": "Paramètres du bien en construction",
+      "supportsInstallments": "Proposer le paiement échelonné aux acheteurs"
+    },
+    "review": {
+      "title": "Vérifiez votre bien",
+      "title_": "Titre :",
+      "type": "Type :",
+      "category": "Catégorie :",
+      "totalValue": "Valeur totale :",
+      "sharePrice": "Prix de la part :",
+      "totalShares": "Nombre total de parts :",
+      "expectedReturn": "Rendement attendu :",
+      "location": "Emplacement",
+      "address": "Adresse :",
+      "city": "Ville :",
+      "propertyDetails": "Détails du bien",
+      "size": "Superficie :",
+      "sizeValue": "{{value}} pi²",
+      "yearBuilt": "Année de construction :",
+      "importantLabel": "Important :",
+      "importantBody": "Une fois créé, votre bien sera soumis à l'examen d'un administrateur. Vous pourrez téléverser des images et des documents à l'étape suivante."
+    }
+  },
+  "approvalStatus": {
+    "status": {
+      "pending": {
+        "title": "En attente d'examen",
+        "description": "Votre bien soumis est en attente d'examen par un administrateur."
+      },
+      "under_review": {
+        "title": "En cours d'examen",
+        "description": "Notre équipe examine actuellement votre bien soumis."
+      },
+      "approved": {
+        "title": "Approuvé",
+        "description": "Félicitations ! Votre bien a été approuvé pour la tokenisation."
+      },
+      "rejected": {
+        "title": "Refusé",
+        "description": "Votre bien soumis n'a pas été approuvé. Veuillez consulter les commentaires."
+      },
+      "requires_changes": {
+        "title": "Modifications requises",
+        "description": "Veuillez effectuer les modifications demandées et soumettre à nouveau votre bien."
+      },
+      "not_submitted": {
+        "title": "Non soumis",
+        "description": "Votre bien n'a pas encore été soumis pour approbation."
+      }
+    },
+    "badges": {
+      "pending": "EN ATTENTE",
+      "under_review": "EN COURS D'EXAMEN",
+      "approved": "APPROUVÉ",
+      "rejected": "REFUSÉ",
+      "requires_changes": "MODIFICATIONS REQUISES",
+      "not_submitted": "NON SOUMIS"
+    },
+    "submitted": "Soumis le : {{date}}",
+    "reviewer": "Examinateur : {{name}}",
+    "reviewed": "Examiné le : {{date}}",
+    "approved": "Approuvé le : {{date}}",
+    "refresh": "Actualiser",
+    "submit": "Soumettre pour approbation",
+    "uploadDocument": "Téléverser un document",
+    "reviewNotes": "Notes d'examen",
+    "requiredChanges": "Modifications requises",
+    "process": {
+      "title": "Processus d'approbation",
+      "submit": {
+        "title": "Soumettre le bien",
+        "description": "Téléversez tous les documents requis et les informations du bien"
+      },
+      "initial": {
+        "title": "Examen initial",
+        "description": "Notre équipe vérifie que votre dossier est complet"
+      },
+      "dueDiligence": {
+        "title": "Due diligence",
+        "description": "Vérification détaillée du bien et de sa documentation"
+      },
+      "final": {
+        "title": "Décision finale",
+        "description": "Bien approuvé ou commentaires transmis pour modifications"
+      }
+    },
+    "docTypes": {
+      "property_deed": "Titre de propriété",
+      "financial_statement": "État financier",
+      "valuation_report": "Rapport d'évaluation",
+      "legal_document": "Document juridique",
+      "compliance_certificate": "Certificat de conformité",
+      "other": "Autre"
+    },
+    "modal": {
+      "title": "Téléverser un document supplémentaire",
+      "subtitle": "Téléversez des documents supplémentaires à l'appui de l'approbation de votre bien",
+      "documentType": "Type de document",
+      "selectType": "Sélectionnez le type de document...",
+      "file": "Fichier à téléverser",
+      "formats": "Formats acceptés : PDF, DOC, DOCX, JPG, PNG (10 Mo max.)",
+      "description": "Description (facultatif)",
+      "descriptionPlaceholder": "Brève description du document...",
+      "cancel": "Annuler",
+      "uploading": "Téléversement..."
+    }
+  },
+  "documentUpload": {
+    "uploadFailed": "Échec du téléversement",
+    "invalidFormat": "{{name}} n'est pas un format de document valide. Veuillez utiliser PDF, DOC, DOCX, JPG ou PNG.",
+    "tooLarge": "{{name}} est trop volumineux. La taille maximale est de 50 Mo.",
+    "nameRequired": "Le nom du document est obligatoire",
+    "typeRequired": "Le type de document est obligatoire",
+    "dropzone": "Déposez vos documents ici ou cliquez pour parcourir",
+    "supports": "Formats PDF, DOC, DOCX, JPG, PNG • 50 Mo max. par fichier",
+    "selected": "Documents sélectionnés ({{count}})",
+    "uploadAll": "Téléverser tous les documents",
+    "remove": "Retirer",
+    "name": "Nom du document",
+    "namePlaceholder": "ex. : Titre de propriété du bien",
+    "type": "Type de document",
+    "description": "Description (facultatif)",
+    "descriptionPlaceholder": "Ajoutez des précisions sur ce document...",
+    "types": {
+      "title_deed": "Titre de propriété",
+      "valuation_report": "Rapport d'évaluation",
+      "legal_certificate": "Certificat juridique",
+      "construction_permit": "Permis de construire",
+      "insurance": "Document d'assurance",
+      "tax_certificate": "Certificat fiscal",
+      "floor_plan": "Plan d'étage",
+      "other": "Autre document"
+    },
+    "tips": {
+      "title": "Exigences pour le téléversement des documents",
+      "requiredLabel": "Obligatoires :",
+      "required": "Titre de propriété, rapport d'évaluation, certificats juridiques",
+      "recommendedLabel": "Recommandés :",
+      "recommended": "Permis de construire, documents d'assurance, certificats fiscaux",
+      "clear": "Tous les documents doivent être nets, lisibles et à jour",
+      "reviewed": "Les documents seront examinés par notre équipe conformité",
+      "redacted": "Veillez à masquer correctement toute information sensible si nécessaire"
+    }
+  },
+  "imageUpload": {
+    "invalidFormat": "{{name}} n'est pas un format d'image valide. Veuillez utiliser JPG, PNG ou WEBP.",
+    "tooLarge": "{{name}} est trop volumineux. La taille maximale est de 10 Mo.",
+    "dropzone": "Déposez vos images ici ou cliquez pour parcourir",
+    "supports": "Formats JPG, PNG, WEBP • 10 Mo max. par image",
+    "selected": "Images sélectionnées ({{count}})",
+    "uploadAll": "Téléverser toutes les images",
+    "previewAlt": "Aperçu {{n}}",
+    "primary": "Principale",
+    "remove": "Retirer l'image",
+    "caption": "Légende",
+    "captionPlaceholder": "Ajoutez une légende...",
+    "primaryImage": "Image principale",
+    "setPrimary": "Définir comme principale",
+    "upload": "Téléverser",
+    "tips": {
+      "title": "Conseils pour le téléversement des images",
+      "quality": "Téléversez des images de haute qualité mettant en valeur les meilleurs atouts de votre bien",
+      "primary": "La première image (ou l'image principale) sera affichée dans les annonces",
+      "recommended": "Recommandé : vues extérieures, pièces intérieures, équipements, vues du quartier",
+      "captions": "Utilisez des légendes descriptives pour aider les acheteurs à comprendre chaque image"
+    }
+  },
+  "list": {
+    "status": {
+      "draft": "Brouillon",
+      "pending_approval": "En attente d'approbation",
+      "approved": "Approuvé",
+      "active": "Actif",
+      "tokenized": "Tokenisé",
+      "delisted": "Retiré"
+    },
+    "allProperties": "Tous les biens",
+    "alerts": {
+      "submitted": "Bien soumis pour approbation avec succès !",
+      "submitFailed": "Impossible de soumettre le bien : {{message}}"
+    },
+    "errorTitle": "Erreur de chargement des biens",
+    "errorBody": "Impossible de charger vos biens. Veuillez réessayer.",
+    "subtitle": "Gérez et suivez vos biens tokenisés",
+    "searchPlaceholder": "Rechercher des biens par titre, ville ou adresse...",
+    "noneFound": "Aucun bien trouvé",
+    "adjustFilters": "Essayez de modifier vos filtres ou votre recherche",
+    "startCreating": "Commencez par créer votre première annonce",
+    "createFirst": "Créer votre premier bien",
+    "created": "Créé le : {{date}}",
+    "updated": "Mis à jour le : {{date}}",
+    "sharePrice": "Prix de la part",
+    "shares": "Parts",
+    "expectedReturn": "Rendement attendu",
+    "viewDetails": "Voir les détails",
+    "edit": "Modifier",
+    "manageMedia": "Gérer les médias",
+    "submitting": "Envoi...",
+    "checkStatus": "Vérifier le statut d'approbation"
+  }
+}

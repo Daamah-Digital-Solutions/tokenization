@@ -5,10 +5,11 @@ import { InfoPageLayout } from '../components/info/InfoPageLayout';
 export const BrokerGuidePage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const isFr = i18n.language?.startsWith('fr');
   return (
     <InfoPageLayout
-      title={isAr ? 'دليل الوسيط' : 'Broker Guide'}
-      subtitle={isAr ? 'منصة كابي مكس RT – دليل الوسيط' : 'Capimax RT Platform – Broker Guide'}
+      title={isAr ? 'دليل الوسيط' : isFr ? 'Guide du courtier' : 'Broker Guide'}
+      subtitle={isAr ? 'منصة كابي مكس RT – دليل الوسيط' : isFr ? 'Plateforme Capimax RT – Guide du courtier' : 'Capimax RT Platform – Broker Guide'}
     >
       {isAr ? (
       <section className="info-section">
@@ -122,6 +123,121 @@ export const BrokerGuidePage: React.FC = () => {
           <li>الوصول إلى جميع المستندات والبيانات المالية وبيانات الملكية.</li>
           <li>متابعة العمولات والأرباح وسحبها بسهولة.</li>
           <li>أدوات تحليلية لتقييم أداء المشاريع وحصص المشترين.</li>
+        </ul>
+      </section>
+      ) : isFr ? (
+      <section className="info-section">
+        <h2>1. Présentation de la plateforme</h2>
+        <p>
+          Capimax RT est une plateforme de Capimax Group, qui regroupe 12 sociétés internationales aux
+          États-Unis, au Royaume-Uni et aux Émirats arabes unis. Le groupe est actif dans
+          l'accession à la propriété, la gestion de fonds immobiliers, la blockchain, la fintech et les actifs numériques.
+        </p>
+        <p>
+          La plateforme assure la tokenisation immobilière grâce à la blockchain et aux contrats intelligents, permettant
+          la propriété fractionnée de biens. Capimax RT opère à l'échelle mondiale, sans restriction
+          géographique.
+        </p>
+        <p>
+          Les biens proposés sur la plateforme sont rigoureusement vérifiés par des spécialistes de la gestion immobilière et
+          des sociétés d'évaluation internationales agréées, notamment :
+        </p>
+        <ul>
+          <li>Des biens prêts à la location, générant des rendements.</li>
+          <li>Des projets de développement en cours, répartis en quatre tours de financement.</li>
+          <li>Des biens en construction avec des plans de paiement échelonné.</li>
+        </ul>
+        <p>
+          La plateforme met à disposition des tableaux de bord dédiés aux propriétaires, vendeurs, promoteurs et courtiers, ainsi
+          que des rapports et analyses sur les biens et les parts détenues. Elle garantit une transparence totale et la
+          vérification de toutes les opérations financières et de propriété. Un marché de sortie annuel est ouvert aux
+          propriétaires, et un fournisseur de liquidité permettant des sorties instantanées arrive bientôt. De multiples options de
+          paiement et de retrait sont prises en charge, y compris les devises traditionnelles et les cryptomonnaies.
+        </p>
+
+        <h2>2. Fonctionnalités et avantages pour le courtier</h2>
+        <ol>
+          <li>
+            <strong>Commissions sur les apports de biens/projets :</strong> le courtier perçoit une commission pour chaque bien ou projet apporté à la
+            plateforme qui est tokenisé et proposé en propriété fractionnée.
+          </li>
+          <li>
+            <strong>Commissions sur les apports d'acheteurs :</strong> le courtier perçoit une commission pour chaque nouvel acheteur qui s'inscrit et
+            participe aux souscriptions via le code de parrainage unique du courtier.
+          </li>
+          <li>
+            <strong>Avantages supplémentaires :</strong>
+            <ul>
+              <li>Un tableau de bord complet pour suivre tous les projets et biens apportés.</li>
+              <li>Le suivi de tous les acheteurs apportés, y compris leurs données et leurs documents.</li>
+              <li>L'accès aux données financières et de propriété de tous les projets et acheteurs.</li>
+              <li>Un portefeuille numérique pour retirer commissions et gains par compte bancaire ou en cryptomonnaie.</li>
+              <li>La possibilité de travailler avec des acheteurs de capacités financières différentes (faible, moyenne, élevée).</li>
+            </ul>
+          </li>
+        </ol>
+
+        <h2>3. Tokenisation immobilière</h2>
+        <ul>
+          <li>Conversion des biens en unités numériques (jetons) représentant des parts fractionnées.</li>
+          <li>Permet au courtier de bien comprendre les mécanismes de souscription, de vente et de sortie ainsi que les avantages pour toutes les parties (vendeur, promoteur, acheteur).</li>
+          <li>Les contrats intelligents garantissent l'exécution automatique de toutes les conditions juridiques et financières.</li>
+        </ul>
+
+        <h2>4. Propriété fractionnée</h2>
+        <ul>
+          <li>Permet aux acheteurs d'acquérir des parts fractionnées, ce qui abaisse le seuil d'entrée et répartit les risques.</li>
+          <li>Offre aux courtiers la possibilité d'accompagner des acheteurs de capacités financières différentes.</li>
+          <li>Favorise la participation à divers projets en toute sécurité et en toute transparence.</li>
+        </ul>
+
+        <h2>5. Blockchain et contrats intelligents</h2>
+        <ul>
+          <li><strong>Blockchain :</strong> registre sécurisé et transparent pour toutes les opérations liées aux biens et aux projets.</li>
+          <li><strong>Contrats intelligents :</strong> appliquent automatiquement toutes les conditions juridiques et financières, y compris les souscriptions, les encaissements et les distributions.</li>
+          <li><strong>Avantages pour les courtiers :</strong> garantissent la transparence et la sécurité de toutes les opérations d'apport d'acheteurs et de projets.</li>
+        </ul>
+
+        <h2>6. Avantages de la tokenisation et de la propriété fractionnée pour toutes les parties</h2>
+        <ul>
+          <li><strong>Vendeurs :</strong> vendre un bien en totalité ou en partie, lever des capitaux rapidement, conserver la gestion et maintenir un flux de revenus.</li>
+          <li><strong>Promoteurs :</strong> lever des capitaux pour des projets en cours et nouveaux, vendre en partie ou en totalité, conserver des parts et gérer les projets.</li>
+          <li><strong>Acheteurs :</strong> participer avec un capital faible ou moyen, accéder à des biens diversifiés, percevoir les rendements attendus et bénéficier d'une protection juridique et financière grâce aux contrats intelligents.</li>
+        </ul>
+
+        <h2>7. Contrat de courtier</h2>
+        <p>Accord juridique entre le courtier et Capimax RT précisant :</p>
+        <ul>
+          <li>Les commissions sur les apports de biens ou de projets.</li>
+          <li>Les commissions sur les apports d'acheteurs via le code unique du courtier.</li>
+          <li>Les obligations juridiques et financières envers les vendeurs, les promoteurs et les acheteurs.</li>
+          <li>Le mécanisme de retrait des gains via le portefeuille numérique ou un compte bancaire.</li>
+          <li>Le respect des lois et réglementations locales et internationales applicables au courtage.</li>
+        </ul>
+
+        <h2>8. Responsabilités du courtier et de la plateforme</h2>
+        <h3>Responsabilités du courtier :</h3>
+        <ul>
+          <li>Apporter des acheteurs et des clients de manière professionnelle et transparente.</li>
+          <li>Respecter les réglementations locales et internationales en matière de courtage.</li>
+          <li>Suivre tous les projets et acheteurs apportés, en veillant à l'exactitude des données.</li>
+          <li>Respecter les termes du contrat relatifs aux commissions et aux retraits.</li>
+        </ul>
+        <h3>Responsabilités de la plateforme :</h3>
+        <ul>
+          <li>Gérer toutes les opérations juridiques et financières des projets via la blockchain et les contrats intelligents.</li>
+          <li>Vérifier les documents et les données des acheteurs et des promoteurs.</li>
+          <li>Verser les commissions aux courtiers via le portefeuille numérique ou un compte bancaire.</li>
+          <li>Fournir aux courtiers un tableau de bord et des outils complets pour gérer et suivre les projets et les acheteurs en toute transparence.</li>
+        </ul>
+
+        <h2>9. Tableau de bord du courtier</h2>
+        <ul>
+          <li>Suivre tous les projets et biens apportés.</li>
+          <li>Suivre tous les acheteurs apportés, par projet ou par bien.</li>
+          <li>Accéder à tous les documents et aux données financières et de propriété.</li>
+          <li>Suivre les commissions et les gains, et les retirer facilement.</li>
+          <li>Des outils d'analyse pour évaluer la performance des projets et les parts des acheteurs.</li>
         </ul>
       </section>
       ) : (

@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowDownLeft, ArrowUpRight, Plus, RefreshCw, Repeat } from 'lucide-react';
 import { TransferService, type TransferRecord } from '../../services/transfers/TransferService';
 import { NewTransferDialog } from './NewTransferDialog';
+import { uiLocale } from '../../utils/locale';
 
 const STATUS_STYLE: Record<string, string> = {
   delivered: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
@@ -28,7 +29,7 @@ export const TransfersPanel: React.FC = () => {
   const { data = [], isLoading, isFetching, refetch } = useQuery({
     queryKey: ['transfers'], queryFn: () => TransferService.list(), refetchOnMount: 'always',
   });
-  const locale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
+  const locale = uiLocale(i18n.language);
   const fmtDate = (d?: string | null) => (d ? new Date(d).toLocaleDateString(locale) : '—');
 
   const rows = useMemo(() => data.filter(r =>

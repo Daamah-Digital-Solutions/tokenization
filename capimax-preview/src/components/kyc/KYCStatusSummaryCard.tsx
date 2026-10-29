@@ -4,6 +4,7 @@ import { Check, Clock, AlertTriangle, ShieldAlert, XCircle, Loader2 } from 'luci
 import { useRouter } from '../../utils/router';
 import { cn } from '../../utils/cn';
 import { KYCService, deriveKYCUiState, type KYCStatusPayload, type KYCUiState } from '../../services/user/KYCService';
+import { baseLanguage } from '../../utils/locale';
 
 /**
  * Compact, REAL KYC status for settings pages. Replaces a card that was
@@ -43,7 +44,7 @@ export const KYCStatusSummaryCard: React.FC<{ className?: string }> = ({ classNa
   const Icon = tone.icon;
   const isAr = (i18n.language || 'en').startsWith('ar');
   const fmt = (iso?: string | null) =>
-    iso ? new Date(iso).toLocaleDateString(isAr ? 'ar' : 'en', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+    iso ? new Date(iso).toLocaleDateString(baseLanguage((i18n.language || 'en')), { year: 'numeric', month: 'long', day: 'numeric' }) : '';
 
   return (
     <div className={cn('space-y-4', className)}>

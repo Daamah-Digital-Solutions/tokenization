@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '../ui/Button';
 import { useTranslation } from 'react-i18next';
+import { uiLocale } from '../../utils/locale';
 
 export interface ReferralClient {
   id: string;
@@ -111,7 +112,7 @@ export const ReferralTracker: React.FC<ReferralTrackerProps> = ({
     });
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US', {
+    return new Date(dateString).toLocaleDateString(uiLocale(i18n.language), {
       month: 'short',
       day: 'numeric',
       year: 'numeric'

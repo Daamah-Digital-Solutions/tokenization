@@ -53,6 +53,7 @@ import { Input } from '../design-system/forms/Input';
 import { Select } from '../design-system/forms/Select';
 import { ConfirmationDialog } from '../ui/ConfirmationDialog';
 import { COUNTRIES } from '../../utils/countries';
+import { baseLanguage } from '../../utils/locale';
 
 interface CreditCardFormProps {
   amount: number;
@@ -104,7 +105,7 @@ export function CreditCardForm(props: CreditCardFormProps) {
   const stripePromise = React.useMemo(() => getStripe(), []);
   // Stripe's own card fields follow the site language.
   const { i18n } = useTranslation();
-  const locale = i18n.language?.startsWith('ar') ? 'ar' : 'en';
+  const locale = baseLanguage(i18n.language);
 
   return (
     <Elements stripe={stripePromise} options={{ locale }} key={locale}>

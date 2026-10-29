@@ -11,6 +11,7 @@ import { PayoutsPanel } from '../../wallet/PayoutsPanel';
 import { useRouter } from '../../../utils/router';
 import { useAuth } from '../../../contexts/AuthContext';
 import { apiClient } from '../../../services/api/ApiClient';
+import { uiLocale } from '../../../utils/locale';
 
 // In-dashboard tab navigation. Pushes ?view=<tab> to the URL and dispatches a
 // `dashboardpushstate` event that DashboardPage listens for to swap currentView
@@ -22,7 +23,7 @@ const switchDashboardView = (view: string) => {
   window.history.pushState({}, '', url.toString());
 };
 
-const dateLocale = (lng?: string) => (lng?.startsWith('ar') ? 'ar-EG' : 'en-US');
+const dateLocale = (lng?: string) => (uiLocale(lng));
 
 // Loading and Error Components
 const LoadingStats = () => (

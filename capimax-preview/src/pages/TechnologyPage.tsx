@@ -5,6 +5,7 @@ import { InfoPageLayout } from '../components/info/InfoPageLayout';
 export const TechnologyPage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = (i18n.language || 'en').startsWith('ar');
+  const isFr = (i18n.language || 'en').startsWith('fr');
 
   if (isAr) {
     return (
@@ -173,6 +174,181 @@ export const TechnologyPage: React.FC = () => {
             <li>تحسينات في مراقبة المخاطر</li>
           </ul>
           <p>تتبع حوكمة التقنية بروتوكولات مراجعة داخلية منظّمة.</p>
+        </section>
+      </InfoPageLayout>
+    );
+  }
+
+  if (isFr) {
+    return (
+      <InfoPageLayout
+        title="Technologie"
+        subtitle="Une infrastructure sécurisée pour l'immobilier tokenisé"
+      >
+        <section className="info-section">
+          <p className="info-intro">
+            Capimax RT repose sur une infrastructure native blockchain conçue pour garantir la force
+            juridique exécutoire, la sécurité technique, la transparence des actifs et la protection des propriétaires.
+            Notre cadre technologique associe des structures juridiques réglementées à des contrats intelligents audités afin
+            d'offrir une tokenisation immobilière de niveau institutionnel.
+          </p>
+
+          <h2>1. Infrastructure blockchain</h2>
+          <h3>Couche réseau</h3>
+          <p>Capimax RT utilise un réseau blockchain public optimisé pour :</p>
+          <ul>
+            <li>Une sécurité élevée des transactions</li>
+            <li>Une vérification transparente sur la chaîne</li>
+            <li>Des registres de propriété immuables</li>
+            <li>Un règlement efficace</li>
+          </ul>
+          <h3>Principes fondamentaux</h3>
+          <ul>
+            <li>Validation par registre décentralisé</li>
+            <li>Émission transparente des jetons</li>
+            <li>Historique des transactions vérifiable publiquement</li>
+            <li>Compatibilité avec les portefeuilles non dépositaires</li>
+          </ul>
+          <p>
+            Chaque actif tokenisé est déployé au moyen d'un contrat intelligent dédié, rattaché à l'entité
+            juridique correspondante (structure SPV/CBV).
+          </p>
+
+          <h2>2. Cadre des contrats intelligents</h2>
+          <h3>Contrats intelligents au niveau de l'actif</h3>
+          <p>Chaque bien sur Capimax RT est représenté par un contrat intelligent dédié qui régit :</p>
+          <ul>
+            <li>L'émission des jetons</li>
+            <li>La répartition de la propriété</li>
+            <li>Les restrictions de transfert</li>
+            <li>La logique de distribution</li>
+            <li>Les contrôles de conformité</li>
+          </ul>
+          <h3>Fonctionnalités des contrats intelligents</h3>
+          <ul>
+            <li>Transfert secondaire encadré (fenêtre de liquidité annuelle)</li>
+            <li>Validation des accès fondée sur la vérification d'identité (KYC)</li>
+            <li>Liste blanche des portefeuilles</li>
+            <li>Logique d'application de la conformité</li>
+            <li>Mécanismes de distribution automatisés</li>
+          </ul>
+          <p>
+            Les contrats intelligents sont structurés de manière à refléter les droits juridiques prévus dans la documentation de la SPV.
+          </p>
+
+          <h2>3. Architecture de sécurité</h2>
+          <p>
+            Capimax RT applique un cadre de sécurité multicouche conçu pour atténuer les risques techniques et
+            opérationnels.
+          </p>
+          <h3>Sécurité de l'infrastructure</h3>
+          <ul>
+            <li>Renforcement de l'infrastructure cloud</li>
+            <li>Transmission chiffrée des données (SSL/TLS)</li>
+            <li>Architecture réseau segmentée</li>
+          </ul>
+          <h3>Sécurité des applications</h3>
+          <ul>
+            <li>Contrôles d'accès fondés sur les rôles</li>
+            <li>Authentification multifacteur</li>
+            <li>Analyse continue des vulnérabilités</li>
+          </ul>
+          <h3>Sécurité des contrats intelligents</h3>
+          <ul>
+            <li>Validation par audit externe</li>
+            <li>Vérification du code</li>
+            <li>Contrôles d'intégrité du déploiement</li>
+          </ul>
+          <h3>Sécurité opérationnelle</h3>
+          <ul>
+            <li>Contrôle strict des accès internes</li>
+            <li>Séparation des tâches</li>
+            <li>Protocoles de surveillance continue</li>
+          </ul>
+
+          <h2>4. Modèle de conservation</h2>
+          <p>Capimax RT prend en charge une structure de conservation hybride.</p>
+          <h3>Conservation des jetons</h3>
+          <ul>
+            <li>Les propriétaires peuvent détenir leurs jetons dans des portefeuilles approuvés</li>
+            <li>La liste blanche garantit l'alignement sur les exigences de conformité</li>
+            <li>Intégrations facultatives avec des dépositaires tiers (le cas échéant)</li>
+          </ul>
+          <h3>Conservation des actifs</h3>
+          <ul>
+            <li>Les actifs immobiliers sous-jacents sont détenus au sein de SPV/CBV juridiquement immatriculées</li>
+            <li>Supervision indépendante de la gestion immobilière</li>
+            <li>Mécanismes structurés d'encaissement des revenus</li>
+          </ul>
+          <p>Le modèle de conservation garantit la séparation entre :</p>
+          <ul>
+            <li>Les opérations de la plateforme</li>
+            <li>La propriété des actifs</li>
+            <li>Les jetons détenus par les propriétaires</li>
+          </ul>
+
+          <h2>5. Audit &amp; vérification</h2>
+          <p>La transparence et la vérification sont des piliers fondamentaux.</p>
+          <h3>Audit des contrats intelligents</h3>
+          <ul>
+            <li>Audits de sécurité indépendants réalisés par des tiers</li>
+            <li>Analyse des vulnérabilités du code</li>
+            <li>Synthèses d'audit publiques (le cas échéant)</li>
+          </ul>
+          <h3>Supervision financière &amp; opérationnelle</h3>
+          <ul>
+            <li>Reporting au niveau de chaque bien</li>
+            <li>Validation des revenus</li>
+            <li>Supervision comptable structurée</li>
+          </ul>
+          <p>
+            La documentation d'audit et les synthèses de vérification sont mises à la disposition des parties prenantes via le
+            portail de transparence.
+          </p>
+
+          <h2>6. Transparence des données</h2>
+          <p>Capimax RT offre une visibilité structurée sur l'ensemble de l'écosystème.</p>
+          <h3>Transparence sur la chaîne</h3>
+          <ul>
+            <li>Vérification de l'offre de jetons</li>
+            <li>Répartition de la propriété</li>
+            <li>Registres des transactions</li>
+          </ul>
+          <h3>Transparence hors chaîne</h3>
+          <ul>
+            <li>Performance financière du bien</li>
+            <li>Distributions de rendement</li>
+            <li>Mises à jour des évaluations</li>
+            <li>Rapports sur les actifs</li>
+          </ul>
+          <p>Les propriétaires conservent l'accès à :</p>
+          <ul>
+            <li>Tableau de bord du portefeuille</li>
+            <li>Historique des distributions</li>
+            <li>Activité sur le marché secondaire</li>
+            <li>Rapports annuels de liquidité</li>
+          </ul>
+
+          <h2>7. Une technologie intégrant la conformité</h2>
+          <p>Chez Capimax RT, la technologie n'est pas dissociée de la réglementation.</p>
+          <p>Les contrats intelligents sont déployés en cohérence avec :</p>
+          <ul>
+            <li>La structure juridique de la juridiction</li>
+            <li>L'application des règles KYC / AML</li>
+            <li>Les restrictions de transfert</li>
+            <li>Les critères d'éligibilité des propriétaires</li>
+          </ul>
+          <p>Cela garantit que l'exécution sur la blockchain est conforme à la force juridique exécutoire.</p>
+
+          <h2>8. Développement &amp; surveillance continus</h2>
+          <p>L'environnement technologique de Capimax RT fait l'objet :</p>
+          <ul>
+            <li>D'une revue de sécurité continue</li>
+            <li>De mises à jour périodiques des systèmes</li>
+            <li>D'une adaptation aux exigences de conformité</li>
+            <li>D'améliorations de la surveillance des risques</li>
+          </ul>
+          <p>La gouvernance technologique suit des protocoles structurés de revue interne.</p>
         </section>
       </InfoPageLayout>
     );

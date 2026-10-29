@@ -1,0 +1,46 @@
+{
+  "disclaimer": {
+    "title": "Avertissement de la plateforme",
+    "lastUpdated": "Dernière mise à jour"
+  },
+  "riskDisclosure": {
+    "title": "Avertissement sur les risques liés à la propriété",
+    "intro": "La détention de biens immobiliers tokenisés via Capimax RT comporte des risques importants, notamment la perte potentielle d'une partie ou de la totalité de la valeur des actifs détenus."
+  },
+  "compliance": {
+    "title": "Conformité réglementaire"
+  },
+  "privacy": {
+    "title": "Politique de confidentialité",
+    "intro": "Votre vie privée est importante pour nous. Cette politique explique comment nous collectons, utilisons et protégeons vos informations personnelles."
+  },
+  "terms": {
+    "title": "Conditions d'utilisation",
+    "intro": "En utilisant Capimax RT, vous acceptez ces conditions générales."
+  },
+  "cookies": {
+    "title": "Politique relative aux cookies",
+    "intro": "Ce site utilise des cookies pour améliorer votre expérience."
+  },
+  "amlKyc": {
+    "title": "Politique LCB-FT/KYC",
+    "intro": "Capimax RT s'engage à prévenir le blanchiment de capitaux et le financement du terrorisme."
+  },
+  "conflicts": {
+    "title": "Politique en matière de conflits d'intérêts"
+  },
+  "complaints": {
+    "title": "Procédure de réclamation",
+    "intro": "Nous prenons toutes les réclamations au sérieux et nous efforçons de les traiter rapidement."
+  },
+  "security": {
+    "title": "Politique de sécurité",
+    "intro": "Nous mettons en œuvre des mesures de sécurité robustes pour protéger vos données et vos actifs."
+  },
+  "common": {
+    "printPage": "Imprimer la page",
+    "downloadPdf": "Télécharger le PDF",
+    "backToLegal": "Retour aux mentions légales",
+    "tableOfContents": "Table des matières"
+  }
+}

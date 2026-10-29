@@ -1,0 +1,48 @@
+{
+  "main": {
+    "home": "Accueil",
+    "properties": "Biens",
+    "marketplace": "Marché",
+    "howItWorks": "Comment ça marche",
+    "about": "À propos",
+    "contact": "Contact",
+    "partners": "Partenaires"
+  },
+  "user": {
+    "dashboard": "Tableau de bord",
+    "portfolio": "Mes investissements",
+    "wallet": "Portefeuille",
+    "settings": "Paramètres",
+    "profile": "Profil",
+    "kyc": "Vérification KYC",
+    "logout": "Se déconnecter"
+  },
+  "legal": {
+    "disclaimer": "Avertissement",
+    "riskDisclosure": "Avertissement sur les risques",
+    "compliance": "Conformité",
+    "privacyPolicy": "Politique de confidentialité",
+    "termsOfService": "Conditions d'utilisation",
+    "cookiesPolicy": "Politique relative aux cookies",
+    "amlKyc": "Politique LCB-FT/KYC",
+    "conflicts": "Conflits d'intérêts",
+    "complaints": "Réclamations",
+    "security": "Politique de sécurité"
+  },
+  "info": {
+    "tokenization": "Tokenisation",
+    "spv": "Modèle SPV",
+    "dataRoom": "Salle de données",
+    "investorGuide": "Guide du propriétaire",
+    "secondaryMarket": "Marché secondaire",
+    "risks": "Risques liés à la propriété",
+    "faq": "FAQ",
+    "propertyOwner": "Pour les propriétaires de biens",
+    "liquidityProvider": "Fournisseur de liquidité"
+  },
+  "broker": {
+    "program": "Programme courtiers",
+    "apply": "Postuler",
+    "dashboard": "Tableau de bord courtier"
+  }
+}

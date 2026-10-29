@@ -56,6 +56,15 @@ import arSharedW15 from './locales/ar/shared.json';
 import arPagesW15 from './locales/ar/pages.json';
 import arCheckout from './locales/ar/checkout.json';
 
+// French (client round 4, E5): every namespace of locales/fr, loaded the same way.
+const frModules = import.meta.glob('./locales/fr/*.json', { eager: true }) as Record<
+  string,
+  { default: Record<string, unknown> }
+>;
+const fr = Object.fromEntries(
+  Object.entries(frModules).map(([path, mod]) => [path.split('/').pop()!.replace('.json', ''), mod.default]),
+);
+
 // Define resources
 const resources = {
   en: {
@@ -112,6 +121,7 @@ const resources = {
     pages: arPagesW15,
     checkout: arCheckout,
   },
+  fr,
 };
 
 // Initialize i18next
@@ -121,6 +131,10 @@ i18n
   .init({
     resources,
     fallbackLng: 'en',
+    // English, Arabic and French; a browser in fr-FR / ar-EG gets French / Arabic
+    supportedLngs: ['en', 'ar', 'fr'],
+    nonExplicitSupportedLngs: true,
+    load: 'languageOnly',
     defaultNS: 'common',
     ns: ['common', 'auth', 'navigation', 'properties', 'legal', 'kyc', 'owner', 'partners', 'plan', 'docs', 'site', 'certs', 'transfers', 'dashboard', 'admin', 'ownerui', 'payments', 'invest', 'propui', 'market', 'brokerui', 'ui', 'shared', 'pages', 'checkout'],
 
@@ -141,12 +155,13 @@ i18n
 
 // Function to update document direction based on language
 export const updateDocumentDirection = (language: string) => {
-  const dir = language === 'ar' ? 'rtl' : 'ltr';
+  const rtl = language?.startsWith('ar');
+  const dir = rtl ? 'rtl' : 'ltr';
   document.documentElement.dir = dir;
   document.documentElement.lang = language;
 
   // Add/remove RTL class for Tailwind
-  if (language === 'ar') {
+  if (rtl) {
     document.documentElement.classList.add('rtl');
   } else {
     document.documentElement.classList.remove('rtl');

@@ -5,6 +5,7 @@ import { InfoPageLayout } from '../components/info/InfoPageLayout';
 export const TokenizationPage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const isFr = i18n.language?.startsWith('fr');
   const navigateToPage = (path: string) => {
     window.history.pushState({}, '', path);
     window.dispatchEvent(new PopStateEvent('popstate'));
@@ -13,8 +14,8 @@ export const TokenizationPage: React.FC = () => {
 
   return (
     <InfoPageLayout
-      title={isAr ? 'ما هو ترميز العقارات؟' : 'What Is Real Estate Tokenization?'}
-      subtitle={isAr ? 'شرح تعليمي بلغة بسيطة وغير تقنية' : 'An educational explanation in plain, non-technical language'}
+      title={isAr ? 'ما هو ترميز العقارات؟' : isFr ? "Qu'est-ce que la tokenisation immobilière ?" : 'What Is Real Estate Tokenization?'}
+      subtitle={isAr ? 'شرح تعليمي بلغة بسيطة وغير تقنية' : isFr ? 'Une explication pédagogique dans un langage simple et non technique' : 'An educational explanation in plain, non-technical language'}
     >
       {isAr ? (
       <section className="info-section">
@@ -69,6 +70,62 @@ export const TokenizationPage: React.FC = () => {
           </button>
           <button className="link-button-outline" onClick={() => navigateToPage('/risks')}>
             إفصاحات المخاطر
+          </button>
+        </div>
+      </section>
+      ) : isFr ? (
+      <section className="info-section">
+        <p className="info-intro">
+          Cette section propose une explication pédagogique de la tokenisation immobilière, dans un langage simple et non technique, destinée au grand public.
+        </p>
+
+        <h2>Définition</h2>
+        <p>
+          La tokenisation immobilière est une méthode permettant de représenter numériquement des droits de participation économique dans un actif immobilier au moyen de parts de propriété structurées, ce qui permet à plusieurs propriétaires de participer à un même actif sans détenir directement le bien physique.
+        </p>
+
+        <h2>Ce que permet la tokenisation</h2>
+        <ul className="check-list">
+          <li>Accès à la propriété fractionnée</li>
+          <li>Des seuils d'entrée en capital plus bas</li>
+          <li>Une participation plus large des propriétaires</li>
+          <li>Une transparence et une tenue des registres améliorées</li>
+          <li>Des échanges organisés sur le marché secondaire</li>
+        </ul>
+
+        <h2>Ce que la tokenisation ne signifie PAS</h2>
+        <ul className="cross-list">
+          <li>Elle ne garantit ni bénéfices ni revenus</li>
+          <li>Elle n'élimine pas le risque lié à la propriété</li>
+          <li>Elle ne confère pas automatiquement la propriété inscrite au registre foncier</li>
+          <li>Elle n'assure pas une liquidité immédiate</li>
+        </ul>
+
+        <h2>Pourquoi la tokenisation via Capimax RT</h2>
+        <p>
+          Capimax RT n'applique la tokenisation que dans le cadre de :
+        </p>
+        <ul>
+          <li>SPV (sociétés ad hoc) légalement constituées</li>
+          <li>Droits contractuels clairement définis</li>
+          <li>Documentation et informations complètes</li>
+          <li>Conformité et gouvernance structurées</li>
+        </ul>
+
+        <div className="info-warning">
+          La tokenisation n'élimine pas les risques liés à la propriété. Toute propriété immobilière comporte des risques, y compris la perte potentielle du capital investi. Veuillez consulter nos avertissements sur les risques avant tout achat.
+        </div>
+
+        <h2>En savoir plus</h2>
+        <div>
+          <button className="link-button" onClick={() => navigateToPage('/spv')}>
+            Qu'est-ce qu'une SPV
+          </button>
+          <button className="link-button" onClick={() => navigateToPage('/how-it-works')}>
+            Comment ça marche
+          </button>
+          <button className="link-button-outline" onClick={() => navigateToPage('/risks')}>
+            Avertissements sur les risques
           </button>
         </div>
       </section>

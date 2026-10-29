@@ -5,10 +5,11 @@ import { LegalPageLayout } from '../../components/legal/LegalPageLayout';
 export const SecurityPolicyPage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const isFr = i18n.language?.startsWith('fr');
   return (
     <LegalPageLayout
-      title={isAr ? 'نظرة عامة على أمن المعلومات' : 'Information Security Overview'}
-      lastUpdated={isAr ? 'يناير 2026' : 'January 2026'}
+      title={isAr ? 'نظرة عامة على أمن المعلومات' : isFr ? "Présentation de la sécurité de l'information" : 'Information Security Overview'}
+      lastUpdated={isAr ? 'يناير 2026' : isFr ? 'janvier 2026' : 'January 2026'}
     >
       {isAr ? (
       <section className="legal-section">
@@ -26,6 +27,24 @@ export const SecurityPolicyPage: React.FC = () => {
 
         <p className="legal-emphasis">
           رغم بذل أقصى الجهود، لا يوجد نظام محصّن تمامًا من المخاطر، ويُقرّ المستخدمون بوجود مخاطر متبقية تتعلق بالأمن السيبراني.
+        </p>
+      </section>
+      ) : isFr ? (
+      <section className="legal-section">
+        <p className="legal-intro">
+          Capimax RT met en œuvre des mesures de sécurité conformes aux standards du secteur, notamment :
+        </p>
+
+        <ul>
+          <li>L'authentification à deux facteurs (2FA) ;</li>
+          <li>Des contrôles d'accès fondés sur les rôles ;</li>
+          <li>Le chiffrement des données en transit et au repos ;</li>
+          <li>Une surveillance et des audits de sécurité réguliers ;</li>
+          <li>Des plans de réponse aux incidents et de reprise d'activité.</li>
+        </ul>
+
+        <p className="legal-emphasis">
+          Malgré tous les efforts déployés, aucun système n'est entièrement à l'abri des risques, et les utilisateurs reconnaissent l'existence de risques résiduels en matière de cybersécurité.
         </p>
       </section>
       ) : (

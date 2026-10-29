@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Bitcoin, ExternalLink } from 'lucide-react';
 import { PurchaseService } from '../../services/purchase/PurchaseService';
 import { rememberPendingPurchase } from '../../utils/pendingPayment';
+import { uiLocale } from '../../utils/locale';
 
 /** Crypto payments started in the last 24 h and not finished — open their NOWPayments page again. */
 export const OpenCryptoPayments: React.FC = () => {
@@ -15,7 +16,7 @@ export const OpenCryptoPayments: React.FC = () => {
   });
   if (!open.length) return null;
   const when = (iso: string) =>
-    new Date(iso).toLocaleString(i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-GB', {
+    new Date(iso).toLocaleString(uiLocale(i18n.language, 'en-GB'), {
       day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
     });
 

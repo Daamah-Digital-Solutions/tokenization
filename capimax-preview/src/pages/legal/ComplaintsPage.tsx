@@ -5,10 +5,11 @@ import { LegalPageLayout } from '../../components/legal/LegalPageLayout';
 export const ComplaintsPage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const isFr = i18n.language?.startsWith('fr');
   return (
     <LegalPageLayout
-      title={isAr ? 'سياسة الشكاوى وتسوية النزاعات' : 'Complaints & Dispute Resolution Policy'}
-      lastUpdated={isAr ? 'يناير 2026' : 'January 2026'}
+      title={isAr ? 'سياسة الشكاوى وتسوية النزاعات' : isFr ? 'Politique de traitement des réclamations et de règlement des litiges' : 'Complaints & Dispute Resolution Policy'}
+      lastUpdated={isAr ? 'يناير 2026' : isFr ? 'janvier 2026' : 'January 2026'}
     >
       {isAr ? (
       <section className="legal-section">
@@ -30,6 +31,28 @@ export const ComplaintsPage: React.FC = () => {
           <li>التفاوض؛</li>
           <li>الوساطة؛</li>
           <li>التحكيم أو المحاكم، وفقًا لما هو محدد في الشروط.</li>
+        </ul>
+      </section>
+      ) : isFr ? (
+      <section className="legal-section">
+        <h2>Traitement des réclamations</h2>
+        <p>
+          Les utilisateurs peuvent soumettre leurs réclamations par l'intermédiaire des canaux d'assistance prévus à cet effet.
+        </p>
+
+        <h2>Procédure de traitement</h2>
+        <ul>
+          <li>Accusé de réception ;</li>
+          <li>Enquête interne ;</li>
+          <li>Réponse écrite dans un délai raisonnable.</li>
+        </ul>
+
+        <h2>Règlement des litiges</h2>
+        <p>Les litiges peuvent être réglés par voie :</p>
+        <ul>
+          <li>De négociation ;</li>
+          <li>De médiation ;</li>
+          <li>D'arbitrage ou judiciaire, selon ce que prévoient les Conditions.</li>
         </ul>
       </section>
       ) : (

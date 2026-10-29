@@ -5,10 +5,11 @@ import { LegalPageLayout } from '../../components/legal/LegalPageLayout';
 export const DisclaimerPage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const isFr = i18n.language?.startsWith('fr');
   return (
     <LegalPageLayout
-      title={isAr ? 'إخلاء مسؤولية المنصة' : 'Platform Disclaimer'}
-      lastUpdated={isAr ? 'يناير 2026' : 'January 2026'}
+      title={isAr ? 'إخلاء مسؤولية المنصة' : isFr ? 'Clause de non-responsabilité de la plateforme' : 'Platform Disclaimer'}
+      lastUpdated={isAr ? 'يناير 2026' : isFr ? 'janvier 2026' : 'January 2026'}
     >
       {isAr ? (
       <section className="legal-section">
@@ -36,6 +37,34 @@ export const DisclaimerPage: React.FC = () => {
 
         <p className="legal-emphasis">
           يُعدّ استخدام المنصة قبولًا لإخلاء المسؤولية هذا ولجميع المستندات القانونية المرتبطة به.
+        </p>
+      </section>
+      ) : isFr ? (
+      <section className="legal-section">
+        <p className="legal-intro">
+          Capimax RT est une plateforme technologique conçue pour faciliter la structuration, la présentation et l'administration d'opportunités de propriété immobilière tokenisée au moyen de sociétés ad hoc (Special Purpose Vehicles, SPV).
+        </p>
+
+        <h2>Capimax RT :</h2>
+        <ul>
+          <li>N'agit pas en qualité de banque, de courtier-négociant, de conseiller financier, de fiduciaire ou de dépositaire ;</li>
+          <li>Ne fournit aucun conseil financier, juridique, fiscal ou en investissement ;</li>
+          <li>Ne garantit ni les rendements, ni la liquidité, ni la préservation du capital.</li>
+        </ul>
+
+        <p>
+          Toutes les informations mises à disposition sur la plateforme sont fournies à titre purement informatif et reposent sur des données communiquées par les propriétaires d'actifs, les promoteurs, les SPV et des prestataires de services tiers. Bien que des efforts raisonnables soient déployés pour en assurer l'exactitude, l'exhaustivité et l'actualité, Capimax RT ne fait aucune déclaration et n'accorde aucune garantie de quelque nature que ce soit, expresse ou implicite, quant à la fiabilité ou à l'exactitude de ces informations.
+        </p>
+
+        <h2>Les propriétaires sont seuls responsables :</h2>
+        <ul>
+          <li>De mener leur propre due diligence indépendante ;</li>
+          <li>De consulter des conseillers professionnels agréés ;</li>
+          <li>D'évaluer l'adéquation, les risques et les implications juridiques.</li>
+        </ul>
+
+        <p className="legal-emphasis">
+          L'utilisation de la plateforme vaut acceptation de la présente clause de non-responsabilité et de l'ensemble des documents juridiques qui s'y rapportent.
         </p>
       </section>
       ) : (

@@ -9,6 +9,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Droplets, Loader2 } from 'lucide-react';
 import { LiquidityProviderService, type InvestorExitRequest } from '../../services/liquidity-provider/LiquidityProviderService';
+import { uiLocale } from '../../utils/locale';
 
 const money = (v: string | number | null | undefined) =>
   `$${(Number(v) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -30,7 +31,7 @@ export const MyExitRequests: React.FC = () => {
   });
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<{ id: string; text: string; ok: boolean } | null>(null);
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
+  const dateLocale = uiLocale(i18n.language);
 
   if (!data.length) return null;
 

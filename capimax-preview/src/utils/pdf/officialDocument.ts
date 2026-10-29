@@ -22,6 +22,7 @@
 import type { jsPDF as JsPDF } from 'jspdf';
 import { getBrandLogoDark } from '../brandLogo';
 import { COMPANY } from '../company';
+import { uiLocale } from '../locale';
 
 type RGB = [number, number, number];
 const INK: RGB = [10, 41, 40];
@@ -600,7 +601,7 @@ export const pdfDate = (d: string | Date | null | undefined, lang = 'en'): strin
   if (!d) return '—';
   const date = d instanceof Date ? d : new Date(d);
   if (isNaN(date.getTime())) return String(d);
-  return date.toLocaleDateString(lang.startsWith('ar') ? 'ar-EG' : 'en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  return date.toLocaleDateString(uiLocale(lang, 'en-GB'), { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
 /** Compact date for table cells (dd/mm/yyyy). */
@@ -608,5 +609,5 @@ export const pdfShortDate = (d: string | Date | null | undefined, lang = 'en'): 
   if (!d) return '—';
   const date = d instanceof Date ? d : new Date(d);
   if (isNaN(date.getTime())) return String(d);
-  return date.toLocaleDateString(lang.startsWith('ar') ? 'ar-EG' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return date.toLocaleDateString(uiLocale(lang, 'en-GB'), { day: '2-digit', month: '2-digit', year: 'numeric' });
 };

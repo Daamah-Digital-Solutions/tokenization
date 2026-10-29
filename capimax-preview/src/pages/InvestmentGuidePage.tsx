@@ -5,10 +5,11 @@ import { InfoPageLayout } from '../components/info/InfoPageLayout';
 export const InvestmentGuidePage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const isFr = i18n.language?.startsWith('fr');
   return (
     <InfoPageLayout
-      title={isAr ? 'دليل التملّك' : 'Ownership Guide'}
-      subtitle={isAr ? 'منصة كابي مكس RT – التملّك العقاري المرمّز' : 'Capi Max RT Platform – Tokenized Real Estate Ownership'}
+      title={isAr ? 'دليل التملّك' : isFr ? 'Guide de propriété' : 'Ownership Guide'}
+      subtitle={isAr ? 'منصة كابي مكس RT – التملّك العقاري المرمّز' : isFr ? 'Plateforme Capi Max RT – Propriété immobilière tokenisée' : 'Capi Max RT Platform – Tokenized Real Estate Ownership'}
     >
       {isAr ? (
       <section className="info-section">
@@ -203,6 +204,202 @@ export const InvestmentGuidePage: React.FC = () => {
           <li>عوائد منظّمة</li>
           <li>خيارات تخارج مرنة</li>
           <li>امتثال مدمج</li>
+        </ul>
+      </section>
+      ) : isFr ? (
+      <section className="info-section">
+        <h2>Phase 1 : inscription et vérification</h2>
+
+        <h3>1) Création du compte</h3>
+        <p><strong>Actions du propriétaire :</strong></p>
+        <ul>
+          <li>Créer un compte utilisateur sur la plateforme</li>
+          <li>
+            Saisir les informations de base :
+            <ul>
+              <li>Nom légal</li>
+              <li>Adresse e-mail</li>
+              <li>Numéro de téléphone</li>
+              <li>Pays</li>
+            </ul>
+          </li>
+        </ul>
+
+        <h3>2) Vérification et conformité (KYC / AML)</h3>
+        <p>Pour garantir la conformité et la protection du propriétaire :</p>
+        <ul>
+          <li>Téléverser les pièces d'identité</li>
+          <li>Justificatif de domicile</li>
+          <li>Vérifier l'origine des fonds</li>
+          <li>Préciser le type de propriétaire (particulier / société)</li>
+        </ul>
+        <p><strong>Ce qui se passe après la vérification :</strong></p>
+        <ul>
+          <li>Activation du compte à des fins d'accession à la propriété</li>
+          <li>Accès complet à la plateforme</li>
+          <li>Rattachement du compte au cadre réglementaire et juridique</li>
+        </ul>
+
+        <h2>Phase 2 : alimentation du compte</h2>
+        <h3>Moyens d'alimentation :</h3>
+        <ul>
+          <li>Virement bancaire</li>
+          <li>Cryptomonnaies approuvées</li>
+          <li>Portefeuilles numériques compatibles</li>
+        </ul>
+        <h3>Processus technique :</h3>
+        <ul>
+          <li>Enregistrement des fonds sur le compte du propriétaire</li>
+          <li>Rattachement des fonds au portefeuille de propriété</li>
+          <li>Interdiction d'utiliser les fonds en dehors des cadres autorisés</li>
+        </ul>
+
+        <h2>Phase 3 : choix d'une stratégie de propriété</h2>
+        <p>
+          La plateforme propose 3 stratégies de propriété claires. Le propriétaire en choisit une selon
+          son objectif :
+        </p>
+        <h3>1) Propriété génératrice de revenus</h3>
+        <ul>
+          <li>Biens prêts à la location</li>
+          <li>Rendements périodiques réguliers</li>
+          <li>Risque plus faible</li>
+          <li>Distribution automatique des rendements</li>
+          <li>Adaptée aux propriétaires recherchant un revenu stable</li>
+        </ul>
+        <h3>2) Propriété en développement</h3>
+        <ul>
+          <li>Biens en cours de développement</li>
+          <li>Rendements plus élevés à moyen terme</li>
+          <li>Dépend de l'achèvement du projet</li>
+          <li>Bénéfices issus de la vente ou de l'exploitation</li>
+          <li>Adaptée aux propriétaires acceptant un risque plus élevé en contrepartie de rendements plus élevés</li>
+        </ul>
+        <h3>3) Propriété par échéances / progressive</h3>
+        <ul>
+          <li>Entrée avec des montants plus faibles</li>
+          <li>Paiement par étapes</li>
+          <li>Acquisition progressive des droits</li>
+          <li>Engagement flexible</li>
+          <li>Adaptée aux propriétaires à long terme ou disposant de liquidités limitées</li>
+        </ul>
+
+        <h2>Phase 4 : achat de jetons</h2>
+        <h3>Étapes de l'achat :</h3>
+        <ul>
+          <li>Sélectionner le bien</li>
+          <li>Indiquer le nombre de jetons</li>
+          <li>
+            Vérifier :
+            <ul>
+              <li>Le rendement attendu</li>
+              <li>Les droits représentés</li>
+              <li>La durée de détention</li>
+            </ul>
+          </li>
+          <li>Confirmer l'achat</li>
+        </ul>
+        <h3>Ce qui se passe techniquement :</h3>
+        <ul>
+          <li>Transaction exécutée via un contrat intelligent</li>
+          <li>Débit du solde</li>
+          <li>Enregistrement de la propriété numérique</li>
+        </ul>
+
+        <h2>Phase 5 : jetons et tableau de bord</h2>
+        <h3>Transfert des jetons :</h3>
+        <ul>
+          <li>Jetons envoyés directement dans votre portefeuille</li>
+          <li>Chaque jeton représente une part documentée</li>
+        </ul>
+        <h3>Le tableau de bord affiche :</h3>
+        <ul>
+          <li>Le nombre de jetons détenus</li>
+          <li>La valeur de la propriété</li>
+          <li>Les rendements cumulés</li>
+          <li>L'historique des transactions</li>
+          <li>Les documents juridiques associés</li>
+        </ul>
+
+        <h2>Phase 6 : distribution des rendements</h2>
+        <h3>Calcul des rendements :</h3>
+        <p>En fonction de :</p>
+        <ul>
+          <li>Nombre de jetons</li>
+          <li>Performance du bien</li>
+          <li>Type de propriété</li>
+        </ul>
+        <h3>Mécanisme de distribution :</h3>
+        <ul>
+          <li>Automatique via un contrat intelligent</li>
+          <li>Directement dans le portefeuille du propriétaire</li>
+          <li>Enregistrée sur la blockchain</li>
+        </ul>
+
+        <h2>Phase 7 : suivi des prix</h2>
+        <p>Le propriétaire peut :</p>
+        <ul>
+          <li>Suivre le prix du jeton</li>
+          <li>Suivre la performance historique</li>
+          <li>Comparer le rendement attendu et le rendement réel</li>
+          <li>Accéder aux rapports périodiques</li>
+        </ul>
+
+        <h2>Phase 8 : retrait des rendements</h2>
+        <h3>Options de retrait :</h3>
+        <ul>
+          <li>Transfert vers le portefeuille numérique</li>
+          <li>Réinvestissement des rendements</li>
+          <li>Virement bancaire (si disponible)</li>
+        </ul>
+        <h3>Encadrement :</h3>
+        <ul>
+          <li>Selon les conditions du bien</li>
+          <li>Selon le cycle de distribution</li>
+          <li>Dans le respect de la réglementation</li>
+        </ul>
+
+        <h2>Phase 9 : sortie</h2>
+        <p>La plateforme propose plusieurs options de sortie :</p>
+        <ol>
+          <li>
+            <strong>Vendre des jetons au sein de la plateforme</strong>
+            <ul>
+              <li>Échanges internes</li>
+              <li>Liquidité flexible</li>
+            </ul>
+          </li>
+          <li>
+            <strong>Sortie lors de la vente du bien</strong>
+            <ul>
+              <li>Distribution finale des bénéfices</li>
+              <li>Destruction (burn) des jetons</li>
+            </ul>
+          </li>
+          <li>
+            <strong>Transférer la propriété à un autre propriétaire</strong>
+            <ul>
+              <li>Via un contrat intelligent</li>
+              <li>Mise à jour automatique des registres</li>
+            </ul>
+          </li>
+        </ol>
+        <h3>Ce qui se passe après la sortie :</h3>
+        <ul>
+          <li>Règlement complet des droits</li>
+          <li>Enregistrement de la transaction finale</li>
+          <li>Rapport de clôture pour le propriétaire</li>
+        </ul>
+
+        <h2>Résumé du guide de propriété</h2>
+        <p>Ce système offre :</p>
+        <ul>
+          <li>Une transparence totale</li>
+          <li>Une protection juridique</li>
+          <li>Une transparence technique</li>
+          <li>Des rendements structurés</li>
+          <li>Des options de sortie flexibles</li>
+          <li>Une conformité intégrée</li>
         </ul>
       </section>
       ) : (

@@ -32,6 +32,7 @@ import { marketplaceService, type SecondaryMarketListing } from '../../services/
 import { useUser } from '../../contexts/AuthContext';
 import { PROPERTY_PLACEHOLDER, handleImageFallback } from '../../utils/imageFallback';
 import { useTranslation } from 'react-i18next';
+import { uiLocale } from '../../utils/locale';
 
 interface ManageListingsPageProps {
   className?: string;
@@ -282,7 +283,7 @@ const ListingRow: React.FC<ListingRowProps> = ({
   isLoading
 }) => {
   const { t, i18n } = useTranslation('market');
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
+  const dateLocale = uiLocale(i18n.language);
   const fillPercentage = ((listing.tokens_offered - listing.tokens_remaining) / listing.tokens_offered) * 100;
   const expiresAt = new Date(listing.expires_at);
   const isExpiringSoon = (expiresAt.getTime() - Date.now()) < 24 * 60 * 60 * 1000; // 24 hours

@@ -8,8 +8,9 @@ import type { AdminUser, AdminProperty, SystemAlert } from '../../../services';
 import { UserDetailModal, PropertyDetailModal } from './modals';
 import AdminWebSocketManager from './AdminWebSocketManager';
 import { PropertyApprovalDashboard } from '../../admin/PropertyApprovalDashboard';
+import { uiLocale } from '../../../utils/locale';
 
-const dateLocale = (lng?: string) => (lng?.startsWith('ar') ? 'ar-EG' : 'en-US');
+const dateLocale = (lng?: string) => (uiLocale(lng));
 
 // Helper function to convert dashboard stats to StatItem format
 const formatDashboardStats = (stats: any, t: TFunction): StatItem[] => {

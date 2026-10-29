@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { PurchaseService } from '../../services/purchase/PurchaseService';
 import { usePaymentOptions } from '../purchase/PaymentMethodList';
+import { uiLocale } from '../../utils/locale';
 
 const money = (v: string | number | null | undefined) =>
   `$${Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -12,7 +13,7 @@ export const RentalReturns: React.FC = () => {
   const { t, i18n } = useTranslation('payments');
   const { data } = useQuery({ queryKey: ['rental-returns'], queryFn: () => PurchaseService.returns() });
   const { data: options } = usePaymentOptions();
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-GB';
+  const dateLocale = uiLocale(i18n.language, 'en-GB');
   const fmt = (d: string) => new Date(d).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short', year: 'numeric' });
   if (!data || data.items.length === 0) return null;
 

@@ -5,10 +5,11 @@ import { InfoPageLayout } from '../components/info/InfoPageLayout';
 export const DeveloperGuidePage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const isFr = i18n.language?.startsWith('fr');
   return (
     <InfoPageLayout
-      title={isAr ? 'دليل المطوّر' : "Developer's Guide"}
-      subtitle={isAr ? 'منصة كابي مكس RT – دليل المطوّر' : "Capimax RT Platform – Developer's Guide"}
+      title={isAr ? 'دليل المطوّر' : isFr ? 'Guide du promoteur' : "Developer's Guide"}
+      subtitle={isAr ? 'منصة كابي مكس RT – دليل المطوّر' : isFr ? 'Plateforme Capimax RT – Guide du promoteur' : "Capimax RT Platform – Developer's Guide"}
     >
       {isAr ? (
       <section className="info-section">
@@ -177,6 +178,175 @@ export const DeveloperGuidePage: React.FC = () => {
           <li>توفير لوحات التحكم والتقارير والتحليلات.</li>
           <li>توفير أدوات التسويق والترويج.</li>
           <li>الالتزام بشروط اتفاقية الملكية الموقّعة.</li>
+        </ul>
+      </section>
+      ) : isFr ? (
+      <section className="info-section">
+        <h2>1. Tokenisation immobilière</h2>
+        <ul>
+          <li>Conversion des biens en unités numériques (jetons) représentant des parts fractionnées du bien.</li>
+          <li>Permet au promoteur de vendre tout ou partie de la propriété des biens tout en conservant certaines unités pour un revenu continu.</li>
+          <li>Les contrats intelligents garantissent l'exécution de toutes les conditions, tant pour le promoteur que pour les copropriétaires.</li>
+        </ul>
+
+        <h2>2. Propriété fractionnée</h2>
+        <ul>
+          <li>Les copropriétaires peuvent acquérir des parts fractionnées de biens, ce qui abaisse le seuil d'entrée et répartit le risque.</li>
+          <li>Permet aux promoteurs de lever des capitaux efficacement pour des projets en cours ou nouveaux.</li>
+          <li>Les promoteurs peuvent conserver une partie de la propriété afin de générer un revenu continu ou de profiter de la valorisation du bien.</li>
+        </ul>
+
+        <h2>3. Blockchain et contrats intelligents</h2>
+        <ul>
+          <li><strong>Blockchain :</strong> un registre sécurisé et transparent pour toutes les opérations liées aux biens.</li>
+          <li><strong>Contrats intelligents :</strong> appliquent automatiquement toutes les conditions juridiques et financières, y compris la souscription, l'encaissement et la distribution.</li>
+          <li><strong>Avantages pour les promoteurs :</strong> garantissent le respect des contrats, permettent une gestion transparente des parts des biens et réduisent les risques juridiques et opérationnels.</li>
+        </ul>
+
+        <h2>4. Fonctionnalités de la plateforme pour les promoteurs</h2>
+        <ol>
+          <li>Tokeniser les biens et les convertir en unités numériques.</li>
+          <li>Les contrats intelligents appliquent toutes les conditions de souscription et de vente.</li>
+          <li>Mettre en ligne les biens sur la plateforme pour la souscription des copropriétaires.</li>
+          <li>Outils marketing pour promouvoir les projets à l'international.</li>
+          <li>Encaissement automatisé des fonds des acheteurs.</li>
+          <li>Tableau de bord intégré pour gérer la souscription, suivre l'avancement et générer des rapports détaillés.</li>
+          <li>Accompagnement par des sociétés d'évaluation, d'assurance et de gestion pour faciliter la bonne exécution des projets.</li>
+          <li>Portefeuille numérique pour retirer des fonds dans le monde entier, en cryptomonnaies ou par voie bancaire traditionnelle.</li>
+          <li>Rapports périodiques sur la performance des projets et la participation des copropriétaires.</li>
+          <li>
+            <strong>Flexibilité et avantages propres aux promoteurs :</strong>
+            <ul>
+              <li>Possibilité de tokeniser et de vendre des biens prêts à la location, générant des rendements.</li>
+              <li>Possibilité de tokeniser et de vendre des projets de développement répartis en quatre tours de financement.</li>
+              <li>Possibilité de tokeniser des biens en construction avec des plans de paiement échelonné.</li>
+              <li>Conserver une partie du projet pour maintenir un revenu continu.</li>
+              <li>Option de conserver la gestion du projet via une société externe, garantissant liquidité et contrôle.</li>
+              <li>Supervision transparente de toutes les unités, des copropriétaires et des flux financiers via les tableaux de bord de la plateforme.</li>
+            </ul>
+          </li>
+        </ol>
+
+        <h2>5. Contrat de propriété entre le promoteur et la plateforme</h2>
+        <p>
+          Le Contrat de propriété définit toutes les informations juridiques, financières et documentaires du
+          bien et du projet, notamment :
+        </p>
+        <ul>
+          <li>L'ensemble des données du bien et du projet, ainsi que les documents juridiques et techniques.</li>
+          <li>Les sociétés d'évaluation et de gestion agréées.</li>
+          <li>Les frais : tokenisation, administration, mise en ligne, souscription, SPV et évaluation.</li>
+          <li>Le mécanisme de transfert de la propriété du projet/bien à une SPV (société ad hoc).</li>
+          <li>Les obligations juridiques et financières du promoteur et de la plateforme.</li>
+        </ul>
+        <p>
+          <strong>Important :</strong> le contrat doit être signé avant toute autre étape.
+        </p>
+        <p>
+          <strong>Si la souscription n'est pas achevée :</strong> le contrat définit les procédures permettant soit
+          de le résilier, soit de le renouveler jusqu'à l'achèvement de la souscription.
+        </p>
+
+        <h2>6. Conditions générales de mise en ligne et responsabilités juridiques</h2>
+        <ul>
+          <li>Remise de documents exacts et complets.</li>
+          <li>Respect des délais et des étapes définies pour la mise en ligne et la souscription.</li>
+          <li>Conformité aux lois et réglementations locales et internationales.</li>
+          <li>Le promoteur est responsable de l'exactitude de tous les documents.</li>
+          <li>La plateforme est responsable de la gestion de la souscription et de la vérification via les contrats intelligents.</li>
+        </ul>
+
+        <h2>7. Frais à la charge des promoteurs</h2>
+        <ol>
+          <li><strong>Frais de tokenisation :</strong> pour convertir le bien/projet en unités numériques.</li>
+          <li><strong>Frais d'administration :</strong> fonctionnement de la plateforme et gestion de la souscription.</li>
+          <li><strong>Frais de mise en ligne et de souscription :</strong> pour la mise en ligne sur la plateforme et la souscription des copropriétaires.</li>
+          <li><strong>Frais de SPV :</strong> constitution et gestion de la SPV propre à chaque bien/projet.</li>
+          <li><strong>Frais d'évaluation :</strong> honoraires des sociétés d'évaluation agréées pour l'évaluation du projet/bien.</li>
+        </ol>
+
+        <h2>8. Documents requis de la part du promoteur</h2>
+        <ol>
+          <li>Titre de propriété du bien ou contrat juridique du projet.</li>
+          <li>Plans architecturaux et permis légaux.</li>
+          <li>Rapport d'évaluation récent établi par des sociétés agréées.</li>
+          <li>Attestations d'assurance, le cas échéant.</li>
+          <li>Pièces d'identité légales du promoteur ou de la société.</li>
+          <li>Documents financiers relatifs aux dettes ou obligations grevant le bien/projet.</li>
+          <li>Tout accord existant avec les copropriétaires, locataires ou partenaires actuels.</li>
+        </ol>
+
+        <h2>9. Étapes de mise en ligne du bien/projet jusqu'à la souscription</h2>
+
+        <h3>Étape 0 : signature du Contrat de propriété</h3>
+        <ul>
+          <li>Doit être signé avant toute autre étape.</li>
+          <li>Définit toutes les informations juridiques, financières et documentaires.</li>
+          <li>Fixe les frais et le mécanisme de transfert de la propriété à la SPV.</li>
+        </ul>
+
+        <h3>Étape 1 : inspection, évaluation et approbation</h3>
+        <ul>
+          <li>Accord sur l'organisme d'évaluation.</li>
+          <li>Rapport complet sur le projet/bien comprenant le type, l'emplacement, les rendements attendus et les risques.</li>
+          <li>Approbation du projet/bien pour la souscription.</li>
+        </ul>
+
+        <h3>Étape 2 : création de la SPV et mise en place des contrats intelligents</h3>
+        <ul>
+          <li>Accord sur l'entité chargée de constituer la SPV.</li>
+          <li>Conversion du bien/projet en jetons numériques via la SPV.</li>
+          <li>Préparation des contrats intelligents pour l'exécution juridique et financière de chaque unité.</li>
+        </ul>
+
+        <h3>Étape 3 : mise en ligne sur la plateforme et ouverture de la souscription</h3>
+        <ul>
+          <li>Mise en ligne sur Capimax RT.</li>
+          <li>Tableau de bord permettant au promoteur de gérer la souscription, de suivre les demandes et de maîtriser le calendrier.</li>
+        </ul>
+
+        <h3>Étape 4 : marketing et attraction des acheteurs</h3>
+        <ul>
+          <li>Outils de promotion numérique pour une portée internationale.</li>
+          <li>Rapports clairs sur les rendements et les risques pour chaque copropriétaire.</li>
+        </ul>
+
+        <h3>Étape 5 : encaissement des fonds et achèvement de la souscription</h3>
+        <ul>
+          <li>Réception des fonds via le portefeuille numérique ou les circuits bancaires.</li>
+          <li>Les jetons sont distribués automatiquement aux copropriétaires via les contrats intelligents.</li>
+        </ul>
+
+        <h3>Étape 6 : gestion après la souscription</h3>
+        <p>Après la souscription définitive :</p>
+        <ul>
+          <li>Le promoteur reçoit les fonds.</li>
+          <li>Exécution intégrale du Contrat de propriété.</li>
+          <li>Transfert de la propriété à la SPV.</li>
+        </ul>
+        <p>Gestion des parts du promoteur et des copropriétaires, sortie via le marché annuel ou le fournisseur de liquidité.</p>
+        <p>
+          <strong>Si la souscription n'est pas achevée :</strong> les clauses du Contrat de propriété définissent les procédures permettant
+          soit de résilier, soit de renouveler le contrat jusqu'à l'achèvement de la souscription.
+        </p>
+
+        <h2>10. Responsabilités du promoteur et de la plateforme</h2>
+        <h3>Responsabilités du promoteur :</h3>
+        <ul>
+          <li>Remettre des documents exacts et complets.</li>
+          <li>Respecter toutes les exigences légales et réglementaires.</li>
+          <li>Suivre les rapports financiers et veiller au respect des contrats intelligents.</li>
+          <li>Coopérer avec les sociétés d'évaluation, d'assurance et de gestion.</li>
+          <li>Respecter les conditions et les frais prévus dans le Contrat de propriété.</li>
+        </ul>
+        <h3>Responsabilités de la plateforme :</h3>
+        <ul>
+          <li>Gérer la tokenisation, la souscription et les opérations liées à la SPV et à la blockchain.</li>
+          <li>Vérifier les documents juridiques et financiers.</li>
+          <li>Gérer l'encaissement des fonds et verser les paiements au promoteur après l'achèvement de la souscription.</li>
+          <li>Fournir des tableaux de bord, des rapports et des analyses.</li>
+          <li>Fournir des outils de marketing et de promotion.</li>
+          <li>Respecter les conditions du Contrat de propriété signé.</li>
         </ul>
       </section>
       ) : (

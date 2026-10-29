@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/Button';
 import { Input } from '../design-system/forms/Input';
 import { useTranslation } from 'react-i18next';
+import { uiLocale } from '../../utils/locale';
 
 export interface InstallmentPlan {
   id: string;
@@ -55,7 +56,7 @@ export const InstallmentInvestment: React.FC<InstallmentInvestmentProps> = ({
   className = ''
 }) => {
   const { t, i18n } = useTranslation('invest');
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
+  const dateLocale = uiLocale(i18n.language);
   const [currentStep, setCurrentStep] = useState<'amount' | 'plan' | 'payment' | 'review'>('amount');
   const [selectedTokens, setSelectedTokens] = useState<number>(property.minimumTokens);
   const [selectedPlanId, setSelectedPlanId] = useState<string>('');

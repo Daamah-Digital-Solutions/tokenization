@@ -63,6 +63,7 @@ import { PropertyService } from '../../../services/property/PropertyService';
 import { PaymentService } from '../../../services/payment/PaymentService';
 import { cn } from '../../../utils/cn';
 import { useTranslation } from 'react-i18next';
+import { uiLocale } from '../../../utils/locale';
 
 interface InvestorControlPanelProps {
   className?: string;
@@ -328,7 +329,7 @@ const OverviewContent: React.FC<{
   walletBalance: number;
 }> = ({ portfolio, marketInsights, loading, showBalances, formatCurrency, formatPercentage, setActiveTab, walletBalance }) => {
   const { t, i18n } = useTranslation('dashboard');
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
+  const dateLocale = uiLocale(i18n.language);
   return (
   <div className="space-y-6">
     {/* Wallet Balance Banner */}
@@ -1031,7 +1032,7 @@ export const NotificationsContent: React.FC = () => {
                   <Text variant="caption" color="muted">{notif.message || notif.description || ''}</Text>
                   {notif.created_at && (
                     <Text variant="caption" color="muted" className="mt-1">
-                      {new Date(notif.created_at).toLocaleDateString(i18n.language?.startsWith('ar') ? 'ar-EG' : undefined)}
+                      {new Date(notif.created_at).toLocaleDateString(uiLocale(i18n.language))}
                     </Text>
                   )}
                 </div>

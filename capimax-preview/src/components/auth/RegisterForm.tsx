@@ -24,6 +24,7 @@ import { AuthService } from '../../services/auth/AuthService';
 import { UserRole } from '../../services/api/types';
 import { getLocalizedCountries } from '../../utils/countries';
 import { useTranslation } from 'react-i18next';
+import { baseLanguage } from '../../utils/locale';
 
 interface RegisterFormProps {
   onSignIn?: () => void;
@@ -197,7 +198,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             text: 'signup_with',
             shape: 'rectangular',
             width: 400,
-            locale: i18n.language?.startsWith('ar') ? 'ar' : 'en'
+            locale: baseLanguage(i18n.language)
           });
         }
       }, 100);

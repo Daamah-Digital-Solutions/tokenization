@@ -26,7 +26,17 @@ const languages: Language[] = [
     flag: '🇸🇦',
     dir: 'rtl',
   },
+  {
+    code: 'fr',
+    name: 'French',
+    nativeName: 'Français',
+    flag: '🇫🇷',
+    dir: 'ltr',
+  },
 ];
+
+// The current language of an i18next code ('fr-FR' is French)
+const sameLanguage = (code: string, lng?: string) => (lng || '').split('-')[0] === code;
 
 interface LanguageSwitcherProps {
   variant?: 'dropdown' | 'toggle' | 'minimal';
@@ -37,16 +47,13 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
   variant = 'dropdown',
   className = '',
 }) => {
-  // TEMPORARILY HIDDEN (client request 2026-07-09): hide the language switcher
-  // from the live site until the Arabic/i18n translations are finalized.
-  // To restore, delete the next line.
-  return null;
-
   const { i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const currentLanguage = languages.find((lang) => lang.code === i18n.language) || languages[0];
+  const currentLanguage = languages.find((lang) => sameLanguage(lang.code, i18n.language)) || languages[0];
+  // The language after the current one (icon-only switcher)
+  const nextLanguage = languages[(languages.indexOf(currentLanguage) + 1) % languages.length];
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -65,29 +72,35 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
     setIsOpen(false);
   };
 
-  // Toggle variant - simple button to switch between languages
+  // Toggle variant (mobile menu): every language side by side
   if (variant === 'toggle') {
-    const nextLanguage = languages.find((lang) => lang.code !== i18n.language) || languages[0];
-
     return (
-      <button
-        onClick={() => handleLanguageChange(nextLanguage.code)}
-        className={`flex items-center gap-2 px-3 py-2 text-sm font-medium
-                   text-navy-700 dark:text-navy-200 hover:bg-navy-100
-                   dark:hover:bg-navy-800 rounded-lg transition-all
-                   border border-navy-200 dark:border-navy-700 ${className}`}
-        aria-label={`Switch to ${nextLanguage.name}`}
-      >
-        <Globe className="w-4 h-4" />
-        <span>{nextLanguage.nativeName}</span>
-      </button>
+      <div className={`flex items-center gap-1 p-1 rounded-lg border border-navy-200 dark:border-navy-700 ${className}`}>
+        <Globe className="w-4 h-4 mx-1 text-navy-500 dark:text-navy-400 shrink-0" />
+        {languages.map((language) => {
+          const active = language.code === currentLanguage.code;
+          return (
+            <button
+              key={language.code}
+              type="button"
+              onClick={() => handleLanguageChange(language.code)}
+              aria-pressed={active}
+              className={`flex-1 px-2 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                active
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-navy-700 dark:text-navy-200 hover:bg-navy-100 dark:hover:bg-navy-800'
+              }`}
+            >
+              {language.nativeName}
+            </button>
+          );
+        })}
+      </div>
     );
   }
 
   // Minimal variant - just the flag/icon
   if (variant === 'minimal') {
-    const nextLanguage = languages.find((lang) => lang.code !== i18n.language) || languages[0];
-
     return (
       <button
         onClick={() => handleLanguageChange(nextLanguage.code)}
@@ -139,19 +152,19 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
                 onClick={() => handleLanguageChange(language.code)}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-left
                            transition-colors ${
-                             language.code === i18n.language
+                             language.code === currentLanguage.code
                                ? 'bg-emerald-600/10 text-emerald-600 dark:text-emerald-400'
                                : 'text-navy-700 dark:text-navy-200 hover:bg-navy-100 dark:hover:bg-navy-700'
                            }`}
                 role="option"
-                aria-selected={language.code === i18n.language}
+                aria-selected={language.code === currentLanguage.code}
               >
                 <span className="text-lg">{language.flag}</span>
                 <div className="flex-1">
                   <div className="font-medium">{language.nativeName}</div>
                   <div className="text-xs text-slate-500">{language.name}</div>
                 </div>
-                {language.code === i18n.language && (
+                {language.code === currentLanguage.code && (
                   <Check className="w-4 h-4 text-emerald-400" />
                 )}
               </button>

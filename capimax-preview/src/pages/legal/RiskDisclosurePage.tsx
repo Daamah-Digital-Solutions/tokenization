@@ -5,10 +5,11 @@ import { LegalPageLayout } from '../../components/legal/LegalPageLayout';
 export const RiskDisclosurePage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const isFr = i18n.language?.startsWith('fr');
   return (
     <LegalPageLayout
-      title={isAr ? 'الإفصاح عن مخاطر التملّك' : 'Ownership Risk Disclosure'}
-      lastUpdated={isAr ? 'يناير 2026' : 'January 2026'}
+      title={isAr ? 'الإفصاح عن مخاطر التملّك' : isFr ? 'Avertissement sur les risques liés à la propriété' : 'Ownership Risk Disclosure'}
+      lastUpdated={isAr ? 'يناير 2026' : isFr ? 'janvier 2026' : 'January 2026'}
     >
       {isAr ? (
       <section className="legal-section">
@@ -65,6 +66,63 @@ export const RiskDisclosurePage: React.FC = () => {
 
         <p className="legal-emphasis">
           بالمتابعة، يُقرّ الملاك بفهمهم الكامل لهذه المخاطر وقبولهم بها.
+        </p>
+      </section>
+      ) : isFr ? (
+      <section className="legal-section">
+        <p className="legal-intro">
+          La détention de biens immobiliers tokenisés par l'intermédiaire de Capimax RT comporte des risques importants, y compris la perte potentielle d'une partie ou de la totalité du capital consacré à l'achat. Les propriétaires potentiels doivent examiner attentivement et comprendre les facteurs de risque suivants, dont la liste n'est pas exhaustive.
+        </p>
+
+        <h2>2.1 Risque de marché</h2>
+        <p>
+          La valeur des actifs immobiliers peut fluctuer en fonction de la conjoncture économique, des taux d'intérêt, de l'inflation, de l'équilibre entre l'offre et la demande et des événements géopolitiques.
+        </p>
+
+        <h2>2.2 Risque de liquidité</h2>
+        <ul>
+          <li>Les parts de propriété tokenisées peuvent être illiquides.</li>
+          <li>Le marché secondaire ne garantit ni des échanges actifs ni la présence d'acheteurs.</li>
+          <li>Les dispositifs de fournisseur de liquidité (le cas échéant) sont facultatifs, limités et soumis à conditions.</li>
+        </ul>
+
+        <h2>2.3 Absence de sortie garantie</h2>
+        <p>
+          Rien ne garantit que les propriétaires pourront sortir des biens qu'ils détiennent au moment ou au prix souhaité.
+        </p>
+
+        <h2>2.4 Risque réglementaire et juridique</h2>
+        <p>Des modifications des lois, des réglementations ou des pratiques de contrôle peuvent :</p>
+        <ul>
+          <li>Restreindre l'accès à la plateforme ;</li>
+          <li>Affecter l'éligibilité des propriétaires ;</li>
+          <li>Avoir une incidence sur la légalité ou la structure des offres tokenisées.</li>
+        </ul>
+
+        <h2>2.5 Risque opérationnel</h2>
+        <p>Des risques peuvent découler :</p>
+        <ul>
+          <li>D'erreurs ou de défaillances des SPV (sociétés ad hoc), des gestionnaires de biens, des sociétés d'évaluation, des assureurs ou des prestataires de paiement ;</li>
+          <li>De défaillances technologiques, d'incidents de cybersécurité ou de violations de données.</li>
+        </ul>
+
+        <h2>2.6 Risque de contrepartie</h2>
+        <p>
+          Les SPV, les promoteurs ou les prestataires de services peuvent faire défaut, devenir insolvables ou ne pas exécuter leurs obligations contractuelles.
+        </p>
+
+        <h2>2.7 Risque d'évaluation</h2>
+        <p>
+          Les évaluations reposent sur des hypothèses et des méthodologies susceptibles de ne pas refléter les conditions futures du marché ni les prix effectivement réalisables.
+        </p>
+
+        <h2>2.8 Force majeure</h2>
+        <p>
+          Des événements échappant à tout contrôle (catastrophes naturelles, pandémies, guerres, mesures gouvernementales) peuvent avoir une incidence significative sur la performance des actifs.
+        </p>
+
+        <p className="legal-emphasis">
+          En poursuivant, les propriétaires reconnaissent avoir pleinement compris et accepté ces risques.
         </p>
       </section>
       ) : (

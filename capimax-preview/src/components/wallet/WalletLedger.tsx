@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { FileDown, Loader2 } from 'lucide-react';
 import { PayoutService, type LedgerRow } from '../../services/wallet/PayoutService';
 import { cn } from '../../utils/cn';
+import { uiLocale } from '../../utils/locale';
 
 /** Every movement of the wallet, newest first, each with its numbered receipt (PropShare model). */
 export const WalletLedger: React.FC = () => {
@@ -11,7 +12,7 @@ export const WalletLedger: React.FC = () => {
   const [pages, setPages] = useState(1);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-GB';
+  const dateLocale = uiLocale(i18n.language, 'en-GB');
 
   const { data, isLoading } = useQuery({
     queryKey: ['wallet-ledger', pages],

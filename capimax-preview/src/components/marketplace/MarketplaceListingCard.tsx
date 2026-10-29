@@ -15,6 +15,7 @@ import { Badge } from '../ui/Badge';
 import { cn } from '../../utils/cn';
 import type { SecondaryMarketListing } from '../../services/marketplace/MarketplaceService';
 import { useTranslation } from 'react-i18next';
+import { uiLocale } from '../../utils/locale';
 
 interface MarketplaceListingCardProps {
   listing: SecondaryMarketListing;
@@ -34,7 +35,7 @@ export const MarketplaceListingCard: React.FC<MarketplaceListingCardProps> = ({
   showActions = true
 }) => {
   const { t, i18n } = useTranslation('market');
-  const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
+  const dateLocale = uiLocale(i18n.language);
   const isAuction = listing.listing_type === 'AUCTION';
   const isExpired = listing.status === 'EXPIRED';
   const isSold = listing.status === 'SOLD';

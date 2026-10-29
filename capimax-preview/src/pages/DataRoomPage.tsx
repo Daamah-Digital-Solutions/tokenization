@@ -5,6 +5,7 @@ import { InfoPageLayout } from '../components/info/InfoPageLayout';
 export const DataRoomPage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const isFr = i18n.language?.startsWith('fr');
   const navigateToPage = (path: string) => {
     window.history.pushState({}, '', path);
     window.dispatchEvent(new PopStateEvent('popstate'));
@@ -13,8 +14,8 @@ export const DataRoomPage: React.FC = () => {
 
   return (
     <InfoPageLayout
-      title={isAr ? 'غرفة البيانات ومركز المستندات' : 'Data Room & Documentation Hub'}
-      subtitle={isAr ? 'تجسيد لالتزام كابي مكس RT بالشفافية وحماية الملاك' : "Demonstrating Capimax RT's commitment to transparency and owner protection"}
+      title={isAr ? 'غرفة البيانات ومركز المستندات' : isFr ? 'Salle de données et centre de documentation' : 'Data Room & Documentation Hub'}
+      subtitle={isAr ? 'تجسيد لالتزام كابي مكس RT بالشفافية وحماية الملاك' : isFr ? "L'illustration de l'engagement de Capimax RT en faveur de la transparence et de la protection des propriétaires" : "Demonstrating Capimax RT's commitment to transparency and owner protection"}
     >
       {isAr ? (
       <section className="info-section">
@@ -70,6 +71,63 @@ export const DataRoomPage: React.FC = () => {
           </button>
           <button className="link-button-outline" onClick={() => navigateToPage('/properties')}>
             تصفّح العقارات
+          </button>
+        </div>
+      </section>
+      ) : isFr ? (
+      <section className="info-section">
+        <p className="info-intro">
+          Chaque actif proposé dispose d'une salle de données numérique sécurisée contenant toute la documentation pertinente pour vous aider à prendre des décisions de propriété éclairées.
+        </p>
+
+        <h2>Contenu de la salle de données</h2>
+        <p>
+          Chaque actif proposé dispose d'une salle de données numérique sécurisée contenant :
+        </p>
+        <ul>
+          <li>Les documents de propriété et les titres</li>
+          <li>Les documents de constitution et de gouvernance de la SPV</li>
+          <li>Des rapports d'évaluation indépendants</li>
+          <li>Les polices d'assurance</li>
+          <li>Les contrats de gestion du bien</li>
+          <li>Des rapports financiers et opérationnels périodiques</li>
+          <li>Les relevés de distribution</li>
+          <li>Le registre des événements importants</li>
+        </ul>
+
+        <h2>Fonctionnalités de la salle de données</h2>
+        <ul className="check-list">
+          <li>Recherche et classement avancés</li>
+          <li>Gestion des versions et piste d'audit</li>
+          <li>Droits d'accès selon le rôle</li>
+          <li>Consultation et téléchargement sécurisés</li>
+        </ul>
+
+        <h2>Pourquoi c'est important</h2>
+        <p>
+          La transparence :
+        </p>
+        <ul>
+          <li>Renforce la confiance des propriétaires</li>
+          <li>Réduit l'asymétrie d'information</li>
+          <li>Limite les litiges</li>
+          <li>Favorise des décisions éclairées</li>
+        </ul>
+
+        <div className="info-highlight">
+          <strong>Accès :</strong> Les propriétaires vérifiés ont accès à la salle de données de chaque bien qu'ils envisagent ou qu'ils ont acheté. L'accès à la documentation est soumis aux règles de la plateforme et aux exigences de conformité.
+        </div>
+
+        <h2>Pages associées</h2>
+        <div>
+          <button className="link-button" onClick={() => navigateToPage('/spv')}>
+            Qu'est-ce qu'une SPV
+          </button>
+          <button className="link-button" onClick={() => navigateToPage('/investor-guide')}>
+            Guide du copropriétaire
+          </button>
+          <button className="link-button-outline" onClick={() => navigateToPage('/properties')}>
+            Parcourir les biens
           </button>
         </div>
       </section>

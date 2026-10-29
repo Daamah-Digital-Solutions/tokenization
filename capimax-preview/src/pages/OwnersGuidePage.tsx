@@ -5,10 +5,11 @@ import { InfoPageLayout } from '../components/info/InfoPageLayout';
 export const OwnersGuidePage: React.FC = () => {
   const { i18n } = useTranslation();
   const isAr = i18n.language?.startsWith('ar');
+  const isFr = i18n.language?.startsWith('fr');
   return (
     <InfoPageLayout
-      title={isAr ? 'دليل مالك العقار' : "Owner's Guide"}
-      subtitle={isAr ? 'منصة كابي مكس RT – دليل مالك العقار' : "Capimax RT Platform – Owner's Guide"}
+      title={isAr ? 'دليل مالك العقار' : isFr ? 'Guide du propriétaire du bien' : "Owner's Guide"}
+      subtitle={isAr ? 'منصة كابي مكس RT – دليل مالك العقار' : isFr ? 'Plateforme Capimax RT – Guide du propriétaire du bien' : "Capimax RT Platform – Owner's Guide"}
     >
       {isAr ? (
       <section className="info-section">
@@ -174,6 +175,175 @@ export const OwnersGuidePage: React.FC = () => {
           <li>توفير لوحات التحكم والتقارير والتحليلات الدقيقة.</li>
           <li>تقديم أدوات تسويق وترويج احترافية للعقار.</li>
           <li>الالتزام بشروط اتفاقية الملكية الموقّعة مع مالك العقار.</li>
+        </ul>
+      </section>
+      ) : isFr ? (
+      <section className="info-section">
+        <h2>1. Tokenisation immobilière</h2>
+        <ul>
+          <li>Conversion de la propriété d'un bien en unités numériques (jetons) représentant des parts fractionnées du bien.</li>
+          <li>Permet au propriétaire de vendre une partie du bien ou de conserver certains jetons afin de générer un revenu régulier.</li>
+          <li>Les contrats intelligents garantissent la protection des droits du propriétaire comme des copropriétaires.</li>
+        </ul>
+
+        <h2>2. Propriété fractionnée</h2>
+        <ul>
+          <li>Permet aux copropriétaires d'acheter des parts fractionnées du bien, ce qui abaisse le seuil d'entrée et répartit les risques.</li>
+          <li>Offre au propriétaire un financement flexible de ses projets sans recourir aux prêts traditionnels.</li>
+          <li>Le propriétaire peut conserver une partie de la propriété pour percevoir un revenu continu ou profiter de la valorisation du bien.</li>
+        </ul>
+
+        <h2>3. Blockchain et contrats intelligents</h2>
+        <ul>
+          <li><strong>Blockchain :</strong> une base de données sécurisée et transparente pour toutes les opérations immobilières.</li>
+          <li><strong>Contrats intelligents :</strong> exécutent automatiquement les conditions juridiques et financières du contrat, y compris la souscription, l'encaissement et la distribution.</li>
+          <li><strong>Avantages pour le propriétaire :</strong> garantissent le respect des contrats, une gestion transparente des parts de propriété et des risques juridiques réduits.</li>
+        </ul>
+
+        <h2>4. Fonctionnalités de la plateforme pour le propriétaire</h2>
+        <ol>
+          <li>Tokenisation du bien en unités numériques.</li>
+          <li>Contrats intelligents pour appliquer toutes les conditions de souscription et de vente.</li>
+          <li>Mise en ligne du bien sur la plateforme et ouverture à la souscription.</li>
+          <li>Outils de promotion et de marketing pour attirer des acheteurs.</li>
+          <li>Encaissement automatique des fonds des acheteurs.</li>
+          <li>Tableau de bord intégré pour suivre les souscriptions et gérer les parts de propriété.</li>
+          <li>Accompagnement par des sociétés d'évaluation, d'assurance et de gestion pour faciliter le processus de souscription.</li>
+          <li>Portefeuille numérique pour retirer des fonds depuis n'importe où dans le monde, en cryptomonnaies ou par les moyens bancaires traditionnels.</li>
+          <li>Rapports périodiques sur la performance du bien et les parts des copropriétaires.</li>
+          <li><strong>Flexibilité pour le propriétaire :</strong> le propriétaire peut vendre le bien en totalité, en vendre une partie, ou en conserver la gestion afin de générer un revenu régulier ou de superviser le projet.</li>
+        </ol>
+
+        <h2>5. Contrat de propriété entre le propriétaire et la plateforme</h2>
+        <p>
+          Le Contrat de propriété est le contrat principal conclu entre le propriétaire et Capimax RT ;
+          il contient toutes les informations juridiques, financières et documentaires relatives au bien,
+          notamment :
+        </p>
+        <ul>
+          <li>L'ensemble des données du bien et ses documents juridiques et techniques.</li>
+          <li>Les coordonnées des sociétés d'évaluation agréées.</li>
+          <li>Les frais liés à la tokenisation, à l'administration, à la mise en ligne, à la souscription, à la SPV et à l'évaluation.</li>
+          <li>Le mécanisme de transfert de la propriété du bien à une SPV (société ad hoc).</li>
+          <li>Les droits et obligations juridiques et financiers du propriétaire et de la plateforme.</li>
+        </ul>
+        <p>
+          <strong>Remarque importante :</strong> le contrat de propriété doit être signé avant toute autre étape, car il
+          constitue le fondement juridique de toutes les procédures de mise en ligne et de souscription du bien.
+        </p>
+        <p>
+          <strong>En cas d'échec de la souscription :</strong> le contrat comprend des clauses définissant la
+          procédure permettant :
+        </p>
+        <ul>
+          <li>De résilier légalement le contrat, ou</li>
+          <li>De renouveler le contrat jusqu'à l'achèvement de la souscription.</li>
+        </ul>
+
+        <h2>6. Conditions générales de mise en ligne du bien et responsabilités juridiques</h2>
+        <ul>
+          <li>Remettre à la plateforme des documents exacts et complets.</li>
+          <li>Respecter le calendrier et les étapes définies pour la mise en ligne et la souscription du bien.</li>
+          <li>Se conformer aux lois locales et internationales en matière d'immobilier et de propriété.</li>
+          <li>Le propriétaire est responsable de tout document inexact ou erroné.</li>
+          <li>La plateforme est responsable de la gestion de la souscription et de la vérification de la validité des transactions via les contrats intelligents.</li>
+        </ul>
+
+        <h2>7. Frais dont le propriétaire doit avoir connaissance</h2>
+        <ol>
+          <li><strong>Frais de tokenisation du bien :</strong> pour la conversion du bien en unités numériques.</li>
+          <li><strong>Frais d'administration :</strong> frais de fonctionnement de la plateforme et de gestion de la souscription.</li>
+          <li><strong>Frais de mise en ligne et de souscription :</strong> pour la mise en ligne du bien sur la plateforme et son ouverture aux acheteurs.</li>
+          <li><strong>Frais de SPV :</strong> pour la constitution et la gestion de la société ad hoc propre à chaque bien.</li>
+          <li><strong>Frais d'évaluation :</strong> honoraires des sociétés d'évaluation agréées pour l'établissement de rapports précis sur le bien.</li>
+        </ol>
+
+        <h2>8. Documents requis de la part du propriétaire</h2>
+        <ol>
+          <li>Titre de propriété ou acte de propriété du bien.</li>
+          <li>Plans architecturaux et permis de construire légaux.</li>
+          <li>Certificat d'évaluation récent du bien délivré par des sociétés agréées.</li>
+          <li>Attestation d'assurance du bien, le cas échéant.</li>
+          <li>Pièces d'identité légales du propriétaire ou de la société propriétaire.</li>
+          <li>Documents financiers relatifs à toute dette ou obligation grevant le bien.</li>
+          <li>Tout accord existant avec les copropriétaires ou locataires actuels.</li>
+        </ol>
+
+        <h2>9. Étapes de mise en ligne du bien jusqu'à la souscription</h2>
+
+        <h3>Étape 0 : signature du Contrat de propriété</h3>
+        <ul>
+          <li>Le Contrat de propriété entre le propriétaire et la plateforme est signé avant toute autre procédure.</li>
+          <li>Le contrat définit toutes les informations juridiques, financières et documentaires du bien.</li>
+          <li>Accord sur les frais et sur le mécanisme de transfert de la propriété du bien à la SPV.</li>
+          <li>Il constitue le fondement juridique de toutes les étapes de mise en ligne et de souscription.</li>
+        </ul>
+
+        <h3>Étape 1 : inspection, évaluation et approbation</h3>
+        <ul>
+          <li>Après la signature du contrat, le propriétaire et la plateforme conviennent de l'organisme chargé d'évaluer le bien.</li>
+          <li>Un rapport complet sur le bien est établi, comprenant l'emplacement, le type de bien, les rendements attendus et les risques.</li>
+          <li>Le bien est approuvé pour la souscription sur la base d'une évaluation objective.</li>
+        </ul>
+
+        <h3>Étape 2 : création de la SPV et préparation des contrats intelligents</h3>
+        <ul>
+          <li>Le propriétaire et la plateforme conviennent de l'entité chargée de constituer la SPV.</li>
+          <li>Le bien est converti en unités numériques (jetons) par l'intermédiaire de la SPV.</li>
+          <li>Les contrats intelligents sont préparés afin de définir les conditions juridiques et financières de chaque unité.</li>
+        </ul>
+
+        <h3>Étape 3 : mise en ligne sur la plateforme et souscription</h3>
+        <ul>
+          <li>Le bien est mis en ligne sur Capimax RT et la souscription est ouverte aux acheteurs.</li>
+          <li>Tableau de bord du propriétaire pour gérer la souscription, suivre les demandes et maîtriser le calendrier.</li>
+        </ul>
+
+        <h3>Étape 4 : marketing et attraction des acheteurs</h3>
+        <ul>
+          <li>Outils de promotion immobilière numérique pour attirer des acheteurs.</li>
+          <li>Des rapports clairs sur les rendements attendus et les risques sont fournis à chaque copropriétaire.</li>
+        </ul>
+
+        <h3>Étape 5 : encaissement des fonds et achèvement de la souscription</h3>
+        <ul>
+          <li>Réception des fonds des acheteurs via le portefeuille numérique ou les banques.</li>
+          <li>Les jetons sont distribués automatiquement aux acheteurs par l'intermédiaire des contrats intelligents.</li>
+        </ul>
+
+        <h3>Étape 6 : gestion après la souscription</h3>
+        <p>Après l'achèvement définitif de la souscription :</p>
+        <ul>
+          <li>Le propriétaire reçoit ses fonds.</li>
+          <li>Exécution intégrale du Contrat de propriété.</li>
+          <li>Transfert de la propriété du bien à la SPV, conformément au contrat.</li>
+        </ul>
+        <p>
+          Gestion des parts du propriétaire et des copropriétaires, et sortie via le marché annuel ou le fournisseur
+          de liquidité.
+        </p>
+        <p>
+          <strong>En cas d'échec de la souscription :</strong> les clauses du Contrat de propriété déterminent la
+          procédure permettant soit de résilier le contrat, soit de le renouveler jusqu'à l'achèvement de la souscription.
+        </p>
+
+        <h2>10. Responsabilités du propriétaire et de la plateforme</h2>
+        <h3>Responsabilités du propriétaire :</h3>
+        <ul>
+          <li>Remettre des documents exacts et complets.</li>
+          <li>Respecter l'ensemble des lois et réglementations locales et internationales.</li>
+          <li>Suivre les rapports financiers et veiller au respect des conditions des contrats intelligents.</li>
+          <li>Coopérer avec les sociétés d'évaluation, d'assurance et de gestion pour faciliter le bon déroulement de la souscription.</li>
+          <li>Respecter les conditions et les frais prévus dans le Contrat de propriété.</li>
+        </ul>
+        <h3>Responsabilités de la plateforme :</h3>
+        <ul>
+          <li>Gérer la tokenisation et la souscription via la SPV et la blockchain.</li>
+          <li>Vérifier les documents juridiques et financiers.</li>
+          <li>Gérer l'encaissement des fonds et verser les paiements au propriétaire après l'achèvement définitif de la souscription.</li>
+          <li>Fournir des tableaux de bord, des rapports et des analyses précises.</li>
+          <li>Proposer des outils professionnels de marketing et de promotion du bien.</li>
+          <li>Respecter les conditions du Contrat de propriété signé avec le propriétaire.</li>
         </ul>
       </section>
       ) : (

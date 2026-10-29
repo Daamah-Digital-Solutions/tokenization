@@ -1,0 +1,192 @@
+{
+  "footer": {
+    "tagline": "Plateforme de tokenisation immobilière pour une propriété sûre et transparente.",
+    "headquarters": "Siège mondial",
+    "unitedStates": "États-Unis",
+    "unitedKingdom": "Royaume-Uni",
+    "email": "E-mail",
+    "sections": {
+      "platform": "Plateforme",
+      "learn": "Comprendre",
+      "guides": "Guides",
+      "legal": "Mentions légales",
+      "help": "Aide"
+    },
+    "links": {
+      "properties": "Biens",
+      "marketplace": "Marché secondaire",
+      "liquidityProvider": "Fournisseur de liquidité",
+      "howItWorks": "Comment ça marche",
+      "partners": "Nos partenaires",
+      "brokerProgram": "Programme courtiers",
+      "about": "À propos",
+      "tokenization": "Qu'est-ce que la tokenisation ?",
+      "spv": "Qu'est-ce qu'une SPV ?",
+      "ownersGuide": "Guide du propriétaire",
+      "dataRoom": "Salle de données",
+      "risks": "Risques et avertissements",
+      "faq": "FAQ",
+      "propertyOwners": "Pour les propriétaires de biens",
+      "rtGuide": "Guide Capimax RT",
+      "ownershipGuide": "Guide de la propriété",
+      "strategies": "Stratégies de propriété",
+      "coOwnerGuide": "Guide du copropriétaire",
+      "developerGuide": "Guide du promoteur",
+      "brokerGuide": "Guide du courtier",
+      "lpGuide": "Guide du fournisseur de liquidité",
+      "technology": "Technologie",
+      "documentCenter": "Centre de documents",
+      "verificationCenter": "Centre de vérification",
+      "privacy": "Politique de confidentialité",
+      "terms": "Conditions générales",
+      "riskDisclosure": "Avertissement sur les risques",
+      "compliance": "Conformité",
+      "cookies": "Politique relative aux cookies",
+      "amlKyc": "Politique LCB-FT/KYC",
+      "security": "Politique de sécurité",
+      "disclaimer": "Avertissement",
+      "support": "Centre d'assistance",
+      "contact": "Nous contacter",
+      "fees": "Frais"
+    },
+    "disclaimerTitle": "Avertissement juridique de Capimax RT",
+    "disclaimer1": "Ce site est exploité par Capimax Real Estate Technologies LLC (« Capimax »). Capimax RT est une plateforme technologique et un écosystème numérique qui met en relation investisseurs, propriétaires de biens, promoteurs, courtiers et fournisseurs de liquidité.",
+    "disclaimer2": "Capimax n'est ni un courtier-négociant enregistré ni un conseiller en investissement et ne fournit pas de services de conseil financier, de conseil en investissement personnalisé ni de recommandations d'acheter, de conserver ou de vendre un investissement. Les annonces et le contenu du site sont fournis à titre informatif et ne constituent ni une recommandation ni une garantie d'adéquation.",
+    "disclaimer3": "Tout investissement comporte des risques, y compris la perte possible d'une partie ou de la totalité du capital investi. Capimax ne garantit ni rendements, ni revenus, ni plus-value, ni liquidité, ni remboursement du capital. Les performances passées ne sont pas un indicateur fiable des résultats futurs.",
+    "disclaimer4": "Il vous appartient d'évaluer si un investissement est adapté à votre situation financière, à vos objectifs et à votre tolérance au risque. Consultez les documents applicables et sollicitez l'avis indépendant de professionnels qualifiés en matière juridique, fiscale et d'investissement avant d'investir.",
+    "disclaimer5": "L'utilisation de ce site est soumise à nos <terms>Conditions générales</terms> et à notre <privacy>Politique de confidentialité</privacy>. Rien dans le présent avertissement n'exclut une responsabilité qui ne peut légalement être exclue.",
+    "copyright": "Copyright © {{year}} Capimax Real Estate Technologies LLC. Tous droits réservés."
+  },
+  "contact": {
+    "badge": "Nous contacter",
+    "title": "Nous sommes là pour vous aider",
+    "subtitle": "Des questions sur la détention de parts de biens, votre compte ou une annonce ? Envoyez-nous un message : notre équipe vous répond par e-mail, généralement sous un jour ouvré.",
+    "cards": {
+      "email": "Écrivez-nous",
+      "emailHint": "Pour toute question — nous répondons sous un jour ouvré.",
+      "phone": "Appelez-nous",
+      "phoneHint": "Du lundi au vendredi, 9 h – 18 h (heure de l'Est des États-Unis).",
+      "office": "Rendez-nous visite",
+      "support": "Centre d'assistance",
+      "supportHint": "Tickets, réponses aux questions fréquentes et notre assistant IA."
+    },
+    "form": {
+      "title": "Envoyez-nous un message",
+      "name": "Nom complet",
+      "email": "E-mail",
+      "phone": "Téléphone (facultatif)",
+      "topic": "Thème",
+      "subject": "Objet",
+      "message": "Message",
+      "send": "Envoyer le message",
+      "sending": "Envoi…",
+      "sent": "Merci — votre message a bien été reçu. Une copie a été envoyée à {{email}} et notre équipe vous répondra rapidement. Référence : {{reference}}",
+      "sendAnother": "Envoyer un autre message",
+      "error": "Votre message n'a pas pu être envoyé. Veuillez réessayer ou nous écrire directement par e-mail.",
+      "required": "Veuillez remplir tous les champs obligatoires.",
+      "invalidEmail": "Veuillez saisir une adresse e-mail valide.",
+      "privacy": "Nous utilisons vos coordonnées uniquement pour répondre à votre message."
+    },
+    "topics": {
+      "general": "Question générale",
+      "investment": "Détenir des parts de biens",
+      "account": "Mon compte et ma vérification",
+      "payments": "Paiements et portefeuille",
+      "listing": "Mettre un bien en ligne",
+      "partnership": "Partenariats et courtiers",
+      "media": "Presse et médias",
+      "other": "Autre"
+    }
+  },
+  "support": {
+    "badge": "Centre d'assistance",
+    "title": "Comment pouvons-nous vous aider ?",
+    "subtitle": "Obtenez des réponses instantanées de notre assistant IA, ouvrez un ticket auprès de notre équipe ou contactez-nous par téléphone, WhatsApp ou e-mail.",
+    "channels": {
+      "assistant": "Assistant IA",
+      "assistantHint": "Des réponses instantanées sur la plateforme, à tout moment.",
+      "assistantCta": "Interroger l'assistant",
+      "whatsapp": "WhatsApp",
+      "whatsappHint": "Discutez avec notre équipe.",
+      "whatsappCta": "Ouvrir WhatsApp",
+      "phone": "Téléphone",
+      "phoneHint": "Lun – ven, 9 h – 18 h (heure de l'Est des États-Unis).",
+      "email": "E-mail",
+      "emailHint": "Réponse sous un jour ouvré.",
+      "contact": "Formulaire de contact",
+      "contactHint": "Envoyez un message sans compte.",
+      "contactCta": "Ouvrir le formulaire"
+    },
+    "faq": {
+      "title": "Questions fréquentes",
+      "all": "Voir toutes les questions",
+      "items": [
+        {
+          "q": "Comment vérifier mon identité (KYC) ?",
+          "a": "Ouvrez Tableau de bord → Vérification d'identité, renseignez vos informations, importez un passeport, une carte d'identité ou un permis de conduire, puis prenez un selfie en direct. Notre équipe l'examine et vous recevez un e-mail avec le résultat."
+        },
+        {
+          "q": "Je n'ai pas reçu mon code de vérification.",
+          "a": "Vérifiez vos dossiers Spam et Promotions, puis utilisez « Renvoyer le code » sur l'écran de vérification (disponible toutes les 60 secondes). Les codes sont valables 30 minutes."
+        },
+        {
+          "q": "Comment ajouter de l'argent à mon portefeuille ?",
+          "a": "Ouvrez Portefeuille → Ajouter des fonds et choisissez carte, crypto ou virement bancaire. Les dépôts par carte et crypto sont crédités automatiquement ; les virements bancaires après confirmation par notre équipe."
+        },
+        {
+          "q": "Puis-je payer un bien en plusieurs échéances ?",
+          "a": "Oui, lorsque le bien le propose. La page du bien indique l'apport initial ainsi que chaque échéance avec sa date et son montant, et vous réglez chacune depuis votre portefeuille dans Tableau de bord → Échéances."
+        },
+        {
+          "q": "Comment vendre mes parts ?",
+          "a": "Mettez-les en vente sur le marché secondaire depuis votre portefeuille d'actifs. Lorsqu'un acheteur les achète, l'argent est ajouté à votre portefeuille et les parts sont transférées immédiatement à l'acheteur."
+        },
+        {
+          "q": "Où se trouvent mes documents et relevés ?",
+          "a": "Tableau de bord → Documents contient vos certificats et les documents des biens ; Tableau de bord → Rapports contient les relevés officiels du portefeuille, des transactions, des investissements et des biens détenus, en anglais ou en arabe."
+        }
+      ]
+    },
+    "tickets": {
+      "title": "Mes tickets d'assistance",
+      "subtitle": "Ouvrez un ticket et suivez ici la conversation avec notre équipe.",
+      "new": "Nouveau ticket",
+      "signIn": "Connectez-vous pour ouvrir et suivre vos tickets d'assistance.",
+      "signInCta": "Se connecter",
+      "empty": "Vous n'avez encore aucun ticket d'assistance.",
+      "loadError": "Impossible de charger vos tickets.",
+      "subject": "Objet",
+      "category": "Catégorie",
+      "priority": "Priorité",
+      "details": "Décrivez votre demande",
+      "submit": "Ouvrir le ticket",
+      "submitting": "Envoi…",
+      "created": "Le ticket {{reference}} a été ouvert. Nous vous répondrons ici et par e-mail.",
+      "error": "Le ticket n'a pas pu être ouvert. Veuillez réessayer.",
+      "reply": "Écrire une réponse…",
+      "send": "Envoyer la réponse",
+      "you": "Vous",
+      "team": "Assistance Capimax RT",
+      "back": "Tous les tickets",
+      "opened": "Ouvert le {{date}}",
+      "updated": "Mis à jour le {{date}}",
+      "categories": {
+        "investment": "Détenir des parts de biens",
+        "payments": "Paiements et portefeuille",
+        "account": "Compte et vérification",
+        "technical": "Problème technique",
+        "other": "Autre"
+      },
+      "priorities": {
+        "low": "Basse",
+        "medium": "Moyenne",
+        "high": "Haute"
+      },
+      "status": {
+        "open": "Ouvert",
+        "pending": "En attente de votre réponse",
+        "resolved": "Résolu"
+      }
+    }
+  }
+}

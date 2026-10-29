@@ -8,6 +8,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from '../../utils/router';
 import { AuthService } from '../../services/auth/AuthService';
 import { useTranslation } from 'react-i18next';
+import { baseLanguage } from '../../utils/locale';
 
 // Declare google global for TypeScript
 declare global {
@@ -170,7 +171,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             text: 'continue_with',
             shape: 'rectangular',
             width: 400,
-            locale: i18n.language?.startsWith('ar') ? 'ar' : 'en'
+            locale: baseLanguage(i18n.language)
           });
         }
       }, 100);
