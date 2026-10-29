@@ -276,7 +276,7 @@ class InstallmentPaymentAdmin(admin.ModelAdmin):
     
     def is_overdue_display(self, obj):
         """Display if installment is overdue."""
-        return 'Yes' if obj.is_overdue else 'No'
+        return obj.is_overdue  # a boolean column needs True / False
     is_overdue_display.short_description = 'Overdue'
     is_overdue_display.boolean = True
 
@@ -312,7 +312,7 @@ class TokenReservationAdmin(admin.ModelAdmin):
     
     def is_expired_display(self, obj):
         """Display if reservation is expired."""
-        return 'Yes' if obj.is_expired else 'No'
+        return obj.is_expired  # a boolean column needs True / False (not 'Yes' / 'No')
     is_expired_display.short_description = 'Expired'
     is_expired_display.boolean = True
     

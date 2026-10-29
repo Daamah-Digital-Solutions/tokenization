@@ -66,7 +66,9 @@ class Notification(models.Model):
     is_sent_via_push = models.BooleanField(default=False)
     
     # Action links
-    action_url = models.URLField(blank=True, null=True)
+    # A site path (/dashboard?view=…) or a full URL: a URLField refused the paths,
+    # so a notification could not be saved in the admin.
+    action_url = models.CharField(max_length=500, blank=True, null=True)
     action_label = models.CharField(max_length=100, blank=True)
     
     # Timestamps

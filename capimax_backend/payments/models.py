@@ -170,7 +170,7 @@ class Payment(models.Model):
     @property
     def fee_percentage(self):
         """Calculate processing fee as percentage of amount."""
-        if self.amount == 0:
+        if not self.amount or self.processing_fee is None:
             return Decimal('0.00')
         return ((self.processing_fee / self.amount) * 100).quantize(Decimal('0.01'))
 

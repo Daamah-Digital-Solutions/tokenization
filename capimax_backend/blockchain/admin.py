@@ -390,14 +390,14 @@ class RentalDistributionAdmin(admin.ModelAdmin):
     
     def amount_per_token(self, obj):
         """Calculate amount per token."""
-        if obj.eligible_tokens > 0:
+        if obj.eligible_tokens and obj.net_amount is not None:
             return f"{obj.net_amount / obj.eligible_tokens:.8f}"
         return '0'
     amount_per_token.short_description = 'Per Token'
     
     def claim_percentage(self, obj):
         """Calculate claim percentage."""
-        if obj.net_amount > 0:
+        if obj.net_amount and obj.net_amount > 0 and obj.total_claimed is not None:
             percentage = (obj.total_claimed / obj.net_amount) * 100
             return f"{percentage:.1f}%"
         return '0%'
@@ -405,7 +405,9 @@ class RentalDistributionAdmin(admin.ModelAdmin):
     
     def unclaimed_amount(self, obj):
         """Calculate unclaimed amount."""
-        return obj.net_amount - obj.total_claimed
+        if obj.net_amount is None:
+            return '-'
+        return obj.net_amount - (obj.total_claimed or 0)
     unclaimed_amount.short_description = 'Unclaimed'
 
 
@@ -503,6 +505,8 @@ class GasTrackerAdmin(admin.ModelAdmin):
     def gas_prices_gwei(self, obj):
         """Display all gas prices in Gwei format."""
         gwei_divisor = 10**9
+        if None in (obj.slow_gas_price, obj.standard_gas_price, obj.fast_gas_price):
+            return '-'
         slow = obj.slow_gas_price / gwei_divisor
         standard = obj.standard_gas_price / gwei_divisor
         fast = obj.fast_gas_price / gwei_divisor

@@ -204,12 +204,12 @@ class MarketListing(models.Model):
     @property
     def tokens_filled(self):
         """Get number of tokens that have been filled."""
-        return self.tokens_offered - self.tokens_remaining
+        return (self.tokens_offered or 0) - (self.tokens_remaining or 0)
     
     @property
     def fill_percentage(self):
         """Get fill percentage of the listing."""
-        if self.tokens_offered == 0:
+        if not self.tokens_offered:
             return Decimal('0.00')
         percentage = (Decimal(self.tokens_filled) / Decimal(self.tokens_offered)) * 100
         return percentage.quantize(Decimal('0.01'))
@@ -217,7 +217,8 @@ class MarketListing(models.Model):
     @property
     def is_expired(self):
         """Check if listing is expired."""
-        return timezone.now() > self.expires_at and self.status == ListingStatus.ACTIVE
+        return (self.expires_at is not None and timezone.now() > self.expires_at
+                and self.status == ListingStatus.ACTIVE)
     
     @property
     def is_active(self):
@@ -225,13 +226,15 @@ class MarketListing(models.Model):
         return (
             self.status in [ListingStatus.ACTIVE, ListingStatus.PARTIALLY_FILLED] and
             not self.is_expired and
-            self.tokens_remaining > 0
+            (self.tokens_remaining or 0) > 0
         )
     
     @property
     def current_value(self):
         """Get current value of remaining tokens."""
-        return self.price_per_token * Decimal(self.tokens_remaining)
+        if self.price_per_token is None:
+            return Decimal('0.00')
+        return self.price_per_token * Decimal(self.tokens_remaining or 0)
     
     def can_fill_order(self, token_amount):
         """Check if the listing can fill an order for the specified token amount."""
@@ -435,15 +438,15 @@ class TradeOrder(models.Model):
     @property
     def fill_percentage(self):
         """Get fill percentage of the order."""
-        if self.tokens_requested == 0:
+        if not self.tokens_requested:
             return Decimal('0.00')
-        percentage = (Decimal(self.tokens_filled) / Decimal(self.tokens_requested)) * 100
+        percentage = (Decimal(self.tokens_filled or 0) / Decimal(self.tokens_requested)) * 100
         return percentage.quantize(Decimal('0.01'))
     
     @property
     def tokens_remaining(self):
         """Get remaining tokens to be filled."""
-        return self.tokens_requested - self.tokens_filled
+        return (self.tokens_requested or 0) - (self.tokens_filled or 0)
     
     def calculate_fees(self):
         """Calculate trading fees based on total amount."""

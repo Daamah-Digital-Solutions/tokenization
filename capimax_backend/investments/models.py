@@ -489,7 +489,7 @@ class InstallmentPayment(models.Model):
     @property
     def is_overdue(self):
         """Check if installment is overdue."""
-        return self.status == 'pending' and self.due_date < timezone.now()
+        return self.status == 'pending' and self.due_date is not None and self.due_date < timezone.now()
     
     def mark_as_paid(self, payment):
         """Mark installment as paid."""
@@ -652,7 +652,7 @@ class InvestmentWithdrawal(models.Model):
     @property
     def net_amount(self):
         """Calculate net amount after fees."""
-        return self.estimated_amount - self.processing_fee
+        return (self.estimated_amount or Decimal('0')) - (self.processing_fee or Decimal('0'))
 
 
 class AutoInvestment(models.Model):
@@ -840,6 +840,8 @@ class DividendPayment(models.Model):
     @property
     def annual_yield(self):
         """Calculate annualized yield for this dividend."""
+        if not (self.period_start and self.period_end):
+            return Decimal('0.00')
         days_in_period = (self.period_end - self.period_start).days
         if days_in_period == 0:
             return Decimal('0.00')
