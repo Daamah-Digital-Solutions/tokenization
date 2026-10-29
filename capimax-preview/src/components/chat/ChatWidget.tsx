@@ -16,7 +16,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { MessageCircle, X, Send, RefreshCw, Bot } from 'lucide-react';
+import { MessagesSquare, Sparkles, X, Send, RefreshCw, Bot } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const WEBHOOK_URL =
@@ -216,10 +216,13 @@ export const ChatWidget: React.FC = () => {
             transition={{ type: 'spring', stiffness: 260, damping: 20 }}
             onClick={() => setIsOpen(true)}
             aria-label={t('chat.open')}
-            className="fixed z-50 end-4 bottom-20 md:end-6 md:bottom-6 flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-xl shadow-emerald-600/30 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-emerald-400/40"
+            className="fixed z-50 end-4 bottom-20 md:end-6 md:bottom-6 flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-emerald-700 text-white shadow-xl shadow-slate-900/30 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-emerald-400/40"
           >
-            <MessageCircle className="w-7 h-7" />
-            <span className="absolute -top-0.5 -end-0.5 w-3.5 h-3.5 rounded-full bg-white/90 border-2 border-emerald-500" />
+            {/* chat bubbles + AI spark: an AI assistant, not a WhatsApp link (client round 4, #3) */}
+            <MessagesSquare className="w-7 h-7" />
+            <span className="absolute -top-1.5 -end-1.5 flex items-center justify-center w-6 h-6 rounded-full bg-amber-400 text-slate-900 shadow">
+              <Sparkles className="w-3.5 h-3.5" />
+            </span>
           </motion.button>
         )}
       </AnimatePresence>
@@ -240,7 +243,7 @@ export const ChatWidget: React.FC = () => {
             aria-label={t('chat.dialogLabel')}
           >
             {/* Header */}
-            <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white shrink-0">
+            <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-slate-800 to-emerald-700 text-white shrink-0">
               <div className="flex items-center justify-center w-9 h-9 rounded-full bg-white/20">
                 <Bot className="w-5 h-5" />
               </div>

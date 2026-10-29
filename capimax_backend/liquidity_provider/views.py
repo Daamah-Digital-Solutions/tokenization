@@ -6,6 +6,7 @@ from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from decimal import Decimal
@@ -58,6 +59,7 @@ class LPApplicationViewSet(viewsets.ModelViewSet):
 
     queryset = LPApplication.objects.all()
     serializer_class = LPApplicationSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]  # documents (client round 4, #14)
 
     def get_permissions(self):
         if self.action == 'create':
@@ -74,10 +76,34 @@ class LPApplicationViewSet(viewsets.ModelViewSet):
         return LPApplicationSerializer
 
     def create(self, request, *args, **kwargs):
-        """Submit a new LP application."""
-        serializer = self.get_serializer(data=request.data)
+        """Submit a new LP application, with its documents, linked to the signed-in account."""
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        from django.db import transaction as db_transaction
+
+        from core.partner_documents import collect, fingerprint
+
+        from .models import LPApplicationDocument
+        from .notify import application_received
+
+        try:
+            files = collect(request)
+        except DjangoValidationError as exc:
+            return Response(create_error_response(message=' '.join(exc.messages),
+                                                  details={'documents': exc.messages}),
+                            status=status.HTTP_400_BAD_REQUEST)
+        data = request.data
+        if hasattr(data, 'getlist'):  # multipart: lists arrive as repeated keys
+            data = {k: (data.getlist(k) if k == 'preferred_currencies' else data.get(k)) for k in data.keys()}
+        serializer = self.get_serializer(data=data)
         if serializer.is_valid():
-            application = serializer.save()
+            user = request.user if request.user.is_authenticated else None
+            with db_transaction.atomic():
+                application = serializer.save(applicant=user)
+                for doc_type, f in files:
+                    LPApplicationDocument.objects.create(
+                        application=application, document_type=doc_type, file=f,
+                        original_name=f.name[:255], size=f.size or 0, sha256=fingerprint(f))
+            application_received(application)
             return Response(
                 create_success_response(
                     data={'id': str(application.id)},
@@ -86,7 +112,7 @@ class LPApplicationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED
             )
         return Response(
-            create_error_response(message='Validation failed', errors=serializer.errors),
+            create_error_response(message='Validation failed', details=serializer.errors),
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -107,14 +133,20 @@ class LPApplicationViewSet(viewsets.ModelViewSet):
         """Approve an LP application (admin only)."""
         application = self.get_object()
 
-        if application.status != LPApplicationStatus.PENDING:
+        if application.status not in (LPApplicationStatus.PENDING, LPApplicationStatus.UNDER_REVIEW):
             return Response(
                 create_error_response(message='Application is not pending'),
                 status=status.HTTP_400_BAD_REQUEST
             )
+        from .notify import application_decided, missing_documents
+        missing = missing_documents(application)
+        if missing:
+            return Response(create_error_response(
+                message='Required documents are missing: ' + ', '.join(missing)), status=status.HTTP_400_BAD_REQUEST)
 
         notes = request.data.get('notes', '')
         lp = application.approve(reviewer=request.user, notes=notes)
+        application_decided(application)
 
         return Response(
             create_success_response(
@@ -128,7 +160,7 @@ class LPApplicationViewSet(viewsets.ModelViewSet):
         """Reject an LP application (admin only)."""
         application = self.get_object()
 
-        if application.status != LPApplicationStatus.PENDING:
+        if application.status not in (LPApplicationStatus.PENDING, LPApplicationStatus.UNDER_REVIEW):
             return Response(
                 create_error_response(message='Application is not pending'),
                 status=status.HTTP_400_BAD_REQUEST
@@ -136,6 +168,8 @@ class LPApplicationViewSet(viewsets.ModelViewSet):
 
         reason = request.data.get('reason', '')
         application.reject(reviewer=request.user, reason=reason)
+        from .notify import application_decided
+        application_decided(application)
 
         return Response(
             create_success_response(message='Application rejected.')
@@ -171,7 +205,8 @@ class LiquidityProviderViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def list_active(self, request):
         """List active LPs for investors to choose from."""
-        queryset = self.get_queryset().filter(status=LPStatus.ACTIVE)
+        queryset = self.get_queryset().filter(status=LPStatus.ACTIVE, user__isnull=False).exclude(
+            user=request.user)
         serializer = self.get_serializer(queryset, many=True)
         return Response(create_success_response(data=serializer.data))
 
@@ -283,6 +318,8 @@ class ExitRequestViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             exit_request = serializer.save()
+            from .notify import exit_requested
+            exit_requested(exit_request)
             return Response(
                 create_success_response(
                     data={'id': str(exit_request.id)},
@@ -291,7 +328,7 @@ class ExitRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED
             )
         return Response(
-            create_error_response(message='Validation failed', errors=serializer.errors),
+            create_error_response(message='Validation failed', details=serializer.errors),
             status=status.HTTP_400_BAD_REQUEST
         )
 
@@ -347,19 +384,32 @@ class ExitRequestViewSet(viewsets.ModelViewSet):
         serializer = ExitRequestLPActionSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(
-                create_error_response(message='Validation failed', errors=serializer.errors),
+                create_error_response(message='Validation failed', details=serializer.errors),
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         action = serializer.validated_data['action']
         notes = serializer.validated_data.get('notes', '')
 
+        from .notify import offer_made, request_declined
+        from .settlement import lp_can_pay
         if action == 'approve':
             offered_price = serializer.validated_data['offered_price_per_unit']
+            total = offered_price * exit_request.units_requested
+            if not lp.check_transaction_limit(total) or not lp.check_monthly_limit(total):
+                return Response(create_error_response(
+                    message='This offer is above your per-transaction or monthly limit.'),
+                    status=status.HTTP_400_BAD_REQUEST)
+            if not lp_can_pay(lp, total):
+                return Response(create_error_response(
+                    message='Your wallet balance does not cover this offer and its fee. Add funds first.',
+                    details={'code': 'LP_INSUFFICIENT_FUNDS'}), status=status.HTTP_400_BAD_REQUEST)
             exit_request.approve(offered_price_per_unit=offered_price, notes=notes)
-            message = 'Exit request approved. Waiting for investor to accept the offer.'
+            offer_made(exit_request)
+            message = 'Offer sent. The investor has 48 hours to accept it.'
         else:
             exit_request.reject(notes=notes)
+            request_declined(exit_request)
             message = 'Exit request rejected.'
 
         return Response(create_success_response(message=message))
@@ -379,19 +429,22 @@ class ExitRequestViewSet(viewsets.ModelViewSet):
         serializer = ExitRequestInvestorActionSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(
-                create_error_response(message='Validation failed', errors=serializer.errors),
+                create_error_response(message='Validation failed', details=serializer.errors),
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         action = serializer.validated_data['action']
 
         if action == 'cancel':
-            if exit_request.status in [ExitRequestStatus.COMPLETED]:
+            if exit_request.status in [ExitRequestStatus.COMPLETED, ExitRequestStatus.CANCELLED,
+                                       ExitRequestStatus.REJECTED, ExitRequestStatus.EXPIRED]:
                 return Response(
                     create_error_response(message='Cannot cancel completed request'),
                     status=status.HTTP_400_BAD_REQUEST
                 )
             exit_request.cancel()
+            from .notify import investor_withdrew
+            investor_withdrew(exit_request, declined=False)
             message = 'Exit request cancelled.'
 
         elif action == 'accept':
@@ -410,11 +463,16 @@ class ExitRequestViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            exit_request.accept_offer()
-
-            # Create the transaction
-            self._complete_exit_transaction(exit_request)
-            message = 'Offer accepted. Transaction completed.'
+            # Money, shares and (then) tokens move now (client round 4, #13)
+            from .settlement import ExitSettlementError, settle_exit
+            try:
+                tx = settle_exit(exit_request)
+            except ExitSettlementError as exc:
+                return Response(create_error_response(message=exc.message, details={'code': exc.code}),
+                                status=status.HTTP_400_BAD_REQUEST)
+            return Response(create_success_response(
+                data={'reference': tx.reference_number, 'amount': str(tx.total_amount)},
+                message='Offer accepted. The amount was added to your wallet.'))
 
         elif action == 'decline':
             if exit_request.status != ExitRequestStatus.APPROVED:
@@ -423,48 +481,11 @@ class ExitRequestViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             exit_request.decline_offer()
+            from .notify import investor_withdrew
+            investor_withdrew(exit_request, declined=True)
             message = 'Offer declined. Exit request cancelled.'
 
         return Response(create_success_response(message=message))
-
-    def _complete_exit_transaction(self, exit_request):
-        """Complete the exit transaction after investor accepts offer."""
-        lp = exit_request.liquidity_provider
-
-        # Calculate fee (e.g., 1% platform fee)
-        platform_fee_rate = Decimal('0.01')
-        platform_fee = exit_request.total_offered_amount * platform_fee_rate
-        net_to_investor = exit_request.total_offered_amount - platform_fee
-
-        # Create transaction record
-        transaction = LiquidityTransaction.objects.create(
-            exit_request=exit_request,
-            liquidity_provider=lp,
-            investor=exit_request.investor,
-            units_purchased=exit_request.units_requested,
-            price_per_unit=exit_request.offered_price_per_unit,
-            total_amount=exit_request.total_offered_amount,
-            platform_fee=platform_fee,
-            net_amount_to_investor=net_to_investor
-        )
-
-        # Update exit request status
-        exit_request.status = ExitRequestStatus.COMPLETED
-        exit_request.save()
-
-        # Update LP monthly total
-        lp.current_month_total += exit_request.total_offered_amount
-        lp.save()
-
-        # Update investment (reduce tokens)
-        investment = exit_request.investment
-        investment.token_amount -= exit_request.units_requested
-        if investment.token_amount <= 0:
-            investment.status = 'exited'
-        investment.save()
-
-        return transaction
-
 
 # ============================================================================
 # Transaction Views

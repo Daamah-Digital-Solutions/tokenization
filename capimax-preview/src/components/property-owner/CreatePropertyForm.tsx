@@ -320,13 +320,14 @@ export const CreatePropertyForm: React.FC = () => {
           name="description"
           value={formData.description}
           onChange={handleInputChange}
-          rows={5}
+          rows={10}
           className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-100 ${
             errors.description ? 'border-red-500' : 'border-neutral-300'
           }`}
           placeholder={t('createForm.placeholders.description')}
         />
         <p className="mt-1 text-sm text-neutral-500">{t('createForm.descriptionCounter', { count: formData.description.length })}</p>
+        <p className="mt-1 text-xs text-neutral-500">{t('common:richTextHint')}</p>
         {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
       </div>
 

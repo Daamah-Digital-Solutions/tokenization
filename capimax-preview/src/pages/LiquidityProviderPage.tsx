@@ -16,6 +16,7 @@ import { Button } from '../components/ui/Button';
 import { LPApplicationForm } from '../components/liquidity-provider/LPApplicationForm';
 import { useTranslation, Trans } from 'react-i18next';
 
+import { COMPANY } from '../utils/company';
 const howItWorksSteps = [
   {
     step: 1,
@@ -436,8 +437,8 @@ export const LiquidityProviderPage: React.FC = () => {
                 </div>
                 <Text variant="caption" align="center" className="text-white/60 pt-4" as="p">
                   {t('lpPage.inquiries')}{' '}
-                  <a href="mailto:liquidity@capimaxrt.com" className="text-emerald-400 hover:underline">
-                    liquidity@capimaxrt.com
+                  <a href={`mailto:${COMPANY.email}`} className="text-emerald-400 hover:underline">
+                    {COMPANY.email}
                   </a>
                 </Text>
               </motion.div>

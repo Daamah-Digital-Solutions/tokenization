@@ -818,5 +818,28 @@
     "saved": "Saved",
     "save": "Save",
     "share": "Share"
+  },
+  "brokerCta": {
+    "badge": "Broker program",
+    "title": "Become a Capimax RT broker",
+    "subtitle": "Introduce clients to tokenized real estate and earn a commission on every completed purchase they make. Apply in a few minutes — our team reviews your application and activates your broker dashboard.",
+    "s1": {
+      "title": "Apply",
+      "text": "Send your broker application with your licence and supporting documents."
+    },
+    "s2": {
+      "title": "Get your referral link",
+      "text": "Once approved, share your personal link or refer clients by email."
+    },
+    "s3": {
+      "title": "Track everything",
+      "text": "Follow referrals, purchases and commissions in your broker dashboard."
+    },
+    "s4": {
+      "title": "Get paid",
+      "text": "Approved commissions are paid to your platform wallet, ready to withdraw."
+    },
+    "apply": "Apply as a broker",
+    "learnMore": "How the program works"
   }
 }

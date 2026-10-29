@@ -272,7 +272,7 @@
     "printTitle": "Capimax RT",
     "printSubtitle": "Capimax Real Estate Tokenization Platform",
     "lastUpdated": "Last Updated: {{date}}",
-    "footerNotice": "This document is part of Capimax RT's legal framework. For questions, please contact <link>legal@capimaxrt.com</link>",
+    "footerNotice": "This document is part of Capimax RT's legal framework. For questions, please contact <link>{{email}}</link>",
     "nav": {
       "disclaimer": "Platform Disclaimer",
       "risk-disclosure": "Risk Disclosure",

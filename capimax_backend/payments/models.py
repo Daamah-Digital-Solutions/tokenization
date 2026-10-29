@@ -518,6 +518,9 @@ class WalletTransaction(models.Model):
         ('refund', 'Refund'),
         ('trade_purchase', 'Secondary market purchase'),
         ('trade_sale', 'Secondary market sale'),
+        ('transfer_sent', 'Transfer sent'),
+        ('transfer_received', 'Transfer received'),
+        ('transfer_returned', 'Transfer returned'),
     ]
     
     id = models.UUIDField(

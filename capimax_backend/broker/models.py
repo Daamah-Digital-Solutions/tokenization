@@ -220,7 +220,7 @@ class BrokerApplication(models.Model):
 
     def approve(self, reviewed_by_user):
         """Approve the application and create user account."""
-        if self.application_status == BrokerApplicationStatus.PENDING:
+        if self.application_status in (BrokerApplicationStatus.PENDING, BrokerApplicationStatus.UNDER_REVIEW):
             self.application_status = BrokerApplicationStatus.APPROVED
             self.reviewed_by = reviewed_by_user
             self.reviewed_at = timezone.now()
@@ -232,7 +232,7 @@ class BrokerApplication(models.Model):
 
     def reject(self, reviewed_by_user, reason=""):
         """Reject the application."""
-        if self.application_status == BrokerApplicationStatus.PENDING:
+        if self.application_status in (BrokerApplicationStatus.PENDING, BrokerApplicationStatus.UNDER_REVIEW):
             self.application_status = BrokerApplicationStatus.REJECTED
             self.reviewed_by = reviewed_by_user
             self.reviewed_at = timezone.now()
@@ -240,6 +240,40 @@ class BrokerApplication(models.Model):
             self.save()
             return True
         return False
+
+
+class BrokerDocumentType(models.TextChoices):
+    LICENSE = 'license', 'Broker / real-estate licence'
+    ID_DOCUMENT = 'id_document', 'ID / passport'
+    COMPANY_REGISTRATION = 'company_registration', 'Company registration'
+    PROOF_OF_ADDRESS = 'proof_of_address', 'Proof of address'
+    VERIFICATION = 'verification', 'Verification document (after approval)'
+    OTHER = 'other', 'Other'
+
+
+def _broker_document_path(instance, filename):
+    from core.partner_documents import upload_path
+    return upload_path('broker')(instance, filename)
+
+
+class BrokerApplicationDocument(models.Model):
+    """A file attached to a broker application (client round 4, #14). Private; staff-only download."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    application = models.ForeignKey(BrokerApplication, on_delete=models.CASCADE, related_name='documents')
+    document_type = models.CharField(max_length=30, choices=BrokerDocumentType.choices,
+                                     default=BrokerDocumentType.OTHER)
+    file = models.FileField(upload_to=_broker_document_path, max_length=255)
+    original_name = models.CharField(max_length=255, blank=True)
+    size = models.PositiveIntegerField(default=0)
+    sha256 = models.CharField(max_length=64, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['uploaded_at']
+
+    def __str__(self):
+        return f'{self.get_document_type_display()} — {self.original_name}'
 
 
 class BrokerProfile(models.Model):
@@ -552,6 +586,9 @@ class BrokerCommission(models.Model):
             self.status = CommissionStatus.APPROVED
             self.approved_at = timezone.now()
             self.save(update_fields=['status', 'approved_at'])
+            _notify_broker(self.broker.user, 'Commission approved',
+                           f'Your commission of ${self.commission_amount:,.2f} was approved and will be paid '
+                           f'to your wallet.')
     
     def mark_paid(self, payment_reference=None):
         """
@@ -577,6 +614,20 @@ class BrokerCommission(models.Model):
             if payment_reference:
                 self.payment_reference = payment_reference
             self.save(update_fields=['status', 'paid_at', 'payment_reference'])
+        _notify_broker(self.broker.user, 'Commission paid',
+                       f'${self.commission_amount:,.2f} was added to your wallet. You can withdraw it from '
+                       f'the Wallet section.', url='/dashboard?view=wallet')
+
+
+def _notify_broker(user, title, message, url='/dashboard?view=commissions'):
+    """In-app + email notice to a broker (client round 4, #16); never breaks the caller."""
+    try:
+        from notifications.services import NotificationService
+        NotificationService.create_notification(user=user, title=title, message=message,
+                                                notification_type='payment', action_url=url,
+                                                action_label='Broker dashboard', send_email=True)
+    except Exception:  # noqa: BLE001
+        pass
 
 
 def generate_referral_code():

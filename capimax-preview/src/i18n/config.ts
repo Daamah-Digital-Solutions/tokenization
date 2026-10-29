@@ -14,6 +14,8 @@ import enPartners from './locales/en/partners.json';
 import enPlan from './locales/en/plan.json';
 import enDocs from './locales/en/docs.json';
 import enSite from './locales/en/site.json';
+import enCerts from './locales/en/certs.json';
+import enTransfers from './locales/en/transfers.json';
 // Wave 15 language sweep (client round 3, #10)
 import enDashboardW15 from './locales/en/dashboard.json';
 import enAdminW15 from './locales/en/admin.json';
@@ -39,6 +41,8 @@ import arPartners from './locales/ar/partners.json';
 import arPlan from './locales/ar/plan.json';
 import arDocs from './locales/ar/docs.json';
 import arSite from './locales/ar/site.json';
+import arCerts from './locales/ar/certs.json';
+import arTransfers from './locales/ar/transfers.json';
 import arDashboardW15 from './locales/ar/dashboard.json';
 import arAdminW15 from './locales/ar/admin.json';
 import arOwneruiW15 from './locales/ar/ownerui.json';
@@ -66,6 +70,8 @@ const resources = {
     plan: enPlan,
     docs: enDocs,
     site: enSite,
+    certs: enCerts,
+    transfers: enTransfers,
     dashboard: enDashboardW15,
     admin: enAdminW15,
     ownerui: enOwneruiW15,
@@ -91,6 +97,8 @@ const resources = {
     plan: arPlan,
     docs: arDocs,
     site: arSite,
+    certs: arCerts,
+    transfers: arTransfers,
     dashboard: arDashboardW15,
     admin: arAdminW15,
     ownerui: arOwneruiW15,
@@ -114,7 +122,7 @@ i18n
     resources,
     fallbackLng: 'en',
     defaultNS: 'common',
-    ns: ['common', 'auth', 'navigation', 'properties', 'legal', 'kyc', 'owner', 'partners', 'plan', 'docs', 'site', 'dashboard', 'admin', 'ownerui', 'payments', 'invest', 'propui', 'market', 'brokerui', 'ui', 'shared', 'pages', 'checkout'],
+    ns: ['common', 'auth', 'navigation', 'properties', 'legal', 'kyc', 'owner', 'partners', 'plan', 'docs', 'site', 'certs', 'transfers', 'dashboard', 'admin', 'ownerui', 'payments', 'invest', 'propui', 'market', 'brokerui', 'ui', 'shared', 'pages', 'checkout'],
 
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],

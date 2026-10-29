@@ -63,7 +63,8 @@ export const SumsubVerification: React.FC<SumsubVerificationProps> = ({ onStatus
         if (cancelled || !window.snsWebSdk) return;
         instanceRef.current = window.snsWebSdk
           .init(token, () => KYCService.getSumsubToken())
-          .withConf({ lang: (i18n.language || 'en').startsWith('ar') ? 'ar' : 'en' })
+          // the site language (any of the platform's languages; Sumsub falls back to English)
+          .withConf({ lang: (i18n.language || 'en').split('-')[0] })
           .withOptions({ addViewportTag: false, adaptIframeHeight: true })
           .on('idCheck.onApplicantSubmitted', () => {
             setState('submitted');

@@ -180,7 +180,7 @@ class BrokerReferralSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = [
-            'id', 'referral_code', 'is_converted', 'conversion_amount',
+            'id', 'broker', 'referral_code', 'is_converted', 'conversion_amount',
             'commission_earned', 'first_investment_at', 'last_activity_at',
             'created_at', 'updated_at'
         ]
@@ -432,10 +432,11 @@ class BrokerApplicationSerializer(serializers.ModelSerializer):
         return obj.get_full_name()
 
     def validate_email(self, value):
-        """Validate email uniqueness."""
-        if BrokerApplication.objects.filter(email=value).exists():
+        """One open application per email (a rejected applicant may apply again)."""
+        if BrokerApplication.objects.filter(email__iexact=value).exclude(
+                application_status__in=['rejected']).exists():
             raise serializers.ValidationError("An application with this email already exists.")
-        return value
+        return value.strip().lower()
 
     def validate_terms_accepted(self, value):
         """Ensure terms are accepted."""

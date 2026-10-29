@@ -123,7 +123,10 @@
       "brokerGuide": "دليل الوسيط",
       "platformGuide": "دليل كابي مكس RT",
       "ownershipGuide": "دليل التملّك",
-      "faq": "الأسئلة الشائعة"
+      "faq": "الأسئلة الشائعة",
+      "library": "المواد التسويقية",
+      "libraryEmpty": "لم يَنشر الفريق مواد بعد.",
+      "download": "تحميل"
     },
     "wallet": {
       "title": "محفظة العمولات",

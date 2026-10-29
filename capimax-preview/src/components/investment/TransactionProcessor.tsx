@@ -29,6 +29,7 @@ import type { InvestmentProperty, InvestmentData } from './types';
 import { cn } from '../../utils/cn';
 import { useTranslation } from 'react-i18next';
 
+import { COMPANY } from '../../utils/company';
 interface TransactionProcessorProps {
   property: InvestmentProperty;
   investmentData: InvestmentData;
@@ -112,7 +113,7 @@ export const TransactionProcessor: React.FC<TransactionProcessorProps> = ({
     if (m.includes('unresolved compliance review')) {
       return {
         label: t('processor.cta.support'),
-        href: 'mailto:support@capimax.com?subject=Compliance%20review',
+        href: `mailto:${COMPANY.email}?subject=Compliance%20review`,
       };
     }
     if (m.includes('annual limit')) {

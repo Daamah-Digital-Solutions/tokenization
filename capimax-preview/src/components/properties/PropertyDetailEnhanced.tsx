@@ -38,11 +38,13 @@ import {
   Calendar,
   Percent,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Copy
 } from 'lucide-react';
 import { Card } from '../design-system/cards/Card';
 import { Text } from '../design-system/typography/Text';
 import { Button } from '../ui/Button';
+import { RichText } from '../ui/RichText';
 import { cn } from '../../utils/cn';
 import type { Property, PropertyDocuments } from '../../services/api/types';
 import { PROPERTY_PLACEHOLDER, handleImageFallback } from '../../utils/imageFallback';
@@ -58,6 +60,9 @@ import {
   ValuationCard,
 } from './ListingDetailsSections';
 import { buildSchedule, fallbackPlan, formatMoney, formatPlanDate, parseDate } from '../../utils/paymentPlan';
+
+// Wyoming Secretary of State business search (client round 4, #6; same link as Capimax BRX)
+const WYOMING_BUSINESS_SEARCH = 'https://wyobiz.wyo.gov/Business/FilingSearch.aspx';
 
 interface PropertyDetailEnhancedProps {
   property: Property;
@@ -179,26 +184,31 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
     return rows.find((r) => r.kind === 'installment')?.amount || 0;
   })();
 
-  // SPV Information — prefer the real SPV fields the backend serializes
-  // (spv_company_name / spv_registration_number / spv_establishment_date),
-  // falling back to derived placeholders only when a field is missing so the
-  // panel is never blank.
+  // SPV Information — the backend `spv` block (legal entity, else the legacy
+  // spv_* fields). Nothing is made up: a missing value reads "pending".
   const spvAny = property as any;
+  const spv = spvAny.spv || null;
+  const pending = t('detail.spv.pendingValue');
   const spvInfo = {
-    name: spvAny.spv_company_name || `${property.title} SPV Ltd`,
-    jurisdiction: t('detail.spv.uae'),
-    formationDate: spvAny.spv_establishment_date
-      ? formatDate(spvAny.spv_establishment_date.toString())
-      : property.created_at
-        ? formatDate(property.created_at.toString())
-        : t('detail.na'),
-    registrationNumber:
-      spvAny.spv_registration_number || `SPV-${property.id?.slice(0, 8).toUpperCase()}`,
-    legalStructure: t('detail.spv.legalStructureValue'),
+    name: spv?.name || pending,
+    jurisdiction: spv?.jurisdiction || (spv?.is_wyoming !== false ? t('detail.spv.wyoming') : pending),
+    formationDate: spv?.formation_date ? formatDate(String(spv.formation_date)) : pending,
+    registrationNumber: spv?.registration_number || pending,
+    legalStructure: spv?.entity_type || t('detail.spv.legalStructureValue'),
+    status: spv?.status_display || (spv?.registration_number ? t('detail.spv.statusValue') : pending),
     managingDirector: t('detail.spv.managingDirectorValue'),
     auditor: t('detail.spv.auditorValue'),
     custodian: spvAny.spv_bank_name || t('detail.spv.custodianValue'),
-    hasRealRegistration: !!spvAny.spv_registration_number,
+    hasRealRegistration: !!spv?.registration_number,
+    registryUrl: spv?.registry_url || (spv?.is_wyoming === false ? null : WYOMING_BUSINESS_SEARCH),
+  };
+  const [filingCopied, setFilingCopied] = useState(false);
+  const copyFilingId = () => {
+    if (!spvInfo.hasRealRegistration) return;
+    navigator.clipboard?.writeText(spvInfo.registrationNumber).then(() => {
+      setFilingCopied(true);
+      window.setTimeout(() => setFilingCopied(false), 2000);
+    });
   };
 
   // Distribution schedule
@@ -389,9 +399,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                     </div>
                   </div>
 
-                  <Text variant="body" className="text-gray-700 dark:text-gray-300 mb-8 leading-relaxed">
-                    {property.description}
-                  </Text>
+                  <RichText text={property.description} className="mb-8" />
 
                   {/* Key Metrics Grid */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -980,7 +988,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                         [t('detail.spv.jurisdiction'), spvInfo.jurisdiction],
                         [t('detail.spv.formationDate'), spvInfo.formationDate],
                         [t('detail.spv.legalStructure'), spvInfo.legalStructure],
-                        [t('detail.spv.status'), t('detail.spv.statusValue')],
+                        [t('detail.spv.status'), spvInfo.status],
                       ].map(([label, value]) => (
                         <div
                           key={label}
@@ -1000,18 +1008,34 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                         : t('detail.spv.pendingNote')}
                     </p>
 
+                    {spvInfo.registryUrl && (
+                      <div className="mt-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 p-3 text-xs text-slate-600 dark:text-slate-300">
+                        <p>{t('detail.spv.wyomingHowTo')}</p>
+                        {spvInfo.hasRealRegistration && (
+                          <button
+                            type="button"
+                            onClick={copyFilingId}
+                            className="mt-2 inline-flex items-center gap-1.5 font-medium text-emerald-700 dark:text-emerald-400 hover:underline"
+                          >
+                            {filingCopied ? <CheckCircle className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                            {filingCopied ? t('detail.spv.copied') : t('detail.spv.copyFilingId', { id: spvInfo.registrationNumber })}
+                          </button>
+                        )}
+                      </div>
+                    )}
+
                     <div className="mt-5 flex gap-3">
-                      <a
-                        href={`https://www.google.com/search?q=${encodeURIComponent(
-                          `${spvInfo.name} ${spvInfo.registrationNumber} company registration United Arab Emirates`,
-                        )}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                        {t('detail.spv.lookup')}
-                      </a>
+                      {spvInfo.registryUrl && (
+                        <a
+                          href={spvInfo.registryUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 px-4 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          {t('detail.spv.lookup')}
+                        </a>
+                      )}
                       <button
                         onClick={() => setShowSpvVerify(false)}
                         className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2.5 text-sm transition-colors"
@@ -1156,7 +1180,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                 their backend `type` field and each one wires the Download
                 button to its actual file URL.
               */}
-              {documents.length === 0 ? (
+              {!Array.isArray(documents) || documents.length === 0 ? (
                 <div className="text-center py-12 px-6 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
                   <FileText className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
                   <p className="font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -1178,6 +1202,11 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                       insurance: t('detail.dr.types.insurance'),
                       spv: t('detail.dr.types.spv'),
                       construction: t('detail.dr.types.construction'),
+                      management: t('detail.dr.types.management'),
+                      technical: t('detail.dr.types.technical'),
+                      owner_identity: t('detail.dr.types.owner_identity'),
+                      company_registration: t('detail.dr.types.company_registration'),
+                      permits: t('detail.dr.types.permits'),
                       other: t('detail.dr.types.other'),
                     };
                     const typeIcons: Record<string, any> = {
@@ -1188,6 +1217,11 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                       insurance: Shield,
                       spv: Briefcase,
                       construction: Folder,
+                      management: Briefcase,
+                      technical: Folder,
+                      owner_identity: Shield,
+                      company_registration: Briefcase,
+                      permits: Shield,
                       other: FileText,
                     };
 

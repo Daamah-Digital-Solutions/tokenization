@@ -272,7 +272,7 @@
     "printTitle": "كابي مكس RT",
     "printSubtitle": "منصة كابي مكس لترميز العقارات",
     "lastUpdated": "آخر تحديث: {{date}}",
-    "footerNotice": "هذا المستند جزء من الإطار القانوني لـ كابي مكس RT. للاستفسارات، يرجى التواصل عبر <link>legal@capimaxrt.com</link>",
+    "footerNotice": "هذا المستند جزء من الإطار القانوني لـ كابي مكس RT. للاستفسارات، يرجى التواصل عبر <link>{{email}}</link>",
     "nav": {
       "disclaimer": "إخلاء مسؤولية المنصة",
       "risk-disclosure": "الإفصاح عن المخاطر",

@@ -122,6 +122,8 @@ class MarketListingViewSet(viewsets.ModelViewSet):
         
         # Filter user's own listings
         if self.request.query_params.get('my_listings', '').lower() == 'true':
+            if not self.request.user.is_authenticated:
+                return queryset.none()
             queryset = queryset.filter(seller=self.request.user)
         
         return queryset

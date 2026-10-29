@@ -87,6 +87,16 @@ def _make_pending_investment(*, user, prop, tokens=100):
 class ProcessPendingMintsDispatcherTests(TransactionTestCase):
     """`process_pending_mints` must atomically claim each investment."""
 
+    def setUp(self):
+        # Certificate sync (post_save, after commit) writes from every thread; on
+        # SQLite that locks the table this race test reads. Not part of the race.
+        from django.db.models.signals import post_save
+
+        from certificates.signals import investment_saved
+        from investments.models import Investment
+        post_save.disconnect(investment_saved, sender=Investment)
+        self.addCleanup(post_save.connect, investment_saved, sender=Investment)
+
     def test_concurrent_dispatchers_claim_each_investment_once(self):
         user = _make_user()
         prop = _make_property()

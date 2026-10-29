@@ -127,6 +127,7 @@ const WhyCapimaxPage = lazyWithRetry(() => import('./pages/WhyCapimaxPage').then
 const StructurePage = lazyWithRetry(() => import('./pages/StructurePage').then(m => ({ default: m.StructurePage })));
 const DocumentCenterPage = lazyWithRetry(() => import('./pages/DocumentCenterPage').then(m => ({ default: m.DocumentCenterPage })));
 const VerificationCenterPage = lazyWithRetry(() => import('./pages/VerificationCenterPage').then(m => ({ default: m.VerificationCenterPage })));
+const VerifyCertificatePage = lazyWithRetry(() => import('./pages/VerifyCertificatePage'));
 
 // Guide Pages
 const BrokerGuidePage = lazyWithRetry(() => import('./pages/BrokerGuidePage').then(m => ({ default: m.BrokerGuidePage })));
@@ -699,6 +700,15 @@ const AppRouter: React.FC = () => {
           <main {...mainProps}>
             <Suspense fallback={<PageLoader message="Loading verification center..." />}>
               <VerificationCenterPage />
+            </Suspense>
+          </main>
+        );
+      // Public certificate check — the QR on every certificate opens /verify/<code> (round 4, #5)
+      case 'verify-certificate':
+        return (
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading certificate..." />}>
+              <VerifyCertificatePage />
             </Suspense>
           </main>
         );

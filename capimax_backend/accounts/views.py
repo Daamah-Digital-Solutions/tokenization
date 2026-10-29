@@ -27,7 +27,7 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-from .models import User, PasswordResetToken, EmailVerificationToken, UserRoleAssignment, UserRole
+from .models import SELF_SERVICE_ROLES, User, PasswordResetToken, EmailVerificationToken, UserRoleAssignment, UserRole
 from .serializers import (
     UserRegistrationSerializer,
     CustomTokenObtainPairSerializer,
@@ -849,12 +849,12 @@ def add_user_role_view(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Security check: Only admins can assign ADMIN role
-    if role == UserRole.ADMIN and not user.is_admin_user():
+    # Security check: broker / LP come from an approved application, admin from staff
+    if role not in SELF_SERVICE_ROLES and not user.is_admin_user():
         return Response(
             create_error_response(
                 message="Permission denied",
-                details={'role': ['Only administrators can assign admin role.']}
+                details={'role': ['This role is granted after an approved application.']}
             ),
             status=status.HTTP_403_FORBIDDEN
         )

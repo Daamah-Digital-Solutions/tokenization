@@ -105,7 +105,7 @@ services:
       - redis
     networks:
       - capimax_network
-    command: celery -A capimax_backend worker -l info --concurrency=4
+    command: celery -A capimax_backend worker -l info --concurrency=4 -Q high_priority,medium_priority,low_priority,blockchain,celery
 
   # Celery Beat Scheduler
   celery-beat:

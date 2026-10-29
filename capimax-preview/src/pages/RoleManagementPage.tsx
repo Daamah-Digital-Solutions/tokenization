@@ -26,6 +26,7 @@ import { Card } from '../components/design-system/cards/Card';
 import { cn } from '../utils/cn';
 import { useTranslation } from 'react-i18next';
 
+import { COMPANY } from '../utils/company';
 interface RoleData {
   role: UserRole;
   role_display: string;
@@ -564,7 +565,7 @@ export const RoleManagementPage: React.FC = () => {
                 size="sm"
                 variant="primary"
                 className="w-full"
-                onClick={() => window.location.href = 'mailto:support@capimax.com'}
+                onClick={() => window.location.href = `mailto:${COMPANY.email}`}
               >
                 {t('roleMgmt.contactSupport')}
               </Button>

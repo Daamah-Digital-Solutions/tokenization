@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Grid3X3,
@@ -39,7 +40,8 @@ import { Button } from '../../ui/Button';
 import { BlockchainLink } from '../../ui/BlockchainLink';
 import { cn } from '../../../utils/cn';
 import { useUser } from '../../../contexts/AuthContext';
-import { downloadOwnershipCertificatePdf } from '../../../utils/ownershipCertificatePdf';
+import { MyCertificatesPanel } from '../../certificates/MyCertificatesPanel';
+import { CertificateService } from '../../../services/certificates/CertificateService';
 import { useTranslation } from 'react-i18next';
 
 interface PortfolioManagerProps {
@@ -89,20 +91,6 @@ interface Distribution {
   status: 'paid' | 'pending' | 'scheduled';
 }
 
-interface Certificate {
-  id: string;
-  propertyId: string;
-  propertyName: string;
-  certificateNumber: string;
-  issueDate: Date;
-  unitsHeld: number;
-  downloadUrl: string;
-  ownershipPct: number;
-  investmentValue: number;
-  totalTokens: number;
-  location: string;
-}
-
 interface Transaction {
   id: string;
   date: Date;
@@ -130,7 +118,6 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [activeSection, setActiveSection] = useState<ActiveSection>('investments');
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
-  const [downloadingCert, setDownloadingCert] = useState<string | null>(null);
 
   const authUser = useUser() as any;
   const investorName =
@@ -139,34 +126,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
     authUser?.email ||
     t('docsPanel.holderFallback');
 
-  const handleDownloadCertificate = async (cert: Certificate) => {
-    setDownloadingCert(cert.id);
-    try {
-      await downloadOwnershipCertificatePdf({
-        certificateNumber: cert.certificateNumber,
-        investorName,
-        property: {
-          title: cert.propertyName,
-          reference: cert.certificateNumber.replace('CMX-', ''),
-          location: cert.location,
-        },
-        tokens: cert.unitsHeld,
-        totalTokens: cert.totalTokens,
-        ownershipPercentage: cert.ownershipPct || 0,
-        investmentValue: cert.investmentValue || 0,
-        amountPaid: cert.investmentValue || 0,
-        issueDate: new Date(cert.issueDate),
-        qrPayload:
-          `Capimax RT - Certificate of Ownership | Cert: ${cert.certificateNumber} | ` +
-          `Property: ${cert.propertyName} | Holder: ${investorName} | ` +
-          `Tokens: ${cert.unitsHeld} | Ownership: ${(cert.ownershipPct || 0).toFixed(4)}%`,
-      });
-    } catch (_) {
-      /* PDF generation failed — non-fatal */
-    } finally {
-      setDownloadingCert(null);
-    }
-  };
+
 
   // Transform portfolio investments with property data
   const investments: PropertyInvestment[] = useMemo(() => {
@@ -234,35 +194,12 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
     return portfolio.distributions as Distribution[];
   }, [portfolio?.distributions, investments]);
 
-  // Sample certificates data (would come from API)
-  const certificates: Certificate[] = useMemo(() => {
-    if (!portfolio?.certificates) {
-      return investments
-        .filter(inv => inv.status === InvestmentStatus.COMPLETED)
-        .map((inv, idx) => {
-          const propId = inv.property?.id || '';
-          const totalTokens = Number(inv.property?.total_tokens) || 0;
-          const ownershipPct = totalTokens ? (Number(inv.token_amount) / totalTokens) * 100 : 0;
-          const city = (inv as any).property_city || inv.property?.city || '';
-          const country = (inv as any).property_country || '';
-          return {
-            id: `cert-${idx}`,
-            propertyId: propId,
-            propertyName: inv.property?.title || t('portfolio.cols.property'),
-            // Stable certificate number (same scheme as the Document Center).
-            certificateNumber: `CMX-${propId.replace(/-/g, '').slice(0, 8).toUpperCase()}`,
-            issueDate: new Date(inv.created_at),
-            unitsHeld: inv.token_amount,
-            downloadUrl: '#',
-            ownershipPct,
-            investmentValue: Number(inv.investment_amount) || 0,
-            totalTokens,
-            location: [city, country].filter(Boolean).join(', '),
-          };
-        });
-    }
-    return portfolio.certificates as Certificate[];
-  }, [portfolio?.certificates, investments]);
+  // live certificate records (client round 4, #5)
+  const { data: certificateRecords = [] } = useQuery({
+    queryKey: ['my-certificates'],
+    queryFn: () => CertificateService.mine(),
+  });
+  const certificateCount = certificateRecords.filter((c) => c.status !== 'revoked').length;
 
   // Sample transactions data (would come from API)
   const transactions: Transaction[] = useMemo(() => {
@@ -530,7 +467,7 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
         {[
           { id: 'investments' as const, label: t('myProps.properties'), icon: Building, count: investments.length },
           { id: 'distributions' as const, label: t('portfolio.tabs.distributions'), icon: Receipt, count: distributions.length },
-          { id: 'certificates' as const, label: t('portfolio.tabs.certificates'), icon: Award, count: certificates.length },
+          { id: 'certificates' as const, label: t('portfolio.tabs.certificates'), icon: Award, count: certificateCount },
           { id: 'transactions' as const, label: t('overview.actions.transactionHistory'), icon: History, count: transactions.length },
         ].map((tab) => {
           const Icon = tab.icon;
@@ -785,70 +722,9 @@ export const PortfolioManager: React.FC<PortfolioManagerProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="space-y-6"
           >
-            <div>
-              <Text variant="h3" weight="semibold" className="mb-2">
-                {t('portfolio.certificatesTitle')}
-              </Text>
-              <Text variant="body" color="muted">
-                {t('portfolio.certificatesText')}
-              </Text>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {certificates.map((cert) => (
-                <Card key={cert.id} className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg flex items-center justify-center">
-                      <Award className="w-6 h-6 text-emerald-600" />
-                    </div>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
-                      #{cert.certificateNumber}
-                    </span>
-                  </div>
-
-                  <Text variant="bodyLarge" weight="semibold" className="mb-1">
-                    {cert.propertyName}
-                  </Text>
-                  <Text variant="caption" color="muted" className="mb-4">
-                    {t('portfolio.issued', { date: new Date(cert.issueDate).toLocaleDateString(dateLocale) })}
-                  </Text>
-
-                  <div className="border-t border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-700/60">
-                    <div className="flex justify-between items-center py-2.5">
-                      <span className="text-sm text-slate-600 dark:text-slate-400">{t('portfolio.sharesHeld')}</span>
-                      <span className="font-semibold text-slate-900 dark:text-white">
-                        {cert.unitsHeld.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2.5">
-                      <span className="text-sm text-slate-600 dark:text-slate-400">{t('myProps.ownershipShare')}</span>
-                      <span className="font-semibold text-slate-900 dark:text-white">
-                        {(cert.ownershipPct || 0).toFixed(4)}%
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-2.5">
-                      <span className="text-sm text-slate-600 dark:text-slate-400">{t('portfolio.investmentValue')}</span>
-                      <span className="font-semibold text-slate-900 dark:text-white">
-                        ${(cert.investmentValue || 0).toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full mt-4"
-                    onClick={() => handleDownloadCertificate(cert)}
-                    disabled={downloadingCert === cert.id}
-                  >
-                    <Download className="w-4 h-4 me-2" />
-                    {downloadingCert === cert.id ? t('docsPanel.generating') : t('docsPanel.downloadPdf')}
-                  </Button>
-                </Card>
-              ))}
-            </div>
+            {/* the real certificate records (client round 4, #5) — same as My Certificates */}
+            <MyCertificatesPanel />
           </motion.div>
         )}
 

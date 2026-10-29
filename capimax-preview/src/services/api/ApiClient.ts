@@ -34,6 +34,9 @@ const PUBLIC_ENDPOINTS = [
   '/auth/email/resend-verification/',
   // Contact Us works without an account (an expired session must not block it).
   '/support/contact/',
+  // Certificate QR verification + the public SPV register (client round 4, #5 #7).
+  '/certificates/verify/',
+  '/certificates/registrations/',
 ];
 
 function getCookie(name: string): string | null {

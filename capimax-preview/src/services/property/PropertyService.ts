@@ -359,7 +359,14 @@ export class PropertyService {
    */
   static async getDocuments(propertyId: string): Promise<PropertyDocuments[]> {
     try {
-      return await apiClient.get<PropertyDocuments[]>(`/properties/${propertyId}/data-room/`);
+      const res: any = await apiClient.get(`/properties/${propertyId}/data-room/`);
+      const rows: any[] = Array.isArray(res) ? res : res?.results ?? [];
+      // the data room sends document_type / document_url
+      return rows.map((d) => ({
+        ...d,
+        type: d.type ?? d.document_type ?? 'other',
+        url: d.url ?? d.document_url ?? '',
+      }));
     } catch (error) {
       console.error('Failed to get property documents:', error);
       throw error;

@@ -57,6 +57,23 @@ export interface LPExitRequest {
   expires_at: string | null;
 }
 
+export interface PublicLP {
+  id: string;
+  legal_entity_name: string;
+  country: string;
+  entity_type_display: string;
+  discount_rate: string;
+  max_per_transaction: string;
+  target_ready_properties: boolean;
+  target_under_construction: boolean;
+}
+
+export interface InvestorExitRequest extends LPExitRequest {
+  property_id: string;
+  lp_name: string;
+  resale_fee: string | null;
+}
+
 export interface LPTransaction {
   id: string;
   reference_number: string;
@@ -85,7 +102,8 @@ export class LiquidityProviderService {
   }
 
   static async getTransactions(): Promise<LPTransaction[]> {
-    return listOf<LPTransaction>(await apiClient.get('/liquidity-provider/transactions/my_transactions/'));
+    // the LP's own purchases (my_transactions returns the caller's sales as an investor)
+    return listOf<LPTransaction>(await apiClient.get('/liquidity-provider/transactions/', { page_size: 100 }));
   }
 
   static decide(
@@ -99,6 +117,25 @@ export class LiquidityProviderService {
       ...(action === 'approve' ? { offered_price_per_unit: offeredPricePerUnit } : {}),
       notes: notes || '',
     });
+  }
+
+  // ---- investor side: sell shares to a liquidity provider (client round 4, #13) ----
+
+  static async listActiveProviders(): Promise<PublicLP[]> {
+    return listOf<PublicLP>(await apiClient.get('/liquidity-provider/providers/list_active/'));
+  }
+
+  static requestExit(data: { property: string; liquidity_provider: string; units_requested: number;
+    requested_price_per_unit: number }): Promise<unknown> {
+    return apiClient.post('/liquidity-provider/exit-requests/', data);
+  }
+
+  static async myExitRequests(): Promise<InvestorExitRequest[]> {
+    return listOf<InvestorExitRequest>(await apiClient.get('/liquidity-provider/exit-requests/my_requests/'));
+  }
+
+  static answer(requestId: string, action: 'accept' | 'decline' | 'cancel'): Promise<unknown> {
+    return apiClient.post(`/liquidity-provider/exit-requests/${requestId}/investor_action/`, { action });
   }
 
   static updatePreferences(providerId: string, data: Partial<LPProfile>): Promise<unknown> {

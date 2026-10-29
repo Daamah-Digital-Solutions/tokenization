@@ -147,38 +147,51 @@ class LiquidityProviderPublicSerializer(serializers.ModelSerializer):
 
 
 class ExitRequestCreateSerializer(serializers.ModelSerializer):
-    """Serializer for investor creating exit requests."""
+    """
+    Investor asks a liquidity provider to buy shares of a property (client round 4, #13).
+    Send `property` (or a holding as `investment`); the shares must be free — not listed
+    on the market nor offered to another LP.
+    """
+
+    property = serializers.UUIDField(write_only=True, required=False)
 
     class Meta:
         model = ExitRequest
         fields = [
-            'investment', 'liquidity_provider', 'units_requested', 'requested_price_per_unit'
+            'property', 'investment', 'liquidity_provider', 'units_requested', 'requested_price_per_unit'
         ]
+        extra_kwargs = {'investment': {'required': False}}
 
     def validate(self, attrs):
+        from investments.models import Investment
+        from marketplace.share_moves import free_shares
+
         request = self.context.get('request')
         investment = attrs.get('investment')
         lp = attrs.get('liquidity_provider')
         units = attrs.get('units_requested')
         price = attrs.get('requested_price_per_unit')
 
-        # Verify investor owns the investment
-        if investment.user != request.user:
-            raise serializers.ValidationError({
-                'investment': 'You do not own this investment.'
-            })
+        prop_id = attrs.pop('property', None) or (investment.property_investment_id if investment else None)
+        holding = (Investment.objects.filter(user=request.user, property_investment_id=prop_id, status='completed',
+                                             token_amount__gt=0).order_by('completed_at', 'created_at').first()
+                   if prop_id else None)
+        if holding is None:
+            raise serializers.ValidationError({'property': 'You do not hold shares of this property.'})
+        attrs['investment'] = holding
 
-        # Verify investment is completed
-        if investment.status != 'completed':
+        if not units or units < 1:
+            raise serializers.ValidationError({'units_requested': 'Enter how many shares to sell.'})
+        if not price or price <= 0:
+            raise serializers.ValidationError({'requested_price_per_unit': 'Enter a price per share.'})
+        available = free_shares(request.user, holding.property_investment)
+        if units > available:
             raise serializers.ValidationError({
-                'investment': 'Investment must be completed to request exit.'
+                'units_requested': f'You can offer up to {available} share(s) — the rest are listed on the '
+                                   f'market or already offered to a liquidity provider.'
             })
-
-        # Verify units available
-        if units > investment.token_amount:
-            raise serializers.ValidationError({
-                'units_requested': f'You only have {investment.token_amount} units available.'
-            })
+        if lp.user_id == request.user.pk:
+            raise serializers.ValidationError({'liquidity_provider': 'You cannot sell to yourself.'})
 
         # Verify LP is active
         if lp.status != LPStatus.ACTIVE:
@@ -198,16 +211,6 @@ class ExitRequestCreateSerializer(serializers.ModelSerializer):
                 'units_requested': f'LP has insufficient monthly capacity. Remaining: ${lp.remaining_monthly_capacity}'
             })
 
-        # Check for existing pending exit request for same investment
-        existing = ExitRequest.objects.filter(
-            investor=request.user,
-            investment=investment,
-            status__in=[ExitRequestStatus.PENDING, ExitRequestStatus.UNDER_REVIEW, ExitRequestStatus.APPROVED]
-        ).exists()
-        if existing:
-            raise serializers.ValidationError({
-                'investment': 'You already have a pending exit request for this investment.'
-            })
 
         return attrs
 
@@ -227,12 +230,25 @@ class ExitRequestSerializer(serializers.ModelSerializer):
     property_name = serializers.SerializerMethodField()
     lp_name = serializers.CharField(source='liquidity_provider.legal_entity_name', read_only=True)
     discount_percentage = serializers.SerializerMethodField()
+    property_id = serializers.UUIDField(source='investment.property_investment_id', read_only=True)
+    resale_fee = serializers.SerializerMethodField()
+    lp_total_cost = serializers.SerializerMethodField()
+
+    def get_resale_fee(self, obj):
+        from .settlement import resale_fee
+        return str(resale_fee(obj.total_offered_amount)) if obj.total_offered_amount else None
+
+    def get_lp_total_cost(self, obj):
+        from .settlement import resale_fee
+        if not obj.total_offered_amount:
+            return None
+        return str(obj.total_offered_amount + resale_fee(obj.total_offered_amount))
 
     class Meta:
         model = ExitRequest
         fields = [
-            'id', 'investor', 'investor_name', 'investment', 'property_name',
-            'liquidity_provider', 'lp_name',
+            'id', 'investor', 'investor_name', 'investment', 'property_id', 'property_name',
+            'liquidity_provider', 'lp_name', 'resale_fee', 'lp_total_cost',
             'units_requested', 'requested_price_per_unit', 'total_requested_amount',
             'offered_price_per_unit', 'total_offered_amount', 'discount_percentage',
             'lp_notes', 'status', 'status_display',
@@ -288,7 +304,7 @@ class LiquidityTransactionSerializer(serializers.ModelSerializer):
             'liquidity_provider', 'lp_name', 'investor', 'investor_name',
             'units_purchased', 'price_per_unit', 'total_amount',
             'platform_fee', 'net_amount_to_investor', 'completed_at',
-            'property_name'
+            'property_name', 'chain_status', 'transaction_hash'
         ]
 
     def get_investor_name(self, obj):

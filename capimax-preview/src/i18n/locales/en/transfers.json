@@ -1,0 +1,66 @@
+{
+  "nav": "Transfers",
+  "title": "Transfers",
+  "subtitle": "Send shares of a property or wallet balance to anyone by email — family, partners or friends.",
+  "refresh": "Refresh",
+  "newTransfer": "New transfer",
+  "tabs": {
+    "all": "All",
+    "sent": "Sent",
+    "received": "Received",
+    "open": "Open"
+  },
+  "emptyTitle": "No transfers yet",
+  "emptyText": "Transfers you send or receive appear here.",
+  "status": {
+    "scheduled": "Scheduled",
+    "waiting": "Waiting for the recipient",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "expired": "Returned",
+    "failed": "Returned"
+  },
+  "row": {
+    "units": "{{count}} share(s) of {{property}}",
+    "to": "{{what}} to {{who}}",
+    "from": "{{what}} from {{who}}",
+    "date": "date {{date}}",
+    "until": "returns {{date}} if not claimed",
+    "cancel": "Cancel",
+    "confirmCancel": "Cancel this transfer? Everything comes back to you."
+  },
+  "new": {
+    "title": "New transfer",
+    "close": "Close",
+    "cancel": "Cancel",
+    "send": "Send",
+    "asset": {
+      "units": "Property shares",
+      "cash": "Wallet balance"
+    },
+    "property": "Property",
+    "chooseProperty": "Choose a property",
+    "free": "{{count}} free",
+    "noShares": "You have no free shares to send (listed or offered shares are not free).",
+    "units": "Shares",
+    "amount": "Amount ($)",
+    "balance": "Wallet balance {{amount}}",
+    "email": "Recipient's email",
+    "name": "Recipient's name (optional)",
+    "date": "Deliver on",
+    "message": "Message (optional)",
+    "youSend": "You send",
+    "costBasis": "Value (your cost)",
+    "fee": "Transfer fee ({{pct}}%)",
+    "rules": "The shares / money are held from you now. The recipient receives them on the date if their account has a verified identity; otherwise we invite them and the transfer waits {{days}} days, then comes back to you. You can cancel until it is delivered.",
+    "errEmail": "Enter the recipient's email.",
+    "errUnits": "Choose a property and a number of shares you can send.",
+    "errAmount": "Enter an amount your wallet covers (including any fee).",
+    "errGeneric": "Something went wrong. Please try again.",
+    "result": {
+      "delivered": "Delivered to {{email}}.",
+      "scheduled": "Scheduled. {{email}} receives it on the chosen date.",
+      "waiting": "Sent. {{email}} doesn't have a verified account yet — we invited them. They have {{days}} days to claim it, otherwise it comes back to you."
+    }
+  }
+}

@@ -56,7 +56,8 @@ class EmailService:
             if not from_email:
                 from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@capimaxrt.com')
 
-            # Render HTML template
+            # Render HTML template (the public support address comes from settings — client round 4, #8)
+            context = {'support_email': getattr(settings, 'SUPPORT_EMAIL', ''), **(context or {})}
             html_content = render_to_string(f'emails/{template_name}.html', context)
 
             # Plain-text part with the real content (incl. verification

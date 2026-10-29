@@ -29,7 +29,7 @@ import { Heading } from '../design-system/typography/Heading';
 import { Text } from '../design-system/typography/Text';
 import { cn } from '../../utils/cn';
 import { marketplaceService, type SecondaryMarketListing } from '../../services/marketplace/MarketplaceService';
-import { useAuth } from '../../contexts/AuthContext';
+import { useUser } from '../../contexts/AuthContext';
 import { PROPERTY_PLACEHOLDER, handleImageFallback } from '../../utils/imageFallback';
 import { useTranslation } from 'react-i18next';
 
@@ -40,7 +40,7 @@ interface ManageListingsPageProps {
 export const ManageListingsPage: React.FC<ManageListingsPageProps> = ({
   className
 }) => {
-  const { user } = useAuth();
+  const user = useUser(); // useAuth() exposes { state }, so { user } was always undefined
   const { t } = useTranslation('market');
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');

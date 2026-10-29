@@ -44,6 +44,9 @@ import { MyProperties } from './MyProperties';
 import { InvestorReports } from './InvestorReports';
 import { KYCStatusSummaryCard } from '../../kyc/KYCStatusSummaryCard';
 import { InstallmentsPanel } from './InstallmentsPanel';
+import { MyCertificatesPanel } from '../../certificates/MyCertificatesPanel';
+import { TransfersPanel } from '../../transfers/TransfersPanel';
+import { VerificationCenterPanel } from '../../verification/VerificationCenterPanel';
 import { InvestorDocumentsPanel } from './InvestorDocumentsPanel';
 import { WithdrawModal } from '../../wallet/WithdrawModal';
 import { WithdrawalRequestsSection } from '../../wallet/WithdrawalRequestsSection';
@@ -66,7 +69,7 @@ interface InvestorControlPanelProps {
   currentView?: string;
 }
 
-type TabType = 'overview' | 'my-properties' | 'properties' | 'marketplace' | 'transactions' | 'installments' | 'reports' | 'analytics' | 'wallet' | 'documents' | 'notifications' | 'settings';
+type TabType = 'overview' | 'my-properties' | 'properties' | 'marketplace' | 'transactions' | 'installments' | 'reports' | 'analytics' | 'wallet' | 'transfers' | 'certificates' | 'verification' | 'notifications' | 'settings';
 
 interface PriceAlert {
   id: string;
@@ -104,8 +107,13 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
         return 'wallet';
       case 'installments':
         return 'installments';
-      case 'documents':
-        return 'documents';
+      case 'documents': // old links: Documents became My Certificates (client round 4, #4)
+      case 'certificates':
+        return 'certificates';
+      case 'verification':
+        return 'verification';
+      case 'transfers':
+        return 'transfers';
       case 'notifications':
         return 'notifications';
       case 'settings':
@@ -259,8 +267,13 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
           <TransactionManager />
         )}
 
+        {/* Reports & Documents (client round 4, #4): statements, then receipts,
+            agreements and property documents. Certificates have their own view. */}
         {activeTab === 'reports' && (
-          <InvestorReports />
+          <div className="space-y-10">
+            <InvestorReports />
+            <InvestorDocumentsPanel />
+          </div>
         )}
 
         {activeTab === 'analytics' && (
@@ -279,8 +292,16 @@ export const InvestorControlPanel: React.FC<InvestorControlPanelProps> = ({
           <WalletContent portfolio={portfolio} loading={portfolioLoading} walletBalance={walletBalance} walletLoading={walletLoading} />
         )}
 
-        {activeTab === 'documents' && (
-          <InvestorDocumentsPanel />
+        {activeTab === 'transfers' && (
+          <TransfersPanel />
+        )}
+
+        {activeTab === 'certificates' && (
+          <MyCertificatesPanel />
+        )}
+
+        {activeTab === 'verification' && (
+          <VerificationCenterPanel onOpenCertificates={() => setActiveTab('certificates')} />
         )}
 
         {activeTab === 'notifications' && (
@@ -954,7 +975,7 @@ export const WalletContent: React.FC<{
 
 
 // Notifications Content Component
-const NotificationsContent: React.FC = () => {
+export const NotificationsContent: React.FC = () => {
   const { t, i18n } = useTranslation('dashboard');
   const { data: notifications, isLoading } = useQuery({
     queryKey: ['notifications'],
@@ -1149,7 +1170,8 @@ const SettingsContent: React.FC = () => {
 
       {/* Settings Tab Navigation */}
       <div className="border-b border-slate-200 dark:border-slate-700">
-        <nav className="flex gap-8" aria-label={t('icp.settings.tabsLabel')}>
+        {/* 2×2 on phones so no tab (e.g. Account) is pushed off-screen */}
+        <nav className="grid grid-cols-2 sm:flex sm:gap-8" aria-label={t('icp.settings.tabsLabel')}>
           {settingsTabs.map((tab) => {
             const isActive = activeSettingsTab === tab.id;
             return (
@@ -1157,7 +1179,7 @@ const SettingsContent: React.FC = () => {
                 key={tab.id}
                 onClick={() => setActiveSettingsTab(tab.id)}
                 className={cn(
-                  'group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+                  'group inline-flex items-center justify-center sm:justify-start py-3 sm:py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors',
                   isActive
                     ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
                     : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 dark:text-slate-400 dark:hover:text-slate-300'

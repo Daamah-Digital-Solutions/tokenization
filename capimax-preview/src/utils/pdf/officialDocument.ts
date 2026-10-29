@@ -26,6 +26,7 @@ import { COMPANY } from '../company';
 type RGB = [number, number, number];
 const INK: RGB = [10, 41, 40];
 const GREEN_D: RGB = [29, 122, 78];
+const LINK: RGB = [21, 94, 117];
 const GOLD: RGB = [197, 154, 46];
 const GOLD_L: RGB = [230, 203, 122];
 const MUTED: RGB = [95, 107, 106];
@@ -394,14 +395,19 @@ export class OfficialDocument {
     this.y += 22;
   }
 
-  /** Label / value lines (values wrap). */
-  kv(rows: Array<[string, string, boolean?]>, labelW = 150) {
-    for (const [label, value, strong] of rows) {
+  /** Label / value lines (values wrap). A 4th item makes the value a clickable link. */
+  kv(rows: Array<[string, string, boolean?, string?]>, labelW = 150) {
+    for (const [label, value, strong, url] of rows) {
       const lines = this.wrap(value || '—', 9.2, CONTENT_W - labelW - 8, undefined, !!strong);
       this.ensure(14 * lines.length + 4);
       this.text(label, LEFT + 4, this.y, { size: 8.4, color: MUTED });
       for (const ln of lines) {
-        this.text(ln, LEFT + labelW, this.y, { size: 9.2, bold: !!strong, color: strong ? GREEN_D : INK });
+        this.text(ln, LEFT + labelW, this.y, { size: 9.2, bold: !!strong, color: url ? LINK : strong ? GREEN_D : INK });
+        if (url) {
+          const w = this.doc.getTextWidth(ln);
+          const x = this.rtl ? this.X(LEFT + labelW) - w : LEFT + labelW;
+          this.doc.link(x, this.y - 9, w, 12, { url });
+        }
         this.y += 13.5;
       }
       this.y += 3;
@@ -513,6 +519,32 @@ export class OfficialDocument {
       this.y += 18;
     }
     this.y += 6;
+  }
+
+  /** Label / value lines with an image (a QR code) beside them — certificates. */
+  kvWithImage(title: string, rows: Array<[string, string, boolean?]>, dataUrl: string, size: number, caption?: string, labelW = 120) {
+    const gap = 18;
+    const textW = CONTENT_W - size - gap;
+    const lines = rows.map(([, value, strong]) => this.wrap(value || '—', 8.6, textW - labelW - 8, undefined, !!strong));
+    const textH = lines.reduce((h, l) => h + 13 * l.length + 3, 0);
+    const blockH = Math.max(textH, size + (caption ? 16 : 0));
+    // heading and block stay on the same page
+    if (this.y + 22 + blockH + 8 > H - BOTTOM) this.newPage();
+    this.section(title);
+    const top = this.y;
+    // the image sits at the far end of the line (right in LTR, left in RTL)
+    const imgLeft = this.rtl ? LEFT : RIGHT - size;
+    this.doc.addImage(dataUrl, 'PNG', imgLeft, top - 8, size, size);
+    if (caption) this.text(caption, imgLeft + size / 2, top + size, { size: 7.2, color: MUTED, align: 'center', raw: true });
+    rows.forEach(([label, , strong], i) => {
+      this.text(label, LEFT + 4, this.y, { size: 8, color: MUTED });
+      for (const ln of lines[i]) {
+        this.text(ln, LEFT + labelW, this.y, { size: 8.6, bold: !!strong, color: strong ? GREEN_D : INK });
+        this.y += 13;
+      }
+      this.y += 3;
+    });
+    this.y = top + blockH + 8;
   }
 
   /** A centred, emphasised statement (certificates). */

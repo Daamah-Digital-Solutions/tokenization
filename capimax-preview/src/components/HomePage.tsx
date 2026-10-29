@@ -18,6 +18,7 @@ import {
   SecondaryMarketPreview,
   LiquidityProviderCTA,
   RealEstateVisualSection,
+  BrokerCTA,
 } from './home';
 import { AcceptedPaymentsNotice } from './home/AcceptedPaymentsNotice';
 
@@ -64,6 +65,9 @@ export const HomePage: React.FC = () => {
 
         {/* 9. Liquidity Provider CTA - LP program promotion */}
         <LiquidityProviderCTA />
+
+        {/* 9.5. Brokers - apply / how the program works (client round 4, #12) */}
+        <BrokerCTA />
 
         {/* 10. Trusted Partners - Industry partnerships */}
         <TrustedPartners />

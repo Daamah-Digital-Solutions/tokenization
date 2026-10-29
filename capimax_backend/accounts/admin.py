@@ -13,6 +13,19 @@ from .models import User, PasswordResetToken, EmailVerificationToken, UserSessio
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
+    actions = ['email_selected_users']
+
+    @admin.action(description='Email the selected users')
+    def email_selected_users(self, request, queryset):
+        """Opens a draft broadcast addressed to these users (client round 4, extra #4)."""
+        from django.shortcuts import redirect
+        from django.urls import reverse
+
+        from notifications.models import Broadcast
+        b = Broadcast.objects.create(subject='', title='', message='', audience='custom', created_by=request.user,
+                                     custom_emails=', '.join(queryset.values_list('email', flat=True)))
+        return redirect(reverse('admin:notifications_broadcast_change', args=[b.pk]))
+
     """
     Custom User admin with role-based filtering and comprehensive user management.
     """

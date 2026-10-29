@@ -401,11 +401,12 @@ export const SubmitPropertyPage: React.FC = () => {
                   <textarea
                     value={form.description}
                     onChange={set('description')}
-                    rows={4}
+                    rows={8}
                     required
                     className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
                     placeholder={t('submit.fields.descriptionPlaceholder')}
                   />
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t('common:richTextHint')}</p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Select label={t('submit.fields.type')} options={PROPERTY_TYPES.map(v => ({ value: v, label: t(`submit.types.${v}`) }))} value={form.property_type} onChange={set('property_type')} required />

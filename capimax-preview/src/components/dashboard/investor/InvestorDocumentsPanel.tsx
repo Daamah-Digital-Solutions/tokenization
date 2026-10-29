@@ -1,12 +1,10 @@
 /**
- * Investor Document Center (client edits #3 + #8).
- *
- * Lives inside the investor Dashboard (not a hidden Account page). Shows the
- * investor's documents SEPARATED PER PROPERTY:
- *   - a professional, downloadable Certificate of Ownership per property
- *     (generated client-side with a QR code + certificate number),
+ * Investor documents per property (client edits #3 + #8), shown under
+ * Reports & Documents (client round 4, #4):
+ *   - the purchase receipt,
  *   - any subscription-agreement PDF,
  *   - the property's Data Room documents (valuation / insurance / ownership …).
+ * Ownership certificates are real records now and live in My Certificates.
  */
 
 import React, { useEffect, useState } from 'react';
@@ -21,7 +19,6 @@ import {
 } from '../../../services/documents/DocumentService';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '../../../contexts/AuthContext';
-import { downloadOwnershipCertificatePdf } from '../../../utils/ownershipCertificatePdf';
 import { downloadReceiptPdf } from '../../../utils/receiptPdf';
 
 // Values are i18n keys in the `dashboard` namespace (docsPanel.types.*).
@@ -43,12 +40,6 @@ function iconFor(doc: InvestorDocument) {
   if (doc.kind === 'subscription_agreement') return ScrollText;
   if (doc.document_type === 'valuation' || doc.document_type === 'financial') return FileCheck2;
   return FileText;
-}
-
-function certificateNumber(propertyId: string, userId?: string): string {
-  const p = (propertyId || '').replace(/-/g, '').slice(0, 8).toUpperCase();
-  const u = (userId || '').replace(/-/g, '').slice(0, 4).toUpperCase();
-  return `CMX-${p}${u ? '-' + u : ''}`;
 }
 
 export const InvestorDocumentsPanel: React.FC = () => {
@@ -78,41 +69,6 @@ export const InvestorDocumentsPanel: React.FC = () => {
     [user?.first_name, user?.last_name].filter(Boolean).join(' ') ||
     user?.email ||
     t('docsPanel.holderFallback');
-
-  const downloadCertificate = async (g: InvestorPropertyDocuments, docId: string) => {
-    const certNo = certificateNumber(g.property.id, user?.id);
-    setBusyDoc(docId);
-    try {
-      const ownershipPct = parseFloat(g.holdings.ownership_percentage || '0') || 0;
-      const invested = parseFloat(g.holdings.total_invested || '0') || 0;
-      const qrPayload =
-        `Capimax RT - Certificate of Ownership | Cert: ${certNo} | ` +
-        `Property: ${g.property.title} | Holder: ${investorName} | ` +
-        `Tokens: ${g.holdings.token_amount} | Ownership: ${ownershipPct.toFixed(4)}%`;
-      await downloadOwnershipCertificatePdf({
-        certificateNumber: certNo,
-        investorName,
-        property: {
-          title: g.property.title,
-          reference: certificateNumber(g.property.id).replace('CMX-', ''),
-          location: g.property.location,
-        },
-        tokens: g.holdings.token_amount,
-        totalTokens: g.property.total_tokens,
-        ownershipPercentage: ownershipPct,
-        investmentValue: invested,
-        amountPaid: invested,
-        issueDate: g.holdings.first_investment_date
-          ? new Date(g.holdings.first_investment_date)
-          : new Date(),
-        qrPayload,
-      });
-    } catch (_) {
-      setError(t('docsPanel.certError'));
-    } finally {
-      setBusyDoc(null);
-    }
-  };
 
   const downloadReceipt = async (g: InvestorPropertyDocuments, docId: string) => {
     setBusyDoc(docId);
@@ -147,10 +103,7 @@ export const InvestorDocumentsPanel: React.FC = () => {
     }
   };
 
-  const generateDoc = (g: InvestorPropertyDocuments, doc: InvestorDocument) => {
-    if (doc.kind === 'purchase_receipt') return downloadReceipt(g, doc.id);
-    return downloadCertificate(g, doc.id);
-  };
+  const generateDoc = (g: InvestorPropertyDocuments, doc: InvestorDocument) => downloadReceipt(g, doc.id);
 
   if (loading) {
     return (
@@ -233,7 +186,7 @@ export const InvestorDocumentsPanel: React.FC = () => {
 
               {/* Documents */}
               <ul className="divide-y divide-slate-100 dark:divide-slate-700">
-                {g.documents.map((doc) => {
+                {g.documents.filter((doc) => doc.kind !== 'share_certificate').map((doc) => {
                   const Icon = iconFor(doc);
                   const isGenerated = doc.generated;
                   const highlight = doc.kind === 'share_certificate';

@@ -13,6 +13,7 @@ import { PartnerCard, PartnerCardProps, PartnerCategory } from '../components/pa
 import { useRouter } from '../utils/router';
 import { useTranslation } from 'react-i18next';
 
+import { COMPANY } from '../utils/company';
 type FilterCategory = 'all' | PartnerCategory;
 
 interface CategoryTab {
@@ -354,8 +355,8 @@ export const PartnersPage: React.FC = () => {
                 </div>
                 <Text variant="caption" align="center" className="text-white/60 pt-4" as="p">
                   {t('partnersPage.inquiries')}{' '}
-                  <a href="mailto:partners@capimaxrt.com" className="text-emerald-400 hover:underline">
-                    partners@capimaxrt.com
+                  <a href={`mailto:${COMPANY.email}`} className="text-emerald-400 hover:underline">
+                    {COMPANY.email}
                   </a>
                 </Text>
               </motion.div>

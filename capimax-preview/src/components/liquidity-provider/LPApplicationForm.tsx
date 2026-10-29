@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Building2, User, Mail, Phone, Globe, DollarSign,
-  CheckCircle, AlertCircle, Loader2, ChevronRight, ChevronLeft
+  CheckCircle, AlertCircle, Loader2, ChevronRight, ChevronLeft, FileUp, X
 } from 'lucide-react';
 import { apiClient } from '../../services/api/ApiClient';
 import { useTranslation, Trans } from 'react-i18next';
+import { useUser } from '../../contexts/AuthContext';
+import { useRouter } from '../../utils/router';
 
 interface LPApplicationFormData {
   // Entity Information
@@ -68,6 +70,19 @@ const initialFormData: LPApplicationFormData = {
 
 const currencyOptions = ['USD', 'EUR', 'CRYPTO', 'OTHER'];
 
+// Documents the team reviews (client round 4, #14). The first two are required.
+const DOCUMENT_TYPES = [
+  { type: 'certificate_of_incorporation', required: true },
+  { type: 'director_id', required: true },
+  { type: 'regulatory_license', required: false },
+  { type: 'proof_of_address', required: false },
+  { type: 'proof_of_funds', required: false },
+  { type: 'aml_policy', required: false },
+  { type: 'board_resolution', required: false },
+] as const;
+const ACCEPT = '.pdf,.jpg,.jpeg,.png';
+const MAX_BYTES = 10 * 1024 * 1024;
+
 const entityTypes = [
   { value: 'company', label: 'Company' },
   { value: 'fund', label: 'Investment Fund' },
@@ -87,8 +102,28 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof LPApplicationFormData, string>>>({});
+  const user = useUser();
+  const { navigate } = useRouter();
+  const [documents, setDocuments] = useState<Record<string, File | null>>({});
+  const [docErrors, setDocErrors] = useState<Record<string, string>>({});
 
-  const totalSteps = 5;
+  const totalSteps = 6;
+
+  const pickDocument = (type: string, file: File | null) => {
+    if (file) {
+      const ext = file.name.toLowerCase().split('.').pop() || '';
+      if (!['pdf', 'jpg', 'jpeg', 'png'].includes(ext)) {
+        setDocErrors(prev => ({ ...prev, [type]: t('lp.docs.badType') }));
+        return;
+      }
+      if (file.size > MAX_BYTES) {
+        setDocErrors(prev => ({ ...prev, [type]: t('lp.docs.tooBig') }));
+        return;
+      }
+    }
+    setDocErrors(prev => ({ ...prev, [type]: '' }));
+    setDocuments(prev => ({ ...prev, [type]: file }));
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -145,6 +180,15 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
     }
 
     if (step === 5) {
+      const missing: Record<string, string> = {};
+      DOCUMENT_TYPES.filter(d => d.required && !documents[d.type]).forEach(d => {
+        missing[d.type] = t('lp.docs.required');
+      });
+      setDocErrors(missing);
+      if (Object.keys(missing).length) return false;
+    }
+
+    if (step === 6) {
       if (!formData.ack_independent_provider) newErrors.ack_independent_provider = t('lp.mustAcknowledge');
       if (!formData.ack_no_exit_guarantee) newErrors.ack_no_exit_guarantee = t('lp.mustAcknowledge');
       if (!formData.ack_compliance_agreement) newErrors.ack_compliance_agreement = t('lp.mustAgree');
@@ -173,25 +217,59 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
     setSubmitError(null);
 
     try {
-      const payload = {
-        ...formData,
-        approximate_liquidity_available: parseFloat(formData.approximate_liquidity_available),
-        average_transaction_size: parseFloat(formData.average_transaction_size),
-        expected_discount_rate: parseFloat(formData.expected_discount_rate),
-        max_per_transaction: parseFloat(formData.max_per_transaction),
-        max_per_month: parseFloat(formData.max_per_month)
-      };
+      // multipart: the form fields + the documents with their types
+      const body = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === 'preferred_currencies') {
+          (value as string[]).forEach(c => body.append(key, c));
+        } else {
+          body.append(key, typeof value === 'boolean' ? (value ? 'true' : 'false') : String(value ?? ''));
+        }
+      });
+      Object.entries(documents).forEach(([type, file]) => {
+        if (file) {
+          body.append('documents', file);
+          body.append('document_types', type);
+        }
+      });
 
-      await apiClient.post('/liquidity-provider/applications/', payload);
+      await apiClient.uploadFile('/liquidity-provider/applications/', body);
       setSubmitSuccess(true);
       onSuccess?.();
     } catch (error: any) {
-      const message = error.response?.data?.message || error.message || t('lp.errSubmit');
+      const details = error?.details && typeof error.details === 'object'
+        ? Object.values(error.details).flat().filter((v: any) => typeof v === 'string').join(' ')
+        : '';
+      const message = details || error.response?.data?.message || error.message || t('lp.errSubmit');
       setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // The application is tied to the signed-in account: approval gives that account
+  // the liquidity-provider dashboard (client round 4, #13).
+  if (!user) {
+    return (
+      <div className="text-center py-10 px-6">
+        <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+          <User className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+        </div>
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t('lp.signInTitle')}</h3>
+        <p className="text-slate-600 dark:text-slate-400 max-w-md mx-auto mb-6">{t('lp.signInText')}</p>
+        <div className="flex flex-wrap gap-3 justify-center">
+          <button type="button" onClick={() => navigate('login')}
+                  className="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
+            {t('lp.signIn')}
+          </button>
+          <button type="button" onClick={() => navigate('register')}
+                  className="px-5 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold">
+            {t('lp.createAccount')}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (submitSuccess) {
     return (
@@ -553,6 +631,50 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
         );
 
       case 5:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">{t('lp.docs.title')}</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{t('lp.docs.subtitle')}</p>
+            </div>
+            <div className="space-y-3">
+              {DOCUMENT_TYPES.map(({ type, required }) => {
+                const file = documents[type];
+                return (
+                  <div key={type} className="rounded-xl border border-slate-200 dark:border-slate-700 p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                        {t(`lp.docs.types.${type}`)}
+                        {required && <span className="text-red-500 ms-1">*</span>}
+                      </span>
+                      {file ? (
+                        <span className="inline-flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-400 max-w-full">
+                          <CheckCircle className="w-4 h-4 shrink-0" />
+                          <span className="truncate max-w-[180px]" dir="ltr">{file.name}</span>
+                          <button type="button" onClick={() => pickDocument(type, null)}
+                                  className="text-slate-400 hover:text-red-500" aria-label={t('lp.docs.remove')}>
+                            <X className="w-4 h-4" />
+                          </button>
+                        </span>
+                      ) : (
+                        <label className="inline-flex items-center gap-1.5 cursor-pointer rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">
+                          <FileUp className="w-4 h-4" />
+                          {t('lp.docs.choose')}
+                          <input type="file" accept={ACCEPT} className="hidden"
+                                 onChange={e => pickDocument(type, e.target.files?.[0] || null)} />
+                        </label>
+                      )}
+                    </div>
+                    {docErrors[type] && <p className="text-red-500 text-xs mt-1">{docErrors[type]}</p>}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{t('lp.docs.hint')}</p>
+          </div>
+        );
+
+      case 6:
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">

@@ -13,7 +13,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils import timezone
 from datetime import timedelta
 import pyotp
-from .models import User, PasswordResetToken, EmailVerificationToken, UserRoleAssignment, UserRole
+from .models import SELF_SERVICE_ROLES, User, PasswordResetToken, EmailVerificationToken, UserRoleAssignment, UserRole
 from core.utils import generate_secure_token, send_notification_email
 
 
@@ -129,13 +129,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         role = attrs.get('role')
         roles = attrs.get('roles', [])
 
+        # Only self-service roles at sign-up: broker / LP need an approved application, admin is staff-only
+        for role_value in [*roles, *([role] if role else [])]:
+            if role_value not in SELF_SERVICE_ROLES:
+                raise serializers.ValidationError({"roles": f"Invalid role: {role_value}"})
+
         # If roles list is provided, validate it
         if roles:
-            # Validate each role choice
-            valid_roles = [choice[0] for choice in UserRole.choices]
-            for role_value in roles:
-                if role_value not in valid_roles:
-                    raise serializers.ValidationError({"roles": f"Invalid role: {role_value}"})
 
             # Remove duplicates while preserving order
             attrs['roles'] = list(dict.fromkeys(roles))
@@ -264,9 +264,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             
             # Update login attempts and IP
             user.login_attempts = 0
+            previous_ip = user.last_login_ip
             if hasattr(self.context.get('request'), 'META'):
                 user.last_login_ip = self.get_client_ip(self.context['request'])
             user.save(update_fields=['login_attempts', 'last_login_ip'])
+            # A sign-in from a new network is emailed (client round 4, #16)
+            if previous_ip and user.last_login_ip and previous_ip != user.last_login_ip:
+                self._alert_new_sign_in(user)
             
             # Set user for token generation
             self.user = user
@@ -280,6 +284,24 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         
         return data
     
+    def _alert_new_sign_in(self, user):
+        try:
+            from django.utils import timezone
+
+            from notifications.services import NotificationService
+            agent = (self.context['request'].META.get('HTTP_USER_AGENT') or 'Unknown device')[:160]
+            NotificationService.create_notification(
+                user=user,
+                title='New sign-in to your account',
+                message=(f'Your Capimax RT account was signed in to from a new network '
+                         f'(IP {user.last_login_ip}, {agent}) on {timezone.now():%d %b %Y %H:%M} UTC.\n'
+                         f'If this was you, no action is needed. If not, change your password now and '
+                         f'enable two-factor authentication.'),
+                notification_type='warning', priority='high',
+                action_url='/dashboard?view=settings', action_label='Security settings', send_email=True)
+        except Exception:  # noqa: BLE001 — never block a sign-in
+            pass
+
     def get_client_ip(self, request):
         """Get client IP address from request."""
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')

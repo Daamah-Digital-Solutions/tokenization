@@ -6,4 +6,5 @@ export { PropertyOwnerCTA } from './PropertyOwnerCTA';
 export { InvestorCTA } from './InvestorCTA';
 export { SecondaryMarketPreview } from './SecondaryMarketPreview';
 export { LiquidityProviderCTA } from './LiquidityProviderCTA';
+export { BrokerCTA } from './BrokerCTA';
 export { RealEstateVisualSection } from './RealEstateVisualSection';

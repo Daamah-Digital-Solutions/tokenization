@@ -32,6 +32,7 @@ import type { WalletInfo } from '../../services/api/types';
 import { cn } from '../../utils/cn';
 import { useTranslation, Trans } from 'react-i18next';
 
+import { COMPANY } from '../../utils/company';
 interface TransactionConfirmationProps {
   property: InvestmentProperty;
   investmentData: InvestmentData;
@@ -127,7 +128,7 @@ export const TransactionConfirmation: React.FC<TransactionConfirmationProps> = (
         totalROI: returns.totalROI,
         nextDividendDate,
       },
-      supportEmail: 'support@capimax.com',
+      supportEmail: COMPANY.email,
     });
   };
 

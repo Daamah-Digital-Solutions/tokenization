@@ -4,6 +4,7 @@ import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { useTranslation, Trans } from 'react-i18next';
 import { Button } from './Button';
 
+import { COMPANY } from '../../utils/company';
 interface Props {
   children?: ReactNode;
   fallback?: ReactNode;
@@ -140,7 +141,7 @@ const ErrorFallbackView: React.FC<{
                 components={{
                   link: (
                     <a
-                      href="mailto:support@capimax.com"
+                      href={`mailto:${COMPANY.email}`}
                       className="text-emerald-600 dark:text-emerald-400 hover:underline"
                     />
                   ),

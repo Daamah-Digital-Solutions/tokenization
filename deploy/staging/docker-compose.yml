@@ -84,6 +84,7 @@ services:
       echo 'VITE_ENABLE_WEBSOCKETS=true' >> .env &&
       echo 'VITE_ENABLE_2FA=true' >> .env &&
       echo 'VITE_SUPPORTED_CHAINS=97' >> .env &&
+      echo \"VITE_SUPPORT_EMAIL=$${VITE_SUPPORT_EMAIL:-}\" >> .env &&
       echo '--- generated frontend .env ---' && cat .env &&
       npm install --no-audit --no-fund &&
       npm run build &&

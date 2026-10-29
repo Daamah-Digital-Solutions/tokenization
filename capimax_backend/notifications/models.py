@@ -373,3 +373,52 @@ class NotificationChannel(models.Model):
         
     def __str__(self):
         return f"{self.notification.title} via {self.channel} - {self.status}"
+
+
+class Broadcast(models.Model):
+    """
+    An email the team sends from the admin to a group of users — news,
+    announcements, promotions (client round 4, extra request #4).
+    Sent in the background, in batches; every message is logged in EmailLog.
+    """
+
+    AUDIENCES = [
+        ('all', 'Everyone with an active account'),
+        ('investors', 'Investors'),
+        ('owners', 'Property owners / developers'),
+        ('brokers', 'Brokers'),
+        ('liquidity_providers', 'Liquidity providers'),
+        ('kyc_verified', 'Identity-verified users'),
+        ('holders', 'Shareholders (own at least one share)'),
+        ('custom', 'Specific email addresses'),
+    ]
+    STATUSES = [('draft', 'Draft'), ('sending', 'Sending'), ('sent', 'Sent'), ('failed', 'Failed')]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    subject = models.CharField(max_length=200)
+    title = models.CharField(max_length=200, help_text='Heading inside the email.')
+    message = models.TextField(help_text='Plain text; blank lines start new paragraphs.')
+    action_url = models.CharField(max_length=300, blank=True,
+                                  help_text='Optional button link, e.g. /properties or https://…')
+    action_label = models.CharField(max_length=60, blank=True, default='Open Capimax RT')
+    audience = models.CharField(max_length=30, choices=AUDIENCES, default='all')
+    custom_emails = models.TextField(blank=True, help_text="For 'Specific email addresses': one per line or comma separated.")
+    is_marketing = models.BooleanField(
+        default=False, help_text='Promotional: only users who did not turn off email notifications; '
+                                 'the email says how to stop receiving news.')
+    also_in_app = models.BooleanField(default=False, help_text='Also show it in the notifications bell.')
+
+    status = models.CharField(max_length=10, choices=STATUSES, default='draft')
+    recipients_count = models.PositiveIntegerField(default=0)
+    sent_count = models.PositiveIntegerField(default=0)
+    failed_count = models.PositiveIntegerField(default=0)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    last_error = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.subject} ({self.get_status_display()})'

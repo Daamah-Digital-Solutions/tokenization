@@ -65,15 +65,19 @@ def attach_referral(user, code):
         if referral.referred_user_id is None:
             referral.referred_user = user
             referral.save(update_fields=['referred_user', 'updated_at'])
-            return referral
-
-        # Code already claimed by an earlier signup — attach this user to the
-        # same broker through a new referral row.
-        return BrokerReferral.objects.create(
-            broker=referral.broker,
-            referred_user=user,
-            notes=f'Via shared referral link {code}',
-        )
+        else:
+            # Code already claimed by an earlier signup — attach this user to the
+            # same broker through a new referral row.
+            referral = BrokerReferral.objects.create(
+                broker=referral.broker,
+                referred_user=user,
+                notes=f'Via shared referral link {code}',
+            )
+        from .models import _notify_broker
+        _notify_broker(referral.broker.user, 'New client registered with your link',
+                       f'{user.get_full_name() or user.email} created an account with your referral link. '
+                       f'You earn your commission on their completed purchases.', url='/dashboard?view=referrals')
+        return referral
     except Exception as exc:  # never break registration on a referral hiccup
         logger.warning("attach_referral failed for code %r: %s", code, exc)
         return None

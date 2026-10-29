@@ -140,6 +140,8 @@ urlpatterns = [
     path('api/v1/liquidity-provider/', include('liquidity_provider.urls')),
     path('api/v1/documents/', include('documents.urls')),
     path('api/v1/support/', include('support.urls')),
+    path('api/v1/certificates/', include('certificates.urls')),
+    path('api/v1/transfers/', include('transfers.urls')),
     path('api/v1/purchases/', include('investments.purchase_urls')),  # PropShare-model checkout
 ]
 

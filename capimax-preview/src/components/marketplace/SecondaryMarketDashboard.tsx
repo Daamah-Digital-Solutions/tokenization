@@ -21,15 +21,17 @@ import {
   BarChart3,
   Timer,
   Building2,
+  XCircle,
+  Tag,
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Input } from '../design-system/forms/Input';
 import { Button } from '../ui/Button';
 import { Badge } from '../design-system/icons/Badge';
 import { Container } from '../design-system/layout/Container';
 import { cn } from '../../utils/cn';
 import { marketplaceService, type SecondaryMarketListing, type MarketplaceFilters } from '../../services/marketplace/MarketplaceService';
-import { useAuth } from '../../contexts/AuthContext';
+import { useUser } from '../../contexts/AuthContext';
 import { Card } from '../design-system/cards/Card';
 import { Heading } from '../design-system/typography/Heading';
 import { Text } from '../design-system/typography/Text';
@@ -47,13 +49,13 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
   className,
   showStats = true
 }) => {
-  const { user } = useAuth();
+  const user = useUser(); // useAuth() exposes { state }, so { user } was always undefined
   const { navigate } = useRouter();
   const { t } = useTranslation('market');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<'all' | 'sell' | 'buy'>('sell');
+  const [selectedTab, setSelectedTab] = useState<'all' | 'sell' | 'buy' | 'mine'>('sell');
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState<MarketplaceFilters>({
     sort_by: 'created_desc'
@@ -67,10 +69,17 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
     const combined = { ...filters };
 
     // Apply tab filters
-    if (selectedTab === 'sell') {
-      combined.listing_type = 'sell';
-    } else if (selectedTab === 'buy') {
-      combined.listing_type = 'buy';
+    if (selectedTab === 'mine') {
+      // all of the user's own listings, any status, so they can follow and cancel them
+      (combined as any).my_listings = 'true';
+    } else {
+      // the market only shows what can still be traded
+      (combined as any).active_only = 'true';
+      if (selectedTab === 'sell') {
+        combined.listing_type = 'sell';
+      } else if (selectedTab === 'buy') {
+        combined.listing_type = 'buy';
+      }
     }
 
     // Add search query
@@ -108,6 +117,24 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
     enabled: showStats
   });
 
+  const queryClient = useQueryClient();
+  const cancelMutation = useMutation({
+    mutationFn: (listingId: string) => marketplaceService.cancelListing(listingId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['secondary-market-listings'] });
+      queryClient.invalidateQueries({ queryKey: ['marketplace-stats'] });
+    },
+    onError: (err: any) => {
+      window.alert(err?.message || t('smd.cancelFailed'));
+    },
+  });
+
+  const handleCancelListing = (listing: SecondaryMarketListing) => {
+    if (window.confirm(t('smd.cancelConfirm'))) {
+      cancelMutation.mutate(listing.id);
+    }
+  };
+
   const handleCreateListing = () => {
     setCreateListingModalOpen(true);
   };
@@ -143,7 +170,8 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
   const tabs = [
     { id: 'sell', label: t('smd.tabSell'), icon: ArrowUpDown, description: t('smd.tabSellDesc') },
     { id: 'buy', label: t('smd.tabBuy'), icon: ShoppingCart, description: t('smd.tabBuyDesc') },
-    { id: 'all', label: t('smd.tabAll'), icon: List, description: t('smd.tabAllDesc') }
+    { id: 'all', label: t('smd.tabAll'), icon: List, description: t('smd.tabAllDesc') },
+    ...(user ? [{ id: 'mine', label: t('smd.tabMine'), icon: Tag, description: t('smd.tabMineDesc') }] : [])
   ];
 
   const stats = [
@@ -181,27 +209,28 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
     <div className={cn("py-8 px-4 max-w-7xl mx-auto", className)}>
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
               {t('smd.title')}
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
               {t('smd.subtitle')}
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 w-full sm:w-auto">
             <Button
               variant="outline"
               onClick={() => refetch()}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 shrink-0"
+              aria-label={t('common.refresh')}
             >
               <RefreshCw className="w-4 h-4" />
-              {t('common.refresh')}
+              <span className="hidden sm:inline">{t('common.refresh')}</span>
             </Button>
             <Button
               onClick={handleCreateListing}
-              className="flex items-center gap-2"
+              className="flex flex-1 sm:flex-none items-center justify-center gap-2 whitespace-nowrap"
             >
               <Plus className="w-4 h-4" />
               {t('smd.createListing')}
@@ -287,7 +316,7 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mb-6">
+        <div className="flex gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1 mb-6 overflow-x-auto">
           {tabs.map(({ id, label, icon: Icon, description }) => (
             <button
               key={id}
@@ -296,7 +325,7 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
                 setCurrentPage(1);
               }}
               className={cn(
-                "flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium transition-all flex-1",
+                "flex items-center gap-2 px-4 py-3 rounded-md text-sm font-medium transition-all flex-1 shrink-0 whitespace-nowrap",
                 selectedTab === id
                   ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
@@ -305,7 +334,7 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
               <Icon className="w-4 h-4" />
               <div className="text-start">
                 <div className="font-semibold">{label}</div>
-                <div className="text-xs opacity-75">{description}</div>
+                <div className="text-xs opacity-75 hidden sm:block">{description}</div>
               </div>
             </button>
           ))}
@@ -501,6 +530,8 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
                       viewMode={viewMode}
                       onBuy={handleBuyTokens}
                       onViewDetails={handleViewDetails}
+                      onCancel={handleCancelListing}
+                      cancelling={cancelMutation.isPending && cancelMutation.variables === listing.id}
                       currentUser={user}
                     />
                   ))}
@@ -565,6 +596,8 @@ interface ListingCardProps {
   viewMode: 'grid' | 'list';
   onBuy: (listing: SecondaryMarketListing) => void;
   onViewDetails: (listing: SecondaryMarketListing) => void;
+  onCancel: (listing: SecondaryMarketListing) => void;
+  cancelling?: boolean;
   currentUser: any;
 }
 
@@ -573,11 +606,14 @@ const ListingCard: React.FC<ListingCardProps> = ({
   viewMode,
   onBuy,
   onViewDetails,
+  onCancel,
+  cancelling,
   currentUser
 }) => {
   const { t, i18n } = useTranslation('market');
   const dateLocale = i18n.language?.startsWith('ar') ? 'ar-EG' : undefined;
   const isOwnListing = currentUser?.id === listing.seller.id;
+  const isOpen = listing.status === 'active' || listing.status === 'partially_filled';
   const fillPercentage = ((listing.tokens_offered - listing.tokens_remaining) / listing.tokens_offered) * 100;
   const expiresAt = new Date(listing.expires_at);
   const isExpiringSoon = (expiresAt.getTime() - Date.now()) < 24 * 60 * 60 * 1000; // 24 hours
@@ -726,7 +762,7 @@ const ListingCard: React.FC<ListingCardProps> = ({
 
           {/* Actions */}
           <div className="flex gap-2 pt-2">
-            {!isOwnListing && listing.status === 'active' && listing.listing_type === 'sell' && (
+            {!isOwnListing && isOpen && listing.listing_type === 'sell' && (
               <Button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -750,6 +786,21 @@ const ListingCard: React.FC<ListingCardProps> = ({
               <Eye className="w-4 h-4 me-2" />
               {t('smd.details')}
             </Button>
+            {isOwnListing && isOpen && (
+              <Button
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCancel(listing);
+                }}
+                disabled={cancelling}
+                className="flex-1 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-red-900/20"
+                size="sm"
+              >
+                <XCircle className="w-4 h-4 me-2" />
+                {cancelling ? t('smd.cancelling') : t('smd.cancelListing')}
+              </Button>
+            )}
           </div>
 
           {/* Expiry info */}

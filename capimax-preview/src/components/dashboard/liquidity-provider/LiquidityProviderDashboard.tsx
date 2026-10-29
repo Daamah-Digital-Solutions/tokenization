@@ -8,6 +8,7 @@ import {
 import { cn } from '../../../utils/cn';
 import { Button } from '../../ui/Button';
 import { PayoutsPanel } from '../../wallet/PayoutsPanel';
+import { NotificationsContent } from '../investor/InvestorControlPanel';
 import {
   LiquidityProviderService,
   type LPExitRequest,
@@ -415,6 +416,9 @@ export const LiquidityProviderDashboard: React.FC<{ currentView: string }> = ({ 
       break;
     case 'wallet':
       body = <PayoutsPanel title={t('nav.wallet')} />;
+      break;
+    case 'notifications': // the header bell (client round 4, #13)
+      body = <NotificationsContent />;
       break;
     case 'lp-profile':
       body = (

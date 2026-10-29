@@ -39,6 +39,8 @@ import { useTranslation } from 'react-i18next';
 import { useRouter } from '../../../utils/router';
 import { useAuth } from '../../../contexts/AuthContext';
 import { CreateListingModal } from '../../marketplace/CreateListingModal';
+import { SellToLPModal } from '../../liquidity-provider/SellToLPModal';
+import { MyExitRequests } from '../../liquidity-provider/MyExitRequests';
 import { InvestmentService } from '../../../services/investment/InvestmentService';
 import { apiClient } from '../../../services/api/ApiClient';
 import type { Property } from '../../../services/api/types';
@@ -53,6 +55,7 @@ interface PropertyHolding {
   tokensReserved: number; // locked in my active sell listings
   tokensAvailable: number; // tokens - tokensReserved — what I can list right now
   totalTokens: number; // total tokens of the property
+  sharePrice: number; // current price per share (default asking price for an LP sale)
   yield: number;
   change: number;
   image?: string;
@@ -67,7 +70,8 @@ const HoldingCard: React.FC<{
   holding: PropertyHolding;
   onView: (h: PropertyHolding) => void;
   onSell: (h: PropertyHolding) => void;
-}> = ({ holding, onView, onSell }) => {
+  onSellToLP: (h: PropertyHolding) => void;
+}> = ({ holding, onView, onSell, onSellToLP }) => {
   const { t } = useTranslation('dashboard');
   // Track image-load failures so a 404 or wrong-type src falls back to
   // the Building2 placeholder instead of leaving the alt text exposed
@@ -232,6 +236,15 @@ const HoldingCard: React.FC<{
             {holding.tokensAvailable <= 0 ? t('myProps.fullyListed') : t('myProps.sellOnMarket')}
           </button>
         </div>
+        {/* Or sell directly to a liquidity provider (client round 4, #13) */}
+        <button
+          type="button"
+          onClick={() => onSellToLP(holding)}
+          disabled={holding.tokensAvailable <= 0}
+          className="w-full mt-2 px-3 py-2 rounded-lg text-sm font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          {t('market:lpSell.cta')}
+        </button>
       </div>
     </div>
   );
@@ -245,6 +258,7 @@ export const MyProperties: React.FC = () => {
   const [filter, setFilter] = useState<FilterMode>('all');
   const [query, setQuery] = useState('');
   const [listingOpen, setListingOpen] = useState(false);
+  const [lpSale, setLpSale] = useState<PropertyHolding | null>(null);
   // Which property the investor clicked "Sell" on, so the listing modal opens
   // pre-scoped to it instead of an empty property picker (client edit #2).
   const [sellPropertyId, setSellPropertyId] = useState<string | null>(null);
@@ -358,6 +372,7 @@ export const MyProperties: React.FC = () => {
         tokens: h.tokens_total_owned, // gross — "what I have"
         tokensReserved: h.tokens_reserved,
         tokensAvailable: h.tokens_owned, // gross − reserved
+        sharePrice: currentTokenPrice,
         totalTokens,
         yield: Number((property as any)?.rental_yield) || 0,
         change,
@@ -565,6 +580,8 @@ export const MyProperties: React.FC = () => {
         </div>
       </div>
 
+      <MyExitRequests />
+
       {filtered.length === 0 ? (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-10 text-center">
           <p className="text-slate-500 dark:text-slate-400">
@@ -579,9 +596,20 @@ export const MyProperties: React.FC = () => {
               holding={h}
               onView={handleView}
               onSell={handleSell}
+              onSellToLP={setLpSale}
             />
           ))}
         </div>
+      )}
+
+      {lpSale && (
+        <SellToLPModal
+          propertyId={lpSale.id}
+          propertyName={lpSale.name}
+          availableShares={lpSale.tokensAvailable}
+          sharePrice={lpSale.sharePrice}
+          onClose={() => setLpSale(null)}
+        />
       )}
 
       <CreateListingModal

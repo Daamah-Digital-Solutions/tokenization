@@ -76,6 +76,10 @@ class MarketplacePermissions(permissions.BasePermission):
         """
         Check if user has permission to perform trading operations.
         """
+        # A seller may always withdraw their own listing (ownership is checked per object)
+        if getattr(view, 'action', None) == 'cancel':
+            return True
+
         # Investors and brokers can trade
         if hasattr(user, 'role'):
             if user.role in ['investor', 'broker']:

@@ -305,6 +305,15 @@ class KYCService:
         )
 
         KYCService._notify_reviewers(kyc_profile)
+        try:  # the applicant gets a receipt too (client round 4, #16)
+            from notifications.services import NotificationService
+            NotificationService.create_notification(
+                user=user, title='Identity verification received',
+                message=('We received your identity documents. Our team reviews them within 1–2 business days; '
+                         'you will get an email with the result.'),
+                notification_type='kyc', action_url='/kyc', action_label='Verification status', send_email=True)
+        except Exception:  # noqa: BLE001
+            logger.warning('KYC receipt notice failed', exc_info=True)
         return True
 
     @staticmethod

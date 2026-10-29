@@ -185,7 +185,7 @@ services:
       celery -A capimax_backend worker
       -l info
       --concurrency=${CELERY_CONCURRENCY:-4}
-      -Q high_priority,medium_priority,low_priority,blockchain
+      -Q high_priority,medium_priority,low_priority,blockchain,celery
 
   # ---------------------------------------------------------------------------
   # Celery beat — persistent schedule via DatabaseScheduler

@@ -363,6 +363,7 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
     investor_count = serializers.SerializerMethodField()
     construction_progress = serializers.SerializerMethodField()
     blockchain = serializers.SerializerMethodField()
+    spv = serializers.SerializerMethodField()
 
     # Same decimal-as-string fix as PropertyListSerializer (see comment there).
     # construction_progress stays a SerializerMethodField so we don't list it here.
@@ -393,7 +394,7 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
             'spv_bank_account_number', 'spv_bank_name', 'spv_establishment_date',
             'images', 'documents', 'listing_details', 'updates', 'reviews', 'valuations',
             'construction_milestones', 'rental_distributions', 'average_rating', 'total_reviews',
-            'total_investment', 'investor_count', 'blockchain', 'created_at', 'updated_at'
+            'total_investment', 'investor_count', 'blockchain', 'spv', 'created_at', 'updated_at'
         ]
         read_only_fields = [
             'id', 'tokens_available', 'funding_percentage', 'is_fully_funded',
@@ -443,6 +444,11 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
             milestone.progress_percentage for milestone in milestones
         )
         return round(total_progress / milestones.count(), 2)
+
+    def get_spv(self, obj):
+        """The company that owns the property (client round 4, #6) — real data only."""
+        from .spv import spv_details
+        return spv_details(obj)
 
     def get_blockchain(self, obj):
         """Real on-chain data for this property's token contract (client edits

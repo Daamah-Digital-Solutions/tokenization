@@ -310,7 +310,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
       {/* Chart Navigation */}
       <div className="border-b border-slate-200 dark:border-slate-700">
-        <nav className="flex gap-8" aria-label={t('analytics.chartTabs')}>
+        <nav className="grid grid-cols-2 sm:flex sm:gap-8" aria-label={t('analytics.chartTabs')}>
           {[
             { id: 'performance', label: t('analytics.tabs.performance'), icon: BarChart3 },
             { id: 'allocation', label: t('invDash.assetAllocation'), icon: PieChartIcon },
@@ -323,7 +323,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
                 key={tab.id}
                 onClick={() => setActiveChart(tab.id as ChartType)}
                 className={cn(
-                  'group inline-flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors',
+                  'group inline-flex items-center justify-center sm:justify-start py-3 sm:py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors',
                   isActive
                     ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
                     : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'

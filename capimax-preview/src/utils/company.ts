@@ -10,7 +10,8 @@ export const COMPANY = {
   assetHolder: 'Capimax Asset Structure',
   registration: 'Registered in the State of Wyoming, United States',
   address: '8 The Green, Ste R, Dover, Kent, DE 19901, United States',
-  email: 'tech@capimaxholding.com',
+  // The public contact address (client round 4, #8) — set VITE_SUPPORT_EMAIL to the real RT mailbox.
+  email: ((import.meta as any).env?.VITE_SUPPORT_EMAIL as string) || 'tech@capimaxholding.com',
   phones: ['+1 205 350 8771', '+1 205 350 8864', '+44 7577 370309'],
   website: 'capimaxrt.tech',
   websiteUrl: 'https://capimaxrt.tech',
