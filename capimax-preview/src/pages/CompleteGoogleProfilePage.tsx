@@ -16,6 +16,7 @@ import { Navbar } from '../components/layout/Navbar';
 import { Footer } from '../components/layout/Footer';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from '../utils/router';
+import { goAfterSignIn } from '../utils/returnTo';
 import { AuthService, GoogleProfileCompletionData } from '../services/auth/AuthService';
 import { UserRole } from '../services/api/types';
 import { getLocalizedCountries } from '../utils/countries';
@@ -140,8 +141,8 @@ export const CompleteGoogleProfilePage: React.FC = () => {
       // Clear session storage
       sessionStorage.removeItem('googleUserData');
 
-      // Navigate to dashboard
-      navigate('dashboard');
+      // Back to the page that asked for a sign-in (a partner application), else the dashboard
+      goAfterSignIn(navigate);
     } catch (err: any) {
       console.error('Profile completion failed:', err);
       setError(err.message || t('googleProfile.failed'));

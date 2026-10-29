@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, User, LogOut, Settings, ChevronDown, LayoutDashboard, Building2, TrendingUp, Users, ShieldCheck } from 'lucide-react';
+import { Menu, X, User, LogOut, Settings, ChevronDown, LayoutDashboard, Building2, TrendingUp, Users, ShieldCheck, Briefcase, Landmark, ClipboardList } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { LanguageSwitcher } from '../i18n/LanguageSwitcher';
@@ -8,15 +8,19 @@ import { useRouter } from '../../utils/router';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useNotifications } from '../../contexts/NotificationContext';
+import { clearReturn } from '../../utils/returnTo';
 import CapiMaxLightLogo from '../../assets/tokenization_capi max  tokenization light  uk  copy.svg';
 import CapiMaxDarkLogo from '../../assets/tokenization_capi max tokenization uk dark   copy.svg';
 
 export const Navbar: React.FC = () => {
   const { t: tKyc } = useTranslation('kyc');
   const { t } = useTranslation('ui');
+  const { t: tPartners } = useTranslation('partners');
   const [isOpen, setIsOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [partnersOpen, setPartnersOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const partnersRef = useRef<HTMLDivElement>(null);
   const { navigate, currentRoute } = useRouter();
   const { state: authState, logout } = useAuth();
   const { theme } = useTheme();
@@ -28,6 +32,9 @@ export const Navbar: React.FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
         setProfileDropdownOpen(false);
+      }
+      if (partnersRef.current && !partnersRef.current.contains(event.target as Node)) {
+        setPartnersOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -87,6 +94,24 @@ export const Navbar: React.FC = () => {
     navigate(route as any, params);
     setIsOpen(false);
     setProfileDropdownOpen(false);
+    setPartnersOpen(false);
+  };
+
+  // "Partners" menu (client round 4 follow-up): the broker and liquidity-provider
+  // applications are one click away from every page, and a signed-in user can
+  // follow their applications from the dashboard.
+  const partnerItems: Array<{ name: string; desc?: string; route: string; icon: any; params?: Record<string, string> }> = [
+    { name: tPartners('join.broker'), desc: tPartners('join.brokerDesc'), route: 'broker-application', icon: Briefcase },
+    { name: tPartners('join.lp'), desc: tPartners('join.lpDesc'), route: 'liquidity-provider', icon: Landmark, params: { apply: '1' } },
+    ...(isAuthenticated && user?.role !== 'admin'
+      ? [{ name: tPartners('join.myApplications'), route: 'dashboard', icon: ClipboardList, params: { view: 'become-partner' } }]
+      : []),
+  ];
+
+  // A plain "Sign in" must not send the user back to an application they left earlier
+  const startAuth = (route: 'login' | 'register') => {
+    clearReturn();
+    handleNavClick(route);
   };
 
   const handleLogout = async () => {
@@ -170,6 +195,46 @@ export const Navbar: React.FC = () => {
                 {item.name}
               </motion.button>
             ))}
+
+            <div className="relative" ref={partnersRef}>
+              <button
+                type="button"
+                onClick={() => setPartnersOpen(!partnersOpen)}
+                aria-expanded={partnersOpen}
+                className={`flex items-center gap-1 text-navy-600 dark:text-navy-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium transition-colors duration-200 text-sm ${
+                  ['broker-application', 'broker-program', 'liquidity-provider'].includes(currentRoute) ? 'text-emerald-600 dark:text-emerald-400' : ''
+                }`}
+              >
+                {tPartners('join.menu')}
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${partnersOpen ? 'rotate-180' : ''}`} />
+              </button>
+              <AnimatePresence>
+                {partnersOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute start-0 mt-3 w-72 whitespace-normal bg-white dark:bg-navy-800 rounded-xl shadow-lg border border-navy-200 dark:border-navy-700 overflow-hidden z-50 py-2"
+                  >
+                    {partnerItems.map((item) => (
+                      <button
+                        key={item.name}
+                        type="button"
+                        onClick={() => handleNavClick(item.route, item.params)}
+                        className="w-full flex items-start gap-3 px-4 py-2.5 text-start hover:bg-navy-50 dark:hover:bg-navy-700 transition-colors duration-150"
+                      >
+                        <item.icon className="w-5 h-5 mt-0.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                        <span>
+                          <span className="block text-sm font-medium text-navy-800 dark:text-navy-100">{item.name}</span>
+                          {item.desc && <span className="block text-xs text-navy-500 dark:text-navy-400">{item.desc}</span>}
+                        </span>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* Desktop Actions */}
@@ -251,7 +316,7 @@ export const Navbar: React.FC = () => {
               /* Public User - Sign In / Get Started */
               <>
                 <button
-                  onClick={() => navigate('login')}
+                  onClick={() => startAuth('login')}
                   className={`text-navy-600 dark:text-navy-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium text-sm transition-colors duration-200 ${
                     currentRoute === 'login' ? 'text-emerald-600 dark:text-emerald-400' : ''
                   }`}
@@ -259,7 +324,7 @@ export const Navbar: React.FC = () => {
                   {t('navbar.signIn')}
                 </button>
                 <button
-                  onClick={() => navigate('register')}
+                  onClick={() => startAuth('register')}
                   className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors duration-200"
                 >
                   {t('navbar.getStarted')}
@@ -307,6 +372,24 @@ export const Navbar: React.FC = () => {
                     {item.name}
                   </motion.button>
                 ))}
+
+                {/* Partners */}
+                <div className="pt-3 mt-2 border-t border-navy-200 dark:border-navy-700">
+                  <p className="px-4 pb-1 text-xs font-semibold uppercase tracking-wide text-navy-400 dark:text-navy-500">
+                    {tPartners('join.menu')}
+                  </p>
+                  {partnerItems.map((item) => (
+                    <button
+                      key={item.name}
+                      type="button"
+                      onClick={() => handleNavClick(item.route, item.params)}
+                      className="flex w-full items-center gap-3 px-4 py-2 text-sm font-medium text-navy-600 dark:text-navy-300 hover:bg-navy-100 dark:hover:bg-navy-800 rounded-lg transition-colors duration-200 text-start"
+                    >
+                      <item.icon className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                      <span>{item.name}</span>
+                    </button>
+                  ))}
+                </div>
 
                 {/* Actions Section */}
                 <div className="flex flex-col space-y-2 px-4 pt-4 border-t border-navy-200 dark:border-navy-700">
@@ -356,7 +439,7 @@ export const Navbar: React.FC = () => {
                     /* Public Mobile Menu */
                     <>
                       <button
-                        onClick={() => handleNavClick('login')}
+                        onClick={() => startAuth('login')}
                         className={`text-navy-600 dark:text-navy-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium text-sm p-2 text-start transition-colors duration-200 ${
                           currentRoute === 'login' ? 'text-emerald-600 dark:text-emerald-400' : ''
                         }`}
@@ -364,7 +447,7 @@ export const Navbar: React.FC = () => {
                         {t('navbar.signIn')}
                       </button>
                       <button
-                        onClick={() => handleNavClick('register')}
+                        onClick={() => startAuth('register')}
                         className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors duration-200"
                       >
                         {t('navbar.getStarted')}

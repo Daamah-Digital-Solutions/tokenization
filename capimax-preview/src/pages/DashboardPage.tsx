@@ -9,6 +9,7 @@ import { PropertyOwnerDashboard } from '../components/dashboard/property-owner/P
 import { BrokerDashboard } from '../components/dashboard/broker/BrokerDashboard';
 import { LiquidityProviderDashboard } from '../components/dashboard/liquidity-provider/LiquidityProviderDashboard';
 import { RoleSwitcher } from '../components/dashboard/RoleSwitcher';
+import { BecomePartnerPanel } from '../components/partners/BecomePartnerPanel';
 import { KYCReminderBanner } from '../components/kyc/KYCReminderBanner';
 import { useTranslation } from 'react-i18next';
 
@@ -137,9 +138,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   // Identity verification gets a permanent sidebar entry for every non-admin
   // role (client round 3, #3) — it opens the dedicated /kyc page.
+  // ...and so does "Become a partner": apply as a broker / liquidity provider
+  // and follow the application (client round 4 follow-up).
   const navigationItems = user.role === 'admin'
     ? getNavigationItems(user.role)
-    : [...getNavigationItems(user.role), { id: KYC_NAV_ID, label: tKyc('nav.identityVerification'), icon: '🛡️' }];
+    : [
+        ...getNavigationItems(user.role),
+        { id: 'become-partner', label: tPartners('join.dashNav'), icon: '⭐' },
+        { id: KYC_NAV_ID, label: tKyc('nav.identityVerification'), icon: '🛡️' },
+      ];
 
   // Handle navigation item click with auto-close for mobile
   const handleNavigationClick = (itemId: string) => {
@@ -468,6 +475,11 @@ export const DashboardPage: React.FC = () => {
       effectiveRole,
       currentView
     });
+
+    // Every role can open "Become a partner" (client round 4 follow-up)
+    if (currentView === 'become-partner') {
+      return <BecomePartnerPanel />;
+    }
 
     // Brokers and liquidity providers have their own dashboards — including
     // the overview, which used to render the investor overview for every

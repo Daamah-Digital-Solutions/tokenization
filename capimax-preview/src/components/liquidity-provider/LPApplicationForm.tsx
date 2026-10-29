@@ -247,36 +247,12 @@ export const LPApplicationForm: React.FC<LPApplicationFormProps> = ({ onSuccess,
     }
   };
 
-  // The application is tied to the signed-in account: approval gives that account
-  // the liquidity-provider dashboard (client round 4, #13).
-  if (!user) {
-    return (
-      <div className="text-center py-10 px-6">
-        <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-          <User className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
-        </div>
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t('lp.signInTitle')}</h3>
-        <p className="text-slate-600 dark:text-slate-400 max-w-md mx-auto mb-6">{t('lp.signInText')}</p>
-        <div className="flex flex-wrap gap-3 justify-center">
-          <button type="button" onClick={() => navigate('login')}
-                  className="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
-            {t('lp.signIn')}
-          </button>
-          <button type="button" onClick={() => navigate('register')}
-                  className="px-5 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold">
-            {t('lp.createAccount')}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   if (submitSuccess) {
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="text-center py-12"
+        className="text-center py-12 px-6 bg-white dark:bg-slate-800 rounded-2xl"
       >
         <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckCircle className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />

@@ -28,6 +28,8 @@ import { useTranslation } from 'react-i18next';
 interface RegisterFormProps {
   onSignIn?: () => void;
   onSuccess?: (email: string) => void;
+  /** An existing Google account signed straight in (no e-mail code needed). */
+  onSignedIn?: () => void;
   className?: string;
 }
 
@@ -77,6 +79,7 @@ const USER_TYPES = [
 export const RegisterForm: React.FC<RegisterFormProps> = ({
   onSignIn,
   onSuccess,
+  onSignedIn,
   className
 }) => {
   const { state, register, clearError, setUser } = useAuth();
@@ -129,7 +132,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       } else if (authResponse.tokens) {
         const user = await AuthService.getCurrentUser();
         setUser(user);
-        onSuccess?.(user.email);
+        if (onSignedIn) onSignedIn();
+        else onSuccess?.(user.email);
       }
     } catch (error: any) {
       console.error('Google auth error:', error);
@@ -141,7 +145,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     } finally {
       setGoogleLoading(false);
     }
-  }, [clearError, navigate, onSuccess, setUser, t]);
+  }, [clearError, navigate, onSuccess, onSignedIn, setUser, t]);
 
   // Load and initialize Google Sign-In
   useEffect(() => {

@@ -496,14 +496,14 @@ const AppRouter: React.FC = () => {
           </main>
         );
       case 'broker-application':
+        // Not a ProtectedRoute: the page's PartnerGate explains why an account is
+        // needed and brings the visitor back here after signing in.
         return (
-          <ProtectedRoute fallback={<PageLoader message="Loading broker application..." />}>
-            <main {...mainProps}>
-              <Suspense fallback={<PageLoader message="Loading broker application..." />}>
-                <BrokerApplicationPage />
-              </Suspense>
-            </main>
-          </ProtectedRoute>
+          <main {...mainProps}>
+            <Suspense fallback={<PageLoader message="Loading broker application..." />}>
+              <BrokerApplicationPage />
+            </Suspense>
+          </main>
         );
       // Legal Pages
       case 'legal-index':

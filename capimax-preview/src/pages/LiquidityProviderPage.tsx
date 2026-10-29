@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { PartnerGate } from '../components/partners/PartnerGate';
+import { useRouter } from '../utils/router';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -109,6 +112,14 @@ const legalBenefits = [
 export const LiquidityProviderPage: React.FC = () => {
   const { t } = useTranslation('brokerui');
   const [showApplicationForm, setShowApplicationForm] = useState(false);
+  const { getQueryParam } = useRouter();
+  const queryClient = useQueryClient();
+
+  // /liquidity-provider?apply=1 (the "Partners" menu, the dashboard, the way back
+  // after signing in) opens the application straight away.
+  useEffect(() => {
+    if (getQueryParam('apply') === '1') setShowApplicationForm(true);
+  }, []);
 
   return (
     <>
@@ -400,12 +411,17 @@ export const LiquidityProviderPage: React.FC = () => {
                   exit={{ opacity: 0, scale: 0.95, y: 20 }}
                   className="w-full max-w-3xl my-8"
                 >
-                  <LPApplicationForm
-                    onSuccess={() => {
-                      setTimeout(() => setShowApplicationForm(false), 3000);
-                    }}
-                    onCancel={() => setShowApplicationForm(false)}
-                  />
+                  <PartnerGate kind="lp" framed>
+                    <LPApplicationForm
+                      onSuccess={() => {
+                        setTimeout(() => {
+                          setShowApplicationForm(false);
+                          queryClient.invalidateQueries({ queryKey: ['partner-status'] });
+                        }, 3000);
+                      }}
+                      onCancel={() => setShowApplicationForm(false)}
+                    />
+                  </PartnerGate>
                 </motion.div>
               </motion.div>
             )}

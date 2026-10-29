@@ -32,6 +32,8 @@ def grant_lp_role(user) -> None:
             assignment.is_active = True
             assignment.save(update_fields=['is_active'])
         if make_primary:
+            from broker.onboarding import keep_current_role
+            keep_current_role(user)  # an approved investor stays an investor too
             UserRoleAssignment.objects.filter(user=user, is_primary=True).exclude(
                 pk=assignment.pk).update(is_primary=False)
             if not assignment.is_primary:

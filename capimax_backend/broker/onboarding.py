@@ -31,6 +31,19 @@ logger = logging.getLogger(__name__)
 REVIEWABLE = (BrokerApplicationStatus.PENDING, BrokerApplicationStatus.UNDER_REVIEW)
 
 
+def keep_current_role(user) -> None:
+    """
+    Record the account's current role as an assignment before a partner role
+    becomes primary: otherwise an approved investor lost the investor role (no
+    more buying, no way back to the investor dashboard).
+    """
+    from accounts.models import UserRoleAssignment
+
+    if user.role:
+        UserRoleAssignment.objects.get_or_create(
+            user=user, role=user.role, defaults={'is_active': True, 'is_primary': False})
+
+
 def grant_broker_role(user) -> None:
     from accounts.models import UserRole, UserRoleAssignment
 
@@ -43,6 +56,7 @@ def grant_broker_role(user) -> None:
     # A plain investor account becomes a broker account; an owner / LP keeps
     # their primary role and can switch to "broker" from the role switcher.
     if user.role in (UserRole.INVESTOR, '', None):
+        keep_current_role(user)
         UserRoleAssignment.objects.filter(user=user, is_primary=True).exclude(
             pk=assignment.pk).update(is_primary=False)
         if not assignment.is_primary:

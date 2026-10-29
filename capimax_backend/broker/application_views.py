@@ -25,16 +25,64 @@ from .serializers import (
 logger = logging.getLogger(__name__)
 
 
+OPEN_STATUSES = (BrokerApplicationStatus.PENDING, BrokerApplicationStatus.UNDER_REVIEW,
+                 BrokerApplicationStatus.INCOMPLETE)
+
+
+def latest_application(user):
+    """The account's most recent broker application (linked, or sent with its email)."""
+    from django.db.models import Q
+    return (BrokerApplication.objects
+            .filter(Q(associated_user=user) | Q(email__iexact=user.email))
+            .order_by('-created_at').first())
+
+
+def application_block(user):
+    """``(code, message)`` when this account cannot send a new application, else None."""
+    from accounts.models import UserRole
+    if user.has_role(UserRole.BROKER):
+        return 'already_partner', 'This account is already a broker.'
+    latest = latest_application(user)
+    if latest and latest.application_status in OPEN_STATUSES:
+        return 'open_application', 'Your broker application is already under review.'
+    return None
+
+
+class MyBrokerApplicationView(generics.GenericAPIView):
+    """
+    The signed-in account's broker status, for the "Become a partner" section
+    of the dashboard and the application page: has the role / last application.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from accounts.models import UserRole
+        from core.utils import create_success_response
+        app = latest_application(request.user)
+        return Response(create_success_response(data={
+            'has_role': request.user.has_role(UserRole.BROKER),
+            'application': None if app is None else {
+                'id': str(app.id),
+                'status': app.application_status,
+                'submitted_at': app.created_at,
+                'reviewed_at': app.reviewed_at,
+                'rejection_reason': app.rejection_reason or '',
+            },
+        }))
+
+
 class BrokerApplicationCreateView(generics.CreateAPIView):
     """
     API view for submitting broker applications.
 
-    Allows users to submit broker applications without authentication.
+    The applicant must be signed in (client round 4 follow-up): the application
+    belongs to that account, so approval gives the broker dashboard to it.
     Applications are stored for admin review and approval.
     """
 
     serializer_class = BrokerApplicationSerializer
-    permission_classes = [permissions.AllowAny]  # Allow anonymous submissions
+    permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]  # Support file uploads
 
     def create(self, request, *args, **kwargs):
@@ -56,11 +104,13 @@ class BrokerApplicationCreateView(generics.CreateAPIView):
         except DjangoValidationError as exc:
             return Response({'error': ' '.join(exc.messages), 'details': {'documents': exc.messages}},
                             status=status.HTTP_400_BAD_REQUEST)
+        user = request.user
+        blocked = application_block(user)
+        if blocked:
+            return Response({'error': blocked[1], 'code': blocked[0]}, status=status.HTTP_400_BAD_REQUEST)
         data = request.data.copy() if hasattr(request.data, 'copy') else dict(request.data)
         data.pop('supporting_documents', None)
-        user = request.user if request.user.is_authenticated else None
-        if user is not None:
-            data['email'] = user.email
+        data['email'] = user.email
         serializer = self.get_serializer(data=data)
         if not serializer.is_valid():
             first = next(iter(serializer.errors.values()), ['Please check the form.'])
@@ -158,8 +208,10 @@ class BrokerApplicationStatusView(generics.RetrieveAPIView):
         except (BrokerApplication.DoesNotExist, ValueError):
             # If not a valid UUID, try email lookup
             email = self.request.query_params.get('email')
-            if email:
-                return get_object_or_404(BrokerApplication, email=email)
+            if email:  # a rejected applicant may have applied again with the same email
+                app = BrokerApplication.objects.filter(email__iexact=email).order_by('-created_at').first()
+                if app:
+                    return app
 
         raise Http404("Application not found")
 

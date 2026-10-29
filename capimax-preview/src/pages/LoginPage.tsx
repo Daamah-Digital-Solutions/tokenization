@@ -6,6 +6,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from '../utils/router';
 import { AuthService } from '../services/auth/AuthService';
 import { useTranslation } from 'react-i18next';
+import { goAfterSignIn } from '../utils/returnTo';
+import { PartnerAuthHint } from '../components/partners/PartnerAuthHint';
 
 type LoginStep = 'login' | 'forgot-password' | 'success';
 
@@ -29,7 +31,8 @@ export const LoginPage: React.FC = () => {
       window.location.href = '/admin/';
       return;
     }
-    navigate('dashboard');
+    // Back to the application the user was on ("Apply" -> sign in), else the dashboard
+    goAfterSignIn(navigate);
   };
 
   const handleGoToRegister = () => {
@@ -124,6 +127,7 @@ export const LoginPage: React.FC = () => {
       subtitle={t('loginPage.layoutSubtitle')}
     >
       {renderCurrentStep()}
+      {currentStep === 'login' && <PartnerAuthHint />}
     </AuthLayout>
   );
 };

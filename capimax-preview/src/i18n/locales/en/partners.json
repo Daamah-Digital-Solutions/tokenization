@@ -229,5 +229,69 @@
       "saved": "Preferences saved.",
       "failed": "Your changes couldn't be saved."
     }
+  },
+  "join": {
+    "menu": "Partners",
+    "broker": "Become a broker",
+    "brokerDesc": "Refer clients and earn commissions",
+    "lp": "Become a liquidity provider",
+    "lpDesc": "Buy shares from owners who want to exit",
+    "myApplications": "My partner applications",
+    "authHint": "Want to join as a broker or a liquidity provider?",
+    "authHintBroker": "Broker",
+    "authHintLp": "Liquidity provider",
+    "dashNav": "Become a partner",
+    "roleName": {
+      "broker": "broker",
+      "lp": "liquidity provider"
+    },
+    "panel": {
+      "title": "Become a partner",
+      "subtitle": "Apply from this account. Our team reviews every application, and once it is approved this same account opens the partner dashboard.",
+      "step1": "Apply with your documents",
+      "step2": "Our team reviews it (usually 2–3 business days) and emails you the decision",
+      "step3": "Once approved, open your partner dashboard from here or from the role switcher at the top",
+      "loadFailed": "Could not load your application status."
+    },
+    "card": {
+      "brokerTitle": "Broker",
+      "brokerText": "Refer clients to Capimax RT and earn a commission on their purchases. Licence and ID required.",
+      "lpTitle": "Liquidity provider",
+      "lpText": "Buy shares from owners who want to exit, at a price you offer. For companies, funds and professional investors.",
+      "status": {
+        "none": "Not applied yet",
+        "pending": "Received — waiting for review",
+        "under_review": "Under review",
+        "incomplete": "More information needed",
+        "approved": "Approved",
+        "rejected": "Not approved",
+        "withdrawn": "Withdrawn",
+        "active": "Active"
+      },
+      "submittedOn": "Submitted on {{date}}",
+      "reason": "Reason: {{reason}}",
+      "apply": "Apply now",
+      "applyAgain": "Apply again",
+      "learnMore": "How it works",
+      "openBroker": "Open the broker dashboard",
+      "openLp": "Open the liquidity provider dashboard",
+      "reviewNote": "We will email you as soon as there is a decision.",
+      "incompleteNote": "Our team will contact you by email about what is missing."
+    },
+    "gate": {
+      "signInTitle": "Sign in to apply",
+      "signInText": "The application belongs to your account: once it is approved, this same account opens the {{role}} dashboard. You can also continue with Google. After signing in you will come straight back here.",
+      "signIn": "Sign in",
+      "createAccount": "Create an account",
+      "pendingTitle": "Your application is under review",
+      "pendingText": "We received your {{role}} application on {{date}}. We will email you as soon as there is a decision.",
+      "partnerTitle": "Your account is already a {{role}}",
+      "partnerText": "Open your dashboard to get started.",
+      "openDashboard": "Open my dashboard",
+      "rejectedTitle": "Your previous application was not approved",
+      "rejectedText": "You can send a new application below.",
+      "back": "Back to my dashboard",
+      "switchFailed": "Could not open that dashboard. Use the role switcher at the top of the dashboard."
+    }
   }
 }

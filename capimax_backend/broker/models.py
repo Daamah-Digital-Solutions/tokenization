@@ -95,8 +95,10 @@ class BrokerApplication(models.Model):
         help_text="Applicant's last name"
     )
 
+    # Not unique: a rejected applicant may apply again (one open application per
+    # email is enforced by the serializer).
     email = models.EmailField(
-        unique=True,
+        db_index=True,
         help_text="Applicant's email address"
     )
 
@@ -187,14 +189,14 @@ class BrokerApplication(models.Model):
         help_text="Internal notes for admin review"
     )
 
-    # Associated user (created after approval)
-    associated_user = models.OneToOneField(
+    # The applicant's account (a ForeignKey: a rejected applicant may apply again)
+    associated_user = models.ForeignKey(
         'accounts.User',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='broker_application',
-        help_text="User account created after approval"
+        related_name='broker_applications',
+        help_text="The applicant's account"
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

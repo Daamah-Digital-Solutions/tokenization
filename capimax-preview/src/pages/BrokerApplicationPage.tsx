@@ -21,6 +21,8 @@ import { useRouter } from '../utils/router';
 import { useTranslation } from 'react-i18next';
 import { apiClient } from '../services/api/ApiClient';
 import { useUser } from '../contexts/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
+import { PartnerGate } from '../components/partners/PartnerGate';
 
 // Documents the team reviews (client round 4, #14); PDF / JPG / PNG, 10 MB each.
 const BROKER_DOCUMENTS = ['license', 'id_document', 'company_registration', 'proof_of_address', 'other'] as const;
@@ -72,6 +74,7 @@ export const BrokerApplicationPage: React.FC = () => {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [docError, setDocError] = useState<string | null>(null);
   const user = useUser() as any;
+  const queryClient = useQueryClient();
 
   // The application belongs to the signed-in account (client round 4, #13):
   // its email is the account's, so approval upgrades this account.
@@ -198,6 +201,7 @@ export const BrokerApplicationPage: React.FC = () => {
       // through the shared client (signed in; the old fetch used an undefined base URL)
       await apiClient.uploadFile('/broker/applications/submit/', formDataToSubmit);
       setSubmitSuccess(true);
+      queryClient.invalidateQueries({ queryKey: ['partner-status'] });
     } catch (error: any) {
       const details = error?.details && typeof error.details === 'object'
         ? Object.values(error.details).flat().filter((v: any) => typeof v === 'string').join(' ')
@@ -252,8 +256,8 @@ export const BrokerApplicationPage: React.FC = () => {
               </div>
 
               <div className="flex gap-4 justify-center">
-                <Button onClick={() => navigate('home')} variant="outline">
-                  {t('application.backHome')}
+                <Button onClick={() => navigate('dashboard', { view: 'become-partner' })} variant="outline">
+                  {t('partners:join.myApplications')}
                 </Button>
                 <Button onClick={() => navigate('broker-program')}>
                   {t('application.learnMore')}
@@ -284,6 +288,8 @@ export const BrokerApplicationPage: React.FC = () => {
           </p>
         </div>
 
+        {/* Signed-in accounts only; shows the status when an application is open (round 4 follow-up) */}
+        <PartnerGate kind="broker" framed>
         {/* Progress Steps */}
         <div className="max-w-4xl mx-auto mb-12">
           <div className="flex items-center justify-between relative">
@@ -696,6 +702,7 @@ export const BrokerApplicationPage: React.FC = () => {
             </div>
           </div>
         </div>
+        </PartnerGate>
       </Container>
     </div>
   );

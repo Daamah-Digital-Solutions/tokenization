@@ -3,6 +3,8 @@ import { AuthLayout } from '../components/auth/AuthLayout';
 import { RegisterForm } from '../components/auth/RegisterForm';
 import { useRouter } from '../utils/router';
 import { useTranslation } from 'react-i18next';
+import { goAfterSignIn } from '../utils/returnTo';
+import { PartnerAuthHint } from '../components/partners/PartnerAuthHint';
 
 export const RegisterPage: React.FC = () => {
   const { navigate } = useRouter();
@@ -27,7 +29,9 @@ export const RegisterPage: React.FC = () => {
       <RegisterForm
         onSignIn={handleGoToLogin}
         onSuccess={handleSuccess}
+        onSignedIn={() => goAfterSignIn(navigate)}
       />
+      <PartnerAuthHint />
     </AuthLayout>
   );
 };

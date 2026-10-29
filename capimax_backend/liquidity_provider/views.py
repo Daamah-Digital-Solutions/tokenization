@@ -62,11 +62,41 @@ class LPApplicationViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser, JSONParser]  # documents (client round 4, #14)
 
     def get_permissions(self):
-        if self.action == 'create':
-            return [permissions.AllowAny()]
-        elif self.action in ['list', 'retrieve', 'approve', 'reject']:
+        # Creating needs an account: approval gives the LP dashboard to it
+        if self.action in ['list', 'retrieve', 'approve', 'reject']:
             return [IsAdmin()]
         return [permissions.IsAuthenticated()]
+
+    @staticmethod
+    def _latest(user):
+        return LPApplication.objects.filter(applicant=user).order_by('-created_at').first()
+
+    @classmethod
+    def _block(cls, user):
+        """``(code, message)`` when this account cannot send a new application, else None."""
+        from accounts.models import UserRole
+        if user.has_role(UserRole.LIQUIDITY_PROVIDER):
+            return 'already_partner', 'This account is already a liquidity provider.'
+        latest = cls._latest(user)
+        if latest and latest.status in (LPApplicationStatus.PENDING, LPApplicationStatus.UNDER_REVIEW):
+            return 'open_application', 'Your liquidity provider application is already under review.'
+        return None
+
+    @action(detail=False, methods=['get'])
+    def mine(self, request):
+        """The signed-in account's LP status: has the role / last application."""
+        from accounts.models import UserRole
+        app = self._latest(request.user)
+        return Response(create_success_response(data={
+            'has_role': request.user.has_role(UserRole.LIQUIDITY_PROVIDER),
+            'application': None if app is None else {
+                'id': str(app.id),
+                'status': app.status,
+                'submitted_at': app.created_at,
+                'reviewed_at': app.reviewed_at,
+                'rejection_reason': app.rejection_reason or '',
+            },
+        }))
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -85,6 +115,10 @@ class LPApplicationViewSet(viewsets.ModelViewSet):
         from .models import LPApplicationDocument
         from .notify import application_received
 
+        blocked = self._block(request.user)
+        if blocked:
+            return Response(create_error_response(message=blocked[1], details={'code': blocked[0]}),
+                            status=status.HTTP_400_BAD_REQUEST)
         try:
             files = collect(request)
         except DjangoValidationError as exc:
@@ -96,9 +130,8 @@ class LPApplicationViewSet(viewsets.ModelViewSet):
             data = {k: (data.getlist(k) if k == 'preferred_currencies' else data.get(k)) for k in data.keys()}
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
-            user = request.user if request.user.is_authenticated else None
             with db_transaction.atomic():
-                application = serializer.save(applicant=user)
+                application = serializer.save(applicant=request.user)
                 for doc_type, f in files:
                     LPApplicationDocument.objects.create(
                         application=application, document_type=doc_type, file=f,

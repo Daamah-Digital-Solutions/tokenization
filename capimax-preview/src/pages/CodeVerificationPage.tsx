@@ -7,6 +7,7 @@ import { Button } from '../components/ui/Button';
 import { useAuth } from '../contexts/AuthContext';
 import { AuthService } from '../services/auth/AuthService';
 import { useRouter } from '../utils/router';
+import { goAfterSignIn } from '../utils/returnTo';
 
 /**
  * 6-digit email verification (client round 3, #2).
@@ -121,7 +122,7 @@ export const CodeVerificationPage: React.FC = () => {
         token: response.token,
         refreshToken: response.refreshToken,
       });
-      window.setTimeout(() => navigate('dashboard'), 1500);
+      window.setTimeout(() => goAfterSignIn(navigate), 1500);
     } catch {
       setNotice({ tone: 'error', text: t('codeVerification.invalid') });
       setState('error');

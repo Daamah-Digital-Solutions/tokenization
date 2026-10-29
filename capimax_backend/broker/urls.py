@@ -36,6 +36,7 @@ urlpatterns = [
     
     # Broker Application endpoints
     path('applications/submit/', application_views.BrokerApplicationCreateView.as_view(), name='submit_application'),
+    path('applications/mine/', application_views.MyBrokerApplicationView.as_view(), name='my_application'),
     path('applications/status/<uuid:id>/', application_views.BrokerApplicationStatusView.as_view(), name='application_status'),
 
     # Admin-only endpoints

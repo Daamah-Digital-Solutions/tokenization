@@ -47,7 +47,7 @@ class BrokerPathTests(TestCase):
         self._apply()
         res = self._apply()
         self.assertEqual(res.status_code, 400)
-        self.assertIn('already exists', res.json()['error'])
+        self.assertEqual(res.json()['code'], 'open_application')
 
     def test_under_review_can_be_approved_and_the_account_becomes_a_broker(self):
         self._apply()
