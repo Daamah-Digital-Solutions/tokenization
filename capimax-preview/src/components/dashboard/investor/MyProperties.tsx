@@ -360,7 +360,7 @@ export const MyProperties: React.FC = () => {
       const image = rawImage
         ? rawImage.startsWith('http')
           ? rawImage
-          : `https://capimaxrt.tech${rawImage}`
+          : rawImage // same site: /media/ is served by every domain of the platform
         : undefined;
 
       return {

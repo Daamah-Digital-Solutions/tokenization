@@ -33,13 +33,22 @@ class CheckoutError(Exception):
         self.status = status
 
 
-def _frontend() -> str:
+def _frontend(request=None) -> str:
+    """
+    The site the buyer is on (the platform answers on several domains): the
+    request's Origin when it is one of ours, else FRONTEND_URL.
+    """
+    origin = (request.headers.get('Origin') or '').rstrip('/') if request is not None else ''
+    allowed = {o.rstrip('/') for o in [*getattr(settings, 'CORS_ALLOWED_ORIGINS', []),
+                                       *getattr(settings, 'CSRF_TRUSTED_ORIGINS', [])] if o}
+    if origin and origin in allowed:
+        return origin
     return (getattr(settings, 'FRONTEND_URL', '') or 'http://localhost:5173').rstrip('/')
 
 
-def _return_urls(payment) -> tuple[str, str]:
+def _return_urls(payment, request=None) -> tuple[str, str]:
     meta = payment.metadata or {}
-    base = _frontend()
+    base = _frontend(request)
     if meta.get('purpose') == 'deposit':
         return (f'{base}/payment-return?deposit=1&payment={payment.id}',
                 f'{base}/payment-return?deposit=1&payment={payment.id}&cancelled=1')
@@ -63,7 +72,7 @@ def start_checkout(payment, request=None) -> str:
     meta = dict(payment.metadata or {})
     if meta.get('checkout_url'):
         return meta['checkout_url']
-    success_url, cancel_url = _return_urls(payment)
+    success_url, cancel_url = _return_urls(payment, request)
     if payment.payment_method in ('credit_card', 'pronova'):
         url, ref = _stripe_session(payment, success_url, cancel_url)
         meta.update({'provider': 'stripe', 'checkout_session_id': ref})
