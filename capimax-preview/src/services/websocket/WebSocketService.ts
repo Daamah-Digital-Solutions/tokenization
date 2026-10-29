@@ -42,10 +42,15 @@ export class WebSocketService {
     // by URL path (see ws_app/routing.py). The bare `/ws` path returns 1006
     // and burns through reconnect attempts. Caller-specific channels
     // (property/<id>, admin, etc.) should be opened on a separate socket.
-    const baseUrl = import.meta.env.VITE_WEBSOCKET_URL ||
+    const configured = import.meta.env.VITE_WEBSOCKET_URL ||
       (import.meta.env.VITE_API_URL
         ? import.meta.env.VITE_API_URL.replace(/^http/, 'ws').replace('/api/v1', '/ws')
         : 'ws://127.0.0.1:8500/ws');
+    // A relative URL ("/ws", from a relative VITE_API_URL) means "this site": the
+    // same build serves several domains, each with its own API and socket.
+    const baseUrl = configured.startsWith('/') && typeof window !== 'undefined'
+      ? `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}${configured}`
+      : configured;
     // Ensure the URL ends with `/notifications/` (idempotent if already set).
     const defaultWsUrl = /\/notifications\/?$/.test(baseUrl)
       ? baseUrl
