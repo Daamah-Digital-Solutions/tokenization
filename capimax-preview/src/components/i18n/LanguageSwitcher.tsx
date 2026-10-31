@@ -119,16 +119,18 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
     <div ref={dropdownRef} className={`relative ${className}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 text-sm font-medium
+        className="flex items-center gap-1.5 px-2 py-1.5 text-sm font-medium
                    text-navy-700 dark:text-navy-200 hover:bg-navy-100
                    dark:hover:bg-navy-800 rounded-lg transition-all
                    border border-navy-200 dark:border-navy-700"
+        aria-label={currentLanguage.name}
         aria-expanded={isOpen}
         aria-haspopup="listbox"
       >
         <Globe className="w-4 h-4" />
-        <span className="hidden sm:inline">{currentLanguage.nativeName}</span>
-        <span className="sm:hidden">{currentLanguage.flag}</span>
+        {/* Compact in the header: the name only where there is room for it */}
+        <span className="hidden 2xl:inline">{currentLanguage.nativeName}</span>
+        <span className="2xl:hidden uppercase">{currentLanguage.code}</span>
         <ChevronDown
           className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
@@ -141,7 +143,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute top-full mt-2 right-0 w-48
+            className="absolute top-full mt-2 end-0 w-48
                        bg-white dark:bg-navy-800 border border-navy-200
                        dark:border-navy-700 rounded-xl shadow-xl overflow-hidden z-50"
             role="listbox"
@@ -150,7 +152,7 @@ export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({
               <button
                 key={language.code}
                 onClick={() => handleLanguageChange(language.code)}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-left
+                className={`w-full flex items-center gap-3 px-4 py-3 text-start
                            transition-colors ${
                              language.code === currentLanguage.code
                                ? 'bg-emerald-600/10 text-emerald-600 dark:text-emerald-400'

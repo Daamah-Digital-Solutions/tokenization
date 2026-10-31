@@ -262,7 +262,7 @@ export const PropertiesPage: React.FC = () => {
             <div className="flex flex-wrap items-center gap-4 justify-between">
               <div className="flex flex-wrap items-center gap-4">
                 {/* Property Type Filter */}
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {propertyTypes.map(type => (
                     <button
                       key={type}
@@ -280,7 +280,7 @@ export const PropertiesPage: React.FC = () => {
                 </div>
 
                 {/* Status Filter */}
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {statusOptions.map(status => (
                     <button
                       key={status}
@@ -298,7 +298,7 @@ export const PropertiesPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-4">
                 {/* Advanced Filters Toggle */}
                 <Button
                   variant="ghost"

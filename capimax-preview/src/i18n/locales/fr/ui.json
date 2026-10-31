@@ -738,7 +738,8 @@
     "logout": "Se déconnecter",
     "signIn": "Se connecter",
     "getStarted": "Commencer",
-    "toggleMenu": "Afficher/masquer le menu mobile"
+    "toggleMenu": "Afficher/masquer le menu mobile",
+    "more": "Plus"
   },
   "connection": {
     "offline": "Hors ligne",

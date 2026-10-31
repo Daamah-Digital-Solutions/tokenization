@@ -19,6 +19,8 @@ export const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [partnersOpen, setPartnersOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const partnersRef = useRef<HTMLDivElement>(null);
   const { navigate, currentRoute } = useRouter();
@@ -35,6 +37,9 @@ export const Navbar: React.FC = () => {
       }
       if (partnersRef.current && !partnersRef.current.contains(event.target as Node)) {
         setPartnersOpen(false);
+      }
+      if (moreRef.current && !moreRef.current.contains(event.target as Node)) {
+        setMoreOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -95,7 +100,13 @@ export const Navbar: React.FC = () => {
     setIsOpen(false);
     setProfileDropdownOpen(false);
     setPartnersOpen(false);
+    setMoreOpen(false);
   };
+
+  // On a laptop the whole list does not fit in every language (French is the
+  // longest): these links move into a "More" menu until the screen is wide enough.
+  const SECONDARY_ROUTES = new Set(['why-capimax', 'structure', 'document-center', 'support']);
+  const moreItems = navItems.filter((item) => SECONDARY_ROUTES.has(item.route));
 
   // "Partners" menu (client round 4 follow-up): the broker and liquidity-provider
   // applications are one click away from every page, and a signed-in user can
@@ -165,7 +176,7 @@ export const Navbar: React.FC = () => {
       transition={{ duration: 0.3 }}
       className="fixed top-0 inset-x-0 z-50 bg-white/95 dark:bg-navy-900/95 backdrop-blur-md border-b border-navy-200 dark:border-navy-700"
     >
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl 2xl:max-w-screen-2xl mx-auto px-6">
         <div className="flex justify-between items-center gap-x-6 h-16">
           {/* Logo - click to go home */}
           <motion.button
@@ -182,7 +193,7 @@ export const Navbar: React.FC = () => {
           </motion.button>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-x-5 whitespace-nowrap">
+          <div className="hidden xl:flex items-center gap-x-5 whitespace-nowrap">
             {navItems.map((item) => (
               <motion.button
                 key={item.name}
@@ -190,11 +201,49 @@ export const Navbar: React.FC = () => {
                 whileHover={{ y: -1 }}
                 className={`text-navy-600 dark:text-navy-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium transition-colors duration-200 text-sm ${
                   currentRoute === item.route && !('params' in item) ? 'text-emerald-600 dark:text-emerald-400' : ''
-                }`}
+                } ${SECONDARY_ROUTES.has(item.route) ? 'hidden 2xl:block' : ''}`}
               >
                 {item.name}
               </motion.button>
             ))}
+
+            {moreItems.length > 0 && (
+              <div className="relative 2xl:hidden" ref={moreRef}>
+                <button
+                  type="button"
+                  onClick={() => setMoreOpen(!moreOpen)}
+                  aria-expanded={moreOpen}
+                  className={`flex items-center gap-1 text-navy-600 dark:text-navy-300 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium transition-colors duration-200 text-sm ${
+                    moreItems.some((item) => item.route === currentRoute) ? 'text-emerald-600 dark:text-emerald-400' : ''
+                  }`}
+                >
+                  {t('navbar.more')}
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${moreOpen ? 'rotate-180' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {moreOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute start-0 mt-3 w-56 whitespace-normal bg-white dark:bg-navy-800 rounded-xl shadow-lg border border-navy-200 dark:border-navy-700 overflow-hidden z-50 py-2"
+                    >
+                      {moreItems.map((item) => (
+                        <button
+                          key={item.name}
+                          type="button"
+                          onClick={() => handleNavClick(item.route, 'params' in item ? (item as any).params : undefined)}
+                          className="w-full px-4 py-2 text-start text-sm font-medium text-navy-700 dark:text-navy-200 hover:bg-navy-50 dark:hover:bg-navy-700 transition-colors duration-150"
+                        >
+                          {item.name}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             <div className="relative" ref={partnersRef}>
               <button
@@ -238,7 +287,7 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center gap-4 shrink-0">
+          <div className="hidden xl:flex items-center gap-4 shrink-0">
             {/* Language Switcher */}
             <LanguageSwitcher />
 
@@ -334,7 +383,7 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Mobile menu button */}
-          <div className="flex items-center gap-2 md:hidden">
+          <div className="flex items-center gap-2 xl:hidden">
             <ThemeToggle />
             <motion.button
               whileTap={{ scale: 0.95 }}
@@ -356,7 +405,7 @@ export const Navbar: React.FC = () => {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.2 }}
-              className="md:hidden border-t border-navy-200 dark:border-navy-700"
+              className="xl:hidden border-t border-navy-200 dark:border-navy-700"
             >
               <div className="py-4 space-y-1">
                 {/* Navigation Items */}

@@ -306,7 +306,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
 
       <Container className="py-8 pt-24">
         {/* Breadcrumb & Actions */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-8">
           <Button
             variant="ghost"
             size="md"

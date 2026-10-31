@@ -314,7 +314,7 @@ export const FeaturedProperties: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="flex justify-center gap-2 mb-12"
+          className="flex flex-wrap justify-center gap-2 mb-12"
         >
           {categories.map(category => (
             <button

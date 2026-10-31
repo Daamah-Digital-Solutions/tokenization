@@ -738,7 +738,8 @@
     "logout": "Logout",
     "signIn": "Sign In",
     "getStarted": "Get Started",
-    "toggleMenu": "Toggle mobile menu"
+    "toggleMenu": "Toggle mobile menu",
+    "more": "More"
   },
   "connection": {
     "offline": "Offline",
