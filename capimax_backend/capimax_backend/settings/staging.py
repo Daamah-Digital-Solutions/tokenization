@@ -44,7 +44,7 @@ REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
 }
 
 # Staging email configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'core.mail.ReplyToSupportEmailBackend'
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@staging.capimax.com')
 
 # Disable some security features for easier staging testing

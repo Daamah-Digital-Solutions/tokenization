@@ -201,7 +201,7 @@ CELERY_TASK_EAGER_PROPAGATES = True
 # Email
 # ============================================================================
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_BACKEND = 'core.mail.ReplyToSupportEmailBackend'
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.hostinger.com')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '465'))
 EMAIL_USE_SSL = True
