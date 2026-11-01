@@ -35,7 +35,8 @@ from rest_framework.response import Response
 
 from core.utils import create_success_response, create_error_response
 
-from .custody import derive_custodial_wallet, is_custody_configured
+from .custody import derive_custodial_wallet, is_custody_configured
+from blockchain.signing import raw_transaction
 
 
 logger = logging.getLogger(__name__)
@@ -75,7 +76,7 @@ def _send_gas(w3, deployer_account, custodial_address: str) -> str:
         'chainId': w3.eth.chain_id,
     }
     signed = deployer_account.sign_transaction(fund_tx)
-    tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
+    tx_hash = w3.eth.send_raw_transaction(raw_transaction(signed)).hex()
     w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
     logger.info(
         "Gas top-up: deployer -> custodial %s for %s wei (tx %s)",
@@ -255,7 +256,7 @@ def withdraw_tokens(request):
         # Sign with the custodial private key (re-derived; never stored).
         signed = Account.sign_transaction(tx, custodial.private_key_hex)
         try:
-            tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
+            tx_hash = w3.eth.send_raw_transaction(raw_transaction(signed)).hex()
         except Exception as exc:  # noqa: BLE001
             logger.exception("Broadcast failed for user %s", user.pk)
             return Response(create_error_response(

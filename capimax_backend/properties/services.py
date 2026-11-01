@@ -19,7 +19,8 @@ from .models import ConstructionInstallment, Property, RentalIncomeDistribution
 from accounts.models import User
 from payments.models import Payment, PaymentStatus, UserPaymentMethod, WalletBalance
 from investments.models import Investment
-from notifications.models import Notification, NotificationType, NotificationPriority
+from notifications.models import Notification, NotificationType, NotificationPriority
+from blockchain.signing import raw_transaction
 
 # ``BlockchainService`` no longer exists as a top-level export. Token-release
 # now goes through ``_release_tokens_to_investor`` which uses Web3 directly
@@ -421,7 +422,7 @@ class InstallmentProcessingService:
                     'chainId': token_sc.network.chain_id,
                 })
                 signed = w3.eth.account.sign_transaction(tx, settings.BLOCKCHAIN_PRIVATE_KEY)
-                tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
+                tx_hash = w3.eth.send_raw_transaction(raw_transaction(signed)).hex()
 
                 receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=180)
             if receipt.status != 1:

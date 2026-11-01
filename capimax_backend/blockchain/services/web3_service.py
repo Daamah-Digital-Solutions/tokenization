@@ -23,7 +23,8 @@ import requests
 
 from django.conf import settings
 from django.utils import timezone
-from django.db import transaction
+from django.db import transaction
+from blockchain.signing import raw_transaction
 
 from ..models import (
     BlockchainNetwork, SmartContract, TokenTransaction, 
@@ -274,7 +275,7 @@ class Web3Service:
             
                 # Sign and send transaction
                 signed_txn = self.w3.eth.account.sign_transaction(transaction_data, self.account.key)
-                tx_hash = self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+                tx_hash = self.w3.eth.send_raw_transaction(raw_transaction(signed_txn))
             
                 logger.info(f"Contract deployment transaction sent: {tx_hash.hex()}")
             
@@ -402,7 +403,7 @@ class Web3Service:
 
                 # Sign and send transaction
                 signed_txn = self.w3.eth.account.sign_transaction(transaction_data, self.account.key)
-                tx_hash = self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+                tx_hash = self.w3.eth.send_raw_transaction(raw_transaction(signed_txn))
 
                 logger.info(f"Transaction sent: {tx_hash.hex()}")
 

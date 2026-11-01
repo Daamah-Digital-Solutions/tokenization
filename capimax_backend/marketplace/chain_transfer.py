@@ -33,7 +33,8 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.db import transaction
-from django.utils import timezone
+from django.utils import timezone
+from blockchain.signing import raw_transaction
 
 logger = logging.getLogger(__name__)
 
@@ -216,7 +217,7 @@ def transfer_trade(trade) -> str:
             'chainId': chain_id,
         })
         signed = Account.sign_transaction(tx, derive_custodial_wallet(seller.pk).private_key_hex)
-        tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction).hex()
+        tx_hash = w3.eth.send_raw_transaction(raw_transaction(signed)).hex()
         if not tx_hash.startswith('0x'):
             tx_hash = '0x' + tx_hash
         _set(trade, transaction_hash=tx_hash, chain_status='submitted')
