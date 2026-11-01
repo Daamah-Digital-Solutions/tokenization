@@ -58,6 +58,7 @@ import { KYCGate } from '../components/kyc/KYCGate';
 import { PurchaseModal } from '../components/purchase/PurchaseModal';
 import { ConstructionService } from '../services/construction/ConstructionService';
 import { useTranslation } from 'react-i18next';
+import { localizeProperty } from '../utils/localizedProperty';
 import { backToPropertyOverview, readPropertyTab, subscribePropertyTab } from '../utils/propertyTab';
 
 // Property data interfaces
@@ -84,7 +85,7 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
 }) => {
   const { state } = useAuth();
   const { navigate } = useRouter();
-  const { t } = useTranslation('ui');
+  const { t, i18n } = useTranslation('ui');
   // Read propertyId from prop or fall back to URL query parameter
   const propertyId = propertyIdProp || new URLSearchParams(window.location.search).get('id') || undefined;
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -222,7 +223,8 @@ export const PropertyDetailPage: React.FC<PropertyDetailPageProps> = ({
     );
   }
 
-  const property = propertyData.property;
+  // The property's own text (description, developer…) in the reader's language
+  const property = localizeProperty(propertyData.property, i18n.language);
   const fundingPercentage = property.total_tokens > 0 ? 
     Math.round((property.tokens_sold / property.total_tokens) * 100) : 0;
   

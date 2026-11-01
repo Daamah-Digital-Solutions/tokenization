@@ -14,6 +14,7 @@ import { PropertyService } from '../services/property/PropertyService';
 import type { Property } from '../services/api/types';
 import { InvestmentFlow, type InvestmentProperty, type InvestmentData } from '../components/investment';
 import { useTranslation } from 'react-i18next';
+import { localizedField } from '../utils/localizedProperty';
 import { formatFundingPercent, sharesTaken } from '../utils/funding';
 
 
@@ -22,7 +23,7 @@ type SortOption = 'featured' | 'price-low' | 'price-high' | 'return-high' | 'ret
 
 export const PropertiesPage: React.FC = () => {
   const { navigate } = useRouter();
-  const { t } = useTranslation('ui');
+  const { t, i18n } = useTranslation('ui');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -521,7 +522,7 @@ export const PropertiesPage: React.FC = () => {
                     <div className="flex-1">
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                          {property.title}
+                          {localizedField(property, 'title', i18n.language)}
                         </h3>
                         <div className="flex items-center gap-2">
                           <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />

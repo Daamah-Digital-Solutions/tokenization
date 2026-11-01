@@ -256,6 +256,28 @@ class Property(models.Model):
         validators=[MinValueValidator(Decimal('0.00'))])
     insurance_expiry_date = models.DateField(null=True, blank=True)
 
+    # The same text in Arabic and French, written by the admin (what stays empty
+    # shows the English). The site translates its own labels, not this content.
+    title_ar = models.CharField(max_length=255, blank=True)
+    title_fr = models.CharField(max_length=255, blank=True)
+    description_ar = models.TextField(blank=True)
+    description_fr = models.TextField(blank=True)
+    developer_name_ar = models.CharField(max_length=255, blank=True)
+    developer_name_fr = models.CharField(max_length=255, blank=True)
+    developer_description_ar = models.TextField(blank=True)
+    developer_description_fr = models.TextField(blank=True)
+    returns_notes_ar = models.TextField(blank=True)
+    returns_notes_fr = models.TextField(blank=True)
+    financial_study_summary_ar = models.TextField(blank=True)
+    financial_study_summary_fr = models.TextField(blank=True)
+    insurance_coverage_ar = models.TextField(blank=True)
+    insurance_coverage_fr = models.TextField(blank=True)
+    installment_notes_ar = models.TextField(blank=True)
+    installment_notes_fr = models.TextField(blank=True)
+
+    TRANSLATED_FIELDS = ('title', 'description', 'developer_name', 'developer_description', 'returns_notes',
+                         'financial_study_summary', 'insurance_coverage', 'installment_notes')
+
     property_size = models.DecimalField(
         max_digits=10,
         decimal_places=2,
@@ -454,6 +476,16 @@ class Property(models.Model):
     def __str__(self):
         return f"{self.title} ({self.city}, {self.country})"
     
+    @property
+    def content_translations(self) -> dict:
+        """{'ar': {field: text}, 'fr': {...}} with only what the admin wrote."""
+        out = {}
+        for lang in ('ar', 'fr'):
+            texts = {f: getattr(self, f'{f}_{lang}') for f in self.TRANSLATED_FIELDS if getattr(self, f'{f}_{lang}')}
+            if texts:
+                out[lang] = texts
+        return out
+
     @property
     def shares_taken(self) -> int:
         """Shares sold + shares held by running installment plans (they count as sold only when a plan ends)."""

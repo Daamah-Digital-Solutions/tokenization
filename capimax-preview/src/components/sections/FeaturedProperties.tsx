@@ -6,6 +6,7 @@ import { PropertyService } from '../../services/property/PropertyService';
 import type { Property as BackendProperty } from '../../services/api/types';
 import { useRouter } from '../../utils/router';
 import { useTranslation } from 'react-i18next';
+import { localizedField } from '../../utils/localizedProperty';
 import { formatFundingPercent, fundingBarWidth, sharesTaken } from '../../utils/funding';
 
 // Real estate fallback images by property type
@@ -58,7 +59,7 @@ interface Property {
 
 export const FeaturedProperties: React.FC = () => {
   const { navigate } = useRouter();
-  const { t } = useTranslation('ui');
+  const { t, i18n } = useTranslation('ui');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -135,6 +136,7 @@ export const FeaturedProperties: React.FC = () => {
           uuid: prop.id, // Real UUID — used by the "Own Now" CTA to deep-link into property-detail
           image: prop.images?.[0] || getPropertyFallbackImage(propertyType, index),
           title: prop.title,
+          source: prop,
           location: `${prop.city}${prop.state ? ', ' + prop.state : ''}, ${prop.country}`,
           price: `$${(totalValue / 1000000).toFixed(2)}M`,
           tokenPrice: `$${tokenPrice.toLocaleString()}`,
@@ -452,7 +454,7 @@ export const FeaturedProperties: React.FC = () => {
                     {/* Bottom Overlay */}
                     <div className="absolute bottom-4 start-4 end-4">
                       <h3 className="text-xl font-bold text-white mb-1">
-                        {property.title}
+                        {localizedField((property as any).source, 'title', i18n.language) || property.title}
                       </h3>
                       <div className="flex items-center gap-2 text-white/90 text-sm">
                         <MapPin className="w-3 h-3" />

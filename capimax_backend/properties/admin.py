@@ -140,6 +140,22 @@ class PropertyAdmin(admin.ModelAdmin):
         ('Basic Information', {
             'fields': ('title', 'description', 'property_type', 'property_category', 'owner')
         }),
+        ('Arabic & French content', {
+            'fields': (
+                ('title_ar', 'title_fr'),
+                'description_ar', 'description_fr',
+                ('developer_name_ar', 'developer_name_fr'),
+                'developer_description_ar', 'developer_description_fr',
+                'returns_notes_ar', 'returns_notes_fr',
+                'financial_study_summary_ar', 'financial_study_summary_fr',
+                'insurance_coverage_ar', 'insurance_coverage_fr',
+                'installment_notes_ar', 'installment_notes_fr',
+            ),
+            'description': (
+                'The same text as the English fields, for readers using the site in Arabic or French. '
+                'Whatever you leave empty is shown in English.'
+            ),
+        }),
         ('Review & publication', {
             'fields': ('status', 'is_published', 'published_at', 'published_by', 'featured'),
             'description': (

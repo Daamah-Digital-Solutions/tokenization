@@ -235,6 +235,7 @@ class PropertyListSerializer(serializers.ModelSerializer):
     # The cards show the same numbers as the property page (client: "0% and 0 owners on the card")
     shares_taken = serializers.ReadOnlyField()
     investor_count = serializers.ReadOnlyField(source='owners_count')
+    translations = serializers.ReadOnlyField(source='content_translations')
     owner = PropertyOwnerSerializer(read_only=True)
     tokens_available = serializers.ReadOnlyField()
     funding_percentage = serializers.ReadOnlyField()
@@ -268,6 +269,7 @@ class PropertyListSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'property_type', 'status', 'property_category',
             'total_value', 'token_price', 'total_tokens', 'tokens_sold', 'shares_taken', 'investor_count',
+            'translations',
             'tokens_available', 'funding_percentage', 'is_fully_funded',
             'can_accept_investments', 'expected_return', 'rental_yield',
             'property_size', 'year_built', 'city', 'country',
@@ -365,6 +367,7 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
     total_investment = serializers.SerializerMethodField()
     investor_count = serializers.SerializerMethodField()
     shares_taken = serializers.ReadOnlyField()
+    translations = serializers.ReadOnlyField(source='content_translations')
     construction_progress = serializers.SerializerMethodField()
     blockchain = serializers.SerializerMethodField()
     spv = serializers.SerializerMethodField()
@@ -398,7 +401,8 @@ class PropertyDetailSerializer(serializers.ModelSerializer):
             'spv_bank_account_number', 'spv_bank_name', 'spv_establishment_date',
             'images', 'documents', 'listing_details', 'updates', 'reviews', 'valuations',
             'construction_milestones', 'rental_distributions', 'average_rating', 'total_reviews',
-            'total_investment', 'investor_count', 'shares_taken', 'blockchain', 'spv', 'created_at', 'updated_at'
+            'total_investment', 'investor_count', 'shares_taken', 'translations', 'blockchain', 'spv',
+            'created_at', 'updated_at'
         ]
         read_only_fields = [
             'id', 'tokens_available', 'funding_percentage', 'is_fully_funded',
