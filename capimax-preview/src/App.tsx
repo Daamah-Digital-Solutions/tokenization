@@ -87,7 +87,6 @@ const PropertiesPage = lazyWithRetry(() => import('./pages/PropertiesPage').then
 const PropertyDetailPage = lazyWithRetry(() => import('./pages/PropertyDetailPage').then(m => ({ default: m.PropertyDetailPage })));
 const DashboardPage = lazyWithRetry(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const DemoPage = lazyWithRetry(() => import('./pages/DemoPage').then(m => ({ default: m.DemoPage })));
-const IntegrationTestPage = lazyWithRetry(() => import('./pages/IntegrationTestPage').then(m => ({ default: m.IntegrationTestPage })));
 const WalletManagementPage = lazyWithRetry(() => import('./components/payments').then(m => ({ default: m.WalletManagementPage })));
 const RoleManagementPage = lazyWithRetry(() => import('./pages/RoleManagementPage').then(m => ({ default: m.RoleManagementPage })));
 const MarketplacePage = lazyWithRetry(() => import('./pages/MarketplacePage').then(m => ({ default: m.MarketplacePage })));
@@ -410,14 +409,6 @@ const AppRouter: React.FC = () => {
           <main {...mainProps}>
             <Suspense fallback={<PageLoader message="Loading demo..." />}>
               <DemoPage />
-            </Suspense>
-          </main>
-        );
-      case 'integration-test':
-        return (
-          <main {...mainProps}>
-            <Suspense fallback={<PageLoader message="Loading integration test..." />}>
-              <IntegrationTestPage />
             </Suspense>
           </main>
         );

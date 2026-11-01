@@ -1004,10 +1004,21 @@ def get_wallet_transactions(request):
 
 
 class RefundViewSet(ModelViewSet):
-    """ViewSet for refund management."""
-    
+    """
+    ViewSet for refund management. Members see their refunds; only staff can
+    create or change one: creating calls the payment provider at once, so any
+    signed-in member could send real money back on a payment (it checked neither
+    that the payment was theirs nor that they had given the shares back).
+    """
+
     permission_classes = [IsAuthenticated]
-    
+
+    def get_permissions(self):
+        from rest_framework.permissions import IsAdminUser
+        if self.action in ('list', 'retrieve'):
+            return [IsAuthenticated()]
+        return [IsAuthenticated(), IsAdminUser()]
+
     def get_serializer_class(self):
         """Get appropriate serializer based on action."""
         if self.action == 'create':
@@ -1302,29 +1313,10 @@ class StripeWebhookView(APIView):
 
     def _handle_charge_refunded(self, charge):
         """Handle refunded charge from Stripe webhook."""
-        payment_intent_id = charge.get('payment_intent')
-        if not payment_intent_id:
-            logger.warning("Refund webhook missing payment_intent")
-            return
+        from .refunds import apply_provider_refund
 
-        try:
-            payment = Payment.objects.get(payment_intent_id=payment_intent_id)
-
-            # Check if fully refunded
-            if charge.get('refunded', False):
-                payment.status = PaymentStatus.REFUNDED
-                payment.save()
-
-                # Update investment if linked
-                if payment.investment:
-                    investment = payment.investment
-                    investment.status = 'refunded'
-                    investment.save(update_fields=['status'])
-
-                logger.info(f"Marked payment {payment.id} as refunded via webhook")
-
-        except Payment.DoesNotExist:
-            logger.warning(f"Payment not found for refund intent {payment_intent_id}")
+        outcome = apply_provider_refund(charge)
+        logger.info(f"charge.refunded {charge.get('id')}: {outcome}")
 
 
 class BankTransferView(APIView):
