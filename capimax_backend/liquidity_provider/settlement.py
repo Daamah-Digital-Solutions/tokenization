@@ -57,7 +57,7 @@ def settle_exit(exit_request):
     from .models import ExitRequest, ExitRequestStatus, LiquidityTransaction
 
     with transaction.atomic():
-        er = ExitRequest.objects.select_for_update().select_related(
+        er = ExitRequest.objects.select_for_update(of=('self',)).select_related(
             'liquidity_provider__user', 'investor', 'investment__property_investment').get(pk=exit_request.pk)
         if er.status != ExitRequestStatus.APPROVED or er.offered_price_per_unit is None:
             raise ExitSettlementError('NO_OFFER', 'There is no offer to accept.')

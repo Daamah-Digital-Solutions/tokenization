@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { formatFundingPercent, fundingBarWidth, fundingPercent, sharesTaken } from '../../utils/funding';
 import { pushPropertyTab, readPropertyTab, subscribePropertyTab } from '../../utils/propertyTab';
 import { constructionStageLabel } from '../../utils/constructionStage';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -150,8 +151,8 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
     });
   };
 
-  const fundingPercentage = property.total_tokens > 0 ?
-    Math.round((property.tokens_sold / property.total_tokens) * 100) : 0;
+  const taken = sharesTaken(property as any);
+  const fundingPercentage = fundingPercent(taken, property.total_tokens);
 
   const tabs = [
     { id: 'overview' as const, label: t('detail.tabs.overview'), icon: Eye },
@@ -179,7 +180,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
     }
   };
 
-  const availableTokens = property.total_tokens - property.tokens_sold;
+  const availableTokens = property.total_tokens - taken;
 
   const calculateReturns = () => {
     const investmentAmount = tokenCount * property.token_price;
@@ -491,14 +492,14 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                     <div className="flex justify-between items-center mb-3">
                       <Text variant="bodyLarge" weight="semibold">{t('detail.fundingProgress')}</Text>
                       <Text variant="bodyLarge" weight="bold" className="text-emerald-600 dark:text-emerald-400">
-                        {t('detail.percentComplete', { percent: fundingPercentage })}
+                        {t('detail.percentComplete', { percent: formatFundingPercent(taken, property.total_tokens) })}
                       </Text>
                     </div>
 
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden mb-3">
                       <motion.div
                         initial={{ width: 0 }}
-                        animate={{ width: `${fundingPercentage}%` }}
+                        animate={{ width: fundingBarWidth(taken, property.total_tokens) }}
                         transition={{ duration: 2, ease: "easeOut" }}
                         className="h-full bg-gradient-to-r rtl:bg-gradient-to-l from-emerald-500 to-green-500 rounded-full relative"
                       >
@@ -507,8 +508,8 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                     </div>
 
                     <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                      <span>{t('detail.sharesSold', { n: property.tokens_sold?.toLocaleString() })}</span>
-                      <span>{t('detail.sharesAvailable', { n: (property.total_tokens - property.tokens_sold)?.toLocaleString() })}</span>
+                      <span>{t('detail.sharesSold', { n: taken.toLocaleString() })}</span>
+                      <span>{t('detail.sharesAvailable', { n: (property.total_tokens - taken)?.toLocaleString() })}</span>
                     </div>
                   </div>
                 </Card>
@@ -756,7 +757,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
                       <span className="text-gray-600 dark:text-gray-400">{t('detail.fin.availableShares')}</span>
-                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">{(property.total_tokens - property.tokens_sold)?.toLocaleString()}</span>
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">{(property.total_tokens - taken)?.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-gray-200 dark:border-gray-700">
                       <span className="text-gray-600 dark:text-gray-400">{t('detail.fin.minOwnership')}</span>

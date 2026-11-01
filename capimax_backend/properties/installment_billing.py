@@ -99,7 +99,7 @@ def charge_next(plan, *, auto: bool = False, today=None) -> dict:
                 'tokens_released': 0, **extra}
 
     with transaction.atomic():
-        plan = ConstructionInstallment.objects.select_for_update().select_related(
+        plan = ConstructionInstallment.objects.select_for_update(of=('self',)).select_related(
             'property_investment', 'investor').get(pk=plan.pk)
         if not (plan.is_active and plan.remaining_payments > 0):
             return fail('NOT_OPEN', 'This plan has no payment to make.')
@@ -211,7 +211,7 @@ def settle_first_payment(payment) -> str:
     from properties.models import ConstructionInstallment, Property
 
     meta = payment.metadata or {}
-    plan = ConstructionInstallment.objects.select_for_update().select_related(
+    plan = ConstructionInstallment.objects.select_for_update(of=('self',)).select_related(
         'property_investment', 'investor').filter(pk=meta.get('installment_id')).first()
     if plan is not None and plan.status not in (AWAITING, 'cancelled'):
         return 'already'

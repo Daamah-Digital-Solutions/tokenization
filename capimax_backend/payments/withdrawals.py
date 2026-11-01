@@ -141,7 +141,7 @@ def request_withdrawal(user, *, payout_account_id, amount, idempotency_key: str 
 
 def _locked(pk):
     from .models import BankWithdrawalRequest
-    return BankWithdrawalRequest.objects.select_for_update().select_related('user').get(pk=pk)
+    return BankWithdrawalRequest.objects.select_for_update(of=('self',)).select_related('user').get(pk=pk)
 
 
 def mark_processing(wd, by=None):

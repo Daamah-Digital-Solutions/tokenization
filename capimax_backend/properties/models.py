@@ -455,6 +455,23 @@ class Property(models.Model):
         return f"{self.title} ({self.city}, {self.country})"
     
     @property
+    def shares_taken(self) -> int:
+        """Shares sold + shares held by running installment plans (they count as sold only when a plan ends)."""
+        from django.db.models import Sum
+
+        held = self.tokenreservation_set.filter(installment_plan__status__in=['pending', 'processing'],
+                                                released=False).aggregate(n=Sum('token_amount'))['n'] or 0
+        return int(self.tokens_sold) + int(held)
+
+    @property
+    def owners_count(self) -> int:
+        """Accounts holding shares of this property: completed purchases and running installment plans."""
+        buyers = set(self.investments.filter(status='completed').values_list('user_id', flat=True))
+        planners = set(self.installment_payments.filter(status__in=['pending', 'processing'])
+                       .values_list('investor_id', flat=True))
+        return len(buyers | planners)
+
+    @property
     def tokens_available(self):
         """Get number of available tokens for purchase."""
         return self.total_tokens - self.tokens_sold

@@ -14,6 +14,7 @@ import { PropertyService } from '../services/property/PropertyService';
 import type { Property } from '../services/api/types';
 import { InvestmentFlow, type InvestmentProperty, type InvestmentData } from '../components/investment';
 import { useTranslation } from 'react-i18next';
+import { formatFundingPercent, sharesTaken } from '../utils/funding';
 
 
 type ViewMode = 'grid' | 'list' | 'map';
@@ -551,13 +552,13 @@ export const PropertiesPage: React.FC = () => {
                         <div>
                           <div className="text-sm text-gray-500">{t('featured.owners')}</div>
                           <div className="font-bold text-gray-900 dark:text-white">
-                            {property.investor_count || Math.floor(property.tokens_sold / 10)}
+                            {(property as any).investor_count ?? 0}
                           </div>
                         </div>
                       </div>
                       <div className="flex justify-between items-center">
                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                          {t('propertiesPage.funded', { pct: Math.round((property.tokens_sold / property.total_tokens) * 100) })}
+                          {t('propertiesPage.funded', { pct: formatFundingPercent(sharesTaken(property as any), Number(property.total_tokens)) })}
                         </div>
                         <div className="flex gap-2">
                           <Button

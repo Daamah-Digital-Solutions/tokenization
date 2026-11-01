@@ -149,7 +149,7 @@ def process_single_mint(self, investment_id: str):
                 try:
                     investment = (
                         Investment.objects
-                        .select_for_update()
+                        .select_for_update(of=('self',))
                         .select_related('user', 'property_investment')
                         .get(id=investment_id)
                     )

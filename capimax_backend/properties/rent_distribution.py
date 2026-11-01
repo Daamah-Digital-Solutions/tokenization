@@ -109,7 +109,7 @@ def pay(dist, by=None):
     from properties.models import RentDistribution
 
     with transaction.atomic():
-        dist = RentDistribution.objects.select_for_update().select_related('property_investment').get(pk=dist.pk)
+        dist = RentDistribution.objects.select_for_update(of=('self',)).select_related('property_investment').get(pk=dist.pk)
         if dist.status == 'paid':
             raise DistributionError('ALREADY_PAID', 'This distribution was already paid.')
         build(dist)

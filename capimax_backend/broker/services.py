@@ -105,7 +105,7 @@ def record_referral_conversion(investment):
         with transaction.atomic():
             referral = (
                 BrokerReferral.objects
-                .select_for_update()
+                .select_for_update(of=('self',))
                 .select_related('broker')
                 .filter(referred_user_id=user_id, is_converted=False)
                 .order_by('created_at')

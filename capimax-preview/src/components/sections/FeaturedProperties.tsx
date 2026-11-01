@@ -6,6 +6,7 @@ import { PropertyService } from '../../services/property/PropertyService';
 import type { Property as BackendProperty } from '../../services/api/types';
 import { useRouter } from '../../utils/router';
 import { useTranslation } from 'react-i18next';
+import { formatFundingPercent, fundingBarWidth, sharesTaken } from '../../utils/funding';
 
 // Real estate fallback images by property type
 const FALLBACK_IMAGES = {
@@ -121,7 +122,7 @@ export const FeaturedProperties: React.FC = () => {
         const totalValue = Number(prop.total_value) || 0;
         const tokenPrice = Number(prop.token_price) || 0;
         const totalTokens = Number(prop.total_tokens) || 0;
-        const soldTokens = Number(prop.tokens_sold) || 0;
+        const soldTokens = sharesTaken(prop as any);
         const fundingPercentage = totalTokens > 0 ? (soldTokens / totalTokens) * 100 : 0;
         const propertyType = (prop.property_type || 'residential') as string;
         const expectedReturn = prop.expected_return;
@@ -483,13 +484,13 @@ export const FeaturedProperties: React.FC = () => {
                       <div className="flex justify-between text-sm mb-2">
                         <span className="text-slate-600 dark:text-gray-400">{t('featured.fundingProgress')}</span>
                         <span className="font-bold text-slate-900 dark:text-white">
-                          {Math.round((property.soldTokens / property.totalTokens) * 100)}%
+                          {formatFundingPercent(property.soldTokens, property.totalTokens)}%
                         </span>
                       </div>
                       <div className="w-full bg-slate-200 dark:bg-gray-800 rounded-full h-3 overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
-                          whileInView={{ width: `${(property.soldTokens / property.totalTokens) * 100}%` }}
+                          whileInView={{ width: fundingBarWidth(property.soldTokens, property.totalTokens) }}
                           viewport={{ once: true }}
                           transition={{ duration: 1, delay: 0.2 + index * 0.1 }}
                           className="h-full bg-gradient-to-r from-emerald-500 to-green-500 rounded-full relative"

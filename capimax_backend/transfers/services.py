@@ -175,7 +175,7 @@ def deliver(t: Transfer) -> str:
     from payments.models import WalletBalance
 
     with transaction.atomic():
-        t = Transfer.objects.select_for_update().select_related('sender', 'property_ref').get(pk=t.pk)
+        t = Transfer.objects.select_for_update(of=('self',)).select_related('sender', 'property_ref').get(pk=t.pk)
         if t.status not in OPEN or t.deliver_on > timezone.localdate():
             return t.status
         recipient = t.recipient or _find_user(t.recipient_email)

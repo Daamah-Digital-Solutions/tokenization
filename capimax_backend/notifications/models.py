@@ -421,6 +421,8 @@ class Broadcast(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        verbose_name = 'Message to users'
+        verbose_name_plural = 'Messages to users (email)'
 
     def __str__(self):
         return f'{self.subject} ({self.get_status_display()})'
