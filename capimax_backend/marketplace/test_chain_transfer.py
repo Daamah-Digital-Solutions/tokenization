@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
+from web3.exceptions import ContractLogicError
 
 from accounts.tests.test_withdraw import SEED, _make_contract
 from blockchain.models import TokenBalance, TokenTransaction
@@ -103,6 +104,47 @@ class ChainTransferTests(TestCase):
                 reconcile()
         self.trade.refresh_from_db()
         self.assertEqual(self.trade.chain_status, 'needs_review')
+
+    def test_locked_tokens_stop_before_any_gas_or_transaction(self):
+        w3, token = fake_chain()
+        transfer = token.functions.safeTransferFrom.return_value
+        transfer.call.side_effect = ContractLogicError('execution reverted: Tokens are locked up')
+        token.functions.getInvestorInfo.return_value.call.return_value = [50, 500, 1824749568, True]
+        with patch('marketplace.chain_transfer._web3', return_value=(w3, 97)), \
+                patch('accounts.wallet_withdraw._ensure_gas') as gas, \
+                patch('marketplace.chain_transfer._alert_staff') as alert:
+            self.assertEqual(transfer_trade(self.trade), 'needs_review')
+            self.assertEqual(reconcile(), {})  # stopped for good: nothing is due any more
+        gas.assert_not_called()
+        w3.eth.send_raw_transaction.assert_not_called()
+        alert.assert_called_once()
+        self.trade.refresh_from_db()
+        self.assertEqual(self.trade.chain_attempts, 1)
+        self.assertIsNone(self.trade.transaction_hash)
+        self.assertIn('Tokens are locked up', self.trade.chain_error)
+        self.assertIn('2027-10-28', self.trade.chain_error)
+
+    def test_refusal_without_a_lockup_date_still_stops(self):
+        w3, token = fake_chain()
+        token.functions.safeTransferFrom.return_value.call.side_effect = ContractLogicError('execution reverted')
+        token.functions.getInvestorInfo.side_effect = ValueError('not in this ABI')
+        with patch('marketplace.chain_transfer._web3', return_value=(w3, 97)), \
+                patch('marketplace.chain_transfer._alert_staff'):
+            self.assertEqual(transfer_trade(self.trade), 'needs_review')
+        w3.eth.send_raw_transaction.assert_not_called()
+
+    def test_network_trouble_during_the_check_is_not_a_refusal(self):
+        for error, message in ((ContractLogicError('rate limit exceeded'), 'rate limit exceeded'),
+                               (ConnectionError('rpc down'), 'rpc down')):
+            w3, token = fake_chain()
+            token.functions.safeTransferFrom.return_value.call.side_effect = error
+            with patch('marketplace.chain_transfer._web3', return_value=(w3, 97)), \
+                    patch('marketplace.chain_transfer._alert_staff') as alert:
+                self.assertEqual(reconcile().get('unavailable'), message)
+            alert.assert_not_called()
+            w3.eth.send_raw_transaction.assert_not_called()
+            self.trade.refresh_from_db()
+            self.assertEqual((self.trade.chain_status, self.trade.chain_attempts), ('pending', 0))
 
     def test_not_tokenized_property_needs_no_transfer(self):
         self.contract.status = 'inactive'

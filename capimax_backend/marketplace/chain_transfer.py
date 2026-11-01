@@ -12,14 +12,16 @@ token withdrawal (accounts/wallet_withdraw.py):
   * the property's token contract (one clone per property, token id 0);
   * the seller's custodial key is re-derived from the master seed (never
     stored) and checked against the address on the account;
+  * the contract is asked first, without sending anything, whether it would
+    accept the transfer (a lockup would refuse it): no gas is spent on a refusal;
   * the deployer tops the seller's custodial wallet up with gas if needed;
   * ``safeTransferFrom(seller, buyer, 0, amount, "")`` is signed and sent.
 
 The trade records where this stands (``chain_status``): pending → submitted →
 confirmed, or failed (retried by the reconcile job) and, after repeated
 failures or when the platform cannot move the tokens (e.g. the seller moved
-them to an external wallet), needs_review — staff are alerted. A property
-that is not tokenized needs no transfer (not_required).
+them to an external wallet, or the contract refuses), needs_review — staff are
+alerted. A property that is not tokenized needs no transfer (not_required).
 
 Never sends twice: a trade with a transaction hash is only checked, unless
 that transaction is unknown to the network (dropped) — then it is resent.
@@ -28,12 +30,12 @@ that transaction is unknown to the network (dropped) — then it is resent.
 from __future__ import annotations
 
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone as dt_timezone
 from decimal import Decimal
 
 from django.conf import settings
 from django.db import transaction
-from django.utils import timezone
+from django.utils import timezone
 from blockchain.signing import raw_transaction
 
 logger = logging.getLogger(__name__)
@@ -147,6 +149,31 @@ def _fail(trade, reason: str, *, final: bool = False) -> str:
     return 'failed'
 
 
+def _lockup_note(token, seller_addr) -> str:
+    """When the seller's lockup ends, if the contract can tell: staff need the date to retry."""
+    try:
+        end = int(token.functions.getInvestorInfo(TOKEN_ID, seller_addr).call()[2])
+        return f' The lockup of this wallet ends on {datetime.fromtimestamp(end, dt_timezone.utc):%Y-%m-%d}.'
+    except Exception:  # noqa: BLE001 — only a detail of the message
+        return ''
+
+
+def _refusal(token, seller_addr, buyer_addr, amount) -> str | None:
+    """Why the contract would refuse this transfer (a dry run: nothing is sent), or None if it accepts."""
+    from web3.exceptions import ContractLogicError
+
+    try:
+        token.functions.safeTransferFrom(seller_addr, buyer_addr, TOKEN_ID, amount, b'').call({'from': seller_addr})
+    except ContractLogicError as exc:
+        reason = getattr(exc, 'message', None) or str(exc)  # web3 6 prints (message, data) as a tuple
+        # web3 also raises the plain class for RPC errors without data (e.g. a rate limit): not a refusal.
+        if type(exc) is ContractLogicError and 'revert' not in reason.lower():
+            raise ChainUnavailable(reason) from exc
+        note = _lockup_note(token, seller_addr) if 'locked' in reason.lower() else ''
+        return f'{reason}.{note}'
+    return None
+
+
 def transfer_trade(trade) -> str:
     """Move a settled trade's (or any share move's) tokens on-chain. Returns the resulting chain_status."""
     from eth_account import Account
@@ -204,6 +231,10 @@ def transfer_trade(trade) -> str:
     if held < amount:
         return _fail(trade, f'The seller custodial wallet {seller_addr} holds {held} tokens on-chain, fewer than '
                             f'the {amount} sold (tokens withdrawn to an external wallet, or not minted).', final=True)
+    refusal = _refusal(token, seller_addr, buyer_addr, amount)
+    if refusal:
+        return _fail(trade, f'The token contract refuses this transfer, so no transaction was sent: {refusal}',
+                     final=True)
 
     deployer = Account.from_key(settings.BLOCKCHAIN_PRIVATE_KEY)
     _ensure_gas(w3, deployer, seller_addr)
