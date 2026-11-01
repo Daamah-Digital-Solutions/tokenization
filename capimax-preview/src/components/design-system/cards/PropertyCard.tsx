@@ -11,6 +11,8 @@ import { PropertyCategory } from '../../../services/api/types';
 import type { Property } from '../../../services/api/types';
 import { PROPERTY_PLACEHOLDER, handleImageFallback } from '../../../utils/imageFallback';
 import { uiLocale } from '../../../utils/locale';
+import { formatFundingPercent, fundingBarWidth } from '../../../utils/funding';
+import { localizedField } from '../../../utils/localizedProperty';
 
 interface PropertyCardProps extends Omit<Property, 'id'> {
   id: string;
@@ -26,6 +28,8 @@ interface PropertyCardProps extends Omit<Property, 'id'> {
   // Additional UI props
   rating?: number;
   investor_count?: number;
+  shares_taken?: number;
+  translations?: Record<string, Record<string, string>>;
   funding_percentage?: number;
 }
 
@@ -59,6 +63,8 @@ export const PropertyCard = React.forwardRef<HTMLDivElement, PropertyCardProps>(
   featured = false,
   rating = 0,
   investor_count = 0,
+  shares_taken,
+  translations,
   funding_percentage,
   className,
   onInvestClick,
@@ -75,8 +81,9 @@ export const PropertyCard = React.forwardRef<HTMLDivElement, PropertyCardProps>(
   const { t, i18n } = useTranslation('shared');
   const isAr = i18n.language?.startsWith('ar');
   
-  // Calculate funding percentage
-  const calculatedFundingPercentage = funding_percentage || Math.round(((tokens_sold || 0) / (total_tokens || 1)) * 100);
+  // Sold shares + running installment plans; a small share of a big property still shows
+  const taken = Number(shares_taken ?? tokens_sold) || 0;
+  const displayTitle = localizedField({ title, translations }, 'title', i18n.language);
   
   // Format property location
   const location = `${city}${address ? ', ' + address : ''}`;
@@ -284,7 +291,7 @@ export const PropertyCard = React.forwardRef<HTMLDivElement, PropertyCardProps>(
           {/* Bottom Overlay */}
           <div className="absolute bottom-4 start-4 end-4">
             <h3 className="text-xl font-bold text-white mb-1">
-              {title}
+              {displayTitle}
             </h3>
             <div className="flex items-center gap-2 text-white/90 text-sm">
               <MapPin className="w-3 h-3" />
@@ -322,13 +329,13 @@ export const PropertyCard = React.forwardRef<HTMLDivElement, PropertyCardProps>(
                 {is_under_construction ? t('propertyCard.constructionProgress') : t('propertyCard.fundingProgress')}
               </Text>
               <Text variant="bodySmall" weight="bold" color="primary">
-                {is_under_construction ? `${construction_progress || 0}%` : `${calculatedFundingPercentage}%`}
+                {is_under_construction ? `${construction_progress || 0}%` : `${formatFundingPercent(taken, total_tokens || 0)}%`}
               </Text>
             </div>
             <div className="w-full bg-slate-200 dark:bg-gray-800 rounded-full h-3 overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
-                whileInView={{ width: `${is_under_construction ? (construction_progress || 0) : calculatedFundingPercentage}%` }}
+                whileInView={{ width: is_under_construction ? `${construction_progress || 0}%` : fundingBarWidth(taken, total_tokens || 0) }}
                 viewport={{ once: true }}
                 transition={{ duration: 1, delay: 0.2 }}
                 className={cn(
@@ -343,7 +350,7 @@ export const PropertyCard = React.forwardRef<HTMLDivElement, PropertyCardProps>(
             </div>
             <div className="flex justify-between mt-2">
               <Text variant="caption" color="muted">
-                {t(is_under_construction ? 'propertyCard.reserved' : 'propertyCard.sold', { value: (tokens_sold || 0).toLocaleString() })}
+                {t(is_under_construction ? 'propertyCard.reserved' : 'propertyCard.sold', { value: taken.toLocaleString() })}
               </Text>
               <Text variant="caption" color="muted">
                 {t('propertyCard.total', { value: (total_tokens || 0).toLocaleString() })}
