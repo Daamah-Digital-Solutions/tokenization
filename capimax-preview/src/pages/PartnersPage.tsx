@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, Landmark, Shield, Home, Users, Handshake, ArrowRight } from 'lucide-react';
+import {
+  ArrowRight, BadgeCheck, Building2, ConciergeBell, CreditCard, Handshake, Landmark, Scale, ShieldCheck,
+  Umbrella, Users,
+} from 'lucide-react';
 import { Navbar } from '../components/layout/Navbar';
 import { Footer } from '../components/layout/Footer';
 import { Container } from '../components/design-system/layout/Container';
@@ -9,129 +12,48 @@ import { Section } from '../components/design-system/sections/Section';
 import { Heading } from '../components/design-system/typography/Heading';
 import { Text } from '../components/design-system/typography/Text';
 import { Button } from '../components/ui/Button';
-import { PartnerCard, PartnerCardProps, PartnerCategory } from '../components/partners/PartnerCard';
+import { PartnerCard } from '../components/partners/PartnerCard';
+import { PARTNERS, PARTNER_SECTION_KEYS, type PartnerSectionKey } from '../data/partners';
 import { useRouter } from '../utils/router';
 import { useTranslation } from 'react-i18next';
 
 import { COMPANY } from '../utils/company';
-type FilterCategory = 'all' | PartnerCategory;
 
-interface CategoryTab {
-  id: FilterCategory;
-  label: string;
-  icon: typeof Building2;
-  description: string;
-}
+/**
+ * The Partners page: the client's partner register (src/data/partners.ts, the same as
+ * Capimax BRX and PropShare — client voice notes, Nov 2026), one section per kind of
+ * partner, filterable by section.
+ */
 
-const categoryTabs: CategoryTab[] = [
-  { id: 'all', label: 'All Partners', icon: Users, description: 'View all our trusted partners' },
-  { id: 'developer', label: 'Developers', icon: Building2, description: 'Property development partners' },
-  { id: 'financial', label: 'Financial', icon: Landmark, description: 'Valuation & financial management' },
-  { id: 'insurance', label: 'Insurance', icon: Shield, description: 'Insurance coverage partners' },
-  { id: 'management', label: 'Management', icon: Home, description: 'Property management services' }
-];
+type FilterCategory = 'all' | PartnerSectionKey;
 
-const partners: PartnerCardProps[] = [
-  // Developers / Property Partners
-  {
-    name: 'Elite Gate',
-    category: 'developer',
-    description: 'A leading real estate development company specializing in premium residential and commercial projects across the region.',
-    role: 'Property Development Partner',
-    website: undefined
-  },
-  {
-    name: 'Prime One',
-    category: 'developer',
-    description: 'Innovative real estate developer focused on sustainable and modern urban living spaces with cutting-edge design.',
-    role: 'Property Development Partner',
-    website: undefined
-  },
-  {
-    name: 'TDH',
-    category: 'developer',
-    description: 'Established developer with a strong portfolio of mixed-use developments and landmark residential projects.',
-    role: 'Property Development Partner',
-    website: undefined
-  },
-  {
-    name: 'Capimax Development',
-    category: 'developer',
-    description: 'In-house development arm specializing in tokenization-ready properties designed for fractional ownership opportunities.',
-    role: 'In-House Development Partner',
-    website: undefined
-  },
-
-  // Valuation & Financial Management
-  {
-    name: 'Capimax Financial',
-    category: 'financial',
-    description: 'Dedicated financial management entity providing comprehensive ownership management, dividend distribution, and financial reporting services.',
-    role: 'Financial Management & SPV Administration',
-    website: undefined
-  },
-  {
-    name: 'CIM Financial Group',
-    category: 'financial',
-    description: 'Independent valuation and financial advisory firm providing professional property valuations and market analysis.',
-    role: 'Property Valuation & Advisory',
-    website: undefined
-  },
-
-  // Insurance Partners
-  {
-    name: 'Assurax',
-    category: 'insurance',
-    description: 'Comprehensive insurance solutions provider offering property coverage, liability protection, and ownership safeguards.',
-    role: 'Property & Liability Insurance',
-    website: undefined
-  },
-  {
-    name: 'HCC',
-    category: 'insurance',
-    description: 'Specialized insurance partner providing tailored coverage solutions for real estate ownership and tokenized assets.',
-    role: 'Specialty Insurance Coverage',
-    website: undefined
-  },
-
-  // Property Management
-  {
-    name: 'Nova Property',
-    category: 'management',
-    description: 'Professional property management company handling tenant relations, maintenance, rent collection, and day-to-day property operations.',
-    role: 'Property Management Services',
-    website: undefined
-  }
-];
-
-// Translation keys for the partner entries above (names stay as brand names).
-const PARTNER_KEYS: Record<string, string> = {
-  'Elite Gate': 'eliteGate',
-  'Prime One': 'primeOne',
-  'TDH': 'tdh',
-  'Capimax Development': 'capimaxDevelopment',
-  'Capimax Financial': 'capimaxFinancial',
-  'CIM Financial Group': 'cim',
-  'Assurax': 'assurax',
-  'HCC': 'hcc',
-  'Nova Property': 'nova',
+const SECTION_ICONS: Record<FilterCategory, typeof Building2> = {
+  all: Users,
+  payments: CreditCard,
+  identity: ShieldCheck,
+  banking: Landmark,
+  advisory: Scale,
+  insurance: Umbrella,
+  developers: Building2,
+  operations: ConciergeBell,
+  tokenization: BadgeCheck,
 };
+
+const categoryTabs: FilterCategory[] = ['all', ...PARTNER_SECTION_KEYS];
 
 export const PartnersPage: React.FC = () => {
   const { navigate } = useRouter();
   const { t } = useTranslation('brokerui');
   const [activeCategory, setActiveCategory] = useState<FilterCategory>('all');
 
-  const filteredPartners = activeCategory === 'all'
-    ? partners
-    : partners.filter(partner => partner.category === activeCategory);
+  const shownSections = activeCategory === 'all' ? PARTNER_SECTION_KEYS : [activeCategory];
+  const partnerCounts = Object.fromEntries(categoryTabs.map((key) => [
+    key, key === 'all' ? PARTNERS.length : PARTNERS.filter((p) => p.section === key).length,
+  ])) as Record<FilterCategory, number>;
 
-  const partnerCounts = {
-    all: partners.length,
-    developer: partners.filter(p => p.category === 'developer').length,
-    financial: partners.filter(p => p.category === 'financial').length,
-    insurance: partners.filter(p => p.category === 'insurance').length,
-    management: partners.filter(p => p.category === 'management').length
+  const chooseCategory = (key: FilterCategory) => {
+    setActiveCategory(key);
+    document.getElementById('partners-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   return (
@@ -205,12 +127,12 @@ export const PartnersPage: React.FC = () => {
           <Section variant="default" size="sm">
             <div className="flex flex-wrap justify-center gap-3">
               {categoryTabs.map((tab) => {
-                const IconComponent = tab.icon;
-                const isActive = activeCategory === tab.id;
+                const IconComponent = SECTION_ICONS[tab];
+                const isActive = activeCategory === tab;
                 return (
                   <motion.button
-                    key={tab.id}
-                    onClick={() => setActiveCategory(tab.id)}
+                    key={tab}
+                    onClick={() => setActiveCategory(tab)}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className={`
@@ -222,7 +144,7 @@ export const PartnersPage: React.FC = () => {
                     `}
                   >
                     <IconComponent className="w-4 h-4" />
-                    <span>{t(`partnersPage.tabs.${tab.id}.label`, { defaultValue: tab.label })}</span>
+                    <span>{t(`partnersPage.sections.${tab}.label`)}</span>
                     <span className={`
                       text-xs px-2 py-0.5 rounded-full
                       ${isActive
@@ -230,7 +152,7 @@ export const PartnersPage: React.FC = () => {
                         : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
                       }
                     `}>
-                      {partnerCounts[tab.id]}
+                      {partnerCounts[tab]}
                     </span>
                   </motion.button>
                 );
@@ -238,8 +160,9 @@ export const PartnersPage: React.FC = () => {
             </div>
           </Section>
 
-          {/* Partners Grid */}
+          {/* Partners, section by section */}
           <Section variant="default" size="xl">
+            <div id="partners-list" className="scroll-mt-24" />
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeCategory}
@@ -247,33 +170,44 @@ export const PartnersPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                className="space-y-14"
               >
-                {filteredPartners.map((partner, index) => (
-                  <motion.div
-                    key={partner.name}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                  >
-                    <PartnerCard
-                      {...partner}
-                      name={t(`partnersPage.list.${PARTNER_KEYS[partner.name]}.name`, { defaultValue: partner.name })}
-                      description={t(`partnersPage.list.${PARTNER_KEYS[partner.name]}.description`, { defaultValue: partner.description })}
-                      role={t(`partnersPage.list.${PARTNER_KEYS[partner.name]}.role`, { defaultValue: partner.role })}
-                    />
-                  </motion.div>
-                ))}
+                {shownSections.map((section) => {
+                  const IconComponent = SECTION_ICONS[section];
+                  const members = PARTNERS.filter((p) => p.section === section);
+                  return (
+                    <section key={section} aria-labelledby={`partners-${section}`}>
+                      <div className="flex items-start gap-3 mb-6">
+                        <div className="w-11 h-11 shrink-0 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center">
+                          <IconComponent className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                        <div>
+                          <h2 id={`partners-${section}`} className="text-2xl font-bold text-slate-900 dark:text-white">
+                            {t(`partnersPage.sections.${section}.label`)}
+                          </h2>
+                          <p className="text-sm text-slate-500 dark:text-slate-400">
+                            {t(`partnersPage.sections.${section}.description`)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {members.map((partner) => (
+                          <PartnerCard
+                            key={partner.key}
+                            name={partner.name}
+                            logo={partner.logo}
+                            role={partner.hasRole === false ? undefined : t(`partnersPage.list.${partner.key}.role`)}
+                            description={t(`partnersPage.list.${partner.key}.description`)}
+                            market={t(`partnersPage.markets.${partner.market}`)}
+                            website={partner.url}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  );
+                })}
               </motion.div>
             </AnimatePresence>
-
-            {filteredPartners.length === 0 && (
-              <div className="text-center py-16">
-                <p className="text-slate-500 dark:text-slate-400">
-                  {t('partnersPage.noPartners')}
-                </p>
-              </div>
-            )}
           </Section>
 
           {/* Partner Categories Overview */}
@@ -288,15 +222,15 @@ export const PartnersPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {categoryTabs.filter(tab => tab.id !== 'all').map((category, index) => {
-                const IconComponent = category.icon;
+              {PARTNER_SECTION_KEYS.map((category, index) => {
+                const IconComponent = SECTION_ICONS[category];
                 return (
                   <motion.div
-                    key={category.id}
+                    key={category}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    onClick={() => setActiveCategory(category.id)}
+                    transition={{ delay: index * 0.05 }}
+                    onClick={() => chooseCategory(category)}
                     className="group cursor-pointer p-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-xl transition-all duration-300"
                   >
                     <div className="flex items-start gap-4">
@@ -305,13 +239,13 @@ export const PartnersPage: React.FC = () => {
                       </div>
                       <div className="flex-1">
                         <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                          {t(`partnersPage.tabs.${category.id}.label`, { defaultValue: category.label })}
+                          {t(`partnersPage.sections.${category}.label`)}
                         </h3>
                         <p className="text-slate-600 dark:text-slate-400 text-sm">
-                          {t(`partnersPage.tabs.${category.id}.description`, { defaultValue: category.description })}
+                          {t(`partnersPage.sections.${category}.description`)}
                         </p>
                         <p className="mt-2 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
-                          {t('partnersPage.partnerCount', { count: partnerCounts[category.id] })}
+                          {t('partnersPage.partnerCount', { count: partnerCounts[category] })}
                         </p>
                       </div>
                     </div>

@@ -491,94 +491,18 @@
     "submitRequest": "Envoyer la demande"
   },
   "partnerCard": {
-    "category": {
-      "developer": "Promoteur",
-      "financial": "Finance",
-      "insurance": "Assurance",
-      "management": "Gestion"
-    },
     "logoAlt": "Logo {{name}}",
     "visitWebsite": "Visiter le site web"
   },
   "partnersPage": {
     "metaTitle": "Nos partenaires | Capimax RT - Partenaires de confiance de l'écosystème",
-    "metaDescription": "Découvrez notre réseau de partenaires de confiance : promoteurs immobiliers, conseillers financiers, assureurs et sociétés de gestion immobilière, qui collaborent pour offrir des opportunités exceptionnelles de détention immobilière.",
+    "metaDescription": "Les partenaires de Capimax RT : paiement, conformité, banque, évaluation, juridique, assurance, promotion, gestion immobilière et vérification.",
     "badge": "Écosystème de confiance",
     "heroTitle1": "Nos",
     "heroTitle2": "partenaires",
     "heroDesc": "Nous travaillons avec des partenaires de premier plan pour offrir des opportunités exceptionnelles de détention immobilière. Notre écosystème de confiance garantit qualité, transparence et gestion professionnelle à chaque étape.",
-    "tabs": {
-      "all": {
-        "label": "Tous les partenaires",
-        "description": "Voir tous nos partenaires de confiance"
-      },
-      "developer": {
-        "label": "Promoteurs",
-        "description": "Partenaires de promotion immobilière"
-      },
-      "financial": {
-        "label": "Finance",
-        "description": "Évaluation et gestion financière"
-      },
-      "insurance": {
-        "label": "Assurance",
-        "description": "Partenaires de couverture d'assurance"
-      },
-      "management": {
-        "label": "Gestion",
-        "description": "Services de gestion immobilière"
-      }
-    },
-    "list": {
-      "eliteGate": {
-        "name": "Elite Gate",
-        "description": "Promoteur immobilier de premier plan, spécialisé dans les projets résidentiels et commerciaux haut de gamme dans toute la région.",
-        "role": "Partenaire de promotion immobilière"
-      },
-      "primeOne": {
-        "name": "Prime One",
-        "description": "Promoteur immobilier innovant axé sur des espaces de vie urbains modernes et durables, au design de pointe.",
-        "role": "Partenaire de promotion immobilière"
-      },
-      "tdh": {
-        "name": "TDH",
-        "description": "Promoteur reconnu disposant d'un solide portefeuille de projets à usage mixte et de résidences emblématiques.",
-        "role": "Partenaire de promotion immobilière"
-      },
-      "capimaxDevelopment": {
-        "name": "Capimax Development",
-        "description": "Pôle de promotion interne spécialisé dans les biens prêts à être tokenisés, conçus pour la détention fractionnée.",
-        "role": "Partenaire de promotion interne"
-      },
-      "capimaxFinancial": {
-        "name": "Capimax Financial",
-        "description": "Entité de gestion financière dédiée, offrant des services complets de gestion de la détention, de distribution et de reporting financier.",
-        "role": "Gestion financière et administration de SPV"
-      },
-      "cim": {
-        "name": "CIM Financial Group",
-        "description": "Cabinet indépendant d'évaluation et de conseil financier, fournissant des évaluations immobilières professionnelles et des analyses de marché.",
-        "role": "Évaluation immobilière et conseil"
-      },
-      "assurax": {
-        "name": "Assurax",
-        "description": "Fournisseur de solutions d'assurance complètes : couverture des biens, responsabilité civile et protection de la détention.",
-        "role": "Assurance des biens et responsabilité civile"
-      },
-      "hcc": {
-        "name": "HCC",
-        "description": "Assureur spécialisé proposant des couvertures sur mesure pour la détention immobilière et les actifs tokenisés.",
-        "role": "Couverture d'assurance spécialisée"
-      },
-      "nova": {
-        "name": "Nova Property",
-        "description": "Société de gestion immobilière professionnelle chargée des relations avec les locataires, de l'entretien, de l'encaissement des loyers et de l'exploitation courante des biens.",
-        "role": "Services de gestion immobilière"
-      }
-    },
-    "noPartners": "Aucun partenaire dans cette catégorie.",
     "categoriesTitle": "Catégories de partenaires",
-    "categoriesDesc": "Chaque partenaire joue un rôle essentiel dans notre écosystème et garantit qualité et professionnalisme à chaque étape de votre parcours de propriétaire.",
+    "categoriesDesc": "Des paiements et de la conformité à la promotion, l’assurance et la gestion immobilière, chaque partenaire couvre une étape de votre parcours de propriétaire.",
     "partnerCount_zero": "{{count}} partenaire",
     "partnerCount_one": "{{count}} partenaire",
     "partnerCount_two": "{{count}} partenaires",
@@ -586,10 +510,158 @@
     "partnerCount_many": "{{count}} partenaires",
     "partnerCount_other": "{{count}} partenaires",
     "ctaTitle": "Envie de devenir notre partenaire ?",
-    "ctaDesc": "Si vous êtes promoteur immobilier, établissement financier, assureur ou société de gestion immobilière et souhaitez rejoindre notre écosystème, nous serions ravis d'échanger avec vous.",
+    "ctaDesc": "Si votre société travaille dans le paiement, la banque, la conformité, l’évaluation, le juridique, l’assurance, la promotion ou la gestion immobilière et souhaite rejoindre notre écosystème, nous serions ravis d’échanger avec vous.",
     "contactUs": "Nous contacter",
     "brokerProgram": "Programme courtiers",
-    "inquiries": "Pour toute demande de partenariat, contactez-nous à"
+    "inquiries": "Pour toute demande de partenariat, contactez-nous à",
+    "sections": {
+      "all": {
+        "label": "Tous les partenaires",
+        "description": "Tous les partenaires de la plateforme"
+      },
+      "payments": {
+        "label": "Paiements et paiements en actifs numériques",
+        "description": "Paiement par carte, en ligne et en cryptomonnaies"
+      },
+      "identity": {
+        "label": "Vérification d’identité et conformité",
+        "description": "Contrôles KYC, KYB et lutte contre le blanchiment"
+      },
+      "banking": {
+        "label": "Canaux bancaires et trésorerie",
+        "description": "Comptes professionnels et paiements internationaux"
+      },
+      "advisory": {
+        "label": "Financement, évaluation, juridique et risques",
+        "description": "Financement, évaluation, structuration juridique et due diligence"
+      },
+      "insurance": {
+        "label": "Assurance et protection des actifs",
+        "description": "Couverture d’assurance et des risques pour les actifs et les investisseurs"
+      },
+      "developers": {
+        "label": "Partenaires de promotion immobilière",
+        "description": "Les promoteurs des biens proposés sur la plateforme"
+      },
+      "operations": {
+        "label": "Hôtellerie, gestion immobilière et des installations",
+        "description": "Exploitation hôtelière, location, maintenance et services aux bâtiments"
+      },
+      "tokenization": {
+        "label": "Tokenisation et vérification",
+        "description": "Vérification indépendante de la blockchain et des actifs numériques"
+      }
+    },
+    "markets": {
+      "global": "Mondial",
+      "international": "International",
+      "unitedStates": "États-Unis",
+      "unitedKingdom": "Royaume-Uni",
+      "ukAndUs": "Royaume-Uni et États-Unis",
+      "spain": "Espagne",
+      "georgia": "Géorgie",
+      "greece": "Grèce",
+      "singapore": "Singapour",
+      "southAfrica": "Afrique du Sud",
+      "multipleJurisdictions": "Plusieurs juridictions",
+      "capimaxEcosystem": "Écosystème Capimax"
+    },
+    "list": {
+      "stripe": {
+        "role": "Prestataire de paiement intégré",
+        "description": "Infrastructure de paiement par carte et en ligne, encaissement, facturation et traitement des transactions."
+      },
+      "paypal": {
+        "role": "Prestataire de paiement intégré",
+        "description": "Option de paiement en ligne pour les paiements des clients éligibles et l’encaissement via un compte."
+      },
+      "nowpayments": {
+        "role": "Prestataire de paiement crypto",
+        "description": "Passerelle de paiement en cryptomonnaies pour l’acceptation des paiements en actifs numériques, selon l’éligibilité et la juridiction."
+      },
+      "sumsub": {
+        "role": "Intégration conformité",
+        "description": "Prestataire KYC, KYB, vérification d’identité, filtrage LCB-FT et suivi continu de la conformité."
+      },
+      "mercury": {
+        "role": "Canal de compte professionnel",
+        "description": "Plateforme fintech américaine pour les entreprises, utilisée pour les services bancaires et les paiements des sociétés éligibles via des banques partenaires."
+      },
+      "revolutBusiness": {
+        "role": "Canal de compte professionnel",
+        "description": "Compte professionnel multidevise, paiements et gestion de trésorerie, selon l’éligibilité du compte."
+      },
+      "wiseBusiness": {
+        "role": "Canal de paiement professionnel",
+        "description": "Paiements professionnels internationaux, conversion de devises et comptes multidevises, selon disponibilité."
+      },
+      "otherApprovedBanks": {
+        "description": "D’autres banques et établissements de paiement ne peuvent être affichés qu’après intégration, approbation et vérification documentaire."
+      },
+      "novaDigitalFinance": {
+        "role": "Financement",
+        "description": "Le financement de l’écosystème Capimax, pour la participation immobilière éligible et des solutions de paiement structurées."
+      },
+      "cimGlobalFinancial": {
+        "role": "Conseil financier et évaluation",
+        "description": "Études financières, évaluation d’actifs, analyse des risques, appui à la due diligence, reporting et vérification de documents."
+      },
+      "lexcrestGlobalLegal": {
+        "role": "Juridique et due diligence",
+        "description": "Structuration juridique, due diligence immobilière, accompagnement des SPV, contrats, accords, revue réglementaire et gestion des litiges."
+      },
+      "covertechInsurance": {
+        "role": "Assurance et risques",
+        "description": "Solutions d’assurance et de gestion des risques pour les actifs immobiliers, les expositions de la plateforme, l’infrastructure numérique et les fonds clients éligibles, selon les conditions de la police."
+      },
+      "assuraxInsurance": {
+        "role": "Assurance et risques",
+        "description": "Solutions d’assurance pour les actifs, les biens, les projets d’investissement et la protection des clients éligibles, selon la souscription et les conditions de la police."
+      },
+      "westoriaCapitalEstates": {
+        "role": "Promoteur",
+        "description": "Partenaire de promotion et d’investissement immobilier pour des opportunités résidentielles, hôtelières, commerciales et mixtes sélectionnées."
+      },
+      "crestmarkGlobal": {
+        "role": "Promoteur",
+        "description": "Partenaire de promotion et d’investissement immobilier pour des opportunités sélectionnées au Royaume-Uni."
+      },
+      "valoraEstatesGlobal": {
+        "role": "Promoteur",
+        "description": "Partenaire de promotion et d’investissement immobilier pour des opportunités sélectionnées en Espagne."
+      },
+      "verdeaEstates": {
+        "role": "Promoteur",
+        "description": "Partenaire de promotion et d’investissement immobilier pour des opportunités sélectionnées en Géorgie."
+      },
+      "aetheraDevelopment": {
+        "role": "Promoteur",
+        "description": "Partenaire de promotion et d’investissement immobilier pour des opportunités sélectionnées en Grèce."
+      },
+      "elevateProperties": {
+        "role": "Promoteur",
+        "description": "Partenaire de promotion immobilière pour des opportunités sélectionnées à Singapour."
+      },
+      "primeStoneGlobal": {
+        "role": "Promoteur",
+        "description": "Partenaire de promotion immobilière pour des opportunités sélectionnées en Afrique du Sud."
+      },
+      "priminnHotels": {
+        "role": "Exploitant hôtelier",
+        "description": "Partenaire d’exploitation hôtelière : gestion d’hôtels, résidences services, location et accueil des clients au niveau du bien."
+      },
+      "eliteGateProperties": {
+        "role": "Gestion immobilière",
+        "description": "Partenaire de gestion locative : administration des locataires, encaissements et exploitation quotidienne des actifs."
+      },
+      "crownFacilities": {
+        "role": "Gestion des installations",
+        "description": "Partenaire intégré de gestion des installations et des biens : maintenance, ingénierie, exploitation des bâtiments et services aux actifs."
+      },
+      "proofAnchor": {
+        "description": "Proof Anchor assure la vérification indépendante, la sécurité et la certification de la blockchain, des actifs numériques, des smart contracts et des investissements dans des actifs réels."
+      }
+    }
   },
   "perf": {
     "days": "{{value}} jours",

@@ -491,94 +491,18 @@
     "submitRequest": "Submit Request"
   },
   "partnerCard": {
-    "category": {
-      "developer": "Developer",
-      "financial": "Financial",
-      "insurance": "Insurance",
-      "management": "Management"
-    },
     "logoAlt": "{{name}} logo",
     "visitWebsite": "Visit Website"
   },
   "partnersPage": {
     "metaTitle": "Our Partners | Capimax RT - Trusted Ecosystem Partners",
-    "metaDescription": "Meet our trusted network of partners including property developers, financial advisors, insurance providers, and property management companies working together to deliver exceptional real estate ownership opportunities.",
+    "metaDescription": "The partners of Capimax RT: payment, compliance, banking, valuation, legal, insurance, development, property management and verification partners.",
     "badge": "Trusted Ecosystem",
     "heroTitle1": "Our",
     "heroTitle2": "Partners",
     "heroDesc": "We work with industry-leading partners to deliver exceptional real estate ownership opportunities. Our trusted ecosystem ensures quality, transparency, and professional management at every stage.",
-    "tabs": {
-      "all": {
-        "label": "All Partners",
-        "description": "View all our trusted partners"
-      },
-      "developer": {
-        "label": "Developers",
-        "description": "Property development partners"
-      },
-      "financial": {
-        "label": "Financial",
-        "description": "Valuation & financial management"
-      },
-      "insurance": {
-        "label": "Insurance",
-        "description": "Insurance coverage partners"
-      },
-      "management": {
-        "label": "Management",
-        "description": "Property management services"
-      }
-    },
-    "list": {
-      "eliteGate": {
-        "name": "Elite Gate",
-        "description": "A leading real estate development company specializing in premium residential and commercial projects across the region.",
-        "role": "Property Development Partner"
-      },
-      "primeOne": {
-        "name": "Prime One",
-        "description": "Innovative real estate developer focused on sustainable and modern urban living spaces with cutting-edge design.",
-        "role": "Property Development Partner"
-      },
-      "tdh": {
-        "name": "TDH",
-        "description": "Established developer with a strong portfolio of mixed-use developments and landmark residential projects.",
-        "role": "Property Development Partner"
-      },
-      "capimaxDevelopment": {
-        "name": "Capimax Development",
-        "description": "In-house development arm specializing in tokenization-ready properties designed for fractional ownership opportunities.",
-        "role": "In-House Development Partner"
-      },
-      "capimaxFinancial": {
-        "name": "Capimax Financial",
-        "description": "Dedicated financial management entity providing comprehensive ownership management, dividend distribution, and financial reporting services.",
-        "role": "Financial Management & SPV Administration"
-      },
-      "cim": {
-        "name": "CIM Financial Group",
-        "description": "Independent valuation and financial advisory firm providing professional property valuations and market analysis.",
-        "role": "Property Valuation & Advisory"
-      },
-      "assurax": {
-        "name": "Assurax",
-        "description": "Comprehensive insurance solutions provider offering property coverage, liability protection, and ownership safeguards.",
-        "role": "Property & Liability Insurance"
-      },
-      "hcc": {
-        "name": "HCC",
-        "description": "Specialized insurance partner providing tailored coverage solutions for real estate ownership and tokenized assets.",
-        "role": "Specialty Insurance Coverage"
-      },
-      "nova": {
-        "name": "Nova Property",
-        "description": "Professional property management company handling tenant relations, maintenance, rent collection, and day-to-day property operations.",
-        "role": "Property Management Services"
-      }
-    },
-    "noPartners": "No partners found in this category.",
     "categoriesTitle": "Partner Categories",
-    "categoriesDesc": "Each partner plays a crucial role in our ecosystem, ensuring quality and professionalism at every stage of your ownership journey.",
+    "categoriesDesc": "From payments and compliance to development, insurance and property management, each partner covers one part of your ownership journey.",
     "partnerCount_zero": "{{count}} partners",
     "partnerCount_one": "{{count}} partner",
     "partnerCount_two": "{{count}} partners",
@@ -586,10 +510,158 @@
     "partnerCount_many": "{{count}} partners",
     "partnerCount_other": "{{count}} partners",
     "ctaTitle": "Interested in Partnering with Us?",
-    "ctaDesc": "If you are a property developer, financial institution, insurance provider, or property management company interested in joining our ecosystem, we would love to hear from you.",
+    "ctaDesc": "If your company works in payments, banking, compliance, valuation, legal services, insurance, real estate development or property management and wants to join our ecosystem, we would love to hear from you.",
     "contactUs": "Contact Us",
     "brokerProgram": "Broker Program",
-    "inquiries": "For partnership inquiries, contact us at"
+    "inquiries": "For partnership inquiries, contact us at",
+    "sections": {
+      "all": {
+        "label": "All Partners",
+        "description": "Every partner of the platform"
+      },
+      "payments": {
+        "label": "Payments and Digital Asset Payments",
+        "description": "Card, online and crypto payment providers"
+      },
+      "identity": {
+        "label": "Identity Verification and Compliance",
+        "description": "KYC, KYB and anti-money-laundering checks"
+      },
+      "banking": {
+        "label": "Banking and Treasury Rails",
+        "description": "Business accounts and international payments"
+      },
+      "advisory": {
+        "label": "Finance, Valuation, Legal and Risk",
+        "description": "Financing, valuation, legal structuring and due diligence"
+      },
+      "insurance": {
+        "label": "Insurance and Asset Protection",
+        "description": "Insurance and risk cover for assets and investors"
+      },
+      "developers": {
+        "label": "Real Estate Development Partners",
+        "description": "Developers behind the properties on the platform"
+      },
+      "operations": {
+        "label": "Hospitality, Property and Facility Management",
+        "description": "Hotel operation, leasing, maintenance and building services"
+      },
+      "tokenization": {
+        "label": "Tokenization and Verification",
+        "description": "Independent verification of blockchain and digital assets"
+      }
+    },
+    "markets": {
+      "global": "Global",
+      "international": "International",
+      "unitedStates": "United States",
+      "unitedKingdom": "United Kingdom",
+      "ukAndUs": "United Kingdom and United States",
+      "spain": "Spain",
+      "georgia": "Georgia",
+      "greece": "Greece",
+      "singapore": "Singapore",
+      "southAfrica": "South Africa",
+      "multipleJurisdictions": "Multiple jurisdictions",
+      "capimaxEcosystem": "Capimax ecosystem"
+    },
+    "list": {
+      "stripe": {
+        "role": "Integrated payment provider",
+        "description": "Payment infrastructure for card and online payments, checkout, billing and transaction processing."
+      },
+      "paypal": {
+        "role": "Integrated payment provider",
+        "description": "Online payment option supporting eligible customer payments and account-based checkout."
+      },
+      "nowpayments": {
+        "role": "Crypto payment provider",
+        "description": "Cryptocurrency payment gateway supporting digital-asset payment acceptance, subject to eligibility and jurisdiction."
+      },
+      "sumsub": {
+        "role": "Compliance integration",
+        "description": "KYC, KYB, identity verification, AML screening and ongoing compliance workflow provider."
+      },
+      "mercury": {
+        "role": "Business account rail",
+        "description": "US business financial-technology platform used for eligible corporate banking and payment workflows through partner banks."
+      },
+      "revolutBusiness": {
+        "role": "Business account rail",
+        "description": "Multi-currency business account, payments and treasury-management services, subject to account eligibility."
+      },
+      "wiseBusiness": {
+        "role": "Business payment rail",
+        "description": "International business payments, currency conversion and multi-currency account services, subject to availability."
+      },
+      "otherApprovedBanks": {
+        "description": "Additional banks and payment institutions may be displayed only after onboarding, approval and documentary verification."
+      },
+      "novaDigitalFinance": {
+        "role": "Financing",
+        "description": "Capimax ecosystem financing workflow supporting eligible real-estate participation and structured payment solutions."
+      },
+      "cimGlobalFinancial": {
+        "role": "Financial advisory and valuation",
+        "description": "Financial studies, asset valuation, risk assessment, due diligence support, reporting and document verification."
+      },
+      "lexcrestGlobalLegal": {
+        "role": "Legal and due diligence",
+        "description": "Legal structuring, real-estate due diligence, SPV support, contracts, agreements, regulatory review and dispute support."
+      },
+      "covertechInsurance": {
+        "role": "Insurance and risk",
+        "description": "Insurance and risk solutions for real estate assets, platform exposures, digital infrastructure and eligible client-money risks, subject to policy terms."
+      },
+      "assuraxInsurance": {
+        "role": "Insurance and risk",
+        "description": "Insurance solutions for assets, property, investment projects and eligible client protections, subject to underwriting and policy terms."
+      },
+      "westoriaCapitalEstates": {
+        "role": "Developer",
+        "description": "Real-estate development and investment partner for selected residential, hospitality, commercial and mixed-use opportunities."
+      },
+      "crestmarkGlobal": {
+        "role": "Developer",
+        "description": "Real-estate development and investment partner supporting selected UK opportunities."
+      },
+      "valoraEstatesGlobal": {
+        "role": "Developer",
+        "description": "Real-estate development and investment partner supporting selected opportunities in Spain."
+      },
+      "verdeaEstates": {
+        "role": "Developer",
+        "description": "Real-estate development and investment partner supporting selected opportunities in Georgia."
+      },
+      "aetheraDevelopment": {
+        "role": "Developer",
+        "description": "Real-estate development and investment partner supporting selected opportunities in Greece."
+      },
+      "elevateProperties": {
+        "role": "Developer",
+        "description": "Real-estate development partner supporting selected opportunities in Singapore."
+      },
+      "primeStoneGlobal": {
+        "role": "Developer",
+        "description": "Real-estate development partner supporting selected opportunities in South Africa."
+      },
+      "priminnHotels": {
+        "role": "Hospitality operator",
+        "description": "Hospitality operating partner for hotel operations, serviced accommodation, leasing and property-level guest management."
+      },
+      "eliteGateProperties": {
+        "role": "Property management",
+        "description": "Property management and leasing partner supporting tenant administration, collections and day-to-day asset operations."
+      },
+      "crownFacilities": {
+        "role": "Facility management",
+        "description": "Integrated facility and property management partner supporting maintenance, engineering, building operations and asset services."
+      },
+      "proofAnchor": {
+        "description": "Proof Anchor provides independent verification, security, and certification for blockchain, digital assets, smart contracts, and real-world investments."
+      }
+    }
   },
   "perf": {
     "days": "{{value}} days",
