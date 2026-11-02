@@ -81,7 +81,7 @@ export const LPStatement: React.FC = () => {
     try {
       const pt = i18n.getFixedT(lang, 'partners');
       const dt = docT(lang);
-      const ref = documentReference('LPS', s.provider.slice(0, 6), new Date());
+      const ref = documentReference('LPS', s.provider.replace(/[^A-Za-z0-9]/g, '').slice(0, 6).toUpperCase(), new Date());
       const period = pt('lp.statement.periodText', { from: pdfDate(s.from, lang), to: pdfDate(s.to, lang) }) as string;
       const doc = await newOfficialDocument(lang, pt('lp.statement.title') as string, ref, period);
       doc.holder({

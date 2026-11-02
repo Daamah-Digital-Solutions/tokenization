@@ -493,7 +493,7 @@ def _handle_construction_completion(self, property_id: str) -> Dict[str, Any]:
                 notification_type=NotificationType.SUCCESS,
                 priority=NotificationPriority.HIGH,
                 content_object=property_obj,
-                action_url=f"/dashboard/investments/{property_obj.id}",
+                action_url="/dashboard?view=my-properties",
                 action_label="View Property Details",
                 send_email=True,
             )

@@ -19,7 +19,7 @@ from .models import ConstructionInstallment, Property, RentalIncomeDistribution
 from accounts.models import User
 from payments.models import Payment, PaymentStatus, UserPaymentMethod, WalletBalance
 from investments.models import Investment
-from notifications.models import Notification, NotificationType, NotificationPriority
+from notifications.models import Notification, NotificationType, NotificationPriority
 from blockchain.signing import raw_transaction
 
 # ``BlockchainService`` no longer exists as a top-level export. Token-release
@@ -625,7 +625,7 @@ class InstallmentProcessingService:
             notification_type=NotificationType.PAYMENT,
             priority=NotificationPriority.MEDIUM,
             content_object=installment,
-            action_url=f"/dashboard/investments/{installment.property_investment.id}/installments",
+            action_url="/dashboard?view=installments",
             action_label="View Installment Details",
             send_email=True,
         )
@@ -644,7 +644,7 @@ class InstallmentProcessingService:
             notification_type=NotificationType.SUCCESS,
             priority=NotificationPriority.MEDIUM,
             content_object=installment,
-            action_url=f"/dashboard/investments/{installment.property_investment.id}/installments",
+            action_url="/dashboard?view=installments",
             action_label="View Installment Details",
             send_email=True,
         )
@@ -659,7 +659,7 @@ class InstallmentProcessingService:
             notification_type=NotificationType.ERROR,
             priority=NotificationPriority.HIGH,
             content_object=installment,
-            action_url=f"/dashboard/investments/{installment.property_investment.id}/installments",
+            action_url="/dashboard?view=installments",
             action_label="Update Payment Method",
             send_email=True,
         )
@@ -674,7 +674,7 @@ class InstallmentProcessingService:
             notification_type=NotificationType.WARNING,
             priority=NotificationPriority.HIGH,
             content_object=installment,
-            action_url=f"/dashboard/investments/{installment.property_investment.id}/installments",
+            action_url="/dashboard?view=installments",
             action_label="Make Payment Now",
             send_email=True,
         )
@@ -981,7 +981,7 @@ class RentalIncomeProcessingService:
             notification_type=NotificationType.SUCCESS,
             priority=NotificationPriority.MEDIUM,
             content_object=property_obj,
-            action_url=f"/dashboard/investments/{property_obj.id}",
+            action_url="/dashboard?view=wallet",
             action_label="View Property Details",
             send_email=True,
         )

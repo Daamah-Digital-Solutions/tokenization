@@ -1481,6 +1481,14 @@ class ConstructionInstallmentViewSet(ModelViewSet):
                 InstallmentProcessingService()._send_payment_success_notification(installment_plan, first['total'])
             except Exception:
                 pass
+        else:
+            # Nothing due yet: still confirm the purchase (in-app + email, round 5)
+            from .installment_billing import _notify
+            when = (f' The first payment, ${installment_plan.total_due:,.2f}, is due on '
+                    f'{installment_plan.next_payment_date:%Y-%m-%d}.' if installment_plan.next_payment_date else '')
+            _notify(installment_plan.investor, 'Installment plan started',
+                    f'Your installment purchase of {installment_plan.token_allocation} shares of '
+                    f'{installment_plan.property_investment.title} is confirmed.{when}')
         response_serializer = ConstructionInstallmentSerializer(installment_plan, context={'request': request})
         
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)

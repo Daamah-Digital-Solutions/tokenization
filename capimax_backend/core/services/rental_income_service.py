@@ -594,7 +594,7 @@ class RentalIncomeService:
             notification_type=NotificationType.SUCCESS,
             priority=NotificationPriority.MEDIUM,
             content_object=property_obj,
-            action_url=f"/dashboard/investments/{property_obj.id}",
+            action_url="/dashboard?view=wallet",
             action_label="View Investment Details",
             send_email=True,
         )

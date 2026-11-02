@@ -50,6 +50,26 @@ class InstallmentBillingTests(TestCase):
         self.assertEqual(fee.amount, Decimal('-100.00'))
         self.assertEqual(available_shares(self.prop), 900)
 
+    def test_starting_a_plan_is_confirmed_by_email_even_with_nothing_due_yet(self):
+        from notifications.models import NotificationChannel
+        # No down payment and the first installment next month: nothing is charged today
+        self.prop.installment_down_payment_percent = Decimal('0')
+        self.prop.installment_first_due_date = timezone.now().date() + timedelta(days=30)
+        self.prop.save()
+        r = self._create()
+        self.assertEqual(r.status_code, 201, r.content)
+        plan = ConstructionInstallment.objects.get(investor=self.buyer)
+        self.assertEqual(plan.payments_made, 0)
+        channel = NotificationChannel.objects.get(notification__user=self.buyer, channel='email')
+        self.assertEqual(channel.notification.title, 'Installment plan started')
+        self.assertIn('100 shares', channel.notification.message)
+
+    def test_installment_notices_open_the_installments_page(self):
+        from notifications.models import Notification
+        self._create()
+        n = Notification.objects.get(user=self.buyer, title='Payment Processed Successfully')
+        self.assertEqual(n.action_url, '/dashboard?view=installments')
+
     def test_short_wallet_creates_nothing(self):
         WalletBalance.objects.filter(user=self.buyer).update(available_balance=Decimal('2599.99'))
         r = self._create()
