@@ -11,9 +11,22 @@ from django.utils import timezone
 from core.partner_documents import admin_file_link
 
 from .models import (
-    LPApplication, LiquidityProvider, ExitRequest, LiquidityTransaction,
+    LPApplication, LiquidityProvider, ExitRequest, ExitOffer, LiquidityTransaction,
     LPApplicationStatus, LPStatus, ExitRequestStatus, LPApplicationDocument
 )
+
+
+class ExitOfferInline(admin.TabularInline):
+    """Providers' offers on a request open to all providers (round 5)."""
+
+    model = ExitOffer
+    extra = 0
+    can_delete = False
+    fields = ['liquidity_provider', 'price_per_unit', 'total_amount', 'status', 'expires_at', 'created_at']
+    readonly_fields = fields
+
+    def has_add_permission(self, request, obj=None):
+        return False
 
 
 class LPApplicationDocumentInline(admin.TabularInline):
@@ -241,8 +254,9 @@ class LiquidityProviderAdmin(admin.ModelAdmin):
 class ExitRequestAdmin(admin.ModelAdmin):
     """Admin for Exit Requests."""
 
+    inlines = [ExitOfferInline]
     list_display = [
-        'id_short', 'investor', 'liquidity_provider', 'units_requested',
+        'id_short', 'investor', 'provider', 'units_requested',
         'total_requested_amount', 'status_badge', 'created_at'
     ]
     list_filter = ['status', 'created_at', 'liquidity_provider']
@@ -253,7 +267,7 @@ class ExitRequestAdmin(admin.ModelAdmin):
     fieldsets = (
         ('Request Information', {
             'fields': (
-                'id', 'investor', 'investment', 'liquidity_provider'
+                'id', 'investor', 'investment', 'liquidity_provider', 'replaces'
             )
         }),
         ('Request Details', {
@@ -280,6 +294,10 @@ class ExitRequestAdmin(admin.ModelAdmin):
     def id_short(self, obj):
         return str(obj.id)[:8] + '...'
     id_short.short_description = 'ID'
+
+    @admin.display(description='Liquidity provider', ordering='liquidity_provider__legal_entity_name')
+    def provider(self, obj):
+        return obj.liquidity_provider or 'All providers (open)'
 
     def status_badge(self, obj):
         colors = {

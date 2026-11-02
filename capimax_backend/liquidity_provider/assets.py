@@ -13,6 +13,8 @@ from __future__ import annotations
 from collections import defaultdict
 from decimal import Decimal
 
+from django.utils import timezone
+
 ZERO = Decimal('0')
 
 
@@ -56,7 +58,9 @@ def lp_assets(lp, request=None) -> dict:
         b['count'] += 1
 
     listed = defaultdict(int)
-    for listing in MarketListing.objects.filter(seller=user, listing_type='sell', status='active'):
+    for listing in MarketListing.objects.filter(seller=user, listing_type='sell',
+                                                 status__in=['active', 'partially_filled'],
+                                                 expires_at__gt=timezone.now()):
         listed[listing.property_listing_id] += listing.tokens_remaining or 0
 
     certificates = {}

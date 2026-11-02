@@ -31,3 +31,11 @@ def transfer_lp_tokens(self, tx_id: str):
         return 'error'
     finally:
         cache.delete(lock)
+
+
+@shared_task
+def expire_exit_requests():
+    """Close sale requests nobody answered and offers not accepted in time (round 5)."""
+    from .market import expire_due
+
+    return expire_due()

@@ -123,6 +123,14 @@ app.conf.beat_schedule = {
         'kwargs': {},
     },
     
+    # Sales to liquidity providers: close requests nobody answered and offers
+    # not accepted in time, so the shares are free again (round 5)
+    'expire-exit-requests': {
+        'task': 'liquidity_provider.tasks.expire_exit_requests',
+        'schedule': 60.0 * 10.0,  # Every 10 minutes
+        'kwargs': {},
+    },
+
     # Transfers between users: deliver what is due, return unclaimed ones (round 4, extra #3)
     'process-transfers': {
         'task': 'transfers.tasks.process_transfers',

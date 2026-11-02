@@ -30,6 +30,8 @@ export interface LPProfile {
 }
 
 export interface LPStats {
+  open_market_requests: number;
+  open_offers: number;
   total_exit_requests: number;
   pending_requests: number;
   approved_requests: number;
@@ -41,10 +43,65 @@ export interface LPStats {
   remaining_monthly_capacity: string;
 }
 
+/** A provider's offer on a request open to all providers (round 5). */
+export interface LPOffer {
+  id: string;
+  liquidity_provider: string;
+  lp_name: string;
+  lp_country: string;
+  price_per_unit: string;
+  total_amount: string;
+  resale_fee: string;
+  notes: string;
+  status: 'open' | 'accepted' | 'declined' | 'withdrawn' | 'lapsed';
+  live: boolean;
+  expires_at: string;
+  created_at: string;
+}
+
+/** One of the provider's own offers, with the request it answers. */
+export interface LPMyOffer extends LPOffer {
+  exit_request: string;
+  property_name: string;
+  units_requested: number;
+  requested_price_per_unit: string;
+  request_status: string;
+}
+
+export interface LPStatement {
+  provider: string;
+  from: string;
+  to: string;
+  opening_balance: string;
+  closing_balance: string;
+  summary: {
+    bought_deals: number;
+    bought_shares: number;
+    bought_paid: string;
+    sold_deals: number;
+    sold_shares: number;
+    sold_received: string;
+    deposits: string;
+    withdrawals: string;
+    rent: string;
+    fees: string;
+  };
+  bought: { date: string; reference: string; property: string; shares: number; price: string; total: string; fee: string }[];
+  sold: { date: string; reference: string; property: string; shares: number; price: string; total: string }[];
+  lines: { date: string; type: string; description: string; amount: string; balance: string }[];
+}
+
 export interface LPExitRequest {
   id: string;
   investor_name: string;
   property_name: string;
+  property_id?: string;
+  property_city?: string;
+  share_price?: string | null;
+  open_to_all?: boolean;
+  resale_fee_pct?: string;
+  offers?: LPOffer[];
+  replaces?: string | null;
   units_requested: number;
   requested_price_per_unit: string;
   total_requested_amount: string;
@@ -70,7 +127,8 @@ export interface PublicLP {
 
 export interface InvestorExitRequest extends LPExitRequest {
   property_id: string;
-  lp_name: string;
+  lp_name: string | null;
+  liquidity_provider: string | null;
   resale_fee: string | null;
 }
 
@@ -145,6 +203,31 @@ export class LiquidityProviderService {
     return listOf<LPTransaction>(await apiClient.get('/liquidity-provider/transactions/', { page_size: 100 }));
   }
 
+  /** Requests open to all providers (the liquidity market), with this provider's own offer. */
+  static async getMarket(): Promise<LPExitRequest[]> {
+    return listOf<LPExitRequest>(await apiClient.get('/liquidity-provider/exit-requests/market/'));
+  }
+
+  static async getMyOffers(): Promise<LPMyOffer[]> {
+    return listOf<LPMyOffer>(await apiClient.get('/liquidity-provider/exit-requests/my_offers/'));
+  }
+
+  static makeOffer(requestId: string, pricePerUnit: number, notes?: string): Promise<unknown> {
+    return apiClient.post(`/liquidity-provider/exit-requests/${requestId}/make_offer/`, {
+      price_per_unit: pricePerUnit, notes: notes || '',
+    });
+  }
+
+  static withdrawOffer(requestId: string): Promise<unknown> {
+    return apiClient.post(`/liquidity-provider/exit-requests/${requestId}/withdraw_offer/`, {});
+  }
+
+  static getStatement(from?: string, to?: string): Promise<LPStatement> {
+    return apiClient.get<LPStatement>('/liquidity-provider/providers/statement/', {
+      ...(from ? { from } : {}), ...(to ? { to } : {}),
+    });
+  }
+
   static decide(
     requestId: string,
     action: 'approve' | 'reject',
@@ -164,8 +247,9 @@ export class LiquidityProviderService {
     return listOf<PublicLP>(await apiClient.get('/liquidity-provider/providers/list_active/'));
   }
 
-  static requestExit(data: { property: string; liquidity_provider: string; units_requested: number;
-    requested_price_per_unit: number }): Promise<unknown> {
+  /** No `liquidity_provider` = open to all providers; `replaces` = send an earlier request again. */
+  static requestExit(data: { property: string; liquidity_provider?: string | null; units_requested: number;
+    requested_price_per_unit: number; replaces?: string }): Promise<unknown> {
     return apiClient.post('/liquidity-provider/exit-requests/', data);
   }
 
@@ -173,8 +257,11 @@ export class LiquidityProviderService {
     return listOf<InvestorExitRequest>(await apiClient.get('/liquidity-provider/exit-requests/my_requests/'));
   }
 
-  static answer(requestId: string, action: 'accept' | 'decline' | 'cancel'): Promise<unknown> {
-    return apiClient.post(`/liquidity-provider/exit-requests/${requestId}/investor_action/`, { action });
+  /** `offerId`: which provider's offer, on a request open to all providers. */
+  static answer(requestId: string, action: 'accept' | 'decline' | 'cancel', offerId?: string): Promise<unknown> {
+    return apiClient.post(`/liquidity-provider/exit-requests/${requestId}/investor_action/`, {
+      action, ...(offerId ? { offer: offerId } : {}),
+    });
   }
 
   static updatePreferences(providerId: string, data: Partial<LPProfile>): Promise<unknown> {

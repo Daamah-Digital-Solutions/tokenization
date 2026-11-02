@@ -461,10 +461,19 @@ class ExitRequest(models.Model):
         related_name='exit_requests'
     )
 
+    # Empty while the request is open to every provider (round 5): providers
+    # then send competing offers (ExitOffer) and the accepted one is set here.
     liquidity_provider = models.ForeignKey(
         LiquidityProvider,
         on_delete=models.CASCADE,
-        related_name='exit_requests'
+        related_name='exit_requests',
+        null=True,
+        blank=True,
+        help_text="The provider asked (or whose offer was accepted). Empty = open to all providers."
+    )
+    replaces = models.ForeignKey(
+        'self', null=True, blank=True, on_delete=models.SET_NULL, related_name='resent_as',
+        help_text="The earlier request this one was sent again from (to another provider or to all)."
     )
 
     # Request Details
@@ -538,6 +547,10 @@ class ExitRequest(models.Model):
     def __str__(self):
         return f"Exit Request {self.id} - {self.status}"
 
+    @property
+    def is_open_to_all(self) -> bool:
+        return self.liquidity_provider_id is None
+
     def calculate_discount(self):
         """Calculate the discount percentage offered by LP."""
         if self.offered_price_per_unit and self.requested_price_per_unit:
@@ -555,8 +568,8 @@ class ExitRequest(models.Model):
         self.total_offered_amount = offered_price_per_unit * self.units_requested
         self.lp_notes = notes
         self.processed_at = timezone.now()
-        # Set expiry for investor response (e.g., 48 hours)
-        self.expires_at = timezone.now() + timezone.timedelta(hours=48)
+        # The investor's time to answer (admin setting, 48 hours by default)
+        self.expires_at = answer_deadline()
         self.save()
 
     def reject(self, notes=''):
@@ -583,6 +596,59 @@ class ExitRequest(models.Model):
         self.investor_response_at = timezone.now()
         self.status = ExitRequestStatus.CANCELLED
         self.save()
+
+
+def answer_deadline(start=None):
+    """When a request (or an offer) made now stops waiting for an answer — admin setting."""
+    from payments.models import PlatformFeeSettings
+
+    hours = PlatformFeeSettings.current().lp_answer_hours or 48
+    return (start or timezone.now()) + timezone.timedelta(hours=hours)
+
+
+class ExitOfferStatus(models.TextChoices):
+    OPEN = 'open', 'Waiting for the investor'
+    ACCEPTED = 'accepted', 'Accepted'
+    DECLINED = 'declined', 'Declined by the investor'
+    WITHDRAWN = 'withdrawn', 'Withdrawn by the provider'
+    LAPSED = 'lapsed', 'Closed (expired or another offer was accepted)'
+
+
+class ExitOffer(models.Model):
+    """
+    A provider's offer on a request open to all providers (round 5). Several
+    providers can offer on the same request; the investor accepts the one it
+    prefers and the others close.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    exit_request = models.ForeignKey(ExitRequest, on_delete=models.CASCADE, related_name='offers')
+    liquidity_provider = models.ForeignKey(LiquidityProvider, on_delete=models.CASCADE, related_name='exit_offers')
+    price_per_unit = models.DecimalField(max_digits=20, decimal_places=2,
+                                         validators=[MinValueValidator(Decimal('0.01'))])
+    total_amount = models.DecimalField(max_digits=20, decimal_places=2)
+    notes = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=ExitOfferStatus.choices, default=ExitOfferStatus.OPEN,
+                              db_index=True)
+    expires_at = models.DateTimeField(help_text="The investor's time to accept this offer")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-price_per_unit', 'created_at']
+        verbose_name = 'Offer on an open sale request'
+        verbose_name_plural = 'Offers on open sale requests'
+        constraints = [
+            models.UniqueConstraint(fields=['exit_request', 'liquidity_provider'],
+                                    condition=models.Q(status='open'), name='one_open_offer_per_provider'),
+        ]
+
+    def __str__(self):
+        return f'{self.liquidity_provider.legal_entity_name} — {self.price_per_unit}/share ({self.status})'
+
+    @property
+    def is_live(self) -> bool:
+        return self.status == ExitOfferStatus.OPEN and self.expires_at > timezone.now()
 
 
 class LiquidityTransaction(models.Model):

@@ -78,28 +78,102 @@ def _prop(er) -> str:
     return er.investment.property_investment.title
 
 
+def _hours() -> int:
+    from payments.models import PlatformFeeSettings
+    return PlatformFeeSettings.current().lp_answer_hours or 48
+
+
 def exit_requested(er) -> None:
+    if er.is_open_to_all:
+        from .market import providers_to_tell
+        for lp in providers_to_tell(er):
+            _notice(lp.user, 'New sale request in the liquidity market',
+                    f'An investor offers {er.units_requested} shares of {_prop(er)} to all liquidity providers, '
+                    f'asking ${er.requested_price_per_unit:,.2f} per share. Send your offer from the liquidity '
+                    f'market within {_hours()} hours.', '/dashboard?view=lp-market')
+        return
     _notice(er.liquidity_provider.user, 'New exit request',
             f'An investor asks you to buy {er.units_requested} shares of {_prop(er)} at '
-            f'${er.requested_price_per_unit:,.2f} per share. Review it in your dashboard.',
-            '/dashboard?view=requests')
+            f'${er.requested_price_per_unit:,.2f} per share. Answer within {_hours()} hours, '
+            f'after that the request closes.', '/dashboard?view=requests')
 
 
 def offer_made(er) -> None:
     _notice(er.investor, 'Offer received for your shares',
             f'{er.liquidity_provider.legal_entity_name} offers ${er.offered_price_per_unit:,.2f} per share '
             f'(${er.total_offered_amount:,.2f} in total) for {er.units_requested} shares of {_prop(er)}. '
-            f'Accept or decline within 48 hours.', '/dashboard?view=my-properties')
+            f'Accept or decline within {_hours()} hours.', '/dashboard?view=my-properties')
 
 
 def request_declined(er) -> None:
     _notice(er.investor, 'Exit request declined',
             f'{er.liquidity_provider.legal_entity_name} declined your request to sell {er.units_requested} '
             f'shares of {_prop(er)}.' + (f' Note: {er.lp_notes}' if er.lp_notes else '')
-            + ' Your shares are free again.', '/dashboard?view=my-properties')
+            + ' Your shares are free again. You can send the request to another provider or to all '
+              'providers from My Properties.', '/dashboard?view=my-properties')
 
 
-def investor_withdrew(er, declined: bool) -> None:
-    _notice(er.liquidity_provider.user, 'Offer declined' if declined else 'Exit request withdrawn',
-            f'The investor {"declined your offer" if declined else "withdrew the request"} for '
-            f'{er.units_requested} shares of {_prop(er)}.', '/dashboard?view=requests')
+def investor_withdrew(er, declined: bool, offers=()) -> None:
+    for offer in offers:  # open request: every provider that had offered
+        _notice(offer.liquidity_provider.user, 'Sale request withdrawn',
+                f'The investor withdrew the request for {er.units_requested} shares of {_prop(er)}; '
+                f'your offer is closed.', '/dashboard?view=lp-market')
+    if er.liquidity_provider_id:
+        _notice(er.liquidity_provider.user, 'Offer declined' if declined else 'Exit request withdrawn',
+                f'The investor {"declined your offer" if declined else "withdrew the request"} for '
+                f'{er.units_requested} shares of {_prop(er)}.', '/dashboard?view=requests')
+
+
+def open_offer_made(offer) -> None:
+    er = offer.exit_request
+    _notice(er.investor, 'New offer for your shares',
+            f'{offer.liquidity_provider.legal_entity_name} offers ${offer.price_per_unit:,.2f} per share '
+            f'(${offer.total_amount:,.2f} in total) for {er.units_requested} shares of {_prop(er)}. '
+            f'Compare the offers and accept one in My Properties within {_hours()} hours.',
+            '/dashboard?view=my-properties')
+
+
+def open_offer_declined(offer) -> None:
+    er = offer.exit_request
+    _notice(offer.liquidity_provider.user, 'Offer declined',
+            f'The investor declined your offer of ${offer.price_per_unit:,.2f} per share for '
+            f'{er.units_requested} shares of {_prop(er)}. You can send a better offer while the request is open.',
+            '/dashboard?view=lp-market')
+
+
+def other_offers_closed(er, offers) -> None:
+    for offer in offers:
+        _notice(offer.liquidity_provider.user, 'Request sold to another provider',
+                f'The investor accepted another offer for {er.units_requested} shares of {_prop(er)}; '
+                f'your offer is closed.', '/dashboard?view=lp-market')
+
+
+def offer_lapsed(offer) -> None:
+    er = offer.exit_request
+    _notice(offer.liquidity_provider.user, 'Offer expired',
+            f'The investor did not accept your offer for {er.units_requested} shares of {_prop(er)} in time.',
+            '/dashboard?view=lp-market')
+
+
+def request_expired(er, was_offer: bool) -> None:
+    if was_offer:
+        _notice(er.investor, 'Offer expired',
+                f'The offer for your {er.units_requested} shares of {_prop(er)} was not accepted in time and '
+                f'is closed. Your shares are free again; you can send the request again.',
+                '/dashboard?view=my-properties')
+        _notice(er.liquidity_provider.user, 'Offer expired',
+                f'The investor did not accept your offer for {er.units_requested} shares of {_prop(er)} in time.',
+                '/dashboard?view=requests')
+        return
+    who = 'No liquidity provider' if er.is_open_to_all else er.liquidity_provider.legal_entity_name
+    _notice(er.investor, 'Sale request closed without an answer',
+            f'{who} answered your request to sell {er.units_requested} shares of {_prop(er)} in time, so it is '
+            f'closed and your shares are free again. Send it to another provider or to all providers from '
+            f'My Properties.' if er.is_open_to_all else
+            f'{who} did not answer your request to sell {er.units_requested} shares of {_prop(er)} in time, so '
+            f'it is closed and your shares are free again. Send it to another provider or to all providers '
+            f'from My Properties.', '/dashboard?view=my-properties')
+    if er.liquidity_provider_id:
+        _notice(er.liquidity_provider.user, 'Exit request closed',
+                f'The request for {er.units_requested} shares of {_prop(er)} was not answered in time and is '
+                f'closed.', '/dashboard?view=requests')

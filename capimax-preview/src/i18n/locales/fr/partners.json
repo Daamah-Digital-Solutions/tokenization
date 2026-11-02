@@ -11,10 +11,13 @@
     "wallet": "Portefeuille",
     "performance": "Performance",
     "materials": "Supports marketing",
-    "requests": "Demandes de sortie",
+    "requests": "Demandes reçues",
     "transactions": "Transactions",
     "lpProfile": "Profil du fournisseur",
-    "lpAssets": "Mes actifs"
+    "lpAssets": "Mes actifs",
+    "lpMarket": "Marché de liquidité",
+    "lpSell": "Vendre sur le marché",
+    "lpStatement": "Relevé"
   },
   "roles": {
     "investor": "Propriétaire",
@@ -172,7 +175,8 @@
       "units": "Parts achetées",
       "spent": "Total dépensé",
       "monthVolume": "Volume du mois",
-      "capacity": "Capacité restante"
+      "capacity": "Capacité restante",
+      "market": "Ouvertes sur le marché"
     },
     "requests": {
       "title": "Demandes de sortie",
@@ -208,7 +212,7 @@
       "rejected": "Refusée",
       "completed": "Finalisée",
       "cancelled": "Annulée",
-      "expired": "Expirée"
+      "expired": "Fermée — délai dépassé"
     },
     "transactions": {
       "title": "Transactions d'achat",
@@ -250,6 +254,83 @@
         "provisional": "Certificat provisoire",
         "final": "Certificat définitif",
         "revoked": "Révoqué"
+      }
+    },
+    "quick": {
+      "title": "Vos outils",
+      "market": "Marché de liquidité",
+      "marketDesc": "Des investisseurs vendent leurs parts à tous les fournisseurs — faites votre offre",
+      "assets": "Mes actifs",
+      "assetsDesc": "Les parts que vous détenez, leur valeur et leurs certificats",
+      "sell": "Vendre sur le marché",
+      "sellDesc": "Mettez vos parts en vente sur le marché secondaire pour sortir",
+      "statement": "Relevé",
+      "statementDesc": "Achats, ventes et mouvements du portefeuille — PDF ou CSV"
+    },
+    "market": {
+      "title": "Marché de liquidité",
+      "desc": "Les investisseurs qui veulent sortir envoient ici leurs parts à tous les fournisseurs de liquidité. Faites votre offre ; l’investisseur accepte la meilleure et l’achat est payé depuis votre portefeuille.",
+      "empty": "Aucune demande ouverte sur le marché de liquidité pour le moment. Vous serez prévenu à la prochaine.",
+      "asking": "{{units}} parts · demandé {{price}} par part",
+      "sharePrice": "Prix actuel de la part",
+      "sharePriceShort": "prix de la part {{price}}",
+      "belowPrice": "En dessous du prix actuel",
+      "fee": "Frais de plateforme ({{pct}} %)",
+      "youPay": "Total à payer",
+      "closes": "Ouverte jusqu’au {{date}}",
+      "yourOffer": "Votre offre : {{price}} par part ({{total}}), valable jusqu’au {{date}}",
+      "makeOffer": "Faire une offre",
+      "improve": "Modifier mon offre",
+      "send": "Envoyer l’offre",
+      "withdraw": "Retirer l’offre",
+      "sent": "Offre envoyée. L’investisseur est prévenu et peut l’accepter.",
+      "withdrawn": "Votre offre a été retirée.",
+      "offerNote": "Le montant n’est prélevé sur votre portefeuille que si l’investisseur accepte. D’autres fournisseurs peuvent aussi faire une offre.",
+      "myOffers": "Mes offres",
+      "noOffers": "Vous n’avez encore fait aucune offre.",
+      "offerStatus": {
+        "open": "En attente de l’investisseur",
+        "accepted": "Acceptée — acheté",
+        "declined": "Refusée",
+        "withdrawn": "Retirée",
+        "lapsed": "Fermée"
+      }
+    },
+    "statement": {
+      "title": "Relevé du fournisseur de liquidité",
+      "desc": "Vos achats auprès des investisseurs, vos ventes sur le marché secondaire et les mouvements de votre portefeuille sur une période.",
+      "thisMonth": "Ce mois-ci",
+      "lastMonth": "Le mois dernier",
+      "thisYear": "Cette année",
+      "from": "Du",
+      "to": "Au",
+      "period": "Période",
+      "periodText": "{{from}} – {{to}}",
+      "opening": "Solde d’ouverture",
+      "closing": "Solde de clôture",
+      "boughtPaid": "Achats auprès des investisseurs",
+      "soldReceived": "Ventes sur le marché",
+      "deposits": "Dépôts",
+      "withdrawals": "Retraits",
+      "deals_one": "{{count}} opération",
+      "deals_many": "{{count}} opérations",
+      "deals_other": "{{count}} opérations",
+      "bought": "Achats auprès des investisseurs",
+      "sold": "Ventes sur le marché secondaire",
+      "wallet": "Mouvements du portefeuille",
+      "none": "Rien sur cette période.",
+      "cols": {
+        "date": "Date",
+        "reference": "Référence",
+        "property": "Bien",
+        "shares": "Parts",
+        "price": "Prix / part",
+        "total": "Total",
+        "fee": "Frais",
+        "type": "Type",
+        "description": "Description",
+        "amount": "Montant",
+        "balance": "Solde"
       }
     }
   },

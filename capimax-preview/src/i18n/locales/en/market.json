@@ -315,7 +315,7 @@
   "lpSell": {
     "cta": "Sell to a liquidity provider",
     "title": "Sell to a liquidity provider",
-    "intro": "Ask a liquidity provider to buy your shares directly. The provider answers with an offer; the sale completes only when you accept it.",
+    "intro": "Sell your shares to liquidity providers. Send the request to all providers so they compete with offers, or to one provider you choose. The sale completes only when you accept an offer.",
     "provider": "Liquidity provider",
     "choose": "Choose a provider",
     "none": "No liquidity provider is active right now.",
@@ -352,7 +352,25 @@
       "rejected": "Declined by the provider",
       "completed": "Sold",
       "cancelled": "Cancelled",
-      "expired": "Offer expired"
-    }
+      "expired": "Closed — no answer in time"
+    },
+    "toAll": "All liquidity providers",
+    "toAllDesc": "Recommended: every provider sees it and can send an offer; you accept the best one.",
+    "toOne": "One provider",
+    "toOneDesc": "Choose a provider and negotiate with it directly.",
+    "howItWorksAll": "The shares are set aside while the request is open. Offers appear under My Properties; when you accept one, the amount is added to your wallet at once and the shares move to that provider.",
+    "deadlineNote": "If nobody answers in time, the request closes by itself and your shares are free again.",
+    "sendAll": "Send to all providers",
+    "sentAllText": "All liquidity providers were notified. Their offers will appear under My Properties — compare them and accept the one you prefer.",
+    "resendTitle": "Send the request again",
+    "resendNote": "The earlier request is withdrawn and this one replaces it.",
+    "resend": "Send again",
+    "allProviders": "All providers",
+    "waitsUntil": "open until {{date}}",
+    "offersCount_one": "{{count}} offer",
+    "offersCount_other": "{{count}} offers",
+    "offersTitle": "Offers from liquidity providers",
+    "noOffersYet": "No offers yet. Providers were notified; offers will appear here.",
+    "bestOffer": "Best offer"
   }
 }

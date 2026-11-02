@@ -224,7 +224,8 @@ class LiquidityProviderViewSet(viewsets.ModelViewSet):
             return [permissions.IsAuthenticated()]
         elif self.action in ['activate', 'suspend', 'deactivate']:
             return [IsAdmin()]
-        elif self.action in ['update', 'partial_update', 'my_profile', 'dashboard_stats', 'assets']:
+        elif self.action in ['update', 'partial_update', 'my_profile', 'dashboard_stats', 'assets',
+                           'statement']:
             return [IsLiquidityProvider()]
         return [IsAdmin()]
 
@@ -270,7 +271,12 @@ class LiquidityProviderViewSet(viewsets.ModelViewSet):
         exit_requests = ExitRequest.objects.filter(liquidity_provider=lp)
         transactions = LiquidityTransaction.objects.filter(liquidity_provider=lp)
 
+        from .market import open_market
+        from .models import ExitOffer, ExitOfferStatus
         stats = {
+            'open_market_requests': open_market(lp).count(),
+            'open_offers': ExitOffer.objects.filter(liquidity_provider=lp, status=ExitOfferStatus.OPEN,
+                                                    expires_at__gt=timezone.now()).count(),
             'total_exit_requests': exit_requests.count(),
             'pending_requests': exit_requests.filter(status=ExitRequestStatus.PENDING).count(),
             'approved_requests': exit_requests.filter(status=ExitRequestStatus.APPROVED).count(),
@@ -299,6 +305,29 @@ class LiquidityProviderViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
         return Response(create_success_response(data=lp_assets(lp, request)))
+
+    @action(detail=False, methods=['get'])
+    def statement(self, request):
+        """The LP's statement for a period (?from=YYYY-MM-DD&to=YYYY-MM-DD, default: this month)."""
+        from datetime import date
+
+        from .statement import lp_statement, period
+        try:
+            lp = request.user.liquidity_provider_profile
+        except LiquidityProvider.DoesNotExist:
+            return Response(create_error_response(message='You are not a liquidity provider'),
+                            status=status.HTTP_404_NOT_FOUND)
+        try:
+            start = date.fromisoformat(request.query_params['from']) if request.query_params.get('from') else None
+            end = date.fromisoformat(request.query_params['to']) if request.query_params.get('to') else None
+        except ValueError:
+            return Response(create_error_response(message='Dates must look like 2026-11-30.'),
+                            status=status.HTTP_400_BAD_REQUEST)
+        start, end = period(start, end)
+        if (end - start).days > 366:
+            return Response(create_error_response(message='Choose a period of one year at most.'),
+                            status=status.HTTP_400_BAD_REQUEST)
+        return Response(create_success_response(data=lp_statement(lp, start, end)))
 
     @action(detail=True, methods=['post'])
     def activate(self, request, pk=None):
@@ -360,16 +389,21 @@ class ExitRequestViewSet(viewsets.ModelViewSet):
         return ExitRequestSerializer
 
     def create(self, request, *args, **kwargs):
-        """Create a new exit request (investor)."""
+        """Create a new exit request (investor): to one provider, or to all (no provider)."""
         serializer = self.get_serializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             exit_request = serializer.save()
-            from .notify import exit_requested
+            from .notify import exit_requested, investor_withdrew
+            if serializer.withdrawn:  # sent again: the earlier request's providers are told it is withdrawn
+                old, offers = serializer.withdrawn
+                investor_withdrew(old, declined=False, offers=offers)
             exit_requested(exit_request)
             return Response(
                 create_success_response(
                     data={'id': str(exit_request.id)},
-                    message='Exit request submitted. The liquidity provider will review your request.'
+                    message=('Sale request sent to all liquidity providers. Their offers will appear here.'
+                             if exit_request.is_open_to_all else
+                             'Exit request submitted. The liquidity provider will review your request.')
                 ),
                 status=status.HTTP_201_CREATED
             )
@@ -452,7 +486,8 @@ class ExitRequestViewSet(viewsets.ModelViewSet):
                     details={'code': 'LP_INSUFFICIENT_FUNDS'}), status=status.HTTP_400_BAD_REQUEST)
             exit_request.approve(offered_price_per_unit=offered_price, notes=notes)
             offer_made(exit_request)
-            message = 'Offer sent. The investor has 48 hours to accept it.'
+            message = 'Offer sent. The investor can accept it until ' \
+                      f'{exit_request.expires_at:%Y-%m-%d %H:%M} UTC.'
         else:
             exit_request.reject(notes=notes)
             request_declined(exit_request)
@@ -480,6 +515,28 @@ class ExitRequestViewSet(viewsets.ModelViewSet):
             )
 
         action = serializer.validated_data['action']
+        from .market import accept_offer, close_request, decline_offer
+        from .models import ExitOffer
+        from .settlement import ExitSettlementError
+
+        if exit_request.is_open_to_all and action in ('accept', 'decline'):
+            # Open request: the investor answers one provider's offer
+            offer = ExitOffer.objects.filter(pk=serializer.validated_data.get('offer'),
+                                             exit_request=exit_request).first()
+            if offer is None:
+                return Response(create_error_response(message='Choose the offer to answer.'),
+                                status=status.HTTP_400_BAD_REQUEST)
+            try:
+                if action == 'accept':
+                    tx = accept_offer(exit_request, offer)
+                    return Response(create_success_response(
+                        data={'reference': tx.reference_number, 'amount': str(tx.total_amount)},
+                        message='Offer accepted. The amount was added to your wallet.'))
+                decline_offer(exit_request, offer)
+            except ExitSettlementError as exc:
+                return Response(create_error_response(message=exc.message, details={'code': exc.code}),
+                                status=status.HTTP_400_BAD_REQUEST)
+            return Response(create_success_response(message='Offer declined. Your request stays open to the others.'))
 
         if action == 'cancel':
             if exit_request.status in [ExitRequestStatus.COMPLETED, ExitRequestStatus.CANCELLED,
@@ -488,9 +545,9 @@ class ExitRequestViewSet(viewsets.ModelViewSet):
                     create_error_response(message='Cannot cancel completed request'),
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            exit_request.cancel()
+            offers = close_request(exit_request, ExitRequestStatus.CANCELLED)
             from .notify import investor_withdrew
-            investor_withdrew(exit_request, declined=False)
+            investor_withdrew(exit_request, declined=False, offers=offers)
             message = 'Exit request cancelled.'
 
         elif action == 'accept':
@@ -510,7 +567,7 @@ class ExitRequestViewSet(viewsets.ModelViewSet):
                 )
 
             # Money, shares and (then) tokens move now (client round 4, #13)
-            from .settlement import ExitSettlementError, settle_exit
+            from .settlement import settle_exit
             try:
                 tx = settle_exit(exit_request)
             except ExitSettlementError as exc:
@@ -532,6 +589,93 @@ class ExitRequestViewSet(viewsets.ModelViewSet):
             message = 'Offer declined. Exit request cancelled.'
 
         return Response(create_success_response(message=message))
+
+    # ---- the liquidity market: requests open to all providers (round 5) ----
+
+    def _provider(self, request):
+        return getattr(request.user, 'liquidity_provider_profile', None)
+
+    @action(detail=False, methods=['get'])
+    def market(self, request):
+        """Requests open to all providers that this provider can offer on (with its own offer, if any)."""
+        from .market import open_market
+        lp = self._provider(request)
+        if lp is None:
+            return Response(create_error_response(message='You are not a liquidity provider'),
+                            status=status.HTTP_403_FORBIDDEN)
+        serializer = ExitRequestSerializer(open_market(lp), many=True, context={'request': request})
+        return Response(create_success_response(data=serializer.data))
+
+    @action(detail=False, methods=['get'])
+    def my_offers(self, request):
+        """Every offer this provider made on open requests, newest first."""
+        from .models import ExitOffer
+        from .serializers import ExitOfferSerializer
+        lp = self._provider(request)
+        if lp is None:
+            return Response(create_error_response(message='You are not a liquidity provider'),
+                            status=status.HTTP_403_FORBIDDEN)
+        offers = (ExitOffer.objects.filter(liquidity_provider=lp)
+                  .select_related('liquidity_provider', 'exit_request__investment__property_investment')
+                  .order_by('-created_at')[:200])
+        rows = []
+        for offer in offers:
+            row = dict(ExitOfferSerializer(offer).data)
+            er = offer.exit_request
+            row.update({'exit_request': str(er.pk), 'property_name': er.investment.property_investment.title,
+                        'units_requested': er.units_requested,
+                        'requested_price_per_unit': str(er.requested_price_per_unit),
+                        'request_status': er.status})
+            rows.append(row)
+        return Response(create_success_response(data=rows))
+
+    @action(detail=True, methods=['post'])
+    def make_offer(self, request, pk=None):
+        """A provider sends (or improves) its offer on a request open to all providers."""
+        from .market import make_offer
+        from .serializers import ExitOfferCreateSerializer, ExitOfferSerializer
+        from .settlement import ExitSettlementError
+        lp = self._provider(request)
+        if lp is None:
+            return Response(create_error_response(message='You are not a liquidity provider'),
+                            status=status.HTTP_403_FORBIDDEN)
+        er = ExitRequest.objects.filter(pk=pk, liquidity_provider__isnull=True).first()
+        if er is None:
+            return Response(create_error_response(message='This request is not in the liquidity market.'),
+                            status=status.HTTP_404_NOT_FOUND)
+        data = ExitOfferCreateSerializer(data=request.data)
+        if not data.is_valid():
+            return Response(create_error_response(message='Validation failed', details=data.errors),
+                            status=status.HTTP_400_BAD_REQUEST)
+        try:
+            offer = make_offer(lp, er, data.validated_data['price_per_unit'], data.validated_data.get('notes', ''))
+        except ExitSettlementError as exc:
+            return Response(create_error_response(message=exc.message, details={'code': exc.code}),
+                            status=status.HTTP_400_BAD_REQUEST)
+        return Response(create_success_response(
+            data=ExitOfferSerializer(offer).data,
+            message=f'Offer sent. The investor can accept it until {offer.expires_at:%Y-%m-%d %H:%M} UTC.'),
+            status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'])
+    def withdraw_offer(self, request, pk=None):
+        """A provider takes back its open offer on a request."""
+        from .market import withdraw_offer
+        from .models import ExitOffer, ExitOfferStatus
+        from .settlement import ExitSettlementError
+        lp = self._provider(request)
+        offer = (ExitOffer.objects.filter(exit_request_id=pk, liquidity_provider=lp, status=ExitOfferStatus.OPEN)
+                 .first() if lp else None)
+        if offer is None:
+            return Response(create_error_response(message='You have no open offer on this request.'),
+                            status=status.HTTP_404_NOT_FOUND)
+        try:
+            withdraw_offer(lp, offer)
+        except ExitSettlementError as exc:
+            return Response(create_error_response(message=exc.message, details={'code': exc.code}),
+                            status=status.HTTP_400_BAD_REQUEST)
+        return Response(create_success_response(message='Offer withdrawn.'))
+
 
 # ============================================================================
 # Transaction Views

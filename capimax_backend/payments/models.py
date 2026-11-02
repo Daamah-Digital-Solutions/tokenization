@@ -2201,6 +2201,10 @@ class PlatformFeeSettings(models.Model):
         max_digits=10, decimal_places=2, default=Decimal('100.00'),
         validators=[MinValueValidator(Decimal('1'))],
         help_text="Smallest installment a buyer can choose (USD). A property can set its own in its payment plan.")
+    lp_answer_hours = models.PositiveSmallIntegerField(
+        default=48, validators=[MinValueValidator(1), MaxValueValidator(720)],
+        help_text="Hours a liquidity provider has to answer a sale request (and an investor to accept an offer). "
+                  "Unanswered requests then close and the shares are free again.")
     reinvest_discount_pct = models.DecimalField(
         max_digits=5, decimal_places=2, default=Decimal('5.00'),
         validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('50'))],

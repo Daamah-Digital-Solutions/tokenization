@@ -11,10 +11,13 @@
     "wallet": "Wallet",
     "performance": "Performance",
     "materials": "Marketing materials",
-    "requests": "Exit requests",
+    "requests": "Requests to you",
     "transactions": "Transactions",
     "lpProfile": "Provider profile",
-    "lpAssets": "My assets"
+    "lpAssets": "My assets",
+    "lpMarket": "Liquidity market",
+    "lpSell": "Sell on the market",
+    "lpStatement": "Statement"
   },
   "roles": {
     "investor": "Owner",
@@ -172,7 +175,8 @@
       "units": "Shares purchased",
       "spent": "Total spent",
       "monthVolume": "This month's volume",
-      "capacity": "Remaining capacity"
+      "capacity": "Remaining capacity",
+      "market": "Open in the market"
     },
     "requests": {
       "title": "Exit requests",
@@ -208,7 +212,7 @@
       "rejected": "Declined",
       "completed": "Completed",
       "cancelled": "Cancelled",
-      "expired": "Expired"
+      "expired": "Closed — no answer in time"
     },
     "transactions": {
       "title": "Purchase transactions",
@@ -250,6 +254,82 @@
         "provisional": "Provisional certificate",
         "final": "Final certificate",
         "revoked": "Revoked"
+      }
+    },
+    "quick": {
+      "title": "Your tools",
+      "market": "Liquidity market",
+      "marketDesc": "Investors selling shares to all providers — send your offer",
+      "assets": "My assets",
+      "assetsDesc": "The shares you own, their value and certificates",
+      "sell": "Sell on the market",
+      "sellDesc": "List your shares on the secondary market to exit",
+      "statement": "Statement",
+      "statementDesc": "Purchases, sales and wallet movements — PDF or CSV"
+    },
+    "market": {
+      "title": "Liquidity market",
+      "desc": "Investors who want to exit send their shares here to all liquidity providers. Send your offer; the investor accepts the best one and the sale is paid from your wallet.",
+      "empty": "No open requests in the liquidity market right now. You are notified when a new one arrives.",
+      "asking": "{{units}} shares · asking {{price}} per share",
+      "sharePrice": "Current share price",
+      "sharePriceShort": "share price {{price}}",
+      "belowPrice": "Below the current price",
+      "fee": "Platform fee ({{pct}}%)",
+      "youPay": "You pay in total",
+      "closes": "Open until {{date}}",
+      "yourOffer": "Your offer: {{price}} per share ({{total}}), valid until {{date}}",
+      "makeOffer": "Make an offer",
+      "improve": "Change my offer",
+      "send": "Send the offer",
+      "withdraw": "Withdraw offer",
+      "sent": "Offer sent. The investor is notified and can accept it.",
+      "withdrawn": "Your offer was withdrawn.",
+      "offerNote": "The amount is taken from your wallet only if the investor accepts. Other providers may offer too.",
+      "myOffers": "My offers",
+      "noOffers": "You have not made any offers yet.",
+      "offerStatus": {
+        "open": "Waiting for the investor",
+        "accepted": "Accepted — bought",
+        "declined": "Declined",
+        "withdrawn": "Withdrawn",
+        "lapsed": "Closed"
+      }
+    },
+    "statement": {
+      "title": "Liquidity provider statement",
+      "desc": "Your purchases from investors, your sales on the secondary market and your wallet movements for a period.",
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "thisYear": "This year",
+      "from": "From",
+      "to": "To",
+      "period": "Period",
+      "periodText": "{{from}} – {{to}}",
+      "opening": "Opening balance",
+      "closing": "Closing balance",
+      "boughtPaid": "Bought from investors",
+      "soldReceived": "Sold on the market",
+      "deposits": "Deposits",
+      "withdrawals": "Withdrawals",
+      "deals_one": "{{count}} deal",
+      "deals_other": "{{count}} deals",
+      "bought": "Bought from investors",
+      "sold": "Sold on the secondary market",
+      "wallet": "Wallet movements",
+      "none": "Nothing in this period.",
+      "cols": {
+        "date": "Date",
+        "reference": "Reference",
+        "property": "Property",
+        "shares": "Shares",
+        "price": "Price / share",
+        "total": "Total",
+        "fee": "Fee",
+        "type": "Type",
+        "description": "Description",
+        "amount": "Amount",
+        "balance": "Balance"
       }
     }
   },

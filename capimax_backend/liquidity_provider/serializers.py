@@ -7,7 +7,7 @@ from django.utils import timezone
 from decimal import Decimal
 
 from .models import (
-    LPApplication, LiquidityProvider, ExitRequest, LiquidityTransaction,
+    LPApplication, LiquidityProvider, ExitRequest, ExitOffer, LiquidityTransaction,
     LPApplicationStatus, LPStatus, ExitRequestStatus, EntityType
 )
 
@@ -151,16 +151,24 @@ class ExitRequestCreateSerializer(serializers.ModelSerializer):
     Investor asks a liquidity provider to buy shares of a property (client round 4, #13).
     Send `property` (or a holding as `investment`); the shares must be free — not listed
     on the market nor offered to another LP.
+
+    Round 5: leave `liquidity_provider` empty to send the request to all providers, and
+    send `replaces` to send an earlier request again (it is withdrawn if still open and its
+    shares count as free).
     """
 
     property = serializers.UUIDField(write_only=True, required=False)
+    replaces = serializers.PrimaryKeyRelatedField(queryset=ExitRequest.objects.all(), required=False,
+                                                  allow_null=True)
 
     class Meta:
         model = ExitRequest
         fields = [
-            'property', 'investment', 'liquidity_provider', 'units_requested', 'requested_price_per_unit'
+            'property', 'investment', 'liquidity_provider', 'units_requested', 'requested_price_per_unit',
+            'replaces',
         ]
-        extra_kwargs = {'investment': {'required': False}}
+        extra_kwargs = {'investment': {'required': False},
+                        'liquidity_provider': {'required': False, 'allow_null': True}}
 
     def validate(self, attrs):
         from investments.models import Investment
@@ -172,7 +180,16 @@ class ExitRequestCreateSerializer(serializers.ModelSerializer):
         units = attrs.get('units_requested')
         price = attrs.get('requested_price_per_unit')
 
-        prop_id = attrs.pop('property', None) or (investment.property_investment_id if investment else None)
+        replaces = attrs.get('replaces')
+        if replaces is not None:
+            if replaces.investor_id != request.user.pk:
+                raise serializers.ValidationError({'replaces': 'This is not your request.'})
+            if replaces.status == ExitRequestStatus.COMPLETED:
+                raise serializers.ValidationError({'replaces': 'This request is already sold.'})
+        prop_id = (attrs.pop('property', None) or (investment.property_investment_id if investment else None)
+                   or (replaces.investment.property_investment_id if replaces else None))
+        if replaces is not None and replaces.investment.property_investment_id != prop_id:
+            raise serializers.ValidationError({'replaces': 'That request is for another property.'})
         holding = (Investment.objects.filter(user=request.user, property_investment_id=prop_id, status='completed',
                                              token_amount__gt=0).order_by('completed_at', 'created_at').first()
                    if prop_id else None)
@@ -184,12 +201,17 @@ class ExitRequestCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'units_requested': 'Enter how many shares to sell.'})
         if not price or price <= 0:
             raise serializers.ValidationError({'requested_price_per_unit': 'Enter a price per share.'})
-        available = free_shares(request.user, holding.property_investment)
+        still_open = replaces is not None and replaces.status in (
+            ExitRequestStatus.PENDING, ExitRequestStatus.UNDER_REVIEW, ExitRequestStatus.APPROVED)
+        available = free_shares(request.user, holding.property_investment,
+                                exclude_exit=replaces if still_open else None)
         if units > available:
             raise serializers.ValidationError({
                 'units_requested': f'You can offer up to {available} share(s) — the rest are listed on the '
                                    f'market or already offered to a liquidity provider.'
             })
+        if lp is None:  # open to all providers: each one checks its own limits when it offers
+            return attrs
         if lp.user_id == request.user.pk:
             raise serializers.ValidationError({'liquidity_provider': 'You cannot sell to yourself.'})
 
@@ -215,11 +237,24 @@ class ExitRequestCreateSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        from django.db import transaction
+
+        from .market import OPEN, close_request
+        from .models import answer_deadline
+
         validated_data['investor'] = self.context['request'].user
         validated_data['total_requested_amount'] = (
             validated_data['units_requested'] * validated_data['requested_price_per_unit']
         )
-        return super().create(validated_data)
+        validated_data['expires_at'] = answer_deadline()
+        self.withdrawn = None  # (old request, its closed offers) — the view tells those providers
+        with transaction.atomic():
+            old = validated_data.get('replaces')
+            if old is not None:
+                old = ExitRequest.objects.select_for_update().get(pk=old.pk)
+                if old.status in OPEN:
+                    self.withdrawn = (old, close_request(old, ExitRequestStatus.CANCELLED))
+            return super().create(validated_data)
 
 
 class ExitRequestSerializer(serializers.ModelSerializer):
@@ -228,7 +263,18 @@ class ExitRequestSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     investor_name = serializers.SerializerMethodField()
     property_name = serializers.SerializerMethodField()
-    lp_name = serializers.CharField(source='liquidity_provider.legal_entity_name', read_only=True)
+    lp_name = serializers.SerializerMethodField()
+    open_to_all = serializers.BooleanField(source='is_open_to_all', read_only=True)
+    share_price = serializers.SerializerMethodField()
+    property_city = serializers.CharField(source='investment.property_investment.city', read_only=True)
+    offers = serializers.SerializerMethodField()
+    resale_fee_pct = serializers.SerializerMethodField()
+
+    def get_resale_fee_pct(self, obj):
+        if not hasattr(self, '_fee_pct'):
+            from payments.models import PlatformFeeSettings
+            self._fee_pct = str(PlatformFeeSettings.current().secondary_resale_fee_pct)
+        return self._fee_pct
     discount_percentage = serializers.SerializerMethodField()
     property_id = serializers.UUIDField(source='investment.property_investment_id', read_only=True)
     resale_fee = serializers.SerializerMethodField()
@@ -248,7 +294,8 @@ class ExitRequestSerializer(serializers.ModelSerializer):
         model = ExitRequest
         fields = [
             'id', 'investor', 'investor_name', 'investment', 'property_id', 'property_name',
-            'liquidity_provider', 'lp_name', 'resale_fee', 'lp_total_cost',
+            'property_city', 'share_price', 'liquidity_provider', 'lp_name', 'open_to_all', 'offers',
+            'replaces', 'resale_fee', 'resale_fee_pct', 'lp_total_cost',
             'units_requested', 'requested_price_per_unit', 'total_requested_amount',
             'offered_price_per_unit', 'total_offered_amount', 'discount_percentage',
             'lp_notes', 'status', 'status_display',
@@ -262,8 +309,42 @@ class ExitRequestSerializer(serializers.ModelSerializer):
     def get_property_name(self, obj):
         return obj.investment.property_investment.title if obj.investment.property_investment else None
 
+    def get_lp_name(self, obj):
+        return obj.liquidity_provider.legal_entity_name if obj.liquidity_provider_id else None
+
+    def get_share_price(self, obj):
+        prop = obj.investment.property_investment
+        return str(prop.token_price) if prop and prop.token_price is not None else None
+
+    def get_offers(self, obj):
+        """Offers made on a request open to all: the seller sees them all, a provider only its own."""
+        offers = obj.offers.select_related('liquidity_provider')
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        is_staff = user is not None and (user.is_staff or getattr(user, 'role', '') == 'admin')
+        if user is None or (obj.investor_id != user.pk and not is_staff):
+            lp = getattr(user, 'liquidity_provider_profile', None) if user is not None else None
+            offers = offers.filter(liquidity_provider=lp) if lp else offers.none()
+        return ExitOfferSerializer(offers, many=True).data
+
     def get_discount_percentage(self, obj):
         return obj.calculate_discount()
+
+
+class ExitOfferSerializer(serializers.ModelSerializer):
+    lp_name = serializers.CharField(source='liquidity_provider.legal_entity_name', read_only=True)
+    lp_country = serializers.CharField(source='liquidity_provider.country', read_only=True)
+    resale_fee = serializers.SerializerMethodField()
+    live = serializers.BooleanField(source='is_live', read_only=True)
+
+    class Meta:
+        model = ExitOffer
+        fields = ['id', 'liquidity_provider', 'lp_name', 'lp_country', 'price_per_unit', 'total_amount',
+                  'resale_fee', 'notes', 'status', 'live', 'expires_at', 'created_at']
+
+    def get_resale_fee(self, obj):
+        from .settlement import resale_fee
+        return str(resale_fee(obj.total_amount))
 
 
 class ExitRequestLPActionSerializer(serializers.Serializer):
@@ -285,9 +366,15 @@ class ExitRequestLPActionSerializer(serializers.Serializer):
 
 
 class ExitRequestInvestorActionSerializer(serializers.Serializer):
-    """Serializer for investor actions on exit requests."""
+    """Serializer for investor actions on exit requests (`offer` = which offer, on an open request)."""
 
     action = serializers.ChoiceField(choices=['accept', 'decline', 'cancel'])
+    offer = serializers.UUIDField(required=False)
+
+
+class ExitOfferCreateSerializer(serializers.Serializer):
+    price_per_unit = serializers.DecimalField(max_digits=20, decimal_places=2, min_value=Decimal('0.01'))
+    notes = serializers.CharField(max_length=1000, required=False, allow_blank=True)
 
 
 class LiquidityTransactionSerializer(serializers.ModelSerializer):
@@ -317,6 +404,8 @@ class LiquidityTransactionSerializer(serializers.ModelSerializer):
 class LPDashboardStatsSerializer(serializers.Serializer):
     """Serializer for LP dashboard statistics."""
 
+    open_market_requests = serializers.IntegerField()
+    open_offers = serializers.IntegerField()
     total_exit_requests = serializers.IntegerField()
     pending_requests = serializers.IntegerField()
     approved_requests = serializers.IntegerField()

@@ -315,7 +315,7 @@
   "lpSell": {
     "cta": "Vendre à un fournisseur de liquidité",
     "title": "Vendre à un fournisseur de liquidité",
-    "intro": "Demandez à un fournisseur de liquidité d'acheter directement vos parts. Le fournisseur répond par une offre ; la vente n'est finalisée que lorsque vous l'acceptez.",
+    "intro": "Vendez vos parts aux fournisseurs de liquidité. Envoyez la demande à tous les fournisseurs pour qu’ils fassent jouer la concurrence, ou à un fournisseur de votre choix. La vente n’a lieu que si vous acceptez une offre.",
     "provider": "Fournisseur de liquidité",
     "choose": "Choisir un fournisseur",
     "none": "Aucun fournisseur de liquidité n'est actif pour le moment.",
@@ -352,7 +352,26 @@
       "rejected": "Refusée par le fournisseur",
       "completed": "Vendue",
       "cancelled": "Annulée",
-      "expired": "Offre expirée"
-    }
+      "expired": "Fermée — délai dépassé"
+    },
+    "toAll": "Tous les fournisseurs",
+    "toAllDesc": "Recommandé : chaque fournisseur la voit et peut faire une offre ; vous acceptez la meilleure.",
+    "toOne": "Un seul fournisseur",
+    "toOneDesc": "Choisissez un fournisseur et négociez directement avec lui.",
+    "howItWorksAll": "Les parts sont réservées tant que la demande est ouverte. Les offres apparaissent dans Mes biens ; dès que vous en acceptez une, le montant est crédité sur votre portefeuille et les parts passent à ce fournisseur.",
+    "deadlineNote": "Sans réponse dans le délai, la demande se ferme d’elle-même et vos parts redeviennent disponibles.",
+    "sendAll": "Envoyer à tous",
+    "sentAllText": "Tous les fournisseurs de liquidité ont été prévenus. Leurs offres apparaîtront dans Mes biens : comparez-les et acceptez celle qui vous convient.",
+    "resendTitle": "Renvoyer la demande",
+    "resendNote": "La demande précédente est retirée et remplacée par celle-ci.",
+    "resend": "Renvoyer",
+    "allProviders": "Tous les fournisseurs",
+    "waitsUntil": "ouverte jusqu’au {{date}}",
+    "offersCount_one": "{{count}} offre",
+    "offersCount_many": "{{count}} offres",
+    "offersCount_other": "{{count}} offres",
+    "offersTitle": "Offres des fournisseurs de liquidité",
+    "noOffersYet": "Pas encore d’offre. Les fournisseurs ont été prévenus ; leurs offres apparaîtront ici.",
+    "bestOffer": "Meilleure offre"
   }
 }

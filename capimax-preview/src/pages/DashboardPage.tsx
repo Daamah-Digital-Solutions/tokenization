@@ -135,16 +135,20 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           ...holdingItems,
         ];
       case 'liquidity_provider':
-        // LP dashboard (client round 3, #9)
+        // LP dashboard (client round 3, #9), in the order of its work (round 5):
+        // buy in the liquidity market or on request → own the assets → sell them
+        // on the secondary market → statement. Its own views, not the investor's.
         return [
           ...baseItems,
+          { id: 'lp-market', label: tPartners('nav.lpMarket'), icon: '🏦' },
           { id: 'requests', label: tPartners('nav.requests'), icon: '📥' },
+          { id: 'lp-assets', label: tPartners('nav.lpAssets'), icon: '🏠' },
+          { id: 'marketplace', label: tPartners('nav.lpSell'), icon: '🏪' },
+          { id: 'certificates', label: tCerts('nav.certificates'), icon: '🏅' },
           { id: 'transactions', label: tPartners('nav.transactions'), icon: '💳' },
+          { id: 'lp-statement', label: tPartners('nav.lpStatement'), icon: '📄' },
           { id: 'wallet', label: tPartners('nav.wallet'), icon: '💰' },
           { id: 'lp-profile', label: tPartners('nav.lpProfile'), icon: '🏛️' },
-          // the LP's own "My assets" (bought from investors) instead of the investor list
-          { id: 'lp-assets', label: tPartners('nav.lpAssets'), icon: '🏠' },
-          ...holdingItems.filter((item) => item.id !== 'my-properties'),
         ];
       default:
         return baseItems;

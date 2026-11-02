@@ -3,14 +3,17 @@ import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Droplets, Clock, CheckCircle2, Layers, Wallet, TrendingUp, Gauge, Inbox,
-  Loader2, AlertCircle, X,
+  Loader2, AlertCircle, X, Store,
 } from 'lucide-react';
 import { cn } from '../../../utils/cn';
 import { Button } from '../../ui/Button';
 import { PayoutsPanel } from '../../wallet/PayoutsPanel';
 import { NotificationsContent } from '../investor/InvestorControlPanel';
-import { HoldingShortcuts } from '../HoldingShortcuts';
+import { QuickActions, type QuickAction } from '../QuickActions';
+import { useRouter } from '../../../utils/router';
 import { LPAssets } from '../../liquidity-provider/LPAssets';
+import { LPMarket } from '../../liquidity-provider/LPMarket';
+import { LPStatement } from '../../liquidity-provider/LPStatement';
 import {
   LiquidityProviderService,
   type LPExitRequest,
@@ -21,9 +24,12 @@ import { baseLanguage } from '../../../utils/locale';
 /**
  * Liquidity-provider dashboard (client round 3, #9). LP accounts used to
  * land on the investor dashboard because there was no LP role or screen.
- * Views: overview · my assets (the shares the LP bought, their value, certificate
- * and selling them) · exit requests (make an offer / decline) · transactions ·
- * wallet · provider profile & purchase preferences.
+ * Views: overview · liquidity market (requests sent to all providers: send
+ * competing offers) · direct requests (make an offer / decline) · my assets (the
+ * shares the LP bought, their value, certificate and selling them on the
+ * secondary market) · purchases · statement (PDF / CSV) · wallet · provider
+ * profile & purchase preferences. Everything the LP needs is here, without the
+ * investor dashboard (client voice notes, round 5).
  */
 
 const STATUS_STYLE: Record<string, string> = {
@@ -270,6 +276,7 @@ export const LiquidityProviderDashboard: React.FC<{ currentView: string }> = ({ 
   const isAr = (i18n.language || 'en').startsWith('ar');
   const f = useFormat();
   const queryClient = useQueryClient();
+  const { navigate } = useRouter();
   const [reviewing, setReviewing] = useState<LPExitRequest | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -304,6 +311,7 @@ export const LiquidityProviderDashboard: React.FC<{ currentView: string }> = ({ 
   const stats = statsQ.data;
 
   const statCards = [
+    { icon: Store, label: t('lp.stats.market'), value: f.num(stats?.open_market_requests) },
     { icon: Inbox, label: t('lp.stats.total'), value: f.num(stats?.total_exit_requests) },
     { icon: Clock, label: t('lp.stats.pending'), value: f.num(stats?.pending_requests) },
     { icon: CheckCircle2, label: t('lp.stats.completed'), value: f.num(stats?.completed_requests) },
@@ -349,7 +357,7 @@ export const LiquidityProviderDashboard: React.FC<{ currentView: string }> = ({ 
   );
 
   const statsGrid = (
-    <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-3">
       {statCards.map(({ icon: Icon, label, value }) => (
         <Card key={label} className="p-4">
           <Icon className="w-5 h-5 text-cyan-600" />
@@ -410,8 +418,22 @@ export const LiquidityProviderDashboard: React.FC<{ currentView: string }> = ({ 
     </Card>
   );
 
+  const open = (view: string) => () => navigate('dashboard', { view });
+  const quickActions: QuickAction[] = [
+    { id: 'lp-market', label: t('lp.quick.market'), icon: '🏦', description: t('lp.quick.marketDesc'), variant: 'primary', onClick: open('lp-market') },
+    { id: 'lp-assets', label: t('lp.quick.assets'), icon: '🏠', description: t('lp.quick.assetsDesc'), onClick: open('lp-assets') },
+    { id: 'marketplace', label: t('lp.quick.sell'), icon: '🏪', description: t('lp.quick.sellDesc'), onClick: open('marketplace') },
+    { id: 'lp-statement', label: t('lp.quick.statement'), icon: '📄', description: t('lp.quick.statementDesc'), onClick: open('lp-statement') },
+  ];
+
   let body: React.ReactNode;
   switch (currentView) {
+    case 'lp-market':
+      body = <LPMarket />;
+      break;
+    case 'lp-statement':
+      body = <LPStatement />;
+      break;
     case 'requests':
       body = requestsCard(requestsQ.data || [], t('lp.requests.title'));
       break;
@@ -440,8 +462,9 @@ export const LiquidityProviderDashboard: React.FC<{ currentView: string }> = ({ 
         <div className="space-y-6">
           {profileCard}
           {statsGrid}
+          <QuickActions actions={quickActions} title={t('lp.quick.title')} columns={4} />
+          <LPMarket compact />
           <LPAssets compact />
-          <HoldingShortcuts myPropertiesView="lp-assets" />
           {requestsCard(pending, t('lp.requests.pendingTitle'))}
           {transactionsCard}
         </div>
