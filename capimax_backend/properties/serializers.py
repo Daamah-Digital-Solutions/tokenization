@@ -886,8 +886,9 @@ class ConstructionInstallmentCreateSerializer(serializers.ModelSerializer):
         regular = [r for r in rows if r['kind'] == 'installment']
         down = rows[0]['amount'] if rows[0]['kind'] == 'down_payment' else Decimal('0.00')
 
-        # Validate minimum installment amount (e.g., $100)
-        min_installment = Decimal('100.00')
+        # The smallest installment allowed (the property's, else the platform's)
+        from .payment_plan import minimum_installment
+        min_installment = minimum_installment(property_obj)
         if regular[0]['amount'] < min_installment:
             raise serializers.ValidationError(
                 f"Installment amount (${regular[0]['amount']:.2f}) is below minimum (${min_installment})"

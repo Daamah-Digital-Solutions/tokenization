@@ -407,7 +407,18 @@
     "filterAll": "All ({{count}})",
     "filterProfitable": "Profitable",
     "filterUnderperforming": "Underperforming",
-    "noMatch": "No properties match your filters. Try clearing the search or switching to \"All\"."
+    "noMatch": "No properties match your filters. Try clearing the search or switching to \"All\".",
+    "installments": {
+      "badge": "Installments",
+      "paidOff": "Paid off",
+      "shares": "Shares bought",
+      "paid": "Paid so far",
+      "payments": "{{made}} of {{total}} payments",
+      "next": "Next: {{date}}",
+      "note": "Bought in installments. Your ownership certificate is provisional and becomes final once every installment is paid.",
+      "paidOffNote": "Every installment is paid: these shares are fully yours.",
+      "manage": "Installments"
+    }
   },
   "overview": {
     "welcome": "Welcome back, {{name}}!",

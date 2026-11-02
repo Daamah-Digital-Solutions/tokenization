@@ -54,12 +54,39 @@ class NotificationEmailTests(TestCase):
         self.assertEqual(log.status, 'sent')
         self.assertEqual(EmailLog.objects.count(), 1)  # retried in place, no duplicates
 
+    def test_email_lost_before_the_worker_is_sent_by_the_beat_task(self):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from .emailing import retry_failed
+        from .models import Notification, NotificationChannel
+        with self.captureOnCommitCallbacks(execute=False):  # the queued send never happens
+            recent = self._notify()
+            old = self._notify()
+        Notification.objects.filter(pk=recent.pk).update(created_at=timezone.now() - timedelta(minutes=5))
+        Notification.objects.filter(pk=old.pk).update(created_at=timezone.now() - timedelta(days=1))
+        self.assertEqual(retry_failed(), {'sent': 1, 'failed': 0})
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(EmailLog.objects.get().notification_id, recent.pk)
+        self.assertEqual(NotificationChannel.objects.get(notification=recent, channel='email').status, 'sent')
+        self.assertEqual(retry_failed(), {'sent': 0, 'failed': 0})  # never twice
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_lost_email_waits_for_the_queued_send_first(self):
+        from .emailing import retry_failed
+        with self.captureOnCommitCallbacks(execute=False):
+            self._notify()  # just created: the worker may still be sending it
+        self.assertEqual(retry_failed(), {'sent': 0, 'failed': 0})
+
     def test_opted_out_user_gets_no_email(self):
         from .models import NotificationPreference
         NotificationPreference.objects.update_or_create(user=self.user, defaults={'email_notifications_enabled': False})
         with self.captureOnCommitCallbacks(execute=True):
-            self._notify()
+            n = self._notify()
         self.assertEqual(len(mail.outbox), 0)
+        from .models import NotificationChannel
+        self.assertEqual(NotificationChannel.objects.get(notification=n, channel='email').status, 'skipped')
 
     def test_market_sale_emails_both_sides(self):
         from datetime import timedelta

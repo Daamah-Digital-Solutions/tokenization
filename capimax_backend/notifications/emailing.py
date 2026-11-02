@@ -12,6 +12,7 @@ process_pending_emails beat task (3 attempts).
 from __future__ import annotations
 
 import logging
+from datetime import timedelta
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -23,10 +24,12 @@ from django.utils import timezone
 logger = logging.getLogger(__name__)
 
 MAX_ATTEMPTS = 3
+LOST_AFTER = timedelta(minutes=2)    # the queued send normally lands within seconds
+LOST_WINDOW = timedelta(hours=3)
 
 
 def site_context() -> dict:
-    site = getattr(settings, 'FRONTEND_URL', '').rstrip('/') or 'https://capimaxrt.tech'
+    site = getattr(settings, 'FRONTEND_URL', '').rstrip('/') or 'https://capimaxrt.com'
     return {
         'site_url': site,
         'site_host': urlparse(site).netloc or site,
@@ -67,6 +70,8 @@ def deliver(notification, email_log=None) -> bool:
     user = notification.user
     prefs = getattr(user, 'notification_preferences', None)
     if prefs and not prefs.email_notifications_enabled:
+        NotificationChannel.objects.filter(notification=notification, channel='email', status='pending').update(
+            status='skipped')
         return False
     subject, html, text = render(notification)
     if email_log is None:
@@ -102,6 +107,7 @@ def _dispatch(notification_id) -> None:
     try:
         from .tasks import deliver_notification_email
         deliver_notification_email.delay(str(notification_id))
+        logger.info('Queued notification email %s', notification_id)
     except Exception:  # noqa: BLE001 — no broker: send in-process
         from .models import Notification
         n = Notification.objects.select_related('user').filter(pk=notification_id).first()
@@ -114,19 +120,39 @@ def queue(notification) -> None:
     transaction.on_commit(lambda: _dispatch(notification.pk))
 
 
+def lost(now=None):
+    """
+    Emails asked for but never attempted: the email channel is still pending and no
+    EmailLog exists. On the live site every email queued by the web process was
+    lost this way: it reached "redis" through a network where that name was another
+    stack's Redis (fixed in deploy/staging/docker-compose.yml). Should a queued
+    send ever be lost again, the beat task sends it itself.
+    Only recent ones (LOST_WINDOW): an email about something days old would confuse.
+    """
+    from .models import EmailLog, Notification
+
+    now = now or timezone.now()
+    tried = EmailLog.objects.filter(notification__isnull=False).values('notification_id')
+    return (Notification.objects.filter(delivery_channels__channel='email', delivery_channels__status='pending',
+                                        created_at__lt=now - LOST_AFTER, created_at__gte=now - LOST_WINDOW)
+            .exclude(pk__in=tried).select_related('user').distinct().order_by('created_at'))
+
+
 def retry_failed(limit: int = 50) -> dict:
-    """Beat task body: resend failed emails (and ones stuck in 'queued') up to MAX_ATTEMPTS."""
+    """Beat task body: send lost emails, resend failed ones (and ones stuck in 'queued') up to MAX_ATTEMPTS."""
     from datetime import timedelta
 
     from django.db.models import Q
 
     from .models import EmailLog
 
+    stats = {'sent': 0, 'failed': 0}
+    for notification in lost()[:limit]:
+        stats['sent' if deliver(notification) else 'failed'] += 1
     stale = timezone.now() - timedelta(minutes=10)
     rows = (EmailLog.objects.filter(notification__isnull=False, retry_count__lt=MAX_ATTEMPTS)
             .filter(Q(status='failed') | Q(status='queued', created_at__lt=stale))
             .select_related('notification__user').order_by('created_at')[:limit])
-    stats = {'sent': 0, 'failed': 0}
     for row in rows:
         stats['sent' if deliver(row.notification, email_log=row) else 'failed'] += 1
     return stats

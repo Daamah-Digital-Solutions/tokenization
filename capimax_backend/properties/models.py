@@ -220,6 +220,12 @@ class Property(models.Model):
     installment_notes = models.TextField(
         blank=True, help_text="Extra payment-plan terms shown on the property page"
     )
+    installment_minimum = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True,
+        validators=[MinValueValidator(Decimal('1'))],
+        help_text="Smallest installment for this property (USD). Empty = the platform "
+                  "minimum (Payments › Fees & discounts, $100 by default)."
+    )
 
     # --- Developer (admin #2) ---
     developer_name = models.CharField(max_length=255, blank=True)

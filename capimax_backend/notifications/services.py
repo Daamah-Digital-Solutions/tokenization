@@ -218,6 +218,7 @@ class NotificationService:
             preferences = getattr(user, 'notification_preferences', None)
             if preferences and not preferences.email_notifications_enabled:
                 logger.info(f"Email notifications disabled for user {user.email}")
+                NotificationChannel.objects.filter(notification=notification, channel='email').update(status='skipped')
                 return False
             
             # Branded email, sent in the background once the transaction commits
@@ -390,7 +391,7 @@ class EmailNotificationService:
                 'action_url': notification.action_url,
                 'action_label': notification.action_label,
                 'site_name': getattr(settings, 'SITE_NAME', 'Capimax'),
-                'site_url': getattr(settings, 'SITE_URL', 'https://capimax.com'),
+                'site_url': getattr(settings, 'FRONTEND_URL', '') or 'https://capimaxrt.com',
             }
             
             subject = Template(template.subject).render(Context(context_data))
@@ -470,7 +471,7 @@ class EmailNotificationService:
             context_data.update({
                 'user': recipient,
                 'site_name': getattr(settings, 'SITE_NAME', 'Capimax'),
-                'site_url': getattr(settings, 'SITE_URL', 'https://capimax.com'),
+                'site_url': getattr(settings, 'FRONTEND_URL', '') or 'https://capimaxrt.com',
             })
             
             # Render template

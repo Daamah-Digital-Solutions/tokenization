@@ -9,6 +9,8 @@ import { cn } from '../../../utils/cn';
 import { Button } from '../../ui/Button';
 import { PayoutsPanel } from '../../wallet/PayoutsPanel';
 import { NotificationsContent } from '../investor/InvestorControlPanel';
+import { HoldingShortcuts } from '../HoldingShortcuts';
+import { LPAssets } from '../../liquidity-provider/LPAssets';
 import {
   LiquidityProviderService,
   type LPExitRequest,
@@ -19,7 +21,8 @@ import { baseLanguage } from '../../../utils/locale';
 /**
  * Liquidity-provider dashboard (client round 3, #9). LP accounts used to
  * land on the investor dashboard because there was no LP role or screen.
- * Views: overview · exit requests (make an offer / decline) · transactions ·
+ * Views: overview · my assets (the shares the LP bought, their value, certificate
+ * and selling them) · exit requests (make an offer / decline) · transactions ·
  * wallet · provider profile & purchase preferences.
  */
 
@@ -412,6 +415,9 @@ export const LiquidityProviderDashboard: React.FC<{ currentView: string }> = ({ 
     case 'requests':
       body = requestsCard(requestsQ.data || [], t('lp.requests.title'));
       break;
+    case 'lp-assets':
+      body = <LPAssets />;
+      break;
     case 'transactions':
       body = transactionsCard;
       break;
@@ -434,6 +440,8 @@ export const LiquidityProviderDashboard: React.FC<{ currentView: string }> = ({ 
         <div className="space-y-6">
           {profileCard}
           {statsGrid}
+          <LPAssets compact />
+          <HoldingShortcuts myPropertiesView="lp-assets" />
           {requestsCard(pending, t('lp.requests.pendingTitle'))}
           {transactionsCard}
         </div>

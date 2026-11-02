@@ -806,7 +806,8 @@ class PlatformFeeSettingsAdmin(admin.ModelAdmin):
 
     fieldsets = (
         ('Purchases', {'fields': ('platform_fee_pct', 'pronova_discount_pct', 'reinvest_discount_pct')}),
-        ('Installments & secondary market', {'fields': ('installment_fee_pct', 'secondary_resale_fee_pct')}),
+        ('Installments & secondary market', {'fields': ('installment_fee_pct', 'minimum_installment',
+                                                     'secondary_resale_fee_pct')}),
         ('Rental income', {'fields': ('management_fee_pct',)}),
         ('Crypto payments', {'fields': ('crypto_short_tolerance_pct', 'crypto_short_tolerance_max')}),
     )

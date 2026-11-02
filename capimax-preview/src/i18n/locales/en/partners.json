@@ -13,7 +13,8 @@
     "materials": "Marketing materials",
     "requests": "Exit requests",
     "transactions": "Transactions",
-    "lpProfile": "Provider profile"
+    "lpProfile": "Provider profile",
+    "lpAssets": "My assets"
   },
   "roles": {
     "investor": "Owner",
@@ -228,6 +229,28 @@
       "saving": "Saving…",
       "saved": "Preferences saved.",
       "failed": "Your changes couldn't be saved."
+    },
+    "assets": {
+      "title": "My assets",
+      "desc": "Shares you own: what they cost, what they are worth today, your certificate, and selling them.",
+      "viewAll": "View all",
+      "empty": "You do not own any shares yet. Shares you buy from investors appear here.",
+      "properties": "Properties",
+      "shares": "Shares",
+      "cost": "Cost",
+      "value": "Value today",
+      "gain": "Gain / loss",
+      "valueAt": "Value at {{price}} / share",
+      "boughtFrom": "Bought from investors: {{shares}} shares in {{deals}} deal(s) for {{paid}}.",
+      "listed": "{{listed}} listed for sale · {{available}} free",
+      "sell": "Sell on the market",
+      "certificate": "Certificate",
+      "view": "View property",
+      "cert": {
+        "provisional": "Provisional certificate",
+        "final": "Final certificate",
+        "revoked": "Revoked"
+      }
     }
   },
   "join": {
@@ -293,5 +316,16 @@
       "back": "Back to my dashboard",
       "switchFailed": "Could not open that dashboard. Use the role switcher at the top of the dashboard."
     }
+  },
+  "holdings": {
+    "title": "My shares",
+    "myProperties": "My Properties",
+    "myPropertiesDesc": "Shares you own, their value and selling them",
+    "certificates": "Certificates",
+    "certificatesDesc": "Ownership certificates of your shares",
+    "reports": "Reports",
+    "reportsDesc": "Statements and reports of your holdings",
+    "market": "Secondary market",
+    "marketDesc": "Buy and sell shares with other owners"
   }
 }

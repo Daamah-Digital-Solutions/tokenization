@@ -7,7 +7,7 @@
  * flourishes, the official logo, the document title, an account-holder
  * panel, a summary panel, then sections of label/value rows or striped
  * tables whose header repeats on every page. Each page ends with the
- * company line and "<document no.> • Page X of Y • capimaxrt.tech".
+ * company line and "<document no.> • Page X of Y • capimaxrt.com".
  *
  * Arabic: documents can be issued in Arabic (right-to-left, mirrored
  * layout). Arabic text is drawn with a Latin+Arabic subset of DejaVu Sans

@@ -13,7 +13,8 @@
     "materials": "Supports marketing",
     "requests": "Demandes de sortie",
     "transactions": "Transactions",
-    "lpProfile": "Profil du fournisseur"
+    "lpProfile": "Profil du fournisseur",
+    "lpAssets": "Mes actifs"
   },
   "roles": {
     "investor": "Propriétaire",
@@ -228,6 +229,28 @@
       "saving": "Enregistrement…",
       "saved": "Préférences enregistrées.",
       "failed": "Impossible d'enregistrer vos modifications."
+    },
+    "assets": {
+      "title": "Mes actifs",
+      "desc": "Vos parts : leur coût, leur valeur aujourd’hui, votre certificat et leur vente.",
+      "viewAll": "Tout voir",
+      "empty": "Vous ne détenez encore aucune part. Les parts achetées aux investisseurs apparaissent ici.",
+      "properties": "Biens",
+      "shares": "Parts",
+      "cost": "Coût",
+      "value": "Valeur actuelle",
+      "gain": "Plus/moins-value",
+      "valueAt": "Valeur à {{price}} / part",
+      "boughtFrom": "Achetées aux investisseurs : {{shares}} parts en {{deals}} transaction(s) pour {{paid}}.",
+      "listed": "{{listed}} en vente · {{available}} libres",
+      "sell": "Vendre sur le marché",
+      "certificate": "Certificat",
+      "view": "Voir le bien",
+      "cert": {
+        "provisional": "Certificat provisoire",
+        "final": "Certificat définitif",
+        "revoked": "Révoqué"
+      }
     }
   },
   "join": {
@@ -293,5 +316,16 @@
       "back": "Retour à mon tableau de bord",
       "switchFailed": "Impossible d'ouvrir ce tableau de bord. Utilisez le sélecteur de rôle en haut du tableau de bord."
     }
+  },
+  "holdings": {
+    "title": "Mes parts",
+    "myProperties": "Mes propriétés",
+    "myPropertiesDesc": "Vos parts, leur valeur et leur vente",
+    "certificates": "Certificats",
+    "certificatesDesc": "Certificats de propriété de vos parts",
+    "reports": "Rapports",
+    "reportsDesc": "Relevés et rapports de vos avoirs",
+    "market": "Marché secondaire",
+    "marketDesc": "Acheter et vendre des parts avec d’autres propriétaires"
   }
 }

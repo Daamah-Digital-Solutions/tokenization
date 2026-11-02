@@ -1,4 +1,4 @@
-# Capimax STAGING deployment — serves capimaxrt.tech
+# Capimax deployment — serves capimaxrt.com (capimaxrt.tech redirects to it)
 #
 # Runs SIDE-BY-SIDE with the existing capimaxrt.com production deploy.
 # - Fully isolated: own Postgres, own Redis, own code volume, own DB/users.
@@ -75,8 +75,8 @@ services:
       curl -fsSL https://github.com/Daamah-Digital-Solutions/tokenization/archive/$${GIT_REF:-main}.tar.gz | tar -xz -C /tmp/build --strip-components=1 &&
       cd /tmp/build/capimax-preview &&
       : > .env &&
-      echo 'VITE_API_URL=https://capimaxrt.tech/api/v1' >> .env &&
-      echo 'VITE_WEBSOCKET_URL=wss://capimaxrt.tech/ws' >> .env &&
+      echo 'VITE_API_URL=/api/v1' >> .env &&
+      echo 'VITE_WEBSOCKET_URL=/ws' >> .env &&
       echo \"VITE_STRIPE_PUBLISHABLE_KEY=$${VITE_STRIPE_PUBLISHABLE_KEY}\" >> .env &&
       echo \"VITE_GOOGLE_CLIENT_ID=$${VITE_GOOGLE_CLIENT_ID}\" >> .env &&
       echo \"VITE_WALLET_CONNECT_PROJECT_ID=$${VITE_WALLET_CONNECT_PROJECT_ID:-}\" >> .env &&
@@ -117,6 +117,11 @@ services:
       # These guarantee Django picks the right settings even if .env omits them.
       ENVIRONMENT: staging
       DJANGO_SETTINGS_MODULE: capimax_backend.settings
+      # Redis by container name: the web container also sits on capimax_net, where the
+      # capimaxrt.com stack has its own service called "redis". There "redis" resolved
+      # to that other Redis, so every task queued by the web (notification emails,
+      # on-chain transfers, broadcasts) went where no worker reads.
+      REDIS_URL: redis://capimax_staging_redis:6379/0
     volumes:
       - app_src:/app
       - static_files:/app/capimax_backend/staticfiles
@@ -166,6 +171,11 @@ services:
     environment:
       ENVIRONMENT: staging
       DJANGO_SETTINGS_MODULE: capimax_backend.settings
+      # Redis by container name: the web container also sits on capimax_net, where the
+      # capimaxrt.com stack has its own service called "redis". There "redis" resolved
+      # to that other Redis, so every task queued by the web (notification emails,
+      # on-chain transfers, broadcasts) went where no worker reads.
+      REDIS_URL: redis://capimax_staging_redis:6379/0
     volumes:
       - app_src:/app
       - media_files:/app/capimax_backend/media
@@ -197,6 +207,11 @@ services:
     environment:
       ENVIRONMENT: staging
       DJANGO_SETTINGS_MODULE: capimax_backend.settings
+      # Redis by container name: the web container also sits on capimax_net, where the
+      # capimaxrt.com stack has its own service called "redis". There "redis" resolved
+      # to that other Redis, so every task queued by the web (notification emails,
+      # on-chain transfers, broadcasts) went where no worker reads.
+      REDIS_URL: redis://capimax_staging_redis:6379/0
     volumes:
       - app_src:/app
     depends_on:

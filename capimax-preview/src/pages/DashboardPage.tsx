@@ -14,6 +14,8 @@ import { KYCReminderBanner } from '../components/kyc/KYCReminderBanner';
 import { useTranslation } from 'react-i18next';
 
 const KYC_NAV_ID = 'kyc-verification';
+// Investor views a broker / liquidity provider opens for their own shares.
+const PARTNER_HOLDING_VIEWS = ['my-properties', 'certificates', 'reports', 'marketplace'];
 import CapiMaxLightLogo from '../assets/tokenization_capi max  tokenization light  uk  copy.svg';
 import CapiMaxDarkLogo from '../assets/tokenization_capi max tokenization uk dark   copy.svg';
 
@@ -60,6 +62,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const getNavigationItems = (role: UserRole) => {
     const baseItems = [
       { id: 'overview', label: t('nav.overview'), icon: '📊' },
+    ];
+    // A broker or liquidity provider also owns shares (an LP buys them from
+    // investors): their properties, certificates, reports and the secondary
+    // market open right here, without switching to the investor account.
+    const holdingItems = [
+      { id: 'my-properties', label: t('nav.myProperties'), icon: '🏠' },
+      { id: 'certificates', label: tCerts('nav.certificates'), icon: '🏅' },
+      { id: 'reports', label: tCerts('nav.reports'), icon: '📊' },
+      { id: 'marketplace', label: t('nav.marketplace'), icon: '🏪' },
     ];
 
     switch (role) {
@@ -121,6 +132,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           { id: 'wallet', label: tPartners('nav.wallet'), icon: '💸' },
           { id: 'performance', label: tPartners('nav.performance'), icon: '📊' },
           { id: 'marketing-materials', label: tPartners('nav.materials'), icon: '📄' },
+          ...holdingItems,
         ];
       case 'liquidity_provider':
         // LP dashboard (client round 3, #9)
@@ -130,6 +142,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           { id: 'transactions', label: tPartners('nav.transactions'), icon: '💳' },
           { id: 'wallet', label: tPartners('nav.wallet'), icon: '💰' },
           { id: 'lp-profile', label: tPartners('nav.lpProfile'), icon: '🏛️' },
+          // the LP's own "My assets" (bought from investors) instead of the investor list
+          { id: 'lp-assets', label: tPartners('nav.lpAssets'), icon: '🏠' },
+          ...holdingItems.filter((item) => item.id !== 'my-properties'),
         ];
       default:
         return baseItems;
@@ -484,6 +499,10 @@ export const DashboardPage: React.FC = () => {
     // Brokers and liquidity providers have their own dashboards — including
     // the overview, which used to render the investor overview for every
     // role (client round 3, #8 / #9).
+    if ((effectiveRole === 'broker' || effectiveRole === 'liquidity_provider')
+        && PARTNER_HOLDING_VIEWS.includes(currentView)) {
+      return <InvestorControlPanel currentView={currentView} />;
+    }
     if (effectiveRole === 'broker') {
       return <BrokerDashboard currentView={currentView} />;
     }

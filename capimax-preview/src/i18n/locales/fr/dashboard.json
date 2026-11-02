@@ -407,7 +407,18 @@
     "filterAll": "Tous ({{count}})",
     "filterProfitable": "Rentables",
     "filterUnderperforming": "Sous-performants",
-    "noMatch": "Aucun bien ne correspond à vos filtres. Essayez d'effacer la recherche ou de sélectionner « Tous »."
+    "noMatch": "Aucun bien ne correspond à vos filtres. Essayez d'effacer la recherche ou de sélectionner « Tous ».",
+    "installments": {
+      "badge": "Échelonné",
+      "paidOff": "Entièrement payé",
+      "shares": "Parts achetées",
+      "paid": "Payé à ce jour",
+      "payments": "{{made}} paiements sur {{total}}",
+      "next": "Prochaine : {{date}}",
+      "note": "Acheté en plusieurs fois. Votre certificat de propriété est provisoire et devient définitif une fois toutes les échéances payées.",
+      "paidOffNote": "Toutes les échéances sont payées : ces parts vous appartiennent entièrement.",
+      "manage": "Échéances"
+    }
   },
   "overview": {
     "welcome": "Bon retour, {{name}} !",

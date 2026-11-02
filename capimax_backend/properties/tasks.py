@@ -475,16 +475,18 @@ def _handle_construction_completion(self, property_id: str) -> Dict[str, Any]:
         property_obj = Property.objects.get(id=property_id)
         
         # Get all investors for this property
+        # Every current holder (the old filter named fields Investment does not have).
         investments = Investment.objects.filter(
-            property=property_obj,
-            status='active'
+            property_investment=property_obj,
+            status='completed'
         ).select_related('user')
         
         notifications_sent = 0
         
         # Send completion notifications to all investors
         for investment in investments:
-            Notification.objects.create(
+            from notifications.services import NotificationService
+            NotificationService.create_notification(
                 user=investment.user,
                 title="Property Construction Completed",
                 message=f"Great news! Construction of {property_obj.title} has been completed. Your investment is now in a completed property.",
@@ -492,7 +494,8 @@ def _handle_construction_completion(self, property_id: str) -> Dict[str, Any]:
                 priority=NotificationPriority.HIGH,
                 content_object=property_obj,
                 action_url=f"/dashboard/investments/{property_obj.id}",
-                action_label="View Property Details"
+                action_label="View Property Details",
+                send_email=True,
             )
             notifications_sent += 1
         

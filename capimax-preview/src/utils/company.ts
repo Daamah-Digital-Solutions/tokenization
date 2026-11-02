@@ -13,8 +13,8 @@ export const COMPANY = {
   // The public contact address (client round 4, #8) — set VITE_SUPPORT_EMAIL to the real RT mailbox.
   email: ((import.meta as any).env?.VITE_SUPPORT_EMAIL as string) || 'tech@capimaxholding.com',
   phones: ['+1 205 350 8771', '+1 205 350 8864', '+44 7577 370309'],
-  website: 'capimaxrt.tech',
-  websiteUrl: 'https://capimaxrt.tech',
+  website: 'capimaxrt.com',
+  websiteUrl: 'https://capimaxrt.com',
 } as const;
 
 /** WhatsApp-able number for support links (digits only). */

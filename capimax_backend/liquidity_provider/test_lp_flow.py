@@ -136,6 +136,28 @@ class SellToLiquidityProviderTests(TestCase):
         er.refresh_from_db()
         self.assertEqual(er.status, 'completed')
 
+    def test_lp_dashboard_lists_the_shares_it_bought(self):
+        self._request()
+        er = ExitRequest.objects.get()
+        self._offer(er)
+        self._answer(er, 'accept')
+        MarketListing.objects.create(property_listing=self.prop, seller=self.lp_user, listing_type='sell',
+                                     tokens_offered=15, tokens_remaining=15, price_per_token=Decimal('11'),
+                                     minimum_order_size=1, expires_at=timezone.now() + timedelta(days=3))
+        self.client.force_authenticate(self.lp_user)
+        res = self.client.get('/api/v1/liquidity-provider/providers/assets/')
+        self.assertEqual(res.status_code, 200, res.content)
+        data = body(res)
+        [asset] = data['assets']
+        self.assertEqual((asset['property_id'], asset['shares'], asset['listed_shares'], asset['available_shares']),
+                         (str(self.prop.pk), 40, 15, 25))
+        self.assertEqual(asset['value'], '400.00')  # 40 shares x $10 today
+        self.assertEqual(asset['bought_from_investors'], {'deals': 1, 'shares': 40, 'paid': '363.60'})
+        self.assertEqual((data['totals']['properties'], data['totals']['shares']), (1, 40))
+        # an investor (not an LP) cannot read it
+        self.client.force_authenticate(self.investor)
+        self.assertEqual(self.client.get('/api/v1/liquidity-provider/providers/assets/').status_code, 403)
+
     def test_offer_needs_funds_in_the_lp_wallet(self):
         WalletBalance.objects.filter(user=self.lp_user).update(available_balance=Decimal('10.00'))
         self._request()

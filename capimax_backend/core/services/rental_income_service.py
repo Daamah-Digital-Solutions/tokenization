@@ -607,7 +607,8 @@ class RentalIncomeService:
         error: str
     ):
         """Send failed distribution notification to investor."""
-        Notification.objects.create(
+        from notifications.services import NotificationService
+        NotificationService.create_notification(
             user=investor,
             title="Rental Distribution Failed",
             message=f"We were unable to distribute ${amount} in rental income from {property_obj.title}. Error: {error}. Please contact support.",
@@ -615,7 +616,8 @@ class RentalIncomeService:
             priority=NotificationPriority.HIGH,
             content_object=property_obj,
             action_url="/support",
-            action_label="Contact Support"
+            action_label="Contact Support",
+            send_email=True,
         )
     
     def _create_distribution_summary_alert(self, results: Dict[str, Any]):

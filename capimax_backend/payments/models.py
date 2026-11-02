@@ -2197,6 +2197,10 @@ class PlatformFeeSettings(models.Model):
         max_digits=5, decimal_places=2, default=Decimal('1.00'),
         validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('20'))],
         help_text="Secondary-market fee paid by the buyer on top of the price (%)")
+    minimum_installment = models.DecimalField(
+        max_digits=10, decimal_places=2, default=Decimal('100.00'),
+        validators=[MinValueValidator(Decimal('1'))],
+        help_text="Smallest installment a buyer can choose (USD). A property can set its own in its payment plan.")
     reinvest_discount_pct = models.DecimalField(
         max_digits=5, decimal_places=2, default=Decimal('5.00'),
         validators=[MinValueValidator(Decimal('0')), MaxValueValidator(Decimal('50'))],

@@ -34,6 +34,7 @@ import {
   ShieldCheck,
   Search,
   Plus,
+  CalendarClock,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from '../../../utils/router';
@@ -42,6 +43,7 @@ import { CreateListingModal } from '../../marketplace/CreateListingModal';
 import { SellToLPModal } from '../../liquidity-provider/SellToLPModal';
 import { MyExitRequests } from '../../liquidity-provider/MyExitRequests';
 import { InvestmentService } from '../../../services/investment/InvestmentService';
+import { InstallmentService, type InstallmentPlan } from '../../../services/installments/InstallmentService';
 import { apiClient } from '../../../services/api/ApiClient';
 import type { Property } from '../../../services/api/types';
 
@@ -62,6 +64,129 @@ interface PropertyHolding {
 }
 
 type FilterMode = 'all' | 'profitable' | 'underperforming';
+
+// Plans that give the buyer shares: started (first payment made) or fully paid.
+const OWNED_PLAN_STATUSES = ['pending', 'processing', 'completed'];
+
+const firstImage = (images: unknown): string | undefined => {
+  if (!Array.isArray(images) || images.length === 0) return undefined;
+  const first = images[0];
+  if (typeof first === 'string') return first;
+  return (first as any)?.image_url || (first as any)?.image || (first as any)?.url || undefined;
+};
+
+/** A property bought in installments: its shares, how much is paid, and the next due date. */
+const InstallmentCard: React.FC<{
+  plan: InstallmentPlan;
+  property: Property | null;
+  onView: (id: string) => void;
+  onManage: () => void;
+}> = ({ plan, property, onView, onManage }) => {
+  const { t, i18n } = useTranslation('dashboard');
+  const [imageFailed, setImageFailed] = useState(false);
+  const image = firstImage((property as any)?.images);
+  const total = Number(plan.total_investment_amount) || 0;
+  const paid = Number(plan.total_amount_paid) || 0;
+  const pct = total > 0 ? Math.min(100, (paid / total) * 100) : 0;
+  const done = plan.status === 'completed';
+  const totalTokens = Number((property as any)?.total_tokens) || 0;
+  const location = [plan.property_city || (property as any)?.city, plan.property_country || (property as any)?.country]
+    .filter(Boolean)
+    .join(', ');
+  const next = plan.next_payment_date
+    ? new Date(plan.next_payment_date).toLocaleDateString(i18n.language)
+    : '';
+
+  return (
+    <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden flex flex-col">
+      <div className="relative h-44 overflow-hidden bg-gradient-to-br from-amber-600/30 to-slate-900/40 dark:from-amber-900/30 dark:to-slate-900/60">
+        {image && !imageFailed ? (
+          <img src={image} alt="" onError={() => setImageFailed(true)} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-white/40 dark:text-white/30">
+            <Building2 className="w-16 h-16" />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 to-transparent" />
+        <div className="absolute top-3 start-3 flex items-center gap-1.5 px-2.5 py-1 bg-white/90 dark:bg-slate-900/90 rounded-md text-xs font-semibold text-amber-700 dark:text-amber-300">
+          <CalendarClock className="w-3 h-3" />
+          {done ? t('myProps.installments.paidOff') : t('myProps.installments.badge')}
+        </div>
+        <div className="absolute bottom-3 start-3 end-3 text-white">
+          <h3 className="text-lg font-bold leading-tight line-clamp-1">
+            {plan.property_title || (property as any)?.title}
+          </h3>
+          {location && (
+            <div className="flex items-center gap-1 text-xs text-white/90 mt-0.5">
+              <MapPin className="w-3 h-3" />
+              <span className="line-clamp-1">{location}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="p-5 flex flex-col gap-4 flex-1">
+        <div className="flex items-center gap-2 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
+          <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+            <Coins className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div>
+            <div className="text-xs text-slate-500 dark:text-slate-400">{t('myProps.installments.shares')}</div>
+            <div className="text-base font-bold text-slate-900 dark:text-white">
+              {Number(plan.token_allocation).toLocaleString()}
+              {totalTokens > 0 && (
+                <span className="text-xs font-normal text-slate-500 dark:text-slate-400 ms-1">
+                  / {totalTokens.toLocaleString()}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between text-sm mb-1.5">
+            <span className="text-slate-500 dark:text-slate-400">{t('myProps.installments.paid')}</span>
+            <span className="font-semibold text-slate-900 dark:text-white">
+              {formatCurrency(paid)} / {formatCurrency(total)}
+            </span>
+          </div>
+          <div className="h-2 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
+            <div className="h-full bg-amber-500" style={{ width: `${pct}%` }} />
+          </div>
+          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+            <span>
+              {t('myProps.installments.payments', { made: plan.payments_made, total: plan.total_installments })}
+            </span>
+            {!done && next && <span>{t('myProps.installments.next', { date: next })}</span>}
+          </div>
+        </div>
+
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          {done ? t('myProps.installments.paidOffNote') : t('myProps.installments.note')}
+        </p>
+
+        <div className="grid grid-cols-2 gap-2 mt-auto pt-2">
+          <button
+            type="button"
+            onClick={() => onView(plan.property_investment)}
+            className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+          >
+            <Eye className="w-4 h-4" />
+            {t('myProps.viewDetails')}
+          </button>
+          <button
+            type="button"
+            onClick={onManage}
+            className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-white text-sm font-semibold transition-colors"
+          >
+            <CalendarClock className="w-4 h-4" />
+            {t('myProps.installments.manage')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const formatCurrency = (n: number): string =>
   `$${Math.round(n).toLocaleString()}`;
@@ -282,9 +407,25 @@ export const MyProperties: React.FC = () => {
   // detail endpoint here gives us appreciation + rental_yield. React
   // Query dedupes parallel requests so this is cheap.
   const userInvestments = userInvestmentsQuery.data ?? [];
+
+  // Properties bought in installments have no purchase record until paid off:
+  // they come from the installment plans (same query as the Installments tab).
+  const plansQuery = useQuery({
+    queryKey: ['my-installments'],
+    queryFn: () => InstallmentService.getMyInstallments(),
+    enabled: !!authState.user,
+  });
+  const plans = useMemo(
+    // Same rule as the ownership certificate: something has been paid.
+    () => (plansQuery.data ?? []).filter(
+      p => OWNED_PLAN_STATUSES.includes(p.status) && (Number(p.total_amount_paid) > 0 || p.payments_made > 0),
+    ),
+    [plansQuery.data],
+  );
+
   const propertyIds = useMemo(
-    () => userInvestments.map(u => u.property_id),
-    [userInvestments],
+    () => Array.from(new Set([...userInvestments.map(u => u.property_id), ...plans.map(p => p.property_investment)])),
+    [userInvestments, plans],
   );
 
   const propertiesQuery = useQuery({
@@ -396,12 +537,24 @@ export const MyProperties: React.FC = () => {
     return list;
   }, [holdings, filter, query]);
 
+  // Installment plans show under "All" only (their value is what has been paid).
+  const filteredPlans = useMemo(() => {
+    if (filter !== 'all') return [];
+    const q = query.trim().toLowerCase();
+    if (!q) return plans;
+    return plans.filter(p =>
+      [p.property_title, p.property_city, p.property_country].some(v => (v || '').toLowerCase().includes(q)),
+    );
+  }, [plans, filter, query]);
+
   const totals = useMemo(() => {
-    const invested = holdings.reduce((s, h) => s + h.purchaseValue, 0);
-    const current = holdings.reduce((s, h) => s + h.currentValue, 0);
+    const planPaid = plans.reduce((s, p) => s + (Number(p.total_amount_paid) || 0), 0);
+    const invested = holdings.reduce((s, h) => s + h.purchaseValue, 0) + planPaid;
+    const current = holdings.reduce((s, h) => s + h.currentValue, 0) + planPaid;
     const change = invested > 0 ? ((current - invested) / invested) * 100 : 0;
-    return { invested, current, change, count: holdings.length };
-  }, [holdings]);
+    const count = new Set([...holdings.map(h => h.id), ...plans.map(p => p.property_investment)]).size;
+    return { invested, current, change, count };
+  }, [holdings, plans]);
 
   const handleView = (h: PropertyHolding) => {
     navigate('property-detail' as any, { id: h.id });
@@ -416,6 +569,7 @@ export const MyProperties: React.FC = () => {
 
   const loading =
     userInvestmentsQuery.isLoading ||
+    plansQuery.isLoading ||
     (propertyIds.length > 0 && propertiesQuery.isLoading);
   const error =
     (userInvestmentsQuery.error as Error | undefined)?.message ||
@@ -464,7 +618,7 @@ export const MyProperties: React.FC = () => {
     );
   }
 
-  if (holdings.length === 0) {
+  if (holdings.length === 0 && plans.length === 0) {
     return (
       <div className="bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-300 dark:border-slate-600 p-10 text-center">
         <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-4">
@@ -559,7 +713,7 @@ export const MyProperties: React.FC = () => {
         <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
           {(
             [
-              { key: 'all', label: t('myProps.filterAll', { count: holdings.length }) },
+              { key: 'all', label: t('myProps.filterAll', { count: holdings.length + plans.length }) },
               { key: 'profitable', label: t('myProps.filterProfitable') },
               { key: 'underperforming', label: t('myProps.filterUnderperforming') },
             ] as { key: FilterMode; label: string }[]
@@ -580,9 +734,7 @@ export const MyProperties: React.FC = () => {
         </div>
       </div>
 
-      <MyExitRequests />
-
-      {filtered.length === 0 ? (
+      {filtered.length === 0 && filteredPlans.length === 0 ? (
         <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-10 text-center">
           <p className="text-slate-500 dark:text-slate-400">
             {t('myProps.noMatch')}
@@ -599,8 +751,20 @@ export const MyProperties: React.FC = () => {
               onSellToLP={setLpSale}
             />
           ))}
+          {filteredPlans.map(p => (
+            <InstallmentCard
+              key={p.id}
+              plan={p}
+              property={propertiesQuery.data?.get(p.property_investment) ?? null}
+              onView={id => navigate('property-detail' as any, { id })}
+              onManage={() => navigate('dashboard', { view: 'installments' })}
+            />
+          ))}
         </div>
       )}
+
+      {/* The property cards come first; sales to liquidity providers below them. */}
+      <MyExitRequests />
 
       {lpSale && (
         <SellToLPModal

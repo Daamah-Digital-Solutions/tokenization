@@ -142,22 +142,16 @@ def _credit_wallet(payment) -> None:
         description=f'Wallet deposit via {method}',
     )
     try:
-        from core.services.email_service import EmailService
-        EmailService.send_funds_notification_email(
-            user=payment.user,
-            transaction_details={
-                'type': 'Deposit',
-                'amount': str(payment.net_amount),
-                'transaction_id': str(payment.id),
-                'payment_method': method,
-                'status': 'Confirmed',
-                'previous_balance': str(before),
-                'new_balance': str(wb.available_balance),
-                'id': payment.id,
-            },
-        )
-    except Exception:  # noqa: BLE001 — the credit stands even if the email fails
-        logger.warning('Deposit %s credited but email failed', payment.pk, exc_info=True)
+        # In-app notice + the branded email, sent after the credit commits (not inside the lock).
+        from notifications.services import NotificationService
+        NotificationService.create_notification(
+            user=payment.user, title='Wallet top-up received',
+            message=(f'{payment.net_amount} {payment.currency} paid by {method} was added to your wallet. '
+                     f'Balance: {before} → {wb.available_balance} {payment.currency}.'),
+            notification_type='payment', priority='medium', action_url='/dashboard?view=wallet',
+            action_label='My Wallet', send_email=True)
+    except Exception:  # noqa: BLE001 — the credit stands even if the notice fails
+        logger.warning('Deposit %s credited but the notice failed', payment.pk, exc_info=True)
 
 
 def check_payable_investment(user, investment_id, amount):

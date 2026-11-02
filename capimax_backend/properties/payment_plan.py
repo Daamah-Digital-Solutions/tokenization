@@ -98,6 +98,14 @@ def build_schedule(total: Decimal, *, down_payment_percent: Decimal, count: int,
     return rows
 
 
+def minimum_installment(prop) -> Decimal:
+    """The smallest installment: the property's own, else the platform's (admin: Fees & discounts)."""
+    if prop.installment_minimum:
+        return prop.installment_minimum
+    from payments.models import PlatformFeeSettings
+    return PlatformFeeSettings.current().minimum_installment
+
+
 def plan_config(prop) -> dict:
     """The payment-plan section of the property page."""
     return {
@@ -111,7 +119,7 @@ def plan_config(prop) -> dict:
         'first_due_date': prop.installment_first_due_date,
         'max_period_months': prop.installment_period_months,
         'notes': prop.installment_notes or '',
-        'minimum_installment': Decimal('100.00'),
+        'minimum_installment': minimum_installment(prop),
     }
 
 

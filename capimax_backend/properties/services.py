@@ -559,13 +559,15 @@ class InstallmentProcessingService:
             installment.save()
             
             # Create notification for late fee
-            Notification.objects.create(
+            from notifications.services import NotificationService
+            NotificationService.create_notification(
                 user=installment.investor,
                 title="Late Payment Fee Applied",
                 message=f"A late fee of ${installment.late_payment_fee} has been applied to your installment payment for {installment.property_investment.title}.",
                 notification_type=NotificationType.PAYMENT,
                 priority=NotificationPriority.HIGH,
-                content_object=installment
+                content_object=installment,
+                send_email=True,
             )
             
             return True
@@ -582,13 +584,15 @@ class InstallmentProcessingService:
             installment.save()
             
             # Notify user about cancellation
-            Notification.objects.create(
+            from notifications.services import NotificationService
+            NotificationService.create_notification(
                 user=installment.investor,
                 title="Installment Plan Cancelled",
                 message=f"Your installment plan for {installment.property_investment.title} has been cancelled due to non-payment. Please contact support for assistance.",
                 notification_type=NotificationType.WARNING,
                 priority=NotificationPriority.URGENT,
-                content_object=installment
+                content_object=installment,
+                send_email=True,
             )
             
             # Create admin alert
@@ -613,7 +617,8 @@ class InstallmentProcessingService:
     
     def _send_payment_reminder_notification(self, installment: ConstructionInstallment, days_before: int):
         """Send payment reminder notification to investor."""
-        Notification.objects.create(
+        from notifications.services import NotificationService
+        NotificationService.create_notification(
             user=installment.investor,
             title="Payment Reminder",
             message=f"Your installment payment of ${installment.amount_due} for {installment.property_investment.title} is due in {days_before} days on {installment.next_payment_date}.",
@@ -621,7 +626,8 @@ class InstallmentProcessingService:
             priority=NotificationPriority.MEDIUM,
             content_object=installment,
             action_url=f"/dashboard/investments/{installment.property_investment.id}/installments",
-            action_label="View Installment Details"
+            action_label="View Installment Details",
+            send_email=True,
         )
     
     def _send_payment_success_notification(self, installment: ConstructionInstallment, amount_paid: Decimal):
@@ -967,7 +973,8 @@ class RentalIncomeProcessingService:
         period: str
     ):
         """Send rental income distribution notification to investor."""
-        Notification.objects.create(
+        from notifications.services import NotificationService
+        NotificationService.create_notification(
             user=investor,
             title="Rental Income Received",
             message=f"You have received ${amount.quantize(Decimal('0.01'))} in rental income from {property_obj.title} for {period}. The amount has been added to your wallet.",
@@ -975,7 +982,8 @@ class RentalIncomeProcessingService:
             priority=NotificationPriority.MEDIUM,
             content_object=property_obj,
             action_url=f"/dashboard/investments/{property_obj.id}",
-            action_label="View Property Details"
+            action_label="View Property Details",
+            send_email=True,
         )
     
     def collect_rental_income_from_properties(self) -> Dict[str, Any]:

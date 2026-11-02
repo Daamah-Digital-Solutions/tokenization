@@ -6,7 +6,7 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-SITE = 'https://capimaxrt.tech'
+SITE = (getattr(settings, 'FRONTEND_URL', '') or 'https://capimaxrt.com').rstrip('/')
 
 
 def support_inbox() -> str:

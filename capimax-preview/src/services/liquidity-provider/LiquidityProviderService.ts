@@ -74,6 +74,40 @@ export interface InvestorExitRequest extends LPExitRequest {
   resale_fee: string | null;
 }
 
+export interface LPAsset {
+  property_id: string;
+  title: string;
+  city: string;
+  country: string;
+  image: string | null;
+  shares: number;
+  total_shares: number;
+  cost: string;
+  share_price: string;
+  value: string;
+  gain: string;
+  gain_pct: string;
+  listed_shares: number;
+  available_shares: number;
+  bought_from_investors: { deals: number; shares: number; paid: string } | null;
+  certificate: { id: string; number: string; status: 'provisional' | 'final' | 'revoked' } | null;
+  since: string | null;
+}
+
+export interface LPAssets {
+  assets: LPAsset[];
+  totals: {
+    properties: number;
+    shares: number;
+    cost: string;
+    value: string;
+    gain: string;
+    gain_pct: string;
+    certificates: number;
+    listed_shares: number;
+  };
+}
+
 export interface LPTransaction {
   id: string;
   reference_number: string;
@@ -95,6 +129,11 @@ export class LiquidityProviderService {
 
   static getStats(): Promise<LPStats> {
     return apiClient.get<LPStats>('/liquidity-provider/providers/dashboard_stats/');
+  }
+
+  /** The shares this LP owns, per property (bought from investors or otherwise). */
+  static getAssets(): Promise<LPAssets> {
+    return apiClient.get<LPAssets>('/liquidity-provider/providers/assets/');
   }
 
   static async getExitRequests(): Promise<LPExitRequest[]> {

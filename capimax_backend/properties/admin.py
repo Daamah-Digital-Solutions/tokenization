@@ -174,7 +174,7 @@ class PropertyAdmin(admin.ModelAdmin):
             'fields': (
                 'purchase_methods', 'installment_down_payment_percent', 'installment_count',
                 'installment_frequency', 'installment_period_months',
-                'installment_first_due_date', 'installment_notes',
+                'installment_first_due_date', 'installment_minimum', 'installment_notes',
             ),
             'description': (
                 'Choose how buyers may pay: full cash, installments, or both. The property '

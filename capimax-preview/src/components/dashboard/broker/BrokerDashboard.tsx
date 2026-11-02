@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { HoldingShortcuts } from '../HoldingShortcuts';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { BadgeCheck, Building2, Copy, Check, Link2, BookOpen, Loader2, UserRound, Download, FileText } from 'lucide-react';
@@ -468,6 +469,7 @@ export const BrokerDashboard: React.FC<{ currentView: string }> = ({ currentView
               {link && linkBox}
             </div>
           </div>
+          <HoldingShortcuts />
           {referralTracker}
           {commissionsTable}
         </div>

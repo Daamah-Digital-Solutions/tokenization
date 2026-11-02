@@ -128,6 +128,29 @@ class BuyerPlanTests(TestCase):
         self.assertEqual([r['amount'] for r in rows],
                          [Decimal('2500.00'), Decimal('2500.00'), Decimal('2500.00'), Decimal('2500.00')])
 
+    def test_minimum_installment_is_set_in_the_admin(self):
+        from payments.models import PlatformFeeSettings
+        from properties.payment_plan import plan_config
+
+        def start(tokens):  # 2 shares = $200: down payment $50, then 3 x $50
+            return self.client.post('/api/v1/properties/installments/', {
+                'property_investment': str(self.prop.id), 'token_allocation': tokens}, format='json')
+
+        r = start(2)
+        self.assertEqual(r.status_code, 400)
+        self.assertIn('below minimum ($100.00)', r.content.decode())
+        fees = PlatformFeeSettings.current()
+        fees.minimum_installment = Decimal('40.00')
+        fees.save()
+        self.assertEqual(plan_config(self.prop)['minimum_installment'], Decimal('40.00'))
+        self.prop.installment_minimum = Decimal('60.00')  # this property's own minimum wins
+        self.prop.save(update_fields=['installment_minimum'])
+        self.assertEqual(plan_config(self.prop)['minimum_installment'], Decimal('60.00'))
+        self.assertEqual(start(2).status_code, 400)
+        self.prop.installment_minimum = None
+        self.prop.save(update_fields=['installment_minimum'])
+        self.assertEqual(start(2).status_code, 201)
+
     def test_schedule_endpoint_lists_every_installment_with_status(self):
         plan = self._create_plan()
         r = self.client.get(f'/api/v1/properties/installments/{plan.id}/')

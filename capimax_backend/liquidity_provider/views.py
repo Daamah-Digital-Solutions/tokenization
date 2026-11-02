@@ -224,7 +224,7 @@ class LiquidityProviderViewSet(viewsets.ModelViewSet):
             return [permissions.IsAuthenticated()]
         elif self.action in ['activate', 'suspend', 'deactivate']:
             return [IsAdmin()]
-        elif self.action in ['update', 'partial_update', 'my_profile', 'dashboard_stats']:
+        elif self.action in ['update', 'partial_update', 'my_profile', 'dashboard_stats', 'assets']:
             return [IsLiquidityProvider()]
         return [IsAdmin()]
 
@@ -286,6 +286,19 @@ class LiquidityProviderViewSet(viewsets.ModelViewSet):
 
         serializer = LPDashboardStatsSerializer(stats)
         return Response(create_success_response(data=serializer.data))
+
+    @action(detail=False, methods=['get'])
+    def assets(self, request):
+        """The shares this LP owns (bought from investors or otherwise), per property."""
+        from .assets import lp_assets
+        try:
+            lp = request.user.liquidity_provider_profile
+        except LiquidityProvider.DoesNotExist:
+            return Response(
+                create_error_response(message='You are not a liquidity provider'),
+                status=status.HTTP_404_NOT_FOUND
+            )
+        return Response(create_success_response(data=lp_assets(lp, request)))
 
     @action(detail=True, methods=['post'])
     def activate(self, request, pk=None):
