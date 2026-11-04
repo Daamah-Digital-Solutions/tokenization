@@ -334,3 +334,19 @@ CELERY_BEAT_SCHEDULE = {
         'options': {'queue': 'blockchain'}
     },
 }
+
+# ===========================================================================
+# Property registration on the blockchain (admin button — blockchain/registration.py)
+# ===========================================================================
+
+@shared_task(bind=True, acks_late=True)
+def register_property_on_chain(self, registration_id):
+    from .registration import run
+    reg = run(registration_id)
+    return {'registration': str(reg.pk), 'status': reg.status}
+
+
+@shared_task
+def check_property_chain_registrations():
+    from .registration import check_sent
+    check_sent()

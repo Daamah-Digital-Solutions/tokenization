@@ -133,7 +133,7 @@ class PropertyAdmin(admin.ModelAdmin):
 
     readonly_fields = [
         'id', 'published_at', 'published_by', 'tokens_available', 'funding_percentage',
-        'is_fully_funded', 'can_accept_investments', 'created_at', 'updated_at'
+        'is_fully_funded', 'can_accept_investments', 'created_at', 'updated_at', 'blockchain_panel',
     ]
 
     fieldsets = (
@@ -229,8 +229,12 @@ class PropertyAdmin(admin.ModelAdmin):
             'classes': ('collapse',),
         }),
         ('Blockchain', {
-            'fields': ('smart_contract_address',),
-            'classes': ('collapse',),
+            'fields': ('blockchain_panel', 'smart_contract_address'),
+            'description': (
+                'Register the property on the blockchain with the button below, once it is approved and its '
+                'shares, price and owning company (SPV) are filled in. Then download the tokenization report '
+                '(Word) for the investors.'
+            ),
         }),
         ('Computed Fields', {
             'fields': (
@@ -247,7 +251,133 @@ class PropertyAdmin(admin.ModelAdmin):
 
     inlines = [PropertyApprovalInline, OwnerMessageInline, PropertyPriceTierInline,
                PropertyImageInline, PropertyDocumentInline]
-    actions = ['publish_selected', 'unpublish_selected', 'approve_selected']
+    actions = ['publish_selected', 'unpublish_selected', 'approve_selected', 'register_on_blockchain',
+               'download_tokenization_report']
+
+    # ---- Blockchain: register button + Word tokenization report (client, Nov 2026) ------------
+    def get_urls(self):
+        from django.urls import path
+        own = [
+            path('<path:object_id>/blockchain/register/', self.admin_site.admin_view(self.blockchain_register_view),
+                 name='properties_property_blockchain_register'),
+            path('<path:object_id>/blockchain/report/', self.admin_site.admin_view(self.blockchain_report_view),
+                 name='properties_property_blockchain_report'),
+        ]
+        return own + super().get_urls()
+
+    @admin.display(description='Blockchain')
+    def blockchain_panel(self, obj):
+        from django.urls import reverse
+        from django.utils.safestring import mark_safe
+        from blockchain import registration as chain
+        if obj is None or not obj.pk:
+            return 'Save the property first.'
+        reg = chain.latest(obj)
+        register = reverse('admin:properties_property_blockchain_register', args=[obj.pk])
+        report = reverse('admin:properties_property_blockchain_report', args=[obj.pk])
+        btn = '<a class="button" style="padding:6px 12px;margin-right:8px;display:inline-block" href="{}">{}</a>'
+        parts = []
+        if obj.smart_contract_address:
+            parts.append(format_html('<p style="margin:0 0 8px"><b style="color:#059669">On the blockchain</b> — '
+                                     'token contract <code>{}</code></p>', obj.smart_contract_address))
+            parts.append(format_html(btn, report, 'Download tokenization report (Word)'))
+        elif reg is not None and reg.status in ('queued', 'sent'):
+            tx = (format_html(' Transaction: <a href="{}" target="_blank" rel="noopener">{}</a>',
+                              reg.tx_url, reg.tx_hash[:18] + '…') if reg.tx_url else '')
+            parts.append(format_html('<p style="margin:0"><b style="color:#2563eb">{}</b> — started {}. '
+                                     'Reload this page in a minute.{}</p>', reg.get_status_display(),
+                                     reg.created_at.strftime('%d %b %Y %H:%M'), tx))
+        else:
+            if reg is not None and reg.status == 'failed':
+                parts.append(format_html('<p style="margin:0 0 8px;color:#b91c1c"><b>Last attempt failed:</b> {}</p>',
+                                         reg.error))
+            parts.append(format_html(btn, register, 'Register on the blockchain'))
+        return mark_safe(''.join(str(p) for p in parts))
+
+    def blockchain_register_view(self, request, object_id):
+        from decimal import Decimal, InvalidOperation
+        from django.shortcuts import get_object_or_404, redirect
+        from django.template.response import TemplateResponse
+        from django.urls import reverse
+        from blockchain import registration as chain
+
+        prop = get_object_or_404(Property, pk=object_id)
+        back = reverse('admin:properties_property_change', args=[prop.pk])
+        if not request.user.is_superuser:
+            self.message_user(request, 'Only a full admin can register a property on the blockchain.',
+                              level=messages.ERROR)
+            return redirect(back)
+        nets = chain.networks()
+        terms = chain.default_terms(prop)
+        network = chain.default_network()
+        error = ''
+        if request.method == 'POST':
+            network = next((n for n in nets if str(n.pk) == request.POST.get('network')), None)
+            try:
+                terms = chain.Terms(lockup_months=int(request.POST.get('lockup_months') or 0),
+                                    early_exit_fee_pct=Decimal(request.POST.get('early_exit_fee_pct') or '0'),
+                                    distribution_frequency=int(request.POST.get('distribution_frequency') or 0))
+                if network is None:
+                    raise chain.RegistrationError('Choose a network.')
+                if not request.POST.get('confirm'):
+                    raise chain.RegistrationError('Tick the confirmation box: this writes to the blockchain and '
+                                                  'cannot be undone.')
+                if chain.is_mainnet(network) and request.POST.get('mainnet_confirm') != 'MAINNET':
+                    raise chain.RegistrationError('Type MAINNET to confirm registering on the main network.')
+                chain.request(prop, network, terms, by=request.user)
+            except (ValueError, InvalidOperation):
+                error = 'Enter whole months for the lock-up and a number for the fee.'
+            except chain.RegistrationError as exc:
+                error = exc.message
+            else:
+                self.message_user(request, f'Registration of "{prop.title}" started on {network.name}. It takes about '
+                                           f'a minute; you will get an email when it is done.')
+                return redirect(back)
+        context = {
+            **self.admin_site.each_context(request),
+            'opts': self.model._meta, 'original': prop, 'title': f'Register "{prop.title}" on the blockchain',
+            'prop': prop, 'networks': nets, 'network': network, 'terms': terms, 'error': error,
+            'problems': chain.problems(prop, network), 'warnings': chain.warnings(prop),
+            'frequencies': sorted(chain.FREQUENCIES.items()),
+            'rental_yield_pct': Decimal(chain.rental_yield_bps(prop)) / 100,
+            'is_mainnet': bool(network and chain.is_mainnet(network)),
+            'spv': prop.spv_entity if getattr(prop, 'spv_entity_id', None) else None,
+            'shares_display': f'{int(prop.total_tokens or 0):,}', 'back': back,
+        }
+        return TemplateResponse(request, 'admin/blockchain/register_property.html', context)
+
+    def blockchain_report_view(self, request, object_id):
+        from django.http import HttpResponse
+        from django.shortcuts import get_object_or_404, redirect
+        from django.urls import reverse
+        from blockchain.tokenization_report import ReportError, build, filename
+
+        prop = get_object_or_404(Property, pk=object_id)
+        try:
+            data = build(prop)
+        except ReportError as exc:
+            self.message_user(request, exc.message, level=messages.WARNING)
+            return redirect(reverse('admin:properties_property_change', args=[prop.pk]))
+        response = HttpResponse(
+            data, content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        response['Content-Disposition'] = f'attachment; filename="{filename(prop)}"'
+        return response
+
+    @admin.action(description='Register on the blockchain (one property)')
+    def register_on_blockchain(self, request, queryset):
+        from django.shortcuts import redirect
+        from django.urls import reverse
+        if queryset.count() != 1:
+            self.message_user(request, 'Select exactly one property to register.', level=messages.WARNING)
+            return None
+        return redirect(reverse('admin:properties_property_blockchain_register', args=[queryset.first().pk]))
+
+    @admin.action(description='Download tokenization report (Word, one property)')
+    def download_tokenization_report(self, request, queryset):
+        if queryset.count() != 1:
+            self.message_user(request, 'Select exactly one property.', level=messages.WARNING)
+            return None
+        return self.blockchain_report_view(request, str(queryset.first().pk))
 
     def get_fieldsets(self, request, obj=None):
         """

@@ -6,7 +6,7 @@ operations, smart contracts, transactions, and monitoring.
 """
 
 from django.contrib import admin
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 from django.urls import reverse
 from django.db.models import Count, Sum
 from django.utils import timezone
@@ -516,3 +516,33 @@ class GasTrackerAdmin(admin.ModelAdmin):
             slow, standard, fast
         )
     gas_prices_gwei.short_description = 'Gas Prices (Gwei)'
+
+
+from .models import PropertyChainRegistration  # noqa: E402
+
+
+@admin.register(PropertyChainRegistration)
+class PropertyChainRegistrationAdmin(admin.ModelAdmin):
+    """Read-only history of the "Register on the blockchain" button (properties admin)."""
+
+    list_display = ('property', 'network', 'status', 'token_address', 'holders_queued', 'requested_by', 'created_at',
+                    'completed_at')
+    list_filter = ('status', 'network')
+    search_fields = ('property__title', 'token_address', 'tx_hash')
+    readonly_fields = [f.name for f in PropertyChainRegistration._meta.fields] + ['explorer_links']
+
+    @admin.display(description='Explorer')
+    def explorer_links(self, obj):
+        links = [(label, url) for label, url in (('Transaction', obj.tx_url), ('Token contract', obj.token_url),
+                                                 ('Rent distributor', obj.distributor_url)) if url]
+        return format_html_join(' · ', '<a href="{}" target="_blank" rel="noopener">{}</a>',
+                                ((url, label) for label, url in links)) or '—'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

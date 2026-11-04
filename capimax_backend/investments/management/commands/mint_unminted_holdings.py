@@ -48,14 +48,8 @@ class Command(BaseCommand):
             return self._unlanded(apply)
         from marketplace.models import TradeTransaction
 
-        qs = (Investment.objects
-              .filter(status=InvestmentStatus.COMPLETED, token_amount__gt=0,
-                      property_investment__status='tokenized')
-              .exclude(property_investment__smart_contract_address__isnull=True)
-              .exclude(property_investment__smart_contract_address='')
-              .filter(Q(transaction_hash__isnull=True) | Q(transaction_hash=''))
-              .select_related('user', 'property_investment')
-              .order_by('completed_at'))
+        from investments.backfill import queue, unminted_holdings
+        qs = unminted_holdings()
 
         rows = list(qs)
         for inv in rows:
@@ -71,12 +65,7 @@ class Command(BaseCommand):
             return
 
         with transaction.atomic():
-            for inv in rows:
-                inv.payment_method = {**(inv.payment_method or {}), 'backfill_mint': True}
-                inv.mint_retry_count = 0
-                inv.mint_error = None
-                inv.save(update_fields=['payment_method', 'mint_retry_count', 'mint_error'])
-                inv.mark_payment_confirmed()  # -> PENDING_MINT; the mint task completes it
+            queue(rows)
             closed = trades.update(chain_status='not_required', chain_updated_at=timezone.now(),
                                    chain_error='Closed by mint_unminted_holdings: the owners received their current '
                                                'holdings by mint, so no transfer is needed.')

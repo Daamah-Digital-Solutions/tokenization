@@ -10,6 +10,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 from decimal import Decimal
+import builtins
 import uuid
 import json
 
@@ -1102,3 +1103,85 @@ class GasTracker(models.Model):
 
     def __str__(self):
         return f"{self.network.name} - {self.standard_gas_price} gwei"
+
+
+class ChainRegistrationStatus(models.TextChoices):
+    QUEUED = 'queued', 'Queued'
+    SENT = 'sent', 'Sent — waiting for the network'
+    DONE = 'done', 'On the blockchain'
+    FAILED = 'failed', 'Failed'
+
+
+class PropertyChainRegistration(models.Model):
+    """
+    One request, from the admin, to put a property on the blockchain (client, Nov 2026 — as on
+    Capimax BRX): the terms written into its contract, the transaction, the contracts it created
+    and the outcome. It is also the record the Word tokenization report is built from.
+    The work runs in blockchain/registration.py.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    property = models.ForeignKey('properties.Property', on_delete=models.CASCADE,
+                                 related_name='chain_registrations')
+    network = models.ForeignKey(BlockchainNetwork, on_delete=models.PROTECT, related_name='property_registrations')
+    status = models.CharField(max_length=10, choices=ChainRegistrationStatus.choices,
+                              default=ChainRegistrationStatus.QUEUED, db_index=True)
+
+    # Terms written into the contract
+    total_supply = models.PositiveIntegerField()
+    token_price = models.DecimalField(max_digits=18, decimal_places=2)
+    category = models.CharField(max_length=20)
+    lockup_months = models.PositiveIntegerField(default=0)
+    early_exit_fee_bps = models.PositiveIntegerField(default=0, help_text='1% = 100')
+    rental_yield_bps = models.PositiveIntegerField(default=0, help_text='1% = 100')
+    distribution_frequency = models.PositiveSmallIntegerField(default=0, help_text='0 monthly, 1 quarterly, 2 semi-annual, 3 annual')
+    property_uri = models.CharField(max_length=500, blank=True)
+
+    # Outcome
+    tx_hash = models.CharField(max_length=80, blank=True)
+    block_number = models.PositiveBigIntegerField(null=True, blank=True)
+    gas_used = models.PositiveBigIntegerField(null=True, blank=True)
+    cost_native = models.DecimalField(max_digits=30, decimal_places=18, null=True, blank=True)
+    on_chain_property_id = models.PositiveBigIntegerField(null=True, blank=True)
+    factory_address = models.CharField(max_length=42, blank=True)
+    token_address = models.CharField(max_length=42, blank=True)
+    distributor_address = models.CharField(max_length=42, blank=True)
+    deployer_address = models.CharField(max_length=42, blank=True)
+    activation_tx = models.CharField(max_length=80, blank=True)
+    holders_queued = models.PositiveIntegerField(default=0)
+    error = models.TextField(blank=True)
+
+    requested_by = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True, blank=True,
+                                     related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Property registration on the blockchain'
+        verbose_name_plural = 'Property registrations on the blockchain'
+        constraints = [
+            # Only one registration in progress or done per property; failed ones may be retried.
+            models.UniqueConstraint(fields=['property'], condition=~models.Q(status='failed'),
+                                    name='one_live_chain_registration_per_property'),
+        ]
+
+    def __str__(self):
+        return f'{self.property} — {self.get_status_display()}'
+
+    def _explorer(self, kind: str, value: str):
+        base = (self.network.explorer_url or '').rstrip('/')
+        return f'{base}/{kind}/{value}' if base and value else ''
+
+    @builtins.property
+    def tx_url(self):
+        return self._explorer('tx', self.tx_hash)
+
+    @builtins.property
+    def token_url(self):
+        return self._explorer('address', self.token_address)
+
+    @builtins.property
+    def distributor_url(self):
+        return self._explorer('address', self.distributor_address)

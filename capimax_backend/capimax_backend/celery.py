@@ -130,6 +130,12 @@ app.conf.beat_schedule = {
         'schedule': 60.0 * 10.0,  # Every 10 minutes
         'kwargs': {},
     },
+    # A property registration sent to the blockchain but not confirmed yet (worker restarted)
+    'check-property-chain-registrations': {
+        'task': 'blockchain.tasks.check_property_chain_registrations',
+        'schedule': 60.0 * 5.0,
+        'kwargs': {},
+    },
 
     # Transfers between users: deliver what is due, return unclaimed ones (round 4, extra #3)
     'process-transfers': {

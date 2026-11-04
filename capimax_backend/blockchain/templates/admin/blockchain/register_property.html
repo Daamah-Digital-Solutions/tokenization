@@ -1,0 +1,94 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+  &rsaquo; <a href="{% url 'admin:properties_property_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+  &rsaquo; <a href="{{ back }}">{{ prop.title }}</a>
+  &rsaquo; Register on the blockchain
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+  .chain-box { max-width: 760px; }
+  .chain-box table { width: 100%; margin: 8px 0 18px; }
+  .chain-box th { width: 42%; text-align: left; font-weight: 600; }
+  .chain-box .note { padding: 10px 14px; border-radius: 6px; margin: 0 0 14px; }
+  .chain-box .bad { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+  .chain-box .warn { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+  .chain-box .info { background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; }
+  .chain-box label { display: block; font-weight: 600; margin: 12px 0 4px; }
+  .chain-box .help { color: var(--body-quiet-color, #666); font-size: 12px; margin-top: 3px; }
+  .chain-box input[type=number], .chain-box select, .chain-box input[type=text] { min-width: 260px; }
+</style>
+<div class="chain-box">
+  <p>This creates the property's own contract on the blockchain, with the terms below written into it. It takes
+     about a minute; the shares already bought on the platform are then issued to their owners, and you get an
+     email. <b>It cannot be undone</b> — check the terms before you confirm.</p>
+
+  {% if error %}<div class="note bad">{{ error }}</div>{% endif %}
+  {% for p in problems %}<div class="note bad">{{ p }}</div>{% endfor %}
+  {% for w in warnings %}<div class="note warn">{{ w }}</div>{% endfor %}
+
+  <h2>From the property (edit the property to change these)</h2>
+  <table>
+    <tr><th>Property</th><td>{{ prop.title }}</td></tr>
+    <tr><th>Stage</th><td>{{ prop.get_property_category_display }}</td></tr>
+    <tr><th>Number of shares</th><td>{{ shares_display }}</td></tr>
+    <tr><th>Price per share</th><td>${{ prop.token_price }}</td></tr>
+    <tr><th>Rental yield written in the contract</th><td>{{ rental_yield_pct }}%</td></tr>
+    <tr><th>Owning company (SPV)</th><td>{% if spv %}{{ spv.name }}{% if spv.registration_number %} — {{ spv.registration_number }}{% endif %}{% elif prop.spv_company_name %}{{ prop.spv_company_name }}{% else %}<i>not set</i>{% endif %}</td></tr>
+  </table>
+
+  {% if networks %}
+  <form method="post">
+    {% csrf_token %}
+    <h2>Contract terms</h2>
+
+    <label for="network">Network</label>
+    <select name="network" id="network">
+      {% for n in networks %}
+        <option value="{{ n.pk }}" {% if network and n.pk == network.pk %}selected{% endif %}>{{ n.name }} (chain {{ n.chain_id }}{% if n.environment %}, {{ n.environment }}{% endif %})</option>
+      {% endfor %}
+    </select>
+    <div class="help">The test network is used until the client approves going live.</div>
+
+    <label for="lockup_months">Lock-up (months)</label>
+    <input type="number" min="0" max="120" step="1" name="lockup_months" id="lockup_months" value="{{ terms.lockup_months }}">
+    <div class="help">How long after each purchase the shares can't be moved on the blockchain. 0 = no lock-up. The platform will use the same lock-up for this property.</div>
+
+    <label for="early_exit_fee_pct">Early-exit fee (%)</label>
+    <input type="number" min="0" max="25" step="0.01" name="early_exit_fee_pct" id="early_exit_fee_pct" value="{{ terms.early_exit_fee_pct }}">
+    <div class="help">Charged by the contract if an owner exits before the lock-up ends. 0–25%.</div>
+
+    <label for="distribution_frequency">Rent paid</label>
+    <select name="distribution_frequency" id="distribution_frequency">
+      {% for value, label in frequencies %}
+        <option value="{{ value }}" {% if value == terms.distribution_frequency %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+
+    {% if is_mainnet %}
+      <div class="note warn" style="margin-top:16px">This is the <b>main network</b>: the registration uses real funds.</div>
+      <label for="mainnet_confirm">Type MAINNET to confirm</label>
+      <input type="text" name="mainnet_confirm" id="mainnet_confirm" autocomplete="off">
+    {% endif %}
+
+    <p style="margin-top:18px">
+      <label style="display:inline;font-weight:normal"><input type="checkbox" name="confirm" value="1">
+        I checked the terms. Register this property on the blockchain.</label>
+    </p>
+    <div class="submit-row" style="margin-top:12px">
+      <input type="submit" class="default" value="Register on the blockchain" {% if problems %}disabled{% endif %}>
+      <a href="{{ back }}" class="button cancel-link" style="margin-left:8px">Cancel</a>
+    </div>
+  </form>
+  {% else %}
+    <div class="note bad">No blockchain network with the platform contracts is set up on this server.</div>
+    <a href="{{ back }}" class="button">Back</a>
+  {% endif %}
+</div>
+{% endblock %}
