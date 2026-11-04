@@ -254,7 +254,14 @@
         "provisional": "Provisional certificate",
         "final": "Final certificate",
         "revoked": "Revoked"
-      }
+      },
+      "positionsTitle": "Installment positions",
+      "positionsDesc": "Installment plans you bought as a position: the remaining installments are charged to your wallet. Pay them or sell the position on from Installments.",
+      "openInstallments": "Open Installments",
+      "positionListed": "for sale",
+      "positionLine_one": "worth {{value}} · {{left}} left in {{count}} installment",
+      "positionLine_other": "worth {{value}} · {{left}} left in {{count}} installments",
+      "nextDue": "next {{amount}} on {{date}}"
     },
     "quick": {
       "title": "Your tools",

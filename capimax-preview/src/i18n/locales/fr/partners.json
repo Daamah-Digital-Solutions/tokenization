@@ -254,7 +254,15 @@
         "provisional": "Certificat provisoire",
         "final": "Certificat définitif",
         "revoked": "Révoqué"
-      }
+      },
+      "positionsTitle": "Positions en échéances",
+      "positionsDesc": "Les plans d’échéances achetés comme position : les échéances restantes sont prélevées sur votre portefeuille. Payez-les ou revendez la position depuis Échéances.",
+      "openInstallments": "Ouvrir Échéances",
+      "positionListed": "en vente",
+      "positionLine_one": "vaut {{value}} · {{left}} restant en {{count}} échéance",
+      "positionLine_many": "vaut {{value}} · {{left}} restant en {{count}} échéances",
+      "positionLine_other": "vaut {{value}} · {{left}} restant en {{count}} échéances",
+      "nextDue": "prochaine {{amount}} le {{date}}"
     },
     "quick": {
       "title": "Vos outils",

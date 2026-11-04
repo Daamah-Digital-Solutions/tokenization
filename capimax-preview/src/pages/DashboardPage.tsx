@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 
 const KYC_NAV_ID = 'kyc-verification';
 // Investor views a broker / liquidity provider opens for their own shares.
-const PARTNER_HOLDING_VIEWS = ['my-properties', 'certificates', 'reports', 'marketplace'];
+const PARTNER_HOLDING_VIEWS = ['my-properties', 'certificates', 'reports', 'marketplace', 'installments'];
 import CapiMaxLightLogo from '../assets/tokenization_capi max  tokenization light  uk  copy.svg';
 import CapiMaxDarkLogo from '../assets/tokenization_capi max tokenization uk dark   copy.svg';
 
@@ -143,6 +143,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           { id: 'lp-market', label: tPartners('nav.lpMarket'), icon: '🏦' },
           { id: 'requests', label: tPartners('nav.requests'), icon: '📥' },
           { id: 'lp-assets', label: tPartners('nav.lpAssets'), icon: '🏠' },
+          // installment positions it bought: pay them, or sell them on again
+          { id: 'installments', label: t('nav.installments'), icon: '📅' },
           { id: 'marketplace', label: tPartners('nav.lpSell'), icon: '🏪' },
           { id: 'certificates', label: tCerts('nav.certificates'), icon: '🏅' },
           { id: 'transactions', label: tPartners('nav.transactions'), icon: '💳' },

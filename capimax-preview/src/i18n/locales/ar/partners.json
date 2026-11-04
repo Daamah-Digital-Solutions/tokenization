@@ -254,7 +254,18 @@
         "provisional": "شهادة مؤقتة",
         "final": "شهادة نهائية",
         "revoked": "ملغاة"
-      }
+      },
+      "positionsTitle": "مراكز التقسيط",
+      "positionsDesc": "خطط تقسيط اشتريتها كمركز: تُخصم الأقساط المتبقية من محفظتك. ادفعها أو أعد بيع المركز من «الأقساط».",
+      "openInstallments": "فتح الأقساط",
+      "positionListed": "معروض للبيع",
+      "positionLine_zero": "القيمة {{value}} · لا أقساط متبقية",
+      "positionLine_one": "القيمة {{value}} · متبقٍ {{left}} في قسط واحد",
+      "positionLine_two": "القيمة {{value}} · متبقٍ {{left}} في قسطين",
+      "positionLine_few": "القيمة {{value}} · متبقٍ {{left}} في {{count}} أقساط",
+      "positionLine_many": "القيمة {{value}} · متبقٍ {{left}} في {{count}} قسطًا",
+      "positionLine_other": "القيمة {{value}} · متبقٍ {{left}} في {{count}} قسط",
+      "nextDue": "القادم {{amount}} في {{date}}"
     },
     "quick": {
       "title": "أدواتك",

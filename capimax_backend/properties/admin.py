@@ -596,3 +596,31 @@ class RentDistributionAdmin(admin.ModelAdmin):
                 self.message_user(request, f'{dist}: {exc.message}', level=messages.WARNING)
         if done:
             self.message_user(request, f'{done} distribution(s) paid; owners were notified.')
+
+
+from .models import PositionListing, PositionOffer  # noqa: E402
+
+
+class PositionOfferInline(admin.TabularInline):
+    model = PositionOffer
+    extra = 0
+    can_delete = False
+    fields = ['liquidity_provider', 'price_per_share', 'status', 'expires_at', 'created_at']
+    readonly_fields = fields
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(PositionListing)
+class PositionListingAdmin(admin.ModelAdmin):
+    """Installment plans offered for sale as one position (read-only: sales happen in the app)."""
+
+    list_display = ['plan', 'seller', 'price_per_share', 'status', 'buyer', 'seller_cash', 'sold_via', 'created_at']
+    list_filter = ['status', 'sold_via']
+    search_fields = ['seller__email', 'buyer__email', 'plan__property_investment__title']
+    inlines = [PositionOfferInline]
+    readonly_fields = [f.name for f in PositionListing._meta.fields]
+
+    def has_add_permission(self, request):
+        return False

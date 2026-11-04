@@ -75,7 +75,11 @@ def finish_plan(plan) -> None:
     """
     from investments.models import TokenReservation
     from properties.models import Property
+    from properties.positions import close_for_plan
 
+    # A position for sale closes: paid off it is ordinary shares, cancelled there is nothing to sell
+    close_for_plan(plan, 'Closed: the installment plan was fully paid.' if plan.status == 'completed'
+                   else 'Closed: the installment plan was cancelled.')
     held = TokenReservation.objects.select_for_update().filter(installment_plan=plan, released=False)
     if not held.exists():
         return

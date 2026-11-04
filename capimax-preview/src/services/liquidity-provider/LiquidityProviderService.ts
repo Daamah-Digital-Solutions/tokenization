@@ -152,8 +152,26 @@ export interface LPAsset {
   since: string | null;
 }
 
+export interface LPPosition {
+  plan: string;
+  property_id: string;
+  title: string;
+  shares: number;
+  value: string;
+  equity: string;
+  entry_price: string;
+  remaining_principal: string;
+  remaining_payments: number;
+  next_payment_date: string | null;
+  next_payment_amount: string;
+  listed: boolean;
+  certificate: { id: string; number: string; status: string } | null;
+}
+
 export interface LPAssets {
   assets: LPAsset[];
+  /** Installment plans bought as a position, still being paid */
+  positions?: LPPosition[];
   totals: {
     properties: number;
     shares: number;

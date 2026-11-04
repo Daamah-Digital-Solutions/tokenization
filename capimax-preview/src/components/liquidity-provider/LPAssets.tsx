@@ -26,6 +26,7 @@ export const LPAssets: React.FC<{ compact?: boolean }> = ({ compact = false }) =
 
   const q = useQuery({ queryKey: ['lp', 'assets'], queryFn: LiquidityProviderService.getAssets, retry: 1 });
   const assets = q.data?.assets || [];
+  const positions = q.data?.positions || [];
   const totals = q.data?.totals;
   const shown = compact ? assets.slice(0, 3) : assets;
   const gainUp = Number(totals?.gain || 0) >= 0;
@@ -58,7 +59,7 @@ export const LPAssets: React.FC<{ compact?: boolean }> = ({ compact = false }) =
 
       {q.isLoading ? (
         <Loader2 className="w-5 h-5 animate-spin mx-auto my-10 text-neutral-400" />
-      ) : assets.length === 0 ? (
+      ) : assets.length === 0 && positions.length === 0 ? (
         <div className="py-10 px-5 text-center">
           <Building2 className="w-8 h-8 mx-auto text-neutral-300" />
           <p className="mt-3 text-sm text-neutral-500 dark:text-slate-400">{t('lp.assets.empty')}</p>
@@ -76,7 +77,7 @@ export const LPAssets: React.FC<{ compact?: boolean }> = ({ compact = false }) =
               </div>
             ))}
           </div>
-          <div className="space-y-3">
+          {assets.length > 0 && <div className="space-y-3">
             {shown.map((a) => (
               <AssetRow
                 key={a.property_id}
@@ -88,7 +89,35 @@ export const LPAssets: React.FC<{ compact?: boolean }> = ({ compact = false }) =
                 onSell={() => setSelling(a.property_id)}
               />
             ))}
-          </div>
+          </div>}
+          {positions.length > 0 && (
+            <div className="rounded-xl border border-indigo-100 dark:border-indigo-900/40 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <h4 className="font-semibold text-neutral-900 dark:text-slate-100">{t('lp.assets.positionsTitle')}</h4>
+                <button type="button" onClick={() => navigate('dashboard', { view: 'installments' })}
+                  className="text-sm font-semibold text-indigo-700 dark:text-indigo-300 hover:underline">
+                  {t('lp.assets.openInstallments')}
+                </button>
+              </div>
+              <p className="text-xs text-neutral-500 dark:text-slate-400 mb-3">{t('lp.assets.positionsDesc')}</p>
+              <ul className="divide-y divide-neutral-100 dark:divide-slate-700">
+                {positions.map((p) => (
+                  <li key={p.plan} className="py-2 flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
+                    <span className="flex-1 min-w-0 font-medium text-neutral-900 dark:text-slate-100 truncate">
+                      {p.title} · {t('plan:positions.sharesCount', { count: p.shares })}
+                      {p.listed && <span className="ms-2 text-xs text-amber-700 dark:text-amber-300">{t('lp.assets.positionListed')}</span>}
+                    </span>
+                    <span className="text-neutral-600 dark:text-slate-300">
+                      {t('lp.assets.positionLine', { value: money(p.value), left: money(p.remaining_principal), count: p.remaining_payments })}
+                    </span>
+                    {p.next_payment_date && (
+                      <span className="text-xs text-neutral-500">{t('lp.assets.nextDue', { amount: money(p.next_payment_amount), date: new Date(p.next_payment_date).toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' }) })}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 

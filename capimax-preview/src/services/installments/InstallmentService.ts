@@ -15,6 +15,8 @@ import { apiClient } from '../api/ApiClient';
 
 export interface InstallmentPlan {
   id: string;
+  /** The plan valued as one position for its holder, and whether it is for sale (as on Capimax BRX) */
+  position?: import('./PositionService').PlanPosition | null;
   property_investment: string;
   property_title?: string;
   property_address?: string;

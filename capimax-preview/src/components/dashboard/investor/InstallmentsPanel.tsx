@@ -7,7 +7,8 @@
  * upcoming), paying the amount due from the wallet, and downloads — the
  * plan statement and a receipt for each paid installment. On an
  * insufficient balance it opens the Add Funds modal so the fund-then-pay
- * loop stays inside this panel.
+ * loop stays inside this panel. Each plan can also be sold as one position
+ * before it ends (PositionSaleBox, client Nov 2026).
  */
 
 import React, { useState } from 'react';
@@ -29,6 +30,7 @@ import {
 import { InstallmentService, InstallmentPlan } from '../../../services/installments/InstallmentService';
 import { PaymentService } from '../../../services/payment/PaymentService';
 import { AddFundsModal } from '../../wallet/AddFundsModal';
+import { PositionSaleBox } from '../../installments/PositionSaleBox';
 import { ScheduleTable } from '../../properties/PaymentPlanSection';
 import { useRouter } from '../../../utils/router';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -348,6 +350,12 @@ export const InstallmentsPanel: React.FC = () => {
                     {t('dashboard.nextPayment', { amount: formatMoney(nextRow.amount), date: formatPlanDate(nextRow.dueDate, lang) })}
                   </div>
                 ) : null}
+
+                {/* Exit before the end: sell the whole plan as one position (as on Capimax BRX) */}
+                {plan.position && (
+                  <PositionSaleBox planId={plan.id} position={plan.position}
+                                   onSold={(msg) => setFeedback({ type: 'success', msg })} />
+                )}
 
                 {/* Schedule + downloads */}
                 <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between flex-wrap gap-2">

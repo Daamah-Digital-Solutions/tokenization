@@ -36,6 +36,10 @@ def transfer_lp_tokens(self, tx_id: str):
 @shared_task
 def expire_exit_requests():
     """Close sale requests nobody answered and offers not accepted in time (round 5)."""
+    from properties.positions import expire_offers
+
     from .market import expire_due
 
-    return expire_due()
+    result = expire_due()
+    result['position_offers'] = expire_offers()  # offers on installment positions for sale
+    return result

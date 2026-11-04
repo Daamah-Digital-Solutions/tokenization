@@ -6,6 +6,7 @@ import { cn } from '../../utils/cn';
 import { baseLanguage } from '../../utils/locale';
 import { Button } from '../ui/Button';
 import { LiquidityProviderService, type LPExitRequest } from '../../services/liquidity-provider/LiquidityProviderService';
+import { PositionsForSale } from '../installments/PositionsForSale';
 
 /**
  * The liquidity market (client voice notes, round 5): sale requests investors
@@ -203,6 +204,9 @@ export const LPMarket: React.FC<{ compact?: boolean }> = ({ compact = false }) =
           )}
         </div>
       </div>
+
+      {/* Installment plans for sale as one position: buy at the asking price or send an offer */}
+      <PositionsForSale asProvider hideWhenEmpty={compact} />
 
       {!compact && (
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-neutral-200 dark:border-slate-700">

@@ -101,6 +101,7 @@ def lp_assets(lp, request=None) -> dict:
     gain = totals['value'] - totals['cost']
     return {
         'assets': sorted(rows, key=lambda r: Decimal(r['value']), reverse=True),
+        'positions': _positions(user),
         'totals': {
             'properties': totals['properties'],
             'shares': totals['shares'],
@@ -112,3 +113,35 @@ def lp_assets(lp, request=None) -> dict:
             'listed_shares': sum(r['listed_shares'] for r in rows),
         },
     }
+
+
+def _positions(user) -> list[dict]:
+    """Installment plans the LP holds (bought as a position, still being paid): value, what is left to pay."""
+    from certificates.models import Certificate
+    from properties.models import ConstructionInstallment
+    from properties.positions import holder_view
+
+    rows = []
+    for plan in (ConstructionInstallment.objects.filter(investor=user, status__in=['pending', 'processing'])
+                 .select_related('property_investment').order_by('next_payment_date')):
+        view = holder_view(plan)
+        if view is None:
+            continue
+        cert = (Certificate.objects.filter(installment_plan=plan, user=user).exclude(status='revoked')
+                .order_by('-created_at').first())
+        rows.append({
+            'plan': str(plan.pk),
+            'property_id': str(plan.property_investment_id),
+            'title': plan.property_investment.title,
+            'shares': plan.token_allocation,
+            'value': view['value'],
+            'equity': view['equity'],
+            'entry_price': view['entry_price'],
+            'remaining_principal': view['remaining_principal'],
+            'remaining_payments': max(0, plan.total_installments - plan.payments_made),
+            'next_payment_date': plan.next_payment_date.isoformat() if plan.next_payment_date else None,
+            'next_payment_amount': _q(plan.total_due),
+            'listed': bool(view['listing']),
+            'certificate': {'id': str(cert.pk), 'number': cert.certificate_id, 'status': cert.status} if cert else None,
+        })
+    return rows

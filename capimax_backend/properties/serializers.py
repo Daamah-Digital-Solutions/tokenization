@@ -714,6 +714,16 @@ class ConstructionInstallmentSerializer(serializers.ModelSerializer):
         from .payment_plan import plan_schedule_with_status
         return plan_schedule_with_status(obj)
 
+    position = serializers.SerializerMethodField()
+
+    def get_position(self, obj):
+        """The plan valued as one position for its holder, and whether / how it is for sale (positions.py)."""
+        request = self.context.get('request')
+        if request is None or obj.investor_id != getattr(request.user, 'pk', None):
+            return None
+        from .positions import holder_view
+        return holder_view(obj)
+
     class Meta:
         model = ConstructionInstallment
         fields = [
@@ -729,7 +739,7 @@ class ConstructionInstallmentSerializer(serializers.ModelSerializer):
             'property_address', 'property_category', 'investor_email',
             'down_payment_amount', 'first_installment_date', 'start_date',
             'schedule', 'amount_due', 'fee_due', 'total_due', 'is_overdue', 'fee_rate', 'fees_paid', 'auto_debit',
-            'property_city', 'property_country', 'token_price',
+            'property_city', 'property_country', 'token_price', 'position',
             'created_at', 'updated_at'
         ]
         read_only_fields = [

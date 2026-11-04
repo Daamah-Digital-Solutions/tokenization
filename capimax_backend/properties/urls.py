@@ -17,6 +17,9 @@ from . import views
 prefixed_router = SimpleRouter()
 prefixed_router.register(r'installments', views.ConstructionInstallmentViewSet, basename='installment-payment')
 prefixed_router.register(r'rental-distributions', views.RentalIncomeDistributionViewSet, basename='rental-distribution')
+# Installment plans sold as one position (as on Capimax BRX)
+from .position_views import PositionListingViewSet  # noqa: E402
+prefixed_router.register(r'positions', PositionListingViewSet, basename='installment-position')
 
 # Router for the PropertyViewSet (empty prefix — CRUD at /properties/)
 router = DefaultRouter()

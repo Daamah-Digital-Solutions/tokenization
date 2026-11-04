@@ -39,6 +39,7 @@ import { BuyOrderModal } from './BuyOrderModal';
 import { CreateListingModal } from './CreateListingModal';
 import { useRouter } from '../../utils/router';
 import { useTranslation } from 'react-i18next';
+import { PositionsForSale } from '../installments/PositionsForSale';
 import { uiLocale } from '../../utils/locale';
 
 interface SecondaryMarketDashboardProps {
@@ -457,6 +458,10 @@ export const SecondaryMarketDashboard: React.FC<SecondaryMarketDashboardProps> =
 
         {/* Main Content */}
         <div className="lg:col-span-3">
+          {/* Installment plans sold as one position (shown when there are any) */}
+          <div className="mb-6">
+            <PositionsForSale hideWhenEmpty />
+          </div>
           {/* Results Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">

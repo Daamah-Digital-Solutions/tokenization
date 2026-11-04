@@ -2007,3 +2007,104 @@ class RentDistributionItem(models.Model):
 
     def __str__(self):
         return f"{self.user} {self.net_amount}"
+
+
+# ---------------------------------------------------------------------------
+# Selling an installment plan as one position (client, Nov 2026 — as on Capimax BRX)
+# ---------------------------------------------------------------------------
+
+class PositionListingStatus(models.TextChoices):
+    LISTED = 'listed', 'For sale'
+    SOLD = 'sold', 'Sold'
+    CANCELLED = 'cancelled', 'Cancelled'
+
+
+class PositionListing(models.Model):
+    """
+    An active installment plan offered for sale as ONE position (properties/positions.py).
+    The buyer pays the seller what the position is worth above the installments still to
+    pay, plus the resale fee, and takes over the plan with its remaining installments.
+    Investors buy it on the secondary market at the asking price; liquidity providers can
+    buy it at that price too, or send a lower offer the seller accepts or declines.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    plan = models.ForeignKey(ConstructionInstallment, on_delete=models.PROTECT, related_name='position_listings')
+    seller = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='position_listings')
+    price_per_share = models.DecimalField(max_digits=12, decimal_places=2,
+                                          validators=[MinValueValidator(Decimal('0.01'))],
+                                          help_text="The seller's asking price per share")
+    status = models.CharField(max_length=12, choices=PositionListingStatus.choices,
+                              default=PositionListingStatus.LISTED, db_index=True)
+    note = models.CharField(max_length=300, blank=True)
+
+    # Set when sold: who bought, at what price, and the figures at that moment
+    buyer = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True, blank=True,
+                              related_name='positions_bought')
+    sold_price_per_share = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    seller_cash = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    buyer_fee = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
+    assumed_principal = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True,
+                                            help_text='Installments the buyer took over')
+    sold_via = models.CharField(max_length=20, blank=True, help_text='market / liquidity_provider')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    sold_at = models.DateTimeField(null=True, blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'properties_position_listing'
+        ordering = ['-created_at']
+        verbose_name = 'Installment position for sale'
+        verbose_name_plural = 'Installment positions for sale'
+        constraints = [
+            models.UniqueConstraint(fields=['plan'], condition=models.Q(status='listed'),
+                                    name='one_open_position_listing_per_plan'),
+        ]
+
+    def __str__(self):
+        return f'{self.plan.property_investment.title} — {self.plan.token_allocation} shares ({self.status})'
+
+
+class PositionOfferStatus(models.TextChoices):
+    OPEN = 'open', 'Waiting for the seller'
+    ACCEPTED = 'accepted', 'Accepted'
+    DECLINED = 'declined', 'Declined by the seller'
+    WITHDRAWN = 'withdrawn', 'Withdrawn by the provider'
+    LAPSED = 'lapsed', 'Closed (expired or the position was sold)'
+
+
+class PositionOffer(models.Model):
+    """A liquidity provider's offer (price per share) on an installment position for sale."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    listing = models.ForeignKey(PositionListing, on_delete=models.CASCADE, related_name='offers')
+    liquidity_provider = models.ForeignKey('liquidity_provider.LiquidityProvider', on_delete=models.CASCADE,
+                                           related_name='position_offers')
+    price_per_share = models.DecimalField(max_digits=12, decimal_places=2,
+                                          validators=[MinValueValidator(Decimal('0.01'))])
+    notes = models.TextField(blank=True)
+    status = models.CharField(max_length=12, choices=PositionOfferStatus.choices,
+                              default=PositionOfferStatus.OPEN, db_index=True)
+    expires_at = models.DateTimeField(help_text="The seller's time to accept this offer")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'properties_position_offer'
+        ordering = ['-price_per_share', 'created_at']
+        verbose_name = 'Offer on an installment position'
+        verbose_name_plural = 'Offers on installment positions'
+        constraints = [
+            models.UniqueConstraint(fields=['listing', 'liquidity_provider'], condition=models.Q(status='open'),
+                                    name='one_open_position_offer_per_provider'),
+        ]
+
+    def __str__(self):
+        return f'{self.liquidity_provider.legal_entity_name} — {self.price_per_share}/share ({self.status})'
+
+    @property
+    def is_live(self) -> bool:
+        from django.utils import timezone
+        return self.status == PositionOfferStatus.OPEN and self.expires_at > timezone.now()
