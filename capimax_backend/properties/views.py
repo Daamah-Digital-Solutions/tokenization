@@ -23,7 +23,7 @@ from drf_yasg import openapi
 from decimal import Decimal
 from datetime import datetime, timedelta
 from typing import Dict, Any, List
-from core.utils import create_success_response
+from core.utils import create_error_response, create_success_response
 import logging
 
 from core.permissions import IsOwnerOrReadOnly, AdminOrReadOnly
@@ -917,40 +917,15 @@ class PropertyValuationCreateView(generics.CreateAPIView):
         
         valuation = serializer.save(property=property_obj)
 
-        # Auto-update property token price based on new valuation
-        old_price = property_obj.token_price
-        property_obj.total_value = valuation.current_value
-        property_obj.token_price = calculate_token_price(
-            property_obj.total_value, property_obj.total_tokens
+        # The new valuation sets the share price: recorded in the price history and the
+        # owners are told (properties/pricing.py, share price changes, Nov 2026).
+        from .pricing import record_price
+        record_price(
+            property_obj,
+            calculate_token_price(valuation.current_value, property_obj.total_tokens),
+            by=self.request.user, source='valuation', total_value=valuation.current_value,
+            label='New valuation',
         )
-        property_obj.save(update_fields=['total_value', 'token_price', 'updated_at'])
-        new_price = property_obj.token_price
-
-        # Notify all investors who hold tokens in this property
-        investor_ids = Investment.objects.filter(
-            property_investment=property_obj,
-            status='completed'
-        ).values_list('user', flat=True).distinct()
-
-        for user_id in investor_ids:
-            try:
-                from accounts.models import User
-                investor = User.objects.get(id=user_id)
-                NotificationService.create_notification(
-                    user=investor,
-                    title=f"Price Update: {property_obj.title}",
-                    message=(
-                        f"The token price for {property_obj.title} has been updated "
-                        f"from ${old_price} to ${new_price} based on a new property valuation."
-                    ),
-                    notification_type='property',
-                    priority='high',
-                    send_email=True,
-                    send_real_time=True,
-                    content_object=property_obj,
-                )
-            except Exception as e:
-                logger.warning(f"Failed to notify investor {user_id}: {str(e)}")
 
         # Touch marketplace listings so serializers pick up new token_price
         try:
@@ -3628,3 +3603,16 @@ class OwnerMessagesMarkReadView(APIView):
             qs = qs.filter(property_id=request.data.get('property'))
         updated = qs.update(read_by_owner_at=timezone.now())
         return Response({'updated': updated})
+
+
+class PropertyPriceHistoryView(APIView):
+    """Share price history of a property (public): launch price, current price and every change."""
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, property_id):
+        from .pricing import price_summary
+        prop = Property.objects.filter(pk=property_id).first()
+        if prop is None:
+            return Response(create_error_response(message='Property not found', status_code=404), status=404)
+        return Response(create_success_response(data=price_summary(prop)))

@@ -110,6 +110,8 @@ urlpatterns = [
          views.PropertyUpdateCreateView.as_view(),
          name='property-update-create'),
 
+    # Share price history (share price changes, Nov 2026)
+    path('<uuid:property_id>/prices/', views.PropertyPriceHistoryView.as_view(), name='property-price-history'),
     # Property valuation creation
     path('<uuid:property_id>/valuations/',
          views.PropertyValuationCreateView.as_view(),

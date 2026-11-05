@@ -280,5 +280,23 @@
     "confirmDropProviders": "Stop offering it to the liquidity providers? Their open offers will be closed.",
     "channelsSaved": "Saved: your position is offered where you chose.",
     "noProviders": "Not offered to liquidity providers."
+  },
+  "prices": {
+    "title": "Share price history",
+    "subtitle": "Every change of the share price since launch.",
+    "launch": "Launch price",
+    "current": "Current price",
+    "sinceLaunch": "Since launch",
+    "phase": "Current phase",
+    "lastUpdate": "Last update",
+    "noChange": "No change yet",
+    "noChangeLong": "The share price has not changed since launch.",
+    "sharePrice": "Share price",
+    "yourAvgCost": "Your average cost",
+    "date": "Date",
+    "price": "Price",
+    "change": "Change",
+    "phaseNote": "Phase / note",
+    "disclaimer": "Past prices do not guarantee future prices; the share price can go down as well as up."
   }
 }

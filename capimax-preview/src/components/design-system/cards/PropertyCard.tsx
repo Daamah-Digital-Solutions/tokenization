@@ -94,11 +94,12 @@ export const PropertyCard = React.forwardRef<HTMLDivElement, PropertyCardProps>(
   // Format currency values
   const formatCurrency = (amount?: number) => {
     if (typeof amount !== 'number') return '$0';
+    const digits = Math.round(amount) === amount ? 0 : 2;
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits
     }).format(amount);
   };
   

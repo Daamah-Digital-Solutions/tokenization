@@ -382,9 +382,9 @@ export const PropertyGrid: React.FC<PropertyGridProps> = ({
                           {new Intl.NumberFormat('en-US', {
                             style: 'currency',
                             currency: 'USD',
-                            minimumFractionDigits: 0,
-                            maximumFractionDigits: 0
-                          }).format(property.token_price)}
+                            minimumFractionDigits: Number.isInteger(Number(property.token_price)) ? 0 : 2,
+                            maximumFractionDigits: Number.isInteger(Number(property.token_price)) ? 0 : 2
+                          }).format(Number(property.token_price))}
                         </div>
                       </div>
                       <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-3">

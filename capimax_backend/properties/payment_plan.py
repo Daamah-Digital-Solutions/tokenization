@@ -149,7 +149,9 @@ def sync_price_tier(prop) -> bool:
     """Apply the active phase's share price to the property. Returns True if changed."""
     tier = active_tier(prop)
     if tier and tier.price_per_token and tier.price_per_token != prop.token_price:
-        type(prop).objects.filter(pk=prop.pk).update(token_price=tier.price_per_token)
+        # Through the price history: a live property's owners are told (share price changes, Nov 2026).
+        from .pricing import record_price
+        record_price(prop, tier.price_per_token, label=tier.label, note=tier.notes or '', source='phase')
         prop.token_price = tier.price_per_token
         return True
     return False

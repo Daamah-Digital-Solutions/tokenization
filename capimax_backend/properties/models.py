@@ -8,6 +8,7 @@ and property-related operations including images, documents, and reviews.
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+import builtins
 from decimal import Decimal
 import uuid
 import logging
@@ -90,6 +91,13 @@ class Property(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))],
         help_text="Price per token in USD"
+    )
+
+    # The first share price, kept when the price is changed for the first time
+    # (token price changes, client Nov 2026 — as on Capimax BRX).
+    launch_price = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True, editable=False,
+        help_text="The share price before the first price change"
     )
     
     total_tokens = models.PositiveIntegerField(
@@ -1938,6 +1946,69 @@ class PropertyPriceTier(models.Model):
 
     def __str__(self):
         return f"{self.property.title}: {self.label} ({self.price_per_token})"
+
+
+class PropertyPriceChange(models.Model):
+    """
+    One change of a property's share price (client, Nov 2026 — as on Capimax BRX).
+    Append-only: a wrong price is corrected by recording the right one. Written
+    only by properties/pricing.record_price.
+    """
+
+    class Source(models.TextChoices):
+        ADMIN = 'admin', 'Set by the admin'
+        PHASE = 'phase', 'Price phase'
+        VALUATION = 'valuation', 'New valuation'
+
+    property = models.ForeignKey(Property, on_delete=models.PROTECT, related_name='price_history')
+    previous_price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    label = models.CharField(max_length=80, blank=True, help_text='Phase name, e.g. "Phase 2"')
+    note = models.CharField(max_length=280, blank=True, help_text='One-line note to the owners')
+    source = models.CharField(max_length=12, choices=Source.choices, default=Source.ADMIN)
+    owners_notified = models.PositiveIntegerField(default=0)
+    created_by = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True, blank=True,
+                                   related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        db_table = 'properties_price_change'
+        ordering = ['-created_at']
+        verbose_name = 'Share price change'
+        verbose_name_plural = 'Share price changes'
+
+    def __str__(self):
+        return f"{self.property.title}: {self.previous_price} → {self.price}"
+
+    @builtins.property
+    def change_pct(self):
+        if not self.previous_price:
+            return None
+        return ((self.price - self.previous_price) / self.previous_price * 100).quantize(Decimal('0.01'))
+
+    @builtins.property
+    def change_display(self):
+        pct = self.change_pct
+        return f'{pct:+}%' if pct is not None else ''
+
+    def save(self, *args, **kwargs):
+        if self.pk and type(self).objects.filter(pk=self.pk).exists():
+            # owners_notified is filled in after the notices go out; nothing else changes.
+            if set(kwargs.get('update_fields') or ()) != {'owners_notified'}:
+                raise ValueError('Price history is append-only; record a new price instead.')
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise ValueError('Price history is append-only; record a new price instead.')
+
+
+class PropertyTokenPrice(Property):
+    """Admin page "Share prices": change a property's share price (proxy, no table)."""
+
+    class Meta:
+        proxy = True
+        verbose_name = 'Share price'
+        verbose_name_plural = 'Share prices (change the price)'
 
 
 class RentDistribution(models.Model):

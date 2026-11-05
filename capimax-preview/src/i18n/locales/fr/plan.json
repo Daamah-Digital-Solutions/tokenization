@@ -282,5 +282,23 @@
     "confirmDropProviders": "Ne plus la proposer aux fournisseurs de liquidité ? Leurs offres ouvertes seront fermées.",
     "channelsSaved": "Enregistré : votre position est proposée là où vous l’avez choisi.",
     "noProviders": "Non proposée aux fournisseurs de liquidité."
+  },
+  "prices": {
+    "title": "Historique du prix de la part",
+    "subtitle": "Chaque changement du prix de la part depuis le lancement.",
+    "launch": "Prix de lancement",
+    "current": "Prix actuel",
+    "sinceLaunch": "Depuis le lancement",
+    "phase": "Phase actuelle",
+    "lastUpdate": "Dernière mise à jour",
+    "noChange": "Aucun changement",
+    "noChangeLong": "Le prix de la part n’a pas changé depuis le lancement.",
+    "sharePrice": "Prix de la part",
+    "yourAvgCost": "Votre coût moyen",
+    "date": "Date",
+    "price": "Prix",
+    "change": "Variation",
+    "phaseNote": "Phase / note",
+    "disclaimer": "Les prix passés ne garantissent pas les prix futurs ; le prix de la part peut baisser comme monter."
   }
 }

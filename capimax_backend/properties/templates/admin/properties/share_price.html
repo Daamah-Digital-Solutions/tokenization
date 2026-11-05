@@ -1,0 +1,111 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+  &rsaquo; <a href="{{ list_url }}">Share prices</a>
+  &rsaquo; {{ prop.title }}
+</div>
+{% endblock %}
+
+{% block content %}
+<style>
+  .price-box { max-width: 860px; }
+  .price-box table { width: 100%; margin: 8px 0 18px; }
+  .price-box th { text-align: left; font-weight: 600; }
+  .price-box .facts th { width: 40%; }
+  .price-box .note { padding: 10px 14px; border-radius: 6px; margin: 0 0 14px; }
+  .price-box .bad { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+  .price-box .info { background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; }
+  .price-box .warn { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+  .price-box label { display: block; font-weight: 600; margin: 12px 0 4px; }
+  .price-box .help { color: var(--body-quiet-color, #666); font-size: 12px; margin-top: 3px; }
+  .price-box input[type=text] { min-width: 320px; }
+  .price-box .up { color: #059669; font-weight: 600; }
+  .price-box .down { color: #b91c1c; font-weight: 600; }
+  .price-box .big { font-size: 22px; font-weight: 700; }
+</style>
+<div class="price-box">
+  <table class="facts">
+    <tr><th>Share price now</th><td class="big">${{ prop.token_price }}</td></tr>
+    <tr><th>Launch price</th><td>${{ summary.launch_price }}{% if since_launch %} —
+      <span class="{% if since_down %}down{% else %}up{% endif %}">{{ since_launch }} since launch</span>{% endif %}</td></tr>
+    <tr><th>Shares</th><td>{{ fmt.total }} in total · {{ fmt.sold }} sold · {{ fmt.unsold }} not sold yet</td></tr>
+    <tr><th>Property value</th><td>${{ fmt.value }}</td></tr>
+    <tr><th>Minimum investment</th><td>{% if prop.minimum_investment %}${{ fmt.minimum }}{% else %}—{% endif %}</td></tr>
+    <tr><th>Owners who will be told</th><td>{{ owners_count }}{% if sellers_count %} (of them {{ sellers_count }} with an open listing for sale){% endif %}</td></tr>
+  </table>
+
+  <div class="note info">
+    <b>What a new price does — immediately:</b>
+    <ul style="margin:6px 0 0 18px;padding:0">
+      <li>New buyers pay the new price.</li>
+      <li>Every owner's shares are valued at the new price in their portfolio and dashboard.</li>
+      <li>The property value and the minimum investment move in the same proportion (the minimum stays the same number of shares).</li>
+      <li>The change is kept in the price history shown on the property page, and every owner is told in-app and by email.</li>
+    </ul>
+    <b>Not changed:</b> installment plans already started keep their price; listings for sale on the secondary market and
+    installment positions keep the seller's own price; a checkout opened at the old price is refused and must be started again.
+  </div>
+
+  {% if not live %}
+    <div class="note warn">This property is not public and has no owners yet: the new price is applied without a
+      history entry or notification.</div>
+  {% endif %}
+
+  {% if can_change %}
+  <form method="post">
+    {% csrf_token %}
+    <h2>Set a new share price</h2>
+    {% if error %}<div class="note bad">{{ error }}</div>{% endif %}
+
+    <label for="new_price">New share price (USD)</label>
+    <input type="text" inputmode="decimal" name="new_price" id="new_price" value="{{ form.new_price }}" placeholder="{{ prop.token_price }}" autocomplete="off" required>
+
+    <label for="label">Phase name (optional)</label>
+    <input type="text" name="label" id="label" maxlength="80" value="{{ form.label }}" placeholder="e.g. Phase 2, Structure completed">
+    <div class="help">Shown next to the price in the history and in the message to the owners.</div>
+
+    <label for="note">One-line note to the owners (optional)</label>
+    <input type="text" name="note" id="note" maxlength="280" value="{{ form.note }}" style="width:100%" placeholder="e.g. The structure was completed ahead of schedule.">
+
+    <p style="margin-top:14px">
+      <label style="display:inline;font-weight:400">
+        <input type="checkbox" name="confirm_large" {% if form.confirm_large %}checked{% endif %}>
+        I confirm a change of more than {{ max_step }}%
+      </label>
+    </p>
+
+    <p style="margin-top:18px">
+      <input type="submit" class="default" value="Apply the new price and notify the owners">
+      <a href="{{ property_url }}" style="margin-left:12px">Back to the property</a>
+    </p>
+  </form>
+  {% else %}
+    <div class="note warn">Only a full admin (superuser) can change the share price.</div>
+  {% endif %}
+
+  <h2 style="margin-top:28px">Price history</h2>
+  {% if history %}
+  <table>
+    <thead><tr><th>Date</th><th>Price</th><th>Change</th><th>Phase / note</th><th>By</th><th>Owners told</th></tr></thead>
+    <tbody>
+    {% for h in history %}
+      <tr>
+        <td>{{ h.created_at|date:"d M Y H:i" }}</td>
+        <td>${{ h.previous_price }} → <b>${{ h.price }}</b></td>
+        <td>{% if h.change_pct is not None %}<span class="{% if h.change_pct < 0 %}down{% else %}up{% endif %}">{{ h.change_display }}</span>{% endif %}</td>
+        <td>{{ h.label }}{% if h.label and h.note %} — {% endif %}{{ h.note }}{% if not h.label and not h.note %}{{ h.get_source_display }}{% endif %}</td>
+        <td>{% if h.created_by %}{{ h.created_by.email }}{% else %}{{ h.get_source_display }}{% endif %}</td>
+        <td>{{ h.owners_notified }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p>No price change yet — the share price is still the launch price.</p>
+  {% endif %}
+</div>
+{% endblock %}

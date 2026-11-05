@@ -12,6 +12,8 @@ here). Client round 3:
     run the real workflow in properties/workflow.py.
 """
 
+from decimal import Decimal
+
 from django.contrib import admin, messages
 from django.utils import timezone
 from django.utils.html import format_html
@@ -134,6 +136,7 @@ class PropertyAdmin(admin.ModelAdmin):
     readonly_fields = [
         'id', 'published_at', 'published_by', 'tokens_available', 'funding_percentage',
         'is_fully_funded', 'can_accept_investments', 'created_at', 'updated_at', 'blockchain_panel',
+        'price_panel',
     ]
 
     fieldsets = (
@@ -166,7 +169,7 @@ class PropertyAdmin(admin.ModelAdmin):
         }),
         ('Financial Details', {
             'fields': (
-                'total_value', 'token_price', 'total_tokens', 'tokens_sold',
+                'total_value', 'token_price', 'price_panel', 'total_tokens', 'tokens_sold',
                 'expected_return', 'rental_yield', 'minimum_investment'
             )
         }),
@@ -389,7 +392,34 @@ class PropertyAdmin(admin.ModelAdmin):
         fieldsets = super().get_fieldsets(request, obj)
         if obj is None:
             fieldsets = [fs for fs in fieldsets if fs[0] != 'Computed Fields']
+            fieldsets = [(name, {**opts, 'fields': tuple(f for f in opts['fields'] if f != 'price_panel')})
+                         for name, opts in fieldsets]
         return fieldsets
+
+    def get_readonly_fields(self, request, obj=None):
+        fields = list(super().get_readonly_fields(request, obj))
+        # Once the property is public or has sold a share, the price is changed only on the
+        # "Share prices" page, so it is recorded and the owners are told (Nov 2026).
+        if obj is not None and obj.pk:
+            from .pricing import is_live
+            if is_live(obj):
+                fields.append('token_price')
+        return fields
+
+    @admin.display(description='Share price history')
+    def price_panel(self, obj):
+        from django.urls import reverse
+        from django.utils.safestring import mark_safe
+        if obj is None or not obj.pk:
+            return '-'
+        url = reverse('admin:properties_propertytokenprice_change', args=[obj.pk])
+        changes = obj.price_history.count()
+        last = obj.price_history.first()
+        info = (format_html('Launch price ${} · {} change(s), the last on {}.', obj.launch_price or obj.token_price,
+                            changes, last.created_at.strftime('%d %b %Y')) if last else 'No price change yet.')
+        btn = format_html('<a class="button" style="padding:6px 12px;margin-left:10px;display:inline-block" '
+                          'href="{}">Change the share price</a>', url)
+        return mark_safe(f'{info}{btn}')
 
     def get_inlines(self, request, obj):
         # Review decision + messages need an existing property and owner.
@@ -753,4 +783,149 @@ class PositionListingAdmin(admin.ModelAdmin):
     readonly_fields = [f.name for f in PositionListing._meta.fields]
 
     def has_add_permission(self, request):
+        return False
+
+
+# ---- Share prices (client, Nov 2026 — as on Capimax BRX "Unit prices") ----------------------
+from .models import PropertyPriceChange, PropertyTokenPrice  # noqa: E402
+
+
+@admin.register(PropertyTokenPrice)
+class PropertyTokenPriceAdmin(admin.ModelAdmin):
+    """
+    Change a property's share price. Each change is kept in the price history and
+    every owner is told in-app and by email (properties/pricing.py).
+    """
+
+    list_display = ['title', 'current_price', 'launch', 'since_launch', 'last_change', 'changes', 'is_published']
+    list_filter = ['is_published', 'property_category']
+    search_fields = ['title', 'city']
+    ordering = ['title']
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_active and request.user.is_superuser
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_active and request.user.is_staff
+
+    def get_queryset(self, request):
+        from django.db.models import Count, Max
+        return super().get_queryset(request).annotate(_changes=Count('price_history'),
+                                                      _last=Max('price_history__created_at'))
+
+    @admin.display(description='Share price', ordering='token_price')
+    def current_price(self, obj):
+        return f'${obj.token_price:,.2f}'
+
+    @admin.display(description='Launch price')
+    def launch(self, obj):
+        return f'${(obj.launch_price or obj.token_price):,.2f}'
+
+    @admin.display(description='Since launch')
+    def since_launch(self, obj):
+        from .pricing import change_pct
+        pct = change_pct(obj.launch_price, obj.token_price) if obj.launch_price else None
+        if pct is None:
+            return '-'
+        color = '#059669' if pct > 0 else '#b91c1c' if pct < 0 else '#6b7280'
+        return format_html('<span style="color:{};font-weight:600">{}%</span>', color, f'{pct:+}')
+
+    @admin.display(description='Last change', ordering='_last')
+    def last_change(self, obj):
+        return obj._last.strftime('%d %b %Y') if obj._last else '-'
+
+    @admin.display(description='Changes', ordering='_changes')
+    def changes(self, obj):
+        return obj._changes
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        from django.core.exceptions import PermissionDenied
+        from django.shortcuts import get_object_or_404, redirect
+        from django.template.response import TemplateResponse
+        from django.urls import reverse
+        from . import pricing
+
+        prop = get_object_or_404(Property, pk=object_id)
+        if not self.has_view_permission(request, prop):
+            raise PermissionDenied
+        can_change = self.has_change_permission(request, prop)
+        form = {'new_price': '', 'label': '', 'note': '', 'confirm_large': False}
+        error = None
+        if request.method == 'POST':
+            if not can_change:
+                raise PermissionDenied
+            form = {'new_price': request.POST.get('new_price', '').strip(),
+                    'label': request.POST.get('label', '').strip(),
+                    'note': request.POST.get('note', '').strip(),
+                    'confirm_large': request.POST.get('confirm_large') == 'on'}
+            try:
+                old = prop.token_price
+                pricing.validate_new_price(prop, form['new_price'], confirm_large=form['confirm_large'])
+                change = pricing.record_price(prop, form['new_price'], by=request.user, label=form['label'],
+                                              note=form['note'], source=PropertyPriceChange.Source.ADMIN,
+                                              confirm_large=form['confirm_large'])
+                if change is None:
+                    self.message_user(request, f'The share price of "{prop.title}" is now ${prop.token_price} '
+                                               f'(was ${old}). The property is not public and has no owners yet, '
+                                               f'so nothing was announced.', messages.SUCCESS)
+                else:
+                    owners, _ = pricing.owners(prop)
+                    self.message_user(request, f'The share price of "{prop.title}" changed from ${old} to '
+                                               f'${prop.token_price}. {len(owners)} owner(s) are being notified '
+                                               f'in-app and by email.', messages.SUCCESS)
+                return redirect(reverse('admin:properties_propertytokenprice_change', args=[prop.pk]))
+            except pricing.PriceError as exc:
+                error = exc.message
+        owners, sellers = pricing.owners(prop)
+        summary = pricing.price_summary(prop)
+        since = Decimal(summary['change_pct']) if summary['changes'] and summary['change_pct'] else None
+        context = {
+            **self.admin_site.each_context(request),
+            'opts': self.model._meta, 'original': prop, 'prop': prop,
+            'title': f'Share price — {prop.title}',
+            'history': list(prop.price_history.select_related('created_by')),
+            'summary': summary,
+            'since_launch': f'{since:+}%' if since is not None else '', 'since_down': since is not None and since < 0,
+            'live': pricing.is_live(prop),
+            'owners_count': len(owners), 'sellers_count': len(sellers),
+            'unsold': max(int(prop.total_tokens or 0) - int(prop.tokens_sold or 0), 0),
+            'fmt': {'total': f'{int(prop.total_tokens or 0):,}', 'sold': f'{int(prop.tokens_sold or 0):,}',
+                    'unsold': f'{max(int(prop.total_tokens or 0) - int(prop.tokens_sold or 0), 0):,}',
+                    'value': f'{Decimal(prop.total_value or 0):,.2f}',
+                    'minimum': f'{Decimal(prop.minimum_investment or 0):,.2f}'},
+            'form': form, 'error': error, 'can_change': can_change,
+            'max_step': int(pricing.MAX_STEP_CHANGE * 100),
+            'property_url': reverse('admin:properties_property_change', args=[prop.pk]),
+            'list_url': reverse('admin:properties_propertytokenprice_changelist'),
+        }
+        return TemplateResponse(request, 'admin/properties/share_price.html', context)
+
+
+@admin.register(PropertyPriceChange)
+class PropertyPriceChangeAdmin(admin.ModelAdmin):
+    """The price history (read-only: prices are changed on the "Share prices" page)."""
+
+    list_display = ['property', 'previous_price', 'price', 'pct', 'label', 'source', 'owners_notified',
+                    'created_by', 'created_at']
+    list_filter = ['source', 'property']
+    search_fields = ['property__title', 'label', 'note']
+    readonly_fields = [f.name for f in PropertyPriceChange._meta.fields]
+
+    @admin.display(description='Change')
+    def pct(self, obj):
+        return obj.change_display or '-'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
         return False

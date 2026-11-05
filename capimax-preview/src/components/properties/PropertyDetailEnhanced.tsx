@@ -53,6 +53,7 @@ import { PROPERTY_PLACEHOLDER, handleImageFallback } from '../../utils/imageFall
 import { useTranslation } from 'react-i18next';
 import { CalendarClock, Layers, TrendingUp as PriceUp } from 'lucide-react';
 import { PaymentPlanSection, PriceTiersCard } from './PaymentPlanSection';
+import { SharePriceHistory } from './SharePriceHistory';
 import { usePaymentOptions } from '../purchase/PaymentMethodList';
 import {
   DeveloperCard,
@@ -133,12 +134,14 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
   const isReadyProperty = property.property_category === 'ready_property';
 
   const formatCurrency = (amount: number) => {
+    const n = Number(amount) || 0;
+    const digits = Math.round(n) === n ? 0 : 2;
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    }).format(n);
   };
 
   const formatPercentage = (value: number) => `${value.toFixed(1)}%`;
@@ -807,6 +810,7 @@ export const PropertyDetailEnhanced: React.FC<PropertyDetailEnhancedProps> = ({
               <ValuationCard details={details} />
             </div>
             <PriceTiersCard tiers={details?.price_tiers || []} />
+            <SharePriceHistory propertyId={String(property.id)} />
             </div>
           )}
 
