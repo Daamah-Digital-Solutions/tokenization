@@ -160,6 +160,8 @@ def listing_summary(listing, *, for_seller: bool = False, viewer=None) -> dict:
         'next_payment_amount': str(_q(fig['next_payment_amount'])),
         'frequency': plan.frequency,
         'note': listing.note,
+        'to_market': listing.to_market,
+        'to_providers': listing.to_providers,
         'created_at': listing.created_at.isoformat(),
         'mine': viewer is not None and listing.seller_id == viewer.pk,
     }
@@ -189,10 +191,17 @@ def offer_summary(offer, plan) -> dict:
     }
 
 
-def market(viewer):
-    """Positions for sale that `viewer` can buy (everyone's but their own)."""
+def market(viewer, channel: str | None = None):
+    """
+    Positions for sale that `viewer` can buy (everyone's but their own). `channel`: 'market' — the
+    secondary market page; 'providers' — the liquidity market; None — both.
+    """
     qs = (PositionListing.objects.filter(status=PositionListingStatus.LISTED)
           .select_related('plan__property_investment').order_by('-created_at'))
+    if channel == 'market':
+        qs = qs.filter(to_market=True)
+    elif channel == 'providers':
+        qs = qs.filter(to_providers=True)
     if viewer is not None:
         qs = qs.exclude(seller=viewer)
     return [p for p in qs if p.plan.investor_id == p.seller_id and p.plan.is_active]
@@ -202,7 +211,10 @@ def market(viewer):
 # Seller: list / cancel / answer an offer
 # ---------------------------------------------------------------------------
 
-def list_position(user, plan_id, price_per_share=None, note: str = '') -> PositionListing:
+def list_position(user, plan_id, price_per_share=None, note: str = '', *, to_market: bool = True,
+                  to_providers: bool = True) -> PositionListing:
+    if not (to_market or to_providers):
+        raise PositionError('NO_CHANNEL', 'Choose where to sell: the secondary market, the liquidity providers, or both.')
     with transaction.atomic():
         plan = (ConstructionInstallment.objects.select_for_update(of=('self',))
                 .select_related('property_investment').filter(pk=plan_id, investor=user).first())
@@ -223,7 +235,29 @@ def list_position(user, plan_id, price_per_share=None, note: str = '') -> Positi
         if reason:
             raise PositionError(reason, MESSAGES.get(reason, 'This position cannot be sold right now.'))
         return PositionListing.objects.create(plan=plan, seller=user, price_per_share=fig['price_per_share'],
-                                              note=(note or '')[:300])
+                                              note=(note or '')[:300], to_market=bool(to_market),
+                                              to_providers=bool(to_providers))
+
+
+def set_channels(user, listing_id, *, to_market: bool, to_providers: bool) -> PositionListing:
+    """The seller changes where an open listing is offered. Dropping the providers closes their offers."""
+    if not (to_market or to_providers):
+        raise PositionError('NO_CHANNEL', 'Choose where to sell: the secondary market, the liquidity providers, or both.')
+    with transaction.atomic():
+        listing = PositionListing.objects.select_for_update().filter(pk=listing_id, seller=user).first()
+        if listing is None or listing.status != PositionListingStatus.LISTED:
+            raise PositionError('NOT_OPEN', 'This position is not for sale.')
+        closed = []
+        if listing.to_providers and not to_providers:
+            closed = list(listing.offers.filter(status=PositionOfferStatus.OPEN).select_related('liquidity_provider__user'))
+            listing.offers.filter(status=PositionOfferStatus.OPEN).update(status=PositionOfferStatus.LAPSED,
+                                                                          updated_at=timezone.now())
+        listing.to_market, listing.to_providers = bool(to_market), bool(to_providers)
+        listing.save(update_fields=['to_market', 'to_providers', 'updated_at'])
+    if closed:
+        from .position_notify import providers_closed
+        providers_closed(listing, closed)
+    return listing
 
 
 def cancel_listing(user, listing_id) -> PositionListing:
@@ -297,11 +331,17 @@ def buy(buyer, listing_id, expected_cash=None, expected_fee=None) -> PositionLis
         raise PositionError('CONFIRM', 'Confirm the amounts shown.')
     lp = getattr(buyer, 'liquidity_provider_profile', None)
     with transaction.atomic():
-        listing = PositionListing.objects.filter(pk=listing_id).only('price_per_share').first()
+        listing = (PositionListing.objects.filter(pk=listing_id)
+                   .only('price_per_share', 'to_market', 'to_providers').first())
         if listing is None:
             raise PositionError('NOT_OPEN', 'This position is no longer for sale.')
+        # Offered to providers: a provider buys as a provider (its limits apply). Otherwise only the
+        # secondary market sells it, to anyone.
+        as_provider = lp is not None and listing.to_providers
+        if not as_provider and not listing.to_market:
+            raise PositionError('NOT_OPEN', 'This position is offered to liquidity providers only.')
         return _transfer(listing_id, buyer, listing.price_per_share,
-                         via='liquidity_provider' if lp else 'market', lp=lp,
+                         via='liquidity_provider' if as_provider else 'market', lp=lp if as_provider else None,
                          expected=(expected_cash, expected_fee))
 
 
@@ -317,6 +357,9 @@ def make_offer(lp, listing_id, price_per_share, notes: str = '') -> PositionOffe
                    .filter(pk=listing_id).first())
         if listing is None or listing.status != PositionListingStatus.LISTED:
             raise PositionError('NOT_OPEN', 'This position is no longer for sale.')
+        if not listing.to_providers:
+            raise PositionError('NOT_FOR_PROVIDERS', 'The seller offers this position on the secondary market only: '
+                                                     'buy it there at the asking price.')
         if lp.user_id and listing.seller_id == lp.user_id:
             raise PositionError('OWN_LISTING', 'You cannot buy your own position.')
         fig = figures(listing.plan, price)

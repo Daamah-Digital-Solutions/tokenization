@@ -49,6 +49,15 @@ def offers_closed(listing, offers, sold: bool) -> None:
                 f'{_title(listing)}; your offer is closed.', '/dashboard?view=lp-market')
 
 
+def providers_closed(listing, offers) -> None:
+    """The seller now offers the position on the secondary market only."""
+    for offer in offers:
+        _notice(offer.liquidity_provider.user, 'Position offered on the secondary market only',
+                f'The seller of the installment position of {listing.plan.token_allocation} shares of '
+                f'{_title(listing)} now offers it on the secondary market only; your offer is closed. You can still '
+                f'buy it there at the asking price.', '/dashboard?view=marketplace')
+
+
 def offer_received(offer) -> None:
     listing = offer.listing
     from .positions import figures

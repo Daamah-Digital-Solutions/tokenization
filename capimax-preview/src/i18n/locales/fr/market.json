@@ -155,7 +155,11 @@
     "processingDesc": "Veuillez patienter pendant la création de votre annonce de vente...",
     "successTitle": "Annonce créée avec succès !",
     "successDesc": "Votre annonce de vente a été créée et est désormais en ligne sur le marché.",
-    "redirecting": "Redirection vers le marché..."
+    "redirecting": "Redirection vers le marché...",
+    "installmentsTitle": "Plans de paiement échelonné",
+    "installmentsDesc": "Le plan entier est vendu comme une seule position : l’acheteur vous paie votre part maintenant et reprend les échéances restantes.",
+    "installmentBadge": "Échelonné",
+    "installmentListed": "Déjà en vente — gérez-la dans Échéances."
   },
   "filters": {
     "clearAll": "Tout effacer",

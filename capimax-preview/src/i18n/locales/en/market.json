@@ -155,7 +155,11 @@
     "processingDesc": "Please wait while we create your sell listing...",
     "successTitle": "Listing Created Successfully!",
     "successDesc": "Your sell listing has been created and is now live on the marketplace.",
-    "redirecting": "Redirecting you back to the marketplace..."
+    "redirecting": "Redirecting you back to the marketplace...",
+    "installmentsTitle": "Installment plans",
+    "installmentsDesc": "The whole plan is sold as one position: the buyer pays you your share now and takes over the remaining installments.",
+    "installmentBadge": "Installments",
+    "installmentListed": "Already for sale — manage it under Installments."
   },
   "filters": {
     "clearAll": "Clear All",

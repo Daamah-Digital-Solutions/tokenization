@@ -2037,6 +2037,10 @@ class PositionListing(models.Model):
     status = models.CharField(max_length=12, choices=PositionListingStatus.choices,
                               default=PositionListingStatus.LISTED, db_index=True)
     note = models.CharField(max_length=300, blank=True)
+    # Where it is offered (client, Nov 2026): the secondary market (any investor buys at the asking price)
+    # and/or the liquidity providers (they buy or send offers). The seller chooses; at least one.
+    to_market = models.BooleanField(default=True, help_text='Shown on the secondary market to all investors')
+    to_providers = models.BooleanField(default=True, help_text='Shown to liquidity providers (buy or offer)')
 
     # Set when sold: who bought, at what price, and the figures at that moment
     buyer = models.ForeignKey('accounts.User', on_delete=models.SET_NULL, null=True, blank=True,

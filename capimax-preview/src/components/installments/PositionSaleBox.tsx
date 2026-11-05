@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { Layers, Loader2, X, TrendingUp, TrendingDown } from 'lucide-react';
 import { PositionService, type PlanPosition } from '../../services/installments/PositionService';
+import { ChannelChoice, PositionSellForm } from './PositionSellForm';
 import { formatMoney } from '../../utils/paymentPlan';
 
 const n = (v: string | number | null | undefined) => Number(v) || 0;
@@ -23,20 +24,16 @@ export const PositionSaleBox: React.FC<{
   const { t, i18n } = useTranslation('plan');
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [price, setPrice] = useState(n(position.current_price).toFixed(2));
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const when = (iso: string) => new Date(iso).toLocaleString(i18n.language);
 
   const listing = position.listing;
-  const priceNum = n(price);
-  const value = position.units * priceNum;
-  const cash = Math.max(0, Math.round((value - n(position.remaining_principal)) * 100) / 100);
-  const fee = Math.round(cash * n(position.fee_percent)) / 100;
   const gain = n(position.gain);
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ['my-installments'] });
+    queryClient.invalidateQueries({ queryKey: ['positions-market'] });
     queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
   };
 
@@ -99,9 +96,24 @@ export const PositionSaleBox: React.FC<{
               {busy === 'cancel' && <Loader2 className="w-3.5 h-3.5 animate-spin" />}{t('positions.withdraw')}
             </button>
           </div>
+          <div className="rounded-lg bg-white dark:bg-gray-900 border border-indigo-100 dark:border-indigo-900/40 p-3">
+            <ChannelChoice
+              toMarket={listing.to_market !== false}
+              toProviders={listing.to_providers !== false}
+              disabled={!!busy}
+              onChange={(next) => {
+                if (!next.toMarket && !next.toProviders) return;
+                if (listing.to_providers !== false && !next.toProviders && (listing.offers || []).some((o) => o.live)
+                    && !window.confirm(t('positions.confirmDropProviders'))) return;
+                run('channels', () => PositionService.channels(listing.id, next), t('positions.channelsSaved'));
+              }}
+            />
+          </div>
           <div>
             <p className="text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">{t('positions.offersTitle')}</p>
-            {(listing.offers || []).filter((o) => o.live).length === 0 ? (
+            {listing.to_providers === false ? (
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t('positions.noProviders')}</p>
+            ) : (listing.offers || []).filter((o) => o.live).length === 0 ? (
               <p className="text-xs text-gray-500 dark:text-gray-400">{t('positions.noOffers')}</p>
             ) : (
               <ul className="space-y-2">
@@ -154,37 +166,8 @@ export const PositionSaleBox: React.FC<{
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">{t('positions.intro', { units: position.units })}</p>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              {t('positions.askPrice')}
-              <input type="number" min={0.01} step="0.01" value={price} onChange={(e) => setPrice(e.target.value)}
-                     className="mt-1 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm" />
-              <span className="text-xs text-gray-500">{t('positions.floor', { price: formatMoney(position.floor_price), current: formatMoney(position.current_price) })}</span>
-            </label>
-            <dl className="mt-4 space-y-1.5 text-sm">
-              {[
-                [t('positions.positionValue', { units: position.units }), formatMoney(value)],
-                [t('positions.stillToPay'), `− ${formatMoney(position.remaining_principal)}`],
-              ].map(([k, v]) => (
-                <div key={k} className="flex justify-between"><dt className="text-gray-500">{k}</dt><dd>{v}</dd></div>
-              ))}
-              <div className="flex justify-between font-semibold border-t border-gray-100 dark:border-gray-800 pt-1.5">
-                <dt>{t('positions.youReceive')}</dt><dd className="text-emerald-700 dark:text-emerald-400">{formatMoney(cash)}</dd>
-              </div>
-              <div className="flex justify-between text-xs text-gray-500">
-                <dt>{t('positions.buyerFee', { pct: n(position.fee_percent) })}</dt><dd>{formatMoney(fee)}</dd>
-              </div>
-            </dl>
-            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">{t('positions.whoBuys')}</p>
-            {cash <= 0 && <p className="mt-2 text-sm text-red-600">{t('positions.blocked.below_remaining')}</p>}
-            <div className="mt-5 flex justify-end gap-2">
-              <button onClick={() => setOpen(false)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium">{t('positions.cancel')}</button>
-              <button disabled={!!busy || cash <= 0}
-                      onClick={() => run('list', () => PositionService.list(planId, priceNum), t('positions.listed'))}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-semibold">
-                {busy === 'list' && <Loader2 className="w-4 h-4 animate-spin" />}{t('positions.putForSale')}
-              </button>
-            </div>
+            <PositionSellForm planId={planId} position={position} onCancel={() => setOpen(false)}
+                              onListed={(msg) => { setOpen(false); setMessage({ ok: true, text: msg }); refresh(); }} />
           </div>
         </div>
       )}

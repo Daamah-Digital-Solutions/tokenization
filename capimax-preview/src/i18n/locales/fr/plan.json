@@ -214,9 +214,7 @@
     "positionValue": "Valeur de la position ({{units}} parts)",
     "youReceive": "Vous recevez",
     "buyerFee": "Frais de plateforme payés par l’acheteur ({{pct}} %)",
-    "whoBuys": "Elle est proposée sur le marché secondaire (les investisseurs achètent à votre prix) et sur le marché de liquidité (les fournisseurs achètent à votre prix ou vous font une offre).",
     "putForSale": "La mettre en vente",
-    "listed": "Votre position est en vente. Vous serez prévenu à la vente ou à l’arrivée d’une offre.",
     "forSale": "En vente à {{price}} la part — vous recevez {{cash}}",
     "withdraw": "Retirer de la vente",
     "withdrawn": "Votre position n’est plus en vente.",
@@ -241,7 +239,7 @@
     "marketDesc": "Des plans d’échéances entiers : payez sa part au vendeur maintenant et reprenez les échéances restantes.",
     "marketDescProvider": "Des investisseurs vendent leur plan d’échéances comme une seule position. Achetez au prix demandé ou faites une offre plus basse que le vendeur peut accepter. Vous reprenez les échéances restantes.",
     "marketEmpty": "Aucune position en échéances à vendre pour le moment.",
-    "rowLine": "{{units}} parts à {{price}} la part · {{now}} à payer maintenant",
+    "rowLine": "{{units}} à {{price}} la part · {{now}} à payer maintenant",
     "takeOver_one": "Puis {{count}} échéance, {{amount}} — la prochaine le {{date}}",
     "takeOver_many": "Puis {{count}} échéances, {{amount}} au total — la prochaine le {{date}}",
     "takeOver_other": "Puis {{count}} échéances, {{amount}} au total — la prochaine le {{date}}",
@@ -271,6 +269,18 @@
     "bought": "Position achetée. Le plan d’échéances est à vous — retrouvez-le dans Échéances.",
     "offerSent": "Offre envoyée. Le vendeur est prévenu.",
     "offerWithdrawn": "Votre offre a été retirée.",
-    "changed": "Les montants ont changé (une échéance a été payée). Vérifiez les nouveaux chiffres et réessayez."
+    "changed": "Les montants ont changé (une échéance a été payée). Vérifiez les nouveaux chiffres et réessayez.",
+    "whereTitle": "Où la vendre",
+    "whereMarket": "Marché secondaire",
+    "whereMarketDesc": "Tous les investisseurs la voient et l’achètent à votre prix.",
+    "whereProviders": "Fournisseurs de liquidité",
+    "whereProvidersDesc": "Les fournisseurs l’achètent à votre prix ou vous envoient une offre plus basse que vous pouvez accepter.",
+    "whereNone": "Choisissez au moins une option.",
+    "listedBoth": "Votre position est en vente sur le marché secondaire et auprès des fournisseurs de liquidité. Vous serez prévenu dès qu’elle est vendue ou qu’une offre arrive.",
+    "listedMarket": "Votre position est en vente sur le marché secondaire. Vous serez prévenu dès qu’elle est vendue.",
+    "listedProviders": "Votre position est proposée aux fournisseurs de liquidité. Vous serez prévenu dès qu’elle est vendue ou qu’une offre arrive.",
+    "confirmDropProviders": "Ne plus la proposer aux fournisseurs de liquidité ? Leurs offres ouvertes seront fermées.",
+    "channelsSaved": "Enregistré : votre position est proposée là où vous l’avez choisi.",
+    "noProviders": "Non proposée aux fournisseurs de liquidité."
   }
 }

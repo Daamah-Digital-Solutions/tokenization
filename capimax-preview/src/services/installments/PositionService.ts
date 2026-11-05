@@ -45,6 +45,9 @@ export interface PositionListing {
   next_payment_amount: string;
   frequency: string;
   note: string;
+  /** Where the seller offers it: the secondary market and/or the liquidity providers */
+  to_market: boolean;
+  to_providers: boolean;
   created_at: string;
   mine: boolean;
   /** Seller's view */
@@ -78,17 +81,37 @@ export interface PlanPosition {
 
 const listOf = <T,>(data: any): T[] => (Array.isArray(data) ? data : data?.results || data?.data || []);
 
+export type PositionChannel = 'market' | 'providers';
+
+export interface PositionChannels {
+  toMarket: boolean;
+  toProviders: boolean;
+}
+
 export class PositionService {
-  static async market(): Promise<PositionListing[]> {
-    return listOf<PositionListing>(await apiClient.get('/properties/positions/'));
+  /** 'market' — the secondary market page; 'providers' — the liquidity market */
+  static async market(channel?: PositionChannel): Promise<PositionListing[]> {
+    const q = channel ? `?channel=${channel}` : '';
+    return listOf<PositionListing>(await apiClient.get(`/properties/positions/${q}`));
   }
 
   static async mine(): Promise<PositionListing[]> {
     return listOf<PositionListing>(await apiClient.get('/properties/positions/mine/'));
   }
 
-  static list(plan: string, pricePerShare: number, note?: string): Promise<PositionListing> {
-    return apiClient.post('/properties/positions/', { plan, price_per_share: pricePerShare, note: note || '' });
+  static list(plan: string, pricePerShare: number, channels: PositionChannels = { toMarket: true, toProviders: true },
+              note?: string): Promise<PositionListing> {
+    return apiClient.post('/properties/positions/', {
+      plan, price_per_share: pricePerShare, note: note || '',
+      to_market: channels.toMarket, to_providers: channels.toProviders,
+    });
+  }
+
+  /** Change where an open listing is offered (dropping the providers closes their offers). */
+  static channels(listingId: string, channels: PositionChannels): Promise<PositionListing> {
+    return apiClient.post(`/properties/positions/${listingId}/channels/`, {
+      to_market: channels.toMarket, to_providers: channels.toProviders,
+    });
   }
 
   static cancel(listingId: string): Promise<unknown> {

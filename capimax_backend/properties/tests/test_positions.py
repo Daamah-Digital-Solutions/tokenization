@@ -250,3 +250,66 @@ class InstallmentPositionTests(TestCase):
                                                                    'expected_fee': '35.00'}, format='json')
         self.assertEqual(r.json()['error']['details']['code'], 'OWN_LISTING')
         self.assertEqual(self._list('120.00').json()['error']['details']['code'], 'ALREADY_LISTED')
+
+    # ---- where it is sold: secondary market and/or liquidity providers (client, Nov 2026) ----------
+
+    def test_seller_chooses_the_secondary_market_the_providers_or_both(self):
+        lp_user = make_user('lp-ch@example.com', '10000.00')
+        _lp_application(lp_user.email).approve(make_admin())
+        none = self.as_(self.seller).post(URL, {'plan': str(self.plan.id), 'price_per_share': '110.00',
+                                                'to_market': False, 'to_providers': False}, format='json')
+        self.assertEqual(none.json()['error']['details']['code'], 'NO_CHANNEL')
+
+        # Secondary market only: investors see it there, providers don't get it in their market
+        r = self.as_(self.seller).post(URL, {'plan': str(self.plan.id), 'price_per_share': '110.00',
+                                             'to_market': True, 'to_providers': False}, format='json')
+        self.assertEqual(r.status_code, 201, r.content)
+        self.assertEqual((body(r)['to_market'], body(r)['to_providers']), (True, False))
+        self.assertIn('secondary market', r.json()['message'])
+        listing = PositionListing.objects.get()
+        self.assertEqual(len(body(self.as_(self.buyer).get(f'{URL}?channel=market'))), 1)
+        self.assertEqual(len(body(self.as_(lp_user).get(f'{URL}?channel=providers'))), 0)
+        offer = self.as_(lp_user).post(f'{URL}{listing.id}/offer/', {'price_per_share': '100.00'}, format='json')
+        self.assertEqual(offer.json()['error']['details']['code'], 'NOT_FOR_PROVIDERS')
+
+        # Both: the provider offers; then the seller drops the providers and the offer closes with a notice
+        self.as_(self.seller).post(f'{URL}{listing.id}/channels/', {'to_market': True, 'to_providers': True},
+                                   format='json')
+        self.assertEqual(len(body(self.as_(lp_user).get(f'{URL}?channel=providers'))), 1)
+        self.assertEqual(self.as_(lp_user).post(f'{URL}{listing.id}/offer/', {'price_per_share': '100.00'},
+                                                format='json').status_code, 201)
+        with self.captureOnCommitCallbacks(execute=True):
+            r = self.as_(self.seller).post(f'{URL}{listing.id}/channels/', {'to_market': True, 'to_providers': False},
+                                           format='json')
+        self.assertEqual(r.status_code, 200, r.content)
+        self.assertEqual(PositionOffer.objects.get().status, 'lapsed')
+        from notifications.models import Notification
+        self.assertTrue(Notification.objects.filter(user=lp_user,
+                                                    title='Position offered on the secondary market only').exists())
+
+        # Providers only: an investor can't buy it on the secondary market; the provider can
+        self.as_(self.seller).post(f'{URL}{listing.id}/channels/', {'to_market': False, 'to_providers': True},
+                                   format='json')
+        self.assertEqual(len(body(self.as_(self.buyer).get(f'{URL}?channel=market'))), 0)
+        fig = body(self.as_(lp_user).get(f'{URL}?channel=providers'))[0]
+        no = self.as_(self.buyer).post(f'{URL}{listing.id}/buy/', {'expected_cash': fig['cash'],
+                                                                   'expected_fee': fig['fee']}, format='json')
+        self.assertEqual(no.status_code, 400)
+        ok = self.as_(lp_user).post(f'{URL}{listing.id}/buy/', {'expected_cash': fig['cash'],
+                                                                'expected_fee': fig['fee']}, format='json')
+        self.assertEqual(ok.status_code, 200, ok.content)
+        listing.refresh_from_db()
+        self.assertEqual((listing.status, listing.sold_via), ('sold', 'liquidity_provider'))
+
+    def test_a_provider_buying_a_market_only_listing_buys_as_an_investor(self):
+        lp_user = make_user('lp-mk@example.com', '10000.00')
+        lp = _lp_application(lp_user.email).approve(make_admin())
+        self.as_(self.seller).post(URL, {'plan': str(self.plan.id), 'price_per_share': '110.00',
+                                         'to_market': True, 'to_providers': False}, format='json')
+        fig = body(self.as_(lp_user).get(f'{URL}?channel=market'))[0]
+        r = self.as_(lp_user).post(f'{URL}{fig["id"]}/buy/', {'expected_cash': fig['cash'],
+                                                              'expected_fee': fig['fee']}, format='json')
+        self.assertEqual(r.status_code, 200, r.content)
+        self.assertEqual(PositionListing.objects.get().sold_via, 'market')
+        lp.refresh_from_db()
+        self.assertEqual(lp.current_month_total, Decimal('0'))  # not counted against its provider limits

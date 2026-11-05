@@ -11,9 +11,10 @@ import {
   Coins,
   Calculator,
   Timer,
-  MapPin
+  MapPin,
+  Layers
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '../ui/Button';
 import { Input } from '../design-system/forms/Input';
 import { Badge } from '../design-system/icons/Badge';
@@ -27,6 +28,8 @@ import { InvestmentService } from '../../services/investment/InvestmentService';
 import { useUser } from '../../contexts/AuthContext';
 import { PROPERTY_PLACEHOLDER, handleImageFallback } from '../../utils/imageFallback';
 import { useTranslation } from 'react-i18next';
+import { InstallmentService, type InstallmentPlan } from '../../services/installments/InstallmentService';
+import { PositionSellForm } from '../installments/PositionSellForm';
 
 interface CreateListingModalProps {
   isOpen: boolean;
@@ -55,8 +58,13 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
   // `state.user` for us.
   const user = useUser();
   const { t } = useTranslation('market');
-  const [step, setStep] = useState<'select' | 'details' | 'confirm' | 'processing' | 'success'>('select');
+  const { t: tp } = useTranslation('plan');
+  const queryClient = useQueryClient();
+  const [step, setStep] = useState<'select' | 'details' | 'confirm' | 'processing' | 'success' | 'position'>('select');
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
+  // An installment plan sold as one position (client, Nov 2026): it is listed from here too
+  const [selectedPlan, setSelectedPlan] = useState<InstallmentPlan | null>(null);
+  const [positionMessage, setPositionMessage] = useState<string | null>(null);
   const [listingData, setListingData] = useState<Partial<CreateListingRequest>>({
     listing_type: 'sell',
     tokens_offered: 1,
@@ -79,11 +87,23 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
     enabled: isOpen && !!user
   });
 
+  // The investor's installment plans (sold as one position each)
+  const { data: plans, isLoading: plansLoading } = useQuery({
+    queryKey: ['my-installments'],
+    queryFn: InstallmentService.getMyInstallments,
+    enabled: isOpen && !!user && !preselectPropertyId
+  });
+  const sellablePlans = (plans || []).filter(
+    (p) => p.position && p.position.blocked !== 'fully_paid' && p.position.blocked !== 'not_active'
+  );
+
   // Reset state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
       setStep('select');
       setSelectedProperty(null);
+      setSelectedPlan(null);
+      setPositionMessage(null);
       preselectDoneRef.current = false;
       setListingData({
         listing_type: 'sell',
@@ -277,7 +297,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                   <div key={stepItem.id} className="flex items-center">
                     <div className={cn(
                       "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
-                      step === stepItem.id || (['processing', 'success'].includes(step) && index < 3)
+                      step === stepItem.id || (step === 'position' && stepItem.id === 'details') || (['processing', 'success'].includes(step) && index < 3)
                         ? "bg-blue-600 text-white"
                         : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                     )}>
@@ -285,7 +305,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                     </div>
                     <span className={cn(
                       "ms-2 text-sm font-medium",
-                      step === stepItem.id || (['processing', 'success'].includes(step) && index < 3)
+                      step === stepItem.id || (step === 'position' && stepItem.id === 'details') || (['processing', 'success'].includes(step) && index < 3)
                         ? "text-blue-600 dark:text-blue-400"
                         : "text-gray-600 dark:text-gray-400"
                     )}>
@@ -296,7 +316,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                         "w-12 h-0.5 ms-4",
                         (['processing', 'success'].includes(step) && index < 2) ||
                         (step === 'confirm' && index < 2) ||
-                        (step === 'details' && index < 1)
+                        ((step === 'details' || step === 'position') && index < 1)
                           ? "bg-blue-600"
                           : "bg-gray-200 dark:bg-gray-700"
                       )} />
@@ -369,8 +389,60 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                     </div>
                   )}
 
-                  {!investmentsLoading && (!investments || investments.length === 0) && (
-                    <Card variant="outline" className="p-8 text-center">
+                  {!plansLoading && sellablePlans.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Layers className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                        <h5 className="font-semibold text-gray-900 dark:text-white">{t('create.installmentsTitle')}</h5>
+                      </div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('create.installmentsDesc')}</p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {sellablePlans.map((plan) => {
+                          const pos = plan.position!;
+                          const listed = !!pos.listing;
+                          const blocked = !listed && pos.blocked;
+                          return (
+                            <Card
+                              key={plan.id}
+                              variant="outlined"
+                              className={cn('p-4 transition-colors',
+                                listed || blocked ? 'opacity-70' : 'cursor-pointer hover:border-indigo-500')}
+                              onClick={() => {
+                                if (listed || blocked) return;
+                                setSelectedPlan(plan);
+                                setStep('position');
+                              }}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div>
+                                  <h4 className="font-semibold text-gray-900 dark:text-white mb-1">{plan.property_title}</h4>
+                                  {plan.property_city && (
+                                    <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mb-2">
+                                      <MapPin className="w-4 h-4 me-1" />{plan.property_city}
+                                    </div>
+                                  )}
+                                </div>
+                                <Badge variant="secondary">{t('create.installmentBadge')}</Badge>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-600 dark:text-gray-400">{t('create.yourTokens')}</span>
+                                <span className="font-semibold text-gray-900 dark:text-white">{pos.units}</span>
+                              </div>
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-600 dark:text-gray-400">{tp('positions.yourShare')}</span>
+                                <span className="font-semibold text-indigo-700 dark:text-indigo-300">${Number(pos.equity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                              </div>
+                              {listed && <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-400">{t('create.installmentListed')}</p>}
+                              {blocked && <p className="mt-2 text-xs text-gray-500">{tp(`positions.blocked.${blocked}`)}</p>}
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {!investmentsLoading && !plansLoading && (!investments || investments.length === 0) && sellablePlans.length === 0 && (
+                    <Card variant="outlined" className="p-8 text-center">
                       <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                       <Heading level="h4" size="lg" className="mb-2">
                         {t('create.noProperties')}
@@ -581,6 +653,32 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                 </div>
               )}
 
+              {step === 'position' && selectedPlan?.position && (
+                <div className="space-y-5">
+                  <Card variant="outlined" className="p-4 bg-gray-50 dark:bg-gray-900/50">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-white mb-1">{selectedPlan.property_title}</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{t('create.installmentsDesc')}</p>
+                      </div>
+                      <Badge variant="secondary">{t('create.installmentBadge')}</Badge>
+                    </div>
+                  </Card>
+                  <PositionSellForm
+                    planId={selectedPlan.id}
+                    position={selectedPlan.position}
+                    onCancel={() => setStep('select')}
+                    onListed={(msg) => {
+                      setPositionMessage(msg);
+                      setStep('success');
+                      queryClient.invalidateQueries({ queryKey: ['my-installments'] });
+                      queryClient.invalidateQueries({ queryKey: ['positions-market'] });
+                      if (onSuccess) setTimeout(() => { onSuccess(); onClose(); }, 2500);
+                    }}
+                  />
+                </div>
+              )}
+
               {step === 'confirm' && selectedProperty && (
                 <div className="space-y-6">
                   <div className="text-center">
@@ -715,7 +813,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                     {t('create.successTitle')}
                   </Heading>
                   <Text variant="body" color="secondary" className="mb-4">
-                    {t('create.successDesc')}
+                    {positionMessage || t('create.successDesc')}
                   </Text>
                   <Text variant="bodySmall" color="secondary">
                     {t('create.redirecting')}

@@ -22,7 +22,9 @@ export const PositionsForSale: React.FC<{ asProvider?: boolean; hideWhenEmpty?: 
   const lang = i18n.language || 'en';
   const queryClient = useQueryClient();
   const { navigate } = useRouter();
-  const q = useQuery({ queryKey: ['positions-market'], queryFn: PositionService.market, refetchInterval: 60000 });
+  const channel = asProvider ? 'providers' : 'market';
+  const q = useQuery({ queryKey: ['positions-market', channel], queryFn: () => PositionService.market(channel),
+                       refetchInterval: 60000 });
   const [buying, setBuying] = useState<PositionListing | null>(null);
   const [offering, setOffering] = useState<PositionListing | null>(null);
   const [busy, setBusy] = useState(false);
@@ -121,7 +123,7 @@ export const PositionsForSale: React.FC<{ asProvider?: boolean; hideWhenEmpty?: 
                     {p.property_title}{p.property_city ? <span className="font-normal text-gray-500"> · {p.property_city}</span> : null}
                   </button>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {t('positions.rowLine', { units: p.units, price: formatMoney(p.price_per_share), now: formatMoney(p.buyer_total) })}
+                    {t('positions.rowLine', { units: t('positions.sharesCount', { count: p.units }), price: formatMoney(p.price_per_share), now: formatMoney(p.buyer_total) })}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
                     <CalendarClock className="w-3.5 h-3.5" />

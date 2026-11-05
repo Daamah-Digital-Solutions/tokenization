@@ -214,9 +214,7 @@
     "positionValue": "Position value ({{units}} shares)",
     "youReceive": "You receive",
     "buyerFee": "Platform fee paid by the buyer ({{pct}}%)",
-    "whoBuys": "It is offered on the secondary market (investors buy at your price) and in the liquidity market (providers buy at your price or send you an offer).",
     "putForSale": "Put it up for sale",
-    "listed": "Your position is for sale. You will be notified when it sells or an offer arrives.",
     "forSale": "For sale at {{price}} per share — you receive {{cash}}",
     "withdraw": "Withdraw from sale",
     "withdrawn": "Your position is no longer for sale.",
@@ -241,7 +239,7 @@
     "marketDesc": "Whole installment plans: pay the seller their share now and take over the remaining installments.",
     "marketDescProvider": "Investors selling their installment plan as one position. Buy at the asking price, or send a lower offer the seller can accept. You take over the remaining installments.",
     "marketEmpty": "No installment positions for sale right now.",
-    "rowLine": "{{units}} shares at {{price}} per share · pay {{now}} now",
+    "rowLine": "{{units}} at {{price}} per share · pay {{now}} now",
     "takeOver_one": "Then {{count}} installment, {{amount}} — next on {{date}}",
     "takeOver_other": "Then {{count}} installments, {{amount}} in total — next on {{date}}",
     "yourOffer": "Your offer: {{price}} per share (the seller receives {{cash}})",
@@ -269,6 +267,18 @@
     "bought": "Position bought. The installment plan is yours now — find it under Installments.",
     "offerSent": "Offer sent. The seller is notified.",
     "offerWithdrawn": "Your offer was withdrawn.",
-    "changed": "The amounts changed (an installment was paid). Check the new figures and try again."
+    "changed": "The amounts changed (an installment was paid). Check the new figures and try again.",
+    "whereTitle": "Where to sell it",
+    "whereMarket": "Secondary market",
+    "whereMarketDesc": "All investors see it and buy it at your price.",
+    "whereProviders": "Liquidity providers",
+    "whereProvidersDesc": "Providers buy it at your price or send you a lower offer you can accept.",
+    "whereNone": "Choose at least one.",
+    "listedBoth": "Your position is for sale on the secondary market and to the liquidity providers. You will be notified when it sells or an offer arrives.",
+    "listedMarket": "Your position is for sale on the secondary market. You will be notified when it sells.",
+    "listedProviders": "Your position is offered to the liquidity providers. You will be notified when it sells or an offer arrives.",
+    "confirmDropProviders": "Stop offering it to the liquidity providers? Their open offers will be closed.",
+    "channelsSaved": "Saved: your position is offered where you chose.",
+    "noProviders": "Not offered to liquidity providers."
   }
 }

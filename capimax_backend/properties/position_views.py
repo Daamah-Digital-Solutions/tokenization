@@ -1,9 +1,10 @@
 """
 Installment positions for sale (properties/positions.py), at /api/v1/properties/positions/:
 
-  GET  positions/                         positions the caller can buy (everyone's but their own)
+  GET  positions/?channel=market|providers  positions the caller can buy (everyone's but their own)
   GET  positions/mine/                    the caller's listings and the positions they bought
-  POST positions/        {plan, price_per_share?, note?}         list a plan for sale (seller)
+  POST positions/        {plan, price_per_share?, note?, to_market?, to_providers?}   list a plan (seller)
+  POST positions/<id>/channels/  {to_market, to_providers}       where an open listing is offered
   POST positions/<id>/cancel/                                    withdraw it (seller)
   POST positions/<id>/buy/  {expected_cash, expected_fee}        buy at the asking price
   POST positions/<id>/offer/  {price_per_share, notes?}          liquidity provider offer
@@ -26,6 +27,20 @@ def _error(exc: P.PositionError):
                     status=code)
 
 
+def _flag(value) -> bool:
+    if isinstance(value, str):
+        return value.strip().lower() in ('1', 'true', 'yes', 'on')
+    return bool(value)
+
+
+def _where(listing) -> str:
+    if listing.to_market and listing.to_providers:
+        return 'Your position is for sale on the secondary market and to the liquidity providers.'
+    if listing.to_market:
+        return 'Your position is for sale on the secondary market.'
+    return 'Your position is offered to the liquidity providers.'
+
+
 def _provider(user):
     lp = getattr(user, 'liquidity_provider_profile', None)
     return lp if lp is not None and lp.status == 'active' else None
@@ -35,7 +50,9 @@ class PositionListingViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def list(self, request):
-        rows = [P.listing_summary(listing, viewer=request.user) for listing in P.market(request.user)]
+        channel = request.query_params.get('channel')
+        channel = channel if channel in ('market', 'providers') else None
+        rows = [P.listing_summary(listing, viewer=request.user) for listing in P.market(request.user, channel)]
         return Response(create_success_response(data=rows))
 
     @action(detail=False, methods=['get'])
@@ -55,13 +72,24 @@ class PositionListingViewSet(viewsets.ViewSet):
     def create(self, request):
         try:
             listing = P.list_position(request.user, request.data.get('plan'), request.data.get('price_per_share'),
-                                      request.data.get('note', ''))
+                                      request.data.get('note', ''),
+                                      to_market=_flag(request.data.get('to_market', True)),
+                                      to_providers=_flag(request.data.get('to_providers', True)))
         except P.PositionError as exc:
             return _error(exc)
         return Response(create_success_response(data=P.listing_summary(listing, for_seller=True, viewer=request.user),
-                                                message='Your position is for sale on the secondary market and in '
-                                                        'the liquidity market.'),
+                                                message=_where(listing)),
                         status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'])
+    def channels(self, request, pk=None):
+        try:
+            listing = P.set_channels(request.user, pk, to_market=_flag(request.data.get('to_market')),
+                                     to_providers=_flag(request.data.get('to_providers')))
+        except P.PositionError as exc:
+            return _error(exc)
+        return Response(create_success_response(data=P.listing_summary(listing, for_seller=True, viewer=request.user),
+                                                message=_where(listing)))
 
     @action(detail=True, methods=['post'])
     def cancel(self, request, pk=None):
