@@ -11,6 +11,12 @@ deliver()         on the delivery date: if the recipient has an account with
                   recipient is invited, for TRANSFER_CLAIM_DAYS.
 release_waiting() runs when someone's identity is approved: their waiting
                   transfers are delivered.
+Installment plan shares (asset "plan", client Nov 2026): the sender sends some
+                  or all the shares of a plan still being paid. The recipient
+                  must accept them (accept()) because they take over their part
+                  of the remaining installments; declining or not answering
+                  returns them. All the plan's shares move the plan; fewer split
+                  it (properties/plan_split.py). Nothing is minted on-chain.
 cancel() / expire  the sender gets everything back.
 """
 
@@ -91,8 +97,55 @@ def giftable(user) -> dict:
             'fee_percent': str(fee_percent()), 'claim_days': claim_days()}
 
 
+def giftable_plans(user) -> list[dict]:
+    """The user's installment plans whose shares can be transferred now."""
+    from properties import plan_split
+    from properties.models import ConstructionInstallment
+    from properties.positions import free_units, remaining_principal
+
+    rows = []
+    for plan in (ConstructionInstallment.objects.filter(investor=user, status__in=('pending', 'processing'))
+                 .select_related('property_investment').order_by('created_at')):
+        if not plan.is_active or (plan.payments_made or 0) < 1:
+            continue
+        free = free_units(plan)
+        if free > 0:
+            rows.append({'plan_id': str(plan.pk), 'property_id': str(plan.property_investment_id),
+                         'title': plan.property_investment.title, 'plan_units': plan.token_allocation,
+                         'free_units': free, 'payment_due': plan_split.payment_due(plan),
+                         'remaining_principal': str(remaining_principal(plan)),
+                         'remaining_payments': plan.remaining_payments})
+    return rows
+
+
+def plan_terms(t: Transfer) -> dict | None:
+    """What the recipient of installment shares takes over (for the accept screen)."""
+    if t.asset != TransferAsset.PLAN or t.plan_id is None:
+        return None
+    from properties import plan_split
+    from properties.positions import _q, remaining_principal, remaining_schedule
+    plan = t.plan
+    if not plan.is_active or t.units < 1 or t.units > plan.token_allocation:
+        return None
+    if t.units < plan.token_allocation:
+        pv = plan_split.preview(plan, t.units)
+        schedule = [{'number': r['number'], 'kind': r['kind'], 'due_date': r['due_date'].isoformat(),
+                     'amount': str(r['amount']), 'fee': str(r['fee']), 'total': str(r['total'])}
+                    for r in pv['part_unpaid']]
+        paid, remaining = pv['part_paid'], pv['part_remaining']
+    else:
+        schedule = [{k: r[k] for k in ('number', 'kind', 'due_date', 'amount', 'fee', 'total')}
+                    for r in remaining_schedule(plan)]
+        paid, remaining = Decimal(plan.total_amount_paid or 0), remaining_principal(plan)
+    return {'plan_units': plan.token_allocation, 'paid_principal': str(_q(paid)),
+            'remaining_principal': str(_q(remaining)), 'remaining_payments': len(schedule),
+            'remaining_total': str(_q(sum((Decimal(r['total']) for r in schedule), Decimal('0')))),
+            # Only part of a plan waits for a due payment (the whole plan moves with it)
+            'schedule': schedule, 'payment_due': t.units < plan.token_allocation and plan_split.payment_due(plan)}
+
+
 def create(sender, *, asset: str, recipient_email: str, recipient_name: str = '', message: str = '',
-           deliver_on=None, property_id=None, units: int = 0, amount=None) -> Transfer:
+           deliver_on=None, property_id=None, units: int = 0, amount=None, plan_id=None) -> Transfer:
     from marketplace.settlement import TradeSettlementError, _check_custody
     from marketplace.share_moves import free_shares
     from payments.models import WalletBalance
@@ -145,11 +198,104 @@ def create(sender, *, asset: str, recipient_email: str, recipient_name: str = ''
             t.fee_amount = (amount * fee_percent() / 100).quantize(CENT)
             t.save()
             _debit(sender, amount + t.fee_amount, t, f'Transfer {t.reference} to {email}')
+        elif asset == TransferAsset.PLAN:
+            _create_plan_transfer(t, sender, plan_id, units)
         else:
             raise TransferError('BAD_ASSET', 'Choose shares or wallet balance.')
 
         if deliver_on <= today:
             transaction.on_commit(lambda: _deliver_quietly(t.pk))
+    return t
+
+
+def _create_plan_transfer(t: Transfer, sender, plan_id, units) -> None:
+    from properties import plan_split
+    from properties.models import ConstructionInstallment
+    from properties.positions import figures, free_units
+
+    plan = (ConstructionInstallment.objects.select_for_update(of=('self',)).select_related('property_investment')
+            .filter(pk=plan_id, investor=sender).first()) if plan_id else None
+    if plan is None:
+        raise TransferError('PLAN_REQUIRED', 'Choose the installment plan whose shares you send.')
+    if not plan.is_active or (plan.payments_made or 0) < 1:
+        raise TransferError('PLAN_NOT_ACTIVE', 'Shares of this installment plan cannot be transferred now.')
+    units = int(units or 0)
+    free = free_units(plan)
+    if units < 1:
+        raise TransferError('UNITS_REQUIRED', 'Enter how many shares to send.')
+    if units > free:
+        raise TransferError('NOT_ENOUGH_SHARES', f'You can send up to {free} share(s) of this plan — the rest '
+                                                 f'are for sale or already being sent.')
+    if units < plan.token_allocation and plan_split.payment_due(plan):
+        raise TransferError('PAYMENT_DUE', 'An installment of this plan is due. Pay it first, then part of the '
+                                           'plan can be transferred.')
+    # The recipient accepts it: it is delivered then, never on a later date.
+    t.deliver_on = timezone.localdate()
+    t.plan, t.property_ref, t.units = plan, plan.property_investment, units
+    t.amount = figures(plan, 0, units)['paid_principal']  # what was already paid for these shares
+    t.fee_amount = (t.amount * fee_percent() / 100).quantize(CENT)
+    t.save()
+    if t.fee_amount > 0:
+        _debit(sender, t.fee_amount, t, f'Transfer fee {t.reference}')
+
+
+def _deliver_plan(t: Transfer, recipient) -> bool:
+    """Inside deliver(): the accepted installment shares move. False = the transfer was closed."""
+    from properties import plan_split
+    from properties.models import ConstructionInstallment
+    from properties.positions import _reissue_certificate, close_for_plan, listed_units, open_listing
+
+    plan = ConstructionInstallment.objects.select_for_update(of=('self',)).get(pk=t.plan_id)
+    if plan.investor_id != t.sender_id or not plan.is_active or t.units > plan.token_allocation:
+        _close(t, TransferStatus.FAILED, 'The installment plan changed: these shares can no longer be sent.')
+        return False
+    reason = f'transferred to {recipient.email} ({t.reference})'
+    if t.units == plan.token_allocation:
+        close_for_plan(plan, 'Closed: the installment plan was transferred.')
+        plan_split.move_whole(plan, recipient)
+        _reissue_certificate(plan, t.sender)
+    else:
+        if plan_split.payment_due(plan):
+            raise TransferError('PAYMENT_DUE', 'The sender has an installment due on this plan. You can accept '
+                                               'these shares once it is paid.')
+        listing = open_listing(plan)
+        part = plan_split.split(plan, t.units, recipient, reason=reason)
+        if listing is not None and listed_units(listing, plan) > plan.token_allocation:
+            listing.units = plan.token_allocation
+            listing.save(update_fields=['units', 'updated_at'])
+        plan_split.sync_certificates(plan, part)
+    return True
+
+
+def accept(t: Transfer, user) -> Transfer:
+    """The recipient accepts installment shares (and their part of the remaining installments)."""
+    with transaction.atomic():
+        t = Transfer.objects.select_for_update(of=('self',)).get(pk=t.pk)
+        if t.asset != TransferAsset.PLAN or (t.recipient_email or '').lower() != (user.email or '').lower():
+            raise TransferError('NOT_YOURS', 'This transfer is not waiting for your answer.')
+        if t.status not in OPEN:
+            raise TransferError('NOT_OPEN', 'This transfer is no longer open.')
+        if not recipient_ready(user):
+            raise TransferError('KYC_REQUIRED', 'Complete your identity verification to accept it.')
+        t.recipient = user
+        t.accepted_at = timezone.now()
+        t.save(update_fields=['recipient', 'accepted_at', 'updated_at'])
+        status = deliver(t)
+        if status != TransferStatus.DELIVERED:
+            t.refresh_from_db()
+            raise TransferError('NOT_DELIVERED', t.close_reason or 'The transfer could not be delivered.')
+    t.refresh_from_db()
+    return t
+
+
+def decline(t: Transfer, user) -> Transfer:
+    with transaction.atomic():
+        t = Transfer.objects.select_for_update().get(pk=t.pk)
+        if t.asset != TransferAsset.PLAN or (t.recipient_email or '').lower() != (user.email or '').lower():
+            raise TransferError('NOT_YOURS', 'This transfer is not waiting for your answer.')
+        if t.status not in OPEN:
+            raise TransferError('NOT_OPEN', 'This transfer is no longer open.')
+        _close(t, TransferStatus.DECLINED, 'Declined by the recipient')
     return t
 
 
@@ -193,9 +339,22 @@ def deliver(t: Transfer) -> str:
                 transaction.on_commit(lambda: _notices_waiting(t))
             return t.status
 
+        if t.asset == TransferAsset.PLAN and t.accepted_at is None:
+            # Waits for the recipient's answer (they take over installments)
+            if t.status == TransferStatus.SCHEDULED:
+                t.status = TransferStatus.WAITING
+                t.expires_at = timezone.now() + timedelta(days=claim_days())
+                t.save(update_fields=['status', 'expires_at', 'updated_at'])
+                transaction.on_commit(lambda: _notices_accept(t))
+            return t.status
+
         if t.asset == TransferAsset.CASH:
             WalletBalance.credit(recipient, t.amount, transaction_type='transfer_received', reference_id=t.pk,
                                  description=f'Transfer {t.reference} from {t.sender.email}')
+        elif t.asset == TransferAsset.PLAN:
+            if not _deliver_plan(t, recipient):
+                return t.status
+            t.chain_status = 'not_required'
         else:
             if held_shares(t.sender, t.property_ref) < t.units:
                 _close(t, TransferStatus.FAILED, 'The sender no longer holds these shares.')
@@ -251,6 +410,9 @@ def release_waiting(user) -> int:
     n = 0
     for t in Transfer.objects.filter(status__in=OPEN, recipient_email__iexact=user.email,
                                      deliver_on__lte=timezone.localdate()):
+        if t.asset == TransferAsset.PLAN and t.accepted_at is None:
+            _notices_accept(t, sender_too=False)  # now they can answer it
+            continue
         if deliver(t) == TransferStatus.DELIVERED:
             n += 1
     return n
@@ -291,6 +453,8 @@ def _queue_chain(pk) -> None:
 def _what(t: Transfer) -> str:
     if t.asset == TransferAsset.UNITS:
         return f'{t.units} share(s) of {t.property_ref.title}'
+    if t.asset == TransferAsset.PLAN:
+        return f'{t.units} installment share(s) of {t.property_ref.title}'
     return f'${t.amount:,.2f}'
 
 
@@ -325,6 +489,26 @@ def _invite(t: Transfer, reminder: bool = False) -> None:
                 f'After that date the transfer goes back to the sender.{note}', url='/kyc')
 
 
+def _notices_accept(t: Transfer, sender_too: bool = True) -> None:
+    """Installment shares wait for the recipient's answer."""
+    terms = plan_terms(t) or {}
+    sender = t.sender.get_full_name() or t.sender.email
+    note = f'\nMessage: "{t.message}"' if t.message else ''
+    if recipient_ready(t.recipient):
+        _notice(t.recipient, f'{sender} sent you {_what(t)}',
+                f'These shares are still being paid in installments: if you accept them you take over their '
+                f'part of the remaining installments — {terms.get("remaining_payments", 0)} payment(s), '
+                f'${Decimal(terms.get("remaining_total") or 0):,.2f} in total, charged from your wallet. '
+                f'Accept or decline before {t.expires_at:%d %b %Y} in Transfers.{note}')
+    else:
+        _invite(t)
+    if sender_too:
+        _notice(t.sender, 'Transfer waiting for the recipient',
+                f'{_what(t)} to {t.recipient_email} ({t.reference}) waits for the recipient to accept the '
+                f'installments. If they decline or do not answer by {t.expires_at:%d %b %Y}, the shares stay '
+                f'with you.')
+
+
 def _notices_waiting(t: Transfer) -> None:
     _invite(t)
     _notice(t.sender, 'Transfer waiting for the recipient',
@@ -335,12 +519,16 @@ def _notices_waiting(t: Transfer) -> None:
 def _notices_delivered(t: Transfer) -> None:
     sender = t.sender.get_full_name() or t.sender.email
     note = f'\nMessage: "{t.message}"' if t.message else ''
+    url = {TransferAsset.UNITS: '/dashboard?view=my-properties',
+           TransferAsset.PLAN: '/dashboard?view=installments'}.get(t.asset, '/dashboard?view=wallet')
     _notice(t.recipient, 'You received a transfer',
-            f'{sender} sent you {_what(t)} ({t.reference}).{note}',
-            url='/dashboard?view=my-properties' if t.asset == TransferAsset.UNITS else '/dashboard?view=wallet')
+            f'{sender} sent you {_what(t)} ({t.reference}).{note}'
+            + (' Their installments are now charged from your wallet; find the plan under Installments.'
+               if t.asset == TransferAsset.PLAN else ''), url=url)
     _notice(t.sender, 'Transfer delivered', f'{_what(t)} was delivered to {t.recipient_email} ({t.reference}).')
 
 
 def _notices_returned(t: Transfer) -> None:
-    _notice(t.sender, 'Transfer returned' if t.status != TransferStatus.CANCELLED else 'Transfer cancelled',
-            f'{_what(t)} to {t.recipient_email} ({t.reference}) is back with you: {t.close_reason}.')
+    title = {TransferStatus.CANCELLED: 'Transfer cancelled',
+             TransferStatus.DECLINED: 'Transfer declined'}.get(t.status, 'Transfer returned')
+    _notice(t.sender, title, f'{_what(t)} to {t.recipient_email} ({t.reference}) is back with you: {t.close_reason}.')

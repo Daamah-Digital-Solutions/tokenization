@@ -1,15 +1,18 @@
 /**
  * Transfers (client round 4, extra #3): everything the user sent and received,
  * open transfers can be cancelled by the sender, and a "New transfer" button.
+ * Installment shares sent to the user wait for their answer: what they take over
+ * (the remaining installments of those shares) and Accept / Decline (client, Nov 2026).
  */
 
 import React, { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ArrowDownLeft, ArrowUpRight, Plus, RefreshCw, Repeat } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, Layers, Plus, RefreshCw, Repeat } from 'lucide-react';
 import { TransferService, type TransferRecord } from '../../services/transfers/TransferService';
 import { NewTransferDialog } from './NewTransferDialog';
 import { uiLocale } from '../../utils/locale';
+import { formatMoney, formatPlanDate } from '../../utils/paymentPlan';
 
 const STATUS_STYLE: Record<string, string> = {
   delivered: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
@@ -37,7 +40,25 @@ export const TransfersPanel: React.FC = () => {
 
   const what = (r: TransferRecord) => r.asset === 'units'
     ? t('row.units', { count: r.units, property: r.property_title })
+    : r.asset === 'plan' ? t('row.planUnits', { count: r.units, property: r.property_title })
     : `$${Number(r.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const [shown, setShown] = useState<string | null>(null);
+  const answer = async (r: TransferRecord, how: 'accept' | 'decline') => {
+    if (how === 'decline' && !window.confirm(t('plan.confirmDecline'))) return;
+    setBusy(r.id);
+    setError(null);
+    try {
+      await (how === 'accept' ? TransferService.accept(r.id) : TransferService.decline(r.id));
+      queryClient.invalidateQueries({ queryKey: ['transfers'] });
+      queryClient.invalidateQueries({ queryKey: ['my-installments'] });
+      queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
+    } catch (err: any) {
+      setError(err?.message || t('new.errGeneric'));
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const cancel = async (r: TransferRecord) => {
     if (!window.confirm(t('row.confirmCancel'))) return;
@@ -99,8 +120,10 @@ export const TransfersPanel: React.FC = () => {
           {rows.map(r => {
             const sent = r.direction === 'sent';
             const cancellable = sent && ['scheduled', 'waiting'].includes(r.status);
+            const terms = !sent && r.asset === 'plan' && r.status === 'waiting' ? r.plan_terms : null;
             return (
-              <div key={r.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+              <div key={r.id}>
+              <div className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
                 <span className={`flex items-center justify-center w-9 h-9 rounded-full shrink-0 ${sent ? 'bg-slate-100 dark:bg-slate-700' : 'bg-emerald-50 dark:bg-emerald-900/30'}`}>
                   {sent ? <ArrowUpRight className="w-4 h-4 text-slate-600 dark:text-slate-300" /> : <ArrowDownLeft className="w-4 h-4 text-emerald-600" />}
                 </span>
@@ -125,6 +148,54 @@ export const TransfersPanel: React.FC = () => {
                     {t('row.cancel')}
                   </button>
                 )}
+              </div>
+              {terms && (
+                <div className="mx-4 mb-4 rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/60 dark:bg-amber-900/10 p-4 text-sm">
+                  <p className="flex items-start gap-2 font-semibold text-slate-900 dark:text-white">
+                    <Layers className="w-4 h-4 mt-0.5 text-amber-600 shrink-0" />{t('plan.title')}
+                  </p>
+                  <p className="mt-1 text-slate-700 dark:text-slate-300">
+                    {t('plan.body', { payments: terms.remaining_payments, total: formatMoney(terms.remaining_total),
+                                      paid: formatMoney(terms.paid_principal) })}
+                  </p>
+                  {terms.payment_due && <p className="mt-1 text-amber-800 dark:text-amber-300">{t('plan.due')}</p>}
+                  <button onClick={() => setShown(shown === r.id ? null : r.id)} className="mt-2 text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+                    {shown === r.id ? t('plan.hide') : t('plan.show')}
+                  </button>
+                  {shown === r.id && (
+                    <div className="mt-2 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                      <table className="w-full text-xs">
+                        <thead className="text-slate-500"><tr>
+                          <th className="px-3 py-1.5 text-start font-medium">#</th>
+                          <th className="px-3 py-1.5 text-start font-medium">{t('plan.colDue')}</th>
+                          <th className="px-3 py-1.5 text-end font-medium">{t('plan.colAmount')}</th>
+                          <th className="px-3 py-1.5 text-end font-medium">{t('plan.colFee')}</th>
+                          <th className="px-3 py-1.5 text-end font-medium">{t('plan.colTotal')}</th>
+                        </tr></thead>
+                        <tbody>{terms.schedule.map(s => (
+                          <tr key={s.number} className="border-t border-slate-100 dark:border-slate-800">
+                            <td className="px-3 py-1.5">{s.number}</td>
+                            <td className="px-3 py-1.5 whitespace-nowrap">{formatPlanDate(s.due_date, i18n.language || 'en')}</td>
+                            <td className="px-3 py-1.5 text-end">{formatMoney(s.amount)}</td>
+                            <td className="px-3 py-1.5 text-end text-slate-500">{formatMoney(s.fee)}</td>
+                            <td className="px-3 py-1.5 text-end font-medium">{formatMoney(s.total)}</td>
+                          </tr>
+                        ))}</tbody>
+                      </table>
+                    </div>
+                  )}
+                  <div className="mt-3 flex gap-2 flex-wrap">
+                    <button onClick={() => answer(r, 'accept')} disabled={busy === r.id || terms.payment_due}
+                            className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold disabled:opacity-50">
+                      {t('plan.accept')}
+                    </button>
+                    <button onClick={() => answer(r, 'decline')} disabled={busy === r.id}
+                            className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-sm font-medium disabled:opacity-50">
+                      {t('plan.decline')}
+                    </button>
+                  </div>
+                </div>
+              )}
               </div>
             );
           })}

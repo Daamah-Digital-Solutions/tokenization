@@ -18,7 +18,8 @@
     "delivered": "Livré",
     "cancelled": "Annulé",
     "expired": "Retourné",
-    "failed": "Retourné"
+    "failed": "Retourné",
+    "declined": "Refusé"
   },
   "row": {
     "units": "{{count}} part(s) de {{property}}",
@@ -27,7 +28,8 @@
     "date": "date : {{date}}",
     "until": "retour le {{date}} s'il n'est pas réclamé",
     "cancel": "Annuler",
-    "confirmCancel": "Annuler ce transfert ? Tout vous sera restitué."
+    "confirmCancel": "Annuler ce transfert ? Tout vous sera restitué.",
+    "planUnits": "{{count}} part(s) en versements de {{property}}"
   },
   "new": {
     "title": "Nouveau transfert",
@@ -36,7 +38,8 @@
     "send": "Envoyer",
     "asset": {
       "units": "Parts de bien",
-      "cash": "Solde du portefeuille"
+      "cash": "Solde du portefeuille",
+      "plan": "Parts en versements"
     },
     "property": "Bien",
     "chooseProperty": "Choisissez un bien",
@@ -60,7 +63,30 @@
     "result": {
       "delivered": "Livré à {{email}}.",
       "scheduled": "Programmé. {{email}} le recevra à la date choisie.",
-      "waiting": "Envoyé. {{email}} n'a pas encore de compte vérifié — nous l'avons invité. Il dispose de {{days}} jours pour le réclamer ; à défaut, le transfert vous sera restitué."
-    }
+      "waiting": "Envoyé. {{email}} n'a pas encore de compte vérifié — nous l'avons invité. Il dispose de {{days}} jours pour le réclamer ; à défaut, le transfert vous sera restitué.",
+      "plan": "Envoyé. {{email}} doit accepter les parts et leurs échéances sous {{days}} jours ; d’ici là, elles restent à vous."
+    },
+    "plan": "Plan de versements",
+    "choosePlan": "Choisissez un plan",
+    "noPlans": "Vous n’avez aucun plan de versements dont les parts peuvent être envoyées maintenant.",
+    "planTakeOver": "Le destinataire reprend leur part des échéances restantes : environ {{amount}} en {{payments}} paiement(s).",
+    "planKeep": "Vous gardez {{keep}} part(s) et vos échéances diminuent.",
+    "planWhole": "Tout le plan passe au destinataire.",
+    "planDue": "Une échéance de ce plan est due : payez-la d’abord pour envoyer une partie du plan.",
+    "planRules": "Le destinataire doit accepter les parts et leurs échéances. S’il refuse ou ne répond pas sous {{days}} jours, les parts restent à vous. Vous pouvez annuler jusqu’à son acceptation."
+  },
+  "plan": {
+    "title": "Parts en versements en attente de votre réponse",
+    "body": "Si vous acceptez, les parts sont à vous et vous reprenez leurs échéances restantes : {{payments}} paiement(s), {{total}} au total, débités de votre portefeuille à leurs dates. Déjà payé pour elles : {{paid}}.",
+    "due": "L’expéditeur a une échéance due sur ce plan ; vous pourrez accepter une fois qu’elle sera payée.",
+    "show": "Voir les échéances",
+    "hide": "Masquer les échéances",
+    "colDue": "Échéance",
+    "colAmount": "Montant",
+    "colFee": "Frais",
+    "colTotal": "Total",
+    "accept": "Accepter les parts et les échéances",
+    "decline": "Refuser",
+    "confirmDecline": "Refuser ces parts ? Elles restent à l’expéditeur."
   }
 }

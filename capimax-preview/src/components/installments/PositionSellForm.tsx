@@ -3,6 +3,8 @@
  * asking price, what the seller receives, and WHERE it is offered — the secondary market
  * (any investor buys at the asking price) and/or the liquidity providers (they buy or send
  * an offer). Used in the Installments page and in the secondary market's "Create listing".
+ * The seller can sell part of the plan's shares (client, Nov 2026): the buyer takes over their
+ * part of each remaining installment and the seller's installments get smaller.
  */
 
 import React, { useState } from 'react';
@@ -58,13 +60,19 @@ export const PositionSellForm: React.FC<{
 }> = ({ planId, position, onCancel, onListed }) => {
   const { t } = useTranslation('plan');
   const [price, setPrice] = useState(n(position.current_price).toFixed(2));
+  const free = position.free_units ?? position.units;
+  const [count, setCount] = useState(free);
+  const part = count < position.units;
+  const dueBlocks = part && !!position.payment_due;
   const [where, setWhere] = useState({ toMarket: true, toProviders: true });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const priceNum = n(price);
-  const value = position.units * priceNum;
-  const cash = Math.max(0, Math.round((value - n(position.remaining_principal)) * 100) / 100);
+  const value = count * priceNum;
+  // Their part of what is still to pay (the server splits it to the cent)
+  const remaining = Math.round((n(position.remaining_principal) * count) / Math.max(1, position.units) * 100) / 100;
+  const cash = Math.max(0, Math.round((value - remaining) * 100) / 100);
   const fee = Math.round(cash * n(position.fee_percent)) / 100;
   const noChannel = !where.toMarket && !where.toProviders;
 
@@ -72,7 +80,7 @@ export const PositionSellForm: React.FC<{
     setBusy(true);
     setError(null);
     try {
-      await PositionService.list(planId, priceNum, where);
+      await PositionService.list(planId, priceNum, where, undefined, count);
       onListed(t(where.toMarket && where.toProviders ? 'positions.listedBoth'
         : where.toMarket ? 'positions.listedMarket' : 'positions.listedProviders'));
     } catch (err: any) {
@@ -84,7 +92,25 @@ export const PositionSellForm: React.FC<{
 
   return (
     <div>
-      <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">{t('positions.intro', { units: position.units })}</p>
+      <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">{t('positions.introPart', { units: position.units })}</p>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+        {t('positions.howMany')}
+        <div className="mt-1 flex items-center gap-2">
+          <input type="number" min={1} max={free} value={count}
+                 onChange={(e) => setCount(Math.max(1, Math.min(free, Math.floor(Number(e.target.value)) || 1)))}
+                 className="w-28 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm" />
+          <span className="text-xs text-gray-500">{t('positions.ofFree', { units: free })}</span>
+          {count !== free && (
+            <button type="button" onClick={() => setCount(free)} className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+              {t('positions.detail.all', { units: free })}
+            </button>
+          )}
+        </div>
+        <span className="text-xs text-gray-500 block mt-1">
+          {part ? t('positions.partKeep', { keep: position.units - count }) : t('positions.wholeGoes')}
+          {' '}{t('positions.buyersPart')}
+        </span>
+      </label>
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         {t('positions.askPrice')}
         <input type="number" min={0.01} step="0.01" value={price} onChange={(e) => setPrice(e.target.value)}
@@ -93,8 +119,8 @@ export const PositionSellForm: React.FC<{
       </label>
       <dl className="mt-4 space-y-1.5 text-sm">
         {[
-          [t('positions.positionValue', { units: position.units }), formatMoney(value)],
-          [t('positions.stillToPay'), `− ${formatMoney(position.remaining_principal)}`],
+          [t('positions.positionValue', { units: count }), formatMoney(value)],
+          [t(part ? 'positions.stillToPayPart' : 'positions.stillToPay'), `− ${formatMoney(remaining)}`],
         ].map(([k, v]) => (
           <div key={k} className="flex justify-between"><dt className="text-gray-500">{k}</dt><dd>{v}</dd></div>
         ))}
@@ -109,6 +135,7 @@ export const PositionSellForm: React.FC<{
         <ChannelChoice toMarket={where.toMarket} toProviders={where.toProviders} onChange={setWhere} />
       </div>
       {cash <= 0 && <p className="mt-2 text-sm text-red-600">{t('positions.blocked.below_remaining')}</p>}
+      {dueBlocks && <p className="mt-2 text-sm text-amber-700 dark:text-amber-400">{t('positions.partDue')}</p>}
       {error && <p className="mt-2 text-sm text-red-600" role="alert">{error}</p>}
       <div className="mt-5 flex justify-end gap-2">
         {onCancel && (
@@ -116,7 +143,7 @@ export const PositionSellForm: React.FC<{
             {t('positions.cancel')}
           </button>
         )}
-        <button disabled={busy || cash <= 0 || noChannel} onClick={submit}
+        <button disabled={busy || cash <= 0 || noChannel || dueBlocks || free < 1} onClick={submit}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-semibold">
           {busy && <Loader2 className="w-4 h-4 animate-spin" />}{t('positions.putForSale')}
         </button>

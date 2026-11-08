@@ -89,7 +89,8 @@ export const PositionSaleBox: React.FC<{
         <div className="mt-3 space-y-3">
           <div className="flex items-center justify-between gap-2 flex-wrap rounded-lg bg-white dark:bg-gray-900 border border-indigo-100 dark:border-indigo-900/40 p-3">
             <span className="text-sm text-gray-700 dark:text-gray-200">
-              {t('positions.forSale', { price: formatMoney(listing.price_per_share), cash: formatMoney(listing.cash) })}
+              {t('positions.forSaleUnits', { units: listing.offered_units ?? listing.units,
+                                             price: formatMoney(listing.price_per_share), cash: formatMoney(listing.cash) })}
             </span>
             <button disabled={!!busy} onClick={() => run('cancel', () => PositionService.cancel(listing.id), t('positions.withdrawn'))}
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium disabled:opacity-50">
@@ -122,7 +123,8 @@ export const PositionSaleBox: React.FC<{
                     <div className="flex-1 min-w-0">
                       <span className="font-medium text-gray-900 dark:text-white">{o.lp_name}</span>
                       <span className="block text-xs text-gray-500 dark:text-gray-400">
-                        {t('positions.offerLine', { price: formatMoney(o.price_per_share), cash: formatMoney(o.cash), date: when(o.expires_at) })}
+                        {t('positions.offerLineUnits', { units: o.units ?? listing.units, price: formatMoney(o.price_per_share),
+                                                         cash: formatMoney(o.cash), date: when(o.expires_at) })}
                       </span>
                       {o.notes && <span className="block text-xs text-gray-500">“{o.notes}”</span>}
                     </div>
@@ -146,9 +148,14 @@ export const PositionSaleBox: React.FC<{
         </div>
       ) : position.blocked ? (
         <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">{t(`positions.blocked.${position.blocked}`)}</p>
+      ) : (position.free_units ?? 1) < 1 ? (
+        <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">{t('positions.allInTransfer')}</p>
       ) : (
         <div className="mt-3 flex items-center justify-between gap-2 flex-wrap">
-          <p className="text-xs text-gray-500 dark:text-gray-400 max-w-md">{t('positions.how')}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 max-w-md">
+            {t('positions.howPart')}
+            {n(position.in_transfer) > 0 && <> {t('positions.inTransfer', { units: n(position.in_transfer) })}</>}
+          </p>
           <button onClick={() => { setMessage(null); setOpen(true); }}
                   className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2">
             <Layers className="w-4 h-4" />{t('positions.sell')}

@@ -1,11 +1,13 @@
 """
-Selling an installment plan as ONE position (client, Nov 2026 — as on Capimax BRX).
+Selling an installment plan, whole or in part (client, Nov 2026).
 
-An investor still paying installments can't sell part of the plan's shares; the whole
-plan is sold together and the buyer takes it over:
+The seller offers all the plan's shares or some of them, and a buyer takes all the shares
+offered or part of them. Selling part of the plan splits it (properties/plan_split.py): the
+buyer gets a new plan for their shares with their share of every remaining installment,
+the seller keeps the rest. For the K shares sold:
 
-    position value   = all the plan's shares x price per share
-    remaining        = the plan's principal not paid yet
+    position value   = K x price per share
+    remaining        = the principal of those K shares not paid yet
     seller's cash    = position value - remaining   (never below 0: nothing is owed)
     resale fee       = secondary-market fee % of the seller's cash, paid by the BUYER on top
 
@@ -30,6 +32,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
+from . import plan_split
 from .models import (ConstructionInstallment, PositionListing, PositionListingStatus, PositionOffer,
                      PositionOfferStatus)
 
@@ -60,27 +63,61 @@ def remaining_principal(plan) -> Decimal:
     return max(Decimal('0'), _q(Decimal(plan.total_investment_amount or 0) - Decimal(plan.total_amount_paid or 0)))
 
 
-def figures(plan, price_per_share) -> dict:
-    """The sale figures of `plan` at `price_per_share` (see the module docstring)."""
-    units = int(plan.token_allocation or 0)
+def figures(plan, price_per_share, units=None) -> dict:
+    """The sale figures of `units` shares of `plan` (all of them by default) at `price_per_share`."""
+    all_units = int(plan.token_allocation or 0)
+    units = all_units if units is None else max(0, min(int(units), all_units))
     price = _q(price_per_share)
-    remaining = remaining_principal(plan)
+    pv = plan_split.preview(plan, units) if 0 < units < all_units else None
+    remaining = _q(pv['part_remaining']) if pv else remaining_principal(plan)
+    paid = _q(pv['part_paid']) if pv else _q(Decimal(plan.total_amount_paid or 0))
+    if pv:
+        nxt = pv['part_unpaid'][0]['total'] if pv['part_unpaid'] else Decimal('0')
+    else:
+        nxt = plan.total_due if plan.is_active else Decimal('0')
     value = _q(Decimal(units) * price)
     cash = max(Decimal('0'), _q(value - remaining))
     pct = fee_percent()
     fee = _q(cash * pct / 100)
     return {
-        'units': units, 'price_per_share': price, 'position_value': value,
-        'remaining_principal': remaining, 'paid_principal': _q(Decimal(plan.total_amount_paid or 0)),
+        'units': units, 'plan_units': all_units, 'partial': pv is not None,
+        'price_per_share': price, 'position_value': value,
+        'remaining_principal': remaining, 'paid_principal': paid,
         'cash': cash, 'fee_percent': pct, 'fee': fee, 'buyer_total': _q(cash + fee),
         'remaining_payments': max(0, int(plan.total_installments or 0) - int(plan.payments_made or 0)),
         'next_payment_date': plan.next_payment_date,
-        'next_payment_amount': plan.total_due if plan.is_active else Decimal('0'),
+        'next_payment_amount': nxt,
+        'split': pv,
     }
 
 
 def open_listing(plan):
     return plan.position_listings.filter(status=PositionListingStatus.LISTED).first()
+
+
+def listed_units(listing, plan=None) -> int:
+    """The shares a listing still offers (empty = all the plan's shares)."""
+    plan = plan or listing.plan
+    total = int(plan.token_allocation or 0)
+    return total if listing.units is None else min(int(listing.units), total)
+
+
+def committed_to_transfers(plan) -> int:
+    """Shares of the plan being transferred (set aside until the transfer ends)."""
+    from django.db.models import Sum
+
+    from transfers.models import OPEN as OPEN_TRANSFER
+    return int(plan.transfers.filter(status__in=OPEN_TRANSFER).aggregate(n=Sum('units'))['n'] or 0)
+
+
+def free_units(plan, *, skip_listing=False) -> int:
+    """Shares of the plan that can be listed or transferred now."""
+    used = committed_to_transfers(plan)
+    if not skip_listing:
+        listing = open_listing(plan)
+        if listing:
+            used += listed_units(listing, plan)
+    return max(0, int(plan.token_allocation or 0) - used)
 
 
 def block_reason(plan, fig: dict) -> str | None:
@@ -127,6 +164,10 @@ def holder_view(plan) -> dict | None:
         'gain': str(_q(Decimal(fig['units']) * (price - entry))),
         'fee_percent': str(fig['fee_percent']),
         'floor_price': str(floor),
+        'free_units': free_units(plan),
+        'in_transfer': committed_to_transfers(plan),
+        # Selling or transferring PART of the plan waits while a payment is due
+        'payment_due': plan_split.payment_due(plan),
         'blocked': None if listing else block_reason(plan, fig),
         'listing': listing_summary(listing, for_seller=True) if listing else None,
     }
@@ -155,11 +196,27 @@ def remaining_schedule(plan) -> list[dict]:
     return out
 
 
-def listing_summary(listing, *, for_seller: bool = False, viewer=None, request=None) -> dict:
+def _part_schedule(fig) -> list[dict]:
+    today = timezone.now().date()
+    out = []
+    for r in fig['split']['part_unpaid']:
+        out.append({'number': r['number'], 'kind': r['kind'], 'due_date': r['due_date'].isoformat(),
+                    'amount': str(r['amount']), 'fee': str(r['fee']), 'total': str(r['total']),
+                    'status': 'upcoming' if r['due_date'] > today else 'due'})
+    return out
+
+
+def listing_summary(listing, *, for_seller: bool = False, viewer=None, request=None, units=None) -> dict:
+    """The listing for the buyer / seller; `units` = the figures for that many of its shares."""
     plan = listing.plan
     prop = plan.property_investment
-    fig = figures(plan, listing.price_per_share)
-    schedule = remaining_schedule(plan)
+    if listing.status == PositionListingStatus.LISTED:
+        offered = listed_units(listing, plan)
+    else:
+        offered = int(listing.units or plan.token_allocation)
+    chosen = offered if units is None else max(1, min(int(units), offered))
+    fig = figures(plan, listing.price_per_share, chosen)
+    schedule = _part_schedule(fig) if fig['partial'] else remaining_schedule(plan)
     entry = entry_price(plan)
     data = {
         'id': str(listing.id),
@@ -180,6 +237,12 @@ def listing_summary(listing, *, for_seller: bool = False, viewer=None, request=N
         'price_change': str(_q(Decimal(fig['units']) * (Decimal(fig['price_per_share']) - entry))),
         'price_per_share': str(fig['price_per_share']),
         'units': fig['units'],
+        # Shares offered, and the plan's shares (a buyer can take 1..offered; fewer than the plan's
+        # shares splits it — only while no payment is due)
+        'offered_units': offered,
+        'plan_units': fig['plan_units'],
+        'partial': fig['partial'],
+        'partial_allowed': not plan_split.payment_due(plan),
         'total_units': prop.total_tokens or 0,
         'position_value': str(fig['position_value']),
         'paid_principal': str(fig['paid_principal']),
@@ -215,11 +278,12 @@ def listing_summary(listing, *, for_seller: bool = False, viewer=None, request=N
 
 
 def offer_summary(offer, plan) -> dict:
-    fig = figures(plan, offer.price_per_share)
+    fig = figures(plan, offer.price_per_share, listed_units(offer.listing, plan))
     return {
         'id': str(offer.id),
         'lp_name': offer.liquidity_provider.legal_entity_name,
         'price_per_share': str(fig['price_per_share']),
+        'units': fig['units'],
         'cash': str(fig['cash']),
         'fee': str(fig['fee']),
         'notes': offer.notes,
@@ -243,7 +307,7 @@ def market(viewer, channel: str | None = None):
         qs = qs.filter(to_providers=True)
     if viewer is not None:
         qs = qs.exclude(seller=viewer)
-    return [p for p in qs if p.plan.investor_id == p.seller_id and p.plan.is_active]
+    return [p for p in qs if p.plan.investor_id == p.seller_id and p.plan.is_active and listed_units(p) > 0]
 
 
 # ---------------------------------------------------------------------------
@@ -251,7 +315,7 @@ def market(viewer, channel: str | None = None):
 # ---------------------------------------------------------------------------
 
 def list_position(user, plan_id, price_per_share=None, note: str = '', *, to_market: bool = True,
-                  to_providers: bool = True) -> PositionListing:
+                  to_providers: bool = True, units=None) -> PositionListing:
     if not (to_market or to_providers):
         raise PositionError('NO_CHANNEL', 'Choose where to sell: the secondary market, the liquidity providers, or both.')
     with transaction.atomic():
@@ -264,7 +328,16 @@ def list_position(user, plan_id, price_per_share=None, note: str = '', *, to_mar
         price = Decimal(str(price_per_share)) if price_per_share else Decimal(plan.property_investment.token_price or 0)
         if price <= 0:
             raise PositionError('BAD_PRICE', 'Enter a price per share above 0.')
-        fig = figures(plan, price)
+        free = free_units(plan, skip_listing=True)
+        try:
+            units = free if units in (None, '') else int(units)
+        except (TypeError, ValueError):
+            units = 0
+        if units < 1 or units > free:
+            raise PositionError('BAD_UNITS', f'Choose between 1 and {free} share(s) to sell.', {'free_units': free})
+        if units < plan.token_allocation and plan_split.payment_due(plan):
+            raise PositionError('PAYMENT_DUE', MESSAGES['PAYMENT_DUE'])
+        fig = figures(plan, price, units)
         reason = block_reason(plan, fig)
         if reason == 'below_remaining':
             floor = _q(fig['remaining_principal'] / fig['units'])
@@ -275,7 +348,8 @@ def list_position(user, plan_id, price_per_share=None, note: str = '', *, to_mar
             raise PositionError(reason, MESSAGES.get(reason, 'This position cannot be sold right now.'))
         return PositionListing.objects.create(plan=plan, seller=user, price_per_share=fig['price_per_share'],
                                               note=(note or '')[:300], to_market=bool(to_market),
-                                              to_providers=bool(to_providers))
+                                              to_providers=bool(to_providers),
+                                              units=None if units == plan.token_allocation else units)
 
 
 def set_channels(user, listing_id, *, to_market: bool, to_providers: bool) -> PositionListing:
@@ -364,7 +438,7 @@ def accept_offer(user, listing_id, offer_id) -> PositionListing:
 # Buyer: buy at the asking price / liquidity provider offers
 # ---------------------------------------------------------------------------
 
-def buy(buyer, listing_id, expected_cash=None, expected_fee=None) -> PositionListing:
+def buy(buyer, listing_id, expected_cash=None, expected_fee=None, units=None) -> PositionListing:
     """Buy at the asking price. The buyer confirms the amounts they saw (they move as installments are paid)."""
     if expected_cash is None or expected_fee is None:
         raise PositionError('CONFIRM', 'Confirm the amounts shown.')
@@ -381,7 +455,7 @@ def buy(buyer, listing_id, expected_cash=None, expected_fee=None) -> PositionLis
             raise PositionError('NOT_OPEN', 'This position is offered to liquidity providers only.')
         return _transfer(listing_id, buyer, listing.price_per_share,
                          via='liquidity_provider' if as_provider else 'market', lp=lp if as_provider else None,
-                         expected=(expected_cash, expected_fee))
+                         expected=(expected_cash, expected_fee), units=units)
 
 
 def make_offer(lp, listing_id, price_per_share, notes: str = '') -> PositionOffer:
@@ -401,7 +475,7 @@ def make_offer(lp, listing_id, price_per_share, notes: str = '') -> PositionOffe
                                                      'buy it there at the asking price.')
         if lp.user_id and listing.seller_id == lp.user_id:
             raise PositionError('OWN_LISTING', 'You cannot buy your own position.')
-        fig = figures(listing.plan, price)
+        fig = figures(listing.plan, price, listed_units(listing))
         if fig['cash'] <= 0:
             floor = _q(fig['remaining_principal'] / fig['units']) if fig['units'] else Decimal('0')
             raise PositionError('below_remaining',
@@ -447,13 +521,15 @@ def expire_offers(now=None) -> int:
 # The sale itself
 # ---------------------------------------------------------------------------
 
-def _transfer(listing_id, buyer, price_per_share, *, via: str, lp=None, expected=None) -> PositionListing:
+def _transfer(listing_id, buyer, price_per_share, *, via: str, lp=None, expected=None,
+              units=None) -> PositionListing:
     """
-    Inside the caller's transaction: the buyer pays the seller's cash + the fee, the plan
-    and its share hold become the buyer's, the seller's certificate is replaced by the
-    buyer's. Lock order as the installment charge: plan, then listing, then wallets.
+    Inside the caller's transaction: the buyer pays the seller's cash + the fee for `units`
+    of the shares offered (all of them by default). All the plan's shares: the plan and its
+    share hold become the buyer's. Fewer: the plan is split and the buyer gets a new plan
+    for their shares. The certificates follow. Lock order as the installment charge: plan,
+    then listing, then wallets. Returns the sold row (the listing itself, or the part sold).
     """
-    from investments.models import TokenReservation
     from payments.models import WalletBalance
 
     plan_id = PositionListing.objects.filter(pk=listing_id).values_list('plan_id', flat=True).first()
@@ -469,11 +545,21 @@ def _transfer(listing_id, buyer, price_per_share, *, via: str, lp=None, expected
         raise PositionError('OWN_LISTING', 'You cannot buy your own position.')
     if plan.investor_id != seller.pk or not plan.is_active:
         raise PositionError('NOT_OPEN', 'This position is no longer for sale.')
+    offered = listed_units(listing, plan)
+    try:
+        units = offered if units in (None, '') else int(units)
+    except (TypeError, ValueError):
+        units = 0
+    if units < 1 or units > offered:
+        raise PositionError('BAD_UNITS', f'Choose between 1 and {offered} share(s).', {'offered_units': offered})
+    partial = units < plan.token_allocation
+    if partial and plan_split.payment_due(plan):
+        raise PositionError('PAYMENT_DUE', MESSAGES['PAYMENT_DUE_BUYER'])
 
     if expected is None:  # an offer: its own price, the listing's may have changed meanwhile
-        fig = figures(plan, price_per_share)
+        fig = figures(plan, price_per_share, units)
     else:  # bought at the asking price, read under the locks
-        fig = figures(plan, listing.price_per_share)
+        fig = figures(plan, listing.price_per_share, units)
         if _q(expected[0]) != fig['cash'] or _q(expected[1]) != fig['fee']:
             raise PositionError('POSITION_CHANGED', 'The amounts changed since you opened it. Check them again.',
                                 {'cash': str(fig['cash']), 'fee': str(fig['fee'])})
@@ -494,7 +580,7 @@ def _transfer(listing_id, buyer, price_per_share, *, via: str, lp=None, expected
                             f'costs ${fig["buyer_total"]:,.2f} now. Add funds first.',
                             {'required': str(fig['buyer_total'])})
 
-    label = f'installment position: {fig["units"]} shares of {prop.title}'
+    label = f'installment position: {fig["units"]} share(s) of {prop.title}'
     WalletBalance.debit(buyer, fig['cash'], transaction_type='trade_purchase', reference_id=listing.pk,
                         description=f'Bought {label}')
     if fig['fee'] > 0:
@@ -503,36 +589,49 @@ def _transfer(listing_id, buyer, price_per_share, *, via: str, lp=None, expected
     WalletBalance.credit(seller, fig['cash'], transaction_type='trade_sale', reference_id=listing.pk,
                          description=f'Sold {label}')
 
-    # The plan is the buyer's now: its remaining installments are charged to them and the
-    # reminders for what is left go to them.
-    plan.investor = buyer
-    plan.reminder_sent_for = plan.payments_made
-    plan.missed_notice_for = plan.payments_made
-    plan.save(update_fields=['investor', 'reminder_sent_for', 'missed_notice_for', 'updated_at'])
-    TokenReservation.objects.filter(installment_plan=plan, released=False).update(user=buyer)
-
     now = timezone.now()
-    listing.status = PositionListingStatus.SOLD
-    listing.buyer = buyer
-    listing.sold_price_per_share = fig['price_per_share']
-    listing.seller_cash = fig['cash']
-    listing.buyer_fee = fig['fee']
-    listing.assumed_principal = fig['remaining_principal']
-    listing.sold_via = via
-    listing.sold_at = now
-    listing.save()
-    others = list(listing.offers.filter(status=PositionOfferStatus.OPEN).select_related('liquidity_provider__user'))
-    PositionOffer.objects.filter(pk__in=[o.pk for o in others]).update(status=PositionOfferStatus.LAPSED,
-                                                                       updated_at=now)
+    sold = dict(buyer=buyer, sold_price_per_share=fig['price_per_share'], seller_cash=fig['cash'],
+                buyer_fee=fig['fee'], assumed_principal=fig['remaining_principal'], sold_via=via, sold_at=now)
+    if not partial:
+        # The plan is the buyer's now: its remaining installments are charged to them and the
+        # reminders for what is left go to them.
+        plan_split.move_whole(plan, buyer)
+        for field, value in sold.items():
+            setattr(listing, field, value)
+        listing.status = PositionListingStatus.SOLD
+        listing.save()
+        record, closing = listing, True
+        _reissue_certificate(plan, seller)
+    else:
+        part = plan_split.split(plan, units, buyer,
+                                reason=f'sold to {buyer.email} at ${fig["price_per_share"]}/share')
+        record = PositionListing.objects.create(plan=part, seller=seller, price_per_share=listing.price_per_share,
+                                                status=PositionListingStatus.SOLD, units=units, parent=listing,
+                                                to_market=listing.to_market, to_providers=listing.to_providers,
+                                                **sold)
+        left = offered - units
+        listing.units = left
+        closing = left <= 0
+        if closing:
+            listing.status = PositionListingStatus.SOLD
+            listing.sold_at = now
+            listing.note = 'Sold in parts.'
+        listing.save()
+        plan_split.sync_certificates(plan, part)
+
+    others = []
+    if closing:
+        others = list(listing.offers.filter(status=PositionOfferStatus.OPEN)
+                      .select_related('liquidity_provider__user'))
+        PositionOffer.objects.filter(pk__in=[o.pk for o in others]).update(status=PositionOfferStatus.LAPSED,
+                                                                           updated_at=now)
     if lp is not None:
         lp.current_month_total = (lp.current_month_total or 0) + fig['cash']
         lp.save(update_fields=['current_month_total'])
 
-    _reissue_certificate(plan, seller)
-
     from .position_notify import position_sold
-    transaction.on_commit(lambda: position_sold(listing, fig, others))
-    return listing
+    transaction.on_commit(lambda: position_sold(record, fig, others, seller_plan=plan if partial else None))
+    return record
 
 
 def _reissue_certificate(plan, seller) -> None:
@@ -554,6 +653,9 @@ MESSAGES = {
     'fully_paid': 'All installments are paid: these are ordinary shares now — sell them from My Properties.',
     'below_remaining': 'At this price the position is worth less than the remaining installments.',
     'ALREADY_LISTED': 'This position is already for sale.',
+    'PAYMENT_DUE': 'An installment of this plan is due. Pay it first, then part of the plan can be sold.',
+    'PAYMENT_DUE_BUYER': 'The seller has an installment due on this plan, so only all its shares can be bought '
+                         'right now.',
 }
 
 

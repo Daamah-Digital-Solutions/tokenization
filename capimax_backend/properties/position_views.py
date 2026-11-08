@@ -3,10 +3,11 @@ Installment positions for sale (properties/positions.py), at /api/v1/properties/
 
   GET  positions/?channel=market|providers  positions the caller can buy (everyone's but their own)
   GET  positions/mine/                    the caller's listings and the positions they bought
-  POST positions/        {plan, price_per_share?, note?, to_market?, to_providers?}   list a plan (seller)
+  GET  positions/<id>/quote/?units=N      the figures and installments for N of its shares (buyer)
+  POST positions/        {plan, units?, price_per_share?, note?, to_market?, to_providers?}   list a plan (seller)
   POST positions/<id>/channels/  {to_market, to_providers}       where an open listing is offered
   POST positions/<id>/cancel/                                    withdraw it (seller)
-  POST positions/<id>/buy/  {expected_cash, expected_fee}        buy at the asking price
+  POST positions/<id>/buy/  {units?, expected_cash, expected_fee}   buy (all or part) at the asking price
   POST positions/<id>/offer/  {price_per_share, notes?}          liquidity provider offer
   POST positions/<id>/withdraw_offer/                            liquidity provider
   POST positions/<id>/answer/  {offer, action: accept|decline}   seller answers an offer
@@ -75,7 +76,8 @@ class PositionListingViewSet(viewsets.ViewSet):
             listing = P.list_position(request.user, request.data.get('plan'), request.data.get('price_per_share'),
                                       request.data.get('note', ''),
                                       to_market=_flag(request.data.get('to_market', True)),
-                                      to_providers=_flag(request.data.get('to_providers', True)))
+                                      to_providers=_flag(request.data.get('to_providers', True)),
+                                      units=request.data.get('units'))
         except P.PositionError as exc:
             return _error(exc)
         return Response(create_success_response(data=P.listing_summary(listing, for_seller=True, viewer=request.user),
@@ -103,12 +105,29 @@ class PositionListingViewSet(viewsets.ViewSet):
     @action(detail=True, methods=['post'])
     def buy(self, request, pk=None):
         try:
-            listing = P.buy(request.user, pk, request.data.get('expected_cash'), request.data.get('expected_fee'))
+            listing = P.buy(request.user, pk, request.data.get('expected_cash'), request.data.get('expected_fee'),
+                            units=request.data.get('units'))
         except P.PositionError as exc:
             return _error(exc)
         return Response(create_success_response(
-            data={'plan': str(listing.plan_id), 'paid': str(listing.seller_cash + (listing.buyer_fee or 0))},
+            data={'plan': str(listing.plan_id), 'units': listing.units or listing.plan.token_allocation,
+                  'paid': str(listing.seller_cash + (listing.buyer_fee or 0))},
             message='Position bought. The installment plan is yours now; find it under Installments.'))
+
+    @action(detail=True, methods=['get'])
+    def quote(self, request, pk=None):
+        from .models import PositionListing, PositionListingStatus
+        listing = (PositionListing.objects.select_related('plan__property_investment')
+                   .filter(pk=pk, status=PositionListingStatus.LISTED).first())
+        if listing is None:
+            return Response(create_error_response(message='This position is no longer for sale.'),
+                            status=status.HTTP_404_NOT_FOUND)
+        try:
+            units = int(request.query_params.get('units') or 0) or None
+        except ValueError:
+            units = None
+        return Response(create_success_response(
+            data=P.listing_summary(listing, viewer=request.user, request=request, units=units)))
 
     @action(detail=True, methods=['post'])
     def offer(self, request, pk=None):

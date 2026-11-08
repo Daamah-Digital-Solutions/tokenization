@@ -1628,6 +1628,13 @@ class ConstructionInstallment(models.Model):
         default=True,
         help_text="Charge due payments from the wallet automatically (plans started before this was "
                   "introduced are paid by the member).")
+    # Part of a plan sold or transferred (client, Nov 2026 — properties/plan_split.py): the plan's
+    # schedule is kept as stored rows [{kind, due_date, amount}] so the two plans add up to the
+    # original exactly; empty = built from the plan's terms.
+    schedule_override = models.JSONField(null=True, blank=True, editable=False)
+    split_from = models.ForeignKey('self', on_delete=models.PROTECT, null=True, blank=True, editable=False,
+                                   related_name='splits',
+                                   help_text='The plan this one was split from (part of it sold or transferred)')
 
     class Meta:
         db_table = 'properties_installment_payment'
@@ -1708,6 +1715,16 @@ class ConstructionInstallment(models.Model):
     def schedule_rows(self):
         """Full schedule (down payment + installments) with due dates and amounts."""
         from .payment_plan import build_schedule
+        if self.schedule_override:
+            from datetime import date
+            total = Decimal(self.total_investment_amount or 0)
+            out = []
+            for i, r in enumerate(self.schedule_override):
+                amount = Decimal(str(r['amount']))
+                out.append({'number': i + 1, 'kind': r['kind'], 'due_date': date.fromisoformat(r['due_date']),
+                            'amount': amount,
+                            'percent': (amount / total * 100).quantize(Decimal('0.01')) if total else Decimal('0.00')})
+            return out
         start = self.start_date or (self.created_at.date() if self.created_at else None)
         down_pct = Decimal('0')
         if self.down_payment_amount and self.total_investment_amount:
@@ -2122,6 +2139,12 @@ class PositionListing(models.Model):
     assumed_principal = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True,
                                             help_text='Installments the buyer took over')
     sold_via = models.CharField(max_length=20, blank=True, help_text='market / liquidity_provider')
+    # Shares offered (client, Nov 2026: part of a plan can be sold; empty = the whole plan). Buyers
+    # can take part of them; each part sold is its own sold row (plan = the buyer's new plan).
+    units = models.PositiveIntegerField(null=True, blank=True,
+                                        help_text="Shares offered (empty = all the plan's shares)")
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='part_sales',
+                               help_text='For a part sold: the listing it was sold from')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -18,7 +18,8 @@
     "delivered": "Delivered",
     "cancelled": "Cancelled",
     "expired": "Returned",
-    "failed": "Returned"
+    "failed": "Returned",
+    "declined": "Declined"
   },
   "row": {
     "units": "{{count}} share(s) of {{property}}",
@@ -27,7 +28,8 @@
     "date": "date {{date}}",
     "until": "returns {{date}} if not claimed",
     "cancel": "Cancel",
-    "confirmCancel": "Cancel this transfer? Everything comes back to you."
+    "confirmCancel": "Cancel this transfer? Everything comes back to you.",
+    "planUnits": "{{count}} installment share(s) of {{property}}"
   },
   "new": {
     "title": "New transfer",
@@ -36,7 +38,8 @@
     "send": "Send",
     "asset": {
       "units": "Property shares",
-      "cash": "Wallet balance"
+      "cash": "Wallet balance",
+      "plan": "Installment shares"
     },
     "property": "Property",
     "chooseProperty": "Choose a property",
@@ -60,7 +63,30 @@
     "result": {
       "delivered": "Delivered to {{email}}.",
       "scheduled": "Scheduled. {{email}} receives it on the chosen date.",
-      "waiting": "Sent. {{email}} doesn't have a verified account yet — we invited them. They have {{days}} days to claim it, otherwise it comes back to you."
-    }
+      "waiting": "Sent. {{email}} doesn't have a verified account yet — we invited them. They have {{days}} days to claim it, otherwise it comes back to you.",
+      "plan": "Sent. {{email}} must accept the shares and their installments within {{days}} days; until then they stay with you."
+    },
+    "plan": "Installment plan",
+    "choosePlan": "Choose a plan",
+    "noPlans": "You have no installment plan whose shares can be sent now.",
+    "planTakeOver": "The recipient takes over their part of the remaining installments: about {{amount}} over {{payments}} payment(s).",
+    "planKeep": "You keep {{keep}} share(s) and your installments get smaller.",
+    "planWhole": "The whole plan goes to the recipient.",
+    "planDue": "An installment of this plan is due: pay it first to send part of the plan.",
+    "planRules": "The recipient must accept the shares and their installments. If they decline or don't answer within {{days}} days, the shares stay with you. You can cancel until they accept."
+  },
+  "plan": {
+    "title": "Installment shares waiting for your answer",
+    "body": "If you accept, the shares are yours and you take over their remaining installments: {{payments}} payment(s), {{total}} in total, charged from your wallet on their dates. Already paid for them: {{paid}}.",
+    "due": "The sender has an installment due on this plan; you can accept once it is paid.",
+    "show": "Show the installments",
+    "hide": "Hide the installments",
+    "colDue": "Due date",
+    "colAmount": "Amount",
+    "colFee": "Fee",
+    "colTotal": "Total",
+    "accept": "Accept the shares and installments",
+    "decline": "Decline",
+    "confirmDecline": "Decline these shares? They stay with the sender."
   }
 }

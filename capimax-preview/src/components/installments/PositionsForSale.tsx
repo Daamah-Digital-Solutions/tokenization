@@ -6,12 +6,14 @@
  * the fee, and the table of the installments the buyer takes over, with a consent tick.
  * Used on the secondary market (investors) and in the liquidity market (providers, who can
  * also send a lower offer the seller accepts or declines).
+ * The buyer can take part of the shares offered (client, Nov 2026): the plan is split and
+ * they take over their part of each remaining installment — the figures come from the server.
  */
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, Building2, CalendarClock, CheckCircle2, Layers, Loader2, MapPin, X } from 'lucide-react';
+import { AlertTriangle, Building2, CalendarClock, CheckCircle2, Layers, Loader2, MapPin, Minus, Plus, X } from 'lucide-react';
 import { PositionService, type PositionListing } from '../../services/installments/PositionService';
 import { formatMoney, formatPlanDate } from '../../utils/paymentPlan';
 import { useRouter } from '../../utils/router';
@@ -83,6 +85,9 @@ export const PositionCard: React.FC<{
         <dl className="space-y-1.5 text-sm">
           <div className="flex justify-between"><dt className="text-gray-500 dark:text-gray-400">{t('positions.card.shares')}</dt>
             <dd className="font-semibold text-gray-900 dark:text-white">{t('positions.sharesCount', { count: p.units })}</dd></div>
+          {p.units > 1 && p.partial_allowed !== false && (
+            <p className="text-xs text-emerald-700 dark:text-emerald-400">{t('positions.card.partial')}</p>
+          )}
           <div className="flex justify-between"><dt className="text-gray-500 dark:text-gray-400">{t('positions.card.pricePerShare')}</dt>
             <dd className="font-bold text-lg text-gray-900 dark:text-white">{formatMoney(p.price_per_share)}</dd></div>
           <div className="flex justify-between"><dt className="text-gray-500 dark:text-gray-400">{t('positions.card.payNow')}</dt>
@@ -137,15 +142,34 @@ export const PositionDealDialog: React.FC<{
   busy: boolean;
   error: string | null;
   onClose: () => void;
-  onBuy: (p: PositionListing) => void;
+  /** `deal` = the figures for the shares chosen (what the buyer confirms) */
+  onBuy: (deal: PositionListing, units: number) => void;
   onOffer: (p: PositionListing, price: number, notes: string) => void;
-}> = ({ p, mode, busy, error, onClose, onBuy, onOffer }) => {
+}> = ({ p: listing, mode, busy, error, onClose, onBuy, onOffer }) => {
   const { t, i18n } = useTranslation('plan');
   const lang = i18n.language || 'en';
   const { navigate } = useRouter();
-  const [offerPrice, setOfferPrice] = useState(n(p.my_offer?.price_per_share || p.price_per_share).toFixed(2));
+  const [offerPrice, setOfferPrice] = useState(n(listing.my_offer?.price_per_share || listing.price_per_share).toFixed(2));
   const [notes, setNotes] = useState('');
   const [agreed, setAgreed] = useState(false);
+  // How many of the shares offered (a buyer can take part of them; offers are for all of them)
+  const offered = listing.offered_units || listing.units;
+  const planUnits = listing.plan_units || offered;
+  const partialOk = listing.partial_allowed !== false;
+  const canChoose = mode === 'buy' && partialOk && offered > 1;
+  const [units, setUnits] = useState(offered);
+  const quote = useQuery({
+    queryKey: ['position-quote', listing.id, units],
+    queryFn: () => PositionService.quote(listing.id, units),
+    enabled: mode === 'buy' && units !== listing.units,
+    staleTime: 30000,
+    placeholderData: (prev) => prev,
+  });
+  const p: PositionListing = units === listing.units ? listing : (quote.data || listing);
+  const loading = units !== listing.units && (quote.isLoading || quote.isFetching || p.units !== units);
+  // Fewer than all the plan's shares while the seller has a payment due: not possible now
+  const blockedPart = mode === 'buy' && !partialOk && offered < planUnits;
+  const setCount = (v: number) => { setUnits(Math.max(1, Math.min(offered, Math.floor(v) || 1))); setAgreed(false); };
   const price = mode === 'offer' ? n(offerPrice) : n(p.price_per_share);
   const fig = mode === 'offer' ? positionFigures(p, price)
     : { value: n(p.position_value), cash: n(p.cash), fee: n(p.fee), total: n(p.buyer_total), change: n(p.price_change) };
@@ -176,8 +200,48 @@ export const PositionDealDialog: React.FC<{
           </button>
         </div>
 
-        <div className="p-5 space-y-5">
+        <div className="p-5 space-y-5" aria-busy={loading}>
           <p className="text-sm text-gray-600 dark:text-gray-300">{t('positions.detail.intro', { units: p.units })}</p>
+
+          {canChoose && (
+            <section className="rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-900/10 p-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <label htmlFor="position-units" className="text-sm font-semibold text-gray-900 dark:text-white">
+                  {t('positions.detail.howMany')}
+                </label>
+                <div className="flex items-center gap-2">
+                  <button type="button" aria-label="−" onClick={() => setCount(units - 1)} disabled={units <= 1}
+                          className="w-8 h-8 rounded-lg border border-gray-300 dark:border-gray-600 flex items-center justify-center disabled:opacity-40">
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <input id="position-units" type="number" min={1} max={offered} value={units}
+                         onChange={(e) => setCount(Number(e.target.value))}
+                         className="w-20 text-center rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1.5 text-sm font-semibold" />
+                  <button type="button" aria-label="+" onClick={() => setCount(units + 1)} disabled={units >= offered}
+                          className="w-8 h-8 rounded-lg border border-gray-300 dark:border-gray-600 flex items-center justify-center disabled:opacity-40">
+                    <Plus className="w-4 h-4" />
+                  </button>
+                  <button type="button" onClick={() => setCount(offered)} disabled={units === offered}
+                          className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline disabled:opacity-40 disabled:no-underline">
+                    {t('positions.detail.all', { units: offered })}
+                  </button>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-gray-600 dark:text-gray-300">
+                {loading && <Loader2 className="inline w-3.5 h-3.5 me-1 animate-spin" />}
+                {units < planUnits ? t('positions.detail.partNote', { units, plan: planUnits }) : t('positions.detail.wholeNote')}
+              </p>
+            </section>
+          )}
+          {mode === 'buy' && !partialOk && (
+            <p className="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded-lg p-2">
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              {blockedPart ? t('positions.detail.partBlocked') : t('positions.detail.wholeOnly')}
+            </p>
+          )}
+          {mode === 'offer' && offered < planUnits && (
+            <p className="text-xs text-gray-600 dark:text-gray-300">{t('positions.detail.offerPart', { units: offered, plan: planUnits })}</p>
+          )}
 
           {mode === 'offer' && (
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -189,7 +253,7 @@ export const PositionDealDialog: React.FC<{
           )}
 
           {/* 1. The position */}
-          <section className="rounded-xl bg-gray-50 dark:bg-gray-800/60 p-4">
+          <section className={cn('rounded-xl bg-gray-50 dark:bg-gray-800/60 p-4 transition-opacity', loading && 'opacity-50')}>
             <dl className="space-y-1.5 text-sm">
               <div className="flex justify-between gap-3"><dt className="text-gray-500 dark:text-gray-400">{t('positions.detail.positionValue', { units: p.units, price: formatMoney(price) })}</dt><dd className="font-medium">{formatMoney(fig.value)}</dd></div>
               <div className="flex justify-between gap-3"><dt className="text-gray-500 dark:text-gray-400">{t('positions.detail.paidSoFar', { made: n(p.payments_made), total: n(p.total_payments) })}</dt><dd>{formatMoney(p.paid_principal)}</dd></div>
@@ -204,7 +268,7 @@ export const PositionDealDialog: React.FC<{
           </section>
 
           {/* 2. What leaves the wallet now */}
-          <section className="rounded-xl border border-indigo-100 dark:border-indigo-900/40 p-4">
+          <section className={cn('rounded-xl border border-indigo-100 dark:border-indigo-900/40 p-4 transition-opacity', loading && 'opacity-50')}>
             <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700 dark:text-indigo-300 mb-2">{t('positions.detail.walletNow')}</p>
             <dl className="space-y-1.5 text-sm">
               <div className="flex justify-between gap-3"><dt className="text-gray-500 dark:text-gray-400">{t('positions.detail.toSeller')}</dt><dd>{formatMoney(fig.cash)}</dd></div>
@@ -214,7 +278,7 @@ export const PositionDealDialog: React.FC<{
           </section>
 
           {/* 3. The installments taken over */}
-          <section>
+          <section className={cn('transition-opacity', loading && 'opacity-50')}>
             <h4 className="font-semibold text-gray-900 dark:text-white">{t('positions.detail.takeOverTitle', { count: p.remaining_payments })}</h4>
             {n(p.overdue_count) > 0 && (
               <p className="mt-2 flex items-start gap-2 text-sm text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg p-2">
@@ -282,8 +346,8 @@ export const PositionDealDialog: React.FC<{
           <div className="flex justify-end gap-2">
             <button onClick={onClose} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium">{t('positions.cancel')}</button>
             <button
-              disabled={busy || (mode === 'buy' ? !agreed : fig.cash <= 0)}
-              onClick={() => (mode === 'buy' ? onBuy(p) : onOffer(p, price, notes))}
+              disabled={busy || loading || blockedPart || (mode === 'buy' ? !agreed : fig.cash <= 0)}
+              onClick={() => (mode === 'buy' ? onBuy(p, units) : onOffer(p, price, notes))}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-semibold">
               {busy && <Loader2 className="w-4 h-4 animate-spin" />}
               {mode === 'buy' ? t('positions.detail.pay', { amount: formatMoney(fig.total) }) : t('positions.sendOffer')}
@@ -370,11 +434,11 @@ export const PositionsForSale: React.FC<{
   const close = () => { setOpen(null); setError(null); };
   const show = (p: PositionListing, mode: 'buy' | 'offer') => { setDone(null); setError(null); setOpen({ p, mode }); };
 
-  const buy = async (p: PositionListing) => {
+  const buy = async (p: PositionListing, units: number) => {
     setBusy(true);
     setError(null);
     try {
-      await PositionService.buy(p.id, p.cash, p.fee);
+      await PositionService.buy(p.id, p.cash, p.fee, units);
       close();
       setBought(p);
       refresh();

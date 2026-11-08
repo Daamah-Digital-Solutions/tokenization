@@ -5,12 +5,23 @@
 
 import { apiClient } from '../api/ApiClient';
 
-export type TransferStatus = 'scheduled' | 'waiting' | 'delivered' | 'cancelled' | 'expired' | 'failed';
+export type TransferStatus = 'scheduled' | 'waiting' | 'delivered' | 'cancelled' | 'expired' | 'failed' | 'declined';
+
+/** Installment shares (asset "plan"): what the recipient takes over if they accept */
+export interface PlanTerms {
+  plan_units: number;
+  paid_principal: string;
+  remaining_principal: string;
+  remaining_payments: number;
+  remaining_total: string;
+  payment_due: boolean;
+  schedule: Array<{ number: number; kind: string; due_date: string; amount: string; fee: string; total: string }>;
+}
 
 export interface TransferRecord {
   id: string;
   reference: string;
-  asset: 'units' | 'cash';
+  asset: 'units' | 'cash' | 'plan';
   status: TransferStatus;
   direction: 'sent' | 'received';
   sender_name: string;
@@ -27,6 +38,9 @@ export interface TransferRecord {
   delivered_at: string | null;
   close_reason: string;
   created_at: string;
+  plan_id?: string | null;
+  accepted_at?: string | null;
+  plan_terms?: PlanTerms | null;
 }
 
 export interface Giftable {
@@ -34,10 +48,13 @@ export interface Giftable {
   balance: string;
   fee_percent: string;
   claim_days: number;
+  /** Installment plans whose shares can be sent (client, Nov 2026) */
+  plans?: Array<{ plan_id: string; property_id: string; title: string; plan_units: number; free_units: number;
+                  payment_due: boolean; remaining_principal: string; remaining_payments: number }>;
 }
 
 export interface NewTransfer {
-  asset: 'units' | 'cash';
+  asset: 'units' | 'cash' | 'plan';
   recipient_email: string;
   recipient_name?: string;
   message?: string;
@@ -45,6 +62,7 @@ export interface NewTransfer {
   property_id?: string;
   units?: number;
   amount?: number;
+  plan_id?: string;
 }
 
 const asList = <T,>(res: any): T[] => (Array.isArray(res) ? res : res?.results ?? res?.data ?? []);
@@ -61,6 +79,13 @@ export const TransferService = {
   },
   cancel(id: string): Promise<TransferRecord> {
     return apiClient.post<TransferRecord>(`/transfers/${id}/cancel/`);
+  },
+  /** The recipient of installment shares accepts them (and their part of the installments) or declines */
+  accept(id: string): Promise<TransferRecord> {
+    return apiClient.post<TransferRecord>(`/transfers/${id}/accept/`);
+  },
+  decline(id: string): Promise<TransferRecord> {
+    return apiClient.post<TransferRecord>(`/transfers/${id}/decline/`);
   },
 };
 

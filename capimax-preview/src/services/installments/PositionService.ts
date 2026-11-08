@@ -11,6 +11,7 @@ export interface PositionOffer {
   id: string;
   lp_name: string;
   price_per_share: string;
+  units?: number;
   cash: string;
   fee: string;
   notes: string;
@@ -48,7 +49,14 @@ export interface PositionListing {
   entry_price?: string;
   price_change?: string;
   price_per_share: string;
+  /** The shares these figures are for (all offered, or the number asked in quote()) */
   units: number;
+  /** Client, Nov 2026: part of a plan can be sold. Shares still offered, the plan's shares, and
+   *  whether these figures split the plan (fewer than its shares) — only while no payment is due. */
+  offered_units?: number;
+  plan_units?: number;
+  partial?: boolean;
+  partial_allowed?: boolean;
   total_units: number;
   position_value: string;
   paid_principal: string;
@@ -100,6 +108,11 @@ export interface PlanPosition {
   gain: string;
   fee_percent: string;
   floor_price: string;
+  /** Shares that can be listed or transferred now, shares being transferred, and whether a payment
+   *  is due (selling or transferring PART of the plan waits until it is paid) */
+  free_units?: number;
+  in_transfer?: number;
+  payment_due?: boolean;
   blocked: null | 'not_active' | 'not_started' | 'fully_paid' | 'below_remaining';
   listing: PositionListing | null;
 }
@@ -125,11 +138,17 @@ export class PositionService {
   }
 
   static list(plan: string, pricePerShare: number, channels: PositionChannels = { toMarket: true, toProviders: true },
-              note?: string): Promise<PositionListing> {
+              note?: string, units?: number): Promise<PositionListing> {
     return apiClient.post('/properties/positions/', {
       plan, price_per_share: pricePerShare, note: note || '',
       to_market: channels.toMarket, to_providers: channels.toProviders,
+      ...(units ? { units } : {}),
     });
+  }
+
+  /** The figures and the installments taken over for `units` of the shares offered. */
+  static quote(listingId: string, units: number): Promise<PositionListing> {
+    return apiClient.get(`/properties/positions/${listingId}/quote/?units=${units}`);
   }
 
   /** Change where an open listing is offered (dropping the providers closes their offers). */
@@ -144,9 +163,9 @@ export class PositionService {
   }
 
   /** Buy at the asking price; the amounts shown are confirmed (they move as installments are paid). */
-  static buy(listingId: string, expectedCash: string, expectedFee: string): Promise<unknown> {
+  static buy(listingId: string, expectedCash: string, expectedFee: string, units?: number): Promise<unknown> {
     return apiClient.post(`/properties/positions/${listingId}/buy/`, {
-      expected_cash: expectedCash, expected_fee: expectedFee,
+      expected_cash: expectedCash, expected_fee: expectedFee, ...(units ? { units } : {}),
     });
   }
 

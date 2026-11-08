@@ -19,6 +19,9 @@ from django.db import models
 class TransferAsset(models.TextChoices):
     UNITS = 'units', 'Property shares'
     CASH = 'cash', 'Wallet balance'
+    # Shares of an installment plan still being paid (client, Nov 2026): the recipient accepts
+    # them with their part of the remaining installments.
+    PLAN = 'plan', 'Installment plan shares'
 
 
 class TransferStatus(models.TextChoices):
@@ -28,6 +31,7 @@ class TransferStatus(models.TextChoices):
     CANCELLED = 'cancelled', 'Cancelled'      # by the sender — hold returned
     EXPIRED = 'expired', 'Returned (not claimed)'  # hold returned
     FAILED = 'failed', 'Failed'               # hold returned
+    DECLINED = 'declined', 'Declined by the recipient'  # installment shares not accepted
 
 
 OPEN = (TransferStatus.SCHEDULED, TransferStatus.WAITING)
@@ -54,6 +58,11 @@ class Transfer(models.Model):
     property_ref = models.ForeignKey('properties.Property', on_delete=models.PROTECT, null=True, blank=True,
                                      related_name='transfers')
     units = models.PositiveIntegerField(default=0)
+    # Shares of an installment plan (asset "plan", client Nov 2026): the recipient takes over their
+    # part of the remaining installments, so they accept it first (transfers/services.py accept()).
+    plan = models.ForeignKey('properties.ConstructionInstallment', on_delete=models.PROTECT, null=True,
+                             blank=True, related_name='transfers')
+    accepted_at = models.DateTimeField(null=True, blank=True)
     amount = models.DecimalField(max_digits=16, decimal_places=2, default=Decimal('0.00'),
                                  help_text='Cash sent, or the cost basis of the shares sent.')
     fee_amount = models.DecimalField(max_digits=16, decimal_places=2, default=Decimal('0.00'))
@@ -91,7 +100,7 @@ class Transfer(models.Model):
         indexes = [models.Index(fields=['recipient_email', 'status'])]
 
     def __str__(self):
-        what = f'{self.units} shares' if self.asset == TransferAsset.UNITS else f'${self.amount}'
+        what = f'{self.units} shares' if self.asset != TransferAsset.CASH else f'${self.amount}'
         return f'{self.reference}: {what} to {self.recipient_email} ({self.status})'
 
     @property
