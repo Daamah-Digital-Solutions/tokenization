@@ -20,6 +20,16 @@ export interface PositionOffer {
   created_at: string;
 }
 
+export interface PositionScheduleRow {
+  number: number;
+  kind: string;
+  due_date: string;
+  amount: string;
+  fee: string;
+  total: string;
+  status: 'due' | 'overdue' | 'upcoming';
+}
+
 export interface PositionListing {
   id: string;
   plan: string;
@@ -28,7 +38,15 @@ export interface PositionListing {
   property_title: string;
   property_city: string;
   property_country: string;
+  /** Card (client, Nov 2026 — as on PropShare): the property photo and stage */
+  property_image?: string;
+  property_category?: 'under_construction' | 'ready_property' | string;
+  property_type?: string;
+  expected_completion_date?: string | null;
   current_price: string;
+  /** What the seller paid per share, and the gain/loss on all the shares at the asking price */
+  entry_price?: string;
+  price_change?: string;
   price_per_share: string;
   units: number;
   total_units: number;
@@ -44,6 +62,13 @@ export interface PositionListing {
   next_payment_date: string | null;
   next_payment_amount: string;
   frequency: string;
+  total_payments?: number;
+  payments_made?: number;
+  /** The installments the buyer takes over (unpaid rows of the plan) */
+  schedule?: PositionScheduleRow[];
+  remaining_total?: string;
+  remaining_fees?: string;
+  overdue_count?: number;
   note: string;
   /** Where the seller offers it: the secondary market and/or the liquidity providers */
   to_market: boolean;

@@ -52,7 +52,8 @@ class PositionListingViewSet(viewsets.ViewSet):
     def list(self, request):
         channel = request.query_params.get('channel')
         channel = channel if channel in ('market', 'providers') else None
-        rows = [P.listing_summary(listing, viewer=request.user) for listing in P.market(request.user, channel)]
+        rows = [P.listing_summary(listing, viewer=request.user, request=request)
+                for listing in P.market(request.user, channel)]
         return Response(create_success_response(data=rows))
 
     @action(detail=False, methods=['get'])

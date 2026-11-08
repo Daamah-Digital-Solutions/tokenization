@@ -132,10 +132,35 @@ def holder_view(plan) -> dict | None:
     }
 
 
-def listing_summary(listing, *, for_seller: bool = False, viewer=None) -> dict:
+def _image_url(prop, request=None) -> str:
+    try:
+        img = prop.images.filter(is_primary=True).first() or prop.images.order_by('order').first()
+        if img and img.image:
+            return request.build_absolute_uri(img.image.url) if request is not None else img.image.url
+    except Exception:  # noqa: BLE001
+        pass
+    return ''
+
+
+def remaining_schedule(plan) -> list[dict]:
+    """The installments a buyer takes over: number, due date, amount + fee, and whether already due."""
+    from .payment_plan import plan_schedule_with_status
+    out = []
+    for row in plan_schedule_with_status(plan):
+        if row['status'] in ('paid', 'cancelled'):
+            continue
+        out.append({'number': row['number'], 'kind': row['kind'], 'due_date': row['due_date'].isoformat(),
+                    'amount': str(row['amount']), 'fee': str(row['fee']), 'total': str(row['total']),
+                    'status': row['status']})
+    return out
+
+
+def listing_summary(listing, *, for_seller: bool = False, viewer=None, request=None) -> dict:
     plan = listing.plan
     prop = plan.property_investment
     fig = figures(plan, listing.price_per_share)
+    schedule = remaining_schedule(plan)
+    entry = entry_price(plan)
     data = {
         'id': str(listing.id),
         'plan': str(plan.id),
@@ -144,7 +169,15 @@ def listing_summary(listing, *, for_seller: bool = False, viewer=None) -> dict:
         'property_title': prop.title,
         'property_city': prop.city,
         'property_country': prop.country,
+        'property_image': _image_url(prop, request),
+        'property_category': prop.property_category,
+        'property_type': prop.property_type,
+        'expected_completion_date': (prop.expected_completion_date.isoformat()
+                                     if getattr(prop, 'expected_completion_date', None) else None),
         'current_price': str(prop.token_price or 0),
+        # What the seller paid per share (plan price, or the price they bought the position at)
+        'entry_price': str(entry),
+        'price_change': str(_q(Decimal(fig['units']) * (Decimal(fig['price_per_share']) - entry))),
         'price_per_share': str(fig['price_per_share']),
         'units': fig['units'],
         'total_units': prop.total_tokens or 0,
@@ -159,6 +192,12 @@ def listing_summary(listing, *, for_seller: bool = False, viewer=None) -> dict:
         'next_payment_date': fig['next_payment_date'].isoformat() if fig['next_payment_date'] else None,
         'next_payment_amount': str(_q(fig['next_payment_amount'])),
         'frequency': plan.frequency,
+        'total_payments': plan.total_installments,
+        'payments_made': plan.payments_made,
+        'schedule': schedule,
+        'remaining_total': str(_q(sum((Decimal(r['total']) for r in schedule), Decimal('0')))),
+        'remaining_fees': str(_q(sum((Decimal(r['fee']) for r in schedule), Decimal('0')))),
+        'overdue_count': sum(1 for r in schedule if r['status'] in ('due', 'overdue')),
         'note': listing.note,
         'to_market': listing.to_market,
         'to_providers': listing.to_providers,

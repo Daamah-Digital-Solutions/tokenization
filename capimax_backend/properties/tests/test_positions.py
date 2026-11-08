@@ -313,3 +313,18 @@ class InstallmentPositionTests(TestCase):
         self.assertEqual(PositionListing.objects.get().sold_via, 'market')
         lp.refresh_from_db()
         self.assertEqual(lp.current_month_total, Decimal('0'))  # not counted against its provider limits
+
+    def test_buyer_sees_the_card_and_the_installments_they_take_over(self):
+        """Client, Nov 2026: the position shows as a property card and the buyer sees the schedule first."""
+        self.assertEqual(self._list('110.00').status_code, 201)
+        rows = body(self.as_(self.buyer).get(URL + '?channel=market'))
+        row = rows[0]
+        self.assertIn('property_image', row)
+        self.assertEqual((row['property_category'], row['entry_price'], row['price_change']),
+                         ('under_construction', '100.00', '1000.00'))
+        self.assertEqual((row['payments_made'], row['total_payments'], len(row['schedule'])), (1, 4, 3))
+        self.assertEqual([r['amount'] for r in row['schedule']], ['2500.00', '2500.00', '2500.00'])
+        fees = sum(Decimal(r['fee']) for r in row['schedule'])
+        self.assertEqual(Decimal(row['remaining_total']), Decimal('7500.00') + fees)
+        self.assertEqual(Decimal(row['remaining_fees']), fees)
+        self.assertEqual(row['overdue_count'], 0)

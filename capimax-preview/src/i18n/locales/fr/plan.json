@@ -281,7 +281,53 @@
     "listedProviders": "Votre position est proposée aux fournisseurs de liquidité. Vous serez prévenu dès qu’elle est vendue ou qu’une offre arrive.",
     "confirmDropProviders": "Ne plus la proposer aux fournisseurs de liquidité ? Leurs offres ouvertes seront fermées.",
     "channelsSaved": "Enregistré : votre position est proposée là où vous l’avez choisi.",
-    "noProviders": "Non proposée aux fournisseurs de liquidité."
+    "noProviders": "Non proposée aux fournisseurs de liquidité.",
+    "card": {
+      "badge": "Position échelonnée",
+      "category": {
+        "under_construction": "En construction",
+        "ready_property": "Prêt"
+      },
+      "shares": "Parts (vendues ensemble)",
+      "pricePerShare": "Prix par part",
+      "payNow": "Vous payez maintenant",
+      "then_one": "Puis {{count}} échéance",
+      "then_other": "Puis {{count}} échéances",
+      "progress": "{{made}} paiements sur {{total}} effectués",
+      "next": "Prochaine le {{date}}",
+      "view": "Voir et acheter"
+    },
+    "detail": {
+      "title": "Position échelonnée — {{title}}",
+      "seeProperty": "voir le bien",
+      "intro": "Vous achetez la position entière : les {{units}} parts et les échéances restant à payer. Le plan et son certificat passent à votre nom dès aujourd’hui.",
+      "positionValue": "Valeur de la position ({{units}} × {{price}})",
+      "stillToPay": "Reste à payer sur le plan (vous le reprenez)",
+      "sellerGets": "Vous payez le vendeur maintenant",
+      "breakdown": "= {{paid}} déjà payés par le vendeur sur le plan, {{change}} de variation de prix sur toutes les parts.",
+      "walletNow": "Débité de votre portefeuille maintenant",
+      "toSeller": "Payé au vendeur",
+      "fee": "Frais d’achat ({{pct}} %)",
+      "totalNow": "Total maintenant",
+      "takeOverTitle_one": "L’échéance que vous reprenez ({{count}})",
+      "takeOverTitle_other": "Échéances que vous reprenez ({{count}})",
+      "overdue_one": "{{count}} échéance est déjà due : elle est débitée de votre portefeuille au prochain prélèvement automatique.",
+      "overdue_other": "{{count}} échéances sont déjà dues : elles sont débitées de votre portefeuille au prochain prélèvement automatique.",
+      "colNo": "N°",
+      "colDue": "Échéance",
+      "colAmount": "Montant",
+      "colFee": "Frais",
+      "colTotal": "Total",
+      "totalStill": "Total restant à payer",
+      "status": {
+        "due": "Due",
+        "overdue": "En retard"
+      },
+      "autoCharge": "Chaque échéance est débitée automatiquement de votre portefeuille à sa date — gardez un solde suffisant.",
+      "consent_one": "J’achète la position entière et je reprends l’échéance restante, {{total}} au total.",
+      "consent_other": "J’achète la position entière et je reprends les {{count}} échéances restantes, {{total}} au total.",
+      "pay": "Payer {{amount}} et reprendre le plan"
+    }
   },
   "prices": {
     "title": "Historique du prix de la part",

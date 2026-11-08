@@ -279,7 +279,53 @@
     "listedProviders": "Your position is offered to the liquidity providers. You will be notified when it sells or an offer arrives.",
     "confirmDropProviders": "Stop offering it to the liquidity providers? Their open offers will be closed.",
     "channelsSaved": "Saved: your position is offered where you chose.",
-    "noProviders": "Not offered to liquidity providers."
+    "noProviders": "Not offered to liquidity providers.",
+    "card": {
+      "badge": "Installment position",
+      "category": {
+        "under_construction": "Under construction",
+        "ready_property": "Ready"
+      },
+      "shares": "Shares (sold together)",
+      "pricePerShare": "Price per share",
+      "payNow": "You pay now",
+      "then_one": "Then {{count}} installment",
+      "then_other": "Then {{count}} installments",
+      "progress": "{{made}} of {{total}} payments made",
+      "next": "Next {{date}}",
+      "view": "View & buy"
+    },
+    "detail": {
+      "title": "Installment position — {{title}}",
+      "seeProperty": "see the property",
+      "intro": "You buy the whole position: all {{units}} shares and the installments still to pay. The plan and its certificate move to your name today.",
+      "positionValue": "Position value ({{units}} × {{price}})",
+      "stillToPay": "Still to pay on the plan (you take it over)",
+      "sellerGets": "You pay the seller now",
+      "breakdown": "= {{paid}} the seller has already paid on the plan, {{change}} price change on all the shares.",
+      "walletNow": "Charged from your wallet now",
+      "toSeller": "Paid to the seller",
+      "fee": "Purchase fee ({{pct}}%)",
+      "totalNow": "Total now",
+      "takeOverTitle_one": "The installment you take over ({{count}})",
+      "takeOverTitle_other": "Installments you take over ({{count}})",
+      "overdue_one": "{{count}} installment is already due: it is charged from your wallet at the next automatic charge.",
+      "overdue_other": "{{count}} installments are already due: they are charged from your wallet at the next automatic charge.",
+      "colNo": "#",
+      "colDue": "Due date",
+      "colAmount": "Installment",
+      "colFee": "Fee",
+      "colTotal": "Total",
+      "totalStill": "Total still to pay",
+      "status": {
+        "due": "Due",
+        "overdue": "Overdue"
+      },
+      "autoCharge": "Each installment is charged from your wallet automatically on its due date — keep enough balance in your wallet.",
+      "consent_one": "I am buying the whole position and I take over the remaining {{count}} installment, {{total}} in all.",
+      "consent_other": "I am buying the whole position and I take over the remaining {{count}} installments, {{total}} in all.",
+      "pay": "Pay {{amount}} and take over the plan"
+    }
   },
   "prices": {
     "title": "Share price history",
