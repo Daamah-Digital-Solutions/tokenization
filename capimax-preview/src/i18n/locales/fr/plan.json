@@ -304,7 +304,7 @@
       "positionValue": "Valeur de la position ({{units}} × {{price}})",
       "stillToPay": "Reste à payer sur le plan (vous le reprenez)",
       "sellerGets": "Vous payez le vendeur maintenant",
-      "breakdown": "= {{paid}} déjà payés par le vendeur sur le plan, {{change}} de variation de prix sur toutes les parts.",
+      "breakdown": "Le vendeur récupère ce qu’il a payé ({{paid}}) {{change}} de variation de prix sur toutes les parts.",
       "walletNow": "Débité de votre portefeuille maintenant",
       "toSeller": "Payé au vendeur",
       "fee": "Frais d’achat ({{pct}} %)",
@@ -326,7 +326,19 @@
       "autoCharge": "Chaque échéance est débitée automatiquement de votre portefeuille à sa date — gardez un solde suffisant.",
       "consent_one": "J’achète la position entière et je reprends l’échéance restante, {{total}} au total.",
       "consent_other": "J’achète la position entière et je reprends les {{count}} échéances restantes, {{total}} au total.",
-      "pay": "Payer {{amount}} et reprendre le plan"
+      "pay": "Payer {{amount}} et reprendre le plan",
+      "paidSoFar": "Déjà payé sur le plan ({{made}} paiements sur {{total}})",
+      "breakdownFlat": "Le vendeur récupère ce qu’il a payé ; le prix par part n’a pas changé."
+    },
+    "done": {
+      "title": "La position est à vous",
+      "body_one": "Vous avez acheté les {{units}} parts de {{title}}. Il vous reste une échéance, {{total}}.",
+      "body_other": "Vous avez acheté les {{units}} parts de {{title}}. Il vous reste {{count}} échéances, {{total}} au total.",
+      "where": "Le plan est dans Échéances et dans Mes biens, à votre nom.",
+      "certificate": "Le certificat de propriété est émis à votre nom.",
+      "next": "La prochaine échéance ({{amount}}) est débitée de votre portefeuille à sa date.",
+      "auto": "Chaque échéance est débitée de votre portefeuille à sa date.",
+      "open": "Ouvrir mes échéances"
     }
   },
   "prices": {

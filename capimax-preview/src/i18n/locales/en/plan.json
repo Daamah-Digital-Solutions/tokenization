@@ -302,7 +302,7 @@
       "positionValue": "Position value ({{units}} × {{price}})",
       "stillToPay": "Still to pay on the plan (you take it over)",
       "sellerGets": "You pay the seller now",
-      "breakdown": "= {{paid}} the seller has already paid on the plan, {{change}} price change on all the shares.",
+      "breakdown": "The seller gets what they have paid ({{paid}}) {{change}} the price change on all the shares.",
       "walletNow": "Charged from your wallet now",
       "toSeller": "Paid to the seller",
       "fee": "Purchase fee ({{pct}}%)",
@@ -324,7 +324,19 @@
       "autoCharge": "Each installment is charged from your wallet automatically on its due date — keep enough balance in your wallet.",
       "consent_one": "I am buying the whole position and I take over the remaining {{count}} installment, {{total}} in all.",
       "consent_other": "I am buying the whole position and I take over the remaining {{count}} installments, {{total}} in all.",
-      "pay": "Pay {{amount}} and take over the plan"
+      "pay": "Pay {{amount}} and take over the plan",
+      "paidSoFar": "Already paid on the plan ({{made}} of {{total}} payments)",
+      "breakdownFlat": "The seller gets back what they have paid; the price per share is unchanged."
+    },
+    "done": {
+      "title": "The position is yours",
+      "body_one": "You bought the {{units}} shares of {{title}}. You now pay the remaining installment, {{total}}.",
+      "body_other": "You bought the {{units}} shares of {{title}}. You now pay the remaining {{count}} installments, {{total}} in all.",
+      "where": "The plan is under Installments and in My Properties, in your name.",
+      "certificate": "The ownership certificate is issued in your name.",
+      "next": "The next installment ({{amount}}) is charged from your wallet on its due date.",
+      "auto": "Each installment is charged from your wallet on its due date.",
+      "open": "Open my installments"
     }
   },
   "prices": {

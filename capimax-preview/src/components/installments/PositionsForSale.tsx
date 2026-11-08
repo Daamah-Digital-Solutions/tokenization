@@ -11,7 +11,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, Building2, CalendarClock, Layers, Loader2, MapPin, X } from 'lucide-react';
+import { AlertTriangle, Building2, CalendarClock, CheckCircle2, Layers, Loader2, MapPin, X } from 'lucide-react';
 import { PositionService, type PositionListing } from '../../services/installments/PositionService';
 import { formatMoney, formatPlanDate } from '../../utils/paymentPlan';
 import { useRouter } from '../../utils/router';
@@ -191,12 +191,15 @@ export const PositionDealDialog: React.FC<{
           {/* 1. The position */}
           <section className="rounded-xl bg-gray-50 dark:bg-gray-800/60 p-4">
             <dl className="space-y-1.5 text-sm">
-              <div className="flex justify-between gap-3"><dt className="text-gray-500 dark:text-gray-400">{t('positions.detail.positionValue', { units: p.units, price: formatMoney(price) })}</dt><dd>{formatMoney(fig.value)}</dd></div>
-              <div className="flex justify-between gap-3"><dt className="text-gray-500 dark:text-gray-400">{t('positions.detail.stillToPay')}</dt><dd dir="ltr">− {formatMoney(p.remaining_principal)}</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-gray-500 dark:text-gray-400">{t('positions.detail.positionValue', { units: p.units, price: formatMoney(price) })}</dt><dd className="font-medium">{formatMoney(fig.value)}</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-gray-500 dark:text-gray-400">{t('positions.detail.paidSoFar', { made: n(p.payments_made), total: n(p.total_payments) })}</dt><dd>{formatMoney(p.paid_principal)}</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-gray-500 dark:text-gray-400">{t('positions.detail.stillToPay')}</dt><dd>{formatMoney(p.remaining_principal)}</dd></div>
               <div className="flex justify-between gap-3 font-semibold border-t border-gray-200 dark:border-gray-700 pt-1.5"><dt>{t('positions.detail.sellerGets')}</dt><dd>{formatMoney(fig.cash)}</dd></div>
             </dl>
             <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-              {t('positions.detail.breakdown', { paid: formatMoney(p.paid_principal), change: `\u2066${signedMoney(fig.change)}\u2069` })}
+              {Math.abs(fig.change) >= 0.01
+                ? t('positions.detail.breakdown', { paid: formatMoney(p.paid_principal), change: `\u2066${signedMoney(fig.change)}\u2069` })
+                : t('positions.detail.breakdownFlat')}
             </p>
           </section>
 
@@ -292,22 +295,71 @@ export const PositionDealDialog: React.FC<{
   );
 };
 
-export const PositionsForSale: React.FC<{ asProvider?: boolean; hideWhenEmpty?: boolean }> = ({
-  asProvider = false, hideWhenEmpty = false,
-}) => {
+/** After the purchase: what happened and where the plan is now. */
+const BoughtDialog: React.FC<{ p: PositionListing; onClose: () => void }> = ({ p, onClose }) => {
+  const { t } = useTranslation('plan');
+  const { navigate } = useRouter();
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+      <div role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}
+           className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6 text-center">
+        <CheckCircle2 className="w-12 h-12 mx-auto text-emerald-500" />
+        <h3 className="mt-3 text-lg font-bold text-gray-900 dark:text-white">{t('positions.done.title')}</h3>
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+          {t('positions.done.body', { units: p.units, title: p.property_title, count: p.remaining_payments,
+                                      total: formatMoney(p.remaining_total || p.remaining_principal) })}
+        </p>
+        <ul className="mt-4 text-start text-sm text-gray-600 dark:text-gray-300 space-y-1.5 list-disc ps-5">
+          <li>{t('positions.done.where')}</li>
+          <li>{t('positions.done.certificate')}</li>
+          <li>{p.next_payment_date ? t('positions.done.next', { amount: formatMoney(p.next_payment_amount) }) : t('positions.done.auto')}</li>
+        </ul>
+        <div className="mt-6 flex justify-center gap-2">
+          <button onClick={onClose} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium">{t('positions.close')}</button>
+          <button onClick={() => navigate('dashboard' as any, { view: 'installments' })}
+                  className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold">
+            {t('positions.done.open')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const matches = (p: PositionListing, search?: string) => {
+  const q = (search || '').trim().toLowerCase();
+  if (!q) return true;
+  return [p.property_title, p.property_city, p.property_country].some((v) => (v || '').toLowerCase().includes(q));
+};
+
+/** The positions for sale that the current page shows (shared cache with the cards below). */
+export const usePositionsForSale = (channel: 'market' | 'providers', search?: string) => {
+  const q = useQuery({ queryKey: ['positions-market', channel], queryFn: () => PositionService.market(channel),
+                       refetchInterval: 60000 });
+  return { ...q, rows: (q.data || []).filter((p) => matches(p, search)) };
+};
+
+/**
+ * `layout="section"`: a titled section with its own grid (liquidity market).
+ * `layout="cards"`: only the cards, to sit inside the page's own listings grid (secondary market).
+ */
+export const PositionsForSale: React.FC<{
+  asProvider?: boolean;
+  hideWhenEmpty?: boolean;
+  layout?: 'section' | 'cards';
+  search?: string;
+}> = ({ asProvider = false, hideWhenEmpty = false, layout = 'section', search }) => {
   const { t } = useTranslation('plan');
   const queryClient = useQueryClient();
   const channel = asProvider ? 'providers' : 'market';
-  const q = useQuery({ queryKey: ['positions-market', channel], queryFn: () => PositionService.market(channel),
-                       refetchInterval: 60000 });
+  const q = usePositionsForSale(channel, search);
   const [open, setOpen] = useState<{ p: PositionListing; mode: 'buy' | 'offer' } | null>(null);
+  const [bought, setBought] = useState<PositionListing | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
 
-  const rows = q.data || [];
-  // Hidden when nothing is for sale — but not before the buyer sees the result of their purchase
-  if (hideWhenEmpty && !q.isLoading && rows.length === 0 && !done) return null;
+  const rows = q.rows;
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ['positions-market'] });
@@ -323,8 +375,8 @@ export const PositionsForSale: React.FC<{ asProvider?: boolean; hideWhenEmpty?: 
     setError(null);
     try {
       await PositionService.buy(p.id, p.cash, p.fee);
-      setDone(t('positions.bought'));
       close();
+      setBought(p);
       refresh();
     } catch (err: any) {
       // The amounts moved (an installment was paid): reload, close, and let the buyer look again
@@ -365,6 +417,33 @@ export const PositionsForSale: React.FC<{ asProvider?: boolean; hideWhenEmpty?: 
     }
   };
 
+  const cards = rows.map((p) => (
+    <PositionCard key={p.id} p={p} asProvider={asProvider}
+                  onOpen={(x) => show(x, 'buy')} onOffer={(x) => show(x, 'offer')} onWithdrawOffer={withdraw} />
+  ));
+  const dialogs = (
+    <>
+      {open && (
+        <PositionDealDialog p={open.p} mode={open.mode} busy={busy} error={error}
+                            onClose={close} onBuy={buy} onOffer={sendOffer} />
+      )}
+      {bought && <BoughtDialog p={bought} onClose={() => setBought(null)} />}
+    </>
+  );
+
+  if (layout === 'cards') {
+    return (
+      <>
+        {done && <p role="status" className="col-span-full text-sm text-emerald-700 dark:text-emerald-400">{done}</p>}
+        {cards}
+        {dialogs}
+      </>
+    );
+  }
+
+  // Hidden when nothing is for sale — but not before the buyer sees the result of their purchase
+  if (hideWhenEmpty && !q.isLoading && rows.length === 0 && !done && !bought) return null;
+
   return (
     <section>
       <div className="flex items-start gap-3 mb-4">
@@ -384,18 +463,9 @@ export const PositionsForSale: React.FC<{ asProvider?: boolean; hideWhenEmpty?: 
           {t('positions.marketEmpty')}
         </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {rows.map((p) => (
-            <PositionCard key={p.id} p={p} asProvider={asProvider}
-                          onOpen={(x) => show(x, 'buy')} onOffer={(x) => show(x, 'offer')} onWithdrawOffer={withdraw} />
-          ))}
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">{cards}</div>
       )}
-
-      {open && (
-        <PositionDealDialog p={open.p} mode={open.mode} busy={busy} error={error}
-                            onClose={close} onBuy={buy} onOffer={sendOffer} />
-      )}
+      {dialogs}
     </section>
   );
 };
